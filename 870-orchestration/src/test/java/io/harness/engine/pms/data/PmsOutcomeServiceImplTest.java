@@ -11,11 +11,11 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
-import io.harness.utils.DummyOutcome;
+import io.harness.utils.DummyOrchestrationOutcome;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
@@ -34,19 +34,21 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   public void shouldTestSaveAndFind() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    Outcome outcome = DummyOutcome.builder().test("test").build();
-    pmsOutcomeService.consume(
-        ambiance, outcomeName, DocumentOrchestrationUtils.convertToDocumentJson(outcome), "PHASE");
+    Outcome outcome = DummyOrchestrationOutcome.builder().test("test").build();
+    pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toDocumentJson(outcome), "PHASE");
 
     // Resolve with producer id
-    DummyOutcome savedOutcome = DocumentOrchestrationUtils.convertFromDocumentJson(pmsOutcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null)));
+    DummyOrchestrationOutcome savedOutcome = RecastOrchestrationUtils.fromDocumentJson(
+        pmsOutcomeService.resolve(ambiance,
+            RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null)),
+        DummyOrchestrationOutcome.class);
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
 
     // Resolve with scope
-    savedOutcome = DocumentOrchestrationUtils.convertFromDocumentJson(
-        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)));
+    savedOutcome = RecastOrchestrationUtils.fromDocumentJson(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)),
+        DummyOrchestrationOutcome.class);
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
   }
@@ -60,8 +62,8 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcomeName";
     pmsOutcomeService.consume(ambiance, outcomeName, null, null);
 
-    Outcome outcome = DocumentOrchestrationUtils.convertFromDocumentJson(
-        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)));
+    Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)), Outcome.class);
     assertThat(outcome).isNull();
   }
 
@@ -76,9 +78,9 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     pmsOutcomeService.consume(ambiance, outcomeName,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
     pmsOutcomeService.consume(ambiance1, outcomeName1,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test1").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
 
     List<String> outcomes = pmsOutcomeService.findAllByRuntimeId(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
@@ -96,15 +98,16 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     String instanceId1 = pmsOutcomeService.consume(ambiance, outcomeName,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test1").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
     String instanceId2 = pmsOutcomeService.consume(ambiance1, outcomeName1,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test2").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test2").build()), null);
 
     List<String> outcomes = pmsOutcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
     assertThat(outcomes.size()).isEqualTo(2);
-    assertThat(outcomes.stream()
-                   .map(oc -> ((DummyOutcome) DocumentOrchestrationUtils.convertFromDocumentJson(oc)).getTest())
-                   .collect(Collectors.toList()))
+    assertThat(
+        outcomes.stream()
+            .map(oc -> (RecastOrchestrationUtils.fromDocumentJson(oc, DummyOrchestrationOutcome.class)).getTest())
+            .collect(Collectors.toList()))
         .containsExactlyInAnyOrder("test1", "test2");
   }
 
@@ -117,11 +120,11 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcome";
 
     String instanceId = pmsOutcomeService.consume(ambiance, outcomeName,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
 
     String outcomeJson = pmsOutcomeService.fetchOutcome(instanceId);
-    Outcome outcome = DocumentOrchestrationUtils.convertFromDocumentJson(outcomeJson);
-    assertThat(outcome).isInstanceOf(DummyOutcome.class);
-    assertThat(((DummyOutcome) outcome).getTest()).isEqualTo("test");
+    Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(outcomeJson, Outcome.class);
+    assertThat(outcome).isInstanceOf(DummyOrchestrationOutcome.class);
+    assertThat(((DummyOrchestrationOutcome) outcome).getTest()).isEqualTo("test");
   }
 }

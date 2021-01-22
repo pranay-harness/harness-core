@@ -9,11 +9,12 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
+import org.bson.Document;
 
 @OwnedBy(CDC)
 @UtilityClass
@@ -51,7 +52,7 @@ public class NodeExecutionUtils {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    Map<String, Object> map = JsonOrchestrationUtils.asMap(json);
+    Map<String, Object> map = RecastOrchestrationUtils.toDocumentFromJson(json);
     updateStepParametersMap(map);
     return map;
   }
@@ -75,7 +76,7 @@ public class NodeExecutionUtils {
         } catch (ClassNotFoundException e) {
           throw new RuntimeException(e);
         }
-        OrchestrationField field = JsonOrchestrationUtils.asObject(JsonOrchestrationUtils.asJson(v), aClass);
+        OrchestrationField field = RecastOrchestrationUtils.fromDocument((Document) v, aClass);
         map.put(k, field);
         Object finalValue = field.fetchFinalValue();
         if (finalValue instanceof Map) {

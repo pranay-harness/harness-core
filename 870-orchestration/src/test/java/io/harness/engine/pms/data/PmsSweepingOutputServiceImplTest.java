@@ -16,6 +16,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
@@ -43,14 +44,14 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    pmsSweepingOutputService.consume(
-        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build().toJson(), null);
+    pmsSweepingOutputService.consume(ambianceSection, outputName,
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    pmsSweepingOutputService.consume(
-        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build().toJson(), null);
+    pmsSweepingOutputService.consume(ambianceStep, outputName,
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
@@ -68,14 +69,14 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    pmsSweepingOutputService.consumeInternal(
-        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build().toJson(), 2);
+    pmsSweepingOutputService.consumeInternal(ambianceSection, outputName,
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), 2);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
-    pmsSweepingOutputService.consumeInternal(
-        ambianceStep, outputName, DummySweepingOutput.builder().test(testValueStep).build().toJson(), 0);
+    pmsSweepingOutputService.consumeInternal(ambianceStep, outputName,
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), 0);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
@@ -93,21 +94,25 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueSection = "testSection";
     String testValueStep = "testStep";
 
-    pmsSweepingOutputService.consume(
-        ambianceSection, outputName, DummySweepingOutput.builder().test(testValueSection).build().toJson(), "SECTION");
+    pmsSweepingOutputService.consume(ambianceSection, outputName,
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()),
+        "SECTION");
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consume(ambianceStep, outputName,
-        DummySweepingOutput.builder().test(testValueStep).build().toJson(), ResolverUtils.GLOBAL_GROUP_SCOPE);
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()),
+        ResolverUtils.GLOBAL_GROUP_SCOPE);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
 
-    assertThatThrownBy(()
-                           -> pmsSweepingOutputService.consume(ambianceSection, "randomOutputName",
-                               DummySweepingOutput.builder().test("randomTestValue").build().toJson(), "RANDOM"))
+    assertThatThrownBy(
+        ()
+            -> pmsSweepingOutputService.consume(ambianceSection, "randomOutputName",
+                RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("randomTestValue").build()),
+                "RANDOM"))
         .isInstanceOf(GroupNotFoundException.class);
   }
 

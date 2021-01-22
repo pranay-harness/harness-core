@@ -6,6 +6,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +23,9 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null ? "" : node.getStepParameters().toJson())
+            .setStepParameters(node.getStepParameters() == null
+                    ? ""
+                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
@@ -46,7 +49,9 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null ? "" : node.getStepParameters().toJson())
+            .setStepParameters(node.getStepParameters() == null
+                    ? ""
+                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))

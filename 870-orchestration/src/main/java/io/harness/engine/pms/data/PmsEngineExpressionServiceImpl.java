@@ -4,12 +4,11 @@ import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.pms.serializer.json.JsonSerializable;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.apache.commons.lang3.ClassUtils;
 
 public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
@@ -27,10 +26,10 @@ public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionServic
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(expression);
-    if (value instanceof JsonSerializable) {
-      return DocumentOrchestrationUtils.convertToDocumentJson((JsonSerializable) value);
+    if (ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
+      return String.valueOf(value);
     }
-    return JsonOrchestrationUtils.asJson(value);
+    return RecastOrchestrationUtils.toDocumentJson(value);
   }
 
   @Override

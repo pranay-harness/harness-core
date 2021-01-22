@@ -14,11 +14,19 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
+import java.io.IOException;
+import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -29,7 +37,7 @@ import org.junit.experimental.categories.Category;
 
 public class RecastTest extends PmsSdkCoreTestBase {
   private static final String RECAST_KEY = "__recast";
-  private static final String ENCODED_PROTO = "__encodedProto";
+  private static final String ENCODED_VALUE = "__encodedValue";
 
   @Test
   @Owner(developers = ALEXEI)
@@ -66,7 +74,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document expectedDocument = new Document()
                                     .append(RECAST_KEY, ExecutionErrorInfo.class.getName())
-                                    .append(ENCODED_PROTO, JsonFormat.printer().print(executionErrorInfo));
+                                    .append(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo));
 
     Document document = RecastOrchestrationUtils.toDocument(executionErrorInfo);
     assertThat(document).isNotNull();
@@ -98,7 +106,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document expectedDocument = new Document()
                                     .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                                    .append(ENCODED_PROTO, JsonFormat.printer().print(nodeExecutionProto));
+                                    .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
 
     Document document = RecastOrchestrationUtils.toDocument(nodeExecutionProto);
     assertThat(document).isNotNull();
@@ -130,9 +138,30 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document document = new Document()
                             .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                            .append(ENCODED_PROTO, JsonFormat.printer().print(nodeExecutionProto));
+                            .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
 
     NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromDocument(document, NodeExecutionProto.class);
     assertThat(recastedClass).isEqualTo(nodeExecutionProto);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldRecastWithYamlField() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("pipeline.yaml");
+    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+
+    ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
+    objectNode.set("stage", yamlField.getNode().getCurrJsonNode());
+
+    Document document = RecastOrchestrationUtils.toDocument(objectNode);
+    ObjectNode objectNode1 = RecastOrchestrationUtils.fromDocument(document, ObjectNode.class);
+    assertThat(objectNode1).isEqualTo(objectNode);
+
+    Document doc = RecastOrchestrationUtils.toDocument(yamlField);
+    YamlField yamlField1 = RecastOrchestrationUtils.fromDocument(doc, YamlField.class);
+    assertThat(yamlField1).isEqualTo(yamlField);
   }
 }

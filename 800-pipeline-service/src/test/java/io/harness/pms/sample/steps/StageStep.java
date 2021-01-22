@@ -9,7 +9,7 @@ import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ResponseData;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, MapStepParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Stage Step parameters: {}", stepParameters.toJson());
+    log.info("Stage Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
     List<String> childrenNodeIds = (List<String>) stepParameters.get("childrenNodeIds");
     List<Child> children = new ArrayList<>();
     if (childrenNodeIds != null) {
@@ -41,7 +41,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, MapStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    log.info("Stage response map: {}", JsonOrchestrationUtils.asJson(responseDataMap));
+    log.info("Stage response map: {}", RecastOrchestrationUtils.toDocumentJson(responseDataMap));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

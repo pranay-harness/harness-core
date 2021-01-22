@@ -7,7 +7,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
@@ -33,7 +33,7 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
             .filter(planNode -> planNode.getStepType().equals(BarrierStep.STEP_TYPE))
             .map(planNode -> {
               BarrierStepParameters stepParameters =
-                  JsonOrchestrationUtils.asObject(planNode.getStepParameters(), BarrierStepParameters.class);
+                  RecastOrchestrationUtils.fromDocumentJson(planNode.getStepParameters(), BarrierStepParameters.class);
               return BarrierExecutionInstance.builder()
                   .uuid(generateUuid())
                   .name(planNode.getName())

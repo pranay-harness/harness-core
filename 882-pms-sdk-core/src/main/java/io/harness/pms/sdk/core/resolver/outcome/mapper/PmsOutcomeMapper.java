@@ -3,7 +3,7 @@ package io.harness.pms.sdk.core.resolver.outcome.mapper;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,11 +14,12 @@ import org.bson.Document;
 @UtilityClass
 public class PmsOutcomeMapper {
   public String convertOutcomeValueToJson(Outcome outcome) {
-    return DocumentOrchestrationUtils.convertToDocumentJson(outcome);
+    Document document = RecastOrchestrationUtils.toDocument(outcome);
+    return document == null ? null : document.toJson();
   }
 
   public Outcome convertJsonToOutcome(String json) {
-    return json == null ? null : DocumentOrchestrationUtils.convertFromDocumentJson(json);
+    return json == null ? null : RecastOrchestrationUtils.fromDocumentJson(json, Outcome.class);
   }
 
   public List<Outcome> convertJsonToOutcome(List<String> outcomesAsJsonList) {
@@ -27,7 +28,7 @@ public class PmsOutcomeMapper {
     }
     List<Outcome> outcomes = new ArrayList<>();
     for (String jsonOutcome : outcomesAsJsonList) {
-      outcomes.add(DocumentOrchestrationUtils.convertFromDocumentJson(jsonOutcome));
+      outcomes.add(RecastOrchestrationUtils.fromDocumentJson(jsonOutcome, Outcome.class));
     }
     return outcomes;
   }
@@ -38,7 +39,7 @@ public class PmsOutcomeMapper {
     }
     List<Document> outcomes = new ArrayList<>();
     for (String jsonOutcome : outcomeAsJsonList) {
-      outcomes.add(DocumentOrchestrationUtils.convertToDocumentFromJson(jsonOutcome));
+      outcomes.add(RecastOrchestrationUtils.toDocumentFromJson(jsonOutcome));
     }
     return outcomes;
   }
@@ -49,7 +50,7 @@ public class PmsOutcomeMapper {
     }
     List<Outcome> outcomes = new ArrayList<>();
     for (Document document : outcomeDocuments) {
-      outcomes.add(DocumentOrchestrationUtils.convertFromDocument(document));
+      outcomes.add(RecastOrchestrationUtils.fromDocument(document, Outcome.class));
     }
     return outcomes;
   }
@@ -60,7 +61,7 @@ public class PmsOutcomeMapper {
     }
     List<Document> outcomeDocuments = new ArrayList<>();
     for (Outcome outcome : outcomes) {
-      outcomeDocuments.add(DocumentOrchestrationUtils.convertToDocument(outcome));
+      outcomeDocuments.add(RecastOrchestrationUtils.toDocument(outcome));
     }
     return outcomeDocuments;
   }

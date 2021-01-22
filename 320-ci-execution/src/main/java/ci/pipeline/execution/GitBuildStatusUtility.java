@@ -21,7 +21,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepOutcomeGroup;
@@ -57,8 +57,8 @@ public class GitBuildStatusUtility {
   }
 
   public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
-    IntegrationStageStepParametersPMS integrationStageStepParameters = JsonOrchestrationUtils.asObject(
-        nodeExecution.getResolvedStepParameters().toJson(), IntegrationStageStepParametersPMS.class);
+    IntegrationStageStepParametersPMS integrationStageStepParameters = RecastOrchestrationUtils.fromDocument(
+        nodeExecution.getResolvedStepParameters(), IntegrationStageStepParametersPMS.class);
 
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();

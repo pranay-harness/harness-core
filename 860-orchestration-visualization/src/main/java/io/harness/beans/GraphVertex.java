@@ -44,7 +44,7 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private Map<String, Object> stepParameters;
+  private Document stepParameters;
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;

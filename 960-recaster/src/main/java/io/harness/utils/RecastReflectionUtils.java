@@ -1,5 +1,7 @@
 package io.harness.utils;
 
+import io.harness.core.Recaster;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -18,7 +20,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
+@Slf4j
 public class RecastReflectionUtils {
   public static Field[] getDeclaredAndInheritedFields(final Class<?> type, final boolean returnFinalFields) {
     final List<Field> allFields = new ArrayList<>(getValidFields(type.getDeclaredFields(), returnFinalFields));
@@ -102,6 +107,22 @@ public class RecastReflectionUtils {
     } else {
       return null;
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> getClass(final Document document) {
+    // see if there is a className value
+    Class<?> c = null;
+    if (document.containsKey(Recaster.RECAST_CLASS_KEY)) {
+      final String className = document.getString(Recaster.RECAST_CLASS_KEY);
+      // TODO : add caching here
+      try {
+        c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+      } catch (ClassNotFoundException e) {
+        log.warn("Class not found defined in dbObj: ", e);
+      }
+    }
+    return (Class<T>) c;
   }
 
   public static Type getParameterizedType(final Field field, final int index) {

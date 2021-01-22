@@ -73,7 +73,6 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
@@ -102,7 +101,6 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -194,11 +192,9 @@ public class OrchestrationEngine {
 
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
-      Object obj = stepParameters == null
+      Object resolvedStepParameters = stepParameters == null
           ? null
           : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
-      String json = JsonOrchestrationUtils.asJson(obj);
-      Document resolvedStepParameters = obj == null ? null : Document.parse(json);
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),

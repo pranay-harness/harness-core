@@ -52,11 +52,11 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.variables.NGVariable;
-import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -310,8 +310,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     }
   }
 
-  private void handleManifestOutcome(ManifestsOutcome outcome, ServiceOutcomeBuilder outcomeBuilder)
-      throws IOException {
+  private void handleManifestOutcome(ManifestsOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
     List<ManifestOutcome> manifestOutcomeList =
         isNotEmpty(outcome.getManifestOutcomeList()) ? outcome.getManifestOutcomeList() : Collections.emptyList();
 
@@ -322,11 +321,11 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     for (ManifestOutcome manifestOutcome : manifestOriginalList) {
       addValuesToMap(
-          manifestsMap, manifestOutcome.getIdentifier(), JsonPipelineUtils.read(manifestOutcome.toJson(), Map.class));
+          manifestsMap, manifestOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(manifestOutcome));
     }
     for (ManifestOutcome manifestOutcome : manifestOutcomeList) {
       Map<String, Object> valueMap = new HashMap<>();
-      valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(manifestOutcome.toJson(), Map.class));
+      valueMap.put(YamlTypes.OUTPUT, RecastOrchestrationUtils.toDocument(manifestOutcome));
       addValuesToMap(manifestsMap, manifestOutcome.getIdentifier(), valueMap);
     }
     outcomeBuilder.manifests(manifestsMap);
@@ -343,8 +342,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     }
   }
 
-  private void handleArtifactOutcome(ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes,
-      ServiceConfig serviceConfig) throws IOException {
+  private void handleArtifactOutcome(
+      ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes, ServiceConfig serviceConfig) {
     ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
     Map<String, Map<String, Object>> artifactsMap = new HashMap<>();
     for (ArtifactOutcome artifactOutcome : artifactOutcomes) {
@@ -352,13 +351,13 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         artifactsBuilder.primary(artifactOutcome);
 
         Map<String, Object> valueMap = new HashMap<>();
-        valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
+        valueMap.put(YamlTypes.OUTPUT, RecastOrchestrationUtils.toDocument(artifactOutcome));
         addValuesToMap(artifactsMap, YamlTypes.PRIMARY_ARTIFACT, valueMap);
       } else {
         artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);
 
         Map<String, Object> valueMap = new HashMap<>();
-        valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
+        valueMap.put(YamlTypes.OUTPUT, RecastOrchestrationUtils.toDocument(artifactOutcome));
         addValuesToMap(
             artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
       }
@@ -373,10 +372,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
             ArtifactResponseToOutcomeMapper.toArtifactOutcome(artifactConfig, null, false);
         if (artifactOutcome.isPrimaryArtifact()) {
           addValuesToMap(
-              artifactsMap, YamlTypes.PRIMARY_ARTIFACT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
+              artifactsMap, YamlTypes.PRIMARY_ARTIFACT, RecastOrchestrationUtils.toDocument(artifactOutcome));
         } else {
           addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG,
-              Maps.of(artifactOutcome.getIdentifier(), JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class)));
+              Maps.of(artifactOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(artifactOutcome)));
         }
       }
     }
