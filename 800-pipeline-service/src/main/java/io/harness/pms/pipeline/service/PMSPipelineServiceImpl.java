@@ -2,6 +2,7 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -222,9 +223,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria =
-          new Criteria().orOperator(where(PipelineEntityKeys.identifier)
-                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      Criteria searchCriteria = new Criteria().orOperator(
+          where(PipelineEntityKeys.identifier)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
 

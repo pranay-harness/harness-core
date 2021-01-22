@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 public class FilterCreationBlobResponseUtils {
   public void mergeResponses(
       FilterCreationBlobResponse.Builder builder, FilterCreationResponseWrapper response, Map<String, String> filters) {
-    if (response == null) {
+    if (response == null || response.getResponse() == null) {
       return;
     }
     mergeResolvedDependencies(builder, response.getResponse());

@@ -102,6 +102,9 @@ public class VariableCreatorService {
   }
 
   private Optional<VariableCreator> findVariableCreator(List<VariableCreator> variableCreators, YamlField yamlField) {
+    if (EmptyPredicate.isEmpty(variableCreators)) {
+      return Optional.empty();
+    }
     return variableCreators.stream()
         .filter(variableCreator -> {
           Map<String, Set<String>> supportedTypes = variableCreator.getSupportedTypes();

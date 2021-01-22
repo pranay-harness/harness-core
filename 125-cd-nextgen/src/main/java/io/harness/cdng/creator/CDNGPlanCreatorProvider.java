@@ -15,7 +15,6 @@ import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
-import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
@@ -55,7 +54,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   @Override
   public List<VariableCreator> getVariableCreators() {
     List<VariableCreator> variableCreators = new ArrayList<>();
-    variableCreators.add(new PipelineVariableCreator());
     variableCreators.add(new DeploymentStageVariableCreator());
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
