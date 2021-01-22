@@ -24,6 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.mapper.TagMapper;
 
 import com.google.inject.Inject;
@@ -215,7 +216,10 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       Criteria searchCriteria = new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.tags).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(ConnectorKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(ConnectorKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       return searchCriteria;
     }
