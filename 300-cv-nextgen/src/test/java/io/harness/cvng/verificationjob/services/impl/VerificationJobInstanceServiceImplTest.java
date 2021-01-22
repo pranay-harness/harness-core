@@ -45,7 +45,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
@@ -284,12 +284,13 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
 
     // validate that state machine is created since this is health
     Set<String> verTaskIds = verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
-    AnalysisStateMachine stateMachine = hPersistence.createQuery(AnalysisStateMachine.class)
+    AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
                                             .field(AnalysisStateMachineKeys.verificationTaskId)
                                             .in(verTaskIds)
                                             .get();
-    assertThat(stateMachine).isNotNull();
-    assertThat(stateMachine.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
+    assertThat(orchestrator).isNotNull();
+    assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
+    assertThat(orchestrator.getAnalysisStateMachineQueue().size()).isEqualTo(1);
   }
 
   @Test
