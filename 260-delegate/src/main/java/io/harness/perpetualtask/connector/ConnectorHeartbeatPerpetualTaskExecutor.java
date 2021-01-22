@@ -72,7 +72,7 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
               connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier()),
           ex);
     }
-    log.info("Completed validation task for the connector {}", connectorMessage);
+    log.info("Completed validation task for {}", connectorMessage);
     return getPerpetualTaskResponse(connectorValidationResult);
   }
 

@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.scm.github;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 
@@ -17,6 +18,6 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubSshCredentialsSpec")
-public class GithubSshCredentialsSpecDTO {
+public class GithubSshCredentialsSpecDTO implements DecryptableEntity {
   @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData sshKeyRef;
 }

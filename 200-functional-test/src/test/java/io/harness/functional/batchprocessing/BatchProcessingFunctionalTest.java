@@ -20,7 +20,7 @@ public class BatchProcessingFunctionalTest extends CategoryTest {
   private static final BatchProcessingExecutor batchProcessingExecutor = new BatchProcessingExecutor();
 
   @Test
-  @Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldEnsureBatchProcessingStartsUp() throws Exception {
     assertThatCode(() -> batchProcessingExecutor.ensureBatchProcessing(getClass(), ALPN, ALPN_JAR))

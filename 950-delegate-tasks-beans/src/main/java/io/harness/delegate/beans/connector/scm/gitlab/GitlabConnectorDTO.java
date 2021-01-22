@@ -2,12 +2,16 @@ package io.harness.delegate.beans.connector.scm.gitlab;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -23,7 +27,8 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabConnector")
-public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
+public class GitlabConnectorDTO
+    extends ConnectorConfigDTO implements ScmConnector, ExecutionCapabilityDemanderWithScope {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
   @NotNull String url;
   @Valid @NotNull GitlabAuthenticationDTO authentication;
@@ -40,6 +45,16 @@ public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnect
 
   @Override
   public DecryptableEntity getDecryptableEntity() {
+    if (authentication.getAuthType() == GitAuthType.HTTP) {
+      return ((GitlabHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
+    } else {
+      return ((GitlabSshCredentialsDTO) authentication.getCredentials()).getSpec();
+    }
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return null;
   }
 }
