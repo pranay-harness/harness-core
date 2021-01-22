@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -147,6 +148,18 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     log.info("Enabled feature name :[{}] globally", featureName.name());
   }
 
+  @Override
+  public List<FeatureFlag> getGloballyEnabledFeatureFlags() {
+    List<FeatureFlag> globallyEnabledFeatureFlag = new ArrayList<>();
+
+    getAllFeatureFlags().forEach(featureFlag -> {
+      if (featureFlag.isEnabled()) {
+        globallyEnabledFeatureFlag.add(featureFlag);
+      }
+    });
+
+    return globallyEnabledFeatureFlag;
+  }
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {

@@ -20,6 +20,8 @@ public interface FeatureFlagService {
 
   List<FeatureFlag> getAllFeatureFlags();
 
+  List<FeatureFlag> getGloballyEnabledFeatureFlags();
+
   boolean isEnabledReloadCache(FeatureName featureName, String accountId);
 
   void enableAccount(FeatureName featureName, String accountId);
