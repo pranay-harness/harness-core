@@ -47,8 +47,8 @@ public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAt
   }
 
   @Id private String uuid;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   @FdIndex private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;

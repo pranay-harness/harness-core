@@ -116,6 +116,7 @@ public class HeatMapServiceImpl implements HeatMapService {
           .update(heatMapQuery,
               hPersistence.createUpdateOperations(HeatMap.class)
                   .setOnInsert(HeatMapKeys.accountId, accountId)
+                  .setOnInsert(HeatMapKeys.validUntil, HeatMap.builder().build().getValidUntil())
                   .addToSet(HeatMapKeys.heatMapRisks,
                       HeatMapRisk.builder()
                           .riskScore(riskScore)

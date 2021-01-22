@@ -91,6 +91,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                   .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
                   .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
                   .setOnInsert(TimeSeriesRecordKeys.metricType, metricType)
+                  .setOnInsert(TimeSeriesRecordKeys.validUntil, TimeSeriesRecord.builder().build().getValidUntil())
                   .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
                   .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
                       Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),

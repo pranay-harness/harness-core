@@ -51,8 +51,8 @@ public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedA
   }
 
   @Id private String uuid;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;

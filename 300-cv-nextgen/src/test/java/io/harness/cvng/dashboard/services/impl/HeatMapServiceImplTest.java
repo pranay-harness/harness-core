@@ -40,11 +40,13 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -124,6 +126,28 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    Instant instant = Instant.now();
+    heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet(HeatMapKeys.serviceIdentifier, HeatMapKeys.envIdentifier);
+    heatMaps.forEach(heatMap -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(HeatMap.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(heatMap)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test

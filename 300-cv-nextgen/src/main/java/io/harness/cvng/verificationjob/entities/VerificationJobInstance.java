@@ -77,8 +77,8 @@ public class VerificationJobInstance
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.identifier);
   @Id private String uuid;
   @NotNull @FdIndex private String accountId;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   private ExecutionStatus executionStatus;
 
   private String verificationJobIdentifier;

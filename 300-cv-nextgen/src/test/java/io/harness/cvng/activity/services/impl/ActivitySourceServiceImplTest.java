@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
@@ -37,15 +38,18 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -342,6 +346,56 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                 .collect(Collectors.toList());
         eventTypeList.forEach(
             kubernetesActivity -> assertThat(kubernetesActivity.getActivities().size()).isEqualTo(numOfEvents));
+      });
+    });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    createCVConfig();
+
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
+        KubernetesActivitySourceDTO.builder()
+            .identifier(generateUuid())
+            .name(generateUuid())
+            .connectorIdentifier(generateUuid())
+            .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                       .serviceIdentifier(generateUuid())
+                                                       .envIdentifier(generateUuid())
+                                                       .namespace(generateUuid())
+                                                       .workloadName(generateUuid())
+                                                       .build()))
+            .build();
+    String kubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    kubernetesActivitySourceService.saveKubernetesActivities(accountId, kubernetesSourceId,
+        Lists.newArrayList(KubernetesActivityDTO.builder()
+                               .message(generateUuid())
+                               .activitySourceConfigId(kubernetesSourceId)
+                               .eventDetails(generateUuid())
+                               .eventType(KubernetesEventType.Normal)
+                               .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
+                               .activityStartTime(Instant.now().toEpochMilli())
+                               .activityEndTime(Instant.now().toEpochMilli())
+                               .serviceIdentifier(serviceIdentifier)
+                               .environmentIdentifier(envIdentifier)
+                               .build()));
+    List<KubernetesActivity> kubernetesActivities =
+        hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet(ActivityKeys.activityName, ActivityKeys.verificationJobRuntimeDetails,
+        ActivityKeys.activityEndTime, ActivityKeys.tags, ActivityKeys.verificationSummary,
+        ActivityKeys.verificationIteration);
+    kubernetesActivities.forEach(activity -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(KubernetesActivity.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(activity)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
       });
     });
   }

@@ -5,15 +5,20 @@ import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -64,8 +69,14 @@ public class HealthVerificationHeatMap implements UuidAware, PersistentEntity, C
   private double riskScore;
   private AggregationLevel aggregationLevel;
 
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
+
+  @JsonIgnore
+  @SchemaIgnore
+  @Builder.Default
+  @FdTtlIndex
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public enum AggregationLevel {
     VERIFICATION_TASK,

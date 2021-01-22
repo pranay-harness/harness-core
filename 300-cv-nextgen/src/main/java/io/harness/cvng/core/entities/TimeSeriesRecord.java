@@ -58,7 +58,7 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
   private Instant bucketStartTime;
   private TimeSeriesMetricType metricType;
 
-  private long createdAt;
+  @FdIndex private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
 
   @JsonIgnore

@@ -13,6 +13,7 @@ import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -66,8 +67,8 @@ public abstract class VerificationJob
   @Id private String uuid;
   @NotNull private String identifier;
   @NotNull private String jobName;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   private String projectIdentifier;
   private String orgIdentifier;
   private String activitySourceIdentifier;

@@ -1,7 +1,9 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -27,9 +29,12 @@ import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationL
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -108,6 +113,29 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     HealthVerificationHeatMap activityLevelMap = heatMaps.get(1);
     validateHeatMaps(activityLevelMap, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY,
         HealthVerificationHeatMap.AggregationLevel.ACTIVITY, CVMonitoringCategory.PERFORMANCE);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+
+    List<HealthVerificationHeatMap> heatMaps =
+        hPersistence.createQuery(HealthVerificationHeatMap.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet();
+    heatMaps.forEach(heatMap -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(HealthVerificationHeatMap.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(heatMap)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test

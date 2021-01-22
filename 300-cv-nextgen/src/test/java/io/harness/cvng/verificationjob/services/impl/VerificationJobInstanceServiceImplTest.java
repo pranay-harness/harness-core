@@ -62,16 +62,19 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -982,6 +985,62 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
       assertThat(resolvedJob.getEnvIdentifier()).isEqualTo("e1");
       assertThat(resolvedJob.getServiceIdentifier()).isEqualTo("s1");
     }
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    Instant now = Instant.now();
+    int numOfJobInstances = 10;
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    for (int i = 0; i < numOfJobInstances; i++) {
+      verificationJobInstances.add(
+          VerificationJobInstance.builder()
+              .uuid("id-" + i)
+              .accountId(accountId)
+              .startTime(now.plusSeconds(i))
+              .executionStatus(ExecutionStatus.QUEUED)
+              .verificationJobIdentifier("job-" + i)
+              .preActivityVerificationStartTime(now.minusSeconds(i * 60))
+              .postActivityVerificationStartTime(now.plusSeconds(i * 60))
+              .resolvedJob(
+                  TestVerificationJob.builder()
+                      .accountId(accountId)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .identifier("job-" + i)
+                      .envIdentifier(RuntimeParameter.builder().isRuntimeParam(false).value("e1").build())
+                      .serviceIdentifier(RuntimeParameter.builder().isRuntimeParam(false).value("s1").build())
+                      .duration(RuntimeParameter.builder().isRuntimeParam(false).value("10m").build())
+                      .sensitivity(
+                          RuntimeParameter.builder().isRuntimeParam(false).value(Sensitivity.LOW.name()).build())
+                      .build())
+              .build());
+    }
+    verificationJobInstanceService.create(verificationJobInstances);
+    verificationJobInstances = hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet(VerificationJobInstanceKeys.deploymentStartTime,
+        VerificationJobInstanceKeys.dataCollectionTaskIteration,
+        VerificationJobInstanceKeys.analysisOrchestrationIteration,
+        VerificationJobInstanceKeys.deletePerpetualTaskIteration, VerificationJobInstanceKeys.timeoutTaskIteration,
+        VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.perpetualTaskIds,
+        VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, VerificationJobInstanceKeys.oldVersionHosts,
+        VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
+        VerificationJobInstanceKeys.progressLogs);
+    verificationJobInstances.forEach(verificationJobInstance -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(verificationJobInstance))
+              .withFailMessage("field %s is null", field.getName())
+              .isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test

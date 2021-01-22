@@ -41,7 +41,7 @@ public class VerificationTask implements UuidAware, CreatedAtAware, AccountAcces
 
   @Id private String uuid;
   private String accountId;
-  private long createdAt;
+  @FdIndex private long createdAt;
   @FdIndex private String cvConfigId;
   private String verificationJobInstanceId;
   @FdTtlIndex private Date validUntil;

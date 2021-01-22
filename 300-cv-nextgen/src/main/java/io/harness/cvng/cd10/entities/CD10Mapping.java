@@ -5,6 +5,7 @@ import io.harness.cvng.cd10.beans.MappingType;
 import io.harness.cvng.cd10.entities.CD10EnvMapping.CD10EnvMappingKeys;
 import io.harness.cvng.cd10.entities.CD10ServiceMapping.CD10ServiceMappingKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -50,8 +51,8 @@ public abstract class CD10Mapping
         .build();
   }
   @Id private String uuid;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   private String accountId;
   private String appId;
   private String orgIdentifier;

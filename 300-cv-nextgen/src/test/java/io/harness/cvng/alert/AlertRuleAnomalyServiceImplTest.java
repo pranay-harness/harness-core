@@ -3,6 +3,8 @@ package io.harness.cvng.alert;
 import static io.harness.cvng.alert.entities.AlertRuleAnomaly.AlertRuleAnomalyStatus.CLOSED;
 import static io.harness.cvng.alert.entities.AlertRuleAnomaly.AlertRuleAnomalyStatus.OPEN;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,14 +15,18 @@ import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,6 +84,34 @@ public class AlertRuleAnomalyServiceImplTest extends CvNextGenTest {
     assertThat(retrievedRuleAnomaly.getEnvIdentifier()).isEqualTo(ruleAnomaly.getEnvIdentifier());
     assertThat(retrievedRuleAnomaly.getAlertRuleAnomalyStatus()).isEqualTo(OPEN);
     assertThat(retrievedRuleAnomaly.getAnomalyStartTime()).isEqualTo(ruleAnomaly.getAnomalyStartTime());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    String uuid = generateUuid();
+
+    AlertRuleAnomaly alertRuleAnomalyData =
+        createOpenAlertRuleAnomaly(uuid, accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+
+    hPersistence.save(alertRuleAnomalyData);
+
+    alertRuleAnomalyService.openAnomaly(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE);
+    List<AlertRuleAnomaly> anomalies = hPersistence.createQuery(AlertRuleAnomaly.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet();
+    anomalies.forEach(alertRuleAnomaly -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(AlertRuleAnomaly.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(alertRuleAnomaly)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test
