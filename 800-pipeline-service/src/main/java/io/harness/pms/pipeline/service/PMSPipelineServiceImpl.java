@@ -240,7 +240,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   private void populateFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, @NotNull String filterIdentifier) {
     FilterDTO pipelineFilterDTO = this.filterService.get(
-        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.PIPELINE_SETUP);
+        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.PIPELINESETUP);
     if (pipelineFilterDTO == null) {
       throw new InvalidRequestException("Could not find a pipeline filter with the identifier ");
     } else {

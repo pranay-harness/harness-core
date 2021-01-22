@@ -150,8 +150,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
-    filterPropertiesMapper.addBinding(FilterType.PIPELINE_SETUP.toString()).to(PipelineFilterPropertiesMapper.class);
-    filterPropertiesMapper.addBinding(FilterType.PIPELINE_EXECUTION.toString())
+    filterPropertiesMapper.addBinding(FilterType.PIPELINESETUP.toString()).to(PipelineFilterPropertiesMapper.class);
+    filterPropertiesMapper.addBinding(FilterType.PIPELINEEXECUTION.toString())
         .to(PipelineExecutionFilterPropertiesMapper.class);
   }
 

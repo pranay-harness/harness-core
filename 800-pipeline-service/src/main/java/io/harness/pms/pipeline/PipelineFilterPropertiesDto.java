@@ -34,6 +34,6 @@ public class PipelineFilterPropertiesDto extends FilterPropertiesDTO {
 
   @Override
   public FilterType getFilterType() {
-    return FilterType.PIPELINE_SETUP;
+    return FilterType.PIPELINESETUP;
   }
 }
