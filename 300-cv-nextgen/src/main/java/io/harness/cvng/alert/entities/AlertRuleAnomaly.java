@@ -3,14 +3,19 @@ package io.harness.cvng.alert.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -40,6 +45,12 @@ public class AlertRuleAnomaly implements PersistentEntity, UuidAware, CreatedAtA
   private Instant lastNotificationSentAt;
 
   private AlertRuleAnomalyStatus alertRuleAnomalyStatus;
+
+  @JsonIgnore
+  @SchemaIgnore
+  @FdTtlIndex
+  @Builder.Default
+  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
 
   public enum AlertRuleAnomalyStatus {
     CLOSED("Closed"),

@@ -44,6 +44,7 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -54,6 +55,7 @@ import com.google.inject.Inject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
@@ -66,6 +68,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -174,6 +177,53 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
       }
     });
     validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    int numOfMetrics = 4;
+    int numOfTxnx = 5;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
+    List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
+    for (int i = 0; i < numOfMins; i++) {
+      TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
+                                                            .accountId(accountId)
+                                                            .verificationTaskId(verificationTaskId)
+                                                            .host("host-" + i)
+                                                            .timeStamp(TimeUnit.MINUTES.toMillis(i))
+                                                            .metricValues(new HashSet<>())
+                                                            .build();
+      for (int j = 0; j < numOfMetrics; j++) {
+        TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
+                                                          .metricName("metric-" + j)
+                                                          .timeSeriesValues(new HashSet<>())
+                                                          .build();
+        for (int k = 0; k < numOfTxnx; k++) {
+          metricValue.getTimeSeriesValues().add(
+              TimeSeriesDataRecordGroupValue.builder().value(random.nextDouble()).groupName("group-" + k).build());
+        }
+        collectionRecord.getMetricValues().add(metricValue);
+      }
+      collectionRecords.add(collectionRecord);
+    }
+    timeSeriesRecordService.save(collectionRecords);
+    List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                                                   .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
+                                                   .asList();
+    Set<String> nullableFields = Sets.newHashSet(TimeSeriesRecordKeys.cvConfigId);
+    timeSeriesRecords.forEach(timeSeriesRecord -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(TimeSeriesRecord.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(timeSeriesRecord)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test

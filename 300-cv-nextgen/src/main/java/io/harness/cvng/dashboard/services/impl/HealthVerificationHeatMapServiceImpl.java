@@ -190,6 +190,8 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
             .setOnInsert(HealthVerificationHeatMapKeys.aggregationLevel, aggregationLevel)
             .setOnInsert(
                 HealthVerificationHeatMapKeys.startTime, activity.getActivityStartTime().minus(30, ChronoUnit.MINUTES))
+            .setOnInsert(
+                HealthVerificationHeatMapKeys.validUntil, HealthVerificationHeatMap.builder().build().getValidUntil())
             .set(HealthVerificationHeatMapKeys.endTime, endTime)
             .set(HealthVerificationHeatMapKeys.riskScore, overallRisk);
 

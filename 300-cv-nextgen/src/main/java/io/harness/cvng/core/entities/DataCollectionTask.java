@@ -62,7 +62,7 @@ public abstract class DataCollectionTask
   private String nextTaskId;
   @FdIndex @NonNull private DataCollectionExecutionStatus status;
 
-  private long createdAt;
+  @FdIndex private long createdAt;
   @FdIndex private long lastUpdatedAt;
 
   private int retryCount;

@@ -93,7 +93,7 @@ public abstract class Activity
   private Instant activityEndTime;
   @FdIndex private List<String> verificationJobInstanceIds;
   private List<String> tags;
-  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   private ActivityVerificationSummary verificationSummary;
 

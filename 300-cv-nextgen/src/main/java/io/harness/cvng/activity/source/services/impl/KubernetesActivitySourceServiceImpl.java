@@ -79,6 +79,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
               .setOnInsert(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
               .setOnInsert(ActivityKeys.activityStartTime, bucketStartTime)
               .setOnInsert(ActivityKeys.type, ActivityType.KUBERNETES)
+              .setOnInsert(ActivityKeys.validUntil, KubernetesActivity.builder().build().getValidUntil())
               .setOnInsert(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
               .setOnInsert(ActivityKeys.analysisStatus, ActivityVerificationStatus.NOT_STARTED)
               .setOnInsert(KubernetesActivityKeys.eventType, activity.getEventType())

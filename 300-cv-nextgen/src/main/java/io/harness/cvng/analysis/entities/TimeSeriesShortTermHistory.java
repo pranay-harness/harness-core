@@ -35,8 +35,8 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   @NotEmpty @FdIndex private String verificationTaskId;
   List<TransactionMetricHistory> transactionMetricHistories;
 
