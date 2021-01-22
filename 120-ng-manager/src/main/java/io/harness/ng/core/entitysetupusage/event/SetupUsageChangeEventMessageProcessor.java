@@ -53,9 +53,8 @@ public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
 
   private void processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO) {
     entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(), deleteRequestDTO.getReferredEntityFQN(),
-        EntityType.getEntityFromYamlType(deleteRequestDTO.getReferredEntityType().name()),
-        deleteRequestDTO.getReferredByEntityFQN(),
-        EntityType.getEntityFromYamlType(deleteRequestDTO.getReferredByEntityType().name()));
+        EntityType.valueOf(deleteRequestDTO.getReferredEntityType().name()), deleteRequestDTO.getReferredByEntityFQN(),
+        EntityType.valueOf(deleteRequestDTO.getReferredByEntityType().name()));
   }
 
   private void processCreateAction(EntitySetupUsageCreateDTO setupUsageCreateDTO) {
