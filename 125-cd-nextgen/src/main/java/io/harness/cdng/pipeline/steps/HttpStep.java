@@ -3,6 +3,7 @@ package io.harness.cdng.pipeline.steps;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.expressions.HttpExpressionEvaluator;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
@@ -12,6 +13,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
@@ -28,6 +30,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
@@ -98,6 +101,8 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       List<NGVariable> outputVariables = stepParameters.getOutputVariables();
       Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
+      boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
+
       HttpOutcome executionData = HttpOutcome.builder()
                                       .httpUrl(stepParameters.getUrl().getValue())
                                       .httpMethod(stepParameters.getMethod().getValue())
@@ -109,8 +114,11 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
                                       .build();
 
       // Just Place holder for now till we have assertions
-      if (httpStepResponse.getHttpResponseCode() == 500) {
+      if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
         responseBuilder.status(Status.FAILED);
+        if (!assertionSuccessful) {
+          responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
+        }
       } else {
         responseBuilder.status(Status.SUCCEEDED);
       }
@@ -118,6 +126,26 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
           StepOutcome.builder().name(OutcomeExpressionConstants.OUTPUT).outcome(executionData).build());
     }
     return responseBuilder.build();
+  }
+
+  public static boolean validateAssertions(HttpStepResponse httpStepResponse, HttpStepParameters stepParameters) {
+    if (ParameterField.isNull(stepParameters.getAssertion())) {
+      return true;
+    }
+    HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse.getHttpResponseCode());
+    String assertion = stepParameters.getAssertion().getValue();
+    if (assertion == null) {
+      return true;
+    }
+    try {
+      Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
+                                        .build();
+      return (boolean) evaluator.evaluateExpression(assertion, context);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      throw new InvalidRequestException("Assertion provided is not a valid expression.");
+    }
   }
 
   public static Map<String, String> evaluateOutputVariables(
@@ -133,7 +161,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
         if (expression != null) {
           Object evaluatedValue = expressionEvaluator.evaluateExpression(expression, context);
           if (evaluatedValue != null) {
-            outputVariablesEvaluated.put(outputVariable.getName(), (String) evaluatedValue);
+            outputVariablesEvaluated.put(outputVariable.getName(), evaluatedValue.toString());
           }
         }
       });
