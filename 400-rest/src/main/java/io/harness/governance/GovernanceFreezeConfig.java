@@ -26,9 +26,6 @@ public abstract class GovernanceFreezeConfig {
   private boolean applicable; // Corresponds to the on/off button for each window
   private List<ApplicationFilter> appSelections;
   private List<String> userGroups; // User groups to be notified
-  private long nextIteration; // Field used by the blackout window activation iterator to send activation notification
-  private long
-      nextCloseIteration; // Field used by the blackout window deactivation iterator to send deactivation notification
 
   @JsonCreator
   public GovernanceFreezeConfig(@JsonProperty("freezeForAllApps") boolean freezeForAllApps,

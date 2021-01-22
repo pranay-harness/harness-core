@@ -2,6 +2,7 @@ package software.wings.resources.governance;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 
+import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.governance.GovernanceConfig;
@@ -78,5 +79,14 @@ public class GovernanceConfigResource {
       @PathParam("accountId") String accountId, GovernanceConfig governanceConfig) {
     governanceConfig.setAccountId(accountId);
     return new RestResponse<>(governanceConfigService.upsert(accountId, governanceConfig));
+  }
+
+  @GET
+  @Path("deploymentfreeze/info/{accountId}")
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DeploymentFreezeInfo> getDeploymentFreezeInfo(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(governanceConfigService.getDeploymentFreezeInfo(accountId));
   }
 }
