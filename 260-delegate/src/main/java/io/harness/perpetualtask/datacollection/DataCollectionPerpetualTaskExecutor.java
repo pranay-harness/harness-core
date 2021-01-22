@@ -121,8 +121,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         case TIME_SERIES:
           List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
-              new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
+              new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
+                  delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime()));
           timeSeriesDataStoreService.saveTimeSeriesDataRecords(
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
 
@@ -130,8 +130,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
-              new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
+              new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
+                  delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime()));
           logRecordDataStoreService.save(
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), logDataRecords);
           if (dataCollectionInfo.isCollectHostData()) {
@@ -139,7 +139,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
             Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(
                 logDataCollectionInfo.getHostCollectionDSL(), runtimeParameters,
                 new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
-                    delegateLogService)));
+                    delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime())));
             hostRecordDataStoreService.save(dataCollectionTask.getAccountId(),
                 dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime(),
                 dataCollectionTask.getEndTime(), hosts);

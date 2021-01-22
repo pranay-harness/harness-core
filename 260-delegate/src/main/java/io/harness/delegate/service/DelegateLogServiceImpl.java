@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.right;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -30,6 +31,7 @@ import io.harness.managerclient.VerificationServiceClient;
 import io.harness.observer.Subject;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.KryoSerializer;
+import io.harness.verificationclient.CVNextGenServiceClient;
 
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateLogService;
@@ -89,6 +91,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   private Cache<String, List<Log>> cache;
   private Cache<String, List<ThirdPartyApiCallLog>> apiCallLogCache;
+  private Cache<String, List<CVNGLogDTO>> cvngLogCache;
   private Cache<String, List<CVActivityLog>> cvActivityLogCache;
   private DelegateAgentManagerClient delegateAgentManagerClient;
   private final Subject<LogSanitizer> logSanitizerSubject = new Subject<>();
@@ -100,6 +103,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       return size() > MAX_ACTIVITIES;
     }
   };
+  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
 
   @Inject
   public DelegateLogServiceImpl(DelegateAgentManagerClient delegateAgentManagerClient,
@@ -122,6 +126,12 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                   .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
                                   .removalListener(this::dispatchCVActivityLogs)
                                   .build();
+    this.cvngLogCache = Caffeine.newBuilder()
+                            .executor(executorService)
+                            .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
+                            .removalListener(this::dispatchCVNGLogs)
+                            .build();
+
     this.kryoSerializer = kryoSerializer;
 
     Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("delegate-log-service").build())
@@ -189,11 +199,18 @@ public class DelegateLogServiceImpl implements DelegateLogService {
     Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>()))
         .ifPresent(logs -> logs.add(thirdPartyApiCallLog));
   }
+
+  @Override
+  public synchronized void save(String accountId, CVNGLogDTO cvngLogDTO) {
+    Optional.ofNullable(cvngLogCache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(cvngLogDTO));
+  }
+
   @Override
   public synchronized void save(String accountId, CVActivityLog cvActivityLog) {
     Optional.ofNullable(cvActivityLogCache.get(accountId, s -> new ArrayList<>()))
         .ifPresent(cvActivityLogs -> cvActivityLogs.add(cvActivityLog));
   }
+
   @Override
   public void registerLogSanitizer(LogSanitizer sanitizer) {
     logSanitizerSubject.register(sanitizer);
@@ -306,6 +323,29 @@ public class DelegateLogServiceImpl implements DelegateLogService {
             log.error("Finished printing lost logs");
           }
         });
+  }
+
+  private void dispatchCVNGLogs(String accountId, List<CVNGLogDTO> logs, RemovalCause removalCause) {
+    if (accountId == null || logs.isEmpty()) {
+      log.error(LOGS_COMMON_MESSAGE_ERROR, accountId, logs, removalCause);
+      return;
+    }
+    logs.stream().collect(groupingBy(CVNGLogDTO::getTraceableId, toList())).forEach((activityId, logsList) -> {
+      if (isEmpty(logsList)) {
+        return;
+      }
+      String traceableId = logsList.get(0).getTraceableId();
+      try {
+        log.info("Dispatching {} api call logs to  CVNG for [{}] [{}]", logsList.size(), traceableId, accountId);
+
+        RestResponse<Void> restResponse = execute(cvNextGenServiceClient.saveCVNGLogRecords(accountId, logsList));
+        log.info("Dispatched {} api call logs to CVNG for [{}] [{}]", logsList.size(), traceableId, accountId);
+      } catch (IOException e) {
+        log.error("Dispatch log failed for {}. printing lost logs[{}]", traceableId, logsList.size(), e);
+        logsList.forEach(logObject -> log.error(logObject.toString()));
+        log.error("Finished printing lost logs");
+      }
+    });
   }
 
   private void dispatchCVActivityLogs(String accountId, List<CVActivityLog> logs, RemovalCause removalCause) {

@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 
 import software.wings.beans.Log;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -16,4 +17,5 @@ public interface DelegateLogService {
   void save(String accountId, CVActivityLog cvActivityLog);
   void registerLogSanitizer(LogSanitizer sanitizer);
   void unregisterLogSanitizer(LogSanitizer sanitizer);
+  void save(String accountId, CVNGLogDTO cvngLogDTO);
 }
