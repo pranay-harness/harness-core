@@ -71,7 +71,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   private void populatePipelineFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, @NotNull String filterIdentifier) {
     FilterDTO pipelineFilterDTO = this.filterService.get(
-        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.DEPLOYMENT);
+        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.PIPELINEEXECUTION);
     if (pipelineFilterDTO == null) {
       throw new InvalidRequestException("Could not find a pipeline filter with the identifier ");
     }
