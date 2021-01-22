@@ -565,7 +565,7 @@ function cleanupAfterStart(){
 upgrade42=false
 if [[ ${newinstallation} == "false" ]];then
   backupMongo
-  checkMongoUpgrade
+  ####checkMongoUpgrade
 fi
 stopContainers
 startUp
