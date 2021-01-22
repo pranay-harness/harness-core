@@ -15,7 +15,7 @@ import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
-import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,28 +39,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FilterCreatorMergeService {
   private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
-  private final PmsSdkInstanceService pmsSdkInstanceService;
+  private final PmsSdkHelper pmsSdkHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
   public FilterCreatorMergeService(
-      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkInstanceService pmsSdkInstanceService) {
+      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkHelper pmsSdkHelper) {
     this.planCreatorServices = planCreatorServices;
-    this.pmsSdkInstanceService = pmsSdkInstanceService;
+    this.pmsSdkHelper = pmsSdkHelper;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(@NotNull String yaml) throws IOException {
-    Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
-    Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
-      sdkInstances.forEach((k, v) -> {
-        if (planCreatorServices.containsKey(k)) {
-          services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
-        }
-      });
-    }
+    Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     String processedYaml = YamlUtils.injectUuid(yaml);
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
@@ -113,12 +104,16 @@ public class FilterCreatorMergeService {
   public FilterCreationBlobResponse obtainFiltersPerIteration(Map<String, PlanCreatorServiceInfo> services,
       Map<String, YamlFieldBlob> dependencies, Map<String, String> filters) {
     CompletableFutures<FilterCreationResponseWrapper> completableFutures = new CompletableFutures<>(executor);
-    for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
+    for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
+      if (!pmsSdkHelper.containsSupportedDependency(serviceEntry.getValue(), dependencies)) {
+        continue;
+      }
+
       completableFutures.supplyAsync(() -> {
         FilterCreationResponseWrapperBuilder builder =
-            FilterCreationResponseWrapper.builder().serviceName(entry.getKey());
+            FilterCreationResponseWrapper.builder().serviceName(serviceEntry.getKey());
         try {
-          FilterCreationResponse filterCreationResponse = entry.getValue().getPlanCreationClient().createFilter(
+          FilterCreationResponse filterCreationResponse = serviceEntry.getValue().getPlanCreationClient().createFilter(
               FilterCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
           if (filterCreationResponse.getResponseCase() == FilterCreationResponse.ResponseCase.ERRORRESPONSE) {
             builder.errorResponse(filterCreationResponse.getErrorResponse());
@@ -126,10 +121,13 @@ public class FilterCreatorMergeService {
             builder.response(filterCreationResponse.getBlobResponse());
           }
         } catch (StatusRuntimeException ex) {
-          log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
-          builder.errorResponse(ErrorResponse.newBuilder()
-                                    .addMessages(String.format("Error connecting with service: [%s]", entry.getKey()))
-                                    .build());
+          log.error(
+              String.format("Error connecting with service: [%s]. Is this service Running?", serviceEntry.getKey()),
+              ex);
+          builder.errorResponse(
+              ErrorResponse.newBuilder()
+                  .addMessages(String.format("Error connecting with service: [%s]", serviceEntry.getKey()))
+                  .build());
         }
         return builder.build();
       });

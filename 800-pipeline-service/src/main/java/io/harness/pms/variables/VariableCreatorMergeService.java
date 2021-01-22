@@ -16,7 +16,7 @@ import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
-import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VariableCreatorMergeService {
   private Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices;
-  private final PmsSdkInstanceService pmsSdkInstanceService;
+  private final PmsSdkHelper pmsSdkHelper;
 
   private static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
@@ -47,21 +46,13 @@ public class VariableCreatorMergeService {
   @Inject
   public VariableCreatorMergeService(
       Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices,
-      PmsSdkInstanceService pmsSdkInstanceService) {
+      PmsSdkHelper pmsSdkHelper) {
     this.planCreatorServices = planCreatorServices;
-    this.pmsSdkInstanceService = pmsSdkInstanceService;
+    this.pmsSdkHelper = pmsSdkHelper;
   }
 
   public VariableMergeServiceResponse createVariablesResponse(@NotNull String yaml) throws IOException {
-    Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
-    Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
-    if (isNotEmpty(planCreatorServices) && isNotEmpty(sdkInstances)) {
-      sdkInstances.forEach((k, v) -> {
-        if (planCreatorServices.containsKey(k)) {
-          services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
-        }
-      });
-    }
+    Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
     YamlField pipelineField = YamlUtils.getPipelineField(processedYaml.getNode());
@@ -84,7 +75,8 @@ public class VariableCreatorMergeService {
     }
 
     for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
-      VariablesCreationBlobResponse variablesCreationBlobResponse = obtainVariablesPerIteration(services, dependencies);
+      VariablesCreationBlobResponse variablesCreationBlobResponse =
+          obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap());
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
@@ -101,6 +93,10 @@ public class VariableCreatorMergeService {
       Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
     CompletableFutures<VariablesCreationResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
+      if (!pmsSdkHelper.containsSupportedDependency(entry.getValue(), dependencies)) {
+        continue;
+      }
+
       completableFutures.supplyAsync(() -> {
         try {
           return entry.getValue().getPlanCreationClient().createVariablesYaml(

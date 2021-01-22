@@ -19,7 +19,7 @@ import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
-import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -84,18 +84,18 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
       + "                    field32: value2";
 
   PlanCreationServiceGrpc.PlanCreationServiceBlockingStub planCreationServiceBlockingStub;
-  @Mock PmsSdkInstanceService pmsSdkInstanceService;
+  @Mock PmsSdkHelper pmsSdkHelper;
   FilterCreatorMergeService filterCreatorMergeService;
 
   @Before
   public void init() {
     Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> map = new HashMap<>();
-    filterCreatorMergeService = spy(new FilterCreatorMergeService(map, pmsSdkInstanceService));
+    filterCreatorMergeService = spy(new FilterCreatorMergeService(map, pmsSdkHelper));
   }
 
   @After
   public void verifyInteractions() {
-    verifyNoMoreInteractions(pmsSdkInstanceService);
+    verifyNoMoreInteractions(pmsSdkHelper);
   }
 
   @Test
@@ -104,9 +104,8 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   public void testGetPipelineInfo() throws IOException {
     Map<String, Set<String>> stepToSupportedTypes = new HashMap<>();
     stepToSupportedTypes.put("pipeline", Collections.singleton("__any__"));
-    Map<String, Map<String, Set<String>>> sdkInstances = new HashMap<>();
-    sdkInstances.put("cd", stepToSupportedTypes);
-    when(pmsSdkInstanceService.getInstanceNameToSupportedTypes()).thenReturn(sdkInstances);
+    Map<String, PlanCreatorServiceInfo> sdkInstances = new HashMap<>();
+    when(pmsSdkHelper.getServices()).thenReturn(sdkInstances);
 
     doReturn(FilterCreationBlobResponse.newBuilder().build())
         .when(filterCreatorMergeService)
@@ -115,7 +114,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
         filterCreatorMergeService.getPipelineInfo(pipelineYaml);
 
-    verify(pmsSdkInstanceService).getInstanceNameToSupportedTypes();
+    verify(pmsSdkHelper).getServices();
   }
 
   @Test

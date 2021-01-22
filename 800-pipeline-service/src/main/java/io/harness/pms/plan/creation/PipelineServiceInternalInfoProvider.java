@@ -7,6 +7,7 @@ import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.PipelineVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
@@ -43,7 +44,10 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
 
   @Override
   public List<VariableCreator> getVariableCreators() {
-    return null;
+    List<VariableCreator> variableCreators = new ArrayList<>();
+    variableCreators.add(new PipelineVariableCreator());
+    injectorUtils.injectMembers(variableCreators);
+    return variableCreators;
   }
 
   @Override
