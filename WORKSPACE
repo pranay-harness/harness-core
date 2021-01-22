@@ -1978,7 +1978,7 @@ pinned_maven_install()
 
 http_jar(
     name = "jira_client",
-    url = "https://harness.jfrog.io/harness/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20200922.123932-1.jar",
+    url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
 )
 
 load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
