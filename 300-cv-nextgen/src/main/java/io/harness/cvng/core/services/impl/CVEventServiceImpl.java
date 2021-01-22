@@ -168,7 +168,7 @@ public class CVEventServiceImpl implements CVEventService {
     String kubernetesActivitySourceConnectorFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
     String kubernetesActivitySourceFQN = getKubernetesActivitySourceFullyQualifiedName(
         kubernetesActivitySource, kubernetesActivitySource.getIdentifier());
-    DeleteSetupUsageDTO deleteSetupUsageDTO = getEntitySetupUsageCreateDTO(kubernetesActivitySource,
+    DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(kubernetesActivitySource,
         EntityTypeProtoEnum.CONNECTORS, kubernetesActivitySourceConnectorFQN, kubernetesActivitySourceFQN);
 
     sendEventWithMessageForDeletion(kubernetesActivitySource, deleteSetupUsageDTO);
@@ -209,7 +209,7 @@ public class CVEventServiceImpl implements CVEventService {
     String kubernetesActivitySourceServiceFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
     String kubernetesActivitySourceFQN = getKubernetesActivitySourceFullyQualifiedName(
         kubernetesActivitySource, kubernetesActivitySource.getIdentifier());
-    DeleteSetupUsageDTO deleteSetupUsageDTO = getEntitySetupUsageCreateDTO(kubernetesActivitySource,
+    DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(kubernetesActivitySource,
         EntityTypeProtoEnum.SERVICE, kubernetesActivitySourceServiceFQN, kubernetesActivitySourceFQN);
 
     sendEventWithMessageForDeletion(kubernetesActivitySource, deleteSetupUsageDTO);
@@ -252,7 +252,7 @@ public class CVEventServiceImpl implements CVEventService {
     String kubernetesActivitySourceFQN = getKubernetesActivitySourceFullyQualifiedName(
         kubernetesActivitySource, kubernetesActivitySource.getIdentifier());
 
-    DeleteSetupUsageDTO deleteSetupUsageDTO = getEntitySetupUsageCreateDTO(kubernetesActivitySource,
+    DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(kubernetesActivitySource,
         EntityTypeProtoEnum.ENVIRONMENT, kubernetesActivitySourceEnvironmentFQN, kubernetesActivitySourceFQN);
 
     sendEventWithMessageForDeletion(kubernetesActivitySource, deleteSetupUsageDTO);
@@ -404,33 +404,33 @@ public class CVEventServiceImpl implements CVEventService {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(cvConfig.getAccountId())
         .setReferredByEntityFQN(cvConfigFQN)
-        .setReferredByEntityType(cvConfigScopedType)
+        .setReferredByEntityType(EntityTypeProtoEnum.CV_CONFIG)
         .setReferredEntityFQN(cvConfigScopedFQN)
-        .setReferredEntityType(EntityTypeProtoEnum.CV_CONFIG)
+        .setReferredEntityType(cvConfigScopedType)
         .build();
   }
 
   @NotNull
-  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(VerificationJob verificationJob, String cvConfigScopedFQN,
-      EntityTypeProtoEnum cvConfigScopedEntityType, String cvConfigFQN) {
+  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(VerificationJob verificationJob, String verificationJobScopedFQN,
+      EntityTypeProtoEnum verificationJobEntityType, String verificationJobFQN) {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(verificationJob.getAccountId())
-        .setReferredByEntityFQN(cvConfigFQN)
-        .setReferredByEntityType(cvConfigScopedEntityType)
-        .setReferredEntityFQN(cvConfigScopedFQN)
-        .setReferredEntityType(EntityTypeProtoEnum.CV_VERIFICATION_JOB)
+        .setReferredByEntityFQN(verificationJobFQN)
+        .setReferredByEntityType(EntityTypeProtoEnum.CV_VERIFICATION_JOB)
+        .setReferredEntityFQN(verificationJobScopedFQN)
+        .setReferredEntityType(verificationJobEntityType)
         .build();
   }
 
-  private DeleteSetupUsageDTO getEntitySetupUsageCreateDTO(KubernetesActivitySource kubernetesActivitySource,
+  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(KubernetesActivitySource kubernetesActivitySource,
       EntityTypeProtoEnum kubernetesActivitySourceScopedEntityType, String kubernetesActivitySourceScopedFQN,
       String kubernetesActivitySourceFQN) {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(kubernetesActivitySource.getAccountId())
         .setReferredByEntityFQN(kubernetesActivitySourceFQN)
-        .setReferredByEntityType(kubernetesActivitySourceScopedEntityType)
+        .setReferredByEntityType(EntityTypeProtoEnum.CV_KUBERNETES_ACTIVITY_SOURCE)
         .setReferredEntityFQN(kubernetesActivitySourceScopedFQN)
-        .setReferredEntityType(EntityTypeProtoEnum.CV_KUBERNETES_ACTIVITY_SOURCE)
+        .setReferredEntityType(kubernetesActivitySourceScopedEntityType)
         .build();
   }
 
