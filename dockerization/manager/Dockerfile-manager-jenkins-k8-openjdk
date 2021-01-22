@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM harness/alpine:safe-alpine3.12-sec874
+FROM harness/alpine:safe-alpine3.12-sec908
 
 # Remove SunPKCS11 Provider
 RUN sed -i "s|^security.provider.10=.*$||" /usr/lib/jvm/default-jvm/jre/lib/security/java.security
