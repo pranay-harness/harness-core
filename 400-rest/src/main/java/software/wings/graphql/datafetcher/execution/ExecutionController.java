@@ -20,6 +20,7 @@ import io.harness.govern.Switch;
 
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
@@ -35,6 +36,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArt
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
+import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.resources.graphql.TriggeredByType;
@@ -42,6 +44,7 @@ import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -71,6 +74,7 @@ public class ExecutionController {
   @Inject ServiceResourceService serviceResourceService;
   @Inject ArtifactStreamHelper artifactStreamHelper;
   @Inject InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject EnvironmentService environmentService;
 
   public static QLExecutionStatus convertStatus(ExecutionStatus status) {
     switch (status) {
@@ -187,6 +191,9 @@ public class ExecutionController {
   public boolean validateVariableValue(String appId, String value, Variable variable, String envId) {
     EntityType entityType = variable.obtainEntityType();
     if (entityType != null) {
+      if (isEmpty(value)) {
+        throw new InvalidRequestException("Please provide a non empty value for " + variable.getName(), USER);
+      }
       switch (entityType) {
         case ENVIRONMENT:
           return true;
@@ -212,6 +219,37 @@ public class ExecutionController {
       }
     }
     return true;
+  }
+
+  public String getEnvId(String envVarName, String appId, List<QLVariableInput> variableInputs) {
+    if (!isEmpty(variableInputs)) {
+      QLVariableInput envVarInput =
+          variableInputs.stream().filter(t -> envVarName.equals(t.getName())).findFirst().orElse(null);
+      if (envVarInput != null) {
+        QLVariableValue envVarValue = envVarInput.getVariableValue();
+        notNullCheck(envVarInput.getName() + " has no variable value present", envVarValue, USER);
+        if (isEmpty(envVarValue.getValue())) {
+          throw new InvalidRequestException("Please provide a non empty value for " + envVarInput.getName(), USER);
+        }
+        switch (envVarValue.getType()) {
+          case ID:
+            String envId = envVarValue.getValue();
+            Environment environment = environmentService.get(appId, envId);
+            notNullCheck(
+                "Environment [" + envId + "] doesn't exist in specified application " + appId, environment, USER);
+            return envId;
+          case NAME:
+            String envName = envVarValue.getValue();
+            Environment environmentFromName = environmentService.getEnvironmentByName(appId, envName);
+            notNullCheck("Environment [" + envName + "] doesn't exist in specified application " + appId,
+                environmentFromName, USER);
+            return environmentFromName.getUuid();
+          default:
+            throw new InvalidRequestException("Value Type " + envVarValue.getType() + " Not supported");
+        }
+      }
+    }
+    return null;
   }
 
   private Artifact getArtifactFromBuildNumber(QLBuildNumberInput buildNumber, Service service) {
