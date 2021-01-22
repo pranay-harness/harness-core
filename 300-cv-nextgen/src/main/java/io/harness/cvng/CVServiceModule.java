@@ -46,6 +46,7 @@ import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
@@ -67,6 +68,7 @@ import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
+import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
@@ -259,6 +261,7 @@ public class CVServiceModule extends AbstractModule {
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
                   ? verificationConfiguration.getPortalUrl()
                   : verificationConfiguration.getPortalUrl() + "/");
+      bind(CVNGLogService.class).to(CVNGLogServiceImpl.class);
       bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
     } catch (IOException e) {
