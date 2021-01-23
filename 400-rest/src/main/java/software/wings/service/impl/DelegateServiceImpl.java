@@ -2544,12 +2544,20 @@ public class DelegateServiceImpl implements DelegateService {
       List<ExecutionCapability> selectorCapabilities =
           task.getExecutionCapabilities().stream().filter(c -> c instanceof SelectorCapability).collect(toList());
 
-      alertService.openAlert(task.getAccountId(), task.getAppId(), NoEligibleDelegates,
+      String appId =
+          task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD);
+      String envId =
+          task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD);
+      String infrastructureMappingId = task.getSetupAbstractions() == null
+          ? null
+          : task.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
+
+      alertService.openAlert(task.getAccountId(), appId, NoEligibleDelegates,
           NoEligibleDelegatesAlert.builder()
               .accountId(task.getAccountId())
-              .appId(task.getAppId())
-              .envId(task.getEnvId())
-              .infraMappingId(task.getInfrastructureMappingId())
+              .appId(appId)
+              .envId(envId)
+              .infraMappingId(infrastructureMappingId)
               .taskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
               .taskType(TaskType.valueOf(task.getData().getTaskType()))
               .executionCapabilities(selectorCapabilities)
@@ -2813,9 +2821,8 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(mode, serviceTemplateService, configService,
-              delegateTask.getAppId(), delegateTask.getEnvId(), delegateTask.getServiceTemplateId(),
-              artifactCollectionUtils, delegateTask.getArtifactStreamId(), featureFlagService, managerDecryptionService,
-              secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
+              artifactCollectionUtils, featureFlagService, managerDecryptionService, secretManager,
+              delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken(), ngSecretService, delegateTask.getSetupAbstractions());
 
       List<ExecutionCapability> executionCapabilityList = emptyList();

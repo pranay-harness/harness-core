@@ -195,8 +195,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
     TaskGroup taskGroup =
         isNotBlank(task.getData().getTaskType()) ? TaskType.valueOf(task.getData().getTaskType()).getTaskGroup() : null;
-    return canAssignDelegateScopes(
-        batch, delegate, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(), taskGroup);
+
+    String appId =
+        task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD);
+    String envId =
+        task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD);
+    String infrastructureMappingId = task.getSetupAbstractions() == null
+        ? null
+        : task.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
+
+    return canAssignDelegateScopes(batch, delegate, appId, envId, infrastructureMappingId, taskGroup);
   }
 
   @VisibleForTesting
