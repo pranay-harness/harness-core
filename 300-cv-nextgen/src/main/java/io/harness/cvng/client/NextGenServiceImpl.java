@@ -10,8 +10,12 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 public class NextGenServiceImpl implements NextGenService {
   @Inject NextGenClient nextGenClient;
@@ -52,32 +56,43 @@ public class NextGenServiceImpl implements NextGenService {
   }
 
   @Override
-  public PageResponse<ServiceResponseDTO> getServices(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
-    return requestExecutor
-        .execute(nextGenClient.listServicesForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
-        .getData();
+  public Map<String, ServiceResponseDTO> listServicesForProject(
+      String accountId, String orgIdentifier, String projectIdentifier, Set<String> serviceIdentifiers) {
+    PageResponse<ServiceResponseDTO> services =
+        requestExecutor
+            .execute(nextGenClient.listServicesForProject(
+                0, serviceIdentifiers.size(), accountId, orgIdentifier, projectIdentifier, serviceIdentifiers))
+            .getData();
+    return services.getContent().stream().collect(
+        Collectors.toMap(ServiceResponseDTO::getIdentifier, Function.identity()));
   }
 
   @Override
-  public PageResponse<EnvironmentResponseDTO> listEnvironmentsForProject(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
-    return requestExecutor
-        .execute(
-            nextGenClient.listEnvironmentsForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
-        .getData();
+  public Map<String, EnvironmentResponseDTO> listEnvironmentsForProject(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull Set<String> envIdentifiers) {
+    PageResponse<EnvironmentResponseDTO> environments =
+        requestExecutor
+            .execute(nextGenClient.listEnvironmentsForProject(
+                0, envIdentifiers.size(), accountId, orgIdentifier, projectIdentifier, envIdentifiers, null))
+            .getData();
+    return environments.getContent().stream().collect(
+        Collectors.toMap(EnvironmentResponseDTO::getIdentifier, Function.identity()));
   }
 
   @Override
   public int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier) {
-    PageResponse<ServiceResponseDTO> services = getServices(0, 1000, accountId, orgIdentifier, projectIdentifier, null);
-    return (int) services.getTotalItems();
+    return (int) requestExecutor
+        .execute(nextGenClient.listServicesForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null))
+        .getData()
+        .getTotalItems();
   }
 
   @Override
   public int getEnvironmentCount(String accountId, String orgIdentifier, String projectIdentifier) {
-    PageResponse<EnvironmentResponseDTO> environmentResponseDTOS =
-        listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null);
-    return (int) environmentResponseDTOS.getTotalItems();
+    return (int) requestExecutor
+        .execute(
+            nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
+        .getData()
+        .getTotalItems();
   }
 }

@@ -12,6 +12,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO.CategoryRisk;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -50,6 +51,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -69,6 +71,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private AnalysisService analysisService;
   @Inject private AlertRuleService alertRuleService;
   @Inject private ExecutorService defaultExecutorService;
+  @Inject private CVParallelExecutor cvParallelExecutor;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
@@ -178,36 +181,38 @@ public class HeatMapServiceImpl implements HeatMapService {
       String accountId, String orgIdentifier, String projectIdentifier) {
     List<EnvToServicesDTO> envToServicesDTOS =
         cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
-    Map<String, Set<String>> envToServicesMap = new HashMap<>();
-    envToServicesDTOS.forEach(envToServicesDTO -> {
-      if (envToServicesDTO.getEnvironment().getType().equals(EnvironmentType.Production)) {
-        Set<String> services =
-            envToServicesDTO.getServices().stream().map(ServiceResponseDTO::getIdentifier).collect(Collectors.toSet());
-        envToServicesMap.put(envToServicesDTO.getEnvironment().getIdentifier(), services);
-      }
-    });
-    List<EnvServiceRiskDTO> envServiceRiskDTOList = new ArrayList<>();
-    envToServicesMap.forEach((envIdentifier, serviceSet) -> {
+    List<Callable<List<EnvServiceRiskDTO>>> callables = new ArrayList<>();
+    envToServicesDTOS.forEach(envToServicesDTO -> callables.add(() -> {
       Set<ServiceRisk> serviceRisks = new HashSet<>();
-      serviceSet.forEach(service -> {
-        CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(
-            accountId, orgIdentifier, projectIdentifier, service, envIdentifier);
+      List<EnvServiceRiskDTO> riskDTOS = new ArrayList<>();
+      envToServicesDTO.getServices().forEach(service -> {
+        CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(accountId, orgIdentifier,
+            projectIdentifier, service.getIdentifier(), envToServicesDTO.getEnvironment().getIdentifier());
 
         if (categoryRisk != null && isNotEmpty(categoryRisk.getCategoryRisks())) {
           Integer risk = Collections.max(
               categoryRisk.getCategoryRisks().stream().map(CategoryRisk::getRisk).collect(Collectors.toList()));
-          serviceRisks.add(ServiceRisk.builder().serviceIdentifier(service).risk(risk).build());
+          serviceRisks.add(ServiceRisk.builder()
+                               .serviceIdentifier(service.getIdentifier())
+                               .serviceName(service.getName())
+                               .risk(risk)
+                               .build());
         }
       });
       if (isNotEmpty(serviceRisks)) {
-        envServiceRiskDTOList.add(EnvServiceRiskDTO.builder()
-                                      .envIdentifier(envIdentifier)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .serviceRisks(serviceRisks)
-                                      .build());
+        riskDTOS.add(EnvServiceRiskDTO.builder()
+                         .envIdentifier(envToServicesDTO.getEnvironment().getIdentifier())
+                         .envName(envToServicesDTO.getEnvironment().getName())
+                         .orgIdentifier(orgIdentifier)
+                         .projectIdentifier(projectIdentifier)
+                         .serviceRisks(serviceRisks)
+                         .build());
       }
-    });
+      return riskDTOS;
+    }));
+    List<List<EnvServiceRiskDTO>> envDTOsList = cvParallelExecutor.executeParallel(callables);
+    List<EnvServiceRiskDTO> envServiceRiskDTOList = new ArrayList<>();
+    envDTOsList.forEach(envServiceRiskDTOS -> envServiceRiskDTOList.addAll(envServiceRiskDTOS));
     return envServiceRiskDTOList;
   }
 
