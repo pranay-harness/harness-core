@@ -165,6 +165,6 @@ public class NodeExecutionMap extends LateBindingMap {
   }
 
   private static Optional<Object> jsonToObject(String json) {
-    return Optional.ofNullable(json == null ? null : RecastOrchestrationUtils.fromDocumentJson(json, Object.class));
+    return Optional.ofNullable(RecastOrchestrationUtils.toDocumentFromJson(json));
   }
 }
