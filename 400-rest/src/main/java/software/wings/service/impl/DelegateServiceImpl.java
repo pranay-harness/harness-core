@@ -108,7 +108,9 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
@@ -261,6 +263,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -419,6 +422,27 @@ public class DelegateServiceImpl implements DelegateService {
               return retrieveLogStreamingAccountToken(accountId);
             }
           });
+
+  public static void embedCapabilitiesInDelegateTask(
+      DelegateTask task, Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
+    if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
+      return;
+    }
+
+    task.setExecutionCapabilities(new ArrayList<>());
+    task.getExecutionCapabilities().addAll(
+        Arrays.stream(task.getData().getParameters())
+            .filter(param -> param instanceof ExecutionCapabilityDemander)
+            .flatMap(param
+                -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(maskingEvaluator).stream())
+            .collect(toList()));
+
+    if (isNotEmpty(encryptionConfigs)) {
+      task.getExecutionCapabilities().addAll(
+          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForSecretManagers(
+              encryptionConfigs, maskingEvaluator));
+    }
+  }
 
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
@@ -2452,14 +2476,15 @@ public class DelegateServiceImpl implements DelegateService {
     addMergedParamsForCapabilityCheck(task);
 
     DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task,
+    embedCapabilitiesInDelegateTask(task,
         delegateTaskPackage == null || isEmpty(delegateTaskPackage.getEncryptionConfigs())
             ? emptyList()
             : delegateTaskPackage.getEncryptionConfigs().values(),
         new ManagerPreviewExpressionEvaluator());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
-      log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(task));
+      log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
+          task.getData().getTaskType(), task.getExecutionCapabilities()));
     }
   }
 
