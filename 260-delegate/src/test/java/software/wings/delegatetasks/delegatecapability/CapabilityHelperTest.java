@@ -1,21 +1,17 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
-import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -28,10 +24,8 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.expression.ManagerPreviewExpressionEvaluator;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -39,55 +33,9 @@ import org.junit.experimental.categories.Category;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class CapabilityHelperTest extends WingsBaseTest {
-  public static final String HTTP_PORT = "80";
-  public static final String HTTPS_PORT = "443";
   public static final String HTTP_VAUTL_URL = "http://vautl.com";
-  public static final String GOOGLE_COM = "http://google.com";
   public static final String US_EAST_2 = "us-east-2";
   public static final String AWS_KMS_URL = "https://kms.us-east-2.amazonaws.com";
-  public static final String SECRET_URL = "http://google.com/?q=${secretManager.obtain(\"test\", 1234)}";
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testEmbedCapabilitiesInDelegateTask_HTTP_VaultConfig() {
-    TaskData taskData =
-        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(GOOGLE_COM).build()}).build();
-    DelegateTask task = DelegateTask.builder().data(taskData).build();
-
-    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
-    EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
-    encryptionConfigs.add(encryptionConfig);
-
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
-    assertThat(task.getExecutionCapabilities()).isNotNull();
-    assertThat(task.getExecutionCapabilities()).hasSize(2);
-
-    assertThat(
-        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
-        .containsExactlyInAnyOrder(HTTP_VAUTL_URL, GOOGLE_COM);
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testEmbedCapabilitiesInDelegateTask_HTTP_KmsConfig() {
-    TaskData taskData =
-        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(GOOGLE_COM).build()}).build();
-    DelegateTask task = DelegateTask.builder().data(taskData).build();
-
-    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
-    EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
-    encryptionConfigs.add(encryptionConfig);
-
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
-    assertThat(task.getExecutionCapabilities()).isNotNull();
-    assertThat(task.getExecutionCapabilities()).hasSize(2);
-
-    assertThat(
-        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
-        .containsExactlyInAnyOrder(AWS_KMS_URL, GOOGLE_COM);
-  }
 
   @Test
   @Owner(developers = ADWAIT)
@@ -210,23 +158,5 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
     assertThat(encryptionConfig instanceof VaultConfig).isTrue();
     assertThat(((VaultConfig) encryptionConfig).getVaultUrl()).isEqualTo(HTTP_VAUTL_URL);
-  }
-
-  @Test
-  @Owner(developers = INDER)
-  @Category(UnitTests.class)
-  public void testEmbedCapabilitiesInDelegateTask_HTTP_SecretInUrl() {
-    TaskData taskData =
-        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(SECRET_URL).build()}).build();
-    DelegateTask task = DelegateTask.builder().data(taskData).build();
-
-    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
-
-    CapabilityHelper.embedCapabilitiesInDelegateTask(task, encryptionConfigs, new ManagerPreviewExpressionEvaluator());
-    assertThat(task.getExecutionCapabilities()).isNotNull().hasSize(1);
-
-    assertThat(
-        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
-        .containsExactlyInAnyOrder("http://google.com/?q=<<<test>>>");
   }
 }

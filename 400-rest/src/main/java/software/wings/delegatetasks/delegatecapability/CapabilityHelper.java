@@ -5,11 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
-import static java.util.stream.Collectors.toList;
-
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -28,7 +25,6 @@ import software.wings.settings.SettingValue;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,27 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CapabilityHelper {
   public static final String TERRAFORM = "terraform";
   public static final String HELM = "helm";
-
-  public static void embedCapabilitiesInDelegateTask(
-      DelegateTask task, Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
-    if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
-      return;
-    }
-
-    task.setExecutionCapabilities(new ArrayList<>());
-    task.getExecutionCapabilities().addAll(
-        Arrays.stream(task.getData().getParameters())
-            .filter(param -> param instanceof ExecutionCapabilityDemander)
-            .flatMap(param
-                -> ((ExecutionCapabilityDemander) param).fetchRequiredExecutionCapabilities(maskingEvaluator).stream())
-            .collect(toList()));
-
-    if (isNotEmpty(encryptionConfigs)) {
-      task.getExecutionCapabilities().addAll(
-          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForSecretManagers(
-              encryptionConfigs, maskingEvaluator));
-    }
-  }
 
   public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
       List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
@@ -179,13 +154,12 @@ public class CapabilityHelper {
     return false;
   }
 
-  public static String generateLogStringWithCapabilitiesGenerated(DelegateTask task) {
-    StringBuilder builder = new StringBuilder(128)
-                                .append("Capabilities Generate for Task: ")
-                                .append(task.getData().getTaskType())
-                                .append(" are: ");
+  public static String generateLogStringWithCapabilitiesGenerated(
+      String taskType, List<ExecutionCapability> executionCapabilities) {
+    StringBuilder builder =
+        new StringBuilder(128).append("Capabilities Generate for Task: ").append(taskType).append(" are: ");
 
-    task.getExecutionCapabilities().forEach(capability -> builder.append('\n').append(capability.toString()));
+    executionCapabilities.forEach(capability -> builder.append('\n').append(capability.toString()));
     return builder.toString();
   }
 

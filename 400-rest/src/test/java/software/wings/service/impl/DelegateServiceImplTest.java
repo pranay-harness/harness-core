@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -18,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
@@ -43,11 +45,13 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.observer.Subject;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
@@ -68,7 +72,10 @@ import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateInstanceStatus;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.VaultConfig;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
@@ -81,6 +88,7 @@ import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +104,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class DelegateServiceImplTest extends WingsBaseTest {
+  private static final String HTTP_VAUTL_URL = "http://vautl.com";
+  private static final String GOOGLE_COM = "http://google.com";
+  private static final String US_EAST_2 = "us-east-2";
+  private static final String AWS_KMS_URL = "https://kms.us-east-2.amazonaws.com";
+  private static final String SECRET_URL = "http://google.com/?q=${secretManager.obtain(\"test\", 1234)}";
+
   private static final String VERSION = "1.0.0";
   @Mock private UsageLimitedFeature delegatesFeature;
   @Mock private Broadcaster broadcaster;
@@ -690,5 +704,66 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     List<String> connectedDelegates = delegateService.getConnectedDelegates(ACCOUNT_ID, delegateIds);
 
     assertThat(connectedDelegates.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testEmbedCapabilitiesInDelegateTask_HTTP_VaultConfig() {
+    TaskData taskData =
+        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(GOOGLE_COM).build()}).build();
+    DelegateTask task = DelegateTask.builder().data(taskData).build();
+
+    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
+    EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
+    encryptionConfigs.add(encryptionConfig);
+
+    DelegateServiceImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
+    assertThat(task.getExecutionCapabilities()).isNotNull();
+    assertThat(task.getExecutionCapabilities()).hasSize(2);
+
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder(HTTP_VAUTL_URL, GOOGLE_COM);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testEmbedCapabilitiesInDelegateTask_HTTP_KmsConfig() {
+    TaskData taskData =
+        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(GOOGLE_COM).build()}).build();
+    DelegateTask task = DelegateTask.builder().data(taskData).build();
+
+    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
+    EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
+    encryptionConfigs.add(encryptionConfig);
+
+    DelegateServiceImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
+    assertThat(task.getExecutionCapabilities()).isNotNull();
+    assertThat(task.getExecutionCapabilities()).hasSize(2);
+
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder(AWS_KMS_URL, GOOGLE_COM);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testEmbedCapabilitiesInDelegateTask_HTTP_SecretInUrl() {
+    TaskData taskData =
+        TaskData.builder().parameters(new Object[] {HttpTaskParameters.builder().url(SECRET_URL).build()}).build();
+    DelegateTask task = DelegateTask.builder().data(taskData).build();
+
+    Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
+
+    DelegateServiceImpl.embedCapabilitiesInDelegateTask(
+        task, encryptionConfigs, new ManagerPreviewExpressionEvaluator());
+    assertThat(task.getExecutionCapabilities()).isNotNull().hasSize(1);
+
+    assertThat(
+        task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
+        .containsExactlyInAnyOrder("http://google.com/?q=<<<test>>>");
   }
 }
