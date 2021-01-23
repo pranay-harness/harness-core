@@ -8,6 +8,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.SimpleEncryption;
+import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.expression.NgSecretManagerFunctor.NgSecretManagerFunctorBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -28,11 +29,17 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
   private final SweepingOutputSecretFunctor sweepingOutputSecretFunctor;
 
   public ManagerPreExecutionExpressionEvaluator(SecretManagerMode mode, ServiceTemplateService serviceTemplateService,
-      ConfigService configService, String appId, String envId, String serviceTemplateId,
-      ArtifactCollectionUtils artifactCollectionUtils, String artifactStreamId, FeatureFlagService featureFlagService,
-      ManagerDecryptionService managerDecryptionService, SecretManager secretManager, String accountId,
-      String workflowExecutionId, int expressionFunctorToken, NGSecretService ngSecretService,
-      Map<String, String> taskSetupAbstractions) {
+      ConfigService configService, ArtifactCollectionUtils artifactCollectionUtils,
+      FeatureFlagService featureFlagService, ManagerDecryptionService managerDecryptionService,
+      SecretManager secretManager, String accountId, String workflowExecutionId, int expressionFunctorToken,
+      NGSecretService ngSecretService, Map<String, String> taskSetupAbstractions) {
+    String appId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
+    String envId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
+    String serviceTemplateId =
+        taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
+    String artifactStreamId =
+        taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
+
     addFunctor("configFile",
         ConfigFileFunctor.builder()
             .appId(appId)
