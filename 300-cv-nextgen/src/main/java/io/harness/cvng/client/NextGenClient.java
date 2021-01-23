@@ -8,6 +8,7 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -41,10 +42,12 @@ public interface NextGenClient {
   @GET("services")
   Call<ResponseDTO<PageResponse<ServiceResponseDTO>>> listServicesForProject(@Query("page") int page,
       @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier, @Query("sort") List<String> sort);
+      @Query("projectIdentifier") String projectIdentifier,
+      @Query("serviceIdentifiers") Set<String> serviceIdentifiers);
 
   @GET("environments")
   Call<ResponseDTO<PageResponse<EnvironmentResponseDTO>>> listEnvironmentsForProject(@Query("page") int page,
       @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier, @Query("sort") List<String> sort);
+      @Query("projectIdentifier") String projectIdentifier, @Query("envIdentifiers") Set<String> envIdentifiers,
+      @Query("sort") List<String> sort);
 }

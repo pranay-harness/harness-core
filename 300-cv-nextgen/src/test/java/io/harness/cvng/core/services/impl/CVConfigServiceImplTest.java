@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,7 +44,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -83,26 +86,37 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     orgIdentifier = generateUuid();
     monitoringSourceIdentifier = generateUuid();
     monitoringSourceName = generateUuid();
-    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
+    when(nextGenService.listEnvironmentsForProject(anyString(), anyString(), anyString(), anySet()))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          Map<String, EnvironmentResponseDTO> environments = new HashMap<>();
+          Set<String> envIdentifiers = (Set<String>) args[3];
+          envIdentifiers.forEach(envIdentifier
+              -> environments.put(envIdentifier,
+                  EnvironmentResponseDTO.builder()
+                      .identifier(envIdentifier)
+                      .accountId((String) args[0])
+                      .orgIdentifier((String) args[1])
+                      .projectIdentifier((String) args[2])
+                      .name(envIdentifier)
+                      .type(EnvironmentType.Production)
+                      .build()));
+          return environments;
+        });
+    when(nextGenService.listServicesForProject(anyString(), anyString(), anyString(), anySet())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return EnvironmentResponseDTO.builder()
-          .identifier((String) args[0])
-          .accountId((String) args[1])
-          .orgIdentifier((String) args[2])
-          .projectIdentifier((String) args[3])
-          .name((String) args[0])
-          .type(EnvironmentType.Production)
-          .build();
-    });
-    when(nextGenService.getService(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return ServiceResponseDTO.builder()
-          .identifier((String) args[0])
-          .accountId((String) args[1])
-          .orgIdentifier((String) args[2])
-          .projectIdentifier((String) args[3])
-          .name((String) args[0])
-          .build();
+      Set<String> serviceIdentifiers = (Set<String>) args[3];
+      Map<String, ServiceResponseDTO> services = new HashMap<>();
+      serviceIdentifiers.forEach(serviceIdentifier
+          -> services.put(serviceIdentifier,
+              ServiceResponseDTO.builder()
+                  .identifier(serviceIdentifier)
+                  .accountId((String) args[0])
+                  .orgIdentifier((String) args[1])
+                  .projectIdentifier((String) args[2])
+                  .name(serviceIdentifier)
+                  .build()));
+      return services;
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
 

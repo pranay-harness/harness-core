@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -184,16 +185,33 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
     Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
+    Set<String> envIdentifiers = new HashSet<>();
+    Set<String> serIdentifiers = new HashSet<>();
+    envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
+      envIdentifiers.add(envIdentifier);
+      serIdentifiers.addAll(serviceIdentifiers);
+    });
+
+    Map<String, EnvironmentResponseDTO> environments =
+        nextGenService.listEnvironmentsForProject(accountId, orgIdentifier, projectIdentifier, envIdentifiers);
+    Map<String, ServiceResponseDTO> services =
+        nextGenService.listServicesForProject(accountId, orgIdentifier, projectIdentifier, serIdentifiers);
 
     List<EnvToServicesDTO> envToServicesDTOS = new ArrayList<>();
     envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
-      EnvironmentResponseDTO environment =
-          nextGenService.getEnvironment(envIdentifier, accountId, orgIdentifier, projectIdentifier);
-      Set<ServiceResponseDTO> services = new HashSet<>();
-      serviceIdentifiers.forEach(serviceIdentifier
-          -> services.add(nextGenService.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier)));
+      EnvironmentResponseDTO environment = environments.get(envIdentifier);
+      Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
+          envIdentifier, accountId, orgIdentifier, projectIdentifier);
+      Set<ServiceResponseDTO> serviceDTOS = new HashSet<>();
+      serviceIdentifiers.forEach(serviceIdentifier -> {
+        ServiceResponseDTO serviceResponseDTO = services.get(serviceIdentifier);
+        Preconditions.checkNotNull(serviceResponseDTO,
+            "no service with identifier %s found for account %s org %s project %s", serviceIdentifier, accountId,
+            orgIdentifier, projectIdentifier);
+        serviceDTOS.add(serviceResponseDTO);
+      });
 
-      envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(services).build());
+      envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(serviceDTOS).build());
     });
     return envToServicesDTOS;
   }
@@ -300,10 +318,14 @@ public class CVConfigServiceImpl implements CVConfigService {
       CVMonitoringCategory monitoringCategory) {
     List<CVConfig> configsForFilter =
         list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    Set<String> envIdentifiers = configsForFilter.stream().map(CVConfig::getEnvIdentifier).collect(toSet());
+    Map<String, EnvironmentResponseDTO> environments =
+        nextGenService.listEnvironmentsForProject(accountId, orgIdentifier, projectIdentifier, envIdentifiers);
     List<CVConfig> configsToReturn = new ArrayList<>();
     configsForFilter.forEach(config -> {
-      EnvironmentResponseDTO environment = nextGenService.getEnvironment(
-          config.getEnvIdentifier(), config.getAccountId(), config.getOrgIdentifier(), config.getProjectIdentifier());
+      EnvironmentResponseDTO environment = environments.get(config.getEnvIdentifier());
+      Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
+          config.getEnvIdentifier(), accountId, orgIdentifier, projectIdentifier);
       if (environment.getType().equals(EnvironmentType.Production)) {
         configsToReturn.add(config);
       }

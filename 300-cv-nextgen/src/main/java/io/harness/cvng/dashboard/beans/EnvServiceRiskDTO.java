@@ -10,6 +10,7 @@ import lombok.Singular;
 public class EnvServiceRiskDTO {
   String orgIdentifier;
   String projectIdentifier;
+  String envName;
   String envIdentifier;
   Integer risk;
   @Singular("addServiceRisk") Set<ServiceRisk> serviceRisks;
@@ -17,6 +18,7 @@ public class EnvServiceRiskDTO {
   @Data
   @Builder
   public static class ServiceRisk implements Comparable<ServiceRisk> {
+    String serviceName;
     String serviceIdentifier;
     Integer risk;
 

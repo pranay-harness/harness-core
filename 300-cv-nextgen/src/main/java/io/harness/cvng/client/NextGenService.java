@@ -3,12 +3,13 @@ package io.harness.cvng.client;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 public interface NextGenService {
   ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier);
@@ -24,11 +25,11 @@ public interface NextGenService {
 
   int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier);
 
-  PageResponse<ServiceResponseDTO> getServices(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort);
+  Map<String, ServiceResponseDTO> listServicesForProject(@NotNull String accountId, @NotNull String orgIdentifier,
+      @NotNull String projectIdentifier, @NotNull Set<String> serviceIdentifiers);
 
-  PageResponse<EnvironmentResponseDTO> listEnvironmentsForProject(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort);
+  Map<String, EnvironmentResponseDTO> listEnvironmentsForProject(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull Set<String> envIdentifiers);
 
   int getEnvironmentCount(String accountId, String orgIdentifier, String projectIdentifier);
 }
