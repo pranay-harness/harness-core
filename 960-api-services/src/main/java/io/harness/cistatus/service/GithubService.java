@@ -11,6 +11,6 @@ public interface GithubService {
   boolean sendStatus(GithubAppConfig githubAppConfig, String token, List<EncryptedDataDetail> encryptionDetails,
       String sha, String owner, String repo, Map<String, Object> bodyObjectMap);
 
-  String findPR(GithubAppConfig githubAppConfig, String token, List<EncryptedDataDetail> encryptionDetails,
-      String owner, String repo, String prNumber);
+  String findPR(String apiUrl, String token, List<EncryptedDataDetail> encryptionDetails, String owner, String repo,
+      String prNumber);
 }

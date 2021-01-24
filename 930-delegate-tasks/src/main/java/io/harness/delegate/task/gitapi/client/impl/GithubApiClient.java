@@ -1,5 +1,6 @@
 package io.harness.delegate.task.gitapi.client.impl;
 
+import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
 import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.TOKEN;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
@@ -10,6 +11,9 @@ import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
@@ -49,8 +53,8 @@ public class GithubApiClient implements GitApiClient {
       String token = retrieveAuthToken(gitConnector);
       String gitApiURL = getGitApiURL(gitConfigDTO.getUrl());
 
-      String prJson = githubService.findPR(GithubAppConfig.builder().githubUrl(gitApiURL).build(), token, null,
-          gitApiTaskParams.getOwner(), gitApiTaskParams.getRepo(), gitApiTaskParams.getPrNumber());
+      String prJson = githubService.findPR(gitApiURL, token, null, gitApiTaskParams.getOwner(),
+          gitApiTaskParams.getRepo(), gitApiTaskParams.getPrNumber());
       if (isNotBlank(prJson)) {
         responseBuilder.commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .gitApiResult(GitApiFindPRTaskResponse.builder().prJson(prJson).build());
@@ -79,18 +83,36 @@ public class GithubApiClient implements GitApiClient {
 
   private String retrieveAuthToken(ConnectorDetails gitConnector) {
     GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
-    if (gitConfigDTO.getApiAccess() == null) {
+    if (gitConfigDTO.getApiAccess() == null || gitConfigDTO.getApiAccess().getType() == null) {
       throw new InvalidRequestException(
           format("Failed to retrieve token info for github connector: ", gitConnector.getIdentifier()));
     }
 
-    if (gitConfigDTO.getApiAccess().getType() == TOKEN) {
-      GithubTokenSpecDTO githubTokenSpecDTO = (GithubTokenSpecDTO) gitConfigDTO.getApiAccess().getSpec();
-      secretDecryptionService.decrypt(githubTokenSpecDTO, gitConnector.getEncryptedDataDetails());
-      return new String(githubTokenSpecDTO.getTokenRef().getDecryptedValue());
+    GithubApiAccessSpecDTO spec = gitConfigDTO.getApiAccess().getSpec();
+    GithubApiAccessType apiAccessType = gitConfigDTO.getApiAccess().getType();
+    secretDecryptionService.decrypt(spec, gitConnector.getEncryptedDataDetails());
+    String token = null;
+    if (apiAccessType == TOKEN) {
+      token = new String(((GithubTokenSpecDTO) spec).getTokenRef().getDecryptedValue());
+    } else if (gitConfigDTO.getApiAccess().getType() == GITHUB_APP) {
+      token = fetchTokenUsingGithubAppSpec(gitConfigDTO, (GithubAppSpecDTO) spec);
     } else {
-      throw new InvalidRequestException(format(
-          "Unsupported access type %s for Github accessType. Use Token Access", gitConfigDTO.getApiAccess().getType()));
+      throw new InvalidRequestException(
+          format("Failed while retrieving token. Unsupported access type %s for Github accessType. Use Token Access",
+              gitConfigDTO.getApiAccess().getType()));
     }
+
+    return token;
+  }
+
+  private String fetchTokenUsingGithubAppSpec(GithubConnectorDTO gitConfigDTO, GithubAppSpecDTO spec) {
+    GithubAppSpecDTO githubAppSpecDTO = spec;
+    return githubService.getToken(GithubAppConfig.builder()
+                                      .installationId(githubAppSpecDTO.getInstallationId())
+                                      .appId(githubAppSpecDTO.getApplicationId())
+                                      .privateKey(new String(githubAppSpecDTO.getPrivateKeyRef().getDecryptedValue()))
+                                      .githubUrl(getGitApiURL(gitConfigDTO.getUrl()))
+                                      .build(),
+        null);
   }
 }

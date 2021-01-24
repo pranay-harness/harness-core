@@ -84,12 +84,13 @@ public class GithubServiceImpl implements GithubService {
   }
 
   @Override
-  public String findPR(GithubAppConfig githubAppConfig, String token, List<EncryptedDataDetail> encryptionDetails,
-      String owner, String repo, String prNumber) {
+  public String findPR(String apiUrl, String token, List<EncryptedDataDetail> encryptionDetails, String owner,
+      String repo, String prNumber) {
     try {
-      Response<Object> response = getGithubClient(githubAppConfig, encryptionDetails)
-                                      .findPR(getAuthToken(token), owner, repo, prNumber)
-                                      .execute();
+      Response<Object> response =
+          getGithubClient(GithubAppConfig.builder().githubUrl(apiUrl).build(), encryptionDetails)
+              .findPR(getAuthToken(token), owner, repo, prNumber)
+              .execute();
       if (response.isSuccessful()) {
         return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(response.body());
       } else {
@@ -97,7 +98,7 @@ public class GithubServiceImpl implements GithubService {
       }
 
     } catch (Exception e) {
-      log.error("Failed to send status for github url {} and prNum {} ", githubAppConfig.getGithubUrl(), prNumber, e);
+      log.error("Failed to fetch PR details for github url {} and prNum {} ", apiUrl, prNumber, e);
       return "";
     }
   }
