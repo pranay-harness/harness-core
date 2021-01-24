@@ -1,118 +1,57 @@
-use std::collections::HashMap;
-
-use crate::java_class::JavaClass;
-use crate::java_module::{modules, JavaModule};
-
+mod analyze;
 mod java_class;
 mod java_module;
 
+use crate::analyze::analyze;
+
+// (Full example with detailed comments in examples/01d_quick_example.rs)
+//
+// This example demonstrates clap's full 'custom derive' style of creating arguments which is the
+// simplest method of use, but sacrifices some flexibility.
+use clap::Clap;
+
+///
+#[derive(Clap)]
+#[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
+struct Opts {
+    /// A level of verbosity, and can be used multiple times
+    #[clap(short, long, parse(from_occurrences))]
+    verbose: i32,
+    #[clap(subcommand)]
+    subcmd: SubCommand,
+}
+
+#[derive(Clap)]
+enum SubCommand {
+    #[clap(version = "1.3", author = "Someone E. <someone_else@other.com>")]
+    Analyze(Analyze),
+}
+
+/// A subcommand to analyze the project module targets and dependencies
+#[derive(Clap)]
+struct Analyze {
+}
+
 fn main() {
-    println!("loading...");
+    let opts: Opts = Opts::parse();
 
-    let modules = modules();
-    //println!("{:?}", modules);
-
-    let class_modules = modules
-        .values()
-        .flat_map(|module| {
-            module
-                .srcs
-                .iter()
-                .map(|src| (src.1, module))
-                .collect::<HashMap<&JavaClass, &JavaModule>>()
-        })
-        .collect::<HashMap<&JavaClass, &JavaModule>>();
-
-    let classes = class_modules
-        .keys()
-        .map(|&class| (class.name.clone(), class))
-        .collect::<HashMap<String, &JavaClass>>();
-    //println!("{:?}", classes);
-
-    println!("analizing...");
-    class_modules.iter().for_each(|tuple| {
-        check_already_in_target(tuple.0, tuple.1);
-        check_for_promotion(tuple.0, tuple.1, &modules, &classes, &class_modules);
-    });
-}
-
-fn check_already_in_target(class: &JavaClass, module: &JavaModule) {
-    let target_module = class.target_module.as_ref();
-    if target_module.is_none() {
-        return;
+    // Vary the output based on how many times the user used the "verbose" flag
+    // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
+    match opts.verbose {
+        0 => (),
+        1 => println!("Some verbose info"),
+        2 => println!("Tons of verbose info"),
+        3 | _ => println!("Don't be crazy"),
     }
 
-    if module.name.eq(target_module.unwrap()) {
-        println!(
-            "ACTION: {} target module is where it already is - remove the annotation",
-            class.name
-        )
-    }
-}
-
-fn check_for_promotion(
-    class: &JavaClass,
-    module: &JavaModule,
-    modules: &HashMap<String, JavaModule>,
-    classes: &HashMap<String, &JavaClass>,
-    class_modules: &HashMap<&JavaClass, &JavaModule>,
-) {
-    let target_module_name = class.target_module.as_ref();
-    if target_module_name.is_none() {
-        return;
-    }
-
-    let target_module = modules.get(target_module_name.unwrap()).unwrap();
-
-    if module.index >= target_module.index {
-        return;
-    }
-
-    //println!("INFO: {:?}", class);
-
-    let mut issue = false;
-    let mut not_ready_yet = Vec::new();
-    class.dependencies.iter().for_each(|src| {
-        let &dependent_class = classes
-            .get(src)
-            .expect(&format!("The source {} is not find in any module", src));
-
-        let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
-            "The class {} is not find in the modules",
-            dependent_class.name
-        ));
-
-        let dependent_target_module = if dependent_class.target_module.is_some() {
-            modules.get(dependent_class.target_module.as_ref().unwrap()).unwrap()
-        } else {
-            dependent_real_module
-        };
-
-        //println!("INFO: {:?} depends on {:?} that is in module that is higher than the target {:?}", class, dependent_class, dependent_module);
-
-        if dependent_target_module.index < target_module.index {
-            issue = true;
-            println!(
-                "ERROR: {} depends on {} that is in module {} higher than the target {}",
-                class.name, dependent_class.name, dependent_target_module.name, target_module.name
-            )
-        }
-
-        if dependent_real_module.index < target_module.index {
-            not_ready_yet.push(format!("{} to {}", src, target_module.name));
-        }
-    });
-
-    if !issue {
-        if not_ready_yet.is_empty() {
-            println!("ACTION: {} is ready to go to {}", class.name, target_module.name)
-        } else {
-            println!(
-                "WARNING: {} does not have untargeted dependencies to go to {}. First promote {}",
-                class.name,
-                target_module.name,
-                not_ready_yet.join(", ")
-            )
+    // You can handle information about subcommands by requesting their matches by name
+    // (as below), requesting just the name used, or both at the same time
+    match opts.subcmd {
+        SubCommand::Analyze(_options) => {
+            analyze();
         }
     }
+
+    // more program logic goes here...
 }
+

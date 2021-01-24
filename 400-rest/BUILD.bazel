@@ -24,7 +24,6 @@ java_library(
     ],
     deps = [
         "//:lombok",
-        "//420-delegate-agent:module",
         "//420-delegate-service:module",
         "//430-cv-nextgen-commons:module",
         "//450-ce-views:module",

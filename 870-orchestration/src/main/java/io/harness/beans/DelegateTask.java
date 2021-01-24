@@ -3,6 +3,8 @@ package io.harness.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
@@ -43,6 +45,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, HDelegateTask {
   public static List<MongoIndex> mongoIndexes() {

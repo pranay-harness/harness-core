@@ -4,6 +4,8 @@ import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService secretDecryptionService;
 
