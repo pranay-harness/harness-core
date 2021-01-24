@@ -56,6 +56,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
   private ServiceHttpClientConfig ciManagerClientConfig;
+  private ServiceHttpClientConfig managerClientConfig;
   private String ciManagerServiceSecret;
 
   public PipelineServiceConfiguration() {

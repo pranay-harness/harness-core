@@ -45,7 +45,8 @@ public class GithubApiClient implements GitApiClient {
     GitApiTaskResponseBuilder responseBuilder = GitApiTaskResponse.builder();
     ConnectorDetails gitConnector = gitApiTaskParams.getConnectorDetails();
     try {
-      if (gitConnector == null || !gitConnector.getClass().isAssignableFrom(GithubConnectorDTO.class)) {
+      if (gitConnector == null
+          || !gitConnector.getConnectorConfig().getClass().isAssignableFrom(GithubConnectorDTO.class)) {
         throw new InvalidRequestException(
             format("Invalid Connector %s, Need GithubConfig: ", gitConnector.getIdentifier()));
       }
