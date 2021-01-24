@@ -7,52 +7,50 @@ load("//:macros.bzl", "sources")
 
 sources()
 
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//870-orchestration:module",
-        "//920-delegate-service-beans:module",
-        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
-        "//950-common-entities:module",
-        "//970-grpc:module",
-        "//970-rbac-core:module",
-        "@maven//:com_esotericsoftware_kryo",
-        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-        "@maven//:com_github_reinert_jjschema",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_inject_guice",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:com_smoketurner_dropwizard_swagger",
-        "@maven//:commons_codec_commons_codec",
-        "@maven//:io_swagger_swagger_annotations",
-        "@maven//:io_swagger_swagger_core",
-        "@maven//:io_swagger_swagger_jaxrs",
-        "@maven//:io_swagger_swagger_jersey2_jaxrs",
-        "@maven//:io_swagger_swagger_models",
-        "@maven//:javax_validation_validation_api",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_hibernate_hibernate_validator",
-        "@maven//:org_mongodb_mongo_java_driver",
-        "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
+shared_dependencies = [
+    "//870-orchestration:module",
+    "//920-delegate-service-beans:module",
+    "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
+    "//950-common-entities:module",
+    "//970-grpc:module",
+    "//970-rbac-core:module",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+    "@maven//:com_github_reinert_jjschema",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_smoketurner_dropwizard_swagger",
+    "@maven//:commons_codec_commons_codec",
+    "@maven//:io_swagger_swagger_annotations",
+    "@maven//:io_swagger_swagger_core",
+    "@maven//:io_swagger_swagger_jaxrs",
+    "@maven//:io_swagger_swagger_jersey2_jaxrs",
+    "@maven//:io_swagger_swagger_models",
+    "@maven//:javax_validation_validation_api",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_hibernate_hibernate_validator",
+    "@maven//:org_mongodb_mongo_java_driver",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_slf4j_slf4j_api",
+    "//:lombok",
+]
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
+    deps = shared_dependencies,
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "module",
+        "//:lombok",
         "//950-wait-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
@@ -67,18 +65,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
@@ -87,7 +73,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

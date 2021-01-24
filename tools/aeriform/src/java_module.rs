@@ -4,8 +4,8 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
-use crate::java_class::{class_dependencies, external_class, populate_target_module, JavaClass};
 
+use crate::java_class::{class_dependencies, external_class, populate_target_module, JavaClass};
 
 #[derive(Debug)]
 pub struct JavaModule {
@@ -14,6 +14,7 @@ pub struct JavaModule {
     pub directory: String,
     pub jar: String,
     pub srcs: HashMap<String, JavaClass>,
+    pub dependencies: HashSet<String>,
 }
 
 pub fn modules() -> HashMap<String, JavaModule> {
@@ -26,7 +27,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         panic!("Command executed with failing error code");
     }
 
-    let mut vec = String::from_utf8(output.stdout)
+    let modules = String::from_utf8(output.stdout)
         .unwrap()
         .lines()
         .into_iter()
@@ -35,9 +36,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         .filter(|target| target.starts_with("java_library rule "))
         .map(|target| target.split_whitespace().last().unwrap().to_string())
         .filter(|name| name.ends_with(":module") || name.ends_with(":test"))
-        .collect::<Vec<String>>();
-
-    &vec.sort();
+        .collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
         "https/harness-internal-read%40harness.jfrog.io/artifactory/harness-internal",
@@ -46,12 +45,9 @@ pub fn modules() -> HashMap<String, JavaModule> {
         "0.18-RELEASE",
     );
 
-    let mut result: HashMap<String, JavaModule> = vec
+    let mut result: HashMap<String, JavaModule> = modules
         .par_iter()
-        .map(|name| populate_from_bazel(name))
-        .filter(|module| module.is_some())
-        .map(|module| module.unwrap())
-        .map(|module| (module.name.clone(), module))
+        .map(|name| (name.clone(), populate_from_bazel(name, &modules)))
         .collect::<HashMap<String, JavaModule>>();
 
     result.insert("data-collection-dsl".to_string(), data_collection_dsl);
@@ -108,6 +104,24 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
             )
         })
         .collect::<HashMap<String, JavaClass>>()
+}
+
+fn populate_module_dependencies(name: &str, modules: &HashSet<String>) -> HashSet<String> {
+    let output = Command::new("bazel")
+        .args(&["query", &format!("labels(deps, {})", name)])
+        .output()
+        .expect("not able to run bazel");
+
+    if !output.status.success() {
+        panic!("Command executed with failing error code");
+    }
+
+    String::from_utf8(output.stdout)
+        .unwrap()
+        .lines()
+        .map(|line| line.to_string())
+        .filter(|name| modules.contains(name.as_str()))
+        .collect::<HashSet<String>>()
 }
 
 fn dependency_class(line: &String) -> (String, String) {
@@ -192,7 +206,7 @@ lazy_static! {
     .to_string();
 }
 
-fn populate_from_bazel(name: &String) -> Option<JavaModule> {
+fn populate_from_bazel(name: &String, modules: &HashSet<String>) -> JavaModule {
     let mut split = name.split(":");
     let directory = split.next().unwrap().strip_prefix("//").unwrap().to_string();
     let target_name = split.next().unwrap();
@@ -203,6 +217,8 @@ fn populate_from_bazel(name: &String) -> Option<JavaModule> {
         target_name
     );
 
+    let module_dependencies = populate_module_dependencies(name, modules);
+
     let (dependencies, protos) = populate_dependencies(&jar);
 
     let mut srcs = populate_srcs(&name, &dependencies);
@@ -212,21 +228,18 @@ fn populate_from_bazel(name: &String) -> Option<JavaModule> {
         srcs.insert(class.to_string(), external_class(class, &dependencies));
     });
 
-    if srcs.is_empty() {
-        None
-    } else {
-        Some(JavaModule {
-            name: name.clone(),
-            index: directory
-                .chars()
-                .take(3)
-                .collect::<String>()
-                .parse::<i32>()
-                .expect("the model index was ot resolved"),
-            directory: directory,
-            jar: jar,
-            srcs: srcs,
-        })
+    JavaModule {
+        name: name.clone(),
+        index: directory
+            .chars()
+            .take(3)
+            .collect::<String>()
+            .parse::<i32>()
+            .expect("the model index was ot resolved"),
+        directory: directory,
+        jar: jar,
+        srcs: srcs,
+        dependencies: module_dependencies,
     }
 }
 
@@ -252,7 +265,8 @@ fn populate_from_external(artifactory: &str, package: &str, name: &str, version:
         .map(|tuple| (tuple.0.clone(), tuple.1.clone()))
         .collect::<MultiMap<String, String>>();
 
-    let srcs = all.iter()
+    let srcs = all
+        .iter()
         .filter(|tuple| is_harness_class(&tuple.0))
         .map(|tuple| (tuple.0.to_string(), external_class(&tuple.0, &dependencies)))
         .collect();
@@ -263,5 +277,6 @@ fn populate_from_external(artifactory: &str, package: &str, name: &str, version:
         directory: "n/a".to_string(),
         jar: jar,
         srcs: srcs,
+        dependencies: HashSet::new(),
     }
 }
