@@ -6,6 +6,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -44,6 +45,7 @@ import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServi
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
@@ -120,6 +122,10 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
+    install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new SecretManagementClientModule(
+        configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(), MANAGER.getServiceId()));
     install(NGTriggersModule.getInstance());
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
