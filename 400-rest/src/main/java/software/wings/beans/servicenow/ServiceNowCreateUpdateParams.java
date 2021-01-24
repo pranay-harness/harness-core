@@ -2,7 +2,9 @@ package software.wings.beans.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 
@@ -10,6 +12,7 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 public class ServiceNowCreateUpdateParams {
   @Getter @Setter private ServiceNowAction action;

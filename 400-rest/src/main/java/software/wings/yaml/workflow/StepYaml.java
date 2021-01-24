@@ -2,7 +2,9 @@ package software.wings.yaml.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TemplateExpression;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 /**
  * @author rktummala on 10/26/17
  */
+@TargetModule(Module._870_YAML_BEANS)
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor

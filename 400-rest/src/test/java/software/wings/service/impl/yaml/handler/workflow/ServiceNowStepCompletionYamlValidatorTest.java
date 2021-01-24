@@ -6,6 +6,8 @@ import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.Servi
 
 import static org.junit.runners.Parameterized.Parameters;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -28,6 +30,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+@TargetModule(Module._870_YAML_BEANS)
 @RunWith(Parameterized.class)
 public class ServiceNowStepCompletionYamlValidatorTest {
   private final ChangeContext<StepYaml> changeContext;
