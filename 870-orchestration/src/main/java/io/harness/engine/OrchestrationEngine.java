@@ -74,12 +74,14 @@ import io.harness.pms.sdk.core.steps.io.StepOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.registries.timeout.TimeoutRegistry;
+import io.harness.serializer.KryoSerializer;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.TimeoutInstance;
-import io.harness.timeout.TimeoutObtainment;
+import io.harness.timeout.TimeoutParameters;
 import io.harness.timeout.TimeoutTracker;
 import io.harness.timeout.TimeoutTrackerFactory;
+import io.harness.timeout.contracts.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.waiter.WaitNotifyEngine;
@@ -128,6 +130,7 @@ public class OrchestrationEngine {
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private EngineExpressionService engineExpressionService;
+  @Inject private KryoSerializer kryoSerializer;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -253,31 +256,28 @@ public class OrchestrationEngine {
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
-    // StepParameters resolvedStepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
-    List<TimeoutObtainment> timeoutObtainmentList =
-        Collections.singletonList(TimeoutObtainment.builder()
-                                      .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
-                                      .parameters(AbsoluteTimeoutParameters.builder()
-                                                      .timeoutMillis(Duration.of(10, ChronoUnit.MINUTES).toMillis())
-                                                      .build())
-                                      .build());
-    // TODO(gpahal): update later
-    //    if (resolvedStepParameters != null) {
-    //      timeoutObtainmentList = resolvedStepParameters.fetchTimeouts();
-    //    } else {
-    //      timeoutObtainmentList = new StepParameters() {}.fetchTimeouts();
-    //    }
-
-    List<String> timeoutInstanceIds = new ArrayList<>();
-    if (isEmpty(timeoutObtainmentList)) {
-      return timeoutInstanceIds;
+    List<TimeoutObtainment> timeoutObtainmentList;
+    if (nodeExecution.getNode().getTimeoutObtainmentsList().isEmpty()) {
+      timeoutObtainmentList = Collections.singletonList(
+          TimeoutObtainment.newBuilder()
+              .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                  AbsoluteTimeoutParameters.builder()
+                      .timeoutMillis(
+                          Duration.of(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS, ChronoUnit.MINUTES).toMillis())
+                      .build())))
+              .build());
+    } else {
+      timeoutObtainmentList = nodeExecution.getNode().getTimeoutObtainmentsList();
     }
 
+    List<String> timeoutInstanceIds = new ArrayList<>();
     TimeoutCallback timeoutCallback =
         new NodeExecutionTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
     for (TimeoutObtainment timeoutObtainment : timeoutObtainmentList) {
-      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getType());
-      TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(timeoutObtainment.getParameters());
+      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getDimension());
+      TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
+          (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
       TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
       timeoutInstanceIds.add(instance.getUuid());
     }

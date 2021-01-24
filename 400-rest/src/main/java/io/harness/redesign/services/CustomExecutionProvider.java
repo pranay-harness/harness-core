@@ -52,6 +52,9 @@ import io.harness.steps.section.SectionStep;
 import io.harness.steps.section.SectionStepParameters;
 import io.harness.steps.section.chain.SectionChainStep;
 import io.harness.steps.section.chain.SectionChainStepParameters;
+import io.harness.timeout.contracts.TimeoutObtainment;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import software.wings.app.MainConfiguration;
 import software.wings.sm.states.ShellScriptState;
@@ -1574,11 +1577,16 @@ public class CustomExecutionProvider {
                   .identifier("barrier1")
                   .name("barrier1")
                   .stepType(BarrierStep.STEP_TYPE)
-                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(100000).build())
+                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").build())
                   .facilitatorObtainment(
                       FacilitatorObtainment.newBuilder()
                           .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
                           .build())
+                  .timeoutObtainment(TimeoutObtainment.newBuilder()
+                                         .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                                             AbsoluteTimeoutParameters.builder().timeoutMillis(100000).build())))
+                                         .build())
                   .build())
         .build();
   }
@@ -1665,10 +1673,7 @@ public class CustomExecutionProvider {
                 .identifier("barrier1")
                 .name("barrier1")
                 .stepType(BarrierStep.STEP_TYPE)
-                .stepParameters(BarrierStepParameters.builder()
-                                    .identifier("BAR1")
-                                    .timeoutInMillis(Duration.ofMinutes(10).toMillis())
-                                    .build())
+                .stepParameters(BarrierStepParameters.builder().identifier("BAR1").build())
                 .facilitatorObtainment(
                     FacilitatorObtainment.newBuilder()
                         .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
@@ -1679,6 +1684,13 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId3).build())))
                         .build())
+                .timeoutObtainment(TimeoutObtainment.newBuilder()
+                                       .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                       .setParameters(ByteString.copyFrom(
+                                           kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
+                                                                      .timeoutMillis(Duration.ofMinutes(10).toMillis())
+                                                                      .build())))
+                                       .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1686,10 +1698,7 @@ public class CustomExecutionProvider {
                 .identifier("barrier2")
                 .name("barrier2")
                 .stepType(BarrierStep.STEP_TYPE)
-                .stepParameters(BarrierStepParameters.builder()
-                                    .identifier("BAR1")
-                                    .timeoutInMillis(Duration.ofMinutes(10).toMillis())
-                                    .build())
+                .stepParameters(BarrierStepParameters.builder().identifier("BAR1").build())
                 .facilitatorObtainment(
                     FacilitatorObtainment.newBuilder()
                         .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
@@ -1700,6 +1709,13 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId3).build())))
                         .build())
+                .timeoutObtainment(TimeoutObtainment.newBuilder()
+                                       .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                       .setParameters(ByteString.copyFrom(
+                                           kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
+                                                                      .timeoutMillis(Duration.ofMinutes(10).toMillis())
+                                                                      .build())))
+                                       .build())
                 .build())
         .node(
             PlanNode.builder()
@@ -1707,10 +1723,7 @@ public class CustomExecutionProvider {
                 .identifier("barrier3")
                 .name("barrier3")
                 .stepType(BarrierStep.STEP_TYPE)
-                .stepParameters(BarrierStepParameters.builder()
-                                    .identifier("BAR2")
-                                    .timeoutInMillis(Duration.ofMinutes(10).toMillis())
-                                    .build())
+                .stepParameters(BarrierStepParameters.builder().identifier("BAR2").build())
                 .facilitatorObtainment(
                     FacilitatorObtainment.newBuilder()
                         .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.BARRIER).build())
@@ -1721,6 +1734,13 @@ public class CustomExecutionProvider {
                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                             OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId4).build())))
                         .build())
+                .timeoutObtainment(TimeoutObtainment.newBuilder()
+                                       .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                       .setParameters(ByteString.copyFrom(
+                                           kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
+                                                                      .timeoutMillis(Duration.ofMinutes(10).toMillis())
+                                                                      .build())))
+                                       .build())
                 .build())
         .node(PlanNode.builder()
                   .uuid(dummyNodeId3)

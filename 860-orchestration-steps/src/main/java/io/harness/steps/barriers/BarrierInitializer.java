@@ -8,19 +8,23 @@ import io.harness.execution.PlanExecution;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
+import io.harness.timeout.TimeoutParameters;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class BarrierInitializer implements SyncOrchestrationEventHandler {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private BarrierService barrierService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -32,8 +36,15 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
             .stream()
             .filter(planNode -> planNode.getStepType().equals(BarrierStep.STEP_TYPE))
             .map(planNode -> {
-              BarrierStepParameters stepParameters =
-                  RecastOrchestrationUtils.fromDocumentJson(planNode.getStepParameters(), BarrierStepParameters.class);
+              BarrierStepParameters stepParameters = Objects.requireNonNull(
+                  RecastOrchestrationUtils.fromDocumentJson(planNode.getStepParameters(), BarrierStepParameters.class));
+              long expiredIn = planNode.getTimeoutObtainmentsList()
+                                   .stream()
+                                   .map(t
+                                       -> ((TimeoutParameters) kryoSerializer.asObject(t.getParameters().toByteArray()))
+                                              .getTimeoutMillis())
+                                   .max(Long::compareTo)
+                                   .orElse(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS);
               return BarrierExecutionInstance.builder()
                   .uuid(generateUuid())
                   .name(planNode.getName())
@@ -41,7 +52,7 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
                   .identifier(stepParameters.getIdentifier())
                   .planExecutionId(planExecution.getUuid())
                   .barrierState(Barrier.State.STANDING)
-                  .expiredIn(stepParameters.getTimeoutInMillis())
+                  .expiredIn(expiredIn)
                   .build();
             })
             .collect(Collectors.groupingBy(BarrierExecutionInstance::getIdentifier));

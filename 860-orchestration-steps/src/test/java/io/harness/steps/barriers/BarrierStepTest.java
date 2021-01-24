@@ -59,8 +59,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    BarrierStepParameters stepParameters =
-        BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
     when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
     when(barrierService.save(any())).thenReturn(updatedBarrier);
@@ -97,8 +96,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    BarrierStepParameters stepParameters =
-        BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
     when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
@@ -131,8 +129,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
-    BarrierStepParameters stepParameters =
-        BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
     when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
@@ -164,8 +161,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
-    BarrierStepParameters stepParameters =
-        BarrierStepParameters.builder().identifier(barrierIdentifier).timeoutInMillis(1000).build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
     when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);

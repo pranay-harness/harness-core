@@ -12,6 +12,6 @@ import lombok.Value;
 @Value
 @Builder
 public class ActiveTimeoutParameters implements TimeoutParameters {
-  long timeoutMillis;
+  @Builder.Default long timeoutMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
   boolean runningAtStart;
 }
