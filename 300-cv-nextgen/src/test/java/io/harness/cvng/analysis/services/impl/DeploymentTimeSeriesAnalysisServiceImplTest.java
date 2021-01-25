@@ -417,6 +417,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     canaryVerificationJobDTO.setEnvIdentifier(envIdentifier);
     canaryVerificationJobDTO.setDataSources(Arrays.asList(DataSourceType.APP_DYNAMICS));
+    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.LOW.name());
     return canaryVerificationJobDTO;
   }

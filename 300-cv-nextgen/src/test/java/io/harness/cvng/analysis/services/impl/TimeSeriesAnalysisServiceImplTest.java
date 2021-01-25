@@ -664,6 +664,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       testVerificationJob.setIdentifier(generateUuid());
       testVerificationJob.setJobName(generateUuid());
       testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+      testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
       testVerificationJob.setServiceIdentifier(generateUuid());
       testVerificationJob.setOrgIdentifier(generateUuid());
       testVerificationJob.setProjectIdentifier(generateUuid());
@@ -677,6 +678,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       canaryVerificationJobDTO.setIdentifier(generateUuid());
       canaryVerificationJobDTO.setJobName(generateUuid());
       canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+      canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
       canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
       canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
       canaryVerificationJobDTO.setProjectIdentifier(generateUuid());

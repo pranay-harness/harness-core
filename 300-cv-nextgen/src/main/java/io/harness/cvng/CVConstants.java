@@ -13,6 +13,7 @@ public interface CVConstants {
    */
   int MONGO_QUERY_TIMEOUT_SEC = 5;
   double DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD = 0.5;
-  String DEFAULT_HEALTH_JOB_NAME = "_DEFAULT_HEALTH_JOB";
+  String DEFAULT_HEALTH_JOB_NAME = "Built-in health verification";
+  String DEFAULT_HEALTH_JOB_ID = DEFAULT_HEALTH_JOB_NAME.replace(" ", "_");
   int STATE_MACHINE_IGNORE_LIMIT = 100;
 }

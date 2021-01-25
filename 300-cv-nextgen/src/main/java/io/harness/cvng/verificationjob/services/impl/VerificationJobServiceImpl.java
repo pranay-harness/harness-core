@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
 import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -210,9 +211,10 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     VerificationJobDTO verificationJobDTO = HealthVerificationJobDTO.builder()
                                                 .orgIdentifier(orgIdentifier)
                                                 .projectIdentifier(projectIdentifier)
-                                                .jobName(projectIdentifier + DEFAULT_HEALTH_JOB_NAME)
-                                                .identifier(projectIdentifier + DEFAULT_HEALTH_JOB_NAME)
+                                                .jobName(DEFAULT_HEALTH_JOB_NAME)
+                                                .identifier(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID)
                                                 .dataSources(Arrays.asList(DataSourceType.values()))
+                                                .monitoringSources(Arrays.asList("ALL"))
                                                 .serviceIdentifier("${service}")
                                                 .envIdentifier("${environment}")
                                                 .duration("15m")

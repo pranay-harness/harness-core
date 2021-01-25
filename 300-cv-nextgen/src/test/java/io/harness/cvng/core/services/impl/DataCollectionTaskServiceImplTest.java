@@ -65,6 +65,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -776,6 +777,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     testVerificationJob.setIdentifier(generateUuid());
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJob.setServiceIdentifier(generateUuid());
     testVerificationJob.setOrgIdentifier(orgIdentifier);
     testVerificationJob.setProjectIdentifier(projectIdentifier);

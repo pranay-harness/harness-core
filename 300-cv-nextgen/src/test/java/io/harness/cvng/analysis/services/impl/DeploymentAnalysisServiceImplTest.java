@@ -98,6 +98,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     canaryVerificationJobDTO.setEnvIdentifier(envIdentifier);
     canaryVerificationJobDTO.setDataSources(Arrays.asList(DataSourceType.APP_DYNAMICS));
+    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.LOW.name());
     return canaryVerificationJobDTO;
   }
@@ -112,6 +113,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     testVerificationJobDTO.setEnvIdentifier(envIdentifier);
     testVerificationJobDTO.setDataSources(Arrays.asList(DataSourceType.APP_DYNAMICS));
+    testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJobDTO.setSensitivity(Sensitivity.LOW.name());
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
     return testVerificationJobDTO;

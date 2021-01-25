@@ -1104,6 +1104,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     canaryVerificationJobDTO.setJobName(generateUuid());
     canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setServiceIdentifier("service");
     canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
@@ -1119,6 +1120,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     healthVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     healthVerificationJobDTO.setJobName(generateUuid());
     healthVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    healthVerificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
     healthVerificationJobDTO.setServiceIdentifier("service");
     healthVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     healthVerificationJobDTO.setProjectIdentifier(projectIdentifier);
@@ -1207,6 +1209,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     verificationJobDTO.setIdentifier(verificationJobIdentifier);
     verificationJobDTO.setJobName(generateUuid());
     verificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    verificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
     verificationJobDTO.setServiceIdentifier(serviceIdentifier);
     verificationJobDTO.setOrgIdentifier(orgIdentifier);
     verificationJobDTO.setProjectIdentifier(projectIdentifier);

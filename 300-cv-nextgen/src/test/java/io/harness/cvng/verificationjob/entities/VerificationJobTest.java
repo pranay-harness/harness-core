@@ -22,6 +22,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class VerificationJobTest extends CategoryTest {
     testFieldForNotNull(VerificationJobKeys.accountId);
     testFieldForNotNull(VerificationJobKeys.identifier);
     testFieldForNotNull(VerificationJobKeys.jobName);
-    testFieldForNotNull(VerificationJobKeys.dataSources);
+    testFieldForNotNull(VerificationJobKeys.monitoringSources);
 
     testFieldForNotNull(VerificationJobKeys.duration);
 
@@ -97,12 +98,12 @@ public class VerificationJobTest extends CategoryTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testValidate_emptyDataSources() {
+  public void testValidate_emptyMonitoringSources() {
     VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setDataSources(Collections.emptyList());
+    verificationJob.setMonitoringSources(Collections.emptyList());
     assertThatThrownBy(() -> verificationJob.validate())
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("DataSources can not be empty");
+        .hasMessage("Monitoring Sources can not be empty");
   }
 
   @Test(expected = Test.None.class)
@@ -184,6 +185,7 @@ public class VerificationJobTest extends CategoryTest {
     testVerificationJob.setIdentifier("identifier");
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJob.setMonitoringSources(Arrays.asList("monitoringIdentifier"));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
     testVerificationJob.setServiceIdentifier(generateUuid(), false);
     testVerificationJob.setEnvIdentifier(generateUuid(), false);

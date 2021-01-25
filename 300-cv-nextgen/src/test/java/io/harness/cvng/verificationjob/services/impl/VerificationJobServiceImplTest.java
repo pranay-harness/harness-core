@@ -1,6 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
-import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -36,6 +36,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -296,6 +297,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setIdentifier(identifier);
     testVerificationJobDTO.setJobName(generateUuid());
     testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
@@ -453,7 +455,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
         verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
     assertThat(verificationJob).isNotNull();
     assertThat(verificationJob.isDefaultJob()).isTrue();
-    assertThat(verificationJob.getIdentifier()).isEqualTo(projectIdentifier + DEFAULT_HEALTH_JOB_NAME);
+    assertThat(verificationJob.getIdentifier()).isEqualTo(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID);
     assertThat(verificationJob.getServiceIdentifier()).isEqualTo("${service}");
     assertThat(verificationJob.getEnvIdentifier()).isEqualTo("${environment}");
     assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(Duration.ofMinutes(15).toMinutes());

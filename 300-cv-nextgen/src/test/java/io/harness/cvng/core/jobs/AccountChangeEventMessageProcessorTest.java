@@ -22,6 +22,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -84,6 +85,7 @@ public class AccountChangeEventMessageProcessorTest extends CvNextGenTest {
     testVerificationJobDTO.setIdentifier(generateUuid());
     testVerificationJobDTO.setJobName(generateUuid());
     testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
