@@ -142,6 +142,9 @@ public class Recaster {
 
   @SuppressWarnings("unchecked")
   private <T> void populateCollection(final Document document, T entity) {
+    if (!document.containsKey(ENCODED_VALUE)) {
+      return;
+    }
     Collection<Object> collection = (Collection<Object>) entity;
     for (Object o : (List<Object>) document.get(ENCODED_VALUE)) {
       collection.add((o instanceof Document) ? fromDocument((Document) o) : o);
@@ -200,15 +203,22 @@ public class Recaster {
 
     if (entity instanceof Map) {
       Object encoded = transformer.getTransformer(entity.getClass()).encode(entity);
-      if (encoded != null && !(encoded instanceof Document)) {
+      if (encoded == null) {
+        return document;
+      }
+      if (!(encoded instanceof Document)) {
         throw new RecasterException(format("Cannot transform %s to document", entity.getClass()));
       }
+
       document.putAll((Document) encoded);
       return document;
     }
 
     if (entity instanceof Collection) {
       Collection<Object> encoded = (Collection<Object>) transformer.getTransformer(entity.getClass()).encode(entity);
+      if (encoded == null) {
+        return document;
+      }
       document.append(ENCODED_VALUE, encoded);
       return document;
     }
