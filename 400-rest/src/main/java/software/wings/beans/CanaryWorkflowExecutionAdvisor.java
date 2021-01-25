@@ -291,20 +291,30 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .build();
       }
 
+      List<FailureStrategy> workflowFailureStrategies = orchestrationWorkflow.getFailureStrategies();
+
       if (state.getParentId() != null) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
+
         if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
           FailureStrategy failureStrategy = selectTopMatchingStrategy(
-              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
+              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName(), phaseElement);
+
+          if (failureStrategy == null) {
+            failureStrategy = selectTopMatchingStrategy(
+                workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
+          }
           return computeExecutionEventAdvice(
               orchestrationWorkflow, failureStrategy, executionEvent, null, stateExecutionInstance);
         }
       }
+
       FailureStrategy failureStrategy = selectTopMatchingStrategy(
-          orchestrationWorkflow.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
+          workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
 
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
+
     } catch (Exception ex) {
       log.error("Error Occurred while calculating advise. This is really bad");
       return null;
@@ -757,10 +767,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         .build();
   }
 
-  public static FailureStrategy selectTopMatchingStrategy(
-      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
+  public static FailureStrategy selectTopMatchingStrategy(List<FailureStrategy> failureStrategies,
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
     final FailureStrategy failureStrategy =
-        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName);
+        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName, phaseElement);
 
     if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
       log.error("Defaulting to accepting the action. "
@@ -771,8 +781,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     return failureStrategy;
   }
 
-  private static FailureStrategy selectTopMatchingStrategyInternal(
-      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
+  private static FailureStrategy selectTopMatchingStrategyInternal(List<FailureStrategy> failureStrategies,
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
     if (isEmpty(failureStrategies)) {
       return null;
     }
@@ -819,6 +829,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get();
     }
 
-    return filteredFailureStrategies.get(0);
+    FailureStrategy failureStrategy = filteredFailureStrategies.get(0);
+
+    // If scope is WORKFLOW_PHASE and step is not within the Phase the strategy will not be applied
+    if (failureStrategy.getExecutionScope() == ExecutionScope.WORKFLOW_PHASE && phaseElement == null) {
+      return null;
+    } else {
+      return failureStrategy;
+    }
   }
 }
