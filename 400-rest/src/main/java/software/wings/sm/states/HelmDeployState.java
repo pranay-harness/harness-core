@@ -1139,10 +1139,7 @@ public class HelmDeployState extends State {
 
   @VisibleForTesting
   void saveHelmReleaseInfoToSweepingOutput(ExecutionContext context, HelmReleaseInfoElement helmReleaseInfoElement) {
-    Scope scope = workflowExecutionService.isMultiService(context.getAppId(), context.getWorkflowExecutionId())
-        ? Scope.PHASE
-        : Scope.WORKFLOW;
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(scope)
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
                                    .name(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME)
                                    .value(helmReleaseInfoElement)
                                    .build());
