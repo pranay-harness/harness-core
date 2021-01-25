@@ -93,5 +93,7 @@ ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiw
 allowedOrigins:
   - "*"
 
+pipelineServiceBaseUrl: https://localhost:8181/#
+
 scmConnectionConfig:
   url: localhost:8091

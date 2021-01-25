@@ -1,5 +1,6 @@
 package io.harness.pms.notification;
 
+import io.harness.PipelineServiceConfiguration;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
@@ -34,6 +35,7 @@ public class NotificationHelper {
 
   @Inject NotificationClient notificationClient;
   @Inject PlanExecutionService planExecutionService;
+  @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
 
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecutionProto nodeExecutionProto) {
     if (!isStageNode(nodeExecutionProto)) {
@@ -106,13 +108,13 @@ public class NotificationHelper {
       PipelineEventType thisEventType = pipelineEvent.getType();
       if (thisEventType == PipelineEventType.ALL_EVENTS) {
         return true;
-      } else if (thisEventType == pipelineEventType && pipelineEventTypeLevel.equals("Pipeline")) {
-        return true;
       } else if (thisEventType == pipelineEventType && pipelineEventTypeLevel.equals("Stage")) {
         List<String> stages = pipelineEvent.getForStages();
         if (stages.contains(identifier) || stages.contains("AllStages")) {
           return true;
         }
+      } else if (thisEventType == pipelineEventType && !pipelineEventTypeLevel.equals("Stage")) {
+        return true;
       }
     }
     return false;
@@ -132,7 +134,7 @@ public class NotificationHelper {
         new StringBuilder()
             .append("Pipeline Status Update")
             .append("\nEventType: ")
-            .append(pipelineEventType)
+            .append(pipelineEventType.getDisplayName())
             .append("\nProject Id: ")
             .append(projectId)
             .append("\nPipeline: ")
@@ -143,6 +145,9 @@ public class NotificationHelper {
     if (pipelineEventType.getLevel().equals("Stage") && nodeExecutionProto != null) {
       sb.append("\nStage: ").append(identifier);
       sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecutionProto.getStatus()));
+    } else if (pipelineEventType.getLevel().equals("Step") && nodeExecutionProto != null) {
+      sb.append("\nStep: ").append(identifier);
+      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecutionProto.getStatus()));
     } else {
       sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(planExecution.getStatus()));
     }
@@ -151,6 +156,15 @@ public class NotificationHelper {
       sb.append("\nEnded At: ")
           .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(planExecution.getEndTs())));
     }
+    sb.append("\n Link to Execution: ").append(generateUrl(ambiance));
     return sb.toString();
+  }
+
+  private String generateUrl(Ambiance ambiance) {
+    // Todo: Take module name from request
+    return String.format("%s/account/%s/cd/orgs/%s/projects/%s/pipelines/%s/executions/%s/pipeline",
+        pipelineServiceConfiguration.getPipelineServiceBaseUrl(), AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
+        ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId());
   }
 }

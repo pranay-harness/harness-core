@@ -14,6 +14,7 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.notification.bean.NotificationChannelWrapper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -292,5 +293,12 @@ public class PipelineResource {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
     return ResponseDTO.newResponse(schema);
+  }
+
+  @GET
+  @Path("/notification")
+  @ApiOperation(value = "Get Notification Schema", nickname = "getNotificationSchema")
+  public ResponseDTO<NotificationChannelWrapper> getNotificationSchema() {
+    return ResponseDTO.newResponse(NotificationChannelWrapper.builder().build());
   }
 }
