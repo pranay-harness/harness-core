@@ -34,7 +34,6 @@ public class NotificationClientModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(NotificationClientConfiguration.class).toInstance(notificationClientConfiguration);
-    install(new NotificationClientPersistenceModule());
     install(new ProviderModule() {
       @Provides
       @Singleton

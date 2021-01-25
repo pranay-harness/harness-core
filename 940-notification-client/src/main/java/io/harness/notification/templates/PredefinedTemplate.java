@@ -10,7 +10,15 @@ public enum PredefinedTemplate {
   EMAIL_TEST_WITH_USER("templates/email_test2.txt", "email_test2"),
   SLACK_TEST_WITH_USER("templates/slack_test2.txt", "slack_test2"),
   PD_TEST_WITH_USER("templates/pd_test2.txt", "pd_test2"),
-  MSTEAMS_TEST_WITH_USER("templates/msteams_test2.txt", "msteams_test2");
+  MSTEAMS_TEST_WITH_USER("templates/msteams_test2.txt", "msteams_test2"),
+  PIPELINE_PLAIN_SLACK("notification_templates/pipeline/slack/plain_text.txt", "pms_pipeline_slack_plain"),
+  PIPELINE_PLAIN_EMAIL("notification_templates/pipeline/email/plain_text.txt", "pms_pipeline_email_plain"),
+  PIPELINE_PLAIN_PAGERDUTY("notification_templates/pipeline/pagerduty/plain_text.txt", "pms_pipeline_pagerduty_plain"),
+  PIPELINE_PLAIN_MSTEAMS("notification_templates/pipeline/msteams/plain_text.txt", "pms_pipeline_msteams_plain"),
+  STAGE_PLAIN_SLACK("notification_templates/stage/slack/plain_text.txt", "pms_stage_slack_plain"),
+  STAGE_PLAIN_EMAIL("notification_templates/stage/email/plain_text.txt", "pms_stage_email_plain"),
+  STAGE_PLAIN_PAGERDUTY("notification_templates/stage/pagerduty/plain_text.txt", "pms_stage_pagerduty_plain"),
+  STAGE_PLAIN_MSTEAMS("notification_templates/stage/msteams/plain_text.txt", "pms_stage_msteams_plain");
 
   private String path;
   private String identifier;

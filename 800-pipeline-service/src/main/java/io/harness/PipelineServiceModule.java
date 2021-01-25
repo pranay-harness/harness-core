@@ -49,7 +49,6 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
-import io.harness.springdata.SpringPersistenceModule;
 import io.harness.time.TimeModule;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -93,7 +92,7 @@ public class PipelineServiceModule extends AbstractModule {
   protected void configure() {
     install(MongoModule.getInstance());
     install(PipelineServiceGrpcModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new PipelinePersistenceModule());
     install(PmsDelegateServiceDriverModule.getInstance());
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("PIPELINE")

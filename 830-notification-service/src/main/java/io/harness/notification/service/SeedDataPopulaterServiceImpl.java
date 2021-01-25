@@ -27,12 +27,18 @@ public class SeedDataPopulaterServiceImpl implements SeedDataPopulaterService {
     for (PredefinedTemplate predefinedTemplate : PredefinedTemplate.values()) {
       String identifier = predefinedTemplate.getIdentifier();
       String path = predefinedTemplate.getPath();
+      URL url = null;
+      try {
+        url = Resources.getResource(path);
+      } catch (IllegalArgumentException ex) {
+        log.warn("Resource not found, skipping to seed the template - " + ex);
+        continue;
+      }
 
       if (notificationTemplateService.getByIdentifierAndTeam(identifier, null).isPresent()) {
         continue;
       }
 
-      URL url = Resources.getResource(path);
       try {
         byte[] file = Resources.toByteArray(url);
         NotificationTemplate notificationTemplate =

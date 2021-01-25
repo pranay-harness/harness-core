@@ -63,6 +63,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notification.module.NotificationClientModule;
+import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.JWTAuthenticationFilter;
@@ -234,6 +235,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
+    modules.add(new NotificationClientPersistenceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);

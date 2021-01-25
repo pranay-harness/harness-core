@@ -13,7 +13,6 @@ import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,11 +26,11 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @EnableMongoRepositories(basePackages = {"io.harness.ng"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class),
     mongoTemplateRef = "notification-channel")
-public class NotificationChannelPersistenceConfig extends AbstractMongoConfiguration {
+public class NotificationChannelServicePersistenceConfig extends AbstractMongoConfiguration {
   private final MongoBackendConfiguration mongoBackendConfiguration;
 
   @Inject
-  public NotificationChannelPersistenceConfig(Injector injector) {
+  public NotificationChannelServicePersistenceConfig(Injector injector) {
     this.mongoBackendConfiguration = (MongoBackendConfiguration) injector.getInstance(NotificationConfiguration.class)
                                          .getNotificationClientConfiguration()
                                          .getNotificationClientBackendConfiguration();
@@ -59,7 +58,6 @@ public class NotificationChannelPersistenceConfig extends AbstractMongoConfigura
   }
 
   @Bean(name = "notification-channel")
-  @Primary
   @Override
   public MongoTemplate mongoTemplate() throws Exception {
     MongoClientOptions primaryMongoClientOptions =

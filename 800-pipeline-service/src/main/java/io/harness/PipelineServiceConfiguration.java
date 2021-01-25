@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.notification.NotificationClientConfiguration;
 import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
@@ -50,6 +51,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
+  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
 
   private String managerServiceSecret;
   private String managerTarget;

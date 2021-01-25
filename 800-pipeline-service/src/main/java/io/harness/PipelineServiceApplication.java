@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
+import io.harness.exception.UnexpectedException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
@@ -16,6 +17,9 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.notification.module.NotificationClientModule;
+import io.harness.notification.notificationclient.NotificationClient;
+import io.harness.notification.templates.PredefinedTemplate;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
@@ -69,6 +73,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -138,6 +143,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         return appConfig;
       }
     });
+    modules.add(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new MetricRegistryModule(metricRegistry));
@@ -162,6 +168,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
+
+    registerNotificationTemplates(injector.getInstance(NotificationClient.class));
+
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -260,5 +269,22 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
                                                     .requireValidatorInit(false)
                                                     .build();
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
+  }
+
+  private void registerNotificationTemplates(NotificationClient notificationClient) {
+    List<PredefinedTemplate> templates =
+        new ArrayList<>(Arrays.asList(PredefinedTemplate.PIPELINE_PLAIN_SLACK, PredefinedTemplate.PIPELINE_PLAIN_EMAIL,
+            PredefinedTemplate.PIPELINE_PLAIN_PAGERDUTY, PredefinedTemplate.PIPELINE_PLAIN_MSTEAMS,
+            PredefinedTemplate.STAGE_PLAIN_SLACK, PredefinedTemplate.STAGE_PLAIN_EMAIL,
+            PredefinedTemplate.STAGE_PLAIN_PAGERDUTY, PredefinedTemplate.STAGE_PLAIN_MSTEAMS));
+
+    for (PredefinedTemplate template : templates) {
+      try {
+        log.info("Registering {} with NotificationService", template);
+        notificationClient.saveNotificationTemplate(Team.PIPELINE, template, true);
+      } catch (UnexpectedException ex) {
+        log.error("Unable to save {} to NotificationService - skipping register notification templates.", template, ex);
+      }
+    }
   }
 }

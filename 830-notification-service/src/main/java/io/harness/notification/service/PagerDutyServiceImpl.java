@@ -160,8 +160,8 @@ public class PagerDutyServiceImpl implements ChannelService {
       processingResponse = pagerDutySender.send(pagerDutyKeys, payload, links, notificationId);
     }
     log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-            ? "Notification request {} sent"
-            : "Failed to send notification for request {}",
+            ? "Failed to send notification for request {}"
+            : "Notification request {} sent",
         notificationId);
     return processingResponse;
   }
