@@ -385,6 +385,57 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  public void testProcessRiskScore_riskScoreAndThresholdIsZeroChannelIsNotNotified() {
+    List<String> services = Arrays.asList("ser1", "ser2", "ser3");
+    List<String> environments = Arrays.asList("prod");
+    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
+
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder().activityTypes(activityTypes).verificationStatuses(verificationStatuses).build();
+
+    NotificationMethod notificationMethod = NotificationMethod.builder()
+                                                .notificationSettingType(NotificationSettingType.Slack)
+                                                .slackWebhook("testWebHook")
+                                                .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(services)
+                                        .environments(environments)
+                                        .notify(RiskNotify.builder().threshold(0).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .enabled(true)
+                              .name(generateUuid())
+                              .accountId(accountId)
+                              .orgIdentifier(orgIdentifier)
+                              .projectIdentifier(projectIdentifier)
+                              .identifier(identifier)
+                              .alertCondition(alertCondition)
+                              .notificationMethod(notificationMethod)
+                              .build();
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
+        retrievedAlertRule.getProjectIdentifier(), retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), CVMonitoringCategory.PERFORMANCE,
+        Instant.now(), 0);
+
+    ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
+    verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
   public void testProcessRiskScore_ChannelIsNotNotified_EnabledFalse() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
