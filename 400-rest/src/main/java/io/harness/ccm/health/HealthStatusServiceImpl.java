@@ -259,7 +259,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         String exceptionMessage = ceExceptionRecord.getMessage();
         if (exceptionMessage.contains("Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
           errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
-        } else if (exceptionMessage.startsWith("code=[401]")) {
+        } else if (exceptionMessage.startsWith("code=[401]") || exceptionMessage.startsWith("code=[403]")) {
           errors.add(K8S_PERMISSIONS_MISSING);
         } else if (exceptionMessage.startsWith("code=[404]") || exceptionMessage.toLowerCase().contains("not found")) {
           errors.add(METRICS_SERVER_NOT_FOUND);
