@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.HARNESS_TAGS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -142,6 +143,7 @@ import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsServiceSpecification.EcsServiceSpecificationKeys;
 import software.wings.beans.container.HelmChartSpecification;
@@ -1437,6 +1439,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
 
     if (advanced) {
+      if (persistedContainerTask instanceof EcsContainerTask) {
+        return ((EcsContainerTask) persistedContainerTask)
+            .convertToAdvanced(featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, accountId));
+      }
       return persistedContainerTask.convertToAdvanced();
     }
 

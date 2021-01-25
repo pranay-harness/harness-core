@@ -4,6 +4,7 @@ import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -166,6 +167,9 @@ public class EcsStateHelperTest extends WingsBaseTest {
                                                     .scalingPolicyForTarget("ScalablePolicy")
                                                     .build()))
             .build();
+    boolean ecsRegisterTaskDefinitionTagsEnabled = true;
+    when(featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, config.getApp().getAccountId()))
+        .thenReturn(ecsRegisterTaskDefinitionTagsEnabled);
     ContainerSetupParams containerSetupParams = helper.buildContainerSetupParams(mockContext, config);
     assertThat(containerSetupParams).isNotNull();
     assertThat(containerSetupParams instanceof EcsSetupParams).isTrue();
@@ -180,6 +184,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(ecsSetupParams.getParentRecordHostedZoneId()).isEqualTo("ParentZone");
     assertThat(ecsSetupParams.getParentRecordName()).isEqualTo("ParentRecord");
     assertThat(ecsSetupParams.getClusterName()).isEqualTo("EcsCluster");
+    assertThat(ecsSetupParams.isEcsRegisterTaskDefinitionTagsEnabled()).isEqualTo(ecsRegisterTaskDefinitionTagsEnabled);
   }
 
   @Test

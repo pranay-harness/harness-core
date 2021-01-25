@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -225,6 +226,8 @@ public class EcsStateHelper {
         .withIsDaemonSchedulingStrategy(ecsSetupStateConfig.isDaemonSchedulingStrategy())
         .withNewAwsAutoScalarConfigList(
             getNewAwsAutoScalarConfigListWithRenderedExpression(ecsSetupStateConfig.getAwsAutoScalarConfigs(), context))
+        .withEcsRegisterTaskDefinitionTagsEnabled(
+            featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, app.getAccountId()))
         .build();
   }
 
