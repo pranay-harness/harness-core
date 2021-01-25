@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateCallbackRecord;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.beans.TaskSelectorMap;
@@ -20,6 +21,7 @@ public class DelegateServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateSyncTaskResponse.class);
     set.add(DelegateTaskProgressResponse.class);
     set.add(TaskSelectorMap.class);
+    set.add(DelegateScope.class);
   }
 
   @Override

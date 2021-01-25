@@ -7,9 +7,9 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateScope;
 import io.harness.rest.RestResponse;
 
-import software.wings.beans.DelegateScope;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateScopeService;

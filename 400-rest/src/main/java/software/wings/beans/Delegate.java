@@ -5,6 +5,7 @@ import static java.time.Duration.ofDays;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;

@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.delegate.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,7 +7,6 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
-import io.harness.delegate.beans.TaskGroup;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
