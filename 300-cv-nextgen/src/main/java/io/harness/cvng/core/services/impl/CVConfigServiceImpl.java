@@ -489,4 +489,23 @@ public class CVConfigServiceImpl implements CVConfigService {
     }
     return cvConfigIds;
   }
+
+  @Override
+  public List<CVConfig> listByMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, List<String> monitoringSources) {
+    Preconditions.checkNotNull(accountId);
+    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class, excludeAuthority)
+                                   .filter(CVConfigKeys.accountId, accountId)
+                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                   .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+                                   .filter(CVConfigKeys.envIdentifier, envIdentifier)
+                                   .asList();
+    if (monitoringSources == null) {
+      return cvConfigs;
+    }
+    return cvConfigs.stream()
+        .filter(cvConfig -> monitoringSources.contains(cvConfig.getIdentifier()))
+        .collect(Collectors.toList());
+  }
 }
