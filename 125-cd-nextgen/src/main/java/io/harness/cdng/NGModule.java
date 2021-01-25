@@ -5,6 +5,8 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.WalkTreeModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
+import io.harness.cdng.artifact.resources.gcr.service.GcrResourceService;
+import io.harness.cdng.artifact.resources.gcr.service.GcrResourceServiceImpl;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
@@ -47,6 +49,7 @@ public class NGModule extends AbstractModule {
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
+    bind(GcrResourceService.class).to(GcrResourceServiceImpl.class);
     bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
 
     MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
