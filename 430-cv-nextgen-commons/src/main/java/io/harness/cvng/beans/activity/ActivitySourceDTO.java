@@ -13,11 +13,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 public abstract class ActivitySourceDTO {
+  // TODO: keeping it in the base class but we need to separate out UI entities and entities that are updated from
+  // delegate.
   String uuid;
   @NotNull String identifier;
   @NotNull String name;
-  long createdAt;
-  long lastUpdatedAt;
 
   public abstract ActivitySourceType getType();
 }

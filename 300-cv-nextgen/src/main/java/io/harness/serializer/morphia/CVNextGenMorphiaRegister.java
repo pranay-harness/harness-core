@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
+import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
@@ -28,9 +29,6 @@ import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
-import io.harness.cvng.cd10.entities.CD10EnvMapping;
-import io.harness.cvng.cd10.entities.CD10Mapping;
-import io.harness.cvng.cd10.entities.CD10ServiceMapping;
 import io.harness.cvng.core.entities.ApiCallLog;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -100,7 +98,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(VerificationJobInstance.class);
     set.add(VerificationJob.class);
     set.add(VerificationTask.class);
-    set.add(CD10EnvMapping.class);
     set.add(ClusteredLog.class);
     set.add(BlueGreenVerificationJob.class);
     set.add(DeploymentDataCollectionTask.class);
@@ -109,7 +106,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(DeploymentLogAnalysis.class);
     set.add(TestVerificationJob.class);
     set.add(DeploymentTimeSeriesAnalysis.class);
-    set.add(CD10ServiceMapping.class);
     set.add(StackdriverCVConfig.class);
     set.add(TestLogAnalysisLearningEngineTask.class);
     set.add(WebhookToken.class);
@@ -128,9 +124,9 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogClusterLearningEngineTask.class);
     set.add(InfrastructureActivity.class);
     set.add(LogAnalysisLearningEngineTask.class);
-    set.add(CD10Mapping.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
+    set.add(CD10ActivitySource.class);
     set.add(LogAnalysisRecord.class);
     set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
