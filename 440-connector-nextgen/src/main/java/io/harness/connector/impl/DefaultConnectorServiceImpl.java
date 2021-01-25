@@ -6,6 +6,7 @@ import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
+import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -35,9 +36,11 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.entities.Organization;
@@ -329,7 +332,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     try {
       validationResult = connectionValidator.validate(
           connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
-    } catch (Exception ex) {
+    } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
@@ -341,8 +344,20 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
       }
       return validationFailureBuilder.build();
+    } catch (Exception ex) {
+      return createValidationResultWithGenericError(ex);
     }
     return validationResult;
+  }
+
+  private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {
+    List<ErrorDetail> errorDetails = Collections.singletonList(ngErrorHelper.getGenericErrorDetail());
+    return ConnectorValidationResult.builder()
+        .errors(errorDetails)
+        .errorSummary(DEFAULT_ERROR_SUMMARY)
+        .testedAt(System.currentTimeMillis())
+        .status(FAILURE)
+        .build();
   }
 
   @Override

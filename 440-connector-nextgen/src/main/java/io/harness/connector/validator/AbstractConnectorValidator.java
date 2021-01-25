@@ -8,6 +8,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -39,12 +40,12 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
       log.info("Error in validation task for connector : [{}] with failure types [{}]",
           errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
-      throw new InvalidRequestException(errorNotifyResponseData.getErrorMessage());
+      throw new ConnectorValidationException(errorNotifyResponseData.getErrorMessage());
     } else if (responseData instanceof RemoteMethodReturnValueData
         && (((RemoteMethodReturnValueData) responseData).getException() instanceof InvalidRequestException)) {
       String errorMessage =
           ((InvalidRequestException) ((RemoteMethodReturnValueData) responseData).getException()).getMessage();
-      throw new InvalidRequestException(errorMessage);
+      throw new ConnectorValidationException(errorMessage);
     }
     return responseData;
   }

@@ -148,4 +148,8 @@ public class NGErrorHelper {
   public String createErrorSummary(String errorCategory, String errorMessage) {
     return String.format("%s (%s)", errorCategory, errorMessage);
   }
+
+  public ErrorDetail getGenericErrorDetail() {
+    return ErrorDetail.builder().code(DEFAULT_ERROR_CODE).reason(DEFAULT_REASON).message(DEFAULT_ERROR_MESSAGE).build();
+  }
 }
