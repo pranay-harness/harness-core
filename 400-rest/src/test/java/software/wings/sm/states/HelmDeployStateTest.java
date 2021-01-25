@@ -4,10 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -44,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -84,6 +87,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
@@ -109,6 +113,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.helm.HelmReleaseInfoElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
@@ -1744,5 +1749,37 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputDontSkipVerification() {
+    on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
+    helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(true).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputSkipVerification() {
+    on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
+    helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(false).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
   }
 }

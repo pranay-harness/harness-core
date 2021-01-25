@@ -79,6 +79,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -284,7 +285,8 @@ public abstract class ContainerServiceDeploy extends State {
     }
   }
 
-  private void saveInstanceDetailsToSweepingOutput(
+  @VisibleForTesting
+  void saveInstanceDetailsToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
     boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
