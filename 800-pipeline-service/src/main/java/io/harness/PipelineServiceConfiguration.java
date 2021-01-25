@@ -52,6 +52,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
 
   private String managerServiceSecret;
   private String managerTarget;

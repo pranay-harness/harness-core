@@ -97,6 +97,9 @@ if [[ "" != "$SCM_SERVICE_URI" ]]; then
   yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi
 
+if [[ "" != "$PIPELINE_SERVICE_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE pipelineServiceBaseUrl "$PIPELINE_SERVICE_BASE_URL"
+fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]

@@ -4,16 +4,20 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.plan.creation.PlanCreatorUtils.supportsField;
 
+import static java.lang.String.format;
+
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.exception.YamlNodeErrorInfo;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -99,7 +103,8 @@ public class FilterCreatorService {
           Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
           response = filterJsonCreator.handleNode(FilterCreationContext.builder().currentField(yamlField).build(), obj);
         } catch (IOException e) {
-          throw new InvalidRequestException("Invalid yaml", e);
+          throw new InvalidRequestException(
+              format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(yamlField))), e);
         }
       }
 
