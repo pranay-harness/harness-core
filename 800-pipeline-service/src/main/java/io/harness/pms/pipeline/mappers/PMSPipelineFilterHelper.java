@@ -19,6 +19,8 @@ public class PMSPipelineFilterHelper {
     update.set(PipelineEntityKeys.name, pipelineEntity.getName());
     update.set(PipelineEntityKeys.description, pipelineEntity.getDescription());
     update.set(PipelineEntityKeys.stageCount, pipelineEntity.getStageCount());
+    update.set(PipelineEntityKeys.lastUpdatedAt, System.currentTimeMillis());
+
     return update;
   }
 
