@@ -29,6 +29,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     complexFields.add(YamlTypes.SOURCE);
     complexFields.add(YamlTypes.EXECUTION_TARGET);
     complexFields.add(YamlTypes.ENVIRONMENT_VARIABLES);
+    complexFields.add(YamlTypes.OUTPUT_VARIABLES);
 
     List<YamlField> fields = specField.getNode().fields();
     fields.forEach(field -> {
@@ -38,19 +39,25 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     });
 
     YamlField sourceField = specField.getNode().getField(YamlTypes.SOURCE);
-    if (sourceField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(sourceField)) {
       addVariablesForSourceField(sourceField, yamlPropertiesMap);
     }
 
     YamlField executionTargetField = specField.getNode().getField(YamlTypes.EXECUTION_TARGET);
-    if (executionTargetField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(executionTargetField)) {
       addVariablesForExecutionTargetField(executionTargetField, yamlPropertiesMap);
     }
 
     YamlField environmentVariablesField = specField.getNode().getField(YamlTypes.ENVIRONMENT_VARIABLES);
-    if (environmentVariablesField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(environmentVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
           environmentVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
+    }
+
+    YamlField outputVariablesField = specField.getNode().getField(YamlTypes.OUTPUT_VARIABLES);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
+      VariableCreatorHelper.addVariablesForVariables(
+          outputVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
     }
   }
 

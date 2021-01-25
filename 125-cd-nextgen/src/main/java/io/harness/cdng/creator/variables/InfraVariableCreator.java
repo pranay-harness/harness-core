@@ -26,11 +26,12 @@ public class InfraVariableCreator {
     yamlPropertiesMap.put(infraUUID, YamlProperties.newBuilder().setFqn(YamlTypes.PIPELINE_INFRASTRUCTURE).build());
 
     YamlField infraDefNode = infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF);
-    if (infraDefNode != null && infraDefNode.getNode().getField(YamlTypes.SPEC) != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(infraDefNode)
+        && VariableCreatorHelper.isNotYamlFieldEmpty(infraDefNode.getNode().getField(YamlTypes.SPEC))) {
       addVariablesForInfraDef(infraDefNode, yamlPropertiesMap);
     }
     YamlField envField = infraField.getNode().getField(YamlTypes.ENVIRONMENT_YAML);
-    if (envField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(envField)) {
       addVariablesForEnv(envField, yamlPropertiesMap);
     }
     YamlField envRefField = infraField.getNode().getField(YamlTypes.ENVIRONMENT_REF);
@@ -51,7 +52,7 @@ public class InfraVariableCreator {
           descriptionNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
     }
     YamlField tagsField = envNode.getNode().getField(YAMLFieldNameConstants.TAGS);
-    if (tagsField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(tagsField)) {
       List<YamlField> fields = tagsField.getNode().fields();
       fields.forEach(field -> {
         if (!field.getName().equals(YamlTypes.UUID)) {

@@ -46,4 +46,12 @@ public class VariableCreatorHelper {
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
   }
+
+  public boolean isNotYamlFieldEmpty(YamlField yamlField) {
+    if (yamlField == null) {
+      return false;
+    }
+    return !(
+        yamlField.getNode().fields().size() == 1 && yamlField.getNode().getField(YAMLFieldNameConstants.UUID) != null);
+  }
 }
