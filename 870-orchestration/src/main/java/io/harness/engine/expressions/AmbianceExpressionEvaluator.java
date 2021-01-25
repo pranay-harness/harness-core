@@ -3,6 +3,7 @@ package io.harness.engine.expressions;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.core.Recaster;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
@@ -25,12 +26,15 @@ import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
+import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.OrchestrationField;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.ParameterField;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -40,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import org.bson.Document;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -188,6 +193,16 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     Object value = super.evaluateInternal(expression, ctx);
     if (value instanceof OrchestrationField) {
       OrchestrationField orchestrationField = (OrchestrationField) value;
+      return orchestrationField.fetchFinalValue();
+    } else if (!(value instanceof Document)) {
+      return value;
+    }
+
+    Document doc = (Document) value;
+    String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
+    if (recastedClass.equals(ParameterField.class.getName())
+        || recastedClass.equals(DummyOrchestrationField.class.getName())) {
+      OrchestrationField orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
       return orchestrationField.fetchFinalValue();
     }
     return value;
