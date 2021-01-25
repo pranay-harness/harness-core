@@ -15,6 +15,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @JsonTypeName("KUBERNETES")
 public class KubernetesActivitySourceDTO extends ActivitySourceDTO {
+  long createdAt;
+  long lastUpdatedAt;
   @NotNull String connectorIdentifier;
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
 

@@ -6,10 +6,12 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
+import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -25,7 +27,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class ActivitySourceServiceImpl implements ActivitySourceService {
-  private static final int RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE = 5;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationManagerService verificationManagerService;
@@ -45,6 +46,10 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
             accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
         sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
         break;
+      case HARNESS_CD10:
+        activitySource = CD10ActivitySource.fromDTO(
+            accountId, orgIdentifier, projectIdentifier, (CD10ActivitySourceDTO) activitySourceDTO);
+        break;
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
@@ -58,11 +63,10 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   }
 
   private void update(ActivitySourceDTO activitySourceDTO) {
-    KubernetesActivitySource kubernetesActivitySource =
-        hPersistence.get(KubernetesActivitySource.class, activitySourceDTO.getUuid());
-    if (isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId())) {
+    ActivitySource activitySource = hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid());
+    if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
       verificationManagerService.deletePerpetualTask(
-          kubernetesActivitySource.getAccountId(), kubernetesActivitySource.getDataCollectionTaskId());
+          activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
     }
     UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
                                                             .set(ActivitySourceKeys.name, activitySourceDTO.getName())
@@ -72,6 +76,9 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
     switch (activitySourceDTO.getType()) {
       case KUBERNETES:
         KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      case HARNESS_CD10:
+        CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
         break;
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());

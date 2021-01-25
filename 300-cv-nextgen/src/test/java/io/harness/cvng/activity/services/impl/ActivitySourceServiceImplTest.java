@@ -3,6 +3,7 @@ package io.harness.cvng.activity.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
@@ -18,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
+import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -30,6 +32,9 @@ import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
+import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
+import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
+import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -48,6 +53,8 @@ import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -175,6 +182,110 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     assertThat(activitySourceDTOS.size()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testSaveActivitySource_cd10ActivitySource() {
+    String identifier = generateUuid();
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(identifier)
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    String activitySourceUUID =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+
+    CD10ActivitySource activitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+    assertThat(activitySource.getAccountId()).isEqualTo(accountId);
+    assertThat(activitySource.getOrgIdentifier()).isEqualTo(orgIdentifier);
+    assertThat(activitySource.getProjectIdentifier()).isEqualTo(projectIdentifier);
+    assertThat(activitySource.getName()).isEqualTo("some-name");
+    assertThat(activitySource.getIdentifier()).isEqualTo(identifier);
+    assertThat(activitySource.getEnvMappings()).isEqualTo(cd10EnvMappingDTOS);
+    assertThat(activitySource.getServiceMappings()).isEqualTo(cd10ServiceMappingDTOS);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testSaveActivitySource_cd10ActivitySourceUpdate() {
+    String identifier = generateUuid();
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(identifier)
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    String activitySourceUUID =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    cd10ActivitySourceDTO.setUuid(activitySourceUUID);
+    cd10ActivitySourceDTO.setName("updated name");
+    cd10ActivitySourceDTO.setEnvMappings(Collections.emptySet());
+    cd10ActivitySourceDTO.setServiceMappings(Collections.singleton(cd10ServiceMappingDTOS.iterator().next()));
+    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    CD10ActivitySource activitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+    assertThat(activitySource.getAccountId()).isEqualTo(accountId);
+    assertThat(activitySource.getOrgIdentifier()).isEqualTo(orgIdentifier);
+    assertThat(activitySource.getProjectIdentifier()).isEqualTo(projectIdentifier);
+    assertThat(activitySource.getName()).isEqualTo("updated name");
+    assertThat(activitySource.getIdentifier()).isEqualTo(identifier);
+    assertThat(activitySource.getEnvMappings()).isEmpty();
+    assertThat(activitySource.getServiceMappings())
+        .isEqualTo(Collections.singleton(cd10ServiceMappingDTOS.iterator().next()));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetActivitySource() {
+    String identifier = generateUuid();
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(identifier)
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    String activitySourceUUID =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+
+    CD10ActivitySourceDTO activitySource = (CD10ActivitySourceDTO) activitySourceService.getActivitySource(
+        accountId, orgIdentifier, projectIdentifier, identifier);
+    assertThat(activitySource.getUuid()).isEqualTo(activitySourceUUID);
+    assertThat(activitySource.getName()).isEqualTo("some-name");
+    assertThat(activitySource.getIdentifier()).isEqualTo(identifier);
+    assertThat(activitySource.getEnvMappings()).isEqualTo(cd10EnvMappingDTOS);
+    assertThat(activitySource.getServiceMappings()).isEqualTo(cd10ServiceMappingDTOS);
+  }
   @Test
   @Owner(developers = VUK)
   @Category({UnitTests.class})
@@ -545,5 +656,17 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     cvConfig.setTierName("tierName");
     cvConfig.setMetricPack(MetricPack.builder().build());
     return cvConfigService.save(cvConfig);
+  }
+
+  private CD10EnvMappingDTO createEnvMapping(String appId, String envId, String envIdentifier) {
+    return CD10EnvMappingDTO.builder().appId(appId).envId(envId).envIdentifier(envIdentifier).build();
+  }
+
+  private CD10ServiceMappingDTO createServiceMapping(String appId, String serviceId, String serviceIdentifier) {
+    return CD10ServiceMappingDTO.builder()
+        .appId(appId)
+        .serviceId(serviceId)
+        .serviceIdentifier(serviceIdentifier)
+        .build();
   }
 }
