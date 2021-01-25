@@ -118,7 +118,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .filter(AlertRuleKeys.enabled, true)
                                      .filter(AlertRuleKeys.enabledRisk, true)
                                      .field(AlertRuleKeys.threshold)
-                                     .lessThanOrEq(riskValue)
+                                     .lessThan(riskValue)
                                      .asList();
 
     if (isNotEmpty(alertRules)) {
