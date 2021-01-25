@@ -477,7 +477,9 @@ public enum ErrorCode {
 
   UNEXPECTED_SNIPPET_EXCEPTION,
 
-  UNEXPECTED_SCHEMA_EXCEPTION;
+  UNEXPECTED_SCHEMA_EXCEPTION,
+
+  CONNECTOR_VALIDATION_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;
