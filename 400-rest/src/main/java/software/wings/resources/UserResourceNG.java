@@ -4,7 +4,6 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -90,8 +89,19 @@ public class UserResourceNG {
   public RestResponse<Boolean> isUserInAccount(
       @NotNull @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
     try {
-      return new RestResponse<>(userService.get(accountId, userId) != null);
-    } catch (InvalidRequestException ex) {
+      User user = userService.getUserFromCacheOrDB(userId);
+      boolean isUserInAccount = false;
+      if (user != null && user.getAccounts() != null) {
+        isUserInAccount = user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+      }
+      if (!isUserInAccount && user != null && user.getSupportAccounts() != null) {
+        isUserInAccount = user.getSupportAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+      }
+      if (!isUserInAccount) {
+        log.error(String.format("User %s does not belong to account %s", userId, accountId));
+      }
+      return new RestResponse<>(isUserInAccount);
+    } catch (Exception ex) {
       log.error(String.format("User %s does not belong to account %s", userId, accountId), ex);
       return new RestResponse<>(false);
     }
