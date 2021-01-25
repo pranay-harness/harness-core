@@ -27,10 +27,13 @@ import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
+import com.amazonaws.services.identitymanagement.model.EvaluationResult;
 import com.amazonaws.services.identitymanagement.model.GetRolePolicyRequest;
 import com.amazonaws.services.identitymanagement.model.GetRolePolicyResult;
 import com.amazonaws.services.identitymanagement.model.ListRolePoliciesRequest;
 import com.amazonaws.services.identitymanagement.model.ListRolePoliciesResult;
+import com.amazonaws.services.identitymanagement.model.SimulatePrincipalPolicyRequest;
+import com.amazonaws.services.identitymanagement.model.SimulatePrincipalPolicyResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -39,6 +42,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hazelcast.util.CollectionUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +51,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
@@ -220,6 +225,33 @@ public class AwsClientImpl implements AwsClient {
     } while (Boolean.TRUE.equals(response.getIsTruncated()));
 
     return policyNames;
+  }
+
+  /**
+   * @param credentialsProvider the credential (can also be assumed role creds) used while simulating policies.
+   * @param policySourceArn the crossRoleArn whose policies needs to be verified
+   * @param actionNames the list of actions e.g., "rds:ModifyDBInstance", "rds:*", etc.
+   * @param resourceArns the arn of resources e.g., "*", "arn:aws:s3:::customerBucketName". On null defaults to "*"
+   * @return EvaluationResultList the results when each actions is performed on each resources.
+   */
+  @Override
+  public List<EvaluationResult> simulatePrincipalPolicy(final AWSCredentialsProvider credentialsProvider,
+      @NotNull String policySourceArn, @NotEmpty List<String> actionNames, @Nullable List<String> resourceArns) {
+    final AmazonIdentityManagement iam =
+        AmazonIdentityManagementClientBuilder.standard().withCredentials(credentialsProvider).build();
+    final SimulatePrincipalPolicyRequest request =
+        new SimulatePrincipalPolicyRequest().withPolicySourceArn(policySourceArn).withActionNames(actionNames);
+    if (CollectionUtil.isNotEmpty(resourceArns)) {
+      request.withResourceArns(resourceArns);
+    }
+
+    final List<EvaluationResult> evaluationResultList = new ArrayList<>();
+    final SimulatePrincipalPolicyResult response = iam.simulatePrincipalPolicy(request);
+    do {
+      evaluationResultList.addAll(response.getEvaluationResults());
+      request.setMarker(response.getMarker());
+    } while (Boolean.TRUE.equals(response.getIsTruncated()));
+    return evaluationResultList;
   }
 
   @SneakyThrows
