@@ -148,8 +148,8 @@ public class MailServiceImpl implements ChannelService {
       notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId, smtpConfigDefault);
     }
     log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
-            ? "Notification request {} sent"
-            : "Failed to send notification for request {}",
+            ? "Failed to send notification for request {}"
+            : "Notification request {} sent",
         notificationId);
     return notificationProcessingResponse;
   }

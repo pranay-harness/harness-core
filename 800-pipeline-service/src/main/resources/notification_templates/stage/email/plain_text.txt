@@ -1,0 +1,2 @@
+subject: ${event_name}
+body: ${message}

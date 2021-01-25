@@ -66,8 +66,8 @@ public class NotificationTemplateResource {
   @Path("/insertOrUpdate")
   @ApiOperation(value = "Update a template if exists else create", nickname = "insertOrUpdateTemplate")
   public ResponseDTO<TemplateDTO> insertOrUpdateTemplate(@FormDataParam("file") InputStream inputStream,
-      @FormDataParam("team") Team team, @FormDataParam("identifier") String identifier,
-      @FormDataParam("harnessManaged") Boolean harnessManaged) {
+      @QueryParam("team") Team team, @QueryParam("identifier") String identifier,
+      @QueryParam("harnessManaged") Boolean harnessManaged) {
     Optional<NotificationTemplate> optionalTemplate = templateService.getByIdentifierAndTeam(identifier, team);
     NotificationTemplate template;
     BoundedInputStream boundedInputStream = new BoundedInputStream(inputStream, MAX_FILE_SIZE);

@@ -163,8 +163,8 @@ public class MSTeamsServiceImpl implements ChannelService {
       processingResponse = microsoftTeamsSender.send(microsoftTeamsWebhookUrls, message, notificationId);
     }
     log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-            ? "Notification request {} sent"
-            : "Failed to send notification for request {}",
+            ? "Failed to send notification for request {}"
+            : "Notification request {} sent",
         notificationId);
     return processingResponse;
   }

@@ -12,6 +12,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import retrofit2.http.Query;
 
 public interface NotificationHTTPClient {
   @POST("channels/test")
@@ -19,6 +20,6 @@ public interface NotificationHTTPClient {
 
   @Multipart
   @PUT("templates/insertOrUpdate")
-  Call<ResponseDTO<TemplateDTO>> saveNotificationTemplate(@Part MultipartBody.Part file, @Part("team") Team team,
-      @Part("identifier") String identifier, @Part("harnessManaged") Boolean harnessManaged);
+  Call<ResponseDTO<TemplateDTO>> saveNotificationTemplate(@Part MultipartBody.Part file, @Query("team") Team team,
+      @Query("identifier") String identifier, @Query("harnessManaged") Boolean harnessManaged);
 }
