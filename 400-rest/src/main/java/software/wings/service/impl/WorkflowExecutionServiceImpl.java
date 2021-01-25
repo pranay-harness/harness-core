@@ -2323,7 +2323,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isEmpty(previousArtifacts)) {
+      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
         throw new InvalidRequestException("No previous artifact found to rollback to");
       }
 
@@ -2379,7 +2379,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isEmpty(previousArtifacts)) {
+      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
         throw new InvalidRequestException("No artifact found in previous execution");
       }
 
