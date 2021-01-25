@@ -11,6 +11,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.persistence.HPersistence;
@@ -76,6 +77,13 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       DelegateGrpcClientWrapper registerDelegateGrpcClientWrapper() {
         return mock(DelegateGrpcClientWrapper.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      NGActivityService registerNGActivityService() {
+        return mock(NGActivityService.class);
       }
     });
     modules.add(mongoTypeModule(annotations));

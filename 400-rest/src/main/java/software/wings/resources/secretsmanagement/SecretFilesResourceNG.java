@@ -34,7 +34,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-@Api("secret-files")
+@Api(value = "secret-files", hidden = true)
 @Path("/ng/secret-files")
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

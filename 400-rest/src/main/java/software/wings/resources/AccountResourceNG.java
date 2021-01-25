@@ -17,7 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/ng/accounts")
+@Api(value = "/ng/accounts", hidden = true)
 @Path("/ng/accounts")
 @Produces("application/json")
 @Consumes("application/json")

@@ -11,6 +11,8 @@ import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.activityhistory.NGActivityType;
+import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -25,6 +27,7 @@ import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -48,6 +51,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final SecretManagerClientService secretManagerClientService;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private final SshKeySpecDTOHelper sshKeySpecDTOHelper;
+  private final NGSecretActivityService ngSecretActivityService;
 
   @Override
   public Optional<Secret> get(
@@ -62,9 +66,21 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
     Optional<Secret> secretV2Optional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretV2Optional.isPresent()) {
       secretRepository.delete(secretV2Optional.get());
+      deleteSecretActivities(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
       return true;
     }
     return false;
+  }
+
+  private void deleteSecretActivities(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    try {
+      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      ngSecretActivityService.deleteAllActivities(accountIdentifier, fullyQualifiedIdentifier);
+    } catch (Exception ex) {
+      log.info("Error while deleting secret activity", ex);
+    }
   }
 
   @Override
@@ -73,10 +89,20 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
     secret.setDraft(draft);
     secret.setAccountIdentifier(accountIdentifier);
     try {
-      return secretRepository.save(secret);
+      Secret savedSecret = secretRepository.save(secret);
+      createSecretCreationActivity(accountIdentifier, dto);
+      return savedSecret;
     } catch (DuplicateKeyException duplicateKeyException) {
       throw new DuplicateFieldException(
           "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
+    }
+  }
+
+  private void createSecretCreationActivity(String accountIdentifier, SecretDTOV2 dto) {
+    try {
+      ngSecretActivityService.create(accountIdentifier, dto, NGActivityType.ENTITY_CREATION);
+    } catch (Exception ex) {
+      log.info("Error while creating secret creation activity", ex);
     }
   }
 
@@ -99,9 +125,18 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
         throw new DuplicateFieldException(
             "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
       }
+      createSecretUpdateActivity(accountIdentifier, dto);
       return oldSecret;
     }
     throw new InvalidRequestException("No such secret found", USER_SRE);
+  }
+
+  private void createSecretUpdateActivity(String accountIdentifier, SecretDTOV2 dto) {
+    try {
+      ngSecretActivityService.create(accountIdentifier, dto, NGActivityType.ENTITY_UPDATE);
+    } catch (Exception ex) {
+      log.info("Error while creating secret update activity", ex);
+    }
   }
 
   @Override

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -35,4 +36,9 @@ public class NGActivity implements PersistentEntity, NGAccountAccess {
   String errorMessage;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
+
+  @UtilityClass
+  public static final class ActivityHistoryEntityKeys {
+    public static final String referredByEntityType = "referredByEntityType";
+  }
 }

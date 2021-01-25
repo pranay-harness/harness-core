@@ -7,7 +7,9 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
+import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
@@ -111,7 +113,14 @@ public abstract class AbstractHttpClientFactory {
   protected Interceptor getAuthorizationInterceptor() {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
+      boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
+      if (!isPrincipalInContext) {
+        SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
+      }
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
+      if (!isPrincipalInContext) {
+        SecurityContextBuilder.unsetContext();
+      }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };

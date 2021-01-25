@@ -9,6 +9,7 @@ import static io.harness.ng.core.activityhistory.NGActivityType.ENTITY_UPDATE;
 import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -100,7 +101,7 @@ public class ConnectorActivityServiceTest extends CategoryTest {
     connectorActivityService.deleteAllActivities(accountIdentifier, connectorFQN);
     ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(ngActivityService, times(1))
-        .deleteAllActivitiesOfAnEntity(stringArgumentCaptor.capture(), stringArgumentCaptor.capture());
+        .deleteAllActivitiesOfAnEntity(stringArgumentCaptor.capture(), stringArgumentCaptor.capture(), any());
     List<String> arguments = stringArgumentCaptor.getAllValues();
     assertThat(arguments.get(0)).isEqualTo(accountIdentifier);
     assertThat(arguments.get(1)).isEqualTo(connectorFQN);

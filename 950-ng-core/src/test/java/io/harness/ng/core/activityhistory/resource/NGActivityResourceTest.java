@@ -1,5 +1,7 @@
 package io.harness.ng.core.activityhistory.resource;
 
+import static io.harness.EntityType.CONNECTORS;
+
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 
@@ -38,11 +40,11 @@ public class NGActivityResourceTest extends CategoryTest {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
-    ngActivityResource.list(
-        100, 100, accountIdentifier, orgIdentifier, projectIdentifier, identifier, 0L, 100L, NGActivityStatus.SUCCESS);
+    ngActivityResource.list(100, 100, accountIdentifier, orgIdentifier, projectIdentifier, identifier, 0L, 100L,
+        NGActivityStatus.SUCCESS, CONNECTORS, null);
     Mockito.verify(activityService, times(1))
         .list(eq(100), eq(100), eq(accountIdentifier), eq(orgIdentifier), eq(projectIdentifier), eq(identifier), eq(0L),
-            eq(100L), eq(NGActivityStatus.SUCCESS));
+            eq(100L), eq(NGActivityStatus.SUCCESS), eq(CONNECTORS), eq(null));
   }
 
   @Test

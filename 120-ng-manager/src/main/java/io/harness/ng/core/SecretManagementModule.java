@@ -1,11 +1,13 @@
 package io.harness.ng.core;
 
+import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.api.SecretModifyService;
+import io.harness.ng.core.api.impl.NGSecretActivityServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretFileServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
@@ -33,5 +35,6 @@ public class SecretManagementModule extends AbstractModule {
     bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_FILE_SERVICE)).to(SecretFileServiceImpl.class);
     bind(SecretCrudService.class).to(SecretCrudServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
+    bind(NGSecretActivityService.class).to(NGSecretActivityServiceImpl.class);
   }
 }
