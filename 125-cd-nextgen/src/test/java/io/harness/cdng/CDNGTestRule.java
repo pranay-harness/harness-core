@@ -22,6 +22,7 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -135,6 +136,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(OrchestrationVisualizationModule.getInstance());
+    modules.add(new EntitySetupUsageModule());
 
     modules.add(new AbstractModule() {
       @Override

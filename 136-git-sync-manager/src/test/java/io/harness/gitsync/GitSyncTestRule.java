@@ -11,6 +11,7 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.NGCoreModule;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -99,6 +100,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
     modules.add(new SpringPersistenceTestModule());
     modules.add(NGCoreModule.getInstance());
     modules.add(new WaiterModule());
+    modules.add(new EntitySetupUsageModule());
     return modules;
   }
 

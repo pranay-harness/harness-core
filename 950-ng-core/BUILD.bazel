@@ -11,6 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//955-setup-usage-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",

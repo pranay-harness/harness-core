@@ -6,7 +6,7 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
-import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOToRestDTOMapper;
+import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.event.MessageProcessor;
 
@@ -18,13 +18,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@Deprecated
 public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
   EntitySetupUsageService entitySetupUsageService;
-  EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
+  EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
 
   @Inject
   public SetupUsageChangeEventMessageProcessor(EntitySetupUsageService entitySetupUsageService,
-      EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper) {
+      EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper) {
     this.entitySetupUsageService = entitySetupUsageService;
     this.entitySetupUsageEventDTOToRestDTOMapper = entitySetupUsageEventDTOToRestDTOMapper;
   }
