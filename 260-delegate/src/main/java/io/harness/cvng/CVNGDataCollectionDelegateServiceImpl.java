@@ -3,6 +3,9 @@ package io.harness.cvng;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
+import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
+import io.harness.cvng.beans.cvnglog.TraceableType;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -10,12 +13,12 @@ import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
 
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @TargetModule(Module._420_DELEGATE_AGENT)
@@ -42,19 +45,30 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
                                                     .startTime(dataCollectionRequest.getStartTime(now))
                                                     .build();
     return JsonUtils.asJson(dataCollectionDSLService.execute(dsl, runtimeParameters, callDetails -> {
-      final ThirdPartyApiCallLog apiCallLog =
-          ThirdPartyApiCallLog.builder().stateExecutionId(dataCollectionRequest.getTracingId()).build();
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
-                                       .name("url")
-                                       .type(ThirdPartyApiCallLog.FieldType.URL)
-                                       .value(callDetails.getRequest().request().url().toString())
-                                       .build());
-      apiCallLog.addFieldToResponse(callDetails.getResponse().code(),
-          (callDetails.getResponse() != null && callDetails.getResponse().body() != null)
-              ? callDetails.getResponse().body()
-              : callDetails.getResponse(),
-          ThirdPartyApiCallLog.FieldType.JSON);
-      delegateLogService.save(accountId, apiCallLog);
+      // TODO: write unit test case for this lambda expression.
+      if (dataCollectionRequest.getTracingId() != null) {
+        final ApiCallLogDTO cvngLogDTO = ApiCallLogDTO.builder()
+                                             .traceableId(dataCollectionRequest.getTracingId())
+                                             .traceableType(TraceableType.ONBOARDING)
+                                             .accountId(accountId)
+                                             .startTime(dataCollectionRequest.getStartTime(now))
+                                             .endTime(dataCollectionRequest.getEndTime(now))
+                                             .requestTime(OffsetDateTime.now().toInstant())
+                                             .responseTime(OffsetDateTime.now().toInstant())
+                                             .build();
+        cvngLogDTO.addFieldToRequest(ApiCallLogDTOField.builder()
+                                         .name("url")
+                                         .type(ApiCallLogDTO.FieldType.URL)
+                                         .value(callDetails.getRequest().request().url().toString())
+                                         .build());
+
+        cvngLogDTO.addFieldToResponse(callDetails.getResponse().code(),
+            (callDetails.getResponse() != null && callDetails.getResponse().body() != null)
+                ? callDetails.getResponse().body()
+                : callDetails.getResponse(),
+            ApiCallLogDTO.FieldType.JSON);
+        delegateLogService.save(accountId, cvngLogDTO);
+      }
     }));
   }
 }
