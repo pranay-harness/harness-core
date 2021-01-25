@@ -11,6 +11,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.persistence.HPersistence;
 import io.harness.redis.RedisConfig;
@@ -86,6 +87,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
                                               .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
                                               .build()));
+    modules.add(new EntitySetupUsageModule());
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret", "NextGenManager"));

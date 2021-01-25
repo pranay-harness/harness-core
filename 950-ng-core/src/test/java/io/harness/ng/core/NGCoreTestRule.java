@@ -3,6 +3,7 @@ package io.harness.ng.core;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -87,6 +88,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(mongoTypeModule(annotations));
+    modules.add(EntitySetupUsageModule.getInstance());
     return modules;
   }
 

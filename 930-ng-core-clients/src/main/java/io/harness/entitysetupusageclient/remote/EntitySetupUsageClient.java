@@ -38,9 +38,11 @@ public interface EntitySetupUsageClient {
       @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
 
+  @Deprecated
   @POST(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<EntitySetupUsageDTO>> save(@Body EntitySetupUsageDTO entitySetupUsageDTO);
 
+  @Deprecated
   @DELETE(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<Boolean>> delete(@NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
@@ -51,10 +53,4 @@ public interface EntitySetupUsageClient {
   Call<ResponseDTO<Boolean>> isEntityReferenced(
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType);
-
-  @DELETE(INTERNAL_ENTITY_REFERENCE_API + "/deleteAllReferredByRecords")
-  Call<ResponseDTO<Boolean>> deleteAllReferredByEntityRecords(
-      @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
-      @Query(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType);
 }

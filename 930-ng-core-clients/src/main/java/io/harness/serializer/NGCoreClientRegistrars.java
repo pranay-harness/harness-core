@@ -17,7 +17,7 @@ public class NGCoreClientRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
-          .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
+          .addAll(SetupUsageRegistrars.morphiaRegistrars)
           .build();
 }

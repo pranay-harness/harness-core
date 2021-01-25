@@ -21,7 +21,7 @@ public class NGCoreRegistrars {
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
-          .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(SetupUsageRegistrars.morphiaRegistrars)
           .add(NGCoreMorphiaClassesRegistrar.class)
           .build();
 

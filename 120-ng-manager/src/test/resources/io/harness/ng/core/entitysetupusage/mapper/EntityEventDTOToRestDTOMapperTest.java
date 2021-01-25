@@ -26,7 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class EntityEventDTOToRestDTOMapperTest extends CategoryTest {
-  @InjectMocks EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
+  @InjectMocks EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
 
   @Before
   public void setUp() throws Exception {

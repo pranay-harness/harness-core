@@ -3,6 +3,7 @@ package io.harness.ng;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
@@ -49,6 +50,8 @@ import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageProcessor;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
+import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
 import io.harness.ng.core.event.ConnectorEntityCRUDStreamListener;
 import io.harness.ng.core.event.ConnectorFeatureFlagStreamListener;
@@ -252,6 +255,7 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
+    install(EntitySetupUsageModule.getInstance());
 
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
@@ -299,6 +303,8 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM))
         .to(ConnectorFeatureFlagStreamListener.class);
+
+    bind(MessageListener.class).annotatedWith(Names.named(SETUP_USAGE)).to(SetupUsageChangeEventMessageListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {
