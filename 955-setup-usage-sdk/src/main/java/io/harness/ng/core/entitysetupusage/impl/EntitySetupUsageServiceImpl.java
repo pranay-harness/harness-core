@@ -119,7 +119,7 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   // todo(abhinav): make delete and create a transactional operation
   @Override
-  public Boolean saveNew(List<EntitySetupUsage> entitySetupUsage, EntityType entityTypeFromChannel,
+  public Boolean flushSave(List<EntitySetupUsage> entitySetupUsage, EntityType entityTypeFromChannel,
       boolean deleteOldReferredByRecords, String accountId) {
     if (isEmpty(entitySetupUsage)) {
       return true;
