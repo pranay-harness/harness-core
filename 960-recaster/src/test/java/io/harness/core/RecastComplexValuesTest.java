@@ -877,4 +877,48 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
   @EqualsAndHashCode(callSuper = false)
   private static class DummyExtendsMapClass extends HashMap<String, Object> {}
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterClassExtendsList() {
+    DummyParameterized<Map<String, String>> parameterized =
+        DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
+    DummyParameterizedInside dummyParameterizedInside = DummyParameterizedInside.builder().map(parameterized).build();
+    DummyParameterized<Map<String, String>> parameterized1 = DummyParameterized.<Map<String, String>>builder()
+                                                                 .expression(Collections.singletonMap("key1", "value1"))
+                                                                 .build();
+    DummyParameterizedInside dummyParameterizedInside1 = DummyParameterizedInside.builder().map(parameterized1).build();
+
+    DummyExtendsListClass dummyExtendsMapClass = new DummyExtendsListClass();
+    dummyExtendsMapClass.add(dummyParameterizedInside);
+    dummyExtendsMapClass.add(dummyParameterizedInside1);
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    DummyExtendsListClass expected = new DummyExtendsListClass();
+    expected.add(new Document()
+                     .append(RECAST_KEY, DummyParameterizedInside.class.getName())
+                     .append("map",
+                         new Document()
+                             .append(RECAST_KEY, DummyParameterized.class.getName())
+                             .append("expression", new Document().append("key", "value"))));
+    expected.add(new Document()
+                     .append(RECAST_KEY, DummyParameterizedInside.class.getName())
+                     .append("map",
+                         new Document()
+                             .append("__recast", DummyParameterized.class.getName())
+                             .append("expression", new Document().append("key1", "value1"))));
+
+    Document document = recast.toDocument(dummyExtendsMapClass);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyExtendsListClass.class.getName());
+    assertThat(document.get(Recaster.ENCODED_VALUE)).isEqualTo(expected);
+
+    DummyExtendsListClass recasted = recast.fromDocument(document, DummyExtendsListClass.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(dummyExtendsMapClass);
+  }
+
+  @EqualsAndHashCode(callSuper = false)
+  private static class DummyExtendsListClass extends ArrayList<Object> {}
 }
