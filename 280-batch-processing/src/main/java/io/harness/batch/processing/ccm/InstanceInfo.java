@@ -34,5 +34,6 @@ public class InstanceInfo {
   Map<String, String> labels;
   Map<String, String> namespaceLabels;
   Map<String, String> metaData;
+  List<String> pvcClaimNames;
   HarnessServiceInfo harnessServiceInfo;
 }

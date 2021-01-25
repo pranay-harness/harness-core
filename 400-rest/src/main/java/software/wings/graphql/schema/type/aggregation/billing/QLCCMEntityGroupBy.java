@@ -21,7 +21,8 @@ public enum QLCCMEntityGroupBy {
   InstanceName(QLAggregationKind.SIMPLE),
   CloudProvider(QLAggregationKind.SIMPLE),
   Node(QLAggregationKind.SIMPLE),
-  Pod(QLAggregationKind.SIMPLE);
+  Pod(QLAggregationKind.SIMPLE),
+  PV(QLAggregationKind.SIMPLE);
 
   QLAggregationKind aggregationKind;
 

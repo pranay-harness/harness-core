@@ -201,6 +201,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
       return PVInfo.PVType.PV_TYPE_AWS_EBS;
     } else if (spec.getAzureDisk() != null) {
       return PVInfo.PVType.PV_TYPE_AZURE_DISK;
+    } else if (spec.getNfs() != null) {
+      return PVInfo.PVType.PV_TYPE_NFS;
     }
     return PVInfo.PVType.PV_TYPE_UNSPECIFIED;
   }

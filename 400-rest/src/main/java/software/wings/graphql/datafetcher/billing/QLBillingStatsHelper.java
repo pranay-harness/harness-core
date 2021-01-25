@@ -89,6 +89,8 @@ public class QLBillingStatsHelper {
       case NAMESPACE:
       case CLUSTERNAME:
       case INSTANCENAME:
+      case INSTANCETYPE:
+      case CLOUDPROVIDER:
         return entityId;
       default:
         throw new InvalidRequestException("Invalid EntityType " + field);

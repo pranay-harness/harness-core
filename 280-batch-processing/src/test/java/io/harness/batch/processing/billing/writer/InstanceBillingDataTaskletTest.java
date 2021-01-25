@@ -1,5 +1,6 @@
 package io.harness.batch.processing.billing.writer;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 
@@ -41,6 +42,7 @@ import io.harness.rule.Owner;
 import software.wings.security.authentication.BatchQueryConfig;
 
 import com.amazonaws.services.ecs.model.LaunchType;
+import com.google.common.collect.ImmutableMap;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -123,8 +125,8 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, PARENT_RESOURCE_ID);
     InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
-    String parentInstanceId = instanceBillingDataTasklet.getValueForKeyFromInstanceMetaData(
-        InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
+    String parentInstanceId =
+        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
     assertThat(parentInstanceId).isEqualTo(PARENT_RESOURCE_ID);
   }
 
@@ -133,8 +135,8 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetNullValueForKeyFromInstanceMetaData() {
     InstanceData instanceData = InstanceData.builder().build();
-    String parentInstanceId = instanceBillingDataTasklet.getValueForKeyFromInstanceMetaData(
-        InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
+    String parentInstanceId =
+        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
     assertThat(parentInstanceId).isNull();
   }
 
@@ -307,15 +309,16 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
         .thenReturn(utilizationDataForInstances);
     when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
-            new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
+            new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
             new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,
-            CPU_UNIT_SECONDS, MEMORY_MB_SECONDS, 5.0, PricingSource.PUBLIC_API));
+            CPU_UNIT_SECONDS, MEMORY_MB_SECONDS, 5.0, 0, PricingSource.PUBLIC_API));
     when(billingDataGenerationValidator.shouldGenerateBillingData(
              ACCOUNT_ID, CLUSTER_ID, Instant.ofEpochMilli(START_TIME_MILLIS)))
         .thenReturn(true);
 
     instanceBillingDataTasklet.createBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
-        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING, Arrays.asList(instanceData));
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING, Arrays.asList(instanceData),
+        ImmutableMap.of(), ImmutableMap.of());
     ArgumentCaptor<BatchJobType> batchJobTypeArgumentCaptor = ArgumentCaptor.forClass(BatchJobType.class);
     verify(billingDataService)
         .create(instanceBillingDataArgumentCaptor.capture(), batchJobTypeArgumentCaptor.capture());

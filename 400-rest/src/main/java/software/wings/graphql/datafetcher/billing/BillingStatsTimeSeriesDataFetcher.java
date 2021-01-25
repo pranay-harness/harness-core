@@ -124,7 +124,6 @@ public class BillingStatsTimeSeriesDataFetcher
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, !isGroupByNodeOrPodPresent(groupByEntityList));
     log.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
-    log.info(queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -170,10 +169,12 @@ public class BillingStatsTimeSeriesDataFetcher
         checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
-    boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
+    boolean addNamespaceToEntityId = groupByEntityList.contains(QLCCMEntityGroupBy.WorkloadName);
     boolean addClusterIdToEntityId = billingDataQueryBuilder.isClusterDrilldown(groupByEntityList)
         || groupByEntityList.contains(QLCCMEntityGroupBy.Node);
     boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
+    boolean isKeyTypeInstanceId =
+        groupByEntityList.contains(QLCCMEntityGroupBy.Node) || groupByEntityList.contains(QLCCMEntityGroupBy.PV);
 
     if (dataPresent) {
       do {
@@ -197,6 +198,9 @@ public class BillingStatsTimeSeriesDataFetcher
         QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
         QLBillingTimeDataPointBuilder cpuMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
+        String clusterId = "";
+        String instanceId = "";
+        String instanceName = "";
         for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
           switch (field.getDataType()) {
             case DOUBLE:
@@ -272,6 +276,13 @@ public class BillingStatsTimeSeriesDataFetcher
               }
               break;
             case STRING:
+              if (field == BillingDataMetaDataFields.CLUSTERID) {
+                clusterId = resultSet.getString(field.getFieldName());
+              } else if (field == BillingDataMetaDataFields.INSTANCEID) {
+                instanceId = resultSet.getString(field.getFieldName());
+              } else if (field == BillingDataMetaDataFields.INSTANCENAME) {
+                instanceName = resultSet.getString(field.getFieldName());
+              }
               // Group by has been re-arranged such that additional info gets populated first
               if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
                   || (addClusterIdToEntityId && field == BillingDataMetaDataFields.CLUSTERID)
@@ -327,6 +338,14 @@ public class BillingStatsTimeSeriesDataFetcher
             default:
               throw new InvalidRequestException("UnsupportedType " + field.getDataType());
           }
+        }
+
+        if (isKeyTypeInstanceId) {
+          dataPointBuilder.key(QLReference.builder()
+                                   .name(instanceName)
+                                   .id(clusterId + BillingStatsDefaultKeys.TOKEN + instanceId)
+                                   .type(BillingDataMetaDataFields.INSTANCEID.name())
+                                   .build());
         }
 
         checkDataPointIsValidAndInsert(dataPointBuilder.build(), qlTimeDataPointMap);

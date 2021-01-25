@@ -39,4 +39,15 @@ public class QLNodeAndPodDetailsTableRow {
   long createTime;
   long deleteTime;
   String qosClass;
+  double storageCost;
+  double storageUtilizationValue;
+  double storageRequest;
+  double storageActualIdleCost;
+  double memoryBillingAmount;
+  double cpuBillingAmount;
+  double storageUnallocatedCost;
+  double memoryUnallocatedCost;
+  double cpuUnallocatedCost;
+  double memoryIdleCost;
+  double cpuIdleCost;
 }

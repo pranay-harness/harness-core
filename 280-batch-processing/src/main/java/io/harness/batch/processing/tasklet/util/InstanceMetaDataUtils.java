@@ -6,17 +6,18 @@ import io.harness.ccm.commons.entities.InstanceData;
 
 import java.util.Map;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
 public class InstanceMetaDataUtils {
-  public static String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {
+  public static String getValueForKeyFromInstanceMetaData(@NotNull String metaDataKey, InstanceData instanceData) {
     return getValueForKeyFromInstanceMetaData(metaDataKey, instanceData.getMetaData());
   }
 
-  public static String getValueForKeyFromInstanceMetaData(String metaDataKey, Map<String, String> metaData) {
+  public static String getValueForKeyFromInstanceMetaData(@NotNull String metaDataKey, Map<String, String> metaData) {
     if (null != metaData && metaData.containsKey(metaDataKey)) {
       return metaData.get(metaDataKey);
     }

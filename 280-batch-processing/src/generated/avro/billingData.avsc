@@ -63,6 +63,11 @@
      {"name": "avgmemoryutilizationvalue", "type": ["double", "null"]},
      {"name": "networkcost", "type": ["double", "null"]},
      {"name": "pricingsource", "type": ["string", "null"]},
+     {"name": "storagecost", "type": ["double", "null"]},
+     {"name": "storageactualidlecost", "type" : ["double", "null"]},
+     {"name": "storageunallocatedcost", "type" : ["double", "null"]},
+     {"name": "storageutilizationvalue", "type" : ["double", "null"]},
+     {"name": "storagerequest", "type" : ["double", "null"]},
      {"name" : "labels", "type": {
           "type": "array",
           "items": [{

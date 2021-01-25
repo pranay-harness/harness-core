@@ -19,6 +19,9 @@ public class InstanceUtilizationData {
   private double cpuUtilizationMaxValue;
   private double memoryUtilizationAvgValue;
   private double memoryUtilizationMaxValue;
+  private double storageCapacityAvgValue;
+  private double storageRequestAvgValue;
+  private double storageUsageAvgValue;
   private long endTimestamp;
   private long startTimestamp;
 }

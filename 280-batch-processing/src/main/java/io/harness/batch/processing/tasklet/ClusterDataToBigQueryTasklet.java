@@ -195,6 +195,11 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setUsagedurationseconds(instanceBillingData.getUsageDurationSeconds());
     clusterBillingData.setEndtime(instanceBillingData.getEndTimestamp());
     clusterBillingData.setStarttime(instanceBillingData.getStartTimestamp());
+    clusterBillingData.setStoragecost(instanceBillingData.getStorageBillingAmount().doubleValue());
+    clusterBillingData.setStorageactualidlecost(instanceBillingData.getStorageActualIdleCost().doubleValue());
+    clusterBillingData.setStorageunallocatedcost(instanceBillingData.getStorageUnallocatedCost().doubleValue());
+    clusterBillingData.setStorageutilizationvalue(instanceBillingData.getStorageUtilizationValue());
+    clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
 
     if (instanceBillingData.getAppId() != null) {
       clusterBillingData.setAppname(entityIdToNameCache.get(

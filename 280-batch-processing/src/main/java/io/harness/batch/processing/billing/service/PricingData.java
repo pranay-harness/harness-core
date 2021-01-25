@@ -12,5 +12,6 @@ public class PricingData {
   private double pricePerHour;
   private double cpuUnit;
   private double memoryMb;
+  private double storageMb;
   private PricingSource pricingSource;
 }

@@ -181,6 +181,17 @@ public class BillingStatsEntityDataFetcher
       int efficiencyScoreTrendPercentage = BillingStatsDefaultKeys.EFFICIENCY_SCORE_TREND;
       String additionalInfo = "";
 
+      // Number fields should be null initially, will help in debugging without harm.
+      // TODO(utsav): TEMPORARY; change to 0D after testing
+      Double defaultDoubleValue = -1D;
+      Double storageCost = defaultDoubleValue;
+      Double memoryBillingAmount = defaultDoubleValue;
+      Double cpuBillingAmount = defaultDoubleValue;
+      Double storageUnallocatedCost = defaultDoubleValue;
+      Double memoryUnallocatedCost = defaultDoubleValue;
+      Double cpuUnallocatedCost = defaultDoubleValue;
+      Double storageActualIdleCost = defaultDoubleValue;
+
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
           case APPID:
@@ -280,6 +291,27 @@ public class BillingStatsEntityDataFetcher
           case UNALLOCATEDCOST:
             unallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
+          case STORAGECOST:
+            storageCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case MEMORYBILLINGAMOUNT:
+            memoryBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case CPUBILLINGAMOUNT:
+            cpuBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case STORAGEUNALLOCATEDCOST:
+            storageUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case MEMORYUNALLOCATEDCOST:
+            memoryUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case CPUUNALLOCATEDCOST:
+            cpuUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case STORAGEACTUALIDLECOST:
+            storageActualIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           default:
             break;
         }
@@ -324,6 +356,13 @@ public class BillingStatsEntityDataFetcher
 
       final QLEntityTableDataBuilder entityTableDataBuilder = QLEntityTableData.builder();
       entityTableDataBuilder.id(entityId)
+          .storageCost(storageCost)
+          .memoryBillingAmount(memoryBillingAmount)
+          .cpuBillingAmount(cpuBillingAmount)
+          .storageUnallocatedCost(storageUnallocatedCost)
+          .memoryUnallocatedCost(memoryUnallocatedCost)
+          .cpuUnallocatedCost(cpuUnallocatedCost)
+          .storageActualIdleCost(storageActualIdleCost)
           .name(name)
           .type(type)
           .totalCost(totalCost)

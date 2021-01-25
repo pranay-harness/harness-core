@@ -133,6 +133,7 @@ enum CCMEntityGroupBy {
   PROJECT
   Node
   Pod
+  PV
 }
 
 input CETimeTruncGroupby {
@@ -160,6 +161,7 @@ input BillingSortCriteria {
 enum BillingSortType {
   Time
   Amount
+  storageCost
   IdleCost
   Application
   Service
@@ -207,6 +209,15 @@ type BillingEntityDataPoint {
   clusterName: String
   efficiencyScore: Number
   efficiencyScoreTrend: Number
+  storageCost: Number
+  memoryBillingAmount: Number
+  cpuBillingAmount: Number
+  storageUnallocatedCost: Number
+  memoryUnallocatedCost: Number
+  cpuUnallocatedCost: Number
+  storageRequest: Number
+  storageUtilizationValue: Number
+  storageActualIdleCost: Number
 }
 
 type GcpBillingEntityDataPoint {
@@ -314,6 +325,7 @@ type IdleCostStatsData {
   totalIdleCost: BillingStatsInfo
   cpuIdleCost: BillingStatsInfo
   memoryIdleCost: BillingStatsInfo
+  storageIdleCost: BillingStatsInfo
   unallocatedCost: BillingStatsInfo
 }
 
@@ -404,6 +416,7 @@ input CCMFilter {
   envType: CEEnvironmentTypeFilter
   labelSearch: IdFilter
   tagSearch: IdFilter
+  instanceType: IdFilter
 }
 
 input BillingDataLabelFilter {
@@ -435,7 +448,33 @@ enum EnvType {
 
 type NodeAndPodData {
   data: [NodeAndPodDataPoint]
+  pvData: [PVDataPoint]
   info: String
+}
+
+type PVDataPoint {
+  id: String
+  instanceId: String
+  instanceName: String
+  claimName: String
+  claimNamespace: String
+  clusterName: String
+  clusterId: String
+  storageClass: String
+  volumeType: String
+  cloudProvider: String
+  region: String
+
+  capacity: Number
+  storageRequest: Number
+  storageUtilizationValue: Number
+
+  storageCost: Number
+  storageActualIdleCost: Number
+  storageUnallocatedCost: Number
+
+  createTime: Number
+  deleteTime: Number
 }
 
 type NodeAndPodDataPoint {
@@ -465,6 +504,17 @@ type NodeAndPodDataPoint {
   createTime: Number
   deleteTime: Number
   qosClass: String
+  storageUtilizationValue: Number
+  storageActualIdleCost: Number
+  storageCost: Number
+  memoryBillingAmount: Number
+  cpuBillingAmount: Number
+  storageUnallocatedCost: Number
+  memoryUnallocatedCost: Number
+  cpuUnallocatedCost: Number
+  memoryIdleCost: Number
+  cpuIdleCost: Number
+  storageRequest: Number
 }
 
 type PodCountTimeSeriesData {

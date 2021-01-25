@@ -28,6 +28,7 @@ import io.harness.ccm.commons.beans.Resource;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
+import io.harness.perpetualtask.k8s.watch.Volume;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -154,7 +155,7 @@ public class K8sPodInfoTasklet implements Tasklet {
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
-      log.warn("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
+      log.debug("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
           podInfo.getNodeName(), podUid, podInfo.getPodName());
     }
 
@@ -175,6 +176,7 @@ public class K8sPodInfoTasklet implements Tasklet {
     if (!isEmpty(podInfo.getTotalResource().getLimitsMap())) {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
+    List<String> pvcClaimNames = podInfo.getVolumeList().stream().map(Volume::getId).collect(Collectors.toList());
 
     return InstanceInfo.builder()
         .accountId(accountId)
@@ -189,6 +191,7 @@ public class K8sPodInfoTasklet implements Tasklet {
         .resource(resource)
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)
+        .pvcClaimNames(pvcClaimNames)
         .metaData(metaData)
         .labels(encodeDotsInKey(labelsMap))
         .namespaceLabels(encodeDotsInKey(podInfo.getNamespaceLabelsMap()))

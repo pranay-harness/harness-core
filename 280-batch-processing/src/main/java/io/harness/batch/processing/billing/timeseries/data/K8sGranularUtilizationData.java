@@ -15,6 +15,8 @@ public class K8sGranularUtilizationData {
   private double memory;
   private double maxCpu;
   private double maxMemory;
+  private double storageUsageValue;
+  private double storageRequestValue;
   private long endTimestamp;
   private long startTimestamp;
 }

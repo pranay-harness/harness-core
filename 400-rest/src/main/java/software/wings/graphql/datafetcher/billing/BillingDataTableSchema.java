@@ -87,6 +87,13 @@ public class BillingDataTableSchema {
   DbColumn memoryRequest;
   DbColumn cpuLimit;
   DbColumn memoryLimit;
+  DbColumn storageCost;
+  DbColumn storageActualIdleCost;
+  DbColumn storageUtilizationValue;
+  DbColumn storageRequest;
+  DbColumn storageUnallocatedCost;
+  DbColumn memoryUnallocatedCost;
+  DbColumn cpuUnallocatedCost;
   // These 6 columns are not actually present in billing_data table
   DbColumn effectiveCpuRequest;
   DbColumn effectiveMemoryRequest;
@@ -121,10 +128,10 @@ public class BillingDataTableSchema {
     clusterType = billingDataTable.addColumn("clustertype", varcharType, null);
     workloadName = billingDataTable.addColumn("workloadname", "text", null);
     workloadType = billingDataTable.addColumn("workloadtype", "text", null);
-    cloudProvider = billingDataTable.addColumn("cloudprovider", varcharType, null);
+    cloudProvider = billingDataTable.addColumn("cloudProvider", varcharType, null);
     billingAmount = billingDataTable.addColumn("billingamount", doubleType, null);
     cpuBillingAmount = billingDataTable.addColumn("cpubillingamount", doubleType, null);
-    memoryBillingAmount = billingDataTable.addColumn("memorybillingamount", doubleType, null);
+    memoryBillingAmount = billingDataTable.addColumn("memoryBillingAmount", doubleType, null);
     usageDurationSeconds = billingDataTable.addColumn("usagedurationseconds", doubleType, null);
     cpuUnitSeconds = billingDataTable.addColumn("cpuunitseconds", doubleType, null);
     memoryMbSeconds = billingDataTable.addColumn("memorymbseconds", doubleType, null);
@@ -152,6 +159,14 @@ public class BillingDataTableSchema {
     memoryRequest = billingDataTable.addColumn("memoryrequest", doubleType, null);
     cpuLimit = billingDataTable.addColumn("cpulimit", doubleType, null);
     memoryLimit = billingDataTable.addColumn("memorylimit", doubleType, null);
+    storageCost = billingDataTable.addColumn("storageCost", doubleType, null);
+    storageActualIdleCost = billingDataTable.addColumn("storageActualIdleCost", doubleType, null);
+    storageUtilizationValue = billingDataTable.addColumn("storageUtilizationValue", doubleType, null);
+    storageRequest = billingDataTable.addColumn("storageRequest", doubleType, null);
+    storageUnallocatedCost = billingDataTable.addColumn("storageUnallocatedCost", doubleType, null);
+    memoryUnallocatedCost = billingDataTable.addColumn("memoryUnallocatedCost", doubleType, null);
+    cpuUnallocatedCost = billingDataTable.addColumn("cpuUnallocatedCost", doubleType, null);
+    // fields not in billing_data table
     effectiveCpuRequest = billingDataTable.addColumn("cpurequest*usagedurationseconds", doubleType, null);
     effectiveMemoryRequest = billingDataTable.addColumn("memoryrequest*usagedurationseconds", doubleType, null);
     effectiveCpuLimit = billingDataTable.addColumn("cpulimit*usagedurationseconds", doubleType, null);
