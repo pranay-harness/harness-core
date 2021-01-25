@@ -23,18 +23,24 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
     LinkedHashMap<String, VariableCreationResponse> responseMap = new LinkedHashMap<>();
     YamlField serviceField =
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
-    VariableCreationResponse serviceVariableResponse = ServiceVariableCreator.createVariableResponse(serviceField);
-    responseMap.put(serviceField.getNode().getUuid(), serviceVariableResponse);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(serviceField)) {
+      VariableCreationResponse serviceVariableResponse = ServiceVariableCreator.createVariableResponse(serviceField);
+      responseMap.put(serviceField.getNode().getUuid(), serviceVariableResponse);
+    }
 
-    YamlField infraNode =
+    YamlField infraField =
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
-    VariableCreationResponse infraVariableResponse = InfraVariableCreator.createVariableResponse(infraNode);
-    responseMap.put(infraNode.getNode().getUuid(), infraVariableResponse);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(infraField)) {
+      VariableCreationResponse infraVariableResponse = InfraVariableCreator.createVariableResponse(infraField);
+      responseMap.put(infraField.getNode().getUuid(), infraVariableResponse);
+    }
 
     YamlField executionField =
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
-    responseMap.put(executionField.getNode().getUuid(),
-        VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(executionField)) {
+      responseMap.put(executionField.getNode().getUuid(),
+          VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
+    }
 
     YamlField variablesField = config.getNode().getField(YAMLFieldNameConstants.VARIABLES);
     if (variablesField != null) {

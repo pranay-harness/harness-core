@@ -58,6 +58,7 @@ public interface YamlTypes {
   String SOURCE = "source";
   String EXECUTION_TARGET = "executionTarget";
   String OUTPUT_VARIABLES = "outputVariables";
+  String HEADERS = "headers";
   String DELEGATE_SELECTORS = "delegateSelectors";
   String ENVIRONMENT_VARIABLES = "environmentVariables";
 }

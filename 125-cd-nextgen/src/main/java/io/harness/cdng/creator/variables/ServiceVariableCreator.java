@@ -30,7 +30,7 @@ public class ServiceVariableCreator {
     yamlPropertiesMap.put(serviceUUID, YamlProperties.newBuilder().setFqn(YamlTypes.SERVICE_CONFIG).build());
 
     YamlField serviceYamlNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_ENTITY);
-    if (serviceYamlNode != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(serviceYamlNode)) {
       addVariablesForServiceYaml(serviceYamlNode, yamlPropertiesMap);
     }
 
@@ -40,7 +40,8 @@ public class ServiceVariableCreator {
     }
 
     YamlField serviceDefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_DEFINITION);
-    if (serviceDefNode != null && serviceDefNode.getNode().getField(YamlTypes.SERVICE_SPEC) != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(serviceDefNode)
+        && VariableCreatorHelper.isNotYamlFieldEmpty(serviceDefNode.getNode().getField(YamlTypes.SERVICE_SPEC))) {
       addVariablesForServiceSpec(serviceDefNode, yamlPropertiesMap);
     }
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
@@ -56,7 +57,7 @@ public class ServiceVariableCreator {
       VariableCreatorHelper.addFieldToPropertiesMap(descriptionField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
     }
     YamlField tagsField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.TAGS);
-    if (tagsField != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(tagsField)) {
       List<YamlField> fields = tagsField.getNode().fields();
       fields.forEach(field -> {
         if (!field.getName().equals(YamlTypes.UUID)) {
@@ -85,7 +86,7 @@ public class ServiceVariableCreator {
   private void addVariablesForKubernetesServiceSpec(
       YamlField serviceSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField artifactsNode = serviceSpecNode.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
-    if (artifactsNode != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(artifactsNode)) {
       addVariablesForArtifacts(artifactsNode, yamlPropertiesMap);
     }
     YamlField manifestsNode = serviceSpecNode.getNode().getField(YamlTypes.MANIFEST_LIST_CONFIG);
@@ -114,7 +115,7 @@ public class ServiceVariableCreator {
 
   private void addVariablesForArtifacts(YamlField artifactsNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField primaryNode = artifactsNode.getNode().getField(YamlTypes.PRIMARY_ARTIFACT);
-    if (primaryNode != null) {
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(primaryNode)) {
       addVariablesForPrimaryArtifact(primaryNode, yamlPropertiesMap);
     }
     YamlField sidecarsNode = artifactsNode.getNode().getField(YamlTypes.SIDECARS_ARTIFACT_CONFIG);
@@ -127,7 +128,7 @@ public class ServiceVariableCreator {
     List<YamlNode> manifestNodes = Optional.of(manifestsNode.getNode().asArray()).orElse(Collections.emptyList());
     for (YamlNode manifestNode : manifestNodes) {
       YamlField field = manifestNode.getField(YamlTypes.MANIFEST_CONFIG);
-      if (field != null) {
+      if (VariableCreatorHelper.isNotYamlFieldEmpty(field)) {
         addVariablesForManifest(field, yamlPropertiesMap);
       }
     }
@@ -245,7 +246,7 @@ public class ServiceVariableCreator {
       YamlField field = yamlNode.getField(YamlTypes.OVERRIDE_SET);
       if (field != null) {
         YamlField artifactsNode = field.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
-        if (artifactsNode != null) {
+        if (VariableCreatorHelper.isNotYamlFieldEmpty(artifactsNode)) {
           addVariablesForArtifacts(artifactsNode, yamlPropertiesMap);
         }
       }
@@ -262,7 +263,7 @@ public class ServiceVariableCreator {
           List<YamlNode> manifestNodes = Optional.of(manifestsNode.getNode().asArray()).orElse(Collections.emptyList());
           for (YamlNode manifestNode : manifestNodes) {
             YamlField manifestField = manifestNode.getField(YamlTypes.MANIFEST_CONFIG);
-            if (manifestField != null) {
+            if (VariableCreatorHelper.isNotYamlFieldEmpty(manifestField)) {
               addVariablesForManifest(manifestField, yamlPropertiesMap);
             }
           }
