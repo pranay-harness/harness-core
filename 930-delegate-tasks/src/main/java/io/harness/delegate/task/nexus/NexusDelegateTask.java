@@ -62,7 +62,6 @@ public class NexusDelegateTask extends AbstractDelegateRunnableTask {
         default:
           throw new InvalidRequestException("No task found for " + taskType.name());
       }
-
     } catch (Exception e) {
       String errorMessage = e.getMessage();
       String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
