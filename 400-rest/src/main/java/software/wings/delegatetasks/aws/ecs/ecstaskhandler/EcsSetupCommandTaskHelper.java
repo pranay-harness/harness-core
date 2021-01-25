@@ -134,8 +134,16 @@ public class EcsSetupCommandTaskHelper {
     executionLogCallback.saveExecutionLog("Container Name: " + containerName, LogLevel.INFO);
 
     // create Task definition and register it with AWS
-    return createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams, awsConfig,
-        serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback, domainName);
+    TaskDefinition taskDefinition;
+    if (setupParams.isEcsRegisterTaskDefinitionTagsEnabled()) {
+      taskDefinition = createTaskDefinitionParseAsRegisterTaskDefinitionRequest(ecsContainerTask, containerName,
+          dockerImageName, setupParams, awsConfig, serviceVariables, safeDisplayServiceVariables, encryptedDataDetails,
+          executionLogCallback, domainName);
+    } else {
+      taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams, awsConfig,
+          serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback, domainName);
+    }
+    return taskDefinition;
   }
 
   @VisibleForTesting
@@ -229,6 +237,87 @@ public class EcsSetupCommandTaskHelper {
   }
 
   /**
+   * This method will create TaskDefinition and register it with AWS.
+   */
+  public TaskDefinition createTaskDefinitionParseAsRegisterTaskDefinitionRequest(EcsContainerTask ecsContainerTask,
+      String containerName, String dockerImageName, EcsSetupParams ecsSetupParams, AwsConfig awsConfig,
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, String domainName) {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = ecsContainerTask.createRegisterTaskDefinitionRequest(
+        containerName, dockerImageName, ecsSetupParams.getExecutionRoleArn(), domainName);
+
+    // For Awsvpc mode we need to make sure NetworkConfiguration is provided
+    String validationMessage =
+        isValidateSetupParamsForECSRegisterTaskDefinitionRequest(registerTaskDefinitionRequest, ecsSetupParams);
+    handleValidationMessage(validationMessage, executionLogCallback);
+
+    registerTaskDefinitionRequest.setFamily(ecsSetupParams.getTaskFamily());
+
+    // Set service variables as environment variables
+    if (isNotEmpty(serviceVariables)) {
+      if (isNotEmpty(safeDisplayServiceVariables)) {
+        executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
+        for (Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
+          executionLogCallback.saveExecutionLog(entry.getKey() + "=" + entry.getValue(), LogLevel.INFO);
+        }
+      }
+      Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
+          Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
+      for (ContainerDefinition containerDefinition : registerTaskDefinitionRequest.getContainerDefinitions()) {
+        Map<String, KeyValuePair> valuePairsMap = new HashMap<>();
+        if (containerDefinition.getEnvironment() != null) {
+          containerDefinition.getEnvironment().forEach(
+              keyValuePair -> valuePairsMap.put(keyValuePair.getName(), keyValuePair));
+        }
+        valuePairsMap.putAll(serviceValuePairs);
+        containerDefinition.setEnvironment(new ArrayList<>(valuePairsMap.values()));
+      }
+    }
+
+    if (registerTaskDefinitionRequest.getContainerDefinitions().size() > 1) {
+      Tag mainEcsContainerNameTag = new Tag().withKey(MAIN_ECS_CONTAINER_NAME_TAG).withValue(containerName);
+      if (registerTaskDefinitionRequest.getTags() == null) {
+        registerTaskDefinitionRequest.withTags(mainEcsContainerNameTag);
+      } else {
+        registerTaskDefinitionRequest.getTags().add(mainEcsContainerNameTag);
+      }
+    }
+
+    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(null);
+    }
+
+    if (isEmpty(registerTaskDefinitionRequest.getTags())) {
+      ArrayList<Tag> tags = null;
+      registerTaskDefinitionRequest.withTags(tags);
+    }
+
+    // Add extra parameters for Fargate launch type
+    if (isFargateTaskLauchType(ecsSetupParams)) {
+      registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
+      registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
+    } else {
+      registerTaskDefinitionRequest.withCpu(null);
+      registerTaskDefinitionRequest.withMemory(null);
+    }
+
+    executionLogCallback.saveExecutionLog(
+        format("Creating task definition %s with container image %s", ecsSetupParams.getTaskFamily(), dockerImageName),
+        LogLevel.INFO);
+    return awsClusterService.createTask(ecsSetupParams.getRegion(), aSettingAttribute().withValue(awsConfig).build(),
+        encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  public void handleValidationMessage(String validationMessage, ExecutionLogCallback executionLogCallback) {
+    if (!isEmptyOrBlank(validationMessage)) {
+      StringBuilder builder =
+          new StringBuilder().append("Invalid setup params for ECS deployment: ").append(validationMessage);
+      executionLogCallback.saveExecutionLog(builder.toString(), LogLevel.ERROR);
+      throw new WingsException(builder.toString(), USER).addParam("message", builder.toString());
+    }
+  }
+
+  /**
    * Checks for null, "" and  "    "
    *
    * @param input
@@ -286,6 +375,47 @@ public class EcsSetupCommandTaskHelper {
 
     if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
       if (isEmptyOrBlank(taskDefinition.getExecutionRoleArn())) {
+        errorMessage.append("Execution Role ARN is required for Fargate tasks");
+      }
+    }
+
+    return errorMessage.toString();
+  }
+
+  /**
+   * For AwsVpcMode we need to make sure NetworkConfiguration i.e. (SubnetId/s, securityGroupId/s) is provided and For
+   * fargate in addition to this executionRole is also required
+   *
+   * @param registerTaskDefinitionRequest
+   * @param ecsSetupParams
+   * @return
+   */
+  public String isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+      RegisterTaskDefinitionRequest registerTaskDefinitionRequest, EcsSetupParams ecsSetupParams) {
+    StringBuilder errorMessage = new StringBuilder(128);
+    if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())
+        || NetworkMode.Awsvpc.name().equals(registerTaskDefinitionRequest.getNetworkMode())) {
+      if (isEmptyOrBlank(ecsSetupParams.getVpcId())) {
+        errorMessage.append("VPC Id is required for fargate task");
+      }
+
+      if (ArrayUtils.isEmpty(ecsSetupParams.getSubnetIds())
+          || CollectionUtils.isEmpty(Arrays.stream(ecsSetupParams.getSubnetIds())
+                                         .filter(subnet -> !isEmptyOrBlank(subnet))
+                                         .collect(toList()))) {
+        errorMessage.append("At least 1 subnetId is required for mentioned VPC");
+      }
+
+      if (ArrayUtils.isEmpty(ecsSetupParams.getSecurityGroupIds())
+          || CollectionUtils.isEmpty(Arrays.stream(ecsSetupParams.getSecurityGroupIds())
+                                         .filter(securityGroup -> !isEmptyOrBlank(securityGroup))
+                                         .collect(toList()))) {
+        errorMessage.append("At least 1 security Group is required for mentioned VPC");
+      }
+    }
+
+    if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
+      if (isEmptyOrBlank(registerTaskDefinitionRequest.getExecutionRoleArn())) {
         errorMessage.append("Execution Role ARN is required for Fargate tasks");
       }
     }

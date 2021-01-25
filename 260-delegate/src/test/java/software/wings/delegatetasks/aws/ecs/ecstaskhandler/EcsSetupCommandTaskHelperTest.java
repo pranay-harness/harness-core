@@ -4,6 +4,7 @@ import static io.harness.container.ContainerInfo.Status.FAILURE;
 import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -29,6 +30,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
@@ -178,6 +180,47 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
       + "  \"networkMode\" : \"awsvpc\"\n"
       + "}";
 
+  private String registerTaskDefinitionRequestJson = "{\n"
+      + "  \"containerDefinitions\" : [ {\n"
+      + "    \"name\" : \"${CONTAINER_NAME}\",\n"
+      + "    \"image\" : \"${DOCKER_IMAGE_NAME}\",\n"
+      + "    \"cpu\" : 1,\n"
+      + "    \"memory\" : 512,\n"
+      + "    \"links\" : [ ],\n"
+      + "    \"portMappings\" : [ {\n"
+      + "      \"containerPort\" : 80,\n"
+      + "      \"protocol\" : \"tcp\"\n"
+      + "    } ],\n"
+      + "\"secrets\": [\n"
+      + "            {\n"
+      + "                \"name\": \"environment_variable_name\",\n"
+      + "                \"valueFrom\": \"arn:aws:ssm:region:aws_account_id:parameter/parameter_name\"\n"
+      + "            }\n"
+      + "        ],\n"
+      + "    \"entryPoint\" : [ ],\n"
+      + "    \"command\" : [ ],\n"
+      + "    \"environment\" : [ ],\n"
+      + "    \"mountPoints\" : [ ],\n"
+      + "    \"volumesFrom\" : [ ],\n"
+      + "    \"dnsServers\" : [ ],\n"
+      + "    \"dnsSearchDomains\" : [ ],\n"
+      + "    \"extraHosts\" : [ ],\n"
+      + "    \"dockerSecurityOptions\" : [ ],\n"
+      + "    \"ulimits\" : [ ],\n"
+      + "    \"systemControls\" : [ ]\n"
+      + "  } ],\n"
+      + "  \"executionRoleArn\" : \"abc\",\n"
+      + "  \"volumes\" : [ ],\n"
+      + "  \"requiresAttributes\" : [ ],\n"
+      + "  \"placementConstraints\" : [ ],\n"
+      + "  \"compatibilities\" : [ ],\n"
+      + "  \"requiresCompatibilities\" : [ ],\n"
+      + "  \"cpu\" : \"1\",\n"
+      + "  \"memory\" : \"512\",\n"
+      + "  \"networkMode\" : \"awsvpc\",\n"
+      + "  \"tags\" : [{\"key\" : \"key1\" , \"value\" : \"value1\"}, {\"key\" : \"key2\", \"value\" : \"value2\"}]"
+      + "}";
+
   private final String fargateConfigYaml = "{\n"
       + "  \"networkMode\": \"awsvpc\", \n"
       + "  \"taskRoleArn\":null,\n"
@@ -222,6 +265,53 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
       + "  ], \n"
       + "  \"cpu\": \"256\", \n"
       + "  \"memory\": \"1024\"\n"
+      + "}";
+
+  private final String fargateRegisterTaskDefinitionRequestJson = "{\n"
+      + "  \"networkMode\": \"awsvpc\", \n"
+      + "  \"taskRoleArn\":null,\n"
+      + "  \"executionRoleArn\": \"abc\", \n"
+      + "  \"containerDefinitions\" : [ {\n"
+      + "    \"logConfiguration\": {\n"
+      + "        \"logDriver\": \"awslogs\",\n"
+      + "        \"options\": {\n"
+      + "          \"awslogs-group\": \"/ecs/test_3__fargate__env\",\n"
+      + "          \"awslogs-region\": \"us-east-1\",\n"
+      + "          \"awslogs-stream-prefix\": \"ecs\"\n"
+      + "        }\n"
+      + "    },\n"
+      + "    \"name\" : \"${CONTAINER_NAME}\",\n"
+      + "    \"image\" : \"${DOCKER_IMAGE_NAME}\",\n"
+      + "    \"links\" : [ ],\n"
+      + "    \"cpu\": 256, \n"
+      + "    \"memoryReservation\": 1024, \n"
+      + "    \"portMappings\": [\n"
+      + "                {\n"
+      + "                    \"containerPort\": 80,\n"
+      + "                    \"protocol\": \"tcp\"\n"
+      + "                }\n"
+      + "    ], \n"
+      + "    \"entryPoint\" : [ ],\n"
+      + "    \"command\" : [ ],\n"
+      + "    \"environment\" : [ ],\n"
+      + "    \"mountPoints\" : [ ],\n"
+      + "    \"volumesFrom\" : [ ],\n"
+      + "    \"dnsServers\" : [ ],\n"
+      + "    \"dnsSearchDomains\" : [ ],\n"
+      + "    \"extraHosts\" : [ ],\n"
+      + "    \"dockerSecurityOptions\" : [ ],\n"
+      + "    \"ulimits\" : [ ]\n"
+      + "  } ],\n"
+      + "  \"volumes\" : [ ],\n"
+      + "  \"requiresAttributes\" : [ ],\n"
+      + "  \"placementConstraints\" : [ ],\n"
+      + "  \"compatibilities\" : [ ],\n"
+      + "  \"requiresCompatibilities\": [\n"
+      + "        \"FARGATE\"\n"
+      + "  ], \n"
+      + "  \"cpu\": \"256\", \n"
+      + "  \"memory\": \"1024\",\n"
+      + "  \"tags\" : [{\"key\" : \"key1\" , \"value\" : \"value1\"}, {\"key\" : \"key2\", \"value\" : \"value2\"}]"
       + "}";
 
   private TaskDefinition taskDefinition;
@@ -562,6 +652,65 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testCreateTaskDefinitionParseAsRegisterTaskDefinitionRequest_ECS() {
+    EcsContainerTask ecsContainerTask = new EcsContainerTask();
+    ecsContainerTask.setAdvancedConfig(registerTaskDefinitionRequestJson);
+
+    doReturn(new TaskDefinition()).when(awsClusterService).createTask(anyString(), any(), anyList(), any());
+
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    ecsSetupCommandTaskHelper.createTaskDefinitionParseAsRegisterTaskDefinitionRequest(ecsContainerTask,
+        "ContainerName", DOCKER_IMG_NAME, getEcsSetupParams(), AwsConfig.builder().build(),
+        ImmutableMap.of("svk", "svv"), ImmutableMap.of("sdvk", "sdvv"), Collections.EMPTY_LIST, executionLogCallback,
+        DOCKER_DOMAIN_NAME);
+
+    ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
+    verify(awsClusterService).createTask(anyString(), any(), anyList(), captor.capture());
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = captor.getValue();
+    assertThat(registerTaskDefinitionRequest).isNotNull();
+    assertThat(registerTaskDefinitionRequest.getFamily()).isEqualTo(TASK_FAMILY);
+    assertThat(registerTaskDefinitionRequest.getNetworkMode().toLowerCase())
+        .isEqualTo(NetworkMode.Awsvpc.name().toLowerCase());
+
+    assertThat(registerTaskDefinitionRequest.getExecutionRoleArn()).isEqualTo("abc");
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).isNotNull();
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
+    assertThat(registerTaskDefinitionRequest.getCpu()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getMemory()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getTags().contains(new Tag().withKey("key1").withValue("value1")))
+        .isTrue();
+    assertThat(registerTaskDefinitionRequest.getTags().contains(new Tag().withKey("key2").withValue("value2")))
+        .isTrue();
+
+    ContainerDefinition containerDefinition = registerTaskDefinitionRequest.getContainerDefinitions().get(0);
+    assertThat(containerDefinition).isNotNull();
+    assertThat(containerDefinition.getName()).isEqualTo("ContainerName");
+    assertThat(containerDefinition.getMemory().intValue()).isEqualTo(512);
+    assertThat(containerDefinition.getCpu().intValue()).isEqualTo(1);
+    assertThat(containerDefinition.getImage()).isEqualTo(DOCKER_DOMAIN_NAME + "/" + DOCKER_IMG_NAME);
+    assertThat(containerDefinition.getPortMappings()).isNotNull();
+    assertThat(containerDefinition.getPortMappings()).hasSize(1);
+
+    List<KeyValuePair> environment = containerDefinition.getEnvironment();
+    assertThat(environment).isNotNull();
+    assertThat(environment.size()).isEqualTo(1);
+    assertThat(environment.get(0).getName()).isEqualTo("svk");
+    assertThat(environment.get(0).getValue()).isEqualTo("svv");
+
+    PortMapping portMapping = containerDefinition.getPortMappings().iterator().next();
+    assertThat(portMapping.getContainerPort().intValue()).isEqualTo(80);
+    assertThat(portMapping.getProtocol()).isEqualTo("tcp");
+
+    assertThat(containerDefinition.getSecrets()).isNotNull();
+    assertThat(containerDefinition.getSecrets()).hasSize(1);
+    assertThat(containerDefinition.getSecrets().get(0).getName()).isEqualTo("environment_variable_name");
+    assertThat(containerDefinition.getSecrets().get(0).getValueFrom())
+        .isEqualTo("arn:aws:ssm:region:aws_account_id:parameter/parameter_name");
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateTaskDefinition_Fargate() throws Exception {
@@ -595,6 +744,53 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(registerTaskDefinitionRequest.getNetworkMode().toLowerCase())
         .isEqualTo(NetworkMode.Awsvpc.name().toLowerCase());
     assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
+    ContainerDefinition taskDefinition1 = registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
+    assertThat(taskDefinition1.getPortMappings()).isNotNull();
+    assertThat(taskDefinition1.getPortMappings()).hasSize(1);
+
+    PortMapping portMapping = taskDefinition1.getPortMappings().iterator().next();
+    assertThat(portMapping.getProtocol()).isEqualTo("tcp");
+    assertThat(portMapping.getContainerPort().intValue()).isEqualTo(80);
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testCreateTaskDefinitionParseAsRegisterTaskDefinitionRequest_Fargate() {
+    EcsContainerTask ecsContainerTask = new EcsContainerTask();
+    ecsContainerTask.setAdvancedConfig(fargateRegisterTaskDefinitionRequestJson);
+
+    EcsSetupParams setupParams = getEcsSetupParams();
+    setupParams.setVpcId(VPC_ID);
+    setupParams.setSecurityGroupIds(new String[] {SECURITY_GROUP_ID_1});
+    setupParams.setSubnetIds(new String[] {SUBNET_ID});
+    setupParams.setLaunchType(LaunchType.FARGATE.name());
+
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinitionParseAsRegisterTaskDefinitionRequest(
+        ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, AwsConfig.builder().build(),
+        Collections.EMPTY_MAP, Collections.EMPTY_MAP, Collections.EMPTY_LIST, executionLogCallback, DOCKER_DOMAIN_NAME);
+
+    // Capture RegisterTaskDefinitionRequest arg that was passed to "awsClusterService.createTask" and assert it
+    ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
+    verify(awsClusterService).createTask(anyString(), any(), anyList(), captor.capture());
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = captor.getValue();
+
+    assertThat(registerTaskDefinitionRequest).isNotNull();
+    assertThat(registerTaskDefinitionRequest.getCpu()).isEqualTo("256");
+    assertThat(registerTaskDefinitionRequest.getMemory()).isEqualTo("1024");
+    assertThat(registerTaskDefinitionRequest.getExecutionRoleArn()).isEqualTo("abc");
+    assertThat(registerTaskDefinitionRequest.getFamily()).isEqualTo(setupParams.getTaskFamily());
+    assertThat(registerTaskDefinitionRequest.getRequiresCompatibilities().contains(LaunchType.FARGATE.name())).isTrue();
+    assertThat(registerTaskDefinitionRequest.getNetworkMode().toLowerCase())
+        .isEqualTo(NetworkMode.Awsvpc.name().toLowerCase());
+    assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
+    assertThat(registerTaskDefinitionRequest.getTags().contains(new Tag().withKey("key1").withValue("value1")))
+        .isTrue();
+    assertThat(registerTaskDefinitionRequest.getTags().contains(new Tag().withKey("key2").withValue("value2")))
+        .isTrue();
     ContainerDefinition taskDefinition1 = registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
     assertThat(taskDefinition1.getPortMappings()).isNotNull();
     assertThat(taskDefinition1.getPortMappings()).hasSize(1);
@@ -662,6 +858,79 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     taskDefinition.setExecutionRoleArn("");
     assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams))
+        .isEqualTo("Execution Role ARN is required for Fargate tasks");
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testIsValidateSetupParamsForECSRegisterTaskDefinitionRequest() {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+        new RegisterTaskDefinitionRequest().withExecutionRoleArn("executionRole");
+
+    EcsSetupParams ecsSetupParams = anEcsSetupParams()
+                                        .withVpcId("vpc_id")
+                                        .withSubnetIds(new String[] {"subnet_1"})
+                                        .withSecurityGroupIds(new String[] {"sg_id"})
+                                        .withExecutionRoleArn("executionRoleArn")
+                                        .withLaunchType(LaunchType.FARGATE.name())
+                                        .build();
+
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo(StringUtils.EMPTY);
+
+    ecsSetupParams.setSubnetIds(new String[] {"subnet_1", "subnet_2"});
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo(StringUtils.EMPTY);
+
+    ecsSetupParams.setVpcId(null);
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("VPC Id is required for fargate task");
+
+    ecsSetupParams.setVpcId("");
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("VPC Id is required for fargate task");
+
+    ecsSetupParams.setVpcId("vpc_id");
+    ecsSetupParams.setSubnetIds(null);
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("At least 1 subnetId is required for mentioned VPC");
+
+    ecsSetupParams.setSubnetIds(new String[] {null});
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("At least 1 subnetId is required for mentioned VPC");
+
+    ecsSetupParams.setSubnetIds(new String[] {"subnet_id"});
+    ecsSetupParams.setSecurityGroupIds(new String[0]);
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
+
+    ecsSetupParams.setSecurityGroupIds(null);
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
+
+    ecsSetupParams.setSecurityGroupIds(new String[] {null});
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("At least 1 security Group is required for mentioned VPC");
+
+    ecsSetupParams.setSecurityGroupIds(new String[] {"sg_id"});
+    registerTaskDefinitionRequest.setExecutionRoleArn(null);
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
+        .isEqualTo("Execution Role ARN is required for Fargate tasks");
+
+    registerTaskDefinitionRequest.setExecutionRoleArn("");
+    assertThat(ecsSetupCommandTaskHelper.isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+                   registerTaskDefinitionRequest, ecsSetupParams))
         .isEqualTo("Execution Role ARN is required for Fargate tasks");
   }
 
@@ -999,5 +1268,44 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(loadBalancers.get(0).getContainerPort()).isEqualTo(80);
     assertThat(loadBalancers.get(0).getContainerName()).isEqualTo("generatedContainerName_main");
     assertThat(params.getTargetContainerName()).isEqualTo("generatedContainerName_main");
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testCreateTaskDefinitionWithEcsRegisterTaskDefinitionTagsFeatureFlag() {
+    ImageDetails imageDetails = new ImageDetails();
+    imageDetails.setName("imageDetailsName");
+    imageDetails.setTag("imageDetailsTag");
+    imageDetails.setDomainName("imageDetailsDomainName");
+    doReturn(null)
+        .when(ecsSetupCommandTaskHelper)
+        .createTaskDefinition(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    doReturn(null)
+        .when(ecsSetupCommandTaskHelper)
+        .createTaskDefinitionParseAsRegisterTaskDefinitionRequest(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+
+    EcsSetupParams ecsSetupParams = anEcsSetupParams()
+                                        .withImageDetails(imageDetails)
+                                        .withContainerTask(new EcsContainerTask())
+                                        .withEcsRegisterTaskDefinitionTagsEnabled(true)
+                                        .build();
+    ecsSetupCommandTaskHelper.createTaskDefinition(null, null, null, null, new ExecutionLogCallback(), ecsSetupParams);
+
+    verify(ecsSetupCommandTaskHelper, times(0))
+        .createTaskDefinition(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    verify(ecsSetupCommandTaskHelper, times(1))
+        .createTaskDefinitionParseAsRegisterTaskDefinitionRequest(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+
+    ecsSetupParams.setEcsRegisterTaskDefinitionTagsEnabled(false);
+    ecsSetupCommandTaskHelper.createTaskDefinition(null, null, null, null, new ExecutionLogCallback(), ecsSetupParams);
+
+    verify(ecsSetupCommandTaskHelper, times(1))
+        .createTaskDefinition(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    verify(ecsSetupCommandTaskHelper, times(1))
+        .createTaskDefinitionParseAsRegisterTaskDefinitionRequest(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
   }
 }

@@ -51,6 +51,8 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String parentRecordHostedZoneId;
   private String parentRecordName;
 
+  private boolean ecsRegisterTaskDefinitionTagsEnabled;
+
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
     private String serviceName;
@@ -97,6 +99,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String serviceDiscoveryService2JSON;
     private String parentRecordHostedZoneId;
     private String parentRecordName;
+
+    private boolean ecsRegisterTaskDefinitionTagsEnabled;
 
     private EcsSetupParamsBuilder() {}
 
@@ -320,6 +324,12 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withEcsRegisterTaskDefinitionTagsEnabled(
+        boolean ecsRegisterTaskDefinitionTagsEnabled) {
+      this.ecsRegisterTaskDefinitionTagsEnabled = ecsRegisterTaskDefinitionTagsEnabled;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -365,6 +375,7 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setServiceDiscoveryService2JSON(serviceDiscoveryService2JSON);
       ecsSetupParams.setParentRecordHostedZoneId(parentRecordHostedZoneId);
       ecsSetupParams.setParentRecordName(parentRecordName);
+      ecsSetupParams.setEcsRegisterTaskDefinitionTagsEnabled(ecsRegisterTaskDefinitionTagsEnabled);
       return ecsSetupParams;
     }
   }
