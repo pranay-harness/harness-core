@@ -64,6 +64,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//930-delegate-tasks/src/test/resources:resource"],
     visibility = ["//visibility:private"],
     deps = [
         "maven_deps",

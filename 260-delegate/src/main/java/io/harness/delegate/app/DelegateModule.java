@@ -43,6 +43,7 @@ import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
+import io.harness.delegate.k8s.K8sRollingRollbackRequestHandler;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
@@ -880,6 +881,8 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name()).to(K8sRollingRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name()).to(K8sBGRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK.name())
+        .to(K8sRollingRollbackRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
