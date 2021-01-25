@@ -1,11 +1,11 @@
 package migrations.all;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
-import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateScope.DelegateScopeKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;

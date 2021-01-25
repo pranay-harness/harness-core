@@ -4,10 +4,9 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
+import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.persistence.HIterator;
-
-import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateScope.DelegateScopeKeys;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;

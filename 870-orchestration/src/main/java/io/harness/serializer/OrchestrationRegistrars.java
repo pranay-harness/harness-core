@@ -2,6 +2,8 @@ package io.harness.serializer;
 
 import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
+import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
@@ -88,6 +90,8 @@ public class OrchestrationRegistrars {
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
+          .add(DelegateServiceBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

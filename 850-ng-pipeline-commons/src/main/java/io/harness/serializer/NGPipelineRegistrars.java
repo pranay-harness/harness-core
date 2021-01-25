@@ -20,6 +20,8 @@ public class NGPipelineRegistrars {
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+          .addAll(CommonEntitiesRegistrars.kryoRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
           .build();
 

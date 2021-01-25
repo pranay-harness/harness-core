@@ -17,8 +17,8 @@ public class DelegateServiceRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .addAll(CapabilityRegistrars.kryoRegistrars)
-          .add(DelegateServiceKryoRegister.class)
           .add(CommonEntitiesKryoRegistrar.class)
+          .add(DelegateServiceKryoRegister.class)
           .add(RbacCoreKryoRegistrar.class)
           .build();
 

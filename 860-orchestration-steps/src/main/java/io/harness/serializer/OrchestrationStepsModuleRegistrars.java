@@ -1,6 +1,8 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
+import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
@@ -21,6 +23,8 @@ public class OrchestrationStepsModuleRegistrars {
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
+          .add(DelegateServiceBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
