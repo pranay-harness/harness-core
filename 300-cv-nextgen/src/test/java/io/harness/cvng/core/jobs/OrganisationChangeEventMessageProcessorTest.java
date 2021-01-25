@@ -148,6 +148,7 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
     testVerificationJobDTO.setIdentifier(generateUuid());
     testVerificationJobDTO.setJobName(generateUuid());
     testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());

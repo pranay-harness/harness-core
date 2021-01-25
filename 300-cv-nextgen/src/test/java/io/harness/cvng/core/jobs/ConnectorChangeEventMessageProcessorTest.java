@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.StringValue;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -167,6 +168,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
     verificationJobDTO.setIdentifier(verificationJobIdentifier);
     verificationJobDTO.setJobName(generateUuid());
     verificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    verificationJobDTO.setMonitoringSources(Arrays.asList("splunk_test"));
     verificationJobDTO.setServiceIdentifier(generateUuid());
     verificationJobDTO.setOrgIdentifier(orgIdentifier);
     verificationJobDTO.setProjectIdentifier(projectIdentifier);

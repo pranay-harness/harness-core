@@ -46,6 +46,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -404,6 +405,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     canaryVerificationJobDTO.setJobName(generateUuid());
     canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
     canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
@@ -419,6 +421,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     testVerificationJob.setIdentifier(verificationJobIdentifier);
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setServiceIdentifier(generateUuid());
     testVerificationJob.setOrgIdentifier(generateUuid());

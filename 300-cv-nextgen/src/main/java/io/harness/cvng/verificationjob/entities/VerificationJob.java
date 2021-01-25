@@ -76,7 +76,8 @@ public abstract class VerificationJob
   @NotNull private String accountId;
   @NotNull private RuntimeParameter serviceIdentifier;
   @NotNull private RuntimeParameter envIdentifier;
-  private List<DataSourceType> dataSources;
+  @Deprecated private List<DataSourceType> dataSources;
+  private List<String> monitoringSources;
 
   private RuntimeParameter duration;
   private boolean isDefaultJob;
@@ -94,8 +95,8 @@ public abstract class VerificationJob
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(VerificationJobKeys.orgIdentifier));
     Preconditions.checkNotNull(envIdentifier, generateErrorMessageFromParam(VerificationJobKeys.envIdentifier));
     Preconditions.checkNotNull(duration, generateErrorMessageFromParam(VerificationJobKeys.duration));
-    Preconditions.checkNotNull(dataSources, generateErrorMessageFromParam(VerificationJobKeys.dataSources));
-    Preconditions.checkArgument(!dataSources.isEmpty(), "DataSources can not be empty");
+    Preconditions.checkNotNull(monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
+    Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     if (!duration.isRuntimeParam()) {
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
           "Minimum allowed duration is 5 mins. Current value(mins): %s", getDuration().toMinutes());
@@ -122,6 +123,8 @@ public abstract class VerificationJob
     verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
     verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
     verificationJobDTO.setDefaultJob(isDefaultJob);
+    verificationJobDTO.setActivitySourceIdentifier(activitySourceIdentifier);
+    verificationJobDTO.setMonitoringSources(monitoringSources);
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {
