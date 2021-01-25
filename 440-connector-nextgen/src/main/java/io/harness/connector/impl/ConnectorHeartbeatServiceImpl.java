@@ -14,7 +14,8 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -75,7 +76,7 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
 
   @Override
   public PerpetualTaskId createConnectorHeatbeatTask(String accountIdentifier, ConnectorInfoDTO connector) {
-    if (connector.getConnectorType() == ConnectorType.LOCAL) {
+    if (isHarnessManagedSecretManager(connector)) {
       return null;
     }
     PerpetualTaskId perpetualTaskId = createPerpetualTask(connector, accountIdentifier);
@@ -91,6 +92,17 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
             connector.getProjectIdentifier()),
         perpetualTaskId.getId());
     return perpetualTaskId;
+  }
+
+  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
+    switch (connector.getConnectorType()) {
+      case GCP_KMS:
+        return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
+      case LOCAL:
+        return ((LocalConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
+      default:
+        return false;
+    }
   }
 
   @Override

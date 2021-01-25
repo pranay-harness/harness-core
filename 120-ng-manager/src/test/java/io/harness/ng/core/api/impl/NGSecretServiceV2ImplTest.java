@@ -15,6 +15,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.TGTGenerationMethod;
@@ -54,6 +55,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
   private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
+  private NGSecretActivityService ngSecretActivityService;
 
   @Before
   public void setup() {
@@ -61,8 +63,9 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     secretManagerClientService = mock(SecretManagerClientService.class);
     delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
     sshKeySpecDTOHelper = mock(SshKeySpecDTOHelper.class);
-    secretServiceV2 = new NGSecretServiceV2Impl(
-        secretRepository, secretManagerClientService, delegateGrpcClientWrapper, sshKeySpecDTOHelper);
+    ngSecretActivityService = mock(NGSecretActivityService.class);
+    secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper,
+        sshKeySpecDTOHelper, ngSecretActivityService);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 

@@ -6,6 +6,7 @@ import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHE
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 
+import io.harness.EntityType;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.activityhistory.EntityActivityQueryCriteriaHelper;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
@@ -52,9 +53,11 @@ public class NGActivityServiceImpl implements NGActivityService {
 
   @Override
   public Page<NGActivityDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, long start, long end, NGActivityStatus status) {
-    List<NGActivityDTO> allActivitiesOtherThanConnectivityCheck = getAllActivitiesOtherThanConnectivityCheck(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end, status);
+      String projectIdentifier, String referredEntityIdentifier, long start, long end, NGActivityStatus status,
+      EntityType referredEntityType, EntityType referredByEntityType) {
+    List<NGActivityDTO> allActivitiesOtherThanConnectivityCheck =
+        getAllActivitiesOtherThanConnectivityCheck(page, size, accountIdentifier, orgIdentifier, projectIdentifier,
+            referredEntityIdentifier, start, end, status, referredEntityType, referredByEntityType);
     return new PageImpl<>(allActivitiesOtherThanConnectivityCheck);
   }
 
@@ -105,9 +108,9 @@ public class NGActivityServiceImpl implements NGActivityService {
 
   private List<NGActivityDTO> getAllActivitiesOtherThanConnectivityCheck(int page, int size, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String referredEntityIdentifier, long start, long end,
-      NGActivityStatus status) {
-    Criteria criteria = createCriteriaForEntityUsageActivity(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, status, start, end);
+      NGActivityStatus status, EntityType referredEntityType, EntityType referredByEntityType) {
+    Criteria criteria = createCriteriaForEntityUsageActivity(accountIdentifier, orgIdentifier, projectIdentifier,
+        referredEntityIdentifier, status, start, end, referredEntityType, referredByEntityType);
     Pageable pageable =
         PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, ActivityHistoryEntityKeys.activityTime));
     List<NGActivity> activities = activityRepository.findAll(criteria, pageable).getContent();
@@ -121,12 +124,14 @@ public class NGActivityServiceImpl implements NGActivityService {
   }
 
   private Criteria createCriteriaForEntityUsageActivity(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, NGActivityStatus status, long startTime,
-      long endTime) {
+      String projectIdentifier, String referredEntityIdentifier, NGActivityStatus status, long startTime, long endTime,
+      EntityType referredEntityType, EntityType referredByEntityType) {
     Criteria criteria = new Criteria();
     criteria.and(ActivityHistoryEntityKeys.type).ne(String.valueOf(CONNECTIVITY_CHECK));
     entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
+    entityActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
+    entityActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
     populateActivityStatusCriteria(criteria, status);
     entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
     return criteria;
@@ -148,8 +153,10 @@ public class NGActivityServiceImpl implements NGActivityService {
   }
 
   @Override
-  public boolean deleteAllActivitiesOfAnEntity(String accountIdentifier, String entityFQN) {
-    long numberOfRecordsDeleted = activityRepository.deleteByReferredEntityFQN(entityFQN);
+  public boolean deleteAllActivitiesOfAnEntity(
+      String accountIdentifier, String entityFQN, EntityType referredEntityType) {
+    long numberOfRecordsDeleted = activityRepository.deleteByReferredEntityFQNAndReferredEntityType(
+        entityFQN, String.valueOf(referredEntityType));
     return numberOfRecordsDeleted > 0;
   }
 }

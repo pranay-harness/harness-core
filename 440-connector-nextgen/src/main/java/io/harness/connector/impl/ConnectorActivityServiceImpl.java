@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorActivityServiceImpl implements ConnectorActivityService {
   public static final String CREATION_DESCRIPTION = "Connector Created";
   public static final String UPDATE_DESCRIPTION = "Connector Updated";
-  private NGActivityService ngActivityService;
+  private final NGActivityService ngActivityService;
 
   @Override
   public void create(String accountIdentifier, ConnectorInfoDTO connector, NGActivityType ngActivityType) {
@@ -66,6 +66,6 @@ public class ConnectorActivityServiceImpl implements ConnectorActivityService {
 
   @Override
   public void deleteAllActivities(String accountIdentifier, String connectorFQN) {
-    ngActivityService.deleteAllActivitiesOfAnEntity(accountIdentifier, connectorFQN);
+    ngActivityService.deleteAllActivitiesOfAnEntity(accountIdentifier, connectorFQN, EntityType.CONNECTORS);
   }
 }

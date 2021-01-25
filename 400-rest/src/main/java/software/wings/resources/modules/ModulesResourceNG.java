@@ -20,7 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("/ng/modules")
+@Api(value = "/ng/modules", hidden = true)
 @Path("/ng/modules")
 @Produces("application/json")
 @Consumes("application/json")

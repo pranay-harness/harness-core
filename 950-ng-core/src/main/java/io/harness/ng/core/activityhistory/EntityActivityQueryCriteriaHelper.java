@@ -1,5 +1,6 @@
 package io.harness.ng.core.activityhistory;
 
+import io.harness.EntityType;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -17,5 +18,17 @@ public class EntityActivityQueryCriteriaHelper {
     criteria.and(ActivityHistoryEntityKeys.referredEntityFQN)
         .is(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier));
+  }
+
+  public void addReferredEntityTypeCriteria(Criteria criteria, EntityType referredEntityType) {
+    if (referredEntityType != null) {
+      criteria.and(ActivityHistoryEntityKeys.referredEntityType).is(String.valueOf(referredEntityType));
+    }
+  }
+
+  public void addReferredByEntityTypeCriteria(Criteria criteria, EntityType referredByEntityType) {
+    if (referredByEntityType != null) {
+      criteria.and(ActivityHistoryEntityKeys.referredByEntityType).is(String.valueOf(referredByEntityType));
+    }
   }
 }

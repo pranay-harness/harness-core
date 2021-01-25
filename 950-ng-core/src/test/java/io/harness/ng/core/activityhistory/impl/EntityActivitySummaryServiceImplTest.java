@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
@@ -54,7 +55,8 @@ public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     ngActivityService.deleteAllActivitiesOfAnEntity(accountIdentifier,
         FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+        EntityType.CONNECTORS);
   }
 
   public long getRandomNumberUsingNextInt(long minimum, long maximum) {
@@ -91,7 +93,7 @@ public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
     List<NGActivitySummaryDTO> activities =
         entityActivitySummaryService
             .listActivitySummary(accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier,
-                TimeGroupType.DAY, startingTimeEpoch, endTimeEpoch)
+                TimeGroupType.DAY, startingTimeEpoch, endTimeEpoch, EntityType.CONNECTORS, null)
             .toList();
 
     cleanTheEntityActivityRecords(accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
@@ -136,7 +138,7 @@ public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
     List<NGActivitySummaryDTO> activities =
         entityActivitySummaryService
             .listActivitySummary(accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier,
-                TimeGroupType.HOUR, startingTimeEpoch, endTimeEpoch)
+                TimeGroupType.HOUR, startingTimeEpoch, endTimeEpoch, EntityType.CONNECTORS, null)
             .toList();
 
     cleanTheEntityActivityRecords(accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);

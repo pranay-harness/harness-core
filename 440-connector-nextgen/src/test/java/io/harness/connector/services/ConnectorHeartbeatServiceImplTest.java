@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.impl.ConnectorHeartbeatServiceImpl;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.TaskClientParams;
@@ -54,6 +55,7 @@ public class ConnectorHeartbeatServiceImplTest extends CategoryTest {
                                             .orgIdentifier(orgIdentifier)
                                             .projectIdentifier(projectIdentifier)
                                             .identifier(connectorIdentifier)
+                                            .connectorType(ConnectorType.DOCKER)
                                             .build();
     connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, connectorInfoDTO);
     ArgumentCaptor<AccountId> accountIdArgumentCaptor = ArgumentCaptor.forClass(AccountId.class);

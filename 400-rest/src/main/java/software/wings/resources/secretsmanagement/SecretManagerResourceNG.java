@@ -29,7 +29,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("secret-managers")
+@Api(value = "secret-managers", hidden = true)
 @Path("/ng/secret-managers")
 @Produces("application/json")
 @Consumes("application/json")

@@ -10,6 +10,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.buck
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.BooleanOperators.And.and;
 
+import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.activityhistory.EntityActivityQueryCriteriaHelper;
@@ -56,10 +57,11 @@ public class EntityActivitySummaryServiceImpl implements EntityActivitySummarySe
 
   @Override
   public Page<NGActivitySummaryDTO> listActivitySummary(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, TimeGroupType timeGroupType, long start, long end) {
+      String projectIdentifier, String referredEntityIdentifier, TimeGroupType timeGroupType, long start, long end,
+      EntityType referredEntityType, EntityType referredByEntityType) {
     validateTheTimeRangeGivenIsCorrect(timeGroupType, start, end);
-    Criteria activitySummaryCriteria = createActivitySummaryCriteria(
-        accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, start, end);
+    Criteria activitySummaryCriteria = createActivitySummaryCriteria(accountIdentifier, orgIdentifier,
+        projectIdentifier, referredEntityIdentifier, start, end, referredEntityType, referredByEntityType);
     MatchOperation matchStage = Aggregation.match(activitySummaryCriteria);
     ProjectionOperation projectionWhichAddsMinuteInterval = getProjectionWhichAddMinuteInterval(timeGroupType);
     BucketOperation bucketOperation = getBucketOperation(timeGroupType, start, end);
@@ -201,11 +203,14 @@ public class EntityActivitySummaryServiceImpl implements EntityActivitySummarySe
   }
 
   private Criteria createActivitySummaryCriteria(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, long startTime, long endTime) {
+      String projectIdentifier, String referredEntityIdentifier, long startTime, long endTime,
+      EntityType referredEntityType, EntityType referredByEntityType) {
     Criteria criteria = new Criteria();
     entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
     entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
+    entityActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
+    entityActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
     return criteria;
   }
 }
