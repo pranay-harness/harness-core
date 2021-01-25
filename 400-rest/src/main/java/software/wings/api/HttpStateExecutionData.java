@@ -143,9 +143,9 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(
         executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
     if (isNotEmpty(headers)) {
-      String headerStr = String.valueOf(
-          removeNullValues(headers.stream().collect(Collectors.toMap(KeyValuePair::getKey, KeyValuePair::getValue))));
-      headerStr = headerStr.substring(1, headerStr.length() - 1);
+      String headerStr = headers.stream()
+                             .map(headerPair -> headerPair.getKey() + ":" + headerPair.getValue())
+                             .collect(Collectors.joining(","));
       putNotNull(
           executionDetails, "headers", ExecutionDataValue.builder().displayName("Header(s)").value(headerStr).build());
     } else {
