@@ -178,7 +178,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(k8sRollingBaseHandler.tagNewPods(
+            .k8sPodList(k8sTaskHelperBase.tagNewPods(
                 k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
             .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))

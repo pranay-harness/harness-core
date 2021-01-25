@@ -1944,4 +1944,16 @@ public class K8sTaskHelperBase {
       KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
     return kubernetesClusterConfigDTO.getAuth().getCredentials();
   }
+
+  @VisibleForTesting
+  public List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
+    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+    List<K8sPod> allPods = new ArrayList<>(newPods);
+    allPods.forEach(pod -> {
+      if (!existingPodNames.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
+  }
 }

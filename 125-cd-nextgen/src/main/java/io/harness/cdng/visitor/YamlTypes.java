@@ -21,6 +21,7 @@ public interface YamlTypes {
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;
   String K8S_BLUE_GREEN_DEPLOY = StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY;
   String K8S_APPLY = StepSpecTypeConstants.K8S_APPLY;
+  String K8S_SCALE = StepSpecTypeConstants.K8S_SCALE;
 
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";

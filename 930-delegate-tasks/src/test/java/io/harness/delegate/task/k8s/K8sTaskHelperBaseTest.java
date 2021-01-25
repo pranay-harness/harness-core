@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.util.Arrays.asList;
@@ -633,5 +634,36 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     }
 
     assertThat(captor.getValue().command()).isEqualTo(expectedExecutedCommand);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTagNewPods() {
+    assertThat(k8sTaskHelperBase.tagNewPods(emptyList(), emptyList())).isEmpty();
+
+    List<K8sPod> pods = k8sTaskHelperBase.tagNewPods(
+        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("old-pod-1"), podWithName("old-pod-2")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods =
+        k8sTaskHelperBase.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("pod-1")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods = k8sTaskHelperBase.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), emptyList());
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+  }
+
+  private K8sPod podWithName(String name) {
+    return K8sPod.builder().name(name).build();
   }
 }

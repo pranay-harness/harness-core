@@ -12,6 +12,7 @@ import io.harness.azure.model.AzureAppServiceConnectionStringType;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
@@ -251,5 +252,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureAppServiceApplicationSetting.class, 1442);
     kryo.register(AzureAppServiceConnectionString.class, 1443);
     kryo.register(ArtifactoryConfigRequest.class, 1444);
+    kryo.register(NGInstanceUnitType.class, 1445);
   }
 }

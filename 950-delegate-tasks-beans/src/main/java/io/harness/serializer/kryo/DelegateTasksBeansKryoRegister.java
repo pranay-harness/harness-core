@@ -296,6 +296,8 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
+import io.harness.delegate.task.k8s.K8sScaleRequest;
+import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -708,5 +710,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(LocalConnectorDTO.class, 543237);
     kryo.register(GcpKmsConnectorDTO.class, 543238);
     kryo.register(K8sRollingRollbackDeployRequest.class, 543239);
+    kryo.register(K8sScaleRequest.class, 543240);
+    kryo.register(K8sScaleResponse.class, 543241);
   }
 }
