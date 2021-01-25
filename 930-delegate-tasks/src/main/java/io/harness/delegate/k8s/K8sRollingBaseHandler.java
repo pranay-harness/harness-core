@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,18 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class K8sRollingBaseHandler {
   @Inject K8sTaskHelperBase k8sTaskHelperBase;
-
-  @VisibleForTesting
-  public List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
-    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
-    List<K8sPod> allPods = new ArrayList<>(newPods);
-    allPods.forEach(pod -> {
-      if (!existingPodNames.contains(pod.getName())) {
-        pod.setNewPod(true);
-      }
-    });
-    return allPods;
-  }
 
   @VisibleForTesting
   public void updateDeploymentConfigRevision(

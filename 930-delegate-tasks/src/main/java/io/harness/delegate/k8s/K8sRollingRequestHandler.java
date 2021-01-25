@@ -156,8 +156,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(k8sRollingBaseHandler.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
-                                                             managedWorkloads, kubernetesConfig, releaseName),
+            .k8sPodList(k8sTaskHelperBase.tagNewPods(k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis,
+                                                         managedWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
             .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .build();

@@ -8,6 +8,7 @@ import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.k8s.K8sBlueGreenStep;
 import io.harness.cdng.k8s.K8sRollingRollbackStep;
 import io.harness.cdng.k8s.K8sRollingStep;
+import io.harness.cdng.k8s.K8sScaleStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.pipeline.steps.NGSectionStep;
@@ -41,6 +42,7 @@ public class NgStepRegistrar {
     engineSteps.put(ServiceStep.STEP_TYPE, ServiceStep.class);
     engineSteps.put(K8sRollingStep.STEP_TYPE, K8sRollingStep.class);
     engineSteps.put(K8sRollingRollbackStep.STEP_TYPE, K8sRollingRollbackStep.class);
+    engineSteps.put(K8sScaleStep.STEP_TYPE, K8sScaleStep.class);
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
     engineSteps.put(K8sBlueGreenStep.STEP_TYPE, K8sBlueGreenStep.class);
     engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);

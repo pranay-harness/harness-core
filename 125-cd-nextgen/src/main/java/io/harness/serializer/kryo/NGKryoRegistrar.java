@@ -18,11 +18,14 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
+import io.harness.cdng.k8s.K8sInstanceUnitType;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
 import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepParameters;
+import io.harness.cdng.k8s.K8sScaleStepInfo;
+import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -133,5 +136,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactOverrideSetWrapper.class, 12509);
     kryo.register(ManifestOverrideSetWrapper.class, 12510);
     kryo.register(NGVariableOverrideSetWrapper.class, 12511);
+    kryo.register(K8sInstanceUnitType.class, 12512);
+    kryo.register(K8sScaleStepInfo.class, 12513);
+    kryo.register(K8sScaleStepParameter.class, 12514);
   }
 }
