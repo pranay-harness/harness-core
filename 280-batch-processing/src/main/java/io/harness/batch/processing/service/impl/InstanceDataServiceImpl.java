@@ -144,7 +144,7 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
           .metaData(instanceData.getMetaData())
           .build();
     } else {
-      log.warn("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);
+      log.debug("Instance detail not found clusterId {} instanceId {}", clusterId, instanceId);
       return PrunedInstanceData.builder().build();
     }
   }

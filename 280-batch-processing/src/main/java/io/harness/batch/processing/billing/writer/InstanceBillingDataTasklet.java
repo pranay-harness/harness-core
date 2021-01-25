@@ -1,6 +1,11 @@
 package io.harness.batch.processing.billing.writer;
 
+import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static com.google.common.base.MoreObjects.firstNonNull;
 
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
@@ -24,18 +29,24 @@ import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -58,23 +69,32 @@ public class InstanceBillingDataTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
 
   private JobParameters parameters;
+  private static final String CLAIM_REF_SEPARATOR = "/";
+  private int batchSize;
+  private BatchJobType batchJobType;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    int batchSize = config.getBatchQueryConfig().getInstanceDataBatchSize();
+    batchSize = config.getBatchQueryConfig().getInstanceDataBatchSize();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
-    BatchJobType batchJobType =
-        CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
-
+    batchJobType = CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
     // Instant of 1-1-2018
     Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
-    List<InstanceData> instanceDataLists;
+    // bill PV first
+    List<InstanceBillingData> pvInstanceBillingDataList = billPVInstances(accountId, startTime, endTime);
+    Map<String, InstanceBillingData> claimRefToPVInstanceBillingData =
+        pvInstanceBillingDataList.stream().collect(Collectors.toMap(e
+            -> e.getNamespace() + CLAIM_REF_SEPARATOR + e.getWorkloadName(),
+            e -> e, (e1, e2) -> e1.getStartTimestamp() > e2.getStartTimestamp() ? e1 : e2));
 
+    Map<String, MutableInt> pvcClaimCount = getPvcClaimCount(accountId, startTime, endTime);
+    List<InstanceData> instanceDataLists;
     do {
-      instanceDataLists = instanceDataDao.getInstanceDataLists(accountId, batchSize, startTime, endTime, seekingDate);
+      instanceDataLists =
+          instanceDataDao.getInstanceDataListsOtherThanPV(accountId, batchSize, startTime, endTime, seekingDate);
       if (!instanceDataLists.isEmpty()) {
         Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
         seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
@@ -85,7 +105,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
         }
       }
       try {
-        createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists);
+        createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists,
+            claimRefToPVInstanceBillingData, pvcClaimCount);
       } catch (Exception ex) {
         log.error("Exception in billing step", ex);
         throw ex;
@@ -94,8 +115,66 @@ public class InstanceBillingDataTasklet implements Tasklet {
     return null;
   }
 
-  void createBillingData(String accountId, Instant startTime, Instant endTime, BatchJobType batchJobType,
-      List<InstanceData> instanceDataLists) {
+  private Map<String, MutableInt> getPvcClaimCount(String accountId, Instant startTime, Instant endTime) {
+    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
+    List<InstanceData> instanceDataLists;
+    Map<String, MutableInt> result = new HashMap<>();
+    do {
+      instanceDataLists =
+          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_POD);
+      if (!instanceDataLists.isEmpty()) {
+        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
+          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
+              parameters.toString());
+          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
+        }
+      }
+      for (InstanceData instanceData : instanceDataLists) {
+        List<String> pvcClaimNames = firstNonNull(instanceData.getPvcClaimNames(), Collections.emptyList());
+        String namespace = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData);
+        for (String claimName : pvcClaimNames) {
+          String claimRef = namespace + CLAIM_REF_SEPARATOR + claimName;
+          result.computeIfAbsent(claimRef, k -> new MutableInt(0));
+          result.get(claimRef).increment();
+        }
+      }
+    } while (instanceDataLists.size() == batchSize);
+
+    return result;
+  }
+
+  private List<InstanceBillingData> billPVInstances(String accountId, Instant startTime, Instant endTime) {
+    List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
+    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
+    List<InstanceData> instanceDataLists;
+    do {
+      instanceDataLists =
+          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_PV);
+      if (!instanceDataLists.isEmpty()) {
+        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
+        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
+          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
+              parameters.toString());
+          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
+        }
+      }
+      try {
+        instanceBillingDataList.addAll(createBillingData(
+            accountId, startTime, endTime, batchJobType, instanceDataLists, ImmutableMap.of(), ImmutableMap.of()));
+      } catch (Exception ex) {
+        log.error("Exception in billing step", ex);
+        throw ex;
+      }
+    } while (instanceDataLists.size() == batchSize);
+    return instanceBillingDataList;
+  }
+
+  List<InstanceBillingData> createBillingData(String accountId, Instant startTime, Instant endTime,
+      BatchJobType batchJobType, List<InstanceData> instanceDataLists,
+      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
     log.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
@@ -125,110 +204,186 @@ public class InstanceBillingDataTasklet implements Tasklet {
           instanceDataList, startTime.toString(), endTime.toString(), firstInstanceData.getAccountId(),
           firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
 
-      instanceDataList.stream()
-          .filter(instanceData -> instanceData.getInstanceType() != null)
-          .filter(
-              instanceData -> instanceData.getInstanceType() != InstanceType.K8S_PV) // currently not billing for K8S_PV
-          .filter(instanceData
-              -> billingDataGenerationValidator.shouldGenerateBillingData(
-                  instanceData.getAccountId(), instanceData.getClusterId(), startTime))
-          .forEach(instanceData -> {
-            UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
-            BillingData billingData =
-                billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
-            log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
-            HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
-            String settingId =
-                (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getSettingId();
-            String clusterId =
-                (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
-            String instanceName = (instanceData.getInstanceName() == null) ? instanceData.getInstanceId()
-                                                                           : instanceData.getInstanceName();
-            String region = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData);
-            if (null == region) {
-              region = "on_prem";
-            }
-
-            Resource totalResource = instanceData.getTotalResource();
-            Resource limitResource = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
-            if (null != instanceData.getLimitResource()) {
-              limitResource = instanceData.getLimitResource();
-            }
-
-            InstanceBillingData instanceBillingData =
-                InstanceBillingData.builder()
-                    .accountId(instanceData.getAccountId())
-                    .settingId(settingId)
-                    .clusterId(clusterId)
-                    .instanceType(instanceData.getInstanceType().toString())
-                    .billingAccountId("BILLING_ACCOUNT_ID")
-                    .startTimestamp(startTime.toEpochMilli())
-                    .endTimestamp(endTime.toEpochMilli())
-                    .billingAmount(billingData.getBillingAmountBreakup().getBillingAmount())
-                    .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
-                    .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
-                    .systemCost(billingData.getSystemCostData().getSystemCost())
-                    .cpuSystemCost(billingData.getSystemCostData().getCpuSystemCost())
-                    .memorySystemCost(billingData.getSystemCostData().getMemorySystemCost())
-                    .idleCost(billingData.getIdleCostData().getIdleCost())
-                    .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
-                    .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
-                    .usageDurationSeconds(billingData.getUsageDurationSeconds())
-                    .instanceId(instanceData.getInstanceId())
-                    .instanceName(instanceName)
-                    .clusterName(instanceData.getClusterName())
-                    .appId(harnessServiceInfo.getAppId())
-                    .serviceId(harnessServiceInfo.getServiceId())
-                    .cloudProviderId(harnessServiceInfo.getCloudProviderId())
-                    .envId(harnessServiceInfo.getEnvId())
-                    .cpuUnitSeconds(billingData.getCpuUnitSeconds())
-                    .memoryMbSeconds(billingData.getMemoryMbSeconds())
-                    .parentInstanceId(getParentInstanceId(instanceData))
-                    .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
-                    .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
-                    .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
-                    .region(region)
-                    .clusterType(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
-                    .cloudProvider(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
-                    .workloadName(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
-                    .workloadType(
-                        getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
-                    .cloudServiceName(getCloudServiceName(instanceData))
-                    .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
-                    .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
-                    .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
-                    .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
-                    .cpuRequest(totalResource.getCpuUnits())
-                    .memoryRequest(totalResource.getMemoryMb())
-                    .cpuLimit(limitResource.getCpuUnits())
-                    .memoryLimit(limitResource.getMemoryMb())
-                    .maxCpuUtilizationValue(utilizationData.getMaxCpuUtilizationValue())
-                    .maxMemoryUtilizationValue(utilizationData.getMaxMemoryUtilizationValue())
-                    .avgCpuUtilizationValue(utilizationData.getAvgCpuUtilizationValue())
-                    .avgMemoryUtilizationValue(utilizationData.getAvgMemoryUtilizationValue())
-                    // Actual idle cost and unallocated cost for node/container will get updated by actualIdleCost job
-                    .actualIdleCost(billingData.getIdleCostData().getIdleCost())
-                    .cpuActualIdleCost(billingData.getIdleCostData().getCpuIdleCost())
-                    .memoryActualIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
-                    .unallocatedCost(BigDecimal.ZERO)
-                    .cpuUnallocatedCost(BigDecimal.ZERO)
-                    .memoryUnallocatedCost(BigDecimal.ZERO)
-                    .networkCost(billingData.getNetworkCost())
-                    .pricingSource(billingData.getPricingSource().name())
-                    .build();
-            instanceBillingDataList.add(instanceBillingData);
-          });
+      for (InstanceData instanceData : instanceDataList) {
+        if (instanceData.getInstanceType() != null
+            && billingDataGenerationValidator.shouldGenerateBillingData(
+                instanceData.getAccountId(), instanceData.getClusterId(), startTime)) {
+          InstanceBillingData instanceBillingData = getInstanceBillingData(instanceData, utilizationDataForInstances,
+              startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount);
+          instanceBillingDataList.add(instanceBillingData);
+        }
+      }
     });
+
     billingDataService.create(instanceBillingDataList, batchJobType);
+    return instanceBillingDataList;
+  }
+
+  private InstanceBillingData getInstanceBillingData(final InstanceData instanceData,
+      Map<String, UtilizationData> utilizationDataForInstances, Instant startTime, Instant endTime,
+      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
+    InstanceType instanceType = instanceData.getInstanceType();
+    UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
+    BillingData billingData =
+        billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
+
+    log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
+
+    HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
+    String settingId = instanceData.getSettingId();
+    String clusterId = instanceData.getClusterId();
+    if (instanceType == InstanceType.EC2_INSTANCE) {
+      settingId = null;
+      clusterId = null;
+    }
+    String instanceName =
+        (instanceData.getInstanceName() == null) ? instanceData.getInstanceId() : instanceData.getInstanceName();
+    String region = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData);
+    String namespace = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData);
+    String workloadType = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData);
+    String workloadName = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData);
+
+    Resource totalResource = instanceData.getTotalResource();
+    Resource limitResource = null == instanceData.getLimitResource()
+        ? Resource.builder().cpuUnits(0.0).memoryMb(0.0).build()
+        : instanceData.getLimitResource();
+
+    BigDecimal billingAmount = billingData.getBillingAmountBreakup().getBillingAmount();
+    BigDecimal actualIdleCost = billingData.getIdleCostData().getIdleCost();
+    BigDecimal unallocatedCost = BigDecimal.ZERO;
+
+    BigDecimal storageBillingAmount = billingData.getBillingAmountBreakup().getStorageBillingAmount();
+    BigDecimal storageActualIdleCost = billingData.getIdleCostData().getStorageIdleCost();
+    BigDecimal storageUnallocatedCost = getStorageUnallocatedCost(billingData, utilizationData, instanceData);
+
+    double storageRequest = utilizationData.getAvgStorageRequestValue();
+    double storageUtilization = utilizationData.getAvgStorageUsageValue();
+    double storageMBSeconds = billingData.getStorageMbSeconds();
+
+    if (K8S_PV == instanceType) {
+      totalResource = Resource.builder().cpuUnits(0D).memoryMb(0D).build();
+      workloadName = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLAIM_NAME, instanceData);
+      namespace = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLAIM_NAMESPACE, instanceData);
+      unallocatedCost = unallocatedCost.add(storageUnallocatedCost);
+    } else if (K8S_POD == instanceType) {
+      List<String> pvcClaimNames = firstNonNull(instanceData.getPvcClaimNames(), ImmutableList.of());
+      for (String claimName : pvcClaimNames) {
+        String claimRef = namespace + CLAIM_REF_SEPARATOR + claimName;
+        InstanceBillingData storageInstanceBillingData = claimRefToPVInstanceBillingData.get(claimRef);
+
+        if (storageInstanceBillingData != null) {
+          Integer claimCount = pvcClaimCount.getOrDefault(claimRef, new MutableInt(1)).getValue();
+          // only costs gets divided by claimCount to handle double spending, the requests will remain the same.
+          storageBillingAmount = storageBillingAmount.add(storageInstanceBillingData.getStorageBillingAmount().divide(
+              BigDecimal.valueOf(claimCount), MathContext.DECIMAL128));
+          storageActualIdleCost =
+              storageActualIdleCost.add(storageInstanceBillingData.getStorageActualIdleCost().divide(
+                  BigDecimal.valueOf(claimCount), MathContext.DECIMAL128));
+          storageUnallocatedCost =
+              storageUnallocatedCost.add(storageInstanceBillingData.getStorageUnallocatedCost().divide(
+                  BigDecimal.valueOf(claimCount), MathContext.DECIMAL128));
+
+          storageRequest += storageInstanceBillingData.getStorageRequest();
+          storageUtilization += storageInstanceBillingData.getStorageUtilizationValue();
+          storageMBSeconds += storageInstanceBillingData.getStorageMbSeconds();
+        }
+      }
+      billingAmount = billingAmount.add(storageBillingAmount);
+      actualIdleCost = actualIdleCost.add(storageActualIdleCost);
+      unallocatedCost = unallocatedCost.add(storageUnallocatedCost);
+    }
+
+    return InstanceBillingData.builder()
+        .accountId(instanceData.getAccountId())
+        .settingId(settingId)
+        .clusterId(clusterId)
+        .instanceType(instanceData.getInstanceType().toString())
+        .billingAccountId("BILLING_ACCOUNT_ID")
+        .startTimestamp(startTime.toEpochMilli())
+        .endTimestamp(endTime.toEpochMilli())
+        .billingAmount(billingAmount)
+        .cpuBillingAmount(billingData.getBillingAmountBreakup().getCpuBillingAmount())
+        .memoryBillingAmount(billingData.getBillingAmountBreakup().getMemoryBillingAmount())
+        .systemCost(billingData.getSystemCostData().getSystemCost())
+        .cpuSystemCost(billingData.getSystemCostData().getCpuSystemCost())
+        .memorySystemCost(billingData.getSystemCostData().getMemorySystemCost())
+        .idleCost(billingData.getIdleCostData().getIdleCost())
+        .cpuIdleCost(billingData.getIdleCostData().getCpuIdleCost())
+        .memoryIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
+        .usageDurationSeconds(billingData.getUsageDurationSeconds())
+        .instanceId(instanceData.getInstanceId())
+        .instanceName(instanceName)
+        .clusterName(instanceData.getClusterName())
+        .appId(harnessServiceInfo.getAppId())
+        .serviceId(harnessServiceInfo.getServiceId())
+        .cloudProviderId(harnessServiceInfo.getCloudProviderId())
+        .envId(harnessServiceInfo.getEnvId())
+        .cpuUnitSeconds(billingData.getCpuUnitSeconds())
+        .memoryMbSeconds(billingData.getMemoryMbSeconds())
+        .parentInstanceId(getParentInstanceId(instanceData))
+        .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
+        .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
+        .namespace(namespace)
+        .region(firstNonNull(region, "on_prem"))
+        .clusterType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
+        .cloudProvider(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
+        .workloadName(workloadName)
+        .workloadType(workloadType)
+        .cloudServiceName(getCloudServiceName(instanceData))
+        .maxCpuUtilization(utilizationData.getMaxCpuUtilization())
+        .maxMemoryUtilization(utilizationData.getMaxMemoryUtilization())
+        .avgCpuUtilization(utilizationData.getAvgCpuUtilization())
+        .avgMemoryUtilization(utilizationData.getAvgMemoryUtilization())
+        .cpuRequest(totalResource.getCpuUnits())
+        .memoryRequest(totalResource.getMemoryMb())
+        .cpuLimit(limitResource.getCpuUnits())
+        .memoryLimit(limitResource.getMemoryMb())
+        .maxCpuUtilizationValue(utilizationData.getMaxCpuUtilizationValue())
+        .maxMemoryUtilizationValue(utilizationData.getMaxMemoryUtilizationValue())
+        .avgCpuUtilizationValue(utilizationData.getAvgCpuUtilizationValue())
+        .avgMemoryUtilizationValue(utilizationData.getAvgMemoryUtilizationValue())
+        // Actual idle cost and unallocated cost for node/container will get updated by actualIdleCost job
+        .actualIdleCost(actualIdleCost)
+        .cpuActualIdleCost(billingData.getIdleCostData().getCpuIdleCost())
+        .memoryActualIdleCost(billingData.getIdleCostData().getMemoryIdleCost())
+        .unallocatedCost(unallocatedCost)
+        .cpuUnallocatedCost(BigDecimal.ZERO)
+        .memoryUnallocatedCost(BigDecimal.ZERO)
+        .networkCost(billingData.getNetworkCost())
+        .pricingSource(billingData.getPricingSource().name())
+        .storageBillingAmount(storageBillingAmount)
+        .storageActualIdleCost(storageActualIdleCost)
+        .storageUnallocatedCost(storageUnallocatedCost)
+        .storageUtilizationValue(storageUtilization)
+        .storageRequest(storageRequest)
+        .storageMbSeconds(storageMBSeconds)
+        .build();
+  }
+
+  private BigDecimal getStorageUnallocatedCost(
+      BillingData billingData, UtilizationData utilizationData, InstanceData instanceData) {
+    if (K8S_PV == instanceData.getInstanceType()) {
+      BigDecimal storageUnallocatedFraction = BigDecimal.ZERO;
+      if (instanceData.getStorageResource() != null && instanceData.getStorageResource().getCapacity() > 0) {
+        BigDecimal capacityFromInstanceData = BigDecimal.valueOf(instanceData.getStorageResource().getCapacity());
+        storageUnallocatedFraction =
+            capacityFromInstanceData.subtract(BigDecimal.valueOf(utilizationData.getAvgStorageRequestValue()))
+                .divide(capacityFromInstanceData, MathContext.DECIMAL128);
+      }
+      if (storageUnallocatedFraction.compareTo(BigDecimal.ZERO) < 0) {
+        log.warn("-ve storageUnallocatedCost, Request:{}/Capacity:{} {}", utilizationData.getAvgStorageRequestValue(),
+            utilizationData.getAvgStorageCapacityValue(), instanceData.toString());
+        return BigDecimal.ZERO;
+      }
+      return billingData.getBillingAmountBreakup().getStorageBillingAmount().multiply(storageUnallocatedFraction);
+    }
+    return BigDecimal.ZERO;
   }
 
   String getParentInstanceId(InstanceData instanceData) {
     String actualParentResourceId =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceData);
-    if (null == actualParentResourceId && InstanceType.K8S_POD == instanceData.getInstanceType()) {
+    if (null == actualParentResourceId && K8S_POD == instanceData.getInstanceType()) {
       String parentResourceId =
           getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
       if (null != parentResourceId) {
@@ -260,13 +415,6 @@ public class InstanceBillingDataTasklet implements Tasklet {
       return instanceData.getHarnessServiceInfo();
     }
     return new HarnessServiceInfo(null, null, null, null, null, null);
-  }
-
-  String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {
-    if (null != instanceData.getMetaData() && instanceData.getMetaData().containsKey(metaDataKey)) {
-      return instanceData.getMetaData().get(metaDataKey);
-    }
-    return null;
   }
 
   private Instant getFieldValueFromJobParams(String fieldName) {

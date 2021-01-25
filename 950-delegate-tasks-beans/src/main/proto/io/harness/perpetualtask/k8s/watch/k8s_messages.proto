@@ -81,6 +81,7 @@ message PVInfo {
     PV_TYPE_GCE_PERSISTENT_DISK = 1;
     PV_TYPE_AWS_EBS = 2;
     PV_TYPE_AZURE_DISK = 3;
+    PV_TYPE_NFS = 4;
   }
   PVType pv_type = 2;
 

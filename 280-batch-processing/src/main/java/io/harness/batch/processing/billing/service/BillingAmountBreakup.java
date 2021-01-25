@@ -10,4 +10,5 @@ public class BillingAmountBreakup {
   private BigDecimal billingAmount;
   private BigDecimal cpuBillingAmount;
   private BigDecimal memoryBillingAmount;
+  private BigDecimal storageBillingAmount;
 }

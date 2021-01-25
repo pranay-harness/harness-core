@@ -1,8 +1,13 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
+
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
@@ -16,8 +21,10 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableData;
+import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableData.QLNodeAndPodDetailsTableDataBuilder;
 import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableRow;
 import software.wings.graphql.schema.type.aggregation.billing.QLNodeAndPodDetailsTableRow.QLNodeAndPodDetailsTableRowBuilder;
+import software.wings.graphql.schema.type.aggregation.billing.QLPVDetailsTableRow;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
@@ -29,11 +36,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +61,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String OPERATING_SYSTEM = "operating_system";
   private static final String INSTANCE_TYPE_NODE = "K8S_NODE";
   private static final String INSTANCE_TYPE_PODS = "K8S_POD";
+  private static final String INSTANCE_TYPE_PV = "K8S_PV";
   private static final String NAMESPACE = "namespace";
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
@@ -58,6 +69,8 @@ public class NodeAndPodDetailsDataFetcher
   private static final String K8S_POD_CAPACITY = "pod_capacity";
   private static final String DEFAULT_STRING_VALUE = "-";
   private static final InstanceData DEFAULT_INSTANCE_DATA = InstanceData.builder().metaData(new HashMap<>()).build();
+  private static final String CLAIM_NAME = "claim_name";
+  private static final String CLAIM_NAMESPACE = "claim_namespace";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -116,7 +129,7 @@ public class NodeAndPodDetailsDataFetcher
       }
     }
 
-    if (costData != null && !costData.getData().isEmpty()) {
+    if (costData != null && !(costData.getData().isEmpty() && costData.getPvData().isEmpty())) {
       return getFieldsFromInstanceData(costData, filters);
     }
 
@@ -125,7 +138,9 @@ public class NodeAndPodDetailsDataFetcher
 
   private QLNodeAndPodDetailsTableData generateCostData(BillingDataQueryMetadata queryData, ResultSet resultSet)
       throws SQLException {
-    List<QLNodeAndPodDetailsTableRow> entityTableListData = new ArrayList<>();
+    List<QLNodeAndPodDetailsTableRow> qlNodeAndPodDetailsTableRows = new ArrayList<>();
+    List<QLPVDetailsTableRow> qlpvDetailsTableRows = new ArrayList<>();
+
     while (resultSet != null && resultSet.next()) {
       String entityId = BillingStatsDefaultKeys.ENTITYID;
       String name = BillingStatsDefaultKeys.NAME;
@@ -134,8 +149,26 @@ public class NodeAndPodDetailsDataFetcher
       Double systemCost = BillingStatsDefaultKeys.SYSTEMCOST;
       Double networkCost = BillingStatsDefaultKeys.NETWORKCOST;
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
+      Double memoryBillingAmount = BillingStatsDefaultKeys.TOTALCOST;
+      Double cpuBillingAmount = BillingStatsDefaultKeys.TOTALCOST;
+      Double storageUnallocatedCost = BillingStatsDefaultKeys.TOTALCOST;
       String clusterName = BillingStatsDefaultKeys.CLUSTERNAME;
       String clusterId = BillingStatsDefaultKeys.CLUSTERID;
+      String instanceType = BillingStatsDefaultKeys.INSTANCETYPE;
+      String namespace = DEFAULT_STRING_VALUE;
+      String workloadName = DEFAULT_STRING_VALUE;
+      String cloudProviderName = DEFAULT_STRING_VALUE;
+      String region = DEFAULT_STRING_VALUE;
+
+      Double storageCost = -1D;
+      Double storageUsed = -1D;
+      Double storageRequested = -1D;
+      Double storageIdleCost = -1D;
+
+      Double memoryUnallocatedCost = BillingStatsDefaultKeys.TOTALCOST;
+      Double cpuUnallocatedCost = BillingStatsDefaultKeys.TOTALCOST;
+      Double memoryIdleCost = BillingStatsDefaultKeys.TOTALCOST;
+      Double cpuIdleCost = BillingStatsDefaultKeys.TOTALCOST;
 
       for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -166,66 +199,212 @@ public class NodeAndPodDetailsDataFetcher
           case INSTANCENAME:
             name = resultSet.getString(field.getFieldName());
             break;
+          case INSTANCETYPE:
+            instanceType = resultSet.getString(field.getFieldName());
+            break;
+          case NAMESPACE:
+            namespace
+            = resultSet.getString(field.getFieldName());
+            break;
+          case STORAGECOST:
+            storageCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case STORAGEUTILIZATIONVALUE:
+            storageUsed = resultSet.getDouble(field.getFieldName());
+            break;
+          case STORAGEREQUEST:
+            storageRequested = resultSet.getDouble(field.getFieldName());
+            break;
+          case STORAGEACTUALIDLECOST:
+            storageIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case WORKLOADNAME:
+            workloadName = resultSet.getString(field.getFieldName());
+            break;
+          case REGION:
+            region = resultSet.getString(field.getFieldName());
+            break;
+          case CLOUDPROVIDER:
+            cloudProviderName = resultSet.getString(field.getFieldName());
+            break;
+          case MEMORYBILLINGAMOUNT:
+            memoryBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case CPUBILLINGAMOUNT:
+            cpuBillingAmount = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case STORAGEUNALLOCATEDCOST:
+            storageUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case MEMORYUNALLOCATEDCOST:
+            memoryUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case CPUUNALLOCATEDCOST:
+            cpuUnallocatedCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case MEMORYIDLECOST:
+            memoryIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
+          case CPUIDLECOST:
+            cpuIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           default:
             break;
         }
       }
-
-      entityTableListData.add(QLNodeAndPodDetailsTableRow.builder()
-                                  .name(name)
-                                  .id(entityId)
-                                  .totalCost(totalCost)
-                                  .idleCost(idleCost)
-                                  .systemCost(systemCost)
-                                  .unallocatedCost(unallocatedCost)
-                                  .networkCost(networkCost)
-                                  .clusterName(clusterName)
-                                  .clusterId(clusterId)
-                                  .build());
+      if (INSTANCE_TYPE_PV.equals(instanceType)) {
+        qlpvDetailsTableRows.add(QLPVDetailsTableRow.builder()
+                                     .storageCost(storageCost)
+                                     .storageActualIdleCost(storageIdleCost)
+                                     .storageUnallocatedCost(storageUnallocatedCost)
+                                     .storageUtilizationValue(storageUsed)
+                                     .storageRequest(storageRequested)
+                                     .instanceId(entityId)
+                                     .id(clusterId + ":" + entityId)
+                                     .instanceName(name)
+                                     .claimName(workloadName)
+                                     .clusterName(clusterName)
+                                     .clusterId(clusterId)
+                                     .region(region)
+                                     .storageClass(DEFAULT_STRING_VALUE)
+                                     .volumeType(DEFAULT_STRING_VALUE)
+                                     .cloudProvider(cloudProviderName)
+                                     .claimNamespace(namespace)
+                                     .build());
+      } else {
+        qlNodeAndPodDetailsTableRows.add(QLNodeAndPodDetailsTableRow.builder()
+                                             .name(name)
+                                             .id(entityId)
+                                             .totalCost(totalCost)
+                                             .idleCost(idleCost)
+                                             .systemCost(systemCost)
+                                             .unallocatedCost(unallocatedCost)
+                                             .workload(workloadName)
+                                             .networkCost(networkCost)
+                                             .clusterName(clusterName)
+                                             .clusterId(clusterId)
+                                             .namespace(namespace)
+                                             .storageCost(storageCost)
+                                             .storageRequest(storageRequested)
+                                             .storageUtilizationValue(storageUsed)
+                                             .memoryBillingAmount(memoryBillingAmount)
+                                             .cpuBillingAmount(cpuBillingAmount)
+                                             .storageUnallocatedCost(storageUnallocatedCost)
+                                             .memoryUnallocatedCost(memoryUnallocatedCost)
+                                             .cpuUnallocatedCost(cpuUnallocatedCost)
+                                             .memoryIdleCost(memoryIdleCost)
+                                             .cpuIdleCost(cpuIdleCost)
+                                             .storageActualIdleCost(storageIdleCost)
+                                             .build());
+      }
     }
-    return QLNodeAndPodDetailsTableData.builder().data(entityTableListData).build();
+    return QLNodeAndPodDetailsTableData.builder()
+        .data(qlNodeAndPodDetailsTableRows)
+        .pvData(qlpvDetailsTableRows)
+        .build();
   }
 
   private QLNodeAndPodDetailsTableData getFieldsFromInstanceData(
       QLNodeAndPodDetailsTableData costData, List<QLBillingDataFilter> filters) {
     Set<String> instanceIds = new HashSet<>();
-    List<String> instanceIdsWithCluster = new ArrayList<>();
+    List<String> instanceIdWithCluster = new ArrayList<>();
+
     Map<String, QLNodeAndPodDetailsTableRow> instanceIdToCostData = new HashMap<>();
-    String instanceType = getInstanceType(filters);
+    Map<String, QLPVDetailsTableRow> instanceIdToPVCostData = new HashMap<>();
 
-    if (instanceType.equals(INSTANCE_TYPE_NODE)) {
-      costData.getData().forEach(entry -> {
+    List<InstanceType> instanceTypes = getInstanceType(filters);
+
+    if (instanceTypes.contains(K8S_NODE)) {
+      for (QLNodeAndPodDetailsTableRow entry : costData.getData()) {
         instanceIdToCostData.put(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getId(), entry);
+        instanceIdWithCluster.add(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getId());
         instanceIds.add(entry.getId());
-        instanceIdsWithCluster.add(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getId());
-      });
-    } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
-      costData.getData().forEach(entry -> {
+      }
+    }
+    if (instanceTypes.contains(K8S_POD)) {
+      for (QLNodeAndPodDetailsTableRow entry : costData.getData()) {
         instanceIdToCostData.put(entry.getId(), entry);
+        instanceIdWithCluster.add(entry.getId());
         instanceIds.add(entry.getId());
-        instanceIdsWithCluster.add(entry.getId());
-      });
+      }
+    }
+    if (instanceTypes.contains(K8S_PV)) {
+      for (QLPVDetailsTableRow entry : costData.getPvData()) {
+        instanceIdToPVCostData.put(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId(), entry);
+        instanceIdWithCluster.add(entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId());
+        instanceIds.add(entry.getInstanceId());
+      }
     }
 
-    List<InstanceData> instanceData =
-        instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
     Map<String, InstanceData> instanceIdToInstanceData = new HashMap<>();
+    List<InstanceData> instanceDataList =
+        instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
 
-    if (instanceType.equals(INSTANCE_TYPE_NODE)) {
-      instanceData.forEach(entry
-          -> instanceIdToInstanceData.put(
-              entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId(), entry));
-      return QLNodeAndPodDetailsTableData.builder()
-          .data(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIdsWithCluster))
-          .build();
-    } else if (instanceType.equals(INSTANCE_TYPE_PODS)) {
-      instanceData.forEach(entry -> instanceIdToInstanceData.put(entry.getInstanceId(), entry));
-      return QLNodeAndPodDetailsTableData.builder()
-          .data(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIdsWithCluster))
-          .build();
+    for (InstanceData instanceData : instanceDataList) {
+      String key = instanceData.getInstanceId();
+      if (instanceData.getInstanceType() == K8S_NODE || instanceData.getInstanceType() == K8S_PV) {
+        key = instanceData.getClusterId() + BillingStatsDefaultKeys.TOKEN + instanceData.getInstanceId();
+      }
+      instanceIdToInstanceData.put(key, instanceData);
     }
 
-    return null;
+    QLNodeAndPodDetailsTableDataBuilder qlNodeAndPodDetailsTableDataBuilder = QLNodeAndPodDetailsTableData.builder();
+    List<QLNodeAndPodDetailsTableRow> data = new ArrayList<>();
+
+    if (instanceTypes.contains(K8S_NODE)) {
+      data.addAll(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
+    }
+    if (instanceTypes.contains(K8S_POD)) {
+      data.addAll(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
+    }
+    if (instanceTypes.contains(K8S_PV)) {
+      qlNodeAndPodDetailsTableDataBuilder.pvData(
+          getDataForPV(instanceIdToPVCostData, instanceIdToInstanceData, instanceIdWithCluster));
+    }
+
+    return qlNodeAndPodDetailsTableDataBuilder.data(data).build();
+  }
+
+  private List<QLPVDetailsTableRow> getDataForPV(Map<String, QLPVDetailsTableRow> instanceIdToPVCostData,
+      Map<String, InstanceData> pvToInstanceDataMap, List<String> pvInstanceIdsWithCluster) {
+    List<QLPVDetailsTableRow> qlpvDetailsTableRowList = new ArrayList<>();
+
+    for (String instanceIdWithCluster : pvInstanceIdsWithCluster) {
+      QLPVDetailsTableRow billingData = instanceIdToPVCostData.get(instanceIdWithCluster);
+      // Since instanceData can be purged, check for null for each access
+      InstanceData instanceData = pvToInstanceDataMap.getOrDefault(instanceIdWithCluster, DEFAULT_INSTANCE_DATA);
+      if (instanceData.getUsageStopTime() != null) {
+        billingData.setDeleteTime(instanceData.getUsageStopTime().toEpochMilli());
+      }
+      if (instanceData.getUsageStartTime() != null) {
+        billingData.setCreateTime(instanceData.getUsageStartTime().toEpochMilli());
+      }
+      if (instanceData.getStorageResource() != null) {
+        billingData.setCapacity(
+            billingDataHelper.getRoundedDoubleValue(instanceData.getStorageResource().getCapacity() / 1024D));
+      }
+      if (instanceData.getMetaData().get(CLAIM_NAME) != null) {
+        billingData.setClaimName(instanceData.getMetaData().get(CLAIM_NAME));
+      }
+      if (instanceData.getMetaData().get(CLAIM_NAMESPACE) != null) {
+        billingData.setClaimNamespace(instanceData.getMetaData().get(CLAIM_NAMESPACE));
+      }
+      if (instanceData.getMetaData().get("region") != null) {
+        billingData.setRegion(instanceData.getMetaData().get("region"));
+      }
+      if (instanceData.getMetaData().get("type") != null) {
+        billingData.setStorageClass(instanceData.getMetaData().get("type"));
+      }
+      if (instanceData.getMetaData().get("pv_type") != null) {
+        billingData.setVolumeType(instanceData.getMetaData().get("pv_type").substring(8));
+      }
+      // The storage values returned from the DB is in MB
+      billingData.setStorageUtilizationValue(
+          billingDataHelper.getRoundedDoubleValue(billingData.getStorageUtilizationValue() / 1024D));
+      billingData.setStorageRequest(billingDataHelper.getRoundedDoubleValue(billingData.getStorageRequest() / 1024D));
+      qlpvDetailsTableRowList.add(billingData);
+    }
+    return qlpvDetailsTableRowList;
   }
 
   private List<QLNodeAndPodDetailsTableRow> getDataForNodes(
@@ -248,6 +427,17 @@ public class NodeAndPodDetailsDataFetcher
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
           .networkCost(costDataEntry.getNetworkCost())
+          .memoryBillingAmount(costDataEntry.getMemoryBillingAmount())
+          .cpuBillingAmount(costDataEntry.getCpuBillingAmount())
+          .storageUnallocatedCost(costDataEntry.getStorageUnallocatedCost())
+          .memoryUnallocatedCost(costDataEntry.getMemoryUnallocatedCost())
+          .cpuUnallocatedCost(costDataEntry.getCpuUnallocatedCost())
+          .memoryIdleCost(costDataEntry.getMemoryIdleCost())
+          .cpuIdleCost(costDataEntry.getCpuIdleCost())
+          .storageCost(0D)
+          .storageUtilizationValue(0D)
+          .storageRequest(0D)
+          .storageActualIdleCost(0D)
           .cpuAllocatable(-1D)
           .memoryAllocatable(-1D)
           .machineType(entry.getMetaData().getOrDefault(OPERATING_SYSTEM, DEFAULT_STRING_VALUE))
@@ -277,8 +467,8 @@ public class NodeAndPodDetailsDataFetcher
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(costDataEntry.getName())
           .id(instanceId)
-          .namespace(entry.getMetaData().getOrDefault(NAMESPACE, DEFAULT_STRING_VALUE))
-          .workload(entry.getMetaData().getOrDefault(WORKLOAD, DEFAULT_STRING_VALUE))
+          .namespace(entry.getMetaData().getOrDefault(NAMESPACE, costDataEntry.getNamespace()))
+          .workload(costDataEntry.getWorkload())
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .node(entry.getMetaData().getOrDefault(PARENT_RESOURCE_ID, DEFAULT_STRING_VALUE))
@@ -287,7 +477,19 @@ public class NodeAndPodDetailsDataFetcher
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
+          .memoryBillingAmount(costDataEntry.getMemoryBillingAmount())
+          .cpuBillingAmount(costDataEntry.getCpuBillingAmount())
+          .storageUnallocatedCost(costDataEntry.getStorageUnallocatedCost())
+          .memoryUnallocatedCost(costDataEntry.getMemoryUnallocatedCost())
+          .cpuUnallocatedCost(costDataEntry.getCpuUnallocatedCost())
+          .memoryIdleCost(costDataEntry.getMemoryIdleCost())
+          .cpuIdleCost(costDataEntry.getCpuIdleCost())
           .networkCost(costDataEntry.getNetworkCost())
+          .storageCost(billingDataHelper.getRoundedDoubleValue(costDataEntry.getStorageCost()))
+          .storageActualIdleCost(billingDataHelper.getRoundedDoubleValue(costDataEntry.getStorageActualIdleCost()))
+          .storageUtilizationValue(
+              billingDataHelper.getRoundedDoubleValue(costDataEntry.getStorageUtilizationValue() / 1024D))
+          .storageRequest(billingDataHelper.getRoundedDoubleValue(costDataEntry.getStorageRequest() / 1024D))
           .cpuRequested(-1D)
           .memoryRequested(-1D);
       if (entry.getUsageStopTime() != null) {
@@ -307,13 +509,15 @@ public class NodeAndPodDetailsDataFetcher
     return entityTableListData;
   }
 
-  private String getInstanceType(List<QLBillingDataFilter> filters) {
+  private List<InstanceType> getInstanceType(List<QLBillingDataFilter> filters) {
     for (QLBillingDataFilter filter : filters) {
       if (filter.getInstanceType() != null) {
-        return filter.getInstanceType().getValues()[0];
+        return Arrays.stream(filter.getInstanceType().getValues())
+            .map(InstanceType::valueOf)
+            .collect(Collectors.toList());
       }
     }
-    return "";
+    return Collections.emptyList();
   }
 
   @Override

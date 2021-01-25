@@ -16,5 +16,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLNodeAndPodDetailsTableData implements QLData {
   List<QLNodeAndPodDetailsTableRow> data;
+  List<QLPVDetailsTableRow> pvData;
   String info;
 }

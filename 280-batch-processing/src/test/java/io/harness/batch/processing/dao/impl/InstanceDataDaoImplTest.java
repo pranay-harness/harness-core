@@ -1,6 +1,10 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -30,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -182,6 +187,34 @@ public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
     assertThat(updatedInstanceData.getUsageStopTime()).isEqualTo(END_INSTANT);
   }
 
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetInstanceDataListsByType() {
+    Instant startTime = NOW;
+    Instant endTime = NOW.plus(1, ChronoUnit.DAYS);
+
+    instanceDataDao.create(getInstanceOfType(startTime, K8S_PV));
+    instanceDataDao.create(getInstanceOfType(startTime, K8S_POD));
+    instanceDataDao.create(getInstanceOfType(startTime, K8S_POD));
+    instanceDataDao.create(getInstanceOfType(startTime, K8S_NODE));
+
+    List<InstanceData> instanceDataList =
+        instanceDataDao.getInstanceDataListsOfType(ACCOUNT_ID, 10, startTime, endTime, startTime, K8S_PV);
+    assertThat(instanceDataList).isNotEmpty().hasSize(1);
+    assertThat(instanceDataList.get(0).getInstanceType()).isEqualTo(K8S_PV);
+
+    List<InstanceData> instanceDataListsOtherThanPV =
+        instanceDataDao.getInstanceDataListsOtherThanPV(ACCOUNT_ID, 10, startTime, endTime, startTime);
+    assertThat(instanceDataListsOtherThanPV).isNotEmpty().hasSize(3);
+    assertThat(instanceDataListsOtherThanPV.stream().map(InstanceData::getInstanceType).collect(Collectors.toList()))
+        .doesNotContain(K8S_PV);
+  }
+
+  private static InstanceData getInstanceOfType(Instant startTime, InstanceType instanceType) {
+    return InstanceData.builder().usageStartTime(startTime).accountId(ACCOUNT_ID).instanceType(instanceType).build();
+  }
+
   private List<InstanceState> getActiveInstanceState() {
     return new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
   }
@@ -207,7 +240,7 @@ public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
         .instanceName(INSTANCE_NAME)
         .instanceId(RUNNING_INSTANCE_ID)
         .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)
-        .instanceType(InstanceType.K8S_POD)
+        .instanceType(K8S_POD)
         .settingId(CLOUD_PROVIDER_ID)
         .clusterId(CLUSTER_ID)
         .clusterName(CLUSTER_NAME)

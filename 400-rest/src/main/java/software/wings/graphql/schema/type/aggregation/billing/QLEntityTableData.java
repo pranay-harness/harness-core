@@ -46,6 +46,15 @@ public class QLEntityTableData implements QLData {
   String appName;
   String appId;
   String clusterName;
+  Double storageCost;
+  Double memoryBillingAmount;
+  Double cpuBillingAmount;
+  Double storageUnallocatedCost;
+  Double memoryUnallocatedCost;
+  Double cpuUnallocatedCost;
+  Double storageRequest;
+  Double storageUtilizationValue;
+  Double storageActualIdleCost;
   int efficiencyScore;
   int efficiencyScoreTrendPercentage;
 }

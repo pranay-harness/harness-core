@@ -5,6 +5,7 @@ import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.Billi
 public enum QLBillingSortType {
   Time(BillingDataMetaDataFields.STARTTIME),
   Amount(BillingDataMetaDataFields.SUM),
+  storageCost(BillingDataMetaDataFields.STORAGECOST),
   IdleCost(BillingDataMetaDataFields.IDLECOST),
   Application(BillingDataMetaDataFields.APPID),
   Service(BillingDataMetaDataFields.SERVICEID),

@@ -10,6 +10,7 @@ import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.NodeMetric;
+import io.harness.event.payloads.PVMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
@@ -32,6 +33,7 @@ public class EventTypeConstants {
   public final String ECS_TASK_INFO = EcsTaskInfo.class.getName();
   public final String POD_UTILIZATION = PodMetric.class.getName();
   public final String NODE_UTILIZATION = NodeMetric.class.getName();
+  public final String PV_UTILIZATION = PVMetric.class.getName();
   public final String ECS_SYNC_EVENT = EcsSyncEvent.class.getName();
   public final String ECS_UTILIZATION = EcsUtilization.class.getName();
   public final String EC2_INSTANCE_INFO = Ec2InstanceInfo.class.getName();

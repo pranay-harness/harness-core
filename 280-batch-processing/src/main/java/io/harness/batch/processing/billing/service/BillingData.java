@@ -12,6 +12,7 @@ public class BillingData {
   private double usageDurationSeconds;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
+  private double storageMbSeconds;
   private double networkCost;
   private PricingSource pricingSource;
 }

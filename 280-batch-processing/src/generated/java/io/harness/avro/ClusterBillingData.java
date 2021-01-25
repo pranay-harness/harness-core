@@ -5,20 +5,18 @@
  */
 package io.harness.avro;
 
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.util.Utf8;
 
 @javax.annotation.Generated("avro")
 @org.apache.avro.specific.AvroGenerated
 public class ClusterBillingData
     extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -8172501526855763485L;
+  private static final long serialVersionUID = 157245881831301202L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
-      "{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"appname\",\"type\":[\"string\",\"null\"]},{\"name\":\"servicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"envname\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
+      "{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"appname\",\"type\":[\"string\",\"null\"]},{\"name\":\"servicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"envname\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"storagecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"storageutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"storagerequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
   public static org.apache.avro.Schema getClassSchema() {
     return SCHEMA$;
   }
@@ -134,6 +132,11 @@ public class ClusterBillingData
   @Deprecated public java.lang.Double avgmemoryutilizationvalue;
   @Deprecated public java.lang.Double networkcost;
   @Deprecated public java.lang.CharSequence pricingsource;
+  @Deprecated public java.lang.Double storagecost;
+  @Deprecated public java.lang.Double storageactualidlecost;
+  @Deprecated public java.lang.Double storageunallocatedcost;
+  @Deprecated public java.lang.Double storageutilizationvalue;
+  @Deprecated public java.lang.Double storagerequest;
   @Deprecated public java.util.List<java.lang.Object> labels;
 
   /**
@@ -204,6 +207,11 @@ public class ClusterBillingData
    * @param avgmemoryutilizationvalue The new value for avgmemoryutilizationvalue
    * @param networkcost The new value for networkcost
    * @param pricingsource The new value for pricingsource
+   * @param storagecost The new value for storagecost
+   * @param storageactualidlecost The new value for storageactualidlecost
+   * @param storageunallocatedcost The new value for storageunallocatedcost
+   * @param storageutilizationvalue The new value for storageutilizationvalue
+   * @param storagerequest The new value for storagerequest
    * @param labels The new value for labels
    */
   public ClusterBillingData(java.lang.Long starttime, java.lang.Long endtime, java.lang.CharSequence accountid,
@@ -226,6 +234,8 @@ public class ClusterBillingData
       java.lang.Double cpulimit, java.lang.Double memorylimit, java.lang.Double maxcpuutilizationvalue,
       java.lang.Double maxmemoryutilizationvalue, java.lang.Double avgcpuutilizationvalue,
       java.lang.Double avgmemoryutilizationvalue, java.lang.Double networkcost, java.lang.CharSequence pricingsource,
+      java.lang.Double storagecost, java.lang.Double storageactualidlecost, java.lang.Double storageunallocatedcost,
+      java.lang.Double storageutilizationvalue, java.lang.Double storagerequest,
       java.util.List<java.lang.Object> labels) {
     this.starttime = starttime;
     this.endtime = endtime;
@@ -286,6 +296,11 @@ public class ClusterBillingData
     this.avgmemoryutilizationvalue = avgmemoryutilizationvalue;
     this.networkcost = networkcost;
     this.pricingsource = pricingsource;
+    this.storagecost = storagecost;
+    this.storageactualidlecost = storageactualidlecost;
+    this.storageunallocatedcost = storageunallocatedcost;
+    this.storageutilizationvalue = storageutilizationvalue;
+    this.storagerequest = storagerequest;
     this.labels = labels;
   }
 
@@ -417,6 +432,16 @@ public class ClusterBillingData
       case 58:
         return pricingsource;
       case 59:
+        return storagecost;
+      case 60:
+        return storageactualidlecost;
+      case 61:
+        return storageunallocatedcost;
+      case 62:
+        return storageutilizationvalue;
+      case 63:
+        return storagerequest;
+      case 64:
         return labels;
       default:
         throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -606,6 +631,21 @@ public class ClusterBillingData
         pricingsource = (java.lang.CharSequence) value$;
         break;
       case 59:
+        storagecost = (java.lang.Double) value$;
+        break;
+      case 60:
+        storageactualidlecost = (java.lang.Double) value$;
+        break;
+      case 61:
+        storageunallocatedcost = (java.lang.Double) value$;
+        break;
+      case 62:
+        storageutilizationvalue = (java.lang.Double) value$;
+        break;
+      case 63:
+        storagerequest = (java.lang.Double) value$;
+        break;
+      case 64:
         labels = (java.util.List<java.lang.Object>) value$;
         break;
       default:
@@ -1558,6 +1598,86 @@ public class ClusterBillingData
   }
 
   /**
+   * Gets the value of the 'storagecost' field.
+   * @return The value of the 'storagecost' field.
+   */
+  public java.lang.Double getStoragecost() {
+    return storagecost;
+  }
+
+  /**
+   * Sets the value of the 'storagecost' field.
+   * @param value the value to set.
+   */
+  public void setStoragecost(java.lang.Double value) {
+    this.storagecost = value;
+  }
+
+  /**
+   * Gets the value of the 'storageactualidlecost' field.
+   * @return The value of the 'storageactualidlecost' field.
+   */
+  public java.lang.Double getStorageactualidlecost() {
+    return storageactualidlecost;
+  }
+
+  /**
+   * Sets the value of the 'storageactualidlecost' field.
+   * @param value the value to set.
+   */
+  public void setStorageactualidlecost(java.lang.Double value) {
+    this.storageactualidlecost = value;
+  }
+
+  /**
+   * Gets the value of the 'storageunallocatedcost' field.
+   * @return The value of the 'storageunallocatedcost' field.
+   */
+  public java.lang.Double getStorageunallocatedcost() {
+    return storageunallocatedcost;
+  }
+
+  /**
+   * Sets the value of the 'storageunallocatedcost' field.
+   * @param value the value to set.
+   */
+  public void setStorageunallocatedcost(java.lang.Double value) {
+    this.storageunallocatedcost = value;
+  }
+
+  /**
+   * Gets the value of the 'storageutilizationvalue' field.
+   * @return The value of the 'storageutilizationvalue' field.
+   */
+  public java.lang.Double getStorageutilizationvalue() {
+    return storageutilizationvalue;
+  }
+
+  /**
+   * Sets the value of the 'storageutilizationvalue' field.
+   * @param value the value to set.
+   */
+  public void setStorageutilizationvalue(java.lang.Double value) {
+    this.storageutilizationvalue = value;
+  }
+
+  /**
+   * Gets the value of the 'storagerequest' field.
+   * @return The value of the 'storagerequest' field.
+   */
+  public java.lang.Double getStoragerequest() {
+    return storagerequest;
+  }
+
+  /**
+   * Sets the value of the 'storagerequest' field.
+   * @param value the value to set.
+   */
+  public void setStoragerequest(java.lang.Double value) {
+    this.storagerequest = value;
+  }
+
+  /**
    * Gets the value of the 'labels' field.
    * @return The value of the 'labels' field.
    */
@@ -1672,6 +1792,11 @@ public class ClusterBillingData
     private java.lang.Double avgmemoryutilizationvalue;
     private java.lang.Double networkcost;
     private java.lang.CharSequence pricingsource;
+    private java.lang.Double storagecost;
+    private java.lang.Double storageactualidlecost;
+    private java.lang.Double storageunallocatedcost;
+    private java.lang.Double storageutilizationvalue;
+    private java.lang.Double storagerequest;
     private java.util.List<java.lang.Object> labels;
 
     /** Creates a new Builder */
@@ -1921,9 +2046,29 @@ public class ClusterBillingData
         this.pricingsource = data().deepCopy(fields()[58].schema(), other.pricingsource);
         fieldSetFlags()[58] = other.fieldSetFlags()[58];
       }
-      if (isValidValue(fields()[59], other.labels)) {
-        this.labels = data().deepCopy(fields()[59].schema(), other.labels);
+      if (isValidValue(fields()[59], other.storagecost)) {
+        this.storagecost = data().deepCopy(fields()[59].schema(), other.storagecost);
         fieldSetFlags()[59] = other.fieldSetFlags()[59];
+      }
+      if (isValidValue(fields()[60], other.storageactualidlecost)) {
+        this.storageactualidlecost = data().deepCopy(fields()[60].schema(), other.storageactualidlecost);
+        fieldSetFlags()[60] = other.fieldSetFlags()[60];
+      }
+      if (isValidValue(fields()[61], other.storageunallocatedcost)) {
+        this.storageunallocatedcost = data().deepCopy(fields()[61].schema(), other.storageunallocatedcost);
+        fieldSetFlags()[61] = other.fieldSetFlags()[61];
+      }
+      if (isValidValue(fields()[62], other.storageutilizationvalue)) {
+        this.storageutilizationvalue = data().deepCopy(fields()[62].schema(), other.storageutilizationvalue);
+        fieldSetFlags()[62] = other.fieldSetFlags()[62];
+      }
+      if (isValidValue(fields()[63], other.storagerequest)) {
+        this.storagerequest = data().deepCopy(fields()[63].schema(), other.storagerequest);
+        fieldSetFlags()[63] = other.fieldSetFlags()[63];
+      }
+      if (isValidValue(fields()[64], other.labels)) {
+        this.labels = data().deepCopy(fields()[64].schema(), other.labels);
+        fieldSetFlags()[64] = other.fieldSetFlags()[64];
       }
     }
 
@@ -2169,9 +2314,29 @@ public class ClusterBillingData
         this.pricingsource = data().deepCopy(fields()[58].schema(), other.pricingsource);
         fieldSetFlags()[58] = true;
       }
-      if (isValidValue(fields()[59], other.labels)) {
-        this.labels = data().deepCopy(fields()[59].schema(), other.labels);
+      if (isValidValue(fields()[59], other.storagecost)) {
+        this.storagecost = data().deepCopy(fields()[59].schema(), other.storagecost);
         fieldSetFlags()[59] = true;
+      }
+      if (isValidValue(fields()[60], other.storageactualidlecost)) {
+        this.storageactualidlecost = data().deepCopy(fields()[60].schema(), other.storageactualidlecost);
+        fieldSetFlags()[60] = true;
+      }
+      if (isValidValue(fields()[61], other.storageunallocatedcost)) {
+        this.storageunallocatedcost = data().deepCopy(fields()[61].schema(), other.storageunallocatedcost);
+        fieldSetFlags()[61] = true;
+      }
+      if (isValidValue(fields()[62], other.storageutilizationvalue)) {
+        this.storageutilizationvalue = data().deepCopy(fields()[62].schema(), other.storageutilizationvalue);
+        fieldSetFlags()[62] = true;
+      }
+      if (isValidValue(fields()[63], other.storagerequest)) {
+        this.storagerequest = data().deepCopy(fields()[63].schema(), other.storagerequest);
+        fieldSetFlags()[63] = true;
+      }
+      if (isValidValue(fields()[64], other.labels)) {
+        this.labels = data().deepCopy(fields()[64].schema(), other.labels);
+        fieldSetFlags()[64] = true;
       }
     }
 
@@ -4415,6 +4580,196 @@ public class ClusterBillingData
     }
 
     /**
+     * Gets the value of the 'storagecost' field.
+     * @return The value.
+     */
+    public java.lang.Double getStoragecost() {
+      return storagecost;
+    }
+
+    /**
+     * Sets the value of the 'storagecost' field.
+     * @param value The value of 'storagecost'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setStoragecost(java.lang.Double value) {
+      validate(fields()[59], value);
+      this.storagecost = value;
+      fieldSetFlags()[59] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'storagecost' field has been set.
+     * @return True if the 'storagecost' field has been set, false otherwise.
+     */
+    public boolean hasStoragecost() {
+      return fieldSetFlags()[59];
+    }
+
+    /**
+     * Clears the value of the 'storagecost' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearStoragecost() {
+      storagecost = null;
+      fieldSetFlags()[59] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'storageactualidlecost' field.
+     * @return The value.
+     */
+    public java.lang.Double getStorageactualidlecost() {
+      return storageactualidlecost;
+    }
+
+    /**
+     * Sets the value of the 'storageactualidlecost' field.
+     * @param value The value of 'storageactualidlecost'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setStorageactualidlecost(java.lang.Double value) {
+      validate(fields()[60], value);
+      this.storageactualidlecost = value;
+      fieldSetFlags()[60] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'storageactualidlecost' field has been set.
+     * @return True if the 'storageactualidlecost' field has been set, false otherwise.
+     */
+    public boolean hasStorageactualidlecost() {
+      return fieldSetFlags()[60];
+    }
+
+    /**
+     * Clears the value of the 'storageactualidlecost' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearStorageactualidlecost() {
+      storageactualidlecost = null;
+      fieldSetFlags()[60] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'storageunallocatedcost' field.
+     * @return The value.
+     */
+    public java.lang.Double getStorageunallocatedcost() {
+      return storageunallocatedcost;
+    }
+
+    /**
+     * Sets the value of the 'storageunallocatedcost' field.
+     * @param value The value of 'storageunallocatedcost'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setStorageunallocatedcost(java.lang.Double value) {
+      validate(fields()[61], value);
+      this.storageunallocatedcost = value;
+      fieldSetFlags()[61] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'storageunallocatedcost' field has been set.
+     * @return True if the 'storageunallocatedcost' field has been set, false otherwise.
+     */
+    public boolean hasStorageunallocatedcost() {
+      return fieldSetFlags()[61];
+    }
+
+    /**
+     * Clears the value of the 'storageunallocatedcost' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearStorageunallocatedcost() {
+      storageunallocatedcost = null;
+      fieldSetFlags()[61] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'storageutilizationvalue' field.
+     * @return The value.
+     */
+    public java.lang.Double getStorageutilizationvalue() {
+      return storageutilizationvalue;
+    }
+
+    /**
+     * Sets the value of the 'storageutilizationvalue' field.
+     * @param value The value of 'storageutilizationvalue'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setStorageutilizationvalue(java.lang.Double value) {
+      validate(fields()[62], value);
+      this.storageutilizationvalue = value;
+      fieldSetFlags()[62] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'storageutilizationvalue' field has been set.
+     * @return True if the 'storageutilizationvalue' field has been set, false otherwise.
+     */
+    public boolean hasStorageutilizationvalue() {
+      return fieldSetFlags()[62];
+    }
+
+    /**
+     * Clears the value of the 'storageutilizationvalue' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearStorageutilizationvalue() {
+      storageutilizationvalue = null;
+      fieldSetFlags()[62] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'storagerequest' field.
+     * @return The value.
+     */
+    public java.lang.Double getStoragerequest() {
+      return storagerequest;
+    }
+
+    /**
+     * Sets the value of the 'storagerequest' field.
+     * @param value The value of 'storagerequest'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setStoragerequest(java.lang.Double value) {
+      validate(fields()[63], value);
+      this.storagerequest = value;
+      fieldSetFlags()[63] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'storagerequest' field has been set.
+     * @return True if the 'storagerequest' field has been set, false otherwise.
+     */
+    public boolean hasStoragerequest() {
+      return fieldSetFlags()[63];
+    }
+
+    /**
+     * Clears the value of the 'storagerequest' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearStoragerequest() {
+      storagerequest = null;
+      fieldSetFlags()[63] = false;
+      return this;
+    }
+
+    /**
      * Gets the value of the 'labels' field.
      * @return The value.
      */
@@ -4428,9 +4783,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setLabels(java.util.List<java.lang.Object> value) {
-      validate(fields()[59], value);
+      validate(fields()[64], value);
       this.labels = value;
-      fieldSetFlags()[59] = true;
+      fieldSetFlags()[64] = true;
       return this;
     }
 
@@ -4439,7 +4794,7 @@ public class ClusterBillingData
      * @return True if the 'labels' field has been set, false otherwise.
      */
     public boolean hasLabels() {
-      return fieldSetFlags()[59];
+      return fieldSetFlags()[64];
     }
 
     /**
@@ -4448,7 +4803,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearLabels() {
       labels = null;
-      fieldSetFlags()[59] = false;
+      fieldSetFlags()[64] = false;
       return this;
     }
 
@@ -4549,8 +4904,17 @@ public class ClusterBillingData
         record.networkcost = fieldSetFlags()[57] ? this.networkcost : (java.lang.Double) defaultValue(fields()[57]);
         record.pricingsource =
             fieldSetFlags()[58] ? this.pricingsource : (java.lang.CharSequence) defaultValue(fields()[58]);
+        record.storagecost = fieldSetFlags()[59] ? this.storagecost : (java.lang.Double) defaultValue(fields()[59]);
+        record.storageactualidlecost =
+            fieldSetFlags()[60] ? this.storageactualidlecost : (java.lang.Double) defaultValue(fields()[60]);
+        record.storageunallocatedcost =
+            fieldSetFlags()[61] ? this.storageunallocatedcost : (java.lang.Double) defaultValue(fields()[61]);
+        record.storageutilizationvalue =
+            fieldSetFlags()[62] ? this.storageutilizationvalue : (java.lang.Double) defaultValue(fields()[62]);
+        record.storagerequest =
+            fieldSetFlags()[63] ? this.storagerequest : (java.lang.Double) defaultValue(fields()[63]);
         record.labels =
-            fieldSetFlags()[59] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[59]);
+            fieldSetFlags()[64] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[64]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;

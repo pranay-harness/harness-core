@@ -3,8 +3,10 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.reader.K8sGranularUtilizationMetricsReader;
+import io.harness.batch.processing.writer.K8sPVUtilizationAggregationTasklet;
 import io.harness.batch.processing.writer.K8sUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
+import io.harness.batch.processing.writer.PVUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.PodUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
@@ -17,6 +19,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,25 +37,11 @@ public class K8sUtilizationConfiguration {
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
 
-  @Bean
-  @StepScope
-  public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
-      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
-      @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(
-        accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
-  }
+  /*
+   * ****************** PodUtilization ******************
+   */
 
-  @Bean
-  public ItemReader<List<String>> k8sUtilizationAggregationReader() {
-    return new K8sGranularUtilizationMetricsReader();
-  }
-
-  @Bean
-  public ItemWriter<PublishedMessage> nodeUtilizationMetricsWriter() {
-    return new NodeUtilizationMetricsWriter();
-  }
-
+  //  READER
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sPodUtilizationEventMessageReader(
@@ -61,16 +50,13 @@ public class K8sUtilizationConfiguration {
     return eventReaderFactory.getEventReader(accountId, EventTypeConstants.POD_UTILIZATION, startDate, endDate);
   }
 
+  //  WRITER
   @Bean
   public ItemWriter<PublishedMessage> podUtilizationMetricsWriter() {
     return new PodUtilizationMetricsWriter();
   }
 
-  @Bean
-  public ItemWriter<List<String>> k8sUtilizationAggregationWriter() {
-    return new K8sUtilizationMetricsWriter();
-  }
-
+  // STEP
   @Bean
   public Step k8sPodUtilizationEventStep() {
     return stepBuilderFactory.get("k8sPodUtilizationEventStep")
@@ -80,6 +66,27 @@ public class K8sUtilizationConfiguration {
         .build();
   }
 
+  /*
+   ****************** NodeUtilization ******************
+   */
+
+  //  READER
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
+      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
+      @Value("#{jobParameters[endDate]}") Long endDate) {
+    return eventReaderFactory.getEventReader(
+        accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
+  }
+
+  //  WRITER
+  @Bean
+  public ItemWriter<PublishedMessage> nodeUtilizationMetricsWriter() {
+    return new NodeUtilizationMetricsWriter();
+  }
+
+  // STEP
   @Bean
   public Step k8sNodeUtilizationEventStep() {
     return stepBuilderFactory.get("k8sNodeUtilizationEventStep")
@@ -89,6 +96,53 @@ public class K8sUtilizationConfiguration {
         .build();
   }
 
+  /*
+   ****************** PVUtilization ******************
+   */
+
+  //  READER
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> k8sPVUtilizationEventMessageReader(
+      @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
+      @Value("#{jobParameters[endDate]}") Long endDate) {
+    return eventReaderFactory.getEventReader(
+        accountId, EventTypeConstants.PV_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
+  }
+
+  //  WRITER
+  @Bean
+  public ItemWriter<PublishedMessage> pvUtilizationMetricsWriter() {
+    return new PVUtilizationMetricsWriter();
+  }
+
+  // STEP
+  @Bean
+  public Step k8sPVUtilizationGranularStep() {
+    return stepBuilderFactory.get("k8sPVUtilizationGranularStep")
+        .<PublishedMessage, PublishedMessage>chunk(GRANULAR_BATCH_SIZE)
+        .reader(k8sPVUtilizationEventMessageReader(null, null, null))
+        .writer(pvUtilizationMetricsWriter())
+        .build();
+  }
+
+  /*
+   * ****************** K8sUtilizationAggregation ******************
+   */
+
+  //  READER
+  @Bean
+  public ItemReader<List<String>> k8sUtilizationAggregationReader() {
+    return new K8sGranularUtilizationMetricsReader();
+  }
+
+  //  WRITER
+  @Bean
+  public ItemWriter<List<String>> k8sUtilizationAggregationWriter() {
+    return new K8sUtilizationMetricsWriter();
+  }
+
+  // STEP
   @Bean
   public Step k8sUtilizationAggregationStep() {
     return stepBuilderFactory.get("k8sUtilizationAggregationStep")
@@ -98,16 +152,40 @@ public class K8sUtilizationConfiguration {
         .build();
   }
 
+  /*
+   * ****************** k8sPVUtilizationAggregation ******************
+   */
+
+  // Tasklet
+  @Bean
+  public Tasklet k8sPVUtilizationAggregationTasklet() {
+    return new K8sPVUtilizationAggregationTasklet();
+  }
+
+  // STEP
+  @Bean
+  public Step k8sPVUtilizationAggregationStep() {
+    return stepBuilderFactory.get("k8sPVUtilizationAggregationStep")
+        .tasklet(k8sPVUtilizationAggregationTasklet())
+        .build();
+  }
+
+  /*
+   * ****************** Job ******************
+   */
   @Bean
   @Autowired
   @Qualifier(value = "k8sUtilizationJob")
   public Job k8sUtilizationJob(JobBuilderFactory jobBuilderFactory, Step k8sPodUtilizationEventStep,
-      Step k8sNodeUtilizationEventStep, Step k8sUtilizationAggregationStep) {
+      Step k8sNodeUtilizationEventStep, Step k8sUtilizationAggregationStep, Step k8sPVUtilizationGranularStep,
+      Step k8sPVUtilizationAggregationStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_UTILIZATION.name())
         .incrementer(new RunIdIncrementer())
         .start(k8sPodUtilizationEventStep)
         .next(k8sNodeUtilizationEventStep)
         .next(k8sUtilizationAggregationStep)
+        .next(k8sPVUtilizationGranularStep)
+        .next(k8sPVUtilizationAggregationStep)
         .build();
   }
 }
