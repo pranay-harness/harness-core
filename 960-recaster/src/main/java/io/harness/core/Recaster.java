@@ -143,7 +143,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   private <T> void populateCollection(final Document document, T entity) {
     Collection<Object> collection = (Collection<Object>) entity;
-    for (Object o : (List<Object>) document) {
+    for (Object o : (List<Object>) document.get(ENCODED_VALUE)) {
       collection.add((o instanceof Document) ? fromDocument((Document) o) : o);
     }
   }
@@ -173,6 +173,7 @@ public class Recaster {
     return toDocument(entity, null);
   }
 
+  @SuppressWarnings("unchecked")
   public Document toDocument(Object entity, final Map<Object, Document> involvedObjects) {
     if (entity == null) {
       log.warn("Null reference was passed as object");
@@ -203,6 +204,12 @@ public class Recaster {
         throw new RecasterException(format("Cannot transform %s to document", entity.getClass()));
       }
       document.putAll((Document) encoded);
+      return document;
+    }
+
+    if (entity instanceof Collection) {
+      Collection<Object> encoded = (Collection<Object>) transformer.getTransformer(entity.getClass()).encode(entity);
+      document.append(ENCODED_VALUE, encoded);
       return document;
     }
 
