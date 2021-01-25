@@ -7,6 +7,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -1296,5 +1297,37 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     context.pushContextElement(standardParams);
 
     assertThat(abstractK8SState.fetchAppId(context)).isEqualTo(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputDontSkipVerification() {
+    on(abstractK8SState).set("sweepingOutputService", mockedSweepingOutputService);
+    abstractK8SState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(true).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(mockedSweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputSkipVerification() {
+    on(abstractK8SState).set("sweepingOutputService", mockedSweepingOutputService);
+    abstractK8SState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(false).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(mockedSweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
   }
 }
