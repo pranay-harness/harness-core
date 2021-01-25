@@ -132,6 +132,9 @@ public class Recaster {
   private <T> void populateMap(final Document document, T entity) {
     Map<String, Object> map = (Map<String, Object>) entity;
     for (Map.Entry<String, Object> entry : document.entrySet()) {
+      if (entry.getKey().equals(RECAST_CLASS_KEY)) {
+        continue;
+      }
       Object o = document.get(entry.getKey());
       map.put(entry.getKey(), (o instanceof Document) ? fromDocument((Document) o) : o);
     }
@@ -192,6 +195,15 @@ public class Recaster {
     if (entity instanceof Message) {
       Object encodedProto = transformer.encode(entity);
       return document.append(ENCODED_VALUE, encodedProto);
+    }
+
+    if (entity instanceof Map) {
+      Object encoded = transformer.getTransformer(entity.getClass()).encode(entity);
+      if (encoded != null && !(encoded instanceof Document)) {
+        throw new RecasterException(format("Cannot transform %s to document", entity.getClass()));
+      }
+      document.putAll((Document) encoded);
+      return document;
     }
 
     for (final CastedField cf : cc.getPersistenceFields()) {
