@@ -89,21 +89,6 @@ public class K8sTestHelper {
         .build();
   }
 
-  public static Release buildReleaseMultipleManagedWorkloads(Release.Status status) throws IOException {
-    return Release.builder()
-        .resources(asList(deployment().getResourceId(), configMap().getResourceId()))
-        .managedWorkloads(asList(Release.KubernetesResourceIdRevision.builder()
-                                     .workload(deploymentConfig().getResourceId())
-                                     .revision("2")
-                                     .build(),
-            Release.KubernetesResourceIdRevision.builder()
-                .workload(deployment().getResourceId())
-                .revision("2")
-                .build()))
-        .status(status)
-        .build();
-  }
-
   public static ProcessResult buildProcessResult(int exitCode, String output) {
     return new ProcessResult(exitCode, new ProcessOutput(output.getBytes()));
   }
