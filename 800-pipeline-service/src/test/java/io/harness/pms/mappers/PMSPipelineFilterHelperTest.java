@@ -10,9 +10,10 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.data.mongodb.core.query.Update;
 
 public class PMSPipelineFilterHelperTest extends PipelineServiceTestBase {
   @Test
@@ -20,17 +21,20 @@ public class PMSPipelineFilterHelperTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testGetUpdateOperations() {
     PipelineEntity pipelineEntity = PipelineEntity.builder().build();
-    Update update = new Update();
-    update.set(PipelineEntity.PipelineEntityKeys.accountId, pipelineEntity.getAccountId());
-    update.set(PipelineEntity.PipelineEntityKeys.orgIdentifier, pipelineEntity.getOrgIdentifier());
-    update.set(PipelineEntity.PipelineEntityKeys.projectIdentifier, pipelineEntity.getProjectIdentifier());
-    update.set(PipelineEntity.PipelineEntityKeys.yaml, pipelineEntity.getYaml());
-    update.set(PipelineEntity.PipelineEntityKeys.tags, pipelineEntity.getTags());
-    update.set(PipelineEntity.PipelineEntityKeys.deleted, false);
-    update.set(PipelineEntity.PipelineEntityKeys.description, pipelineEntity.getDescription());
-    update.set(PipelineEntity.PipelineEntityKeys.stageCount, pipelineEntity.getStageCount());
-    update.set(PipelineEntity.PipelineEntityKeys.name, pipelineEntity.getName());
+    List<String> fieldsToBeUpdated = new ArrayList<>();
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.name);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.accountId);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.orgIdentifier);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.projectIdentifier);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.yaml);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.tags);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.deleted);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.description);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.stageCount);
+    fieldsToBeUpdated.add(PipelineEntity.PipelineEntityKeys.lastUpdatedAt);
 
-    assertThat(update).isEqualTo(PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity));
+    for (String field : fieldsToBeUpdated) {
+      assertThat(true).isEqualTo(PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity).modifies(field));
+    }
   }
 }

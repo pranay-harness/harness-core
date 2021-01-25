@@ -15,8 +15,8 @@ import lombok.Value;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("executionSummaryInfo")
 public class ExecutionSummaryInfoDTO {
-  int numOfErrors; // total number of errors in the last ten days
-  List<Integer> deployments; // no of deployments for each of the last 10 days, most recent first
+  List<Integer> numOfErrors; // total number of errors in the last 7 days
+  List<Integer> deployments; // no of deployments for each of the last 7 days, most recent first
   Long lastExecutionTs;
   ExecutionStatus lastExecutionStatus;
 }

@@ -39,7 +39,8 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
     Query query = query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
     Update update = update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
                         .set(PmsSdkInstanceKeys.supportedSteps, supportedSteps)
-                        .set(PmsSdkInstanceKeys.supportedStepTypes, supportedStepTypes);
+                        .set(PmsSdkInstanceKeys.supportedStepTypes, supportedStepTypes)
+                        .set(PmsSdkInstanceKeys.lastUpdatedAt, System.currentTimeMillis());
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",
         "[Failed]: Failed updating PMS SDK instance; attempt: {}");
     Failsafe.with(retryPolicy).get(() -> mongoTemplate.findAndModify(query, update, PmsSdkInstance.class));

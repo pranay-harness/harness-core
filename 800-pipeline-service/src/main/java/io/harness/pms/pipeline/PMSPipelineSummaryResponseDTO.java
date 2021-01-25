@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.Version;
@@ -22,5 +23,6 @@ public class PMSPipelineSummaryResponseDTO {
   int numOfStages;
   long createdAt;
   long lastUpdatedAt;
+  Set<String> modules;
   ExecutionSummaryInfoDTO executionSummaryInfo;
 }
