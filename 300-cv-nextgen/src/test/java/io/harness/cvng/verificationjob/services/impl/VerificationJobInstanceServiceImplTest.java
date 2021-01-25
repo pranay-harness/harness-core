@@ -1099,6 +1099,53 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.TIMEOUT);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCVConfigsForVerification() {
+    String monSource = "monitoringSource1";
+    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    job.setMonitoringSources(Arrays.asList(monSource));
+    job.setAccountId(accountId);
+    job.setIdentifier(verificationJobIdentifier);
+    hPersistence.save(job);
+
+    CVConfig cvConfig = newCVConfig();
+    cvConfig.setIdentifier(monSource);
+    CVConfig updated = cvConfigService.save(cvConfig);
+
+    List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(job);
+
+    assertThat(cvConfigs.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCVConfigsForVerification_defaultJob() {
+    String monSource = "monitoringSource1";
+    VerificationJob job = newHealthVerificationJobDTO().getVerificationJob();
+    job.setMonitoringSources(Arrays.asList("ALL"));
+    job.setAccountId(accountId);
+    job.setIdentifier(verificationJobIdentifier);
+    job.setDefaultJob(true);
+    hPersistence.save(job);
+
+    CVConfig cvConfig = newCVConfig();
+    cvConfig.setIdentifier(monSource);
+    CVConfig updated = cvConfigService.save(cvConfig);
+
+    CVConfig cvConfig2 = newCVConfig();
+    cvConfig2.setIdentifier(monSource + "2");
+    CVConfig updated2 = cvConfigService.save(cvConfig2);
+
+    List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(job);
+
+    assertThat(cvConfigs.size()).isEqualTo(2);
+    assertThat(cvConfigs.get(0).getUuid()).isEqualTo(updated.getUuid());
+    assertThat(cvConfigs.get(1).getUuid()).isEqualTo(updated2.getUuid());
+  }
+
   private VerificationJobDTO newCanaryVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
     canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);

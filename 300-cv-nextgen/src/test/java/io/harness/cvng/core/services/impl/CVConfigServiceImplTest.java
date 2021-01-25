@@ -760,4 +760,71 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
 
     cvConfigIds.forEach(cvConfigId -> { assertThat(cvConfigService.get(cvConfigId).getPerpetualTaskId()).isNull(); });
   }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId));
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_multiple() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId, monSourceId + "2"));
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+    assertThat(results.get(1).getUuid()).isEqualTo(updated2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_filterById() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId));
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_null() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results =
+        cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier, "service", "env", null);
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+    assertThat(results.get(1).getUuid()).isEqualTo(updated2.getUuid());
+  }
 }

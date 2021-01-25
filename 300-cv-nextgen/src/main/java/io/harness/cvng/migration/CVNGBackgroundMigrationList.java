@@ -1,6 +1,7 @@
 
 package io.harness.cvng.migration;
 
+import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivityStatusMigration;
@@ -22,6 +23,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(1, CVNGBaseMigration.class))
         .add(Pair.of(2, RecreateMetricPackAndThresholdMigration.class))
         .add(Pair.of(3, UpdateActivityStatusMigration.class))
+        .add(Pair.of(4, AddMonitoringSourcesToVerificationJobMigration.class))
         .build();
   }
 }

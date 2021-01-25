@@ -248,9 +248,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   public List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob) {
-    return cvConfigService.find(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
+    Preconditions.checkNotNull(verificationJob);
+    List<String> monitoringSourceFilter = verificationJob.getMonitoringSources();
+    if (verificationJob.isDefaultJob()) {
+      monitoringSourceFilter = null;
+    }
+
+    return cvConfigService.listByMonitoringSources(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
         verificationJob.getProjectIdentifier(), verificationJob.getServiceIdentifier(),
-        verificationJob.getEnvIdentifier(), verificationJob.getDataSources());
+        verificationJob.getEnvIdentifier(), monitoringSourceFilter);
   }
 
   @VisibleForTesting
