@@ -187,7 +187,7 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
     EntityDetail referredByEntity = getEntityDetails(
         referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, SECRETS);
 
-    final Boolean returned = entitySetupUsageService.saveNew(
+    final Boolean returned = entitySetupUsageService.flushSave(
         getSetupUsages(accountIdentifier, referredByEntity, referredEntity), CONNECTORS, false, accountIdentifier);
     assertThat(returned).isTrue();
     final Page<EntitySetupUsageDTO> list = entitySetupUsageService.list(0, 10, accountIdentifier, orgIdentifier,
@@ -203,7 +203,7 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
         referredIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
     EntityDetail referredByEntity = getEntityDetails(
         referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, SECRETS);
-    entitySetupUsageService.saveNew(
+    entitySetupUsageService.flushSave(
         getSetupUsages(accountIdentifier, referredByEntity, referredEntity), CONNECTORS, false, accountIdentifier);
 
     EntityDetail referredEntity1 = getEntityDetails(
@@ -211,7 +211,7 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
     EntityDetail referredEntity2 = getEntityDetails(
         referredIdentifier2, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
 
-    final Boolean returned = entitySetupUsageService.saveNew(
+    final Boolean returned = entitySetupUsageService.flushSave(
         getSetupUsages(accountIdentifier, referredByEntity, referredEntity, referredEntity1, referredEntity2),
         CONNECTORS, true, accountIdentifier);
     assertThat(returned).isTrue();
@@ -236,7 +236,7 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
     EntityDetail referredEntity2 = getEntityDetails(
         referredIdentifier2, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
 
-    final Boolean returned = entitySetupUsageService.saveNew(
+    final Boolean returned = entitySetupUsageService.flushSave(
         getSetupUsages(accountIdentifier, referredByEntity, referredEntity, referredEntity1, referredEntity2),
         CONNECTORS, true, accountIdentifier);
     assertThat(returned).isTrue();

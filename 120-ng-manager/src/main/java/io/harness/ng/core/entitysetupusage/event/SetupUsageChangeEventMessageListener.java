@@ -62,6 +62,7 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
           log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
+    log.info("Cannot process the setup usage event with id {}", messageId);
     return false;
   }
 
@@ -69,18 +70,18 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
     return entityTypesSupportedByNGCore.contains(EntityTypeProtoEnum.valueOf(entityTypeProtoEnum));
   }
 
-  private Boolean processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO, EntityType entityTypeFromProto) {
+  private Boolean processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO, EntityType referredEntityTypeFromChannel) {
     if (deleteRequestDTO == null) {
       return false;
     }
-    if (deleteRequestDTO.getReferredEntityType() == EntityTypeProtoEnum.valueOf(entityTypeFromProto.name())) {
+    if (deleteRequestDTO.getReferredEntityType() == EntityTypeProtoEnum.valueOf(referredEntityTypeFromChannel.name())) {
       throw new InvalidRequestException(
           String.format("Delete action for wrong entity: [%s] type published with wrong meta data map: [%s]",
-              deleteRequestDTO.getReferredEntityType(), entityTypeFromProto));
+              deleteRequestDTO.getReferredEntityType(), referredEntityTypeFromChannel));
     }
     return entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(),
         deleteRequestDTO.getReferredEntityFQN(), EntityType.valueOf(deleteRequestDTO.getReferredEntityType().name()),
-        deleteRequestDTO.getReferredByEntityFQN(), entityTypeFromProto);
+        deleteRequestDTO.getReferredByEntityFQN(), referredEntityTypeFromChannel);
   }
 
   private Boolean processCreateAction(EntitySetupUsageCreateV2DTO setupUsageCreateDTO, EntityType entityType) {
@@ -89,7 +90,7 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
     }
     final List<EntitySetupUsage> entitySetupUsages =
         entitySetupUsageEventDTOToRestDTOMapper.toEntityDTO(setupUsageCreateDTO);
-    return entitySetupUsageService.saveNew(entitySetupUsages, entityType,
+    return entitySetupUsageService.flushSave(entitySetupUsages, entityType,
         setupUsageCreateDTO.getDeleteOldReferredByRecords(), setupUsageCreateDTO.getAccountIdentifier());
   }
 
