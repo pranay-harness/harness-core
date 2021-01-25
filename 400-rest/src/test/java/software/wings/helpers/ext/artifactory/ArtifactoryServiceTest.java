@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -10,11 +11,14 @@ import static software.wings.utils.ArtifactType.WAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -29,6 +33,7 @@ import software.wings.utils.RepositoryType;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,11 +41,16 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.message.BasicStatusLine;
+import org.jfrog.artifactory.client.Artifactory;
+import org.jfrog.artifactory.client.ArtifactoryResponse;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -288,6 +298,25 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {
     assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith407StatusCode() throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponse.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 407, "407 Related Exception Phrase"));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("407 Related Exception Phrase");
   }
 
   @Test

@@ -24,6 +24,7 @@ import io.harness.artifact.ArtifactUtilities;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
@@ -40,6 +41,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.InputStream;
@@ -572,8 +574,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
    * @return Artifactory returns artifactory client
    */
 
-  private Artifactory getArtifactoryClient(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
+  @VisibleForTesting
+  Artifactory getArtifactoryClient(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(artifactoryConfig, encryptionDetails, false);
     ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
     try {
@@ -591,7 +593,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
 
       HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
-      if (httpProxyHost != null) {
+      if (httpProxyHost != null && !Http.shouldUseNonProxy(artifactoryConfig.getArtifactoryUrl())) {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
             Http.getProxyUserName(), Http.getProxyPassword()));
       }
@@ -656,7 +658,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     ArtifactoryRequest repositoryRequest =
         new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
     try {
-      artifactory.restCall(repositoryRequest);
+      ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
+      if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
+        throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
+      }
       log.info("Validating artifactory server success");
     } catch (RuntimeException e) {
       log.error("Runtime exception occurred while validating artifactory", e);
