@@ -1,17 +1,21 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.ngtriggers.Constants.*;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.ngtriggers.utils.WebhookTriggerFilterUtils.checkIfActionMatches;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
 import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.PRWebhookEvent.PRWebhookEventBuilder;
 import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
@@ -96,40 +100,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void evaluateFilterConditionsTest() {
-    WebhookTriggerSpec webhookTriggerSpec =
-        GitlabTriggerSpec.builder()
-            .actions(emptyList())
-            .event(MERGE_REQUEST)
-            .payloadConditions(Arrays.asList(
-                WebhookPayloadCondition.builder().key("sourceBranch").operator("equals").value("stage").build(),
-                WebhookPayloadCondition.builder().key("sourceBranch").operator("not equals").value("qa").build(),
-                WebhookPayloadCondition.builder().key("targetBranch").operator("regex").value("^master$").build(),
-                WebhookPayloadCondition.builder()
-                    .key("<+eventPayload.event_type>")
-                    .operator("in")
-                    .value("pull_request, merge_request")
-                    .build(),
-                WebhookPayloadCondition.builder()
-                    .key("<+eventPayload.object_kind>")
-                    .operator("not in")
-                    .value("push, package")
-                    .build(),
-                WebhookPayloadCondition.builder()
-                    .key("<+eventPayload.user.name>")
-                    .operator("starts with")
-                    .value("charles")
-                    .build(),
-                WebhookPayloadCondition.builder()
-                    .key("<+eventPayload.user.username>")
-                    .operator("ends with")
-                    .value("grant")
-                    .build(),
-                WebhookPayloadCondition.builder()
-                    .key("<+eventPayload.user.avatar_url>")
-                    .operator("contains")
-                    .value("secure.gravatar.com")
-                    .build()))
-            .build();
+    WebhookTriggerSpec webhookTriggerSpec = getGitLabTriggerSpec();
 
     WebhookPayloadData webhookPayloadData =
         WebhookPayloadData.builder()
@@ -144,5 +115,67 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
     assertThat(WebhookTriggerFilterUtils.checkIfPayloadConditionsMatch(
                    webhookPayloadData, webhookTriggerSpec.getPayloadConditions()))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void evaluateFilterConditionsForCustomPayloadWebhookTest() {
+    WebhookTriggerSpec webhookTriggerSpec = getCustomWebhookTriggerSpec();
+
+    List<HeaderConfig> headerConfigList =
+        Arrays.asList(HeaderConfig.builder().key("X-GITHUB-EVENT").values(Arrays.asList("push")).build(),
+            HeaderConfig.builder().key(X_HARNESS_TRIGGER_ID).values(Arrays.asList("customertriggerspec")).build());
+
+    assertThat(WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(headerConfigList, webhookTriggerSpec))
+        .isTrue();
+  }
+
+  private CustomWebhookTriggerSpec getCustomWebhookTriggerSpec() {
+    return CustomWebhookTriggerSpec.builder()
+        .headerConditions(Arrays.asList(WebhookCondition.builder()
+                                            .key("X-HARNESS-TRIGGER-IDENTIFIER")
+                                            .operator("equals")
+                                            .value("customertriggerspec")
+                                            .build(),
+            WebhookCondition.builder().key("X-GITHUB-EVENT").operator("in").value("push, pull_request").build()))
+        .authToken(AuthToken.builder().build())
+        .build();
+  }
+
+  private GitlabTriggerSpec getGitLabTriggerSpec() {
+    return GitlabTriggerSpec.builder()
+        .actions(emptyList())
+        .event(MERGE_REQUEST)
+        .payloadConditions(
+            Arrays.asList(WebhookCondition.builder().key("sourceBranch").operator("equals").value("stage").build(),
+                WebhookCondition.builder().key("sourceBranch").operator("not equals").value("qa").build(),
+                WebhookCondition.builder().key("targetBranch").operator("regex").value("^master$").build(),
+                WebhookCondition.builder()
+                    .key("<+eventPayload.event_type>")
+                    .operator("in")
+                    .value("pull_request, merge_request")
+                    .build(),
+                WebhookCondition.builder()
+                    .key("<+eventPayload.object_kind>")
+                    .operator("not in")
+                    .value("push, package")
+                    .build(),
+                WebhookCondition.builder()
+                    .key("<+eventPayload.user.name>")
+                    .operator("starts with")
+                    .value("charles")
+                    .build(),
+                WebhookCondition.builder()
+                    .key("<+eventPayload.user.username>")
+                    .operator("ends with")
+                    .value("grant")
+                    .build(),
+                WebhookCondition.builder()
+                    .key("<+eventPayload.user.avatar_url>")
+                    .operator("contains")
+                    .value("secure.gravatar.com")
+                    .build()))
+        .build();
   }
 }

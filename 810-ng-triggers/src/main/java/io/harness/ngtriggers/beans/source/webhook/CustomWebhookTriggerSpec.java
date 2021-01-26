@@ -13,7 +13,8 @@ import lombok.Data;
 @Data
 @Builder
 public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
-  List<WebhookPayloadCondition> payloadConditions;
+  List<WebhookCondition> payloadConditions;
+  List<WebhookCondition> headerConditions;
   AuthToken authToken;
 
   public void setRepoUrl(String repoUrl) {}
