@@ -58,7 +58,8 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   AZURE_WEBAPP(
       AzureWebAppCommandUnit.class, "Azure WebApp Command Unit", StencilCategory.AZURE_WEBAPP, DEFAULT_DISPLAY_ORDER),
   FETCH_INSTANCES_DUMMY(
-      FetchInstancesCommandUnit.class, "Fetch Instances", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER);
+      FetchInstancesCommandUnit.class, "Fetch Instances", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
+  AZURE_ARM(AzureARMCommandUnit.class, "Azure ARM Command Unit", StencilCategory.AZURE_ARM, DEFAULT_DISPLAY_ORDER);
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
 
