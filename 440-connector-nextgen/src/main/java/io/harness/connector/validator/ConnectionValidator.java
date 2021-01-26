@@ -5,5 +5,5 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 public interface ConnectionValidator<T extends ConnectorConfigDTO> {
   ConnectorValidationResult validate(
-      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

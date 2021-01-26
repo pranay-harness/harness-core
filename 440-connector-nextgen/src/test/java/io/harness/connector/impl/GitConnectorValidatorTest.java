@@ -66,7 +66,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     ConnectorValidationResult connectorValidationResult =
-        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
+        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
     assertThat(connectorValidationResult.getStatus()).isEqualTo(FAILURE);
   }
@@ -93,7 +93,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     ConnectorValidationResult connectorValidationResult =
-        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
+        gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
     assertThat(connectorValidationResult.getStatus()).isEqualTo(SUCCESS);
   }

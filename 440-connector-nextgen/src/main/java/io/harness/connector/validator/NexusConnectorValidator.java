@@ -34,10 +34,10 @@ public class NexusConnectorValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    NexusTaskResponse responseData =
-        (NexusTaskResponse) super.validateConnector(connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    NexusTaskResponse responseData = (NexusTaskResponse) super.validateConnector(
+        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
   }
 }

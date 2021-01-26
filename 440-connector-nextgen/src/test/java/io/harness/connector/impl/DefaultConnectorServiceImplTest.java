@@ -301,9 +301,9 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
                                            .build();
 
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
-    when(kubernetesConnectionValidator.validate(any(), anyString(), any(), anyString())).thenReturn(null);
+    when(kubernetesConnectionValidator.validate(any(), anyString(), any(), anyString(), anyString())).thenReturn(null);
     connectorService.validate(connectorRequestDTO, "accountId");
-    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), any(), anyString());
+    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), any(), anyString(), anyString());
   }
 
   @Test
@@ -312,10 +312,10 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   public void testConnection() {
     createConnector(identifier);
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
-    when(kubernetesConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
+    when(kubernetesConnectionValidator.validate(any(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(ConnectorValidationResult.builder().status(SUCCESS).build());
     connectorService.testConnection(accountIdentifier, null, null, identifier);
-    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
+    verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString(), anyString());
   }
 
   @Test

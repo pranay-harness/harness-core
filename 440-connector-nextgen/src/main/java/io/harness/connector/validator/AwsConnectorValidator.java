@@ -35,10 +35,10 @@ public class AwsConnectorValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     AwsValidateTaskResponse responseData = (AwsValidateTaskResponse) super.validateConnector(
-        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
   }
 }

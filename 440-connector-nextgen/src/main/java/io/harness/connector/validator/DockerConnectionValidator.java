@@ -35,10 +35,10 @@ public class DockerConnectionValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO dockerConnector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO dockerConnector, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     DockerTestConnectionTaskResponse responseData = (DockerTestConnectionTaskResponse) super.validateConnector(
-        dockerConnector, accountIdentifier, orgIdentifier, projectIdentifier);
+        dockerConnector, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
   }
 }

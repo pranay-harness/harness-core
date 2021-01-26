@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 public class KubernetesConnectionValidator extends AbstractConnectorValidator {
   @Override
   public ConnectorValidationResult validate(ConnectorConfigDTO kubernetesClusterConfig, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier) {
-    DelegateResponseData responseData =
-        super.validateConnector(kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    DelegateResponseData responseData = super.validateConnector(
+        kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
     return taskResponse.getConnectorValidationResult();
   }

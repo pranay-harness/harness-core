@@ -36,10 +36,10 @@ public class ArtifactoryConnectionValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     ArtifactoryTaskResponse responseData = (ArtifactoryTaskResponse) super.validateConnector(
-        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return responseData.getConnectorValidationResult();
   }
 }
