@@ -81,6 +81,7 @@ import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -2418,6 +2419,17 @@ public class DelegateServiceImpl implements DelegateService {
     wingsPersistence.save(task);
   }
 
+  @Override
+  public List<DelegateInitializationDetails> obtainDelegateInitializationDetails(
+      String accountId, List<String> delegateIds) {
+    List<DelegateInitializationDetails> delegateInitializationDetails = new ArrayList<>();
+
+    delegateIds.forEach(
+        delegateId -> delegateInitializationDetails.add(getDelegateInitializationDetails(accountId, delegateId)));
+
+    return delegateInitializationDetails;
+  }
+
   private void verifyTaskSetupAbstractions(DelegateTask task) {
     if (isNotBlank(task.getUuid()) && task.getData() != null && task.getData().getTaskType() != null) {
       try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
@@ -3928,5 +3940,38 @@ public class DelegateServiceImpl implements DelegateService {
       log.error("Unable to retrieve log streaming authentication token", ex);
       return null;
     }
+  }
+
+  @VisibleForTesting
+  protected DelegateInitializationDetails getDelegateInitializationDetails(String accountId, String delegateId) {
+    Delegate delegate = get(accountId, delegateId, true);
+
+    if (delegate.isProfileError()) {
+      log.debug("Delegate {} could not be initialized correctly.", delegateId);
+      return buildInitializationDetails(false, delegate);
+    } else if (delegate.getProfileExecutedAt() > 0) {
+      log.debug("Delegate {} was initialized correctly.", delegateId);
+      return buildInitializationDetails(true, delegate);
+    } else {
+      DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
+
+      if (isBlank(delegateProfile.getStartupScript())) {
+        log.debug("Delegate {} was initialized correctly.", delegateId);
+        return buildInitializationDetails(true, delegate);
+      } else {
+        log.debug("Delegate {} finalizing initialization correctly.", delegateId);
+        return buildInitializationDetails(false, delegate);
+      }
+    }
+  }
+
+  private DelegateInitializationDetails buildInitializationDetails(boolean initialized, Delegate delegate) {
+    return DelegateInitializationDetails.builder()
+        .delegateId(delegate.getUuid())
+        .hostname(delegate.getHostName())
+        .initialized(initialized)
+        .profileError(delegate.isProfileError())
+        .profileExecutedAt(delegate.getProfileExecutedAt())
+        .build();
   }
 }

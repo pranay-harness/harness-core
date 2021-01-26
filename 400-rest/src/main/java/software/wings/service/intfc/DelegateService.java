@@ -8,6 +8,7 @@ import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateProgressData;
@@ -176,4 +177,6 @@ public interface DelegateService extends OwnedByAccount {
   List<DelegateSizeDetails> fetchAvailableSizes();
 
   List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
+
+  List<DelegateInitializationDetails> obtainDelegateInitializationDetails(String accountID, List<String> delegateIds);
 }
