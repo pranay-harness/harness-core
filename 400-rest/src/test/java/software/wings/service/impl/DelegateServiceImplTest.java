@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateInitializationDetails;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -80,6 +82,7 @@ import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
@@ -111,6 +114,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String SECRET_URL = "http://google.com/?q=${secretManager.obtain(\"test\", 1234)}";
 
   private static final String VERSION = "1.0.0";
+  private static final String TEST_SESSION_IDENTIFIER = generateUuid();
+  private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
+  private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
+
   @Mock private UsageLimitedFeature delegatesFeature;
   @Mock private Broadcaster broadcaster;
   @Mock private BroadcasterFactory broadcasterFactory;
@@ -119,6 +126,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private AccountService accountService;
   @Mock private Account account;
+  @Mock private DelegateProfileService delegateProfileService;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
@@ -255,7 +263,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainDelegateName() {
-    String accountId = generateUuid();
     when(delegatesFeature.getMaxUsageAllowedForAccount(anyString())).thenReturn(Integer.MAX_VALUE);
 
     String delegateId = generateUuid();
@@ -264,17 +271,19 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     DelegateBuilder delegateBuilder = Delegate.builder();
 
-    delegateService.add(delegateBuilder.uuid(delegateId).build());
+    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+        .thenReturn(DelegateProfile.builder().uuid(TEST_DELEGATE_PROFILE_ID).build());
+    delegateService.add(delegateBuilder.uuid(delegateId).accountId(ACCOUNT_ID).build());
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
 
-    delegateService.add(delegateBuilder.accountId(accountId).build());
-    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo(delegateId);
+    delegateService.add(delegateBuilder.accountId(ACCOUNT_ID).build());
+    assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo(delegateId);
 
     delegateService.add(delegateBuilder.hostName("hostName").build());
-    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo("hostName");
+    assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo("hostName");
 
     delegateService.add(delegateBuilder.delegateName("delegateName").build());
-    assertThat(delegateService.obtainDelegateName(accountId, delegateId, true)).isEqualTo("delegateName");
+    assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo("delegateName");
   }
 
   @Test
@@ -655,7 +664,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
-    Delegate delegate = createDelegateBuilder().sessionIdentifier("sessionId").build();
+    Delegate delegate = createDelegateBuilder().sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
     String delegateId = wingsPersistence.save(delegate);
 
     List<String> delegateIds =
@@ -671,7 +680,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testGetConnectedDelegates() {
     List<String> delegateIds = new ArrayList<>();
 
-    Delegate delegate1 = createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier("sessionId").build();
+    Delegate delegate1 =
+        createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
     String delegateId1 = wingsPersistence.save(delegate1);
 
     DelegateConnection delegateConnection1 = DelegateConnection.builder()
@@ -686,7 +696,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     delegateIds.add(delegateId1);
 
-    Delegate delegate2 = createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier("sessionId").build();
+    Delegate delegate2 =
+        createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
     String delegateId2 = wingsPersistence.save(delegate2);
 
     DelegateConnection delegateConnection2 = DelegateConnection.builder()
@@ -765,5 +776,214 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(
         task.getExecutionCapabilities().stream().map(ExecutionCapability::fetchCapabilityBasis).collect(toList()))
         .containsExactlyInAnyOrder("http://google.com/?q=<<<test>>>");
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testGetDelegateInitializationDetails_isProfileError() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .version(VERSION)
+                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .profileError(true)
+                            .build();
+
+    String delegateId = wingsPersistence.save(delegate);
+
+    DelegateInitializationDetails delegateInitializationDetails =
+        delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
+
+    assertThat(delegateInitializationDetails).isNotNull();
+    assertThat(delegateInitializationDetails.getDelegateId()).isEqualTo(delegateId);
+    assertThat(delegateInitializationDetails.isInitialized()).isFalse();
+    assertThat(delegateInitializationDetails.isProfileError()).isTrue();
+    assertThat(delegateInitializationDetails.getProfileExecutedAt()).isEqualTo(delegate.getProfileExecutedAt());
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testGetDelegateInitializationDetails_notProfileErrorAndExecutionTime() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .version(VERSION)
+                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .profileError(false)
+                            .profileExecutedAt(TEST_PROFILE_EXECUTION_TIME)
+                            .build();
+
+    String delegateId = wingsPersistence.save(delegate);
+
+    DelegateInitializationDetails delegateInitializationDetails =
+        delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
+
+    assertThat(delegateInitializationDetails).isNotNull();
+    assertThat(delegateInitializationDetails.getDelegateId()).isEqualTo(delegateId);
+    assertThat(delegateInitializationDetails.isInitialized()).isTrue();
+    assertThat(delegateInitializationDetails.isProfileError()).isFalse();
+    assertThat(delegateInitializationDetails.getProfileExecutedAt()).isEqualTo(delegate.getProfileExecutedAt());
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testGetDelegateInitializationDetails_notProfileErrorBlankScript() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .version(VERSION)
+                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .profileError(false)
+                            .profileExecutedAt(0L)
+                            .delegateProfileId(TEST_DELEGATE_PROFILE_ID)
+                            .build();
+
+    String delegateId = wingsPersistence.save(delegate);
+
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(TEST_DELEGATE_PROFILE_ID).startupScript("").build();
+
+    when(delegateProfileService.get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID)).thenReturn(delegateProfile);
+
+    DelegateInitializationDetails delegateInitializationDetails =
+        delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
+
+    verify(delegateProfileService, times(1)).get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID);
+
+    assertThat(delegateInitializationDetails).isNotNull();
+    assertThat(delegateInitializationDetails.getDelegateId()).isEqualTo(delegateId);
+    assertThat(delegateInitializationDetails.isInitialized()).isTrue();
+    assertThat(delegateInitializationDetails.isProfileError()).isFalse();
+    assertThat(delegateInitializationDetails.getProfileExecutedAt()).isEqualTo(delegate.getProfileExecutedAt());
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testGetDelegateInitializationDetails_pendingInitialization() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .version(VERSION)
+                            .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .profileError(false)
+                            .profileExecutedAt(0L)
+                            .delegateProfileId(TEST_DELEGATE_PROFILE_ID)
+                            .build();
+
+    String delegateId = wingsPersistence.save(delegate);
+
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .uuid(TEST_DELEGATE_PROFILE_ID)
+                                          .startupScript("testScript")
+                                          .build();
+
+    when(delegateProfileService.get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID)).thenReturn(delegateProfile);
+
+    DelegateInitializationDetails delegateInitializationDetails =
+        delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
+
+    verify(delegateProfileService, times(1)).get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID);
+
+    assertThat(delegateInitializationDetails).isNotNull();
+    assertThat(delegateInitializationDetails.getDelegateId()).isEqualTo(delegateId);
+    assertThat(delegateInitializationDetails.isInitialized()).isFalse();
+    assertThat(delegateInitializationDetails.isProfileError()).isFalse();
+    assertThat(delegateInitializationDetails.getProfileExecutedAt()).isEqualTo(delegate.getProfileExecutedAt());
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void obtainDelegateInitializationDetails() {
+    List<String> delegateIds = setUpDelegatesForInitializationTest();
+
+    List<DelegateInitializationDetails> delegateInitializationDetails =
+        delegateService.obtainDelegateInitializationDetails(ACCOUNT_ID, delegateIds);
+
+    assertThat(delegateInitializationDetails).isNotEmpty();
+    assertThat(delegateIds.size()).isEqualTo(delegateInitializationDetails.size());
+
+    assertThat(delegateInitializationDetails.get(0).getDelegateId()).isEqualTo(delegateIds.get(0));
+    assertThat(delegateInitializationDetails.get(0).isInitialized()).isFalse();
+    assertThat(delegateInitializationDetails.get(0).isProfileError()).isTrue();
+
+    assertThat(delegateInitializationDetails.get(1).getDelegateId()).isEqualTo(delegateIds.get(1));
+    assertThat(delegateInitializationDetails.get(1).isInitialized()).isTrue();
+    assertThat(delegateInitializationDetails.get(1).isProfileError()).isFalse();
+    assertThat(delegateInitializationDetails.get(1).getProfileExecutedAt()).isEqualTo(TEST_PROFILE_EXECUTION_TIME);
+
+    assertThat(delegateInitializationDetails.get(2).getDelegateId()).isEqualTo(delegateIds.get(2));
+    assertThat(delegateInitializationDetails.get(2).isInitialized()).isTrue();
+    assertThat(delegateInitializationDetails.get(2).isProfileError()).isFalse();
+    assertThat(delegateInitializationDetails.get(2).getProfileExecutedAt()).isEqualTo(0L);
+
+    assertThat(delegateInitializationDetails.get(3).getDelegateId()).isEqualTo(delegateIds.get(3));
+    assertThat(delegateInitializationDetails.get(3).isInitialized()).isFalse();
+    assertThat(delegateInitializationDetails.get(3).isProfileError()).isFalse();
+  }
+
+  private List<String> setUpDelegatesForInitializationTest() {
+    List<String> delegateIds = new ArrayList<>();
+
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(true)
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .profileExecutedAt(TEST_PROFILE_EXECUTION_TIME)
+                             .build();
+
+    String delegateProfileId1 = TEST_DELEGATE_PROFILE_ID + "_1";
+    Delegate delegate3 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .profileExecutedAt(0L)
+                             .delegateProfileId(delegateProfileId1)
+                             .build();
+
+    DelegateProfile delegateProfile1 =
+        DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(delegateProfileId1).startupScript("").build();
+
+    when(delegateProfileService.get(ACCOUNT_ID, delegateProfileId1)).thenReturn(delegateProfile1);
+
+    String delegateProfileId2 = TEST_DELEGATE_PROFILE_ID + "_2";
+    Delegate delegate4 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .version(VERSION)
+                             .sessionIdentifier(TEST_SESSION_IDENTIFIER)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .profileError(false)
+                             .profileExecutedAt(0L)
+                             .delegateProfileId(delegateProfileId2)
+                             .build();
+
+    DelegateProfile delegateProfile2 =
+        DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(delegateProfileId2).startupScript("testScript").build();
+
+    when(delegateProfileService.get(ACCOUNT_ID, delegateProfileId2)).thenReturn(delegateProfile2);
+
+    delegateIds.add(wingsPersistence.save(delegate1));
+    delegateIds.add(wingsPersistence.save(delegate2));
+    delegateIds.add(wingsPersistence.save(delegate3));
+    delegateIds.add(wingsPersistence.save(delegate4));
+
+    return delegateIds;
   }
 }
