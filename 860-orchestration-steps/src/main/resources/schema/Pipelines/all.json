@@ -156,6 +156,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ManualFailureSpecConfig": {
       "type": "object",
       "required": [
@@ -341,6 +357,15 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "OrchestrationFieldType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ParallelStageElementConfig": {
       "type": "object",
       "required": [
@@ -352,6 +377,66 @@
           "items": {
             "$ref": "#/definitions/StageElementWrapperConfig"
           }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OrchestrationFieldType"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OrchestrationFieldType"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -500,6 +585,11 @@
     },
     "StageInfoConfig": {
       "type": "object",
+      "properties": {
+        "skipCondition": {
+          "$ref": "#/definitions/ParameterFieldString"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StageRollbackFailureActionConfig": {
