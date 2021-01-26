@@ -27,6 +27,7 @@ public enum TaskGroup {
   AZURE_ARTIFACTS,
   AZURE_VMSS,
   AZURE_APP_SERVICE,
+  AZURE_ARM,
   ELK,
   LOGZ,
   SUMO,

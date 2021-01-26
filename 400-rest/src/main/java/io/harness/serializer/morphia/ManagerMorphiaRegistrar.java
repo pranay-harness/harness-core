@@ -38,6 +38,7 @@ import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStepParameters;
 
+import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -340,6 +341,7 @@ import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
+import software.wings.beans.command.AzureARMCommandUnit;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -393,6 +395,7 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.infrastructure.ARMRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.TerraformConfig;
@@ -748,6 +751,7 @@ import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
+import software.wings.sm.states.provision.ARMProvisionState;
 import software.wings.sm.states.provision.AdjustTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
@@ -1084,6 +1088,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
+    set.add(ARMRollbackConfig.class);
   }
 
   @Override
@@ -1184,6 +1189,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ResourceConstraintStepExecutionSummary", ResourceConstraintStepExecutionSummary.class);
     w.put("api.RouteUpdateRollbackElement", RouteUpdateRollbackElement.class);
     w.put("api.ScriptStateExecutionData", ScriptStateExecutionData.class);
+    w.put("api.ARMStateExecutionData", ARMStateExecutionData.class);
     w.put("api.ScriptStateExecutionSummary", ScriptStateExecutionSummary.class);
     w.put("api.SelectedNodeExecutionData", SelectedNodeExecutionData.class);
     w.put("api.SelectNodeStepExecutionSummary", SelectNodeStepExecutionSummary.class);
@@ -1283,6 +1289,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.AzureVMSSDummyCommandUnit", AzureVMSSDummyCommandUnit.class);
     w.put("beans.command.AzureWebAppCommandUnit", AzureWebAppCommandUnit.class);
+    w.put("beans.command.AzureARMCommandUnit", AzureARMCommandUnit.class);
     w.put("beans.config.ArtifactoryConfig", ArtifactoryConfig.class);
     w.put("beans.config.LogzConfig", LogzConfig.class);
     w.put("beans.config.NexusConfig", NexusConfig.class);
@@ -1568,6 +1575,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.provision.DestroyTerraformProvisionState", DestroyTerraformProvisionState.class);
     w.put("sm.states.provision.ShellScriptProvisionState", ShellScriptProvisionState.class);
     w.put("sm.states.provision.TerraformRollbackState", TerraformRollbackState.class);
+    w.put("sm.states.provision.ARMProvisionState", ARMProvisionState.class);
     w.put("sm.states.RepeatState", RepeatState.class);
     w.put("sm.states.RepeatState$RepeatStateExecutionData", RepeatStateExecutionData.class);
     w.put("sm.states.ResourceConstraintState", ResourceConstraintState.class);
