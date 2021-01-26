@@ -810,6 +810,51 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsClass() {
+    DummyWithInnerClass.User user = new DummyWithInnerClass.User("name", 23);
+    DummyParameterized<DummyWithInnerClass.User> parameterized =
+        DummyParameterized.<DummyWithInnerClass.User>builder().expression(user).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression"))
+        .isEqualTo(new Document()
+                       .append(RECAST_KEY, DummyWithInnerClass.User.class.getName())
+                       .append("name", "name")
+                       .append("age", 23));
+
+    DummyParameterized<Boolean> recasted = recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsClassWrapper() {
+    DummyWithInnerClass.User user = new DummyWithInnerClass.User("name", 23);
+    DummyParameterized<DummyWithInnerClass.User> parameterized =
+        DummyParameterized.<DummyWithInnerClass.User>builder().expression(user).build();
+    DummyPrameterizedWrapper wrapper = DummyPrameterizedWrapper.builder().user(parameterized).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(wrapper);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyPrameterizedWrapper.class.getName());
+    assertThat(Document.parse(document.toJson())).isEqualTo(document);
+
+    // assertThat(document.get("expression")).isEqualTo(true);
+
+    DummyPrameterizedWrapper recasted = recast.fromDocument(document, DummyPrameterizedWrapper.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(wrapper);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestRecasterParamField() {
     DummyParam parameterized = new DummyParam(true, false);
     Recast recast = new Recast(recaster, ImmutableSet.of());
@@ -839,6 +884,13 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @EqualsAndHashCode
   private static class DummyParameterized<T> {
     @Setter T expression;
+  }
+
+  @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class DummyPrameterizedWrapper {
+    DummyParameterized<DummyWithInnerClass.User> user;
   }
 
   @Builder

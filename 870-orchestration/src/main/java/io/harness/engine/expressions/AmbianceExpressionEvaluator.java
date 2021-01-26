@@ -219,6 +219,38 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       this.ambiance = ambiance;
     }
 
+    /**
+     * <p>
+     * This method checks if we have special objects, applies custom handling for them and mutates these objects
+     * <br>
+     * Special objects: {@link Document} and {@link OrchestrationField}.
+     * </p>
+     * <p>
+     * When we encounter a {@link Document} with {@link Recaster#RECAST_CLASS_KEY} specified
+     * and equal to one of these values:
+     * <br>
+     * &nbsp;&nbsp;&nbsp;&nbsp;{@link ParameterField},
+     * <br>
+     * &nbsp;&nbsp;&nbsp;&nbsp;{@link DummyOrchestrationField} - used only for testing
+     * <br>
+     * We recast it from <code>Document</code> to <code>OrchestrationField</code> and send to
+     * <br>
+     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> method
+     * <br>
+     * which mutates this object.
+     * <br>
+     * Then we recast this updated <code>OrchestrationField</code> back to Document and update (replace) original
+     * <code>Object o</code> value
+     * </p>
+     *
+     * <p>
+     * When we encounter {@link OrchestrationField} we simply call this method
+     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> and update the object
+     * </p>
+     *
+     * @param o an object that should be processed
+     * @return {@link ResolveObjectResponse} with 2 boolean flags: processed and changed
+     */
     @Override
     public ResolveObjectResponse processObject(Object o) {
       OrchestrationField orchestrationField;
