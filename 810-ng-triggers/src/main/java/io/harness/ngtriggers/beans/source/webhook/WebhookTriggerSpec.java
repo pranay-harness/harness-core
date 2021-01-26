@@ -20,7 +20,11 @@ public interface WebhookTriggerSpec {
   String getRepoUrl();
   WebhookEvent getEvent();
   List<WebhookAction> getActions();
-  List<WebhookPayloadCondition> getPayloadConditions();
+  List<WebhookCondition> getPayloadConditions();
   List<String> getPathFilters();
   WebhookSourceRepo getType();
+
+  default List<WebhookCondition> getHeaderConditions() {
+    return null;
+  }
 }

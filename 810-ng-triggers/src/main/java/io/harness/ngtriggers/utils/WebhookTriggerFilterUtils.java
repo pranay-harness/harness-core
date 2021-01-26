@@ -9,13 +9,11 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_R
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
+import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
-import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
@@ -85,7 +83,7 @@ public class WebhookTriggerFilterUtils {
   }
 
   public boolean checkIfPayloadConditionsMatch(
-      WebhookPayloadData webhookPayloadData, List<WebhookPayloadCondition> payloadConditions) {
+      WebhookPayloadData webhookPayloadData, List<WebhookCondition> payloadConditions) {
     if (isEmpty(payloadConditions)) {
       return true;
     }
@@ -95,24 +93,24 @@ public class WebhookTriggerFilterUtils {
     String operator;
     TriggerExpressionEvaluator triggerExpressionEvaluator = null;
     boolean allConditionsMatched = true;
-    for (WebhookPayloadCondition webhookPayloadCondition : payloadConditions) {
-      standard = webhookPayloadCondition.getValue();
-      operator = webhookPayloadCondition.getOperator();
+    for (WebhookCondition webhookCondition : payloadConditions) {
+      standard = webhookCondition.getValue();
+      operator = webhookCondition.getOperator();
 
-      if (webhookPayloadCondition.getKey().equals("sourceBranch")) {
+      if (webhookCondition.getKey().equals("sourceBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getSource();
         if (isBlank(input)) {
           // Skipping for push event type, because it doesn't have a source branch
           continue;
         }
-      } else if (webhookPayloadCondition.getKey().equals("targetBranch")) {
+      } else if (webhookCondition.getKey().equals("targetBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getTarget();
       } else {
         if (triggerExpressionEvaluator == null) {
           triggerExpressionEvaluator =
               generatorPMSExpressionEvaluator(webhookPayloadData.getOriginalEvent().getPayload());
         }
-        input = readFromPayload(webhookPayloadCondition.getKey(), triggerExpressionEvaluator);
+        input = readFromPayload(webhookCondition.getKey(), triggerExpressionEvaluator);
       }
 
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
@@ -124,10 +122,7 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
-  public boolean checkIfCustomPayloadConditionsMatch(String payload, TriggerDetails triggerDetails) {
-    NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
-
-    WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
+  public boolean checkIfCustomPayloadConditionsMatch(String payload, WebhookTriggerSpec triggerSpec) {
     if (triggerSpec == null || isEmpty(triggerSpec.getPayloadConditions())) {
       return true;
     }
@@ -138,10 +133,10 @@ public class WebhookTriggerFilterUtils {
     boolean allConditionsMatched = true;
     TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(payload);
 
-    for (WebhookPayloadCondition webhookPayloadCondition : triggerSpec.getPayloadConditions()) {
-      standard = webhookPayloadCondition.getValue();
-      operator = webhookPayloadCondition.getOperator();
-      input = readFromPayload(webhookPayloadCondition.getKey(), triggerExpressionEvaluator);
+    for (WebhookCondition webhookCondition : triggerSpec.getPayloadConditions()) {
+      standard = webhookCondition.getValue();
+      operator = webhookCondition.getOperator();
+      input = readFromPayload(webhookCondition.getKey(), triggerExpressionEvaluator);
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
       if (!allConditionsMatched) {
         break;
@@ -149,6 +144,34 @@ public class WebhookTriggerFilterUtils {
     }
 
     return allConditionsMatched;
+  }
+
+  public boolean checkIfCustomHeaderConditionsMatch(List<HeaderConfig> headers, WebhookTriggerSpec triggerSpec) {
+    if (triggerSpec == null || isEmpty(triggerSpec.getHeaderConditions())) {
+      return true;
+    }
+
+    boolean conditionsMatched = true;
+
+    for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
+      HeaderConfig header = headers.stream()
+                                .filter(headerConfig -> headerConfig.getKey().equals(webhookHeaderCondition.getKey()))
+                                .findAny()
+                                .orElse(null);
+
+      if (header != null) {
+        for (String value : header.getValues()) {
+          conditionsMatched = conditionsMatched
+              && ConditionEvaluator.evaluate(
+                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator());
+          if (!conditionsMatched) {
+            return conditionsMatched;
+          }
+        }
+      }
+    }
+
+    return conditionsMatched;
   }
 
   @VisibleForTesting

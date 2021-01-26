@@ -13,6 +13,9 @@ import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.source.NGTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.eventmapper.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
@@ -70,8 +73,13 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
       NGTriggerConfig ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
       TriggerDetails triggerDetails =
           TriggerDetails.builder().ngTriggerConfig(ngTriggerConfig).ngTriggerEntity(ngTriggerEntity).build();
-      if (WebhookTriggerFilterUtils.checkIfCustomPayloadConditionsMatch(
-              triggerWebhookEvent.getPayload(), triggerDetails)) {
+
+      NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
+      WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
+
+      if (WebhookTriggerFilterUtils.checkIfCustomPayloadConditionsMatch(triggerWebhookEvent.getPayload(), triggerSpec)
+          && WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(
+              triggerWebhookEvent.getHeaders(), triggerSpec)) {
         triggerDetailEligible.add(triggerDetails);
       }
     }

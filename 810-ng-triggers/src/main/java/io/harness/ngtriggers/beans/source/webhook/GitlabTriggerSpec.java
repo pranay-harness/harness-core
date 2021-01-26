@@ -12,7 +12,7 @@ public class GitlabTriggerSpec implements WebhookTriggerSpec {
   String repoUrl;
   WebhookEvent event;
   List<WebhookAction> actions;
-  List<WebhookPayloadCondition> payloadConditions;
+  List<WebhookCondition> payloadConditions;
   List<String> pathFilters;
 
   @Override
