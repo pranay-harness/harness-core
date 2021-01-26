@@ -48,6 +48,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
@@ -108,6 +109,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
+  private static final String EXPECTED_ENV_MESSAGE =
+      "*Environments:* <<<https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/1/details|-|ENV-1>>>, <<<https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/2/details|-|ENV-2>>>";
+  private static final String EXPECTED_ENV_URL =
+      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/1/details,https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/2/details";
+  private static final String EXPECTED_ENV_NAME = "ENV-1,ENV-2";
 
   @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
@@ -185,9 +191,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(workflowExecutionQuery.filter(any(), any())).thenReturn(workflowExecutionQuery);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(BASE_URL);
     when(infrastructureDefinitionService.get(APP_ID, "infra-1"))
-        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition One").build());
+        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition One").envId(ENV_ID).build());
     when(infrastructureDefinitionService.get(APP_ID, "infra-2"))
-        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition Two").build());
+        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition Two").envId(ENV_ID).build());
   }
 
   @Test
@@ -587,6 +593,20 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("INFRA_URL", EXPECTED_INFRA_URL)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldCalculateEnvDetails() {
+    List<EnvSummary> envSummaries = asList(
+        EnvSummary.builder().name("ENV-1").uuid("1").build(), EnvSummary.builder().name("ENV-2").uuid("2").build());
+
+    WorkflowNotificationDetails workflowNotificationDetails =
+        workflowNotificationHelper.calculateEnvDetails(ACCOUNT_ID, APP_ID, envSummaries);
+    assertThat(workflowNotificationDetails.getMessage()).isEqualTo(EXPECTED_ENV_MESSAGE);
+    assertThat(workflowNotificationDetails.getUrl()).isEqualTo(EXPECTED_ENV_URL);
+    assertThat(workflowNotificationDetails.getName()).isEqualTo(EXPECTED_ENV_NAME);
   }
 
   public NotificationRule setupNotificationRule(ExecutionScope scope, List<ExecutionStatus> executionStatuses) {
