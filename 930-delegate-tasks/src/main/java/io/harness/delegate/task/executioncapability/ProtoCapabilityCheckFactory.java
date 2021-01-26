@@ -20,6 +20,9 @@ public class ProtoCapabilityCheckFactory {
   @Inject SystemEnvCapabilityCheck systemEnvCapabilityCheck;
 
   public ProtoCapabilityCheck obtainCapabilityCheck(CapabilityParameters parameters) {
+    if (parameters == null) {
+      return null;
+    }
     switch (parameters.getCapabilityCase()) {
       case AWS_REGION_PARAMETERS:
         return awsRegionCapabilityCheck;
