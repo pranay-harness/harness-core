@@ -48,7 +48,7 @@ public class RecastDocumentSerializer extends JsonSerializer<Document> {
       if (value1.containsKey(Recaster.RECAST_CLASS_KEY)
           && value1.get(Recaster.RECAST_CLASS_KEY).equals(ParameterField.class.getName())) {
         ParameterField<?> parameterField = RecastOrchestrationUtils.fromDocument(value1, ParameterField.class);
-        return parameterField.getJsonFieldValue();
+        return RecastOrchestrationUtils.toDocument(parameterField.getJsonFieldValue());
       }
       traverse(value1);
     } else if (RecastReflectionUtils.implementsInterface(value.getClass(), Iterable.class)) {
