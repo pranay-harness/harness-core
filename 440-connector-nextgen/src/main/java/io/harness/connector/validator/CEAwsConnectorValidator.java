@@ -69,8 +69,8 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     final CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connectorDTO;
     final List<CEAwsFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
     final CrossAccountAccessDTO crossAccountAccessDTO = ceAwsConnectorDTO.getCrossAccountAccess();

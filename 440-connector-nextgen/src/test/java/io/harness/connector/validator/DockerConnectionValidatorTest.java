@@ -63,7 +63,8 @@ public class DockerConnectionValidatorTest extends CategoryTest {
         .thenReturn(DockerTestConnectionTaskResponse.builder()
                         .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
                         .build());
-    dockerConnectionValidator.validate(dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+    dockerConnectionValidator.validate(
+        dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }

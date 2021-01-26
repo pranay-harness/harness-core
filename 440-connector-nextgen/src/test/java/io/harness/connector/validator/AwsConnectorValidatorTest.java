@@ -60,7 +60,8 @@ public class AwsConnectorValidatorTest extends CategoryTest {
                         .connectorValidationResult(
                             ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
                         .build());
-    awsConnectorValidator.validate(awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+    awsConnectorValidator.validate(
+        awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 
@@ -86,7 +87,8 @@ public class AwsConnectorValidatorTest extends CategoryTest {
                         .connectorValidationResult(
                             ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
                         .build());
-    awsConnectorValidator.validate(awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+    awsConnectorValidator.validate(
+        awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }

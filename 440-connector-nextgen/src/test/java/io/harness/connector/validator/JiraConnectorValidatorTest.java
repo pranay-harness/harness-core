@@ -30,6 +30,7 @@ public class JiraConnectorValidatorTest {
   private static final String JIRA_URL = "https://jira.dev.harness.io";
   private static final String ORG_IDENTIFIER = "orgIdentifier";
   private static final String PROJECT_IDENTIFIER = "projectIdentifier";
+  private static final String IDENTIFIER = "identifier";
   private static final String USERNAME = "username";
 
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -55,8 +56,8 @@ public class JiraConnectorValidatorTest {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(JiraTestConnectionTaskNGResponse.builder().canConnect(true).build());
 
-    ConnectorValidationResult result =
-        connectorValidator.validate(jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    ConnectorValidationResult result = connectorValidator.validate(
+        jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
 
     assertThat(result.getStatus()).isEqualTo(SUCCESS);
     verify(delegateGrpcClientWrapper).executeSyncTask(any());
@@ -76,8 +77,8 @@ public class JiraConnectorValidatorTest {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(JiraTestConnectionTaskNGResponse.builder().canConnect(false).build());
 
-    ConnectorValidationResult result =
-        connectorValidator.validate(jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    ConnectorValidationResult result = connectorValidator.validate(
+        jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
 
     assertThat(result.getStatus()).isEqualTo(FAILURE);
     verify(delegateGrpcClientWrapper).executeSyncTask(any());

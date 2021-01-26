@@ -138,8 +138,8 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required field is empty."));
   }
 
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorConfigDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorConfigDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
     // No validation for account level git connector.
     if (gitConfig.getGitConnectionType() == ACCOUNT) {
@@ -150,7 +150,7 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
     }
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
-        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 }

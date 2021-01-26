@@ -82,7 +82,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -96,7 +96,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.EVENTS));
     ceAwsConnectorDTO.setCurAttributes(null);
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -114,7 +114,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).hasSize(1);
@@ -136,7 +136,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
@@ -152,7 +152,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.empty()).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).hasSize(1);
@@ -171,7 +171,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).hasSize(1);
@@ -193,7 +193,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrors()).isNotEmpty();
@@ -210,7 +210,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   public void testValidateOptimizationSuccess() {
     ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.OPTIMIZATION));
 
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();
@@ -226,7 +226,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
@@ -244,7 +244,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doThrow(new AmazonIdentityManagementException(MESSAGE))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
-    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null);
+    ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
     assertThat(result.getErrorSummary()).contains("iam:SimulatePrincipalPolicy");

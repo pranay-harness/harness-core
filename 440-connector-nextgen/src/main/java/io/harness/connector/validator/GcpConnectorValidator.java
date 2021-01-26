@@ -42,10 +42,10 @@ public class GcpConnectorValidator extends AbstractConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(
-      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     final GcpValidationTaskResponse gcpValidationTaskResponse = (GcpValidationTaskResponse) super.validateConnector(
-        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return gcpValidationTaskResponse.getConnectorValidationResult();
   }
 }

@@ -248,7 +248,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   public ConnectorValidationResult validate(ConnectorDTO connectorRequest, String accountIdentifier) {
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
-    return validateSafely(connector, accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier());
+    return validateSafely(connector, accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(),
+        connector.getIdentifier());
   }
 
   public boolean validateTheIdentifierIsUnique(
@@ -265,8 +266,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-    return validateConnector(
-        connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+    return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
+        projectIdentifier, connectorIdentifier);
   }
 
   /**
@@ -293,14 +294,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     gitConfigDTO.setUrl(gitRepoURL);
     connectorInfo.setConnectorConfig(gitConfigDTO);
 
-    return validateConnector(
-        connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+    return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
+        projectIdentifier, connectorIdentifier);
   }
 
   private ConnectorValidationResult validateConnector(Connector connector, ConnectorResponseDTO connectorDTO,
-      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier) {
     ConnectorValidationResult validationResult;
-    validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
+    validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return validationResult;
   }
 
@@ -325,13 +327,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private ConnectorValidationResult validateSafely(
-      ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  private ConnectorValidationResult validateSafely(ConnectorInfoDTO connectorInfo, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
     ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorInfo.getConnectorType().toString());
     ConnectorValidationResult validationResult;
     try {
       validationResult = connectionValidator.validate(
-          connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier);
+          connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());

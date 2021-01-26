@@ -56,7 +56,8 @@ public class GcpConnectorValidatorTest extends CategoryTest {
         .thenReturn(GcpValidationTaskResponse.builder()
                         .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
                         .build());
-    gcpConnectorValidator.validate(gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+    gcpConnectorValidator.validate(
+        gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 
@@ -78,7 +79,8 @@ public class GcpConnectorValidatorTest extends CategoryTest {
         .thenReturn(GcpValidationTaskResponse.builder()
                         .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
                         .build());
-    gcpConnectorValidator.validate(gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+    gcpConnectorValidator.validate(
+        gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }

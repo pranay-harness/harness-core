@@ -26,7 +26,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
-      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     DelegateTaskRequest delegateTaskRequest =
         DelegateTaskRequest.builder()
             .accountId(accountIdentifier)
