@@ -132,6 +132,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -796,7 +797,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
     StringBuilder environments = new StringBuilder();
-    WorkflowNotificationDetails envDetails = null;
     StringBuilder services = new StringBuilder();
     WorkflowNotificationDetails serviceDetails = null;
     StringBuilder artifacts = new StringBuilder();
@@ -827,14 +827,17 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       artifacts.append("*Artifacts*: no artifacts");
     }
     if (isNotEmpty(workflowExecution.getEnvironments())) {
-      envDetails = workflowNotificationHelper.calculateEnvironmentDetails(
-          accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv());
-      environments.append("*Environments*: ").append(envDetails.getName());
-      placeHolderValues.put("ENV", envDetails.getMessage().replace("*Environments*", "<b>Environments</b>"));
+      StringJoiner env = new StringJoiner(", ");
+      workflowExecution.getEnvironments().forEach(envSummary -> env.add(envSummary.getName()));
+      environments.append("*Environments*: ").append(env.toString());
     } else {
       environments.append("*Environments*: no environments");
-      placeHolderValues.put("ENV", environments.toString().replace("*Environments*", "<b>Environments</b>"));
     }
+    String envDetailsForEmail =
+        workflowNotificationHelper
+            .calculateEnvDetails(accountId, context.getAppId(), workflowExecution.getEnvironments())
+            .getMessage();
+    placeHolderValues.put("ENV", envDetailsForEmail.replace("*Environments:*", "<b>Environments:</b>"));
     if (isNotEmpty(workflowExecution.getServiceIds())) {
       serviceDetails = workflowNotificationHelper.calculateServiceDetailsForAllServices(
           accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null);
@@ -846,8 +849,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
     List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
     if (isNotEmpty(infraDefinitionIds)) {
-      infraDetails = workflowNotificationHelper.calculateInfraDetails(
-          accountId, context.getAppId(), workflowExecution, ((ExecutionContextImpl) context).getEnv());
+      infraDetails = workflowNotificationHelper.calculateInfraDetails(accountId, context.getAppId(), workflowExecution);
       infrastructureDefinitions.append("*Infrastructure Definitions*: ").append(infraDetails.getName());
       placeHolderValues.put("INFRA_NAMES",
           infraDetails.getMessage().replace("*Infrastructure Definitions*", "<b>Infrastructure Definitions</b>"));

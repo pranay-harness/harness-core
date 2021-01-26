@@ -1259,6 +1259,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setInfraMappingIds(pipeline.getInfraMappingIds());
     workflowExecution.setCloudProviderIds(
         infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
+    workflowExecution.setInfraDefinitionIds(pipeline.getInfraDefinitionIds());
 
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);

@@ -32,6 +32,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.InformationNotification;
@@ -433,7 +434,7 @@ public class WorkflowNotificationHelper {
           app.getAccountId(), app.getAppId(), context, workflowExecution, WORKFLOW, null);
     }
     WorkflowNotificationDetails infraDetails =
-        calculateInfraDetails(app.getAccountId(), context.getAppId(), workflowExecution, env);
+        calculateInfraDetails(app.getAccountId(), context.getAppId(), workflowExecution);
 
     placeHolderValues.put("INFRA", infraDetails.getMessage());
     placeHolderValues.put("INFRA_NAME", infraDetails.getName());
@@ -499,7 +500,7 @@ public class WorkflowNotificationHelper {
   }
 
   public WorkflowNotificationDetails calculateInfraDetails(
-      String accountId, String appId, WorkflowExecution workflowExecution, Environment env) {
+      String accountId, String appId, WorkflowExecution workflowExecution) {
     WorkflowNotificationDetailsBuilder infraDetails = WorkflowNotificationDetails.builder();
     List<String> infraIds = workflowExecution.getInfraDefinitionIds();
 
@@ -517,7 +518,7 @@ public class WorkflowNotificationHelper {
           infraDetailsUrl.append(',');
         }
         notNullCheck("Infrastructure Definition might have been deleted", infrastructureDefinition, USER);
-        String infraUrl = calculateInfraUrl(accountId, appId, infraId, env == null ? null : env.getUuid());
+        String infraUrl = calculateInfraUrl(accountId, appId, infraId, infrastructureDefinition.getEnvId());
         infraMsg.append(format("<<<%s|-|%s>>>", infraUrl, infrastructureDefinition.getName()));
         infraDetailsName.append(infrastructureDefinition.getName());
         infraDetailsUrl.append(infraUrl);
@@ -540,6 +541,41 @@ public class WorkflowNotificationHelper {
         format("/account/%s/app/%s/environments/%s/infrastructure-definitions/%s/details", accountId, appId, envId,
             infraId),
         baseUrl);
+  }
+
+  public WorkflowNotificationDetails calculateEnvDetails(
+      String accountId, String appId, List<EnvSummary> envSummaries) {
+    WorkflowNotificationDetailsBuilder envDetails = WorkflowNotificationDetails.builder();
+
+    StringBuilder envMsg = new StringBuilder();
+    StringBuilder envDetailsName = new StringBuilder();
+    StringBuilder envDetailsUrl = new StringBuilder();
+
+    if (isNotEmpty(envSummaries)) {
+      boolean firstEnv = true;
+      for (EnvSummary envSummary : envSummaries) {
+        if (!firstEnv) {
+          envMsg.append(", ");
+          envDetailsName.append(',');
+          envDetailsUrl.append(',');
+        }
+        String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+        String envURL = NotificationMessageResolver.buildAbsoluteUrl(configuration,
+            format("/account/%s/app/%s/environments/%s/details", accountId, appId, envSummary.getUuid()), baseUrl);
+        envMsg.append(format("<<<%s|-|%s>>>", envURL, envSummary.getName()));
+        envDetailsName.append(envSummary.getName());
+        envDetailsUrl.append(envURL);
+        firstEnv = false;
+      }
+
+    } else {
+      envDetailsName.append("no environments");
+      envMsg.append("no environments");
+    }
+    envDetails.name(envDetailsName.toString());
+    envDetails.url(envDetailsUrl.toString());
+    envDetails.message(format("*Environments:* %s", envMsg));
+    return envDetails.build();
   }
 
   public WorkflowNotificationDetails calculateServiceDetailsForAllServices(String accountId, String appId,
