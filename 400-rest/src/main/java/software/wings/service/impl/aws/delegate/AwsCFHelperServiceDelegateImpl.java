@@ -39,7 +39,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @VisibleForTesting
   AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudFormationClient) builder.build();
   }
 

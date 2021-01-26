@@ -126,7 +126,7 @@ public class AwsLambdaHelperServiceDelegateImpl
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AWSLambdaClient) builder.build();
   }
 

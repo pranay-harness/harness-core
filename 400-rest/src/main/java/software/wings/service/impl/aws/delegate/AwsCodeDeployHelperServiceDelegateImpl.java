@@ -51,7 +51,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, AwsConfig awsConfig) {
     AmazonCodeDeployClientBuilder builder = AmazonCodeDeployClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCodeDeployClient) builder.build();
   }
 

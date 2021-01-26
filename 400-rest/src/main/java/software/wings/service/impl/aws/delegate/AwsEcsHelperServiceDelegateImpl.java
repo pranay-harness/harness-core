@@ -48,7 +48,7 @@ public class AwsEcsHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonECSClient getAmazonEcsClient(String region, AwsConfig awsConfig) {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECSClient) builder.build();
   }
 

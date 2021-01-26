@@ -57,4 +57,6 @@ public interface AwsConstants {
   String AWS_DEFAULT_REGION = "us-east-1";
 
   int DEFAULT_STATE_TIMEOUT_BUFFER_MIN = 5;
+
+  int DEFAULT_BACKOFF_MAX_ERROR_RETRIES = 5;
 }

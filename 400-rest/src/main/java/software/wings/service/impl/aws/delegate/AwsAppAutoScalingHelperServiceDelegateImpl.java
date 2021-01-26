@@ -51,14 +51,14 @@ public class AwsAppAutoScalingHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAppAutoScalingHelperServiceDelegate {
   private AmazonCloudWatchClient getAmazonCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClient.builder().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();
   }
 
   private AWSApplicationAutoScaling getAWSApplicationAutoScalingClient(String region, AwsConfig awsConfig) {
     AWSApplicationAutoScalingClientBuilder builder =
         AWSApplicationAutoScalingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return builder.build();
   }
 

@@ -32,7 +32,7 @@ public class AwsIamHelperServiceDelegateImpl
   AmazonIdentityManagementClient getAmazonIdentityManagementClient(AwsConfig awsConfig) {
     AmazonIdentityManagementClientBuilder builder =
         AmazonIdentityManagementClient.builder().withRegion(getRegion(awsConfig));
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonIdentityManagementClient) builder.build();
   }
 
