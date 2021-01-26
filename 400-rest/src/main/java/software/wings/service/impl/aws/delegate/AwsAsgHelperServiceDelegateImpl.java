@@ -97,7 +97,7 @@ public class AwsAsgHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
     AmazonAutoScalingClientBuilder builder = AmazonAutoScalingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonAutoScalingClient) builder.build();
   }
 

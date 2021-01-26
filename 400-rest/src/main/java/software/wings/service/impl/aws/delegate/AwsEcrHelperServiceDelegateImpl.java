@@ -31,7 +31,7 @@ public class AwsEcrHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECRClient) builder.build();
   }
 

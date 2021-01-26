@@ -106,7 +106,7 @@ public class AwsCloudWatchHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();
   }
 }

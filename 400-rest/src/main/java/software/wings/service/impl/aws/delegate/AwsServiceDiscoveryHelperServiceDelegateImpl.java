@@ -27,7 +27,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImpl
   @VisibleForTesting
   AWSServiceDiscovery getAmazonServiceDiscoveryClient(String region, AwsConfig awsConfig) {
     AWSServiceDiscoveryClientBuilder builder = AWSServiceDiscoveryClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return builder.build();
   }
 

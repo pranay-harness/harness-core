@@ -32,7 +32,7 @@ public class AwsRoute53HelperServiceDelegateImpl
   @VisibleForTesting
   AmazonRoute53 getAmazonRoute53Client(String region, AwsConfig awsConfig) {
     AmazonRoute53ClientBuilder builder = AmazonRoute53ClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return builder.build();
   }
 

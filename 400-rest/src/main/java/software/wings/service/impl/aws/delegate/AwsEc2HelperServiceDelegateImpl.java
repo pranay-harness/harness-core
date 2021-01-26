@@ -65,14 +65,14 @@ public class AwsEc2HelperServiceDelegateImpl
   @VisibleForTesting
   AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
 
   @VisibleForTesting
   AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
 

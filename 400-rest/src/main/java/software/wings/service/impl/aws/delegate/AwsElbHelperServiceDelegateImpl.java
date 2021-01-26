@@ -106,7 +106,7 @@ public class AwsElbHelperServiceDelegateImpl
       Regions region, AwsConfig awsConfig) {
     AmazonElasticLoadBalancingClientBuilder builder =
         AmazonElasticLoadBalancingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -115,7 +115,7 @@ public class AwsElbHelperServiceDelegateImpl
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonElasticLoadBalancingClient) builder.build();
   }
 
