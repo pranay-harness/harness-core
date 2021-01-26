@@ -221,19 +221,38 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
 
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      if (!(o instanceof OrchestrationField)) {
+      OrchestrationField orchestrationField;
+      if (o instanceof Document) {
+        Document doc = (Document) o;
+        String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
+        if (recastedClass.equals(ParameterField.class.getName())
+            || recastedClass.equals(DummyOrchestrationField.class.getName())) {
+          orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
+          ProcessorResult processorResult = getProcessorResult(orchestrationField);
+          Document recastedDocument = RecastOrchestrationUtils.toDocument(orchestrationField);
+          doc.clear();
+          doc.putAll(recastedDocument);
+          return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
+        } else {
+          return new ResolveObjectResponse(false, false);
+        }
+      } else if (o instanceof OrchestrationField) {
+        orchestrationField = (OrchestrationField) o;
+        ProcessorResult processorResult = getProcessorResult(orchestrationField);
+        return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
+      } else {
         return new ResolveObjectResponse(false, false);
       }
+    }
 
-      OrchestrationField orchestrationField = (OrchestrationField) o;
+    private ProcessorResult getProcessorResult(OrchestrationField orchestrationField) {
       OrchestrationFieldType type = orchestrationField.getType();
       OrchestrationFieldProcessor fieldProcessor = orchestrationFieldRegistry.obtain(type);
       ProcessorResult processorResult = fieldProcessor.process(ambiance, orchestrationField);
       if (processorResult.getStatus() == ProcessorResult.Status.ERROR) {
         throw new CriticalExpressionEvaluationException(processorResult.getMessage());
       }
-
-      return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
+      return processorResult;
     }
   }
 }
