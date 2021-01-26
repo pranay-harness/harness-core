@@ -74,6 +74,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
+import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
@@ -230,6 +231,9 @@ import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWeb
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotShiftTrafficTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSwapTaskHandler;
+import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMDeploymentTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMRollbackTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -921,6 +925,14 @@ public class DelegateModule extends AbstractModule {
         .to(AzureWebAppSlotSwapTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_ROLLBACK.name())
         .to(AzureWebAppRollbackTaskHandler.class);
+
+    // Azure ARM tasks
+    MapBinder<String, AbstractAzureARMTaskHandler> azureARMTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, AbstractAzureARMTaskHandler.class);
+    azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.ARM_DEPLOYMENT.name())
+        .to(AzureARMDeploymentTaskHandler.class);
+    azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.ARM_ROLLBACK.name())
+        .to(AzureARMRollbackTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();

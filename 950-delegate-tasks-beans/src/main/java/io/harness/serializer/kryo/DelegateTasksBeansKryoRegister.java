@@ -243,6 +243,13 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlot
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSwapSlotsResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
+import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
+import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
+import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
+import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
+import io.harness.delegate.task.azure.arm.request.AzureARMRollbackParameters;
+import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMRollbackResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
@@ -712,5 +719,12 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sRollingRollbackDeployRequest.class, 543239);
     kryo.register(K8sScaleRequest.class, 543240);
     kryo.register(K8sScaleResponse.class, 543241);
+    kryo.register(AzureARMPreDeploymentData.class, 543242);
+    kryo.register(AzureARMTaskParameters.class, 543243);
+    kryo.register(AzureARMTaskResponse.class, 543244);
+    kryo.register(AzureARMDeploymentParameters.class, 543245);
+    kryo.register(AzureARMRollbackParameters.class, 543246);
+    kryo.register(AzureARMDeploymentResponse.class, 543247);
+    kryo.register(AzureARMRollbackResponse.class, 543248);
   }
 }

@@ -2,9 +2,9 @@ package software.wings.beans;
 
 import static software.wings.beans.InfrastructureProvisionerType.ARM;
 
+import io.harness.azure.model.ARMScopeType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
-import io.harness.delegate.beans.azure.arm.ARMScopeType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
