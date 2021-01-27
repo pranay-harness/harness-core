@@ -106,7 +106,7 @@ public class SecretEntityReferenceHelper {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.SECRETS.name(),
                   EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.DELETE_ACTION))
               .setData(deleteSetupUsageDTO.toByteString())
               .build());
