@@ -76,8 +76,9 @@ public class InvitesServiceImpl implements InvitesService {
           ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificationSecret") String jwtPasswordSecret,
-      MongoConfig mongoConfig, JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
+  public InvitesServiceImpl(@Named("ngManagerBaseUrl") String baseURL,
+      @Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
+      JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
       TransactionTemplate transactionTemplate, InvitesRepository invitesRepository) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
@@ -85,7 +86,7 @@ public class InvitesServiceImpl implements InvitesService {
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
     this.transactionTemplate = transactionTemplate;
-    verificationBaseUrl = baseURL + "ng/api/invites/verify?token=%s&accountId=%s";
+    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
