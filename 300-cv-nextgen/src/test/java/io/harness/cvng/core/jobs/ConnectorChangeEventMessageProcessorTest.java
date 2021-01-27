@@ -137,8 +137,8 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
       String envIdentifier, VerificationJobInstance.ExecutionStatus executionStatus) {
     verificationJobService.upsert(
         accountIdentifier, newTestVerificationJobDTO(verificationJobIdentifier, envIdentifier));
-    VerificationJob verificationJob =
-        verificationJobService.getVerificationJob(accountIdentifier, verificationJobIdentifier);
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(
+        accountIdentifier, orgIdentifier, projectIdentifier, verificationJobIdentifier);
     VerificationJobInstance verificationJobInstance =
         VerificationJobInstance.builder()
             .accountId(accountIdentifier)

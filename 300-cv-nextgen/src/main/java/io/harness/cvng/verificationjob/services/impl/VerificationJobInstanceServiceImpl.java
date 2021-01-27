@@ -107,10 +107,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   // TODO: this is only used in test. Get rid of this API
   @Override
-  public String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO) {
+  public String create(String accountId, String orgIdentifier, String projectIdentifier,
+      VerificationJobInstanceDTO verificationJobInstanceDTO) {
     // TODO: Is this API even needed anymore ?
-    VerificationJob verificationJob =
-        verificationJobService.getVerificationJob(accountId, verificationJobInstanceDTO.getVerificationJobIdentifier());
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO.getVerificationJobIdentifier());
     Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'",
         verificationJobInstanceDTO.getVerificationJobIdentifier());
     VerificationJobInstance verificationJobInstance =

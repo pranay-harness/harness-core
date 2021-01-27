@@ -150,7 +150,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegisterActivity_whenNoJobExists() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenAnswer(invocationOnMock -> { return null; });
     assertThatThrownBy(
         () -> activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob)))
@@ -163,7 +164,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegisterActivity_whenNoCvConfigExists() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any())).thenReturn(Lists.newArrayList());
     DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
@@ -178,7 +180,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegisterActivity_kubernetesActivity() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
@@ -199,7 +202,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegister_resolveJobUuidShouldBeNull() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
@@ -238,7 +242,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testRegisterActivity_deploymentActivity() {
-    when(verificationJobService.getVerificationJob(accountId, "canaryJobName1")).thenReturn(createVerificationJob());
+    when(verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, "canaryJobName1"))
+        .thenReturn(createVerificationJob());
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
@@ -288,7 +293,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testRegisterActivity_deploymentActivityBadJobName() {
-    when(verificationJobService.getVerificationJob(accountId, "canaryJobName2")).thenReturn(createVerificationJob());
+    when(verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, "canaryJobName2"))
+        .thenReturn(createVerificationJob());
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
@@ -335,7 +341,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetRecentDeploymentActivityVerifications_withVerificationJobInstanceInQueuedState() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
@@ -367,7 +374,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetRecentDeploymentActivityVerificationsByTag() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     doNothing().when(verificationJobInstanceService).addResultsToDeploymentResultSummary(anyString(), anyList(), any());
@@ -411,7 +419,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetDeploymentActivityVerificationsPopoverSummary_addBuildAndServiceNameToResult() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
@@ -432,7 +441,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivity() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
@@ -455,7 +465,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetByVerificationJobInstanceId() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
 
@@ -476,7 +487,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivityVerificationResult() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
@@ -517,7 +529,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivityVerificationResult_validateOverallRisk() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
@@ -562,7 +575,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivityVerificationResult_noRisks() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
@@ -603,7 +617,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivityVerificationResult_noSummary() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
@@ -640,7 +655,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetRecentActivityVerificationResults() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     when(verificationJobInstanceService.create(anyList())).thenReturn(Lists.newArrayList(generateUuid()));
     instant = Instant.now();
@@ -692,7 +708,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testListActivitiesInTimeRange() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     instant = Instant.now();
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
@@ -728,7 +745,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetDeploymentSummary() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
     String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
@@ -748,7 +766,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetActivityStatus() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
     String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
@@ -920,7 +939,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testUpdateActivityStatus_passed() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     instant = Instant.now();
 
@@ -960,7 +980,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testUpdateActivityStatus_inProgress() {
     VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     instant = Instant.now();
 

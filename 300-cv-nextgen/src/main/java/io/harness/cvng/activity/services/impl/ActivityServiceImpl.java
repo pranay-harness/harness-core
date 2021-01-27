@@ -514,8 +514,8 @@ public class ActivityServiceImpl implements ActivityService {
       activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {
         String jobIdentifier = jobDetail.getVerificationJobIdentifier();
         Preconditions.checkNotNull(jobIdentifier, "Job Identifier must be present in the jobs to trigger");
-        VerificationJob verificationJob =
-            verificationJobService.getVerificationJob(activity.getAccountId(), jobIdentifier);
+        VerificationJob verificationJob = verificationJobService.getVerificationJob(
+            activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(), jobIdentifier);
         Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
         verificationJobs.add(verificationJob);
         if (isNotEmpty(jobDetail.getRuntimeValues())) {

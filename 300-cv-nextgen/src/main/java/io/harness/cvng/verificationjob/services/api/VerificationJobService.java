@@ -9,11 +9,13 @@ import javax.annotation.Nullable;
 
 public interface VerificationJobService {
   @Nullable VerificationJob get(String uuid);
-  VerificationJobDTO getVerificationJobDTO(String accountId, String identifier);
-  VerificationJob getVerificationJob(String accountId, String identifier);
+  VerificationJobDTO getVerificationJobDTO(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+  VerificationJob getVerificationJob(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   void upsert(String accountId, VerificationJobDTO verificationJobDTO);
   void save(VerificationJob verificationJob);
-  void delete(String accountId, String identifier);
+  void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   PageResponse<VerificationJobDTO> list(
       String accountId, String projectId, String orgIdentifier, Integer offset, Integer pageSize, String filter);
   boolean doesAVerificationJobExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);

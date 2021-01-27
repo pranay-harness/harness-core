@@ -40,8 +40,9 @@ public class VerificationJobServiceImpl implements VerificationJobService {
 
   @Override
   @Nullable
-  public VerificationJobDTO getVerificationJobDTO(String accountId, String identifier) {
-    VerificationJob verificationJob = getVerificationJob(accountId, identifier);
+  public VerificationJobDTO getVerificationJobDTO(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    VerificationJob verificationJob = getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     if (verificationJob == null) {
       return null;
     }
@@ -52,7 +53,8 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   public void upsert(String accountId, VerificationJobDTO verificationJobDTO) {
     VerificationJob verificationJob = verificationJobDTO.getVerificationJob();
     verificationJob.setAccountId(accountId);
-    VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getOrgIdentifier(),
+        verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getIdentifier());
     if (stored != null) {
       Preconditions.checkState(stored.getProjectIdentifier().equals(verificationJob.getProjectIdentifier()));
       Preconditions.checkState(stored.getOrgIdentifier().equals(verificationJob.getOrgIdentifier()));
@@ -81,11 +83,16 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public VerificationJob getVerificationJob(String accountId, String identifier) {
+  public VerificationJob getVerificationJob(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
     Preconditions.checkNotNull(identifier);
     return hPersistence.createQuery(VerificationJob.class)
         .filter(VerificationJobKeys.accountId, accountId)
+        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
         .filter(VerificationJobKeys.identifier, identifier)
         .get();
   }
@@ -135,14 +142,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     Preconditions.checkNotNull(identifier);
     Preconditions.checkNotNull(orgIdentifier);
     Preconditions.checkNotNull(projectIdentifier);
-
-    // TODO: Use the fully qualified method once it's available.
-    return hPersistence.createQuery(VerificationJob.class)
-        .filter(VerificationJobKeys.accountId, accountId)
-        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-        .filter(VerificationJobKeys.identifier, identifier)
-        .get();
+    return getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
   }
 
   private String getParamFromUrl(String url, String paramName) {
@@ -159,12 +159,13 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     }
   }
 
-  @Override
-  public void delete(String accountId, String identifier) {
-    VerificationJob verificationJob = getVerificationJob(accountId, identifier);
+  public void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    VerificationJob verificationJob = getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     sendScopedDeleteEvent(verificationJob);
     hPersistence.delete(hPersistence.createQuery(VerificationJob.class)
                             .filter(VerificationJobKeys.accountId, accountId)
+                            .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+                            .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
                             .filter(VerificationJobKeys.identifier, identifier));
   }
 

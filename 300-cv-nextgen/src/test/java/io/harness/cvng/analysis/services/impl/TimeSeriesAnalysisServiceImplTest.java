@@ -96,10 +96,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   private String accountId;
   private long deploymentStartTimeMs;
   private Instant instant;
+  private String orgIdentifier;
+  private String projectIdentifier;
   @Before
   public void setUp() throws Exception {
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
+    projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
     deploymentStartTimeMs = instant.toEpochMilli();
     CVConfig cvConfig = newCVConfig();
     cvConfigService.save(cvConfig);
@@ -112,6 +116,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     timeSeriesLearningEngineTask.setAnalysisEndTime(Instant.now().plus(Duration.ofMinutes(5)));
     timeSeriesLearningEngineTask.setWindowSize(5);
     learningEngineTaskId = learningEngineTaskService.createLearningEngineTask(timeSeriesLearningEngineTask);
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
   }
 
   @Test
@@ -666,8 +672,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
       testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
       testVerificationJob.setServiceIdentifier(generateUuid());
-      testVerificationJob.setOrgIdentifier(generateUuid());
-      testVerificationJob.setProjectIdentifier(generateUuid());
+      testVerificationJob.setOrgIdentifier(orgIdentifier);
+      testVerificationJob.setProjectIdentifier(projectIdentifier);
       testVerificationJob.setEnvIdentifier(generateUuid());
       testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
       testVerificationJob.setDuration("15m");
@@ -680,8 +686,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
       canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
       canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
-      canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
-      canaryVerificationJobDTO.setProjectIdentifier(generateUuid());
+      canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+      canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
       canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
       canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
       canaryVerificationJobDTO.setDuration("15m");
@@ -698,8 +704,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setOrgIdentifier(generateUuid());
-    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setIdentifier("groupId");
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
@@ -709,8 +715,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   private VerificationJobInstance createVerificationJobInstance(VerificationJobType type) {
     VerificationJobDTO verificationJobDTO = newVerificationJobDTO(type);
     verificationJobService.upsert(accountId, verificationJobDTO);
-    VerificationJob verificationJob =
-        verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     VerificationJobInstance verificationJobInstance =
         VerificationJobInstance.builder()
             .accountId(accountId)

@@ -61,8 +61,11 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
                                                                .setOrgIdentifier(orgIdentifier)
                                                                .setIdentifier("project1")
                                                                .build());
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier())).isNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project1", verificationJobDTO1.getIdentifier()))
+        .isNull();
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project2", verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(cvConfigService.get(cvConfig1.getUuid())).isNull();
     assertThat(cvConfigService.get(cvConfig2.getUuid())).isNotNull();
@@ -77,8 +80,11 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
                                                                .setOrgIdentifier(orgIdentifier)
                                                                .setIdentifier("project1")
                                                                .build());
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier())).isNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project1", verificationJobDTO1.getIdentifier()))
+        .isNull();
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project2", verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(retrievedCVConfig1).isNull();
     assertThat(retrievedCVConfig2).isNotNull();
@@ -101,9 +107,11 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
     projectChangeEventMessageProcessor.processDeleteAction(
         ProjectEntityChangeDTO.newBuilder().setAccountIdentifier(accountId).setOrgIdentifier(orgIdentifier).build());
 
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project1", verificationJobDTO1.getIdentifier()))
         .isNotNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, "project2", verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(cvConfigService.get(cvConfig1.getUuid())).isNotNull();
     assertThat(cvConfigService.get(cvConfig2.getUuid())).isNotNull();

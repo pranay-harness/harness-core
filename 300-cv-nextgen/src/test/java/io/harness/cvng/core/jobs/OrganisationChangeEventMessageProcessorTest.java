@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
@@ -35,6 +36,12 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
   @Inject private OrganizationChangeEventMessageProcessor organizationChangeEventMessageProcessor;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;
+  private String projectIdentifier;
+
+  @Before
+  public void setup() {
+    projectIdentifier = generateUuid();
+  }
 
   @Test
   @Owner(developers = VUK)
@@ -53,8 +60,11 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
                                                                     .setAccountIdentifier(accountId)
                                                                     .setIdentifier("organisation1")
                                                                     .build());
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier())).isNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation1", projectIdentifier, verificationJobDTO1.getIdentifier()))
+        .isNull();
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation2", projectIdentifier, verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(cvConfigService.get(cvConfig1.getUuid())).isNull();
     assertThat(cvConfigService.get(cvConfig2.getUuid())).isNotNull();
@@ -69,8 +79,11 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
                                                                     .setIdentifier("organisation1")
                                                                     .build());
 
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier())).isNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation1", projectIdentifier, verificationJobDTO1.getIdentifier()))
+        .isNull();
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation2", projectIdentifier, verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(retrievedCVConfig1).isNull();
     assertThat(retrievedCVConfig2).isNotNull();
@@ -91,9 +104,11 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO2);
     organizationChangeEventMessageProcessor.processDeleteAction(
         OrganizationEntityChangeDTO.newBuilder().setAccountIdentifier(accountId).build());
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation1", projectIdentifier, verificationJobDTO1.getIdentifier()))
         .isNotNull();
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO2.getIdentifier()))
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, "organisation2", projectIdentifier, verificationJobDTO2.getIdentifier()))
         .isNotNull();
     assertThat(cvConfigService.get(cvConfig1.getUuid())).isNotNull();
     assertThat(cvConfigService.get(cvConfig2.getUuid())).isNotNull();
@@ -156,7 +171,7 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(generateUuid());
     testVerificationJobDTO.setDuration("15m");
     testVerificationJobDTO.setOrgIdentifier(orgIdentifier);
-    testVerificationJobDTO.setProjectIdentifier(generateUuid());
+    testVerificationJobDTO.setProjectIdentifier(projectIdentifier);
     return testVerificationJobDTO;
   }
 }
