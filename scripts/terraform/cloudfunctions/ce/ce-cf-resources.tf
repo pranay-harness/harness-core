@@ -191,7 +191,7 @@ resource "google_cloudfunctions_function" "ce-gcpdata-function" {
     event_type = "google.pubsub.topic.publish"
     resource   = "${google_pubsub_topic.ce-gcpdata-topic.name}"
     failure_policy {
-      retry = true
+      retry = false
     }
   }
 }
