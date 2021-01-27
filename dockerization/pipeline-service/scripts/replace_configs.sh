@@ -107,3 +107,11 @@ if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
 else
   yq delete -i $CONFIG_FILE logging.appenders[1]
 fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$AUTH_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
+fi

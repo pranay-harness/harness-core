@@ -23,6 +23,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.rest.RestResponse;
 import io.harness.utils.CryptoUtils;
 import io.harness.utils.PageUtils;
@@ -71,6 +72,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@PipelineServiceAuth
 @Slf4j
 public class NGTriggerResource {
   private final NGTriggerService ngTriggerService;
