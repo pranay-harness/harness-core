@@ -22,6 +22,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -195,9 +196,11 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setUsagedurationseconds(instanceBillingData.getUsageDurationSeconds());
     clusterBillingData.setEndtime(instanceBillingData.getEndTimestamp());
     clusterBillingData.setStarttime(instanceBillingData.getStartTimestamp());
-    clusterBillingData.setStoragecost(instanceBillingData.getStorageBillingAmount().doubleValue());
-    clusterBillingData.setStorageactualidlecost(instanceBillingData.getStorageActualIdleCost().doubleValue());
-    clusterBillingData.setStorageunallocatedcost(instanceBillingData.getStorageUnallocatedCost().doubleValue());
+    clusterBillingData.setStoragecost(getDoubleValueFromBigDecimal(instanceBillingData.getStorageBillingAmount()));
+    clusterBillingData.setStorageactualidlecost(
+        getDoubleValueFromBigDecimal(instanceBillingData.getStorageActualIdleCost()));
+    clusterBillingData.setStorageunallocatedcost(
+        getDoubleValueFromBigDecimal(instanceBillingData.getStorageUnallocatedCost()));
     clusterBillingData.setStorageutilizationvalue(instanceBillingData.getStorageUtilizationValue());
     clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
 
@@ -257,5 +260,12 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   private static DataFileWriter<ClusterBillingData> getInstanceBillingDataDataFileWriter() {
     DatumWriter<ClusterBillingData> userDatumWriter = new SpecificDatumWriter<>(ClusterBillingData.class);
     return new DataFileWriter<>(userDatumWriter);
+  }
+
+  private static double getDoubleValueFromBigDecimal(BigDecimal value) {
+    if (value != null) {
+      return value.doubleValue();
+    }
+    return 0D;
   }
 }
