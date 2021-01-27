@@ -178,6 +178,6 @@ replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
 replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
 
-replace_key_value baseUrls.ui $MANAGER_API_URL
+replace_key_value baseUrls.ui $MANAGER_UI_URL
 
-replace_key_value baseUrls.ngUi $NG_UI_URL
+replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
