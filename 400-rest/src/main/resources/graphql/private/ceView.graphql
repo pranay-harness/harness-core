@@ -49,6 +49,7 @@ type ViewsData {
 type View {
   id: String
   name: String
+  totalCost: Number
   createdAt: Number
   lastUpdatedAt: Number
   chartType: ViewChartType

@@ -1,6 +1,7 @@
 package io.harness.batch.processing.service;
 
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -9,6 +10,7 @@ import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -29,11 +31,16 @@ public class AccountExpiryCleanupService {
   @Autowired private AccountExpiryService accountExpiryService;
   @Autowired private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Autowired private BigQueryHelperService bigQueryHelperService;
 
   public void execute() {
     List<Account> accounts = cloudToHarnessMappingService.getCeAccountsWithLicense();
     log.info("Accounts batch size is AccountExpiryCleanupTasklet {} ", accounts.size());
-    accounts.forEach(account -> {
+    accounts.forEach(this::cleanupPipeline);
+  }
+
+  private void cleanupPipeline(Account account) {
+    try {
       Boolean isAwsConnectorPresent = false;
       Boolean isGCPConnectorPresent = false;
 
@@ -57,11 +64,16 @@ public class AccountExpiryCleanupService {
         }
       }
 
-      cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder()
-                                                              .accountId(accountId)
-                                                              .awsConnectorConfigured(isAwsConnectorPresent)
-                                                              .gcpConnectorConfigured(isGCPConnectorPresent)
-                                                              .build());
+      CEMetadataRecordBuilder ceMetadataRecordBuilder = CEMetadataRecord.builder().accountId(accountId);
+
+      if (isAwsConnectorPresent || isGCPConnectorPresent) {
+        bigQueryHelperService.updateCloudProviderMetaData(accountId, ceMetadataRecordBuilder);
+      }
+
+      cloudToHarnessMappingService.upsertCEMetaDataRecord(
+          ceMetadataRecordBuilder.awsConnectorConfigured(isAwsConnectorPresent)
+              .gcpConnectorConfigured(isGCPConnectorPresent)
+              .build());
 
       List<BillingDataPipelineRecord> billingDataPipelineRecordList =
           billingDataPipelineRecordDao.getAllRecordsByAccountId(accountId);
@@ -78,6 +90,8 @@ public class AccountExpiryCleanupService {
         log.info("Triggering Data Pipeline Clean up for account: {} ", account);
         accountExpiryService.dataPipelineCleanup(account);
       }
-    });
+    } catch (Exception ex) {
+      log.error("Exception while clean up pipeline", ex);
+    }
   }
 }

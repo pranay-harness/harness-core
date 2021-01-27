@@ -186,6 +186,7 @@ public class CEViewServiceImpl implements CEViewService {
       graphQLViewObjList.add(QLCEView.builder()
                                  .id(view.getUuid())
                                  .name(view.getName())
+                                 .totalCost(view.getTotalCost())
                                  .createdAt(view.getCreatedAt())
                                  .lastUpdatedAt(view.getLastUpdatedAt())
                                  .chartType(vChartType)

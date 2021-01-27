@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 public class QLCEView {
   String id;
   String name;
+  double totalCost;
   Long createdAt;
   Long lastUpdatedAt;
   ViewChartType chartType;

@@ -16,6 +16,9 @@ public class BigQueryConstants {
       + "WHERE productfamily = 'Compute Instance' AND "
       + "usagestartdate  >= '%s' AND usagestartdate < '%s' LIMIT 1";
 
+  public static final String CLOUD_PROVIDER_AGG_DATA =
+      "SELECT count(*) AS count, cloudProvider FROM `%s` GROUP BY cloudProvider";
+
   public static final String cost = "cost";
   public static final String effectiveCost = "effectivecost";
   public static final String resourceId = "resourceid";

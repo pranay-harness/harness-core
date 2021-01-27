@@ -34,8 +34,16 @@ public class CEMetadataRecordDao {
       updateOperations.set(CEMetadataRecordKeys.awsConnectorConfigured, ceMetadataRecord.getAwsConnectorConfigured());
     }
 
+    if (null != ceMetadataRecord.getAwsDataPresent()) {
+      updateOperations.set(CEMetadataRecordKeys.awsDataPresent, ceMetadataRecord.getAwsDataPresent());
+    }
+
     if (null != ceMetadataRecord.getGcpConnectorConfigured()) {
       updateOperations.set(CEMetadataRecordKeys.gcpConnectorConfigured, ceMetadataRecord.getGcpConnectorConfigured());
+    }
+
+    if (null != ceMetadataRecord.getGcpDataPresent()) {
+      updateOperations.set(CEMetadataRecordKeys.gcpDataPresent, ceMetadataRecord.getGcpDataPresent());
     }
 
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);

@@ -19,6 +19,9 @@ import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMI
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 
+import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
+
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -45,10 +48,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   private BatchMainConfig mainConfig;
+  private CloudBillingHelper cloudBillingHelper;
+
+  private static final String preAggregated = "preAggregated";
+  private static final String countConst = "count";
+  private static final String cloudProviderConst = "cloudProvider";
 
   @Autowired
-  public BigQueryHelperServiceImpl(BatchMainConfig mainConfig) {
+  public BigQueryHelperServiceImpl(BatchMainConfig mainConfig, CloudBillingHelper cloudBillingHelper) {
     this.mainConfig = mainConfig;
+    this.cloudBillingHelper = cloudBillingHelper;
   }
 
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
@@ -100,6 +109,34 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     String projectTableName = getAwsProjectTableName(startTime, dataSetId);
     String formattedQuery = format(query, projectTableName, startTime, endTime);
     return query(formattedQuery);
+  }
+
+  @Override
+  public void updateCloudProviderMetaData(String accountId, CEMetadataRecordBuilder ceMetadataRecordBuilder) {
+    String tableName = cloudBillingHelper.getCloudProviderTableName(
+        mainConfig.getBillingDataPipelineConfig().getGcpProjectId(), accountId, preAggregated);
+    String formattedQuery = format(BigQueryConstants.CLOUD_PROVIDER_AGG_DATA, tableName);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
+    try {
+      TableResult result = getBigQueryService().query(queryConfig);
+      for (FieldValueList row : result.iterateAll()) {
+        String cloudProvider = row.get(cloudProviderConst).getStringValue();
+        switch (cloudProvider) {
+          case "AWS":
+            ceMetadataRecordBuilder.awsDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
+          case "GCP":
+            ceMetadataRecordBuilder.gcpDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
+          default:
+            break;
+        }
+      }
+
+    } catch (InterruptedException e) {
+      log.error("Failed to get CloudProvider overview data. {}", e);
+      Thread.currentThread().interrupt();
+    }
   }
 
   public FieldList getFieldList(TableResult result) {

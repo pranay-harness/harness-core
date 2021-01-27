@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
@@ -52,6 +53,7 @@ public class AccountExpiryCleanupServiceTest extends CategoryTest {
   @Mock private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock private AccountExpiryService accountExpiryService;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Mock private BigQueryHelperService bigQueryHelperService;
 
   @Test
   @Owner(developers = ROHIT)
