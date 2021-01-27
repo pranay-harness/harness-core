@@ -34,9 +34,11 @@ public class VerificationJobResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "gets the verification job for an identifier", nickname = "getVerificationJob")
-  public RestResponse<VerificationJobDTO> get(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
-    return new RestResponse<>(verificationJobService.getVerificationJobDTO(accountId, identifier));
+  public RestResponse<VerificationJobDTO> get(@QueryParam("accountId") @Valid final String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("identifier") String identifier) {
+    return new RestResponse<>(
+        verificationJobService.getVerificationJobDTO(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
   @PUT
@@ -52,9 +54,10 @@ public class VerificationJobResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "deletes a verification job for an identifier", nickname = "deleteVerificationJob")
-  public void delete(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
-    verificationJobService.delete(accountId, identifier);
+  public void delete(@QueryParam("accountId") @Valid final String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("identifier") String identifier) {
+    verificationJobService.delete(accountId, orgIdentifier, projectIdentifier, identifier);
   }
 
   @GET

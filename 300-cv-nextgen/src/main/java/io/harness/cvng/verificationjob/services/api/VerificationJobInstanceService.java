@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VerificationJobInstanceService {
-  String create(String accountId, VerificationJobInstanceDTO verificationJobInstanceDTO);
+  String create(String accountId, String orgIdentifier, String projectIdentifier,
+      VerificationJobInstanceDTO verificationJobInstanceDTO);
   String create(VerificationJobInstance verificationJobInstance);
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
   VerificationJobInstanceDTO get(String verificationJobInstanceId);

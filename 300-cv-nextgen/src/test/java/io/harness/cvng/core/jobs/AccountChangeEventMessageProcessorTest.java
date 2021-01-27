@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -30,7 +31,13 @@ public class AccountChangeEventMessageProcessorTest extends CvNextGenTest {
   @Inject private AccountChangeEventMessageProcessor accountChangeEventMessageProcessor;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;
-
+  private String orgIdentifier;
+  private String projectIdentifier;
+  @Before
+  public void setup() {
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
+  }
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
@@ -44,7 +51,9 @@ public class AccountChangeEventMessageProcessorTest extends CvNextGenTest {
     accountChangeEventMessageProcessor.processDeleteAction(
         AccountEntityChangeDTO.newBuilder().setAccountId(accountId).build());
 
-    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO1.getIdentifier())).isNull();
+    assertThat(verificationJobService.getVerificationJobDTO(
+                   accountId, orgIdentifier, projectIdentifier, verificationJobDTO1.getIdentifier()))
+        .isNull();
     assertThat(cvConfigService.get(cvConfig.getUuid())).isNull();
 
     // For every message processing, idemptotency is assumed - Redelivery of a message produces the same result and
@@ -92,8 +101,8 @@ public class AccountChangeEventMessageProcessorTest extends CvNextGenTest {
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(generateUuid());
     testVerificationJobDTO.setDuration("15m");
-    testVerificationJobDTO.setOrgIdentifier(generateUuid());
-    testVerificationJobDTO.setProjectIdentifier(generateUuid());
+    testVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    testVerificationJobDTO.setProjectIdentifier(projectIdentifier);
     return testVerificationJobDTO;
   }
 }

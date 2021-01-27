@@ -124,9 +124,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withBothTimeSeriesAndLogsAnalyses() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -169,9 +170,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withoutAnalysesAndHostRecords() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -192,9 +194,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withTimeSeriesAnalysisOnly() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -231,9 +234,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withLogAnalysisOnly() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -275,9 +279,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withImprovisedCanary() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -321,9 +326,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     CanaryVerificationJobDTO canaryVerificationJobDTO = createCanaryVerificationJobDTO();
     canaryVerificationJobDTO.setTrafficSplitPercentage(60);
     verificationJobService.upsert(accountId, canaryVerificationJobDTO);
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -372,9 +378,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withBaselineVerificationJobInstanceId() {
     verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
-    String baselineVerificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
+    String baselineVerificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(baselineVerificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -394,11 +401,12 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     activityService.createActivity(activity);
 
     verificationJobService.upsert(accountId, createTestVerificationJobDTO(baselineVerificationJobInstanceId));
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJobInstance currentVerificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
-    VerificationJob modifiedVerificationJob = verificationJobService.getVerificationJob(accountId, identifier);
+    VerificationJob modifiedVerificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     currentVerificationJobInstance.setResolvedJob(modifiedVerificationJob);
     Instant currentTime = Instant.now();
     currentVerificationJobInstance.setStartTime(currentTime);
@@ -427,9 +435,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withoutBaselineVerificationJobInstanceId() {
     verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
@@ -460,9 +469,10 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withoutActivityForVerificationJobInstanceId() {
     verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(accountId, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);

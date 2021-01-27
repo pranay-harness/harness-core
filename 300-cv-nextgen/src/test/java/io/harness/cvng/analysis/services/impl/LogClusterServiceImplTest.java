@@ -70,6 +70,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
   private String verificationJobIdentifier;
   private long deploymentStartTimeMs;
   private Instant now;
+  private String projectIdentifier;
+  private String orgIdentifier;
 
   @Before
   public void setup() {
@@ -81,6 +83,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
     cvConfigId = cvConfig.getUuid();
+    projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
   }
 
   @Test
@@ -136,7 +140,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     VerificationJobDTO verificationJob = newCanaryVerificationJob();
     verificationJobService.upsert(accountId, verificationJob);
     VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
@@ -161,7 +166,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     verificationJob.setUuid(verificationJobIdentifier);
     hPersistence.save(verificationJob);
     VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
@@ -196,7 +202,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     verificationJob.setUuid(verificationJobIdentifier);
     hPersistence.save(verificationJob);
     VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId = verificationJobInstanceService.create(accountId, verificationJobInstanceDTO);
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
@@ -408,8 +415,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setServiceIdentifier(generateUuid());
-    canaryVerificationJobDTO.setOrgIdentifier(generateUuid());
-    canaryVerificationJobDTO.setProjectIdentifier(generateUuid());
+    canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    canaryVerificationJobDTO.setProjectIdentifier(projectIdentifier);
     canaryVerificationJobDTO.setEnvIdentifier(generateUuid());
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setDuration("15m");
@@ -424,8 +431,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setServiceIdentifier(generateUuid());
-    testVerificationJob.setOrgIdentifier(generateUuid());
-    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(orgIdentifier);
+    testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setDuration("15m");
