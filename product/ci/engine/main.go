@@ -30,7 +30,7 @@ type stageSchema struct {
 	Input        string `arg:"--input, required" help:"base64 format of stage to execute"`
 	TmpFilePath  string `arg:"--tmppath, required" help:"relative file path to store temporary files"`
 	ServicePorts []uint `arg:"--svc_ports" help:"grpc service ports of integration service containers"`
-	Debug        bool   `arg:"--debug" help:"Enables debug mode for checking run step logs by not exitting CI-addon"`
+	Debug        bool   `arg:"--debug" help:"Enables debug mode for checking run step logs by not exiting CI-addon"`
 }
 
 var args struct {

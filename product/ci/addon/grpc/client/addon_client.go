@@ -50,7 +50,8 @@ func NewAddonClient(port uint, log *zap.SugaredLogger) (AddonClient, error) {
 		fmt.Sprintf(":%d", port),
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithNoProxy())
 	if err != nil {
 		log.Errorw("Could not create a client to CI Addon", "error_msg", zap.Error(err))
 		return nil, err
