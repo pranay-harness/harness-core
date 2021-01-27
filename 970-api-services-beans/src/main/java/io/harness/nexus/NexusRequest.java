@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NexusRequest {
   String nexusUrl;
-  String version = "2.x";
+  String version;
   String username;
   char[] password;
   boolean hasCredentials;

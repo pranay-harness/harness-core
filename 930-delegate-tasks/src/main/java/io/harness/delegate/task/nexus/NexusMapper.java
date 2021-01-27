@@ -17,6 +17,7 @@ public class NexusMapper {
     final NexusRequestBuilder nexusRequestBuilder =
         NexusRequest.builder()
             .nexusUrl(nexusConnectorDTO.getNexusServerUrl())
+            .version(nexusConnectorDTO.getVersion())
             // Setting as false since we are not taking this in yaml as of now.
             .isCertValidationRequired(false);
     final NexusAuthType authType = nexusConnectorDTO.getAuth().getAuthType();
