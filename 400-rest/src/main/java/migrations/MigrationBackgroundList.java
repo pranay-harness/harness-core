@@ -304,6 +304,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(184, SetDefaultTimeOutAndActionForManualInterventionFailureStrategy.class))
         .add(Pair.of(185, ConvertHttpHeadersStringTypeToList.class))
         .add(Pair.of(186, DeleteOrphanPerpetualTaskMigration.class))
+        .add(Pair.of(187, BaseMigration.class))
         .build();
   }
 }
