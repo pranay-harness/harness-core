@@ -45,6 +45,8 @@ public class CD10ActivitySource extends ActivitySource {
   public ActivitySourceDTO toDTO() {
     return CD10ActivitySourceDTO.builder()
         .uuid(this.getUuid())
+        .createdAt(this.getCreatedAt())
+        .lastUpdatedAt(this.getLastUpdatedAt())
         .envMappings(envMappings)
         .serviceMappings(serviceMappings)
         .identifier(getIdentifier())
