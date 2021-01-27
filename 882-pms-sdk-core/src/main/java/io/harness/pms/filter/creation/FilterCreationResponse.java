@@ -3,11 +3,14 @@ package io.harness.pms.filter.creation;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.yaml.YamlField;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -20,12 +23,23 @@ public class FilterCreationResponse {
   int stageCount;
   @Default Map<String, YamlField> dependencies = new HashMap<>();
   @Default Map<String, YamlField> resolvedDependencies = new HashMap<>();
+  @Default List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
 
   public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
     if (EmptyPredicate.isEmpty(resolvedDependencies)) {
       return;
     }
     resolvedDependencies.values().forEach(this::addResolvedDependency);
+  }
+
+  public void addReferredEntities(List<EntityDetailProtoDTO> refferedEntities) {
+    if (EmptyPredicate.isEmpty(refferedEntities)) {
+      return;
+    }
+    if (EmptyPredicate.isEmpty(this.referredEntities)) {
+      this.referredEntities = new ArrayList<>();
+    }
+    this.referredEntities.addAll(refferedEntities);
   }
 
   public void addResolvedDependency(YamlField yamlField) {
@@ -78,6 +92,10 @@ public class FilterCreationResponse {
       for (Map.Entry<String, YamlField> dependency : resolvedDependencies.entrySet()) {
         finalBlobResponseBuilder.putResolvedDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
       }
+    }
+
+    if (isNotEmpty(referredEntities)) {
+      finalBlobResponseBuilder.addAllReferredEntities(referredEntities);
     }
 
     finalBlobResponseBuilder.setStageCount(stageCount);

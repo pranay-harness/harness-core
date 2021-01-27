@@ -9,6 +9,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
@@ -89,7 +90,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException exception) {
+    } catch (IOException | ProducerShutdownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -120,7 +121,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       }
 
       return updateResult;
-    } catch (IOException exception) {
+    } catch (IOException | ProducerShutdownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -176,9 +177,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return pmsPipelineRepository.findAll(criteria, pageable);
   }
 
-  private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
-    FilterCreatorMergeServiceResponse filtersAndStageCount =
-        filterCreatorMergeService.getPipelineInfo(pipelineEntity.getYaml());
+  private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
+    FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(

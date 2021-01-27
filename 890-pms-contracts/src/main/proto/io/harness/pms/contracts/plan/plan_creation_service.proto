@@ -8,6 +8,7 @@ import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/plan/graph_layout.proto";
 import "io/harness/pms/contracts/plan/variables.proto";
 import "io/harness/pms/contracts/plan/execution_metadata.proto";
+import "io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 service PlanCreationService {
   rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationResponse);
@@ -69,6 +70,7 @@ message FilterCreationBlobResponse {
   map<string, YamlFieldBlob> dependencies = 3;
   map<string, YamlFieldBlob> resolvedDependencies = 4;
   string startingNodeId = 6;
+  repeated io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntities = 7;
 }
 
 message VariablesCreationBlobRequest {

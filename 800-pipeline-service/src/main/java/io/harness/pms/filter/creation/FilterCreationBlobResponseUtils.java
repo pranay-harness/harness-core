@@ -18,6 +18,7 @@ public class FilterCreationBlobResponseUtils {
     mergeDependencies(builder, response.getResponse());
     mergeFilters(response, filters);
     updateStageCount(builder, response.getResponse());
+    mergeReferredEntities(builder, response.getResponse());
   }
 
   public void updateStageCount(
@@ -28,6 +29,12 @@ public class FilterCreationBlobResponseUtils {
   public void mergeFilters(FilterCreationResponseWrapper response, Map<String, String> filters) {
     if (isNotEmpty(response.getResponse().getFilter())) {
       filters.put(response.getServiceName(), response.getResponse().getFilter());
+    }
+  }
+
+  public void mergeReferredEntities(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
+    if (isNotEmpty(response.getReferredEntitiesList())) {
+      builder.addAllReferredEntities(response.getReferredEntitiesList());
     }
   }
 
