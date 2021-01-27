@@ -121,3 +121,8 @@ ceAwsSetupConfig:
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
+
+baseUrls:
+  ngManager: http://localhost:7457/
+  ui: http://localhost:8080/
+  ngUi: http://localhost:8080/ng/#/

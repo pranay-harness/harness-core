@@ -70,13 +70,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private static final String PROJECT_URL_FORMAT = "ng/#/account/%s/projects/%s/orgs/%s/details";
-  private static final String ORG_URL_FORMAT = "ng/#/account/%s/admin/organizations/%s";
+  private static final String PROJECT_URL_FORMAT = "account/%s/projects/%s/orgs/%s/details";
+  private static final String ORG_URL_FORMAT = "account/%s/admin/organizations/%s";
   private static final String SIGN_UP_URL = "#/login";
-  private static final String INVALID_TOKEN_REDIRECT_URL = "ng/#/account/%s/error?code=INVITE_EXPIRED";
+  private static final String INVALID_TOKEN_REDIRECT_URL = "account/%s/error?code=INVITE_EXPIRED";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
-  @Named("baseUrl") private String BASE_URL;
+  @Named("uiBaseUrl") String uiBaseUrl;
+  @Named("ngUiBaseUrl") String ngUiBaseUrl;
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
@@ -158,7 +159,7 @@ public class InviteResource {
       // TODO @Ankush when user signup, check if he has any pending approved invites
       redirectURI = getRedirectURI(invite);
     } else {
-      redirectURI = URI.create(BASE_URL + String.format(INVALID_TOKEN_REDIRECT_URL, accountIdentifier));
+      redirectURI = URI.create(ngUiBaseUrl + String.format(INVALID_TOKEN_REDIRECT_URL, accountIdentifier));
     }
     return Response.seeOther(redirectURI).build();
   }
@@ -168,13 +169,13 @@ public class InviteResource {
     if (Boolean.TRUE.equals(invite.getDeleted())) {
       if (invite.getProjectIdentifier() == null) {
         redirectURI = URI.create(
-            String.format(BASE_URL + ORG_URL_FORMAT, invite.getAccountIdentifier(), invite.getOrgIdentifier()));
+            String.format(ngUiBaseUrl + ORG_URL_FORMAT, invite.getAccountIdentifier(), invite.getOrgIdentifier()));
       } else {
-        redirectURI = URI.create(String.format(BASE_URL + PROJECT_URL_FORMAT, invite.getAccountIdentifier(),
+        redirectURI = URI.create(String.format(ngUiBaseUrl + PROJECT_URL_FORMAT, invite.getAccountIdentifier(),
             invite.getProjectIdentifier(), invite.getOrgIdentifier()));
       }
     } else {
-      redirectURI = URI.create(BASE_URL + SIGN_UP_URL);
+      redirectURI = URI.create(uiBaseUrl + SIGN_UP_URL);
     }
     return redirectURI;
   }

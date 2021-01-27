@@ -60,10 +60,24 @@ public class InviteModule extends AbstractModule {
   }
 
   @Provides
-  @Named("baseUrl")
+  @Named("ngManagerBaseUrl")
   @Singleton
-  protected String getBaseURL(NextGenConfiguration nextGenConfiguration) {
-    return nextGenConfiguration.getNgManagerPublicBaseUrl();
+  protected String getNgManagerBaseUrl(NextGenConfiguration nextGenConfiguration) {
+    return nextGenConfiguration.getBaseUrls().getNgManager();
+  }
+
+  @Provides
+  @Named("uiBaseUrl")
+  @Singleton
+  protected String getUiBaseUrl(NextGenConfiguration nextGenConfiguration) {
+    return nextGenConfiguration.getBaseUrls().getUi();
+  }
+
+  @Provides
+  @Named("ngUiBaseUrl")
+  @Singleton
+  protected String getNgUiBaseUrl(NextGenConfiguration nextGenConfiguration) {
+    return nextGenConfiguration.getBaseUrls().getNgUi();
   }
 
   @Provides

@@ -162,10 +162,6 @@ if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
 
-if [[ "" != "$NG_MANAGER_PUBLIC_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE ngManagerPublicBaseUrl $NG_MANAGER_PUBLIC_BASE_URL
-fi
-
 if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
 fi
@@ -179,3 +175,9 @@ replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
 
 replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
+
+replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
+
+replace_key_value baseUrls.ui $MANAGER_API_URL
+
+replace_key_value baseUrls.ngUi $NG_UI_URL

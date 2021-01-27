@@ -61,7 +61,8 @@ public class InviteResourceTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
-    inviteResource = new InviteResource(invitesService, ngUserService, "http://qa.harness.io/");
+    inviteResource =
+        new InviteResource(invitesService, ngUserService, "http://qa.harness.io/", "http://qa.harness.io/ng/#/");
     invite = Invite.builder()
                  .accountIdentifier(accountIdentifier)
                  .orgIdentifier(orgIdentifiier)
