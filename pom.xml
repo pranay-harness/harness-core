@@ -23,6 +23,7 @@
         <module>310-ci-manager</module>
         <module>320-ci-execution</module>
         <module>330-ci-beans</module>
+        <module>340-ce-nextgen</module>
         <module>350-event-server</module>
         <module>380-cg-graphql</module>
         <module>400-rest</module>
@@ -1016,6 +1017,11 @@
                 <groupId>io.prometheus</groupId>
                 <artifactId>simpleclient_servlet</artifactId>
                 <version>0.3.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>1.5.22</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>
