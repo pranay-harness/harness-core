@@ -12,6 +12,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,10 +55,33 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
       addFieldToPropertiesMapUnderStep(descriptionField, yamlPropertiesMap);
     }
 
+    YamlField timeoutField = yamlNode.getField(YAMLFieldNameConstants.TIMEOUT);
+    if (timeoutField != null) {
+      addFieldToPropertiesMapUnderStep(timeoutField, yamlPropertiesMap);
+    }
+
     YamlField specField = yamlNode.getField(YAMLFieldNameConstants.SPEC);
     if (specField != null) {
-      addVariablesForStepSpec(specField, yamlPropertiesMap);
+      addVariablesInComplexObject(yamlPropertiesMap, specField.getNode());
     }
+  }
+
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+    List<String> extraFields = new ArrayList<>();
+    extraFields.add(YAMLFieldNameConstants.UUID);
+    extraFields.add(YAMLFieldNameConstants.IDENTIFIER);
+    extraFields.add(YAMLFieldNameConstants.TYPE);
+    List<YamlField> fields = yamlNode.fields();
+    fields.forEach(field -> {
+      if (field.getNode().isObject()) {
+        addVariablesInComplexObject(yamlPropertiesMap, field.getNode());
+      } else if (field.getNode().isArray()) {
+        List<YamlNode> innerFields = field.getNode().asArray();
+        innerFields.forEach(f -> addVariablesInComplexObject(yamlPropertiesMap, f));
+      } else if (!extraFields.contains(field.getName())) {
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+      }
+    });
   }
 
   protected void addVariablesForStepSpec(YamlField specField, Map<String, YamlProperties> yamlPropertiesMap) {
