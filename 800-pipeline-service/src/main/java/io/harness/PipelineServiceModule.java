@@ -136,6 +136,7 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
     install(new YamlSchemaClientModule(
         configuration.getCiManagerClientConfig(), configuration.getCiManagerServiceSecret(), "PipelineService"));
+    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);

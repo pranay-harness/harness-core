@@ -13,16 +13,20 @@ import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
+import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,23 +89,25 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
 
   PlanCreationServiceGrpc.PlanCreationServiceBlockingStub planCreationServiceBlockingStub;
   @Mock PmsSdkHelper pmsSdkHelper;
+  @Mock PipelineSetupUsageHelper pipelineSetupUsageHelper;
   FilterCreatorMergeService filterCreatorMergeService;
 
   @Before
   public void init() {
     Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> map = new HashMap<>();
-    filterCreatorMergeService = spy(new FilterCreatorMergeService(map, pmsSdkHelper));
+    filterCreatorMergeService = spy(new FilterCreatorMergeService(map, pmsSdkHelper, pipelineSetupUsageHelper));
   }
 
   @After
   public void verifyInteractions() {
     verifyNoMoreInteractions(pmsSdkHelper);
+    verifyNoMoreInteractions(pipelineSetupUsageHelper);
   }
 
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testGetPipelineInfo() throws IOException {
+  public void testGetPipelineInfo() throws IOException, ProducerShutdownException {
     Map<String, Set<String>> stepToSupportedTypes = new HashMap<>();
     stepToSupportedTypes.put("pipeline", Collections.singleton("__any__"));
     Map<String, PlanCreatorServiceInfo> sdkInstances = new HashMap<>();
@@ -112,9 +118,11 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
         .obtainFiltersRecursively(any(), any(), any());
 
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
-        filterCreatorMergeService.getPipelineInfo(pipelineYaml);
+        filterCreatorMergeService.getPipelineInfo(PipelineEntity.builder().yaml(pipelineYaml).build());
 
     verify(pmsSdkHelper).getServices();
+    verify(pipelineSetupUsageHelper)
+        .publishSetupUsageEvent(PipelineEntity.builder().yaml(pipelineYaml).build(), new ArrayList<>());
   }
 
   @Test

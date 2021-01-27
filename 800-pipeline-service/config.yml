@@ -63,6 +63,20 @@ ciManagerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbi
 managerTarget: localhost:9880
 managerAuthority: localhost
 
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
   connectTimeOutSeconds: 15

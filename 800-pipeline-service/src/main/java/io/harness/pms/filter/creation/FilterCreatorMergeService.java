@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.plan.ErrorResponse;
@@ -14,6 +15,8 @@ import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationService
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
+import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -32,7 +35,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -40,20 +42,23 @@ import lombok.extern.slf4j.Slf4j;
 public class FilterCreatorMergeService {
   private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
+  private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public FilterCreatorMergeService(
-      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkHelper pmsSdkHelper) {
+  public FilterCreatorMergeService(Map<String, PlanCreationServiceBlockingStub> planCreatorServices,
+      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper) {
     this.planCreatorServices = planCreatorServices;
     this.pmsSdkHelper = pmsSdkHelper;
+    this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
   }
 
-  public FilterCreatorMergeServiceResponse getPipelineInfo(@NotNull String yaml) throws IOException {
+  public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity)
+      throws IOException, ProducerShutdownException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-
+    String yaml = pipelineEntity.getYaml();
     String processedYaml = YamlUtils.injectUuid(yaml);
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
@@ -62,7 +67,7 @@ public class FilterCreatorMergeService {
     Map<String, String> filters = new HashMap<>();
     FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters);
     validateFilterCreationBlobResponse(response);
-
+    pipelineSetupUsageHelper.publishSetupUsageEvent(pipelineEntity, response.getReferredEntitiesList());
     return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
   }
 
@@ -95,6 +100,7 @@ public class FilterCreatorMergeService {
       }
       FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeReferredEntities(responseBuilder, currIterResponse);
     }
 
     return responseBuilder.build();

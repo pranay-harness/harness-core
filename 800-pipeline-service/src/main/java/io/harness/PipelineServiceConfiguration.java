@@ -3,6 +3,7 @@ package io.harness;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -52,6 +53,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
 
   private String managerServiceSecret;

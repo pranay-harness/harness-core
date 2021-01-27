@@ -113,6 +113,7 @@ public class FilterCreatorService {
         continue;
       }
       finalResponse.setStageCount(finalResponse.getStageCount() + response.getStageCount());
+      finalResponse.addReferredEntities(response.getReferredEntities());
       filterCreationResponseMerger.mergeFilterCreationResponse(finalResponse, response);
       finalResponse.addResolvedDependency(yamlField);
       if (isNotEmpty(response.getDependencies())) {
