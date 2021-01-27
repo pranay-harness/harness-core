@@ -50,7 +50,8 @@ func NewEngineClient(port uint, log *zap.SugaredLogger) (EngineClient, error) {
 		fmt.Sprintf(":%d", port),
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithNoProxy())
 	if err != nil {
 		log.Errorw("Could not create a client to CI Engine", "error_msg", zap.Error(err))
 		return nil, err

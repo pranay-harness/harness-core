@@ -51,7 +51,8 @@ func NewTaskServiceClient(ip string, log *zap.SugaredLogger) (TaskServiceClient,
 		ip,
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithNoProxy())
 	if err != nil {
 		log.Errorw("Could not create a client to expression evaluator service", "error_msg", zap.Error(err))
 		return nil, err
