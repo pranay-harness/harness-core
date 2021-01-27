@@ -1,14 +1,17 @@
 package io.harness.ng.core.models;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
+
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.secretmanagerclient.SecretType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
@@ -39,7 +42,7 @@ public class Secret {
   String identifier;
   String name;
   String description;
-  Map<String, String> tags;
+  List<NGTag> tags;
   SecretType type;
   Boolean draft;
 
@@ -60,7 +63,7 @@ public class Secret {
         .identifier(getIdentifier())
         .name(getName())
         .description(getDescription())
-        .tags(getTags())
+        .tags(convertToMap(getTags()))
         .type(getType())
         .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
         .build();

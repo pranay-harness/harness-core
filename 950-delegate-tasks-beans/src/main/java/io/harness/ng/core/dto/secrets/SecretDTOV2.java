@@ -1,5 +1,7 @@
 package io.harness.ng.core.dto.secrets;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.ng.core.models.Secret;
@@ -58,7 +60,7 @@ public class SecretDTOV2 {
         .identifier(getIdentifier())
         .description(getDescription())
         .name(getName())
-        .tags(getTags())
+        .tags(convertToList(getTags()))
         .type(getType())
         .secretSpec(Optional.ofNullable(getSpec()).map(SecretSpecDTO::toEntity).orElse(null))
         .build();
