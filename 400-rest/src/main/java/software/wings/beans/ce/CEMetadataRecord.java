@@ -25,6 +25,9 @@ public class CEMetadataRecord implements PersistentEntity, UuidAware, AccountAcc
   private String accountId;
   private Boolean clusterDataConfigured;
   private Boolean awsConnectorConfigured;
+  private Boolean awsDataPresent;
   private Boolean gcpConnectorConfigured;
+  private Boolean gcpDataPresent;
+
   private long lastUpdatedAt;
 }

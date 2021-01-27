@@ -2,6 +2,7 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.anomalydetection.RemoveDuplicateAnomaliesTasklet;
 import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsAccountReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsServiceReader;
@@ -20,6 +21,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -34,7 +36,8 @@ public class AnomalyDetectionConfiguration {
   @Qualifier(value = "anomalyDetectionDailyJob")
   public Job anomalyDetectionDailyJob(JobBuilderFactory jobBuilderFactory, Step statisticalModelClusterStep,
       Step statisticalModelNamespaceStep, Step statisticalModelGcpProjectStep, Step statisticalModelGcpSkuStep,
-      Step statisticalModelGcpProductStep, Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep) {
+      Step statisticalModelGcpProductStep, Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep,
+      Step removeDuplicatesStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION.name())
         .incrementer(new RunIdIncrementer())
         .start(statisticalModelClusterStep)
@@ -44,6 +47,7 @@ public class AnomalyDetectionConfiguration {
         .next(statisticalModelGcpSkuStep)
         .next(statisticalModelAwsAccountStep)
         .next(statisticalModelAwsServiceStep)
+        .next(removeDuplicatesStep)
         .build();
   }
 
@@ -115,6 +119,16 @@ public class AnomalyDetectionConfiguration {
         .processor(statModelProcessor())
         .writer(timescaleWriter())
         .build();
+  }
+
+  @Bean
+  protected Step removeDuplicatesStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("removeDuplicateAnomaliesStep").tasklet(removeDuplicateAnomaliesTasklet()).build();
+  }
+
+  @Bean
+  public Tasklet removeDuplicateAnomaliesTasklet() {
+    return new RemoveDuplicateAnomaliesTasklet();
   }
 
   // ---------------- Item Reader ----------------------
