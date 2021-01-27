@@ -1,0 +1,63 @@
+{
+   "comment":{
+      "action":"CREATE",
+      "repo":{
+         "id":"309651765",
+         "namespace":"abc",
+         "name":"def-ci-webhook-test",
+         "branch":"master",
+         "private":true,
+         "clone":"https://github.com/abc/def-ci-webhook-test.git",
+         "cloneSsh":"git@github.com:abc/def-ci-webhook-test.git",
+         "link":"https://github.com/abc/def-ci-webhook-test",
+         "created":"0001-01-01T00:00:00Z",
+         "updated":"0001-01-01T00:00:00Z"
+      },
+      "issue":{
+         "number":2,
+         "title":"Update README.md",
+         "link":"https://github.com/abc/def-ci-webhook-test/pull/2",
+         "user":{
+            "login":"lts-def",
+            "avatar":"https://avatars0.githubusercontent.com/u/10278482?v=4",
+            "created":"0001-01-01T00:00:00Z",
+            "updated":"0001-01-01T00:00:00Z"
+         },
+         "pr":{
+            "link":"https://github.com/abc/def-ci-webhook-test/pull/2",
+            "base":{
+
+            },
+            "head":{
+
+            },
+            "author":{
+               "created":"0001-01-01T00:00:00Z",
+               "updated":"0001-01-01T00:00:00Z"
+            },
+            "created":"0001-01-01T00:00:00Z",
+            "updated":"0001-01-01T00:00:00Z"
+         },
+         "created":"2020-11-03T22:32:14Z",
+         "updated":"2020-12-29T05:49:14Z"
+      },
+      "sender":{
+         "login":"lts-def",
+         "avatar":"https://avatars0.githubusercontent.com/u/10278482?v=4",
+         "created":"0001-01-01T00:00:00Z",
+         "updated":"0001-01-01T00:00:00Z"
+      },
+      "comment":{
+         "id":751955664,
+         "body":"trigger abc",
+         "user":{
+            "login":"lts-def",
+            "avatar":"https://avatars0.githubusercontent.com/u/10278482?v=4",
+            "created":"0001-01-01T00:00:00Z",
+            "updated":"0001-01-01T00:00:00Z"
+         },
+         "created":"2020-12-29T05:49:14Z",
+         "updated":"2020-12-29T05:49:14Z"
+      }
+   }
+}
