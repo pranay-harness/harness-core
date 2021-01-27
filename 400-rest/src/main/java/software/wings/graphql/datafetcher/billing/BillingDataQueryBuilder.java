@@ -455,7 +455,7 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getBillingAmount()),
                 BillingDataMetaDataFields.SUM.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.SUM);
-      } else if (aggregationFunction.getColumnName().equals(schema.getIdleCost().getColumnNameSQL())) {
+      } else if (aggregationFunction.getColumnName().equalsIgnoreCase(schema.getIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getActualIdleCost()),
                 BillingDataMetaDataFields.IDLECOST.getFieldName()));
