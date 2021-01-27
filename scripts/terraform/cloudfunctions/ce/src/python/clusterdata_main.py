@@ -101,7 +101,7 @@ def main(jsonData, context):
 def alterClusterTable(client, jsonData):
     print("Altering CLuster Data Table")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS envname STRING, ADD COLUMN IF NOT EXISTS servicename STRING, ADD COLUMN IF NOT EXISTS appname STRING;" % (ds)
+    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT, ADD COLUMN IF NOT EXISTS storageunallocatedcost FLOAT, ADD COLUMN IF NOT EXISTS storageutilizationvalue FLOAT, ADD COLUMN IF NOT EXISTS storagerequest FLOAT, ADD COLUMN IF NOT EXISTS storagembseconds FLOAT, ADD COLUMN IF NOT EXISTS storagecost FLOAT;" % (ds)
 
     try:
         query_job = client.query(query)
