@@ -16,6 +16,8 @@ public abstract class ActivitySourceDTO {
   // TODO: keeping it in the base class but we need to separate out UI entities and entities that are updated from
   // delegate.
   String uuid;
+  long createdAt;
+  long lastUpdatedAt;
   @NotNull String identifier;
   @NotNull String name;
 
