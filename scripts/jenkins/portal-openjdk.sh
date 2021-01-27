@@ -251,3 +251,17 @@ then
 fi
 
 cd ../..
+
+mkdir -p dist/eventsapi-monitor
+cd dist/eventsapi-monitor
+
+cp -r ../../950-events-api/src/monitoring/ .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
