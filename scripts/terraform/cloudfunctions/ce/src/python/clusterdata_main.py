@@ -94,14 +94,16 @@ def main(jsonData, context):
 
     ingestDataFromAvroToClusterData(client, jsonData)
     ingestDataFromClusterDataToUnified(client, jsonData)
-    loadIntoUnifiedGCP(client, jsonData)
-    loadIntoUnifiedAWS(client, jsonData)
+    # These are now done in corresponding AWS and GCP CFs.
+    #loadIntoUnifiedGCP(client, jsonData)
+    #loadIntoUnifiedAWS(client, jsonData)
     client.close()
 
 def alterClusterTable(client, jsonData):
     print("Altering CLuster Data Table")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT, ADD COLUMN IF NOT EXISTS storageunallocatedcost FLOAT, ADD COLUMN IF NOT EXISTS storageutilizationvalue FLOAT, ADD COLUMN IF NOT EXISTS storagerequest FLOAT, ADD COLUMN IF NOT EXISTS storagembseconds FLOAT, ADD COLUMN IF NOT EXISTS storagecost FLOAT;" % (ds)
+    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, ADD COLUMN IF NOT EXISTS storageunallocatedcost FLOAT64, ADD COLUMN IF NOT EXISTS storageutilizationvalue FLOAT64, ADD COLUMN IF NOT EXISTS storagerequest FLOAT64, ADD COLUMN IF NOT EXISTS storagembseconds FLOAT64, ADD COLUMN IF NOT EXISTS storagecost FLOAT64;" % (ds)
+
 
     try:
         query_job = client.query(query)
