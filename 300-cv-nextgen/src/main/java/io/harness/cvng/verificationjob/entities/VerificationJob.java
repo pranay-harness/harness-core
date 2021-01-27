@@ -24,6 +24,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -37,6 +38,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -110,6 +112,7 @@ public abstract class VerificationJob
   public abstract Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime);
   public abstract Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime);
   public abstract List<TimeRange> getDataCollectionTimeRanges(Instant startTime);
+
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);
     verificationJobDTO.setJobName(this.jobName);
@@ -125,6 +128,7 @@ public abstract class VerificationJob
     verificationJobDTO.setDefaultJob(isDefaultJob);
     verificationJobDTO.setActivitySourceIdentifier(activitySourceIdentifier);
     verificationJobDTO.setMonitoringSources(monitoringSources);
+    verificationJobDTO.setVerificationJobUrl(getVerificationJobUrl());
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {
@@ -136,6 +140,21 @@ public abstract class VerificationJob
       ranges.add(TimeRange.builder().startTime(current).endTime(current.plus(1, ChronoUnit.MINUTES)).build());
     }
     return ranges;
+  }
+
+  public String getVerificationJobUrl() {
+    URIBuilder jobUrlBuilder = new URIBuilder();
+    jobUrlBuilder.setPath("/verification-job");
+    jobUrlBuilder.addParameter(VerificationJobKeys.accountId, accountId);
+    jobUrlBuilder.addParameter(VerificationJobKeys.orgIdentifier, orgIdentifier);
+    jobUrlBuilder.addParameter(VerificationJobKeys.projectIdentifier, projectIdentifier);
+    jobUrlBuilder.addParameter(VerificationJobKeys.identifier, identifier);
+
+    try {
+      return jobUrlBuilder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public void setDuration(Duration duration) {

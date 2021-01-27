@@ -23,11 +23,14 @@ import io.harness.utils.PageUtils;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 
 @Slf4j
 public class VerificationJobServiceImpl implements VerificationJobService {
@@ -51,6 +54,9 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     verificationJob.setAccountId(accountId);
     VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getIdentifier());
     if (stored != null) {
+      Preconditions.checkState(stored.getProjectIdentifier().equals(verificationJob.getProjectIdentifier()));
+      Preconditions.checkState(stored.getOrgIdentifier().equals(verificationJob.getOrgIdentifier()));
+
       verificationJob.setUuid(stored.getUuid());
     }
     verificationJob.validate();
@@ -116,6 +122,41 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   public VerificationJob get(String uuid) {
     Preconditions.checkNotNull(uuid);
     return hPersistence.get(VerificationJob.class, uuid);
+  }
+
+  @Override
+  public VerificationJob getByUrl(String accountId, String verificationJobUrl) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(verificationJobUrl);
+
+    String identifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.identifier);
+    String orgIdentifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.orgIdentifier);
+    String projectIdentifier = getParamFromUrl(verificationJobUrl, VerificationJobKeys.projectIdentifier);
+    Preconditions.checkNotNull(identifier);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+
+    // TODO: Use the fully qualified method once it's available.
+    return hPersistence.createQuery(VerificationJob.class)
+        .filter(VerificationJobKeys.accountId, accountId)
+        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
+        .filter(VerificationJobKeys.identifier, identifier)
+        .get();
+  }
+
+  private String getParamFromUrl(String url, String paramName) {
+    try {
+      List<NameValuePair> queryParams = new URIBuilder(url).getQueryParams();
+      return queryParams.stream()
+          .filter(param -> param.getName().equalsIgnoreCase(paramName))
+          .map(NameValuePair::getValue)
+          .findFirst()
+          .orElse(null);
+    } catch (URISyntaxException ex) {
+      log.error("Exception while parsing URL: " + url, ex);
+      throw new IllegalStateException("Exception while parsing URL: " + url);
+    }
   }
 
   @Override

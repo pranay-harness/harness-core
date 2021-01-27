@@ -25,4 +25,5 @@ public interface VerificationJobService {
       String accountId, String orgIdentifier, String projectIdentifier);
   VerificationJobDTO getDefaultHealthVerificationJobDTO(
       String accountId, String orgIdentifier, String projectIdentifier);
+  VerificationJob getByUrl(String accountId, String verificationJobUrl);
 }
