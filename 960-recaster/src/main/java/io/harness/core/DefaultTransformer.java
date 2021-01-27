@@ -19,7 +19,6 @@ import io.harness.transformers.simplevalue.LocalDateTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LocalTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LongRecastTransformer;
 import io.harness.transformers.simplevalue.MapRecastTransformer;
-import io.harness.transformers.simplevalue.ProtoRecastTransformer;
 import io.harness.transformers.simplevalue.StringRecastTransformer;
 
 public class DefaultTransformer extends Transformer {
@@ -34,7 +33,6 @@ public class DefaultTransformer extends Transformer {
     addTransformer(new ClassRecastTransformer());
     addTransformer(new EnumRecastTransformer());
     addTransformer(new IterableRecastTransformer());
-    addTransformer(new ProtoRecastTransformer());
     addTransformer(new StringRecastTransformer());
     addTransformer(new LongRecastTransformer());
     addTransformer(new IntegerRecastTransformer());

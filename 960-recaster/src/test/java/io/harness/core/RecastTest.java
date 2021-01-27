@@ -11,7 +11,6 @@ import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -283,10 +282,10 @@ public class RecastTest extends RecasterTestBase {
     map.put("Test1", "Success");
     Recast recast = new Recast(recaster, ImmutableSet.of(DummyStringKeyMap.class));
     DummyStringKeyMap stringKeyMap = DummyStringKeyMap.builder().map(map).build();
-    Gson gson = new Gson();
     Document document = recast.toDocument(stringKeyMap);
     assertThat(document).isNotEmpty();
-    assertThat((Document) document.get("map")).isEqualTo(Document.parse(gson.toJson(map)));
+    assertThat((Document) document.get("map"))
+        .isEqualTo(new Document().append("Test", "Success").append("Test1", "Success"));
 
     DummyStringKeyMap recastedDummyMap = recast.fromDocument(document, DummyStringKeyMap.class);
     assertThat(recastedDummyMap).isNotNull();

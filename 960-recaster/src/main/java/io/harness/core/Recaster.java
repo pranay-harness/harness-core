@@ -6,11 +6,10 @@ import io.harness.beans.CastedClass;
 import io.harness.beans.CastedField;
 import io.harness.exceptions.CastedFieldException;
 import io.harness.exceptions.RecasterException;
-import io.harness.fieldrecaster.DefaultFieldRecaster;
+import io.harness.fieldrecaster.ComplexFieldRecaster;
 import io.harness.fieldrecaster.FieldRecaster;
 import io.harness.fieldrecaster.SimpleValueFieldRecaster;
 
-import com.google.protobuf.Message;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +33,7 @@ public class Recaster {
 
   public Recaster() {
     this.transformer = new CustomTransformer(this);
-    this.defaultFieldRecaster = new DefaultFieldRecaster();
+    this.defaultFieldRecaster = new ComplexFieldRecaster();
     this.simpleValueFieldRecaster = new SimpleValueFieldRecaster();
   }
 
@@ -76,7 +75,7 @@ public class Recaster {
           format("The document does not contain a %s key. Determining entity type is impossible.", RECAST_CLASS_KEY));
     }
 
-    if (transformer.hasTransformer(entityClass)) {
+    if (transformer.hasCustomTransformer(entityClass)) {
       return (T) transformer.decode(entityClass, document.get(ENCODED_VALUE), null);
     }
 
@@ -94,9 +93,6 @@ public class Recaster {
 
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, T entity) {
-    if (entity instanceof Message) {
-      return decodeProto(document, entity);
-    }
     if (entity instanceof Map) {
       populateMap(document, entity);
     } else if (entity instanceof Collection) {
@@ -165,7 +161,7 @@ public class Recaster {
 
   private void readCastedField(final Document document, final CastedField cf, final Object entity) {
     // Annotation logic should be wired here
-    if (transformer.hasSimpleValueTransformer(cf)) {
+    if (transformer.hasSimpleValueTransformer(cf.getType())) {
       simpleValueFieldRecaster.fromDocument(this, document, cf, entity);
     } else {
       defaultFieldRecaster.fromDocument(this, document, cf, entity);
@@ -191,14 +187,9 @@ public class Recaster {
     final CastedClass cc = getCastedClass(entity);
     document.put(RECAST_CLASS_KEY, entity.getClass().getName());
 
-    if (transformer.hasTransformer(entity.getClass())) {
+    if (transformer.hasCustomTransformer(entity.getClass())) {
       Object encode = transformer.encode(entity);
       return document.append(ENCODED_VALUE, encode);
-    }
-
-    if (entity instanceof Message) {
-      Object encodedProto = transformer.encode(entity);
-      return document.append(ENCODED_VALUE, encodedProto);
     }
 
     if (entity instanceof Map) {
@@ -228,7 +219,8 @@ public class Recaster {
         writeCastedField(entity, cf, document, involvedObjects);
       } catch (Exception e) {
         throw new CastedFieldException(format("Cannot map [%s] to [%s] class for field [%s]",
-            document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()));
+                                           document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()),
+            e);
       }
     }
 
@@ -242,8 +234,7 @@ public class Recaster {
   private void writeCastedField(
       Object entity, CastedField cf, Document document, Map<Object, Document> involvedObjects) {
     // Annotation logic should be wired here
-    if (transformer.hasSimpleValueTransformer(cf) || transformer.hasSimpleValueTransformer(entity)
-        || transformer.hasSimpleValueTransformer(cf.getType())) {
+    if (transformer.hasSimpleValueTransformer(cf.getType())) {
       simpleValueFieldRecaster.toDocument(this, entity, cf, document, involvedObjects);
     } else {
       defaultFieldRecaster.toDocument(this, entity, cf, document, involvedObjects);

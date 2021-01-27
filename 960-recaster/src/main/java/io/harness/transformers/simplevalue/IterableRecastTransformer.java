@@ -11,6 +11,7 @@ import io.harness.utils.RecastReflectionUtils;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import org.bson.Document;
 
@@ -40,8 +41,9 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
     } else if (fromDBObject instanceof Iterable) {
       for (final Object o : (Iterable<Object>) fromDBObject) {
         if (o instanceof Document) {
+          // if document does not have __recast then use HashMap.class to create instance
           values.add(getRecaster().fromDocument(
-              (Document) o, (Object) getRecaster().getObjectFactory().createInstance(null, (Document) o)));
+              (Document) o, (Object) getRecaster().getObjectFactory().createInstance(HashMap.class, (Document) o)));
         } else if (o instanceof Iterable) {
           values.add(decodeInternal(o.getClass(), o, castedField));
         } else {

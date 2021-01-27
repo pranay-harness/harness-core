@@ -3,6 +3,7 @@ package io.harness.pms.serializer.recaster;
 import io.harness.core.Recast;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
+import io.harness.serializer.recaster.ProtoRecastTransformer;
 
 import lombok.experimental.UtilityClass;
 import org.bson.Document;
@@ -13,6 +14,7 @@ public class RecastOrchestrationUtils {
 
   static {
     recast.addTransformer(new JsonObjectRecastTransformer());
+    recast.addTransformer(new ProtoRecastTransformer());
   }
 
   public <T> Document toDocument(T entity) {

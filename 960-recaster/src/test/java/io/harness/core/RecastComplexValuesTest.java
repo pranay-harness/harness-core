@@ -13,7 +13,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -172,10 +171,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestRecastWithListOfInterfacesWithoutRegisteringTheClassException() {
-    ITest iTest = new ITestImpl("someType");
-    ITest iTest1 = new ITestImpl("someType1");
-    ITest iTest2 = new ITestImpl("someType2");
-
     Document document =
         new Document()
             .append(RECAST_KEY, DummyListOfSetOfInterfaces.class.getName())
@@ -429,11 +424,10 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(DummyStringKeyValueListMap.class));
     DummyStringKeyValueListMap stringKeyMap = DummyStringKeyValueListMap.builder().map(map).build();
 
-    Gson gson = new Gson();
     Document document = recast.toDocument(stringKeyMap);
     assertThat(document).isNotEmpty();
     assertThat(document.get(RECAST_KEY)).isEqualTo(DummyStringKeyValueListMap.class.getName());
-    assertThat((Document) document.get("map")).isEqualTo(Document.parse(gson.toJson(map)));
+    assertThat((Document) document.get("map")).isEqualTo(new Document().append("Test", strings));
 
     DummyStringKeyValueListMap recastedDummyMap = recast.fromDocument(document, DummyStringKeyValueListMap.class);
     assertThat(recastedDummyMap).isNotNull();
@@ -458,11 +452,13 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(DummyStringKeyValueMap.class));
     DummyStringKeyValueMap stringKeyMap = DummyStringKeyValueMap.builder().map(map).build();
 
-    Gson gson = new Gson();
     Document document = recast.toDocument(stringKeyMap);
     assertThat(document).isNotEmpty();
     assertThat(document.get(RECAST_KEY)).isEqualTo(DummyStringKeyValueMap.class.getName());
-    assertThat((Document) document.get("map")).isEqualTo(Document.parse(gson.toJson(map)));
+    assertThat((Document) document.get("map"))
+        .isEqualTo(new Document()
+                       .append("Test", new Document().append("status", "Success"))
+                       .append("Test1", new Document("status", "Success")));
 
     DummyStringKeyValueMap recastedDummyMap = recast.fromDocument(document, DummyStringKeyValueMap.class);
     assertThat(recastedDummyMap).isNotNull();
