@@ -1,14 +1,14 @@
-mod analyze;
-mod java_class;
-mod java_module;
-
-use crate::analyze::analyze;
-
 // (Full example with detailed comments in examples/01d_quick_example.rs)
 //
 // This example demonstrates clap's full 'custom derive' style of creating arguments which is the
 // simplest method of use, but sacrifices some flexibility.
+mod analyze;
+mod java_class;
+mod java_module;
+
 use clap::Clap;
+
+use crate::analyze::{analyze, Analyze};
 
 ///
 #[derive(Clap)]
@@ -23,13 +23,8 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCommand {
-    #[clap(version = "1.3", author = "Someone E. <someone_else@other.com>")]
+    #[clap(version = "1.3", author = "George Georgiev <george@harness.io>")]
     Analyze(Analyze),
-}
-
-/// A subcommand to analyze the project module targets and dependencies
-#[derive(Clap)]
-struct Analyze {
 }
 
 fn main() {
@@ -48,10 +43,9 @@ fn main() {
     // (as below), requesting just the name used, or both at the same time
     match opts.subcmd {
         SubCommand::Analyze(_options) => {
-            analyze();
+            analyze(_options);
         }
     }
 
     // more program logic goes here...
 }
-

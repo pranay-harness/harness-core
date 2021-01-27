@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "DelegateConnectionResultKeys")
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateConnectionResult implements PersistentEntity, UuidAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
