@@ -68,6 +68,9 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
     Infrastructure infrastructure = pipelineInfrastructure.getInfrastructureDefinition().getInfrastructure();
     Infrastructure finalInfrastructure =
         infraOverrides != null ? infrastructure.applyOverrides(infraOverrides) : infrastructure;
+    if (finalInfrastructure == null) {
+      throw new InvalidRequestException("Infrastructure definition can't be null or empty");
+    }
     InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(finalInfrastructure);
 
     return StepResponse.builder()
