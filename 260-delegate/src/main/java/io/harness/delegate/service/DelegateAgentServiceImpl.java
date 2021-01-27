@@ -363,10 +363,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
 
-  public static String getHostName() {
-    return HOST_NAME;
-  }
-
   public static Optional<String> getDelegateId() {
     return Optional.ofNullable(delegateId);
   }
@@ -703,13 +699,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(true);
-    if (!closingSocket.get()) {
-      if (reconnectingSocket.compareAndSet(false, true)) {
-        try {
-          trySocketReconnect();
-        } finally {
-          reconnectingSocket.set(false);
-        }
+    if (!closingSocket.get() && reconnectingSocket.compareAndSet(false, true)) {
+      try {
+        trySocketReconnect();
+      } finally {
+        reconnectingSocket.set(false);
       }
     }
   }
@@ -835,7 +829,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void stopGrpcService() {
     if (delegateConfiguration.isGrpcServiceEnabled() && restartableServiceManager.isRunning()) {
-      grpcServiceExecutor.submit(() -> { restartableServiceManager.stop(); });
+      grpcServiceExecutor.submit(() -> restartableServiceManager.stop());
     }
   }
 
@@ -1728,7 +1722,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try {
       int perpetualTaskCount = 0;
       if (perpetualTaskWorker != null) {
-        perpetualTaskCount = perpetualTaskWorker.getRunningTaskMap().size();
+        perpetualTaskCount = perpetualTaskWorker.getCurrentlyExecutingPerpetualTasksCount().intValue();
       }
 
       if (delegateTaskLimit > 0
@@ -1764,8 +1758,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = selectExecutorService(taskData);
 
-        Future<List<DelegateConnectionResult>> future =
-            executorService.submit(() -> delegateValidateTask.validationResults());
+        Future<List<DelegateConnectionResult>> future = executorService.submit(delegateValidateTask::validationResults);
         currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
@@ -2078,7 +2071,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void updateCounterIfLessThanCurrent(AtomicInteger counter, int current) {
-    counter.updateAndGet(value -> value < current ? current : value);
+    counter.updateAndGet(value -> Math.max(value, current));
   }
 
   private Consumer<DelegateTaskResponse> getPostExecutionFunction(

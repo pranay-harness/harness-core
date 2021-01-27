@@ -15,6 +15,7 @@ import com.google.protobuf.util.Durations;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,13 +28,14 @@ public class PerpetualTaskLifecycleManager {
   private final PerpetualTaskExecutionContext context;
   private final PerpetualTaskExecutor perpetualTaskExecutor;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
+  private final AtomicInteger currentlyExecutingPerpetualTasksCount;
 
-  private Cache<String, PerpetualTaskResponse> perpetualTaskResponseCache =
+  private final Cache<String, PerpetualTaskResponse> perpetualTaskResponseCache =
       Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
 
   PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskExecutionContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
-      TimeLimiter timeLimiter) {
+      TimeLimiter timeLimiter, AtomicInteger currentlyExecutingPerpetualTasksCount) {
     this.taskId = taskId;
     this.context = context;
     this.timeLimiter = timeLimiter;
@@ -41,6 +43,7 @@ public class PerpetualTaskLifecycleManager {
     params = context.getTaskParams();
     perpetualTaskExecutor = factoryMap.get(getTaskType(params));
     timeoutMillis = Durations.toMillis(context.getTaskSchedule().getTimeout());
+    this.currentlyExecutingPerpetualTasksCount = currentlyExecutingPerpetualTasksCount;
   }
 
   void startTask() {
@@ -67,15 +70,23 @@ public class PerpetualTaskLifecycleManager {
     Instant taskStartTime = Instant.now();
     PerpetualTaskResponse perpetualTaskResponse;
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      currentlyExecutingPerpetualTasksCount.getAndIncrement();
+
       perpetualTaskResponse =
           perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
+
+      decrementTaskCounter();
     } catch (UncheckedTimeoutException tex) {
       perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
       log.warn("Timed out starting task", tex);
+
+      decrementTaskCounter();
     } catch (Exception ex) {
       perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(500).responseMessage("failed").build();
       log.error("Exception is ", ex);
+      decrementTaskCounter();
     }
+
     String perpetualTaskId = taskId.getId();
     PerpetualTaskResponse cachedPerpetualTaskResponse = perpetualTaskResponseCache.getIfPresent(perpetualTaskId);
     if (null == cachedPerpetualTaskResponse || !cachedPerpetualTaskResponse.equals(perpetualTaskResponse)) {
@@ -88,5 +99,11 @@ public class PerpetualTaskLifecycleManager {
   private String getTaskType(PerpetualTaskExecutionParams params) {
     String fullyQualifiedClassName = AnyUtils.toFqcn(params.getCustomizedParams());
     return StringUtils.substringAfterLast(fullyQualifiedClassName, ".");
+  }
+
+  private void decrementTaskCounter() {
+    if (currentlyExecutingPerpetualTasksCount.get() > 0) {
+      currentlyExecutingPerpetualTasksCount.getAndDecrement();
+    }
   }
 }
