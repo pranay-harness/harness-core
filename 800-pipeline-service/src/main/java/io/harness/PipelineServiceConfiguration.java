@@ -51,10 +51,12 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
+  @JsonProperty("enableAuth") private boolean enableAuth;
 
   private String managerServiceSecret;
   private String managerTarget;

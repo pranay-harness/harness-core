@@ -20,6 +20,7 @@ java_library(
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
         "//950-events-api:module",
+        "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
         "//955-filters-sdk:module",
         "//960-ng-core-beans:module",

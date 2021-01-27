@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.callback.DelegateCallback;
@@ -24,6 +25,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.UserClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -131,11 +133,13 @@ public class PipelineServiceModule extends AbstractModule {
     install(FiltersModule.getInstance());
 
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
-    install(new YamlSchemaClientModule(
-        configuration.getCiManagerClientConfig(), configuration.getCiManagerServiceSecret(), "PipelineService"));
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new YamlSchemaClientModule(configuration.getCiManagerClientConfig(),
+        configuration.getCiManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
+        PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
