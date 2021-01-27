@@ -112,7 +112,7 @@ public class PerpetualTaskWorkerTest extends DelegateTest {
       worker.stopTask(task1.getTaskId());
       worker.stopTask(task2.getTaskId());
     });
-    assertThat(worker.getRunningTaskMap()).hasSize(0);
+    assertThat(worker.getRunningTaskMap()).isEmpty();
   }
 
   @Test

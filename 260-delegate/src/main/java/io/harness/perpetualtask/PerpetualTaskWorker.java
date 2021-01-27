@@ -38,6 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -51,17 +52,18 @@ public class PerpetualTaskWorker {
   private static final Marker THROTTLED = MarkerFactory.getMarker("THROTTLED");
   @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();
 
-  private TimeLimiter perpetualTaskTimeLimiter;
-  private ScheduledExecutorService perpetualTaskTimeoutExecutor;
+  private final TimeLimiter perpetualTaskTimeLimiter;
+  private final ScheduledExecutorService perpetualTaskTimeoutExecutor;
 
   private final AtomicBoolean firstFillUp = new AtomicBoolean(true);
   private final BackoffScheduler backoffScheduler;
   private final PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
-  private Map<String, PerpetualTaskExecutor> factoryMap;
+  private final Map<String, PerpetualTaskExecutor> factoryMap;
 
-  private AtomicBoolean running = new AtomicBoolean(false);
+  private final AtomicBoolean running = new AtomicBoolean(false);
   private final AtomicReference<PerpetualTaskWorkerService> svcHolder = new AtomicReference<>();
   private String accountId;
+  @Getter private final AtomicInteger currentlyExecutingPerpetualTasksCount = new AtomicInteger();
 
   private class PerpetualTaskWorkerService extends AbstractScheduledService {
     PerpetualTaskWorkerService() {
@@ -180,8 +182,9 @@ public class PerpetualTaskWorker {
       PerpetualTaskSchedule schedule = context.getTaskSchedule();
       long intervalSeconds = Durations.toSeconds(schedule.getInterval());
 
-      PerpetualTaskLifecycleManager perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(
-          task.getTaskId(), context, factoryMap, perpetualTaskServiceGrpcClient, perpetualTaskTimeLimiter);
+      PerpetualTaskLifecycleManager perpetualTaskLifecycleManager =
+          new PerpetualTaskLifecycleManager(task.getTaskId(), context, factoryMap, perpetualTaskServiceGrpcClient,
+              perpetualTaskTimeLimiter, currentlyExecutingPerpetualTasksCount);
 
       synchronized (runningTaskMap) {
         runningTaskMap.computeIfAbsent(task.getTaskId(), k -> {
