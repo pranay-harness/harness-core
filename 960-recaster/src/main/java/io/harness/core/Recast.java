@@ -42,7 +42,7 @@ public class Recast {
     if (recastTransformer == null) {
       return;
     }
-    recaster.getTransformer().addTransformer(recastTransformer);
+    recaster.getTransformer().addCustomTransformer(recastTransformer);
   }
 
   public <T> T fromDocument(final Document document, final Class<T> entityClazz) {

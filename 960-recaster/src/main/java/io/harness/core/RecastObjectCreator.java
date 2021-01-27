@@ -52,6 +52,9 @@ public class RecastObjectCreator implements RecastObjectFactory {
   }
 
   private static <T> Constructor<T> noArgsConstructorOrNull(final Class<T> type) {
+    if (type == null) {
+      return null;
+    }
     try {
       final Constructor<T> constructor = type.getDeclaredConstructor();
       constructor.setAccessible(true);

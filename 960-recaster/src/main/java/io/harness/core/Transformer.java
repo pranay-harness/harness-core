@@ -6,6 +6,7 @@ import io.harness.beans.CastedField;
 import io.harness.exceptions.RecasterException;
 import io.harness.transformers.DefaultRecastTransformer;
 import io.harness.transformers.RecastTransformer;
+import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.transformers.simplevalue.SimpleValueTransformer;
 
 import java.util.HashMap;
@@ -25,7 +26,16 @@ public abstract class Transformer {
     this.recaster = recaster;
   }
 
-  public RecastTransformer addTransformer(RecastTransformer recastTransformer) {
+  public void addCustomTransformer(RecastTransformer recastTransformer) {
+    if (!(recastTransformer instanceof CustomValueTransformer)) {
+      throw new RecasterException(
+          format("RecasterTransformer %s implement CustomValueTransformer interface", recastTransformer));
+    }
+
+    addTransformer(recastTransformer);
+  }
+
+  protected void addTransformer(RecastTransformer recastTransformer) {
     if (recastTransformer.getSupportedTypes() != null) {
       for (final Class<?> c : recastTransformer.getSupportedTypes()) {
         addTypedConverter(c, recastTransformer);
@@ -34,8 +44,6 @@ public abstract class Transformer {
       untypedTypeTransformers.add(recastTransformer);
     }
     recastTransformer.setRecaster(recaster);
-
-    return recastTransformer;
   }
 
   private void addTypedConverter(final Class<?> type, final RecastTransformer rc) {
@@ -66,7 +74,7 @@ public abstract class Transformer {
   public void fromDocument(final Object targetEntity, final CastedField cf, final Document document) {
     final Object object = cf.getDocumentValue(document);
     if (object != null) {
-      RecastTransformer transformer = getTransformer(null, cf);
+      RecastTransformer transformer = getTransformer(cf.getType());
       Object decodedValue = transformer.decode(cf.getType(), object, cf);
       try {
         cf.setFieldValue(targetEntity, decodedValue);
@@ -141,27 +149,16 @@ public abstract class Transformer {
     }
     if (o instanceof Class) {
       return hasSimpleValueTransformer((Class<?>) o);
-    } else if (o instanceof CastedField) {
-      return hasSimpleValueTransformer((CastedField) o);
     } else {
       return hasSimpleValueTransformer(o.getClass());
     }
-  }
-
-  public boolean hasSimpleValueTransformer(CastedField cf) {
-    return getTransformer(cf) instanceof SimpleValueTransformer;
   }
 
   public boolean hasSimpleValueTransformer(Class<?> c) {
     return getTransformer(c) instanceof SimpleValueTransformer;
   }
 
-  public boolean hasTransformer(Class<?> c) {
-    return !(getTransformer(c) instanceof DefaultRecastTransformer)
-        && !(getTransformer(c) instanceof SimpleValueTransformer);
-  }
-
-  private RecastTransformer getTransformer(CastedField cf) {
-    return getTransformer(null, cf);
+  public boolean hasCustomTransformer(Class<?> c) {
+    return getTransformer(c) instanceof CustomValueTransformer;
   }
 }

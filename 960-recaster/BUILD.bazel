@@ -13,8 +13,6 @@ java_library(
     exports = [
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:com_google_protobuf_protobuf_java_util",
         "@maven//:org_modelmapper_modelmapper",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_projectlombok_lombok",
