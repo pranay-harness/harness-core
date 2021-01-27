@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 
 import software.wings.beans.DelegateTaskBroadcast;
@@ -16,6 +18,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateTaskBroadcastHelper {
   public static final String STREAM_DELEGATE_PATH = "/stream/delegate/";
   @Inject private AssignDelegateService assignDelegateService;

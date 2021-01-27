@@ -6,6 +6,8 @@ digraph G {
 
   service_api [shape=rect label="service api"];
 
+  delegate_beans [shape=rect color=green label="delegate beans"];
+
   subgraph {
     rank=same
     delegate_tasks_beans [shape=rect color=green label="delegate tasks beans"];
@@ -17,8 +19,6 @@ digraph G {
     delegate_tasks [shape=rect label="delegate tasks"];
     tasks_add_on [shape=rect label="tasks add-on"];
   }
-
-  delegate_beans [shape=rect color=green label="delegate beans"];
 
   orchestration_beans [shape=rect color=green label="orchestration beans"];
 
@@ -34,7 +34,7 @@ digraph G {
 
   subgraph cluster_delegate_service
   {
-	label = "delegate service";
+	  label = "delegate service";
 
     rank=same
     delegate_service_agent [shape=rect label="agent APIs"];
@@ -52,21 +52,22 @@ digraph G {
 
   delegate_service_managers -> orchestration[style=invis];
 
-
   service_api -> service_api_beans;
 
   delegate_tasks -> tasks_add_on;
+
+  delegate_tasks_beans -> delegate_beans;
 
   delegate_tasks_beans -> service_api_beans;
 
   delegate_tasks -> delegate_tasks_beans;
   tasks_add_on -> tasks_add_on_beans;
 
-  delegate_tasks -> service_api [minlen=2];
+  delegate_tasks -> service_api [minlen=3];
 
-  delegate_agent_beans-> delegate_beans;
+  delegate_agent_beans -> delegate_beans [minlen=4];
 
-  delegate_service_beans-> delegate_beans;
+  delegate_service_beans -> delegate_beans [minlen=4];
 
   orchestration_beans -> delegate_tasks_beans;
 
