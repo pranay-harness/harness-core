@@ -26,6 +26,7 @@ public abstract class VerificationJobDTO {
   private String activitySourceIdentifier;
   private List<DataSourceType> dataSources;
   private List<String> monitoringSources;
+  private String verificationJobUrl;
 
   // TODO: make it Duration and write a custom serializer
   private String duration;

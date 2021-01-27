@@ -71,6 +71,11 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJobDTO inserted =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
+    // url will be newly generated, so wont be present.
+    VerificationJob insertedJob =
+        verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    assertThat(inserted.getVerificationJobUrl()).isEqualTo(insertedJob.getVerificationJobUrl());
+    inserted.setVerificationJobUrl(null);
     assertThat(inserted).isEqualTo(verificationJobDTO);
   }
 
@@ -93,12 +98,20 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJobDTO inserted =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
+    // url will be newly generated, so wont be present.
+    VerificationJob insertedJob =
+        verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    assertThat(inserted.getVerificationJobUrl()).isEqualTo(insertedJob.getVerificationJobUrl());
+    inserted.setVerificationJobUrl(null);
+
     assertThat(inserted).isEqualTo(verificationJobDTO);
     verificationJobDTO.setEnvIdentifier("updated_env");
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJobDTO updated =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(updated).isNotEqualTo(inserted);
+    assertThat(updated.getVerificationJobUrl()).isEqualTo(insertedJob.getVerificationJobUrl());
+    updated.setVerificationJobUrl(null);
     assertThat(updated).isEqualTo(verificationJobDTO);
   }
 
@@ -118,6 +131,11 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJobDTO updated =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
+
+    // url will be newly generated, so wont be present. So we will validate that separately.
+    VerificationJob inserted = verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    assertThat(updated.getVerificationJobUrl()).isEqualTo(inserted.getVerificationJobUrl());
+    updated.setVerificationJobUrl(null);
     assertThat(updated).isEqualTo(verificationJobDTO);
   }
 
@@ -162,6 +180,12 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJobDTO inserted =
         verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
+    // url will be newly generated, so wont be present.
+    VerificationJob insertedJob =
+        verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    assertThat(inserted.getVerificationJobUrl()).isEqualTo(insertedJob.getVerificationJobUrl());
+    inserted.setVerificationJobUrl(null);
+
     assertThat(inserted).isEqualTo(verificationJobDTO);
   }
 
@@ -474,5 +498,39 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
 
     assertThat(verificationJob.getCreatedAt()).isEqualTo(verificationJobSecond.getCreatedAt());
     assertThat(verificationJob.getLastUpdatedAt()).isEqualTo(verificationJobSecond.getLastUpdatedAt());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetByUrl() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob inserted = verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+
+    VerificationJob byUrl = verificationJobService.getByUrl(accountId, inserted.getVerificationJobUrl());
+    assertThat(byUrl.getUuid()).isEqualTo(inserted.getUuid());
+  }
+
+  @Test(expected = NullPointerException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetByUrl_nullAccount() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob inserted = verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+
+    VerificationJob byUrl = verificationJobService.getByUrl(null, inserted.getVerificationJobUrl());
+  }
+
+  @Test(expected = NullPointerException.class)
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetByUrl_nullUrl() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob inserted = verificationJobService.getVerificationJob(accountId, verificationJobDTO.getIdentifier());
+
+    VerificationJob byUrl = verificationJobService.getByUrl(accountId, null);
   }
 }

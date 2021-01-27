@@ -3,8 +3,10 @@ package io.harness.cvng;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
+import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.ActivitySourceServiceImpl;
+import io.harness.cvng.activity.source.services.impl.CD10ActivitySourceServiceImpl;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
@@ -261,6 +263,7 @@ public class CVServiceModule extends AbstractModule {
       bind(CVNGLogService.class).to(CVNGLogServiceImpl.class);
       bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
+      bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

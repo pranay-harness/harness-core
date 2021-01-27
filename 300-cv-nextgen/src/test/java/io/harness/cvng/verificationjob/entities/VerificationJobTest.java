@@ -171,6 +171,17 @@ public class VerificationJobTest extends CategoryTest {
     assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(30);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testSetVerificationJobUrl() {
+    VerificationJob verificationJob = createVerificationJob();
+    String url = verificationJob.getVerificationJobUrl();
+    assertThat(url).isEqualTo("/verification-job?accountId=" + accountId + "&orgIdentifier="
+        + verificationJob.getOrgIdentifier() + "&projectIdentifier=" + verificationJob.getProjectIdentifier()
+        + "&identifier=" + verificationJob.getIdentifier());
+  }
+
   private void testFieldForNotNull(String fieldName) throws IllegalAccessException {
     VerificationJob verificationJob = createVerificationJob();
     FieldUtils.writeField(verificationJob, fieldName, null, true);
