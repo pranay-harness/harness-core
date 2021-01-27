@@ -24,37 +24,37 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
   }
 
   @Override
-  protected void addVariablesForStepSpec(YamlField specField, Map<String, YamlProperties> yamlPropertiesMap) {
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YamlTypes.SOURCE);
     complexFields.add(YamlTypes.EXECUTION_TARGET);
     complexFields.add(YamlTypes.ENVIRONMENT_VARIABLES);
     complexFields.add(YamlTypes.OUTPUT_VARIABLES);
 
-    List<YamlField> fields = specField.getNode().fields();
+    List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
         addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }
     });
 
-    YamlField sourceField = specField.getNode().getField(YamlTypes.SOURCE);
+    YamlField sourceField = yamlNode.getField(YamlTypes.SOURCE);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(sourceField)) {
       addVariablesForSourceField(sourceField, yamlPropertiesMap);
     }
 
-    YamlField executionTargetField = specField.getNode().getField(YamlTypes.EXECUTION_TARGET);
+    YamlField executionTargetField = yamlNode.getField(YamlTypes.EXECUTION_TARGET);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(executionTargetField)) {
       addVariablesForExecutionTargetField(executionTargetField, yamlPropertiesMap);
     }
 
-    YamlField environmentVariablesField = specField.getNode().getField(YamlTypes.ENVIRONMENT_VARIABLES);
+    YamlField environmentVariablesField = yamlNode.getField(YamlTypes.ENVIRONMENT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(environmentVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
           environmentVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
     }
 
-    YamlField outputVariablesField = specField.getNode().getField(YamlTypes.OUTPUT_VARIABLES);
+    YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
           outputVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);

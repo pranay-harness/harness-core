@@ -22,24 +22,24 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
   }
 
   @Override
-  protected void addVariablesForStepSpec(YamlField specField, Map<String, YamlProperties> yamlPropertiesMap) {
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YamlTypes.OUTPUT_VARIABLES);
     complexFields.add(YamlTypes.HEADERS);
 
-    List<YamlField> fields = specField.getNode().fields();
+    List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
         addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }
     });
 
-    YamlField outputVariablesField = specField.getNode().getField(YamlTypes.OUTPUT_VARIABLES);
+    YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
           outputVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
     }
-    YamlField headersField = specField.getNode().getField(YamlTypes.HEADERS);
+    YamlField headersField = yamlNode.getField(YamlTypes.HEADERS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(headersField)) {
       addHeaderVariables(headersField, yamlPropertiesMap);
     }
