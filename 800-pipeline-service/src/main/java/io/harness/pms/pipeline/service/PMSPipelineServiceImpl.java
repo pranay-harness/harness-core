@@ -286,7 +286,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     StepCategory stepCategory =
         calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module)) {
+      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
         continue;
       }
       stepCategory.addStepCategory(calculateStepsForCategory(entry.getKey(), entry.getValue()));
