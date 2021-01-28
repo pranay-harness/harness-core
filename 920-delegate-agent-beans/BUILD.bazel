@@ -7,24 +7,21 @@ load("//:macros.bzl", "sources")
 
 sources()
 
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//980-commons:module",
-        "@maven//:com_esotericsoftware_kryo",
-        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_code_findbugs_jsr305",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:com_squareup_okhttp3_okhttp",
-        "@maven//:commons_io_commons_io",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_projectlombok_lombok",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
+shared_dependencies = [
+    "//980-commons:module",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_code_findbugs_jsr305",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_squareup_okhttp3_okhttp",
+    "@maven//:commons_io_commons_io",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_projectlombok_lombok",
+    "@maven//:org_slf4j_slf4j_api",
+    "//:lombok",
+]
 
 java_library(
     name = "module",
@@ -35,9 +32,7 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
+    deps = shared_dependencies + [
         "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
     ],
 )
@@ -46,10 +41,8 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:private"],
-    deps = [
-        "maven_deps",
+    deps = shared_dependencies + [
         "module",
-        "//:lombok",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -65,7 +58,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

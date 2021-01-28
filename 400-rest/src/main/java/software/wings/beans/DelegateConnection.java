@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -44,6 +45,11 @@ public class DelegateConnection implements PersistentEntity, UuidAware, AccountA
                  .field(DelegateConnectionKeys.accountId)
                  .field(DelegateConnectionKeys.delegateId)
                  .field(DelegateConnectionKeys.version)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("lastHeartbeatIndex")
+                 .field(DelegateConnectionKeys.disconnected)
+                 .sortField(DelegateConnectionKeys.lastHeartbeat)
                  .build())
         .build();
   }

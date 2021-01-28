@@ -5,6 +5,7 @@
  */
 package io.harness.avro;
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
