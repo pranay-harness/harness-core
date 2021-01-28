@@ -22,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = false)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ArtifactoryConnector")
 public class ArtifactoryConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {

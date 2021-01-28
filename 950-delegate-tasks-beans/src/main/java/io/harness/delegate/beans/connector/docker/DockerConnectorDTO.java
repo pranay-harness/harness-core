@@ -24,7 +24,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DockerConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {

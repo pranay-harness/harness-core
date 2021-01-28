@@ -16,7 +16,7 @@ public class ArtifactoryEntityToDTO extends ConnectorEntityToDTOMapper<Artifacto
   @Override
   public ArtifactoryConnectorDTO createConnectorDTO(ArtifactoryConnector artifactoryConnector) {
     ArtifactoryAuthenticationDTO artifactoryAuthenticationDTO = null;
-    if (artifactoryConnector.getAuthType() != ArtifactoryAuthType.NO_AUTH
+    if (artifactoryConnector.getAuthType() != ArtifactoryAuthType.ANONYMOUS
         || artifactoryConnector.getArtifactoryAuthentication() != null) {
       ArtifactoryUserNamePasswordAuthentication artifactoryCredentials =
           (ArtifactoryUserNamePasswordAuthentication) artifactoryConnector.getArtifactoryAuthentication();
@@ -30,6 +30,9 @@ public class ArtifactoryEntityToDTO extends ConnectorEntityToDTOMapper<Artifacto
                                          .authType(artifactoryConnector.getAuthType())
                                          .credentials(artifactoryUsernamePasswordAuthDTO)
                                          .build();
+    } else {
+      artifactoryAuthenticationDTO =
+          ArtifactoryAuthenticationDTO.builder().authType(artifactoryConnector.getAuthType()).build();
     }
 
     return ArtifactoryConnectorDTO.builder()

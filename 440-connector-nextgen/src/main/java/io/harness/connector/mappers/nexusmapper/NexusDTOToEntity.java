@@ -15,8 +15,7 @@ import com.google.inject.Singleton;
 public class NexusDTOToEntity extends ConnectorDTOToEntityMapper<NexusConnectorDTO, NexusConnector> {
   @Override
   public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO) {
-    NexusAuthType nexusAuthType =
-        configDTO.getAuth() != null ? configDTO.getAuth().getAuthType() : NexusAuthType.NO_AUTH;
+    NexusAuthType nexusAuthType = configDTO.getAuth().getAuthType();
     NexusConnectorBuilder nexusConnectorBuilder = NexusConnector.builder()
                                                       .url(configDTO.getNexusServerUrl())
                                                       .nexusVersion(configDTO.getVersion())
