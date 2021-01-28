@@ -6,19 +6,14 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.validation.constraints.NotNull;
@@ -37,7 +32,7 @@ import org.apache.commons.text.StrSubstitutor;
 @UtilityClass
 @Slf4j
 public class ExpressionEvaluatorUtils {
-  public final int EXPANSION_LIMIT = 256 * 1024; // 256 KB
+  public final int EXPANSION_LIMIT = 6 * 1024 * 1024; // 6 MB
   public final int EXPANSION_MULTIPLIER_LIMIT = 10;
   public final int DEPTH_LIMIT = 10;
 
@@ -58,7 +53,7 @@ public class ExpressionEvaluatorUtils {
                                                   .prefix(prefix)
                                                   .suffix(suffix)
                                                   .build();
-    return substitute(expression, ctx, variableResolver, pattern, EngineExpressionEvaluator::hasVariables, true);
+    return substitute(expression, ctx, variableResolver, pattern, true);
   }
 
   public String substitute(
@@ -77,7 +72,7 @@ public class ExpressionEvaluatorUtils {
                                                     .prefix(prefix)
                                                     .suffix(suffix)
                                                     .build();
-    return substitute(expression, ctx, variableResolver, pattern, ExpressionEvaluator::containsVariablePattern, false);
+    return substitute(expression, ctx, variableResolver, pattern, false);
   }
 
   public String substituteSecured(
@@ -96,12 +91,11 @@ public class ExpressionEvaluatorUtils {
                                                     .prefix(prefix)
                                                     .suffix(suffix)
                                                     .build();
-    return substituteSecretsSecured(
-        expression, ctx, variableResolver, pattern, ExpressionEvaluator::containsVariablePattern);
+    return substituteSecretsSecured(expression, ctx, variableResolver, pattern);
   }
 
   public String substitute(@NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver,
-      Pattern pattern, Function<String, Boolean> hasExpressions, boolean newDelimiters) {
+      Pattern pattern, boolean newDelimiters) {
     StrSubstitutor substitutor = getSubstitutor(variableResolver, newDelimiters);
 
     String result = expression;
@@ -129,11 +123,6 @@ public class ExpressionEvaluatorUtils {
         return result;
       }
       if (result.length() > limit) {
-        if (!hasExpressions.apply(result)) {
-          return result;
-        }
-        List<String> matches = findExpressions(result);
-        log.info("Expressions left to be evaluated when script size is greater than limit: " + matches);
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
@@ -300,8 +289,8 @@ public class ExpressionEvaluatorUtils {
     return sb.toString();
   }
 
-  private String substituteSecretsSecured(@NotNull String expression, JexlContext ctx,
-      StrLookup<Object> variableResolver, Pattern pattern, Function<String, Boolean> hasExpressions) {
+  private String substituteSecretsSecured(
+      @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
     StrSubstitutor substitutor = getSubstitutor(variableResolver, false);
 
     String result = expression;
@@ -322,32 +311,11 @@ public class ExpressionEvaluatorUtils {
         return result;
       }
       if (result.length() > limit) {
-        if (!hasExpressions.apply(result)) {
-          return result;
-        }
-        List<String> matches = findExpressions(result);
-        log.info("Expressions left to be evaluated when script size is greater than limit: " + matches);
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
 
     throw new CriticalExpressionEvaluationException(
         "Infinite loop or too deep indirection in property interpretation", expression);
-  }
-
-  private List<String> findExpressions(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return Collections.emptyList();
-    }
-
-    List<String> matches = new ArrayList<>();
-    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(str);
-    while (matcher.find()) {
-      matches.add(matcher.group(0));
-      if (matches.size() >= 3) {
-        return matches;
-      }
-    }
-    return matches;
   }
 }
