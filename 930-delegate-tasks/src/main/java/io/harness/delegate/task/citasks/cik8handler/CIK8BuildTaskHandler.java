@@ -7,6 +7,7 @@ package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
+import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SECRET;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -31,6 +32,7 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.pod.SecretVolumeParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
+import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import io.harness.k8s.KubernetesHelperService;
@@ -64,6 +66,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private SecretSpecBuilder secretSpecBuilder;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private K8EventHandler k8EventHandler;
+  @Inject private ProxyVariableHelper proxyVariableHelper;
 
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
@@ -228,6 +231,12 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
             break;
         }
       }
+
+      if (containerParams.getContainerType() == LITE_ENGINE) {
+        Map<String, String> proxyConfigurationSecretData =
+            getAndUpdateProxyConfigurationSecretData(containerParams, secretName);
+        secretData.putAll(proxyConfigurationSecretData);
+      }
     }
 
     Map<String, String> gitSecretData = getAndUpdateGitSecretData(gitConnectorDetails, containerParamsList, secretName);
@@ -256,6 +265,18 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     if (isNotEmpty(customVarSecretData)) {
       updateContainer(containerParams, secretName, customVarSecretData);
       return customVarSecretData.values().stream().collect(
+          Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
+    } else {
+      return Collections.emptyMap();
+    }
+  }
+
+  private Map<String, String> getAndUpdateProxyConfigurationSecretData(
+      CIK8ContainerParams containerParams, String secretName) {
+    if (proxyVariableHelper.checkIfProxyIsConfigured()) {
+      Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
+      updateContainer(containerParams, secretName, proxyConfiguration);
+      return proxyConfiguration.values().stream().collect(
           Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     } else {
       return Collections.emptyMap();
