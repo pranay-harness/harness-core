@@ -56,6 +56,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
+  private String portalUrl;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -64,6 +65,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     projectIdentifier = generateUuid();
     identifier = "test-verification-harness";
     accountId = generateUuid();
+    portalUrl = "https://app.harness.io/";
     FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(verificationJobService, "cvEventService", cvEventService, true);
   }
@@ -445,6 +447,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJob.setServiceIdentifier(serviceIdentifier, false);
     verificationJob.setEnvIdentifier(generateUuid(), false);
     verificationJob.setDuration(Duration.ZERO);
+    verificationJob.setPortalUrl(portalUrl);
     return verificationJob;
   }
 
@@ -459,6 +462,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJob.setServiceIdentifier(serviceIdentifier, true);
     verificationJob.setEnvIdentifier(generateUuid(), true);
     verificationJob.setDuration(Duration.ZERO);
+    verificationJob.setPortalUrl(portalUrl);
     return verificationJob;
   }
 
@@ -530,7 +534,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.upsert(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
-
+    inserted.setPortalUrl(portalUrl);
     VerificationJobDTO byUrl = verificationJobService.getDTOByUrl(accountId, inserted.getVerificationJobUrl());
     assertThat(byUrl.getServiceName()).isEqualTo(inserted.getServiceIdentifier());
     assertThat(byUrl.getServiceIdentifier()).isEqualTo(inserted.getServiceIdentifier());

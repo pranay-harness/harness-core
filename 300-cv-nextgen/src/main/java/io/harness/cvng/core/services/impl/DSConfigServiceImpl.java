@@ -103,6 +103,11 @@ public class DSConfigServiceImpl implements DSConfigService {
     return PageUtils.offsetAndLimit(monitoringSourceDTOS, offset, limit);
   }
 
+  @Override
+  public List<String> getAvailableMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier) {
+    return cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, null);
+  }
+
   private List<MonitoringSourceDTO> groupDSConfigsByMonitoringSources(List<CVConfig> cvConfigs) {
     if (isEmpty(cvConfigs)) {
       return Collections.emptyList();
