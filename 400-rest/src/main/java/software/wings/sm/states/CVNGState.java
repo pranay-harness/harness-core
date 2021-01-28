@@ -1,11 +1,11 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.DeploymentActivityDTO.DeploymentActivityDTOKeys;
+import io.harness.cvng.beans.job.VerificationJobDTO.VerificationJobDTOKeys;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.cvng.state.CVNGVerificationTask.Status;
@@ -47,13 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 public class CVNGState extends State {
   private static final String DEFAULT_HOSTNAME_TEMPLATE = "${instanceDetails.hostName}";
   private static final Duration DEFAULT_INITIAL_DELAY = Duration.ofMinutes(2);
-  private static final String ENV_IDENTIFIER = "envIdentifier";
-  private static final String SERVICE_IDENTIFIER = "serviceIdentifier";
-  private static final String DATA_COLLECTION_DELAY = "dataCollectionDelay";
   @SchemaIgnore @Inject private CVNGVerificationTaskService cvngVerificationTaskService;
   @Inject private CVNGService cvngService;
   @SchemaIgnore @Inject private WorkflowExecutionService workflowExecutionService;
-
+  private String webhookUrl;
   private String deploymentTag;
   private String orgIdentifier;
   private String projectIdentifier;
@@ -77,18 +74,11 @@ public class CVNGState extends State {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
       CVInstanceApiResponse cvInstanceApiResponse = getCVInstanceAPIResponse(context);
-      if (cvInstanceApiResponse.isSkipVerification()) {
-        return ExecutionResponse.builder()
-            .async(false)
-            .executionStatus(ExecutionStatus.SKIPPED)
-            .errorMessage("Could not find newly deployed instances. Skipping verification")
-            .build();
-      }
       DeploymentActivityDTO activityDTO =
           DeploymentActivityDTO.builder()
-              .deploymentTag(deploymentTag)
-              .environmentIdentifier(getValue(ENV_IDENTIFIER))
-              .serviceIdentifier(getValue(SERVICE_IDENTIFIER))
+              .deploymentTag(getDeploymentTag(context))
+              .environmentIdentifier(getValue(context, VerificationJobDTOKeys.envIdentifier))
+              .serviceIdentifier(getValue(context, VerificationJobDTOKeys.serviceIdentifier))
               .accountIdentifier(context.getAccountId())
               .orgIdentifier(orgIdentifier)
               .projectIdentifier(projectIdentifier)
@@ -97,12 +87,12 @@ public class CVNGState extends State {
               .name(context.getWorkflowExecutionName())
               .oldVersionHosts(cvInstanceApiResponse.getOldVersionHosts())
               .newVersionHosts(cvInstanceApiResponse.getNewVersionHosts())
-              .dataCollectionDelayMs(getDataCollectionDelay())
+              .dataCollectionDelayMs(getDataCollectionDelay(context))
               .newHostsTrafficSplitPercentage(cvInstanceApiResponse.getNewNodesTrafficShiftPercent().orElse(null))
               .verificationJobRuntimeDetails(
                   Collections.singletonList(ActivityDTO.VerificationJobRuntimeDetails.builder()
                                                 .verificationJobIdentifier(verificationJobIdentifier)
-                                                .runtimeValues(getRuntimeValues())
+                                                .runtimeValues(getRuntimeValues(context))
                                                 .build()))
               .build();
       String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
@@ -136,27 +126,30 @@ public class CVNGState extends State {
     }
   }
 
-  public String getValue(String fieldName) {
+  public String getValue(ExecutionContext context, String fieldName) {
     Optional<ParamValue> optionalParam = params.stream().filter(param -> param.getName().equals(fieldName)).findAny();
     if (optionalParam.isPresent()) {
-      return optionalParam.get().getValue();
+      return context.renderExpression(optionalParam.get().getValue());
     } else {
       return null;
     }
   }
 
-  public long getDataCollectionDelay() {
-    if (getValue(DATA_COLLECTION_DELAY) == null) {
+  public long getDataCollectionDelay(ExecutionContext context) {
+    if (getValue(context, DeploymentActivityDTOKeys.dataCollectionDelayMs) == null) {
       return DEFAULT_INITIAL_DELAY.toMillis();
     }
-    return Long.parseLong(getValue(DATA_COLLECTION_DELAY));
+    return Long.parseLong(getValue(context, DeploymentActivityDTOKeys.dataCollectionDelayMs));
   }
 
-  private Map<String, String> getRuntimeValues() {
+  private String getDeploymentTag(ExecutionContext executionContext) {
+    return executionContext.renderExpression(this.deploymentTag);
+  }
+  private Map<String, String> getRuntimeValues(ExecutionContext context) {
     Map<String, String> runtimeValues = new HashMap<>();
     for (ParamValue param : this.params) {
       if (param.isEditable()) {
-        runtimeValues.put(param.getName(), param.getValue());
+        runtimeValues.put(param.getName(), context.renderExpression(param.getValue()));
       }
     }
     return runtimeValues;
@@ -227,27 +220,18 @@ public class CVNGState extends State {
   protected CVInstanceApiResponse getCVInstanceAPIResponse(ExecutionContext context) {
     Set<String> controlNodes, testNodes;
     Optional<Integer> newNodesTrafficShift;
-    boolean skipVerification;
-
     InstanceApiResponse allNodesResponse =
         context.renderExpressionsForInstanceDetailsForWorkflow(DEFAULT_HOSTNAME_TEMPLATE, false);
     Set<String> allNodes = new HashSet<>(allNodesResponse.getInstances());
     InstanceApiResponse instanceApiResponse =
         context.renderExpressionsForInstanceDetails(DEFAULT_HOSTNAME_TEMPLATE, true);
-    skipVerification = instanceApiResponse.isSkipVerification() || allNodesResponse.isSkipVerification();
     testNodes = new HashSet<>(instanceApiResponse.getInstances());
     newNodesTrafficShift = instanceApiResponse.getNewInstanceTrafficPercent();
     Set<String> allPhaseNewNodes = new HashSet<>(
         context.renderExpressionsForInstanceDetailsForWorkflow(DEFAULT_HOSTNAME_TEMPLATE, true).getInstances());
     controlNodes = Sets.difference(allNodes, allPhaseNewNodes);
-    // TODO: do we need this?
-    if (!skipVerification) {
-      // this is part of the contract with CDP team to always have test node if skipVerification is false.
-      Preconditions.checkState(isNotEmpty(testNodes), "Could not find newly deployed instances.");
-    }
     return CVInstanceApiResponse.builder()
         .oldVersionHosts(controlNodes)
-        .skipVerification(skipVerification)
         .newVersionHosts(testNodes)
         .newNodesTrafficShiftPercent(newNodesTrafficShift)
         .build();
@@ -258,7 +242,6 @@ public class CVNGState extends State {
   protected static class CVInstanceApiResponse {
     private Set<String> oldVersionHosts;
     private Set<String> newVersionHosts;
-    private boolean skipVerification;
     private Optional<Integer> newNodesTrafficShiftPercent;
   }
 }
