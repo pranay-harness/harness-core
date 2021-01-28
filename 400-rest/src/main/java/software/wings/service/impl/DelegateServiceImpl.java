@@ -307,6 +307,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(Module._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
+@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.
