@@ -8,4 +8,4 @@ RUN pip3 install -r requirements.txt
 COPY . .
 RUN chmod +x run.sh
 
-ENTRYPOINT [ "sh", "./run.sh" ]
+CMD [ "sh", "./run.sh" ]
