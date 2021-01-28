@@ -1,4 +1,4 @@
-package io.harness.changestreams;
+package io.harness.changestreamsframework;
 
 /**
  * Possible types of operations that can take place.

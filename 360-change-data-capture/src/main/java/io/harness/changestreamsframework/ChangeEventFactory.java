@@ -1,7 +1,7 @@
-package io.harness.changestreams;
+package io.harness.changestreamsframework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.changestreams.ChangeEvent.ChangeEventBuilder;
+import static io.harness.changestreamsframework.ChangeEvent.ChangeEventBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;

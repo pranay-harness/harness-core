@@ -1,4 +1,4 @@
-package io.harness.changestreams;
+package io.harness.changestreamsframework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
