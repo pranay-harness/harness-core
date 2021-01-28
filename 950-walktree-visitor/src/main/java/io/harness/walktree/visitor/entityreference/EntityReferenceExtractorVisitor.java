@@ -1,7 +1,7 @@
 package io.harness.walktree.visitor.entityreference;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.ng.core.EntityDetail;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
@@ -12,12 +12,12 @@ import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 
 public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitableElement> {
-  Set<EntityDetail> entityReferenceSet;
+  Set<EntityDetailProtoDTO> entityReferenceSet;
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
 
-  public Set<EntityDetail> getEntityReferenceSet() {
+  public Set<EntityDetailProtoDTO> getEntityReferenceSet() {
     return entityReferenceSet;
   }
 
@@ -38,7 +38,7 @@ public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitabl
     }
     if (helperClassInstance instanceof EntityReferenceExtractor) {
       EntityReferenceExtractor entityReferenceExtractor = (EntityReferenceExtractor) helperClassInstance;
-      Set<EntityDetail> newReferences =
+      Set<EntityDetailProtoDTO> newReferences =
           entityReferenceExtractor.addReference(currentElement, accountIdentifier, orgIdentifier, projectIdentifier);
       if (EmptyPredicate.isNotEmpty(newReferences)) {
         entityReferenceSet.addAll(newReferences);

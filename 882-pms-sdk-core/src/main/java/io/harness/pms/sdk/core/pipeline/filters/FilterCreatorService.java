@@ -10,6 +10,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.YamlNodeErrorInfo;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -56,11 +57,13 @@ public class FilterCreatorService {
       }
     }
 
-    FilterCreationResponse finalResponse = processNodesRecursively(initialDependencies);
+    SetupMetadata setupMetadata = request.getSetupMetadata();
+    FilterCreationResponse finalResponse = processNodesRecursively(initialDependencies, setupMetadata);
     return finalResponse.toBlobResponse();
   }
 
-  private FilterCreationResponse processNodesRecursively(Map<String, YamlField> initialDependencies) {
+  private FilterCreationResponse processNodesRecursively(
+      Map<String, YamlField> initialDependencies, SetupMetadata setupMetadata) {
     FilterCreationResponse finalResponse = FilterCreationResponse.builder().build();
     if (isEmpty(initialDependencies)) {
       return finalResponse;
@@ -68,7 +71,7 @@ public class FilterCreatorService {
 
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
-      processNodes(dependencies, finalResponse);
+      processNodes(dependencies, finalResponse, setupMetadata);
       initialDependencies.keySet().forEach(dependencies::remove);
     }
 
@@ -79,7 +82,8 @@ public class FilterCreatorService {
     return finalResponse;
   }
 
-  private void processNodes(Map<String, YamlField> dependencies, FilterCreationResponse finalResponse) {
+  private void processNodes(
+      Map<String, YamlField> dependencies, FilterCreationResponse finalResponse, SetupMetadata setupMetadata) {
     List<YamlField> dependenciesList = new ArrayList<>(dependencies.values());
     dependencies.clear();
 
@@ -96,12 +100,13 @@ public class FilterCreatorService {
       FilterJsonCreator filterJsonCreator = filterCreatorOptional.get();
       Class<?> clazz = filterJsonCreator.getFieldClass();
       if (YamlField.class.isAssignableFrom(clazz)) {
-        response =
-            filterJsonCreator.handleNode(FilterCreationContext.builder().currentField(yamlField).build(), yamlField);
+        response = filterJsonCreator.handleNode(
+            FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), yamlField);
       } else {
         try {
           Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
-          response = filterJsonCreator.handleNode(FilterCreationContext.builder().currentField(yamlField).build(), obj);
+          response = filterJsonCreator.handleNode(
+              FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), obj);
         } catch (IOException e) {
           throw new InvalidRequestException(
               format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(yamlField))), e);

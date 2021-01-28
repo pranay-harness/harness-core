@@ -258,7 +258,7 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
     EntityReferenceExtractorVisitor visitor =
         simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
     visitor.walkElementTree(pipeline);
-    return visitor.getEntityReferenceSet();
+    return new HashSet<>(); // visitor.getEntityReferenceSet();
   }
 
   private EntityDetail getInputSetEntityDetail(InputSetEntity inputSetEntity) {
