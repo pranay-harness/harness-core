@@ -3,8 +3,10 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.filter.serializer.morphia.FiltersMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
+import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -21,6 +23,7 @@ public class PipelineServiceModuleRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
+          .addAll(NotificationClientRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -28,6 +31,8 @@ public class PipelineServiceModuleRegistrars {
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(PMSPipelineMorphiaRegistrar.class)
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
+          .add(FiltersMorphiaRegistrar.class)
+          .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

@@ -50,9 +50,9 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;
 
-  @NotEmpty @FdUniqueIndex private String pipelineIdentifier;
+  @NotEmpty private String pipelineIdentifier;
   @NotEmpty @FdUniqueIndex private String planExecutionId;
-  @NotEmpty @FdUniqueIndex private String name;
+  @NotEmpty private String name;
 
   private ExecutionStatus status;
 
