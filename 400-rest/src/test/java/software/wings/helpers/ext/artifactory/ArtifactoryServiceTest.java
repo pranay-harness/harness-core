@@ -44,6 +44,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.message.BasicStatusLine;
 import org.jfrog.artifactory.client.Artifactory;
+import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryResponse;
 import org.junit.Before;
 import org.junit.Rule;
@@ -403,5 +404,54 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "//myartifact/", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("myartifact2");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldAppendProxyConfig() {
+    System.setProperty("http.proxyHost", "proxyHost");
+    System.setProperty("proxyScheme", "http");
+    System.setProperty("http.proxyPort", "123");
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNotNull();
+    assertThat(artifactoryClientBuilder.getProxy().getHost()).isEqualTo("proxyHost");
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendProxyConfigIfArtifactoryUrlIsInNonProxyList() {
+    System.setProperty("http.proxyHost", "proxyHost");
+    System.setProperty("http.proxyPort", "123");
+    System.setProperty("http.nonProxyHosts", "url");
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNull();
+
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+    System.clearProperty("http.nonProxyHosts");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendProxyConfigWhenProxyIsNotEnabled() {
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNull();
   }
 }

@@ -592,17 +592,21 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
             artifactoryConfig.getArtifactoryUrl());
       }
 
-      HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
-      if (httpProxyHost != null && !Http.shouldUseNonProxy(artifactoryConfig.getArtifactoryUrl())) {
-        builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
-            Http.getProxyUserName(), Http.getProxyPassword()));
-      }
+      checkIfUseProxyAndAppendConfig(builder, artifactoryConfig);
       builder.setSocketTimeout(30000);
       builder.setConnectionTimeout(30000);
     } catch (Exception ex) {
       handleAndRethrow(ex, USER);
     }
     return builder.build();
+  }
+
+  protected void checkIfUseProxyAndAppendConfig(ArtifactoryClientBuilder builder, ArtifactoryConfig artifactoryConfig) {
+    HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
+    if (httpProxyHost != null && !Http.shouldUseNonProxy(artifactoryConfig.getArtifactoryUrl())) {
+      builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
+          Http.getProxyUserName(), Http.getProxyPassword()));
+    }
   }
 
   private String getBaseUrl(ArtifactoryConfig artifactoryConfig) {
