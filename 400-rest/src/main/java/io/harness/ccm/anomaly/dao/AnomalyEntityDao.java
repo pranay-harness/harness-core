@@ -1,9 +1,12 @@
 package io.harness.ccm.anomaly.dao;
 
+import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityBuilder;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -60,6 +63,19 @@ public class AnomalyEntityDao {
       AnomalyEntityBuilder anomalyBuilder = AnomalyEntity.builder();
       for (AnomalyEntity.AnomaliesDataTableSchema.fields field : AnomalyEntity.AnomaliesDataTableSchema.getFields()) {
         switch (field) {
+          case ANOMALY_TIME:
+            anomalyBuilder.anomalyTime(resultSet.getTimestamp(field.getFieldName()).toInstant());
+            break;
+          case REPORTED_BY:
+            anomalyBuilder.reportedBy(AnomalyDetectionModel.valueOf(resultSet.getString(field.getFieldName())));
+            break;
+          case FEED_BACK:
+            if (resultSet.getString(field.getFieldName()) != null) {
+              anomalyBuilder.feedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
+            } else {
+              anomalyBuilder.feedback(QLAnomalyFeedback.NOT_RESPONDED);
+            }
+            break;
           case ID:
             anomalyBuilder.id(resultSet.getString(field.getFieldName()));
             break;

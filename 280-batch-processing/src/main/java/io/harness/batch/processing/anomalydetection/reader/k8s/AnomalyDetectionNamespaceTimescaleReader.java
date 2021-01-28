@@ -65,7 +65,7 @@ public class AnomalyDetectionNamespaceTimescaleReader extends AnomalyDetectionTi
     // cost aggreation
     aggregationList.add(QLCCMAggregationFunction.builder()
                             .operationType(QLCCMAggregateOperation.SUM)
-                            .columnName(tableSchema.getBillingAmount().toString())
+                            .columnName(tableSchema.getBillingAmount().getColumnNameSQL())
                             .build());
 
     // filters

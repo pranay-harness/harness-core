@@ -1,9 +1,12 @@
 package io.harness.ccm.anomaly.entities;
 
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
@@ -15,9 +18,15 @@ public class AnomalyEntity {
   String id;
   String accountId;
 
+  Instant anomalyTime;
+
   Double actualCost;
   Double expectedCost;
   Double anomalyScore;
+
+  QLAnomalyFeedback feedback;
+
+  AnomalyDetectionModel reportedBy;
 
   String note;
   TimeGranularity timeGranularity;
