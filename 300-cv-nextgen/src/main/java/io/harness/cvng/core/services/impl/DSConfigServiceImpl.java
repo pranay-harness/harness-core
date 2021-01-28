@@ -119,11 +119,6 @@ public class DSConfigServiceImpl implements DSConfigService {
     Preconditions.checkState(isNotEmpty(cvConfigsGroupedByMonitoringSource), "The number of configs in the group is 0");
     MonitoringSourceDTOBuilder monitoringSourceDTOBuilder = MonitoringSourceDTO.builder();
     populateCommonFieldsOfMonitoringSource(cvConfigsGroupedByMonitoringSource, monitoringSourceDTOBuilder);
-    CVConfig firstCVConfigForReference = cvConfigsGroupedByMonitoringSource.get(0);
-    int numberOfEnvironments = nextGenService.getEnvironmentCount(firstCVConfigForReference.getAccountId(),
-        firstCVConfigForReference.getOrgIdentifier(), firstCVConfigForReference.getProjectIdentifier());
-    monitoringSourceDTOBuilder.importStatus(
-        createImportStatus(cvConfigsGroupedByMonitoringSource, numberOfEnvironments));
     return monitoringSourceDTOBuilder.build();
   }
 
@@ -141,6 +136,18 @@ public class DSConfigServiceImpl implements DSConfigService {
     monitoringSourceDTOBuilder.importedAt(importedAtTime);
     monitoringSourceDTOBuilder.numberOfServices(isNotEmpty(servicesList) ? servicesList.size() : 0);
     monitoringSourceDTOBuilder.type(firstCVConfig.getType());
+  }
+
+  @Override
+  public MonitoringSourceImportStatus getMonitoringSourceImportStatus(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    List<CVConfig> cvConfigs = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, Lists.newArrayList(identifier));
+    Preconditions.checkState(isNotEmpty(cvConfigs), "The number of configs in the group is 0");
+    CVConfig firstCVConfigForReference = cvConfigs.get(0);
+    int numberOfEnvironments = nextGenService.getEnvironmentCount(firstCVConfigForReference.getAccountId(),
+        firstCVConfigForReference.getOrgIdentifier(), firstCVConfigForReference.getProjectIdentifier());
+    return createImportStatus(cvConfigs, numberOfEnvironments);
   }
 
   private MonitoringSourceImportStatus createImportStatus(

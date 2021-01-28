@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.beans.MonitoringSourceDTO;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface DSConfigService {
   DSConfig getMonitoringSource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   PageResponse<MonitoringSourceDTO> listMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset, String filter);
+  MonitoringSourceImportStatus getMonitoringSourceImportStatus(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 }
