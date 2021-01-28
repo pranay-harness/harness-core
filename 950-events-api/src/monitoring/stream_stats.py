@@ -9,9 +9,11 @@ except KeyError:
   print("Please set environment variable `redis_connection` (Example: redis_connection=localhost:6379)")
   sys.exit(1)
 
+redis_password = os.environ.get("redis_password", "")
+
 redis_host, redis_port = redis_connection.split(":")
 
-client = redis.Redis(host=redis_host, port=redis_port, password="OBcvt4IEmWmjsXgpURtKAUn8LWCb98Qa")
+client = redis.Redis(host=redis_host, port=redis_port, password=redis_password)
 
 for key in client.scan_iter("streams:*"):
   redis_key = key.decode("utf-8")
