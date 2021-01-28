@@ -7,6 +7,8 @@ import static java.lang.String.format;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
 

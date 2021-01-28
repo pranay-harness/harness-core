@@ -10,7 +10,6 @@ use clap::Clap;
 
 use crate::analyze::{analyze, Analyze};
 
-///
 #[derive(Clap)]
 #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
 struct Opts {

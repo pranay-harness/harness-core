@@ -693,7 +693,7 @@ java_library(
 )
 
 java_binary(
-    name = "rest",
+    name = "application_deploy",
     main_class = "software.wings.app.WingsApplication",
     runtime_deps = [
         ":module",

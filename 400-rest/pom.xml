@@ -849,6 +849,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>955-setup-usage-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-continuous-features</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

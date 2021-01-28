@@ -189,11 +189,11 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.BarrierServiceImpl;
+import software.wings.service.impl.DelegateDisconnectedDetector;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
-import software.wings.service.impl.PollingModeDelegateDisconnectedDetector;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.applicationmanifest.ManifestPerpetualTaskManger;
@@ -848,9 +848,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(), 0L, 10L, TimeUnit.SECONDS);
 
-    taskPollExecutor.scheduleWithFixedDelay(
-        new Schedulable("Failed updating delegate connection disconnected flag to true",
-            injector.getInstance(PollingModeDelegateDisconnectedDetector.class)),
+    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
+                                                injector.getInstance(DelegateDisconnectedDetector.class)),
         0L, 60L, TimeUnit.SECONDS);
 
     taskPollExecutor.scheduleWithFixedDelay(
@@ -930,10 +929,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
-
-    PollingModeDelegateDisconnectedDetector pollingModeDelegateDisconnectedDetector =
-        injector.getInstance(Key.get(PollingModeDelegateDisconnectedDetector.class));
-    pollingModeDelegateDisconnectedDetector.getSubject().register(perpetualTaskService);
 
     ApplicationManifestServiceImpl applicationManifestService =
         (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
