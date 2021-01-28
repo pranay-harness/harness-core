@@ -35,6 +35,8 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -42,12 +44,11 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -80,6 +81,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private VerificationJobService verificationJobService;
   @Mock private HeatMapService heatMapService;
   private String verificationJobIdentifier;
   private Instant instant;
@@ -515,7 +517,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setDuration("15m");
-    return testVerificationJob.getVerificationJob();
+    return verificationJobService.fromDto(testVerificationJob);
   }
 
   private VerificationJobInstance newVerificationJobInstance() {

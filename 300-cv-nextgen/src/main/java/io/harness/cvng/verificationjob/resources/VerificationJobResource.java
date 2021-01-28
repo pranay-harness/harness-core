@@ -1,7 +1,7 @@
 package io.harness.cvng.verificationjob.resources;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;

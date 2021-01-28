@@ -1,6 +1,6 @@
 package io.harness.cvng.verificationjob.services.api;
 
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.ng.beans.PageResponse;
 
@@ -28,4 +28,5 @@ public interface VerificationJobService {
   VerificationJobDTO getDefaultHealthVerificationJobDTO(
       String accountId, String orgIdentifier, String projectIdentifier);
   VerificationJob getByUrl(String accountId, String verificationJobUrl);
+  VerificationJob fromDto(VerificationJobDTO verificationJobDTO);
 }

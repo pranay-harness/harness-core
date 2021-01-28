@@ -6,11 +6,11 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITI
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 
 import java.time.Instant;
 import java.util.List;
@@ -60,7 +60,7 @@ public class CanaryVerificationJob extends VerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
-    canaryVerificationJobDTO.setSensitivity(this.sensitivity.string());
+    canaryVerificationJobDTO.setSensitivity(getSensitivity().name());
     canaryVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;
@@ -89,6 +89,15 @@ public class CanaryVerificationJob extends VerificationJob {
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return getTimeRangesForDuration(startTime);
+  }
+
+  @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = (CanaryVerificationJobDTO) verificationJobDTO;
+    this.setSensitivity(canaryVerificationJobDTO.getSensitivity(),
+        VerificationJobDTO.isRuntimeParam(canaryVerificationJobDTO.getSensitivity()));
+    this.setTrafficSplitPercentage(canaryVerificationJobDTO.getTrafficSplitPercentage());
+    addCommonFileds(verificationJobDTO);
   }
 
   @Override

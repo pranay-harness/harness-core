@@ -1,8 +1,8 @@
 package io.harness.cvng.analysis.beans;
 
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 
 import java.util.Set;
 import lombok.Builder;

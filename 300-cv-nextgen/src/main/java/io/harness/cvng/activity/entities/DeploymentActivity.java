@@ -6,8 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.utils.DateTimeUtils;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
