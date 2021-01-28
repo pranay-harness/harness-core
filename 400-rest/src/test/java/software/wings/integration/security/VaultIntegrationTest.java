@@ -158,6 +158,7 @@ public class VaultIntegrationTest extends SecretManagementIntegrationTestBase {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void testCreateUpdateDeleteVaultConfig_shouldSucceed() {
     // 1. Create a new Vault config.
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -204,6 +205,7 @@ public class VaultIntegrationTest extends SecretManagementIntegrationTestBase {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_createNewDefaultVault_shouldUnsetPreviousDefaultVaultConfig() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -240,6 +242,7 @@ public class VaultIntegrationTest extends SecretManagementIntegrationTestBase {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_CreateSecretText_WithInvalidPath_shouldFail() {
     // Create the first default vault config
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -293,6 +296,7 @@ public class VaultIntegrationTest extends SecretManagementIntegrationTestBase {
   @Test
   @Owner(developers = UTKARSH)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("skipping the integration test")
   public void test_importSecrets_fromCSV_shouldSucceed() {
     importSecretTextsFromCsv("./encryption/secrets.csv");
     verifySecretTextExists("secret1");

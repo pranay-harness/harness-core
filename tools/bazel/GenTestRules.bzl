@@ -10,6 +10,7 @@ def run_tests(**kwargs):
         native.java_test(
             name = test,
             runtime_deps = ["tests"],
+            size = "large",
             test_class = test,
             testonly = 1,
             visibility = ["//visibility:private"],
