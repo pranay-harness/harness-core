@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -885,6 +886,32 @@ public class AccountServiceTest extends WingsBaseTest {
     account = accountService.get(account.getUuid());
     assertThat(account.getAccountName()).isEqualTo(newAccountName);
     assertThat(account.getCompanyName()).isEqualTo(companyName);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_updateAccountNameWithNoCompanyNameParam() {
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+    String newAccountName = "New Account Name";
+    boolean accountUpdated = accountService.updateAccountName(account.getUuid(), newAccountName);
+    assertThat(accountUpdated).isTrue();
+    account = accountService.get(account.getUuid());
+    assertThat(account.getAccountName()).isEqualTo(newAccountName);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_updateCompanyName() {
+    String companyName = "CompanyName 1";
+    Account account = saveAccount(companyName);
+    String newCompanyName = "CompanyName 2";
+    boolean accountUpdated = accountService.updateCompanyName(account.getUuid(), newCompanyName);
+    assertThat(accountUpdated).isTrue();
+    account = accountService.get(account.getUuid());
+    assertThat(account.getCompanyName()).isEqualTo(newCompanyName);
   }
 
   @Test
