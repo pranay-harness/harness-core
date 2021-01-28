@@ -149,6 +149,26 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     return getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
   }
 
+  @Override
+  public VerificationJobDTO getDTOByUrl(String accountId, String verificationJobUrl) {
+    VerificationJob job = getByUrl(accountId, verificationJobUrl);
+    if (job != null) {
+      VerificationJobDTO verificationJobDTO = job.getVerificationJobDTO();
+      if (!job.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
+        EnvironmentResponseDTO environmentResponseDTO = nextGenService.getEnvironment(
+            job.getEnvIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+        verificationJobDTO.setEnvName(environmentResponseDTO.getName());
+      }
+      if (!job.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
+        ServiceResponseDTO serviceResponseDTO = nextGenService.getService(
+            job.getServiceIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+        verificationJobDTO.setServiceName(serviceResponseDTO.getName());
+      }
+      return verificationJobDTO;
+    }
+    return null;
+  }
+
   private String getParamFromUrl(String url, String paramName) {
     try {
       List<NameValuePair> queryParams = new URIBuilder(url).getQueryParams();

@@ -18,7 +18,9 @@ public abstract class VerificationJobDTO {
   private String identifier;
   private String jobName;
   private String serviceIdentifier;
+  private String serviceName;
   private String envIdentifier;
+  private String envName;
   private String projectIdentifier;
   private String orgIdentifier;
   private String activitySourceIdentifier;
