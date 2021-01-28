@@ -6,8 +6,7 @@ function replace_text() {
 }
 
 replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 400-rest/config.yml
-replace_text "disabledCache: \[\]" "disabledCache: \["userPermissionCache"\]" 400-rest/config.yml
-replace_text "disabledCaches: \[\]" "disabledCaches: \["userPermissionCache"\]" 400-rest/config.yml
+replace_text "disabledCaches: \[\]" "disabledCaches: \["userPermissionCache", "primary_userPermissionCache"\]" 400-rest/config.yml
 replace_text "uri: http://localhost:9200" "uri: ${ELASTICSEARCH_URI}" 400-rest/config.yml
 replace_text "indexSuffix: _default" "indexSuffix: ${ELASTICSEARCH_INDEX_SUFFIX}" 400-rest/config.yml
 replace_text "searchEnabled: false" "searchEnabled: true" 400-rest/config.yml
