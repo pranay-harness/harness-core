@@ -27,6 +27,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
@@ -509,8 +511,12 @@ public class WorkflowNotificationHelper {
     StringBuilder infraDetailsUrl = new StringBuilder();
 
     if (isNotEmpty(infraIds)) {
+      List<String> infras = infraIds.stream()
+                                .filter(EmptyPredicate::isNotEmpty)
+                                .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
+                                .collect(Collectors.toList());
       boolean firstInfra = true;
-      for (String infraId : infraIds) {
+      for (String infraId : infras) {
         InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraId);
         if (!firstInfra) {
           infraMsg.append(", ");
@@ -596,7 +602,11 @@ public class WorkflowNotificationHelper {
     StringBuilder serviceDetailsUrl = new StringBuilder();
 
     boolean firstService = true;
-    for (String serviceId : serviceIds) {
+    List<String> filteredServices = serviceIds.stream()
+                                        .filter(EmptyPredicate::isNotEmpty)
+                                        .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
+                                        .collect(Collectors.toList());
+    for (String serviceId : filteredServices) {
       Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
       if (!firstService) {
         serviceMsg.append(", ");
@@ -611,7 +621,7 @@ public class WorkflowNotificationHelper {
       firstService = false;
     }
 
-    if (serviceIds.isEmpty()) {
+    if (filteredServices.isEmpty()) {
       serviceMsg.append("no service");
       serviceDetailsName.append("no service");
     }
