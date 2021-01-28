@@ -1,4 +1,3 @@
-use crate::java_class;
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use regex::Regex;
@@ -8,12 +7,15 @@ use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
 use std::process::Command;
 
+use crate::java_class;
+
 #[derive(Debug)]
 pub struct JavaClass {
     pub name: String,
     pub location: String,
     pub dependencies: HashSet<String>,
     pub target_module: Option<String>,
+    pub break_dependencies_on: HashSet<String>,
 }
 
 impl PartialEq for JavaClass {
@@ -43,22 +45,25 @@ lazy_static! {
     .to_string();
 }
 
-pub fn populate_target_module(location: &String) -> Option<String> {
-    let re = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
+lazy_static! {
+    static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
+    static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
+}
+
+pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<String>) {
     let code = fs::read_to_string(&format!("{}/{}", GIT_REPO_ROOT_DIR.as_str(), location)).expect(&format!(
         "failed to read file {}/{}",
         GIT_REPO_ROOT_DIR.as_str(),
         location
     ));
 
-    let captures = re.captures(&code);
-
-    if captures.is_none() {
+    let captures_target_module = TARGET_MODULE_PATTERN.captures(&code);
+    let target_module = if captures_target_module.is_none() {
         None
     } else {
         Some(format!(
             "//{}:module",
-            captures
+            captures_target_module
                 .unwrap()
                 .get(1)
                 .unwrap()
@@ -67,7 +72,15 @@ pub fn populate_target_module(location: &String) -> Option<String> {
                 .to_lowercase()
                 .replace('_', "-")
         ))
-    }
+    };
+
+    let captures_break_dependency_on = BREAK_DEPENDENCY_ON_PATTERN.captures_iter(&code);
+    let break_dependencies_on = captures_break_dependency_on
+        .map(|capture| capture.get(1))
+        .map(|break_dependency_on| break_dependency_on.unwrap().as_str().to_string())
+        .collect::<HashSet<String>>();
+
+    (target_module, break_dependencies_on)
 }
 
 pub fn class_dependencies(name: &str, dependencies: &MultiMap<String, String>) -> HashSet<String> {
@@ -84,6 +97,7 @@ pub fn external_class(key: &str, dependencies: &MultiMap<String, String>) -> Jav
         name: key.to_string(),
         location: "n/a".to_string(),
         dependencies: java_class::class_dependencies(key, &dependencies),
-        target_module: None,
+        target_module: Default::default(),
+        break_dependencies_on: Default::default(),
     }
 }

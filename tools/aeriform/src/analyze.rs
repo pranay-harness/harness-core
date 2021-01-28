@@ -4,7 +4,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::java_class::JavaClass;
-use crate::java_module::{JavaModule, modules};
+use crate::java_module::{modules, JavaModule};
 use std::cmp::Ordering::Equal;
 
 /// A sub-command to analyze the project module targets and dependencies
@@ -66,6 +66,7 @@ pub fn analyze(opts: Analyze) {
 
     class_modules.iter().for_each(|tuple| {
         results.extend(check_already_in_target(tuple.0, tuple.1));
+        results.extend(check_for_extra_break(tuple.0, tuple.1));
         results.extend(check_for_promotion(
             tuple.0,
             tuple.1,
@@ -101,6 +102,30 @@ pub fn analyze(opts: Analyze) {
             println!("{:?} -> {}", kind, total[kind as usize]);
         }
     }
+}
+
+fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    class
+        .break_dependencies_on
+        .iter()
+        .filter(|&break_dependency| !class.dependencies.contains(break_dependency))
+        .for_each(|break_dependency| {
+            let mut modules: HashSet<String> = HashSet::new();
+            modules.insert(module.name.clone());
+            if class.target_module.is_some() {
+                modules.insert(class.target_module.as_ref().unwrap().clone());
+            }
+
+            results.push(Report {
+                kind: Kind::CRITICAL,
+                message: format!("{} has no dependency on {}", class.name, break_dependency),
+                modules: modules,
+            })
+        });
+
+    results
 }
 
 fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, JavaModule>) -> Vec<Report> {
@@ -188,16 +213,30 @@ fn check_for_promotion(
                     && !target_module.dependencies.contains(&dependent_target_module.name)
                 {
                     issue = true;
-                    results.push(Report {
-                        kind: Kind::ERROR,
-                        message: format!(
-                            "{} depends on {} that is in module {} but {} does not depend on it",
-                            class.name, dependent_class.name, dependent_target_module.name, target_module.name
-                        ),
-                        modules: [dependent_target_module.name.clone(), target_module.name.clone()]
-                            .iter()
-                            .cloned()
-                            .collect(),
+                    results.push(if class.break_dependencies_on.contains(src) {
+                        Report {
+                            kind: Kind::ACTION,
+                            message: format!(
+                                "{} depends on {} and this dependency has to be broken",
+                                class.name, dependent_class.name
+                            ),
+                            modules: [dependent_target_module.name.clone(), target_module.name.clone()]
+                                .iter()
+                                .cloned()
+                                .collect(),
+                        }
+                    } else {
+                        Report {
+                            kind: Kind::ERROR,
+                            message: format!(
+                                "{} depends on {} that is in module {} but {} does not depend on it",
+                                class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                            ),
+                            modules: [dependent_target_module.name.clone(), target_module.name.clone()]
+                                .iter()
+                                .cloned()
+                                .collect(),
+                        }
                     });
                 }
 

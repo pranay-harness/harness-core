@@ -64,6 +64,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -304,6 +305,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.service.intfc.AccountService")
+@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.
