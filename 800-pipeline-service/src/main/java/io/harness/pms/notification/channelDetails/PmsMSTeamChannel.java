@@ -4,27 +4,22 @@ import io.harness.Team;
 import io.harness.notification.channeldetails.MSTeamChannel;
 import io.harness.notification.channeldetails.NotificationChannel;
 
-import com.google.inject.Inject;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Builder
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName(NotificationChannelType.MSTEAMS)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PmsMSTeamChannel extends PmsNotificationChannel {
   List<String> msTeamKeys;
-
-  @Builder
-  public PmsMSTeamChannel(List<String> userGroups, List<String> msTeamKeys) {
-    super(userGroups);
-    this.msTeamKeys = msTeamKeys;
-  }
+  List<String> userGroups;
 
   @Override
   public NotificationChannel toNotificationChannel(
