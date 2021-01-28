@@ -1290,7 +1290,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                              .project(InfrastructureMappingKeys.appId, true)
                                                              .project(InfrastructureMappingKeys.envId, true)
                                                              .project(InfrastructureMappingKeys.name, true)
-                                                             .project(InfrastructureMapping.ID_KEY2, true)
+                                                             .project(InfrastructureMapping.ID, true)
                                                              .asList();
     for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
       prune(appId, infrastructureMapping.getUuid());

@@ -635,7 +635,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       List<ServiceTemplate> serviceTemplates =
           serviceTemplateService
               .list(aPageRequest()
-                        .addFilter(ServiceTemplate.APP_ID_KEY2, EQ, originalService.getAppId())
+                        .addFilter(ServiceTemplate.APP_ID, EQ, originalService.getAppId())
                         .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
                         .build(),
                   false, OBTAIN_VALUE)
@@ -3028,9 +3028,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
 
-    Query<Service> query = wingsPersistence.createQuery(Service.class)
-                               .filter(Service.APP_ID_KEY2, appId)
-                               .filter(Service.ID_KEY2, serviceId);
+    Query<Service> query =
+        wingsPersistence.createQuery(Service.class).filter(Service.APP_ID, appId).filter(Service.ID, serviceId);
 
     wingsPersistence.update(query, updateOperations);
   }

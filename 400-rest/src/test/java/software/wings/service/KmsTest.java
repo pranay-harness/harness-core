@@ -9,7 +9,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 
@@ -309,7 +308,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void updateFileWithGlobalKms() throws IOException {
@@ -1258,7 +1257,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void kmsEncryptionSaveServiceVariable() throws IllegalAccessException {
@@ -1395,7 +1394,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void kmsEncryptionUpdateServiceVariable() {
@@ -2210,7 +2209,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void saveUpdateConfigFileNoKms() throws IOException, IllegalAccessException {
@@ -2321,7 +2320,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileNoEncryption() throws IOException {
@@ -2375,7 +2374,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
@@ -2517,7 +2516,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileTemplateWithEncryption() throws IOException {

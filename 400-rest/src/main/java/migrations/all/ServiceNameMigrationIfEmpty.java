@@ -40,9 +40,7 @@ public class ServiceNameMigrationIfEmpty implements Migration {
         }
         if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
           bulkWriteOperation
-              .find(wingsPersistence.createQuery(Service.class)
-                        .filter(Service.ID_KEY2, service.getUuid())
-                        .getQueryObject())
+              .find(wingsPersistence.createQuery(Service.class).filter(Service.ID, service.getUuid()).getQueryObject())
               .updateOne(new BasicDBObject("$set",
                   new BasicDBObject(ServiceKeys.name,
                       new StringBuilder(128).append(HARNESS_SERVICE).append("_0").append(count).toString())));

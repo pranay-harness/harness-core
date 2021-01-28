@@ -61,6 +61,7 @@ public class ServiceTemplate extends Base {
 
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";
+  public static final String APP_ID = "appId";
 
   @FdIndex @Getter @Setter private String accountId;
   @NotEmpty private String envId;

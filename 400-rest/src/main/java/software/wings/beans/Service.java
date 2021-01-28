@@ -76,6 +76,9 @@ public class Service
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
+  public static final String APP_ID = "appId";
+  public static final String ID = "_id";
+
   @Trimmed(message = "Service Name should not contain leading and trailing spaces")
   @EntityName
   @NotEmpty

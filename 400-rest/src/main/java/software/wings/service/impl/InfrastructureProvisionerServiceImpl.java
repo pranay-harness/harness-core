@@ -190,12 +190,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @VisibleForTesting
   boolean differentProvisionerWithSameNameExists(String appId, String uuid, String name) {
     Query<InfrastructureProvisioner> query = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                                 .field(InfrastructureProvisioner.APP_ID_KEY2)
+                                                 .field(InfrastructureProvisioner.APP_ID)
                                                  .equal(appId)
                                                  .field(InfrastructureProvisioner.NAME_KEY)
                                                  .equal(name);
     if (isNotEmpty(uuid)) {
-      query.field(InfrastructureProvisioner.ID_KEY2).notEqual(uuid);
+      query.field(InfrastructureProvisioner.ID).notEqual(uuid);
     }
     return query.count() > 0;
   }
@@ -290,8 +290,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public PageResponse<InfrastructureProvisioner> listByBlueprintDetails(@NotEmpty String appId,
       String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) {
-    PageRequestBuilder requestBuilder =
-        aPageRequest().addFilter(InfrastructureProvisioner.APP_ID_KEY2, Operator.EQ, appId);
+    PageRequestBuilder requestBuilder = aPageRequest().addFilter(InfrastructureProvisioner.APP_ID, Operator.EQ, appId);
 
     if (infrastructureProvisionerType != null) {
       requestBuilder.addFilter(
@@ -340,7 +339,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       return Collections.emptyMap();
     }
     PageRequest<Service> servicePageRequest = new PageRequest<>();
-    servicePageRequest.addFilter(Service.APP_ID_KEY2, Operator.EQ, appId);
+    servicePageRequest.addFilter(Service.APP_ID, Operator.EQ, appId);
     servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, servicesIds.toArray());
 
     PageResponse<Service> services = serviceResourceService.list(servicePageRequest, false, false, false, null);
@@ -419,7 +418,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public InfrastructureProvisioner getByName(String appId, String provisionerName) {
     return wingsPersistence.createQuery(InfrastructureProvisioner.class)
-        .filter(InfrastructureProvisioner.APP_ID_KEY2, appId)
+        .filter(InfrastructureProvisioner.APP_ID, appId)
         .filter(InfrastructureProvisioner.NAME_KEY, provisionerName)
         .get();
   }
@@ -480,7 +479,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public void pruneByApplication(String appId) {
     List<Key<InfrastructureProvisioner>> keys = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                                    .filter(InfrastructureProvisioner.APP_ID_KEY2, appId)
+                                                    .filter(InfrastructureProvisioner.APP_ID, appId)
                                                     .asKeyList();
     for (Key<InfrastructureProvisioner> key : keys) {
       prune(appId, (String) key.getId());
