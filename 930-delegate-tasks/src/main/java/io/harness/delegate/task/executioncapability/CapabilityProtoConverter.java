@@ -10,6 +10,7 @@ import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
+import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
@@ -20,6 +21,7 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
+import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.k8s.model.HelmVersion;
@@ -77,6 +79,16 @@ public class CapabilityProtoConverter {
         return builder
             .setProcessExecutorParameters(ProcessExecutorParameters.newBuilder().addAllArgs(
                 processExecutorCapability.getProcessExecutorArguments()))
+            .build();
+      case SMTP:
+        SmtpCapability smtpCapability = (SmtpCapability) executionCapability;
+        return builder
+            .setSmtpParameters(SmtpParameters.newBuilder()
+                                   .setUseSsl(smtpCapability.isUseSSL())
+                                   .setStartTls(smtpCapability.isStartTLS())
+                                   .setHost(smtpCapability.getHost())
+                                   .setPort(smtpCapability.getPort())
+                                   .setUsername(smtpCapability.getUsername()))
             .build();
       case SFTP:
         SftpCapability sftpCapability = (SftpCapability) executionCapability;
