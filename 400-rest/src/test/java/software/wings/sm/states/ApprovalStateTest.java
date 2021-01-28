@@ -1537,6 +1537,53 @@ public class ApprovalStateTest extends WingsBaseTest {
         .isEqualTo("suppressTraditionalNotificationOnSlack");
     assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldTrimExcessiveServicesAndArtifactsDetails() {
+    String excessiveInfo =
+        "first, second, third, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo";
+    WorkflowNotificationDetails serviceDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    WorkflowNotificationDetails infraDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo));
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(APP_ID)
+            .appName(APP_NAME)
+            .routingId(ACCOUNT_ID)
+            .deploymentId(WORKFLOW_EXECUTION_ID)
+            .workflowId(WORKFLOW_ID)
+            .workflowExecutionName(WORKFLOW_NAME)
+            .stateExecutionId(STATE_EXECUTION_ID)
+            .stateExecutionInstanceName(STATE_NAME)
+            .approvalId(APPROVAL_EXECUTION_ID)
+            .pausedStageName(WORKFLOW_NAME)
+            .servicesInvolved(String.format("*Services*: %s", serviceDetails.getName()))
+            .environmentsInvolved(ENV_NAME)
+            .artifactsInvolved(artifacts.toString())
+            .infraDefinitionsInvolved(String.format("*Infrastructure Definitions*: %s", infraDetails.getName()))
+            .confirmation(false)
+            .pipeline(true)
+            .workflowUrl(WORKFLOW_URL)
+            .jwtToken("token")
+            .startTsSecs("mockEpochTimeMillis")
+            .endTsSecs("mockEpochTimeMillis")
+            .startDate("mockEpochTimeMillis")
+            .expiryTsSecs("mockEpochTimeMillis")
+            .endDate("mockEpochTimeMillis")
+            .expiryDate("someMockDate")
+            .verb("paused")
+            .build();
+    JSONObject customData =
+        approvalState.createCustomData(slackApprovalParams, serviceDetails, artifacts, infraDetails);
+    assertThat(customData.toString().length()).isLessThanOrEqualTo(2000);
+    assertThat(customData.get("servicesInvolved")).isEqualTo("*Services*: first, second, third... 25 more");
+    assertThat(customData.get("artifactsInvolved")).isEqualTo("*Artifacts:* first, second, third... 25 more");
+    assertThat(customData.get("infraDefinitionsInvolved"))
+        .isEqualTo("*Infrastructure Definitions*: first, second, third... 25 more");
+  }
+
   private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {
     assertThat(placeholderValues.containsKey("APPROVAL_STEP"));
     assertThat(placeholderValues.containsKey("WORKFLOW"));

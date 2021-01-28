@@ -901,7 +901,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .expiryDate(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_DATE))
             .verb(placeHolderValues.get(SlackApprovalMessageKeys.VERB))
             .build();
-    JSONObject customData = new JSONObject(slackApprovalParams);
+    JSONObject customData = createCustomData(slackApprovalParams, serviceDetails, artifacts, infraDetails);
 
     URL notificationTemplateUrl;
     if (slackApprovalParams.isPipeline()) {
@@ -918,6 +918,63 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
     placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, displayText);
     placeHolderValues.put(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER, "suppressTraditionalNotificationOnSlack");
+  }
+
+  @VisibleForTesting
+  JSONObject createCustomData(SlackApprovalParams slackApprovalParams, WorkflowNotificationDetails serviceDetails,
+      StringBuilder artifacts, WorkflowNotificationDetails infraDetails) {
+    JSONObject customData = new JSONObject(slackApprovalParams);
+    if (customData.toString().length() < 2000) {
+      return customData;
+    } else {
+      int serviceCount = serviceDetails.getName().split(", ").length;
+      boolean areServicesTrimmed = trimNotificationDetails(serviceDetails, serviceCount);
+      int artifactsCount = artifacts.toString().replace("*Artifacts:* ", "").split(", ").length;
+      boolean areArtifactsTrimmed = trimArtifacts(artifacts, artifactsCount);
+      int infraCount = infraDetails.getName().split(", ").length;
+      boolean areInfrasTrimmed = trimNotificationDetails(infraDetails, infraCount);
+      SlackApprovalParams params =
+          slackApprovalParams.toBuilder()
+              .servicesInvolved(areServicesTrimmed
+                      ? String.format("*Services*: %s... %s more", serviceDetails.getName(), serviceCount - 3)
+                      : slackApprovalParams.getServicesInvolved())
+              .artifactsInvolved(areArtifactsTrimmed
+                      ? String.format("*Artifacts:* %s... %s more", artifacts.toString(), artifactsCount - 3)
+                      : slackApprovalParams.getArtifactsInvolved())
+              .infraDefinitionsInvolved(areInfrasTrimmed ? String.format("*Infrastructure Definitions*: %s... %s more",
+                                            infraDetails.getName(), infraCount - 3)
+                                                         : slackApprovalParams.getInfraDefinitionsInvolved())
+              .build();
+      return new JSONObject(params);
+    }
+  }
+
+  private boolean trimArtifacts(StringBuilder artifactsDetails, int artifactsCount) {
+    if (artifactsCount > 3) {
+      String[] trimmedArtifacts =
+          Arrays.copyOfRange(artifactsDetails.toString().replace("*Artifacts:* ", "").split(", "), 0, 3);
+      StringJoiner artifacts = new StringJoiner(", ");
+      for (String artifact : trimmedArtifacts) {
+        artifacts.add(artifact);
+      }
+      artifactsDetails.setLength(0);
+      artifactsDetails.append(artifacts);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean trimNotificationDetails(WorkflowNotificationDetails notificationDetails, int detailCount) {
+    if (detailCount > 3) {
+      String[] trimmedDetails = Arrays.copyOfRange(notificationDetails.getName().split(", "), 0, 3);
+      StringJoiner details = new StringJoiner(", ");
+      for (String detail : trimmedDetails) {
+        details.add(detail);
+      }
+      notificationDetails.setName(details.toString());
+      return true;
+    }
+    return false;
   }
 
   @Override
