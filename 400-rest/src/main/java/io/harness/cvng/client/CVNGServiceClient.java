@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.rest.RestResponse;
 
 import javax.validation.Valid;
@@ -20,4 +21,8 @@ public interface CVNGServiceClient {
   @GET(INTERNAL_ACTIVITY_RESOURCE + "/activity-status")
   Call<RestResponse<ActivityStatusDTO>> getActivityStatus(
       @Query("accountId") String accountId, @Query("activityId") String activityId);
+
+  @GET("verification-job/job-from-url")
+  Call<RestResponse<VerificationJobDTO>> getVerificationJobByUrl(
+      @Query("accountId") String accountId, @Query("verificationJobUrl") String verificationJobUrl);
 }

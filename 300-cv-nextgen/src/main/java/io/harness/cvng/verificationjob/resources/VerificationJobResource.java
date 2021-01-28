@@ -5,6 +5,7 @@ import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -85,5 +86,17 @@ public class VerificationJobResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier) {
     return new RestResponse<>(
         verificationJobService.getDefaultHealthVerificationJobDTO(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Path("/job-from-url")
+  @ApiOperation(value = "gets the verificationJob from its url", nickname = "getVerificationJobFromUrl")
+  public RestResponse<VerificationJobDTO> getVerificationJobFromUrl(
+      @QueryParam("accountId") @NotNull @Valid final String accountId,
+      @QueryParam("verificationJobUrl") @NotNull String webhookUrl) {
+    return new RestResponse<>(verificationJobService.getDTOByUrl(accountId, webhookUrl));
   }
 }

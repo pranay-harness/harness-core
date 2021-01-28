@@ -520,6 +520,42 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     assertThat(byUrl.getUuid()).isEqualTo(inserted.getUuid());
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetDTOByUrl_nonRuntimeParam() {
+    VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
+    mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob inserted = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
+
+    VerificationJobDTO byUrl = verificationJobService.getDTOByUrl(accountId, inserted.getVerificationJobUrl());
+    assertThat(byUrl.getServiceName()).isEqualTo(inserted.getServiceIdentifier());
+    assertThat(byUrl.getServiceIdentifier()).isEqualTo(inserted.getServiceIdentifier());
+    assertThat(byUrl.getEnvName()).isEqualTo(inserted.getEnvIdentifier());
+    assertThat(byUrl.getEnvIdentifier()).isEqualTo(inserted.getEnvIdentifier());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetDTOByUrl_withRuntimeParam() {
+    VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
+    mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    VerificationJob inserted = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
+
+    VerificationJobDTO byUrl = verificationJobService.getDTOByUrl(accountId, inserted.getVerificationJobUrl());
+    assertThat(byUrl.getServiceName()).isEqualTo(null);
+    assertThat(byUrl.getServiceIdentifier()).isEqualTo(inserted.getServiceIdentifier());
+    assertThat(byUrl.getEnvName()).isEqualTo(null);
+    assertThat(byUrl.getEnvIdentifier()).isEqualTo(inserted.getEnvIdentifier());
+  }
+
   @Test(expected = NullPointerException.class)
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
