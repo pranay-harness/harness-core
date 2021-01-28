@@ -41,6 +41,8 @@ public enum WorkflowStepType {
   APM("Performance Monitoring"),
   LOG("Log Analysis"),
 
+  CVNG("Harness CV 2.0 - All Monitoring Sources"),
+
   ISSUE_TRACKING("Issue Tracking"),
   NOTIFICATION("Notification"),
   FLOW_CONTROL("Flow Control"),

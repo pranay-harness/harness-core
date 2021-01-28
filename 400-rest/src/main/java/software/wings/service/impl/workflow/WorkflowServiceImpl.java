@@ -3855,7 +3855,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Add favorites category always even if it is empty.
     addFavoritesToWorkflowCategories(favorites, steps.keySet(), categories);
     // get all categories relevant for workflow
-    addWorkflowCategorySteps(steps.keySet(), categories);
+    addWorkflowCategorySteps(steps.keySet(), categories, accountId);
     // add service commands to categories
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
@@ -3899,7 +3899,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
   }
 
-  public void addWorkflowCategorySteps(Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories) {
+  public void addWorkflowCategorySteps(
+      Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories, String accountId) {
     for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
       WorkflowStepType workflowStepType = entry.getKey();
       List<StepType> stepTypeList = entry.getValue();
@@ -3914,11 +3915,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       // not adding category if there are no steps
       if (isNotEmpty(stepIds)) {
-        categories.add(WorkflowCategoryStepsMeta.builder()
-                           .id(workflowStepType.name())
-                           .name(workflowStepType.getDisplayName())
-                           .stepIds(stepIds)
-                           .build());
+        String displayName = workflowStepType.getDisplayName();
+        if ((workflowStepType.equals(WorkflowStepType.APM) || workflowStepType.equals(WorkflowStepType.LOG))
+            && featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+          displayName = "Harness CV 1.0 - " + displayName;
+        }
+        categories.add(
+            WorkflowCategoryStepsMeta.builder().id(workflowStepType.name()).name(displayName).stepIds(stepIds).build());
       }
     }
   }

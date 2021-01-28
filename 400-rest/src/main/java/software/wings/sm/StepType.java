@@ -625,7 +625,7 @@ public enum StepType {
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   // cvng
-  CVNG(CVNGState.class, CVNG_STATE, asList(LOG, APM),
+  CVNG(CVNGState.class, CVNG_STATE, asList(WorkflowStepType.CVNG),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
