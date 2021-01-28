@@ -5,6 +5,8 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
@@ -49,7 +51,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -158,6 +159,7 @@ import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
@@ -486,8 +488,8 @@ public class AccountServiceImpl implements AccountService {
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {
-      throw new AccountNotFoundException("Account is not found for the given id:" + accountId, null,
-          ErrorCode.ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
+      throw new AccountNotFoundException(
+          "Account is not found for the given id:" + accountId, null, ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
@@ -1470,6 +1472,50 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.update(wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId),
         whitelistedDomainsUpdateOperations);
     return get(accountId);
+  }
+
+  @Override
+  public boolean updateAccountName(String accountId, String accountName) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      log.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.accountName, accountName);
+
+    try {
+      UpdateResults updateResults = wingsPersistence.update(
+          wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
+      if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+        log.info("Successfully updated account name to {} for accountId = {} ", accountName, accountId);
+        return true;
+      }
+      log.info("Failed to update account name to {} for accountId = {} ", accountName, accountId);
+      return false;
+    } catch (DuplicateKeyException duplicateKeyException) {
+      log.error("Account name already exists", duplicateKeyException);
+      throw new InvalidRequestException("Account name already exists", INVALID_REQUEST, USER);
+    }
+  }
+
+  @Override
+  public boolean updateCompanyName(String accountId, String companyName) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      log.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.companyName, companyName);
+    UpdateResults updateResults = wingsPersistence.update(
+        wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
+    if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+      log.info("Successfully updated company name to {} for accountId = {} ", companyName, accountId);
+      return true;
+    }
+    log.info("Failed to update company name to {} for accountId = {} ", companyName, accountId);
+    return false;
   }
 
   @Override
