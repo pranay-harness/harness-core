@@ -172,6 +172,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     TaskData data = delegateTask.getData();
     assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
     assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    assertThat(delegateTask.getExpiry()).isNotZero();
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
     assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
   }
@@ -217,6 +218,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
     assertThat(parameters.getSettingValue()).isNotNull();
     assertThat(parameters.getEncryptedDataDetails()).isNotNull();
+    assertThat(delegateTask.getExpiry()).isNotZero();
   }
 
   @Test(expected = InvalidRequestException.class)

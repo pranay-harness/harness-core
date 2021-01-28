@@ -145,6 +145,8 @@ public class ArtifactCollectionUtils {
   @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private PerpetualTaskService perpetualTaskService;
 
+  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
@@ -292,8 +294,10 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                                                  .waitId(waitId)
+                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
@@ -755,6 +759,7 @@ public class ArtifactCollectionUtils {
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .tags(tags)
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 
