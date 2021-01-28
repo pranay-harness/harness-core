@@ -55,6 +55,7 @@ message YamlFieldBlob {
 
 message FilterCreationBlobRequest {
   map<string, YamlFieldBlob> dependencies = 1;
+  SetupMetadata setupMetadata = 2;
 }
 
 message FilterCreationResponse {
@@ -92,4 +93,10 @@ message VariablesCreationBlobResponse {
 
 message ErrorResponse {
   repeated string messages = 1;
+}
+
+message SetupMetadata {
+  string accountId = 1;
+  string projectId = 2;
+  string orgId = 3;
 }

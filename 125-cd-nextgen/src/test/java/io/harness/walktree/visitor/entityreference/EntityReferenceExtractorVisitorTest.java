@@ -4,12 +4,11 @@ import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
-import io.harness.common.EntityReference;
-import io.harness.encryption.Scope;
-import io.harness.ng.core.EntityDetail;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
@@ -17,6 +16,7 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.protobuf.StringValue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -39,34 +39,31 @@ public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
     String ORG = "ORG";
     String PROJECT = "PROJECT";
 
-    Set<EntityReference> expectedReferences = new HashSet<>();
-    expectedReferences.add(IdentifierRef.builder()
-                               .scope(Scope.PROJECT)
-                               .accountIdentifier(ACCOUNT)
-                               .orgIdentifier(ORG)
-                               .projectIdentifier(PROJECT)
-                               .identifier("npQuotecenter")
+    Set<IdentifierRefProtoDTO> expectedReferences = new HashSet<>();
+    expectedReferences.add(IdentifierRefProtoDTO.newBuilder()
+                               .setScope(ScopeProtoEnum.PROJECT)
+                               .setAccountIdentifier(StringValue.of(ACCOUNT))
+                               .setOrgIdentifier(StringValue.of(ORG))
+                               .setProjectIdentifier(StringValue.of(PROJECT))
+                               .setIdentifier(StringValue.of("npQuotecenter"))
                                .build());
-    expectedReferences.add(IdentifierRef.builder()
-                               .scope(Scope.PROJECT)
-                               .accountIdentifier(ACCOUNT)
-                               .orgIdentifier(ORG)
-                               .projectIdentifier(PROJECT)
-                               .identifier("myDocker2")
+    expectedReferences.add(IdentifierRefProtoDTO.newBuilder()
+                               .setScope(ScopeProtoEnum.PROJECT)
+                               .setAccountIdentifier(StringValue.of(ACCOUNT))
+                               .setOrgIdentifier(StringValue.of(ORG))
+                               .setProjectIdentifier(StringValue.of(PROJECT))
+                               .setIdentifier(StringValue.of("myDocker2"))
                                .build());
-    expectedReferences.add(IdentifierRef.builder()
-                               .scope(Scope.ORG)
-                               .accountIdentifier(ACCOUNT)
-                               .orgIdentifier(ORG)
-                               .projectIdentifier(null)
-                               .identifier("myGitConnector")
+    expectedReferences.add(IdentifierRefProtoDTO.newBuilder()
+                               .setScope(ScopeProtoEnum.ORG)
+                               .setAccountIdentifier(StringValue.of(ACCOUNT))
+                               .setOrgIdentifier(StringValue.of(ORG))
+                               .setIdentifier(StringValue.of("myGitConnector"))
                                .build());
-    expectedReferences.add(IdentifierRef.builder()
-                               .scope(Scope.ACCOUNT)
-                               .accountIdentifier(ACCOUNT)
-                               .orgIdentifier(null)
-                               .projectIdentifier(null)
-                               .identifier("myK8sConnector")
+    expectedReferences.add(IdentifierRefProtoDTO.newBuilder()
+                               .setScope(ScopeProtoEnum.ACCOUNT)
+                               .setAccountIdentifier(StringValue.of(ACCOUNT))
+                               .setIdentifier(StringValue.of("myK8sConnector"))
                                .build());
 
     ClassLoader classLoader = getClass().getClassLoader();
@@ -78,9 +75,9 @@ public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
     EntityReferenceExtractorVisitor visitor = factory.obtainEntityReferenceExtractorVisitor(ACCOUNT, ORG, PROJECT);
 
     visitor.walkElementTree(pipeline);
-    Set<EntityDetail> references = visitor.getEntityReferenceSet();
-    Set<EntityReference> entityReferences =
-        references.stream().map(EntityDetail::getEntityRef).collect(Collectors.toSet());
+    Set<EntityDetailProtoDTO> references = visitor.getEntityReferenceSet();
+    Set<IdentifierRefProtoDTO> entityReferences =
+        references.stream().map(EntityDetailProtoDTO::getIdentifierRef).collect(Collectors.toSet());
 
     assertThat(entityReferences).isEqualTo(expectedReferences);
   }

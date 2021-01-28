@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -89,6 +90,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Input set moved to pipeline service so test is redundant")
   public void testServiceLayerOnInputSet() {
     String ORG_IDENTIFIER = "orgId";
     String PROJ_IDENTIFIER = "projId";

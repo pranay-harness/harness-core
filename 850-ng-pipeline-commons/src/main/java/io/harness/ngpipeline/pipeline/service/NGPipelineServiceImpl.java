@@ -204,7 +204,7 @@ public class NGPipelineServiceImpl implements NGPipelineService {
     EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
         ngPipelineEntity.getAccountId(), ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
     visitor.walkElementTree(ngPipeline);
-    return visitor.getEntityReferenceSet();
+    return new HashSet<>();
   }
 
   private EntityDetail getPipelineEntityDetail(NgPipelineEntity ngPipelineEntity) {
