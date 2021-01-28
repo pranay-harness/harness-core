@@ -13,6 +13,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
@@ -71,7 +72,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
   }
 
   @Override
-  public Optional<Double> getVerificationRisk(String accountId, String verificationJobInstanceId) {
+  public Optional<Risk> getVerificationRisk(String accountId, String verificationJobInstanceId) {
     Set<String> taskIds = verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     List<Double> risks = new ArrayList<>();
     Query<HealthVerificationHeatMap> heatMapQuery =
@@ -92,8 +93,10 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
             grouping(HealthVerificationHeatMapKeys.riskScore, accumulator("$last", "riskScore")))
         .aggregate(HealthVerificationHeatMap.class)
         .forEachRemaining(healthVerificationHeatMap -> { risks.add(healthVerificationHeatMap.getRiskScore()); });
+
     if (isNotEmpty(risks)) {
-      return Optional.of(Collections.max(risks));
+      double max = Collections.max(risks);
+      return Optional.of(Risk.getRiskFromRiskScore(max));
     } else {
       return Optional.empty();
     }

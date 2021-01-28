@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.api;
 
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.ng.beans.PageResponse;
 
@@ -19,7 +20,7 @@ public interface DeploymentLogAnalysisService {
   PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName);
 
-  Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
+  Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
 
   DeploymentLogAnalysis getRecentHighestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId);
 

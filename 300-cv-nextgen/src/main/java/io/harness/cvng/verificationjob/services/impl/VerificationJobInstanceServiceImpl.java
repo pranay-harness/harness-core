@@ -1,6 +1,5 @@
 package io.harness.cvng.verificationjob.services.impl;
 
-import static io.harness.cvng.CVConstants.DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD;
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
@@ -21,6 +20,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -77,7 +77,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -305,7 +304,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     Preconditions.checkState(ExecutionStatus.nonFinalStatuses().contains(verificationJobInstance.getExecutionStatus()),
         "executionStatus should be non final status");
     if (verificationJobInstance.isExecutionTimedOut(clock.instant())) {
-      log.error("VerificationJobInstance timed out {}", verificationJobInstance);
+      log.error("VerificationJobInstance timed out {} endTime: {}", verificationJobInstance,
+          verificationJobInstance.getEndTime());
       // TODO: add telemetry and alerting
       UpdateOperations<VerificationJobInstance> updateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class)
@@ -423,9 +423,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
     return DeploymentActivityVerificationResultDTO.builder()
         .preProductionDeploymentSummary(
-            getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
+            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
         .productionDeploymentSummary(
-            getDeploymentSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
+            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
         .postDeploymentSummary(getActivityVerificationSummary(postDeploymentVerificationJobInstances))
         .build();
   }
@@ -563,9 +563,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       case RUNNING:
         return ActivityVerificationStatus.IN_PROGRESS;
       case SUCCESS:
-        Optional<Double> riskScore = getLatestRiskScore(verificationJobInstance);
-        if (riskScore.isPresent()) {
-          if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
+        Optional<Risk> risk = getLatestRisk(verificationJobInstance);
+        if (risk.isPresent()) {
+          if (risk.get().isLessThanEq(Risk.MEDIUM)) {
             return ActivityVerificationStatus.VERIFICATION_PASSED;
           } else {
             return ActivityVerificationStatus.VERIFICATION_FAILED;
@@ -577,7 +577,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private Optional<Double> getLatestRiskScore(VerificationJobInstance verificationJobInstance) {
+  private Optional<Risk> getLatestRisk(VerificationJobInstance verificationJobInstance) {
     if (verificationJobInstance.getExecutionStatus() == ExecutionStatus.QUEUED) {
       return Optional.empty();
     }
@@ -592,47 +592,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public ActivityVerificationSummary getActivityVerificationSummary(
-      List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
-      return null;
-    }
-    return summarizeVerificationJobInstances(verificationJobInstances);
-  }
-
   @Nullable
-  public ActivityVerificationSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
-      return null;
-    }
-    return summarizeVerificationJobInstances(verificationJobInstances);
-  }
-
-  private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
-      VerificationJobInstance verificationJobInstance) {
-    return DeploymentVerificationJobInstanceSummary.builder()
-        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-        .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
-        .progressPercentage(verificationJobInstance.getProgressPercentage())
-        .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
-        .jobName(verificationJobInstance.getResolvedJob().getJobName())
-        .verificationJobInstanceId(verificationJobInstance.getUuid())
-        .status(getDeploymentVerificationStatus(verificationJobInstance))
-        .additionalInfo(getAdditionalInfo(verificationJobInstance.getAccountId(), verificationJobInstance))
-        .build();
-  }
-
-  @Override
-  public DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
-      List<String> verificationJobInstanceIds) {
-    Preconditions.checkState(isNotEmpty(verificationJobInstanceIds), "Should have at least one element");
-    // TODO:  Currently taking just first element to respond. We need to talk to UX and create mocks to show the full
-    // details in case of multiple verificationJobInstances.
-    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceIds.get(0));
-    return getDeploymentVerificationJobInstanceSummary(verificationJobInstance);
-  }
-
-  private ActivityVerificationSummary summarizeVerificationJobInstances(
+  public ActivityVerificationSummary getActivityVerificationSummary(
       List<VerificationJobInstance> verificationJobInstances) {
     if (isEmpty(verificationJobInstances)) {
       return null;
@@ -658,7 +619,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int failed = 0;
     int notStarted = 0;
     int errors = 0;
-    List<Optional<Double>> latestRiskScores = new ArrayList<>();
+    List<Risk> latestRiskScores = new ArrayList<>();
     for (int i = 0; i < verificationJobInstances.size(); i++) {
       VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
       switch (verificationJobInstance.getExecutionStatus()) {
@@ -670,10 +631,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           errors++;
           break;
         case SUCCESS:
-          Optional<Double> riskScore = getLatestRiskScore(verificationJobInstance);
-          latestRiskScores.add(riskScore);
-          if (riskScore.isPresent()) {
-            if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
+          Optional<Risk> risk = getLatestRisk(verificationJobInstance);
+
+          if (risk.isPresent()) {
+            latestRiskScores.add(risk.get());
+            if (risk.get().isLessThanEq(Risk.MEDIUM)) {
               passed++;
             } else {
               failed++;
@@ -681,27 +643,22 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           }
           break;
         case RUNNING:
-          latestRiskScores.add(getLatestRiskScore(verificationJobInstance));
+          Optional<Risk> latestRisk = getLatestRisk(verificationJobInstance);
+          if (latestRisk.isPresent()) {
+            latestRiskScores.add(latestRisk.get());
+          }
           progress++;
           break;
         default:
           throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
       }
     }
-    OptionalDouble optionalMaxRiskScore = latestRiskScores.stream()
-                                              .filter(optionalRiskScore -> optionalRiskScore.isPresent())
-                                              .mapToDouble(riskScore -> riskScore.get())
-                                              .max();
-    Double maxRiskScore = -1.0;
-    if (optionalMaxRiskScore.isPresent()) {
-      maxRiskScore = optionalMaxRiskScore.getAsDouble();
-    }
     return ActivityVerificationSummary.builder()
         .startTime(minVerificationInstanceJob.getStartTime().toEpochMilli())
         .durationMs(maxDuration.getResolvedJob().getDuration().toMillis())
         .remainingTimeMs(timeRemainingMs)
         .progressPercentage(progressPercentage)
-        .riskScore(maxRiskScore)
+        .risk(latestRiskScores.isEmpty() ? null : Collections.max(latestRiskScores))
         .total(total)
         .failed(failed)
         .errors(errors)
@@ -709,6 +666,31 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .progress(progress)
         .notStarted(notStarted)
         .build();
+  }
+
+  private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
+      VerificationJobInstance verificationJobInstance) {
+    return DeploymentVerificationJobInstanceSummary.builder()
+        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
+        .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
+        .progressPercentage(verificationJobInstance.getProgressPercentage())
+        .risk(getLatestRisk(verificationJobInstance).orElse(null))
+        .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
+        .jobName(verificationJobInstance.getResolvedJob().getJobName())
+        .verificationJobInstanceId(verificationJobInstance.getUuid())
+        .status(getDeploymentVerificationStatus(verificationJobInstance))
+        .additionalInfo(getAdditionalInfo(verificationJobInstance.getAccountId(), verificationJobInstance))
+        .build();
+  }
+
+  @Override
+  public DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
+      List<String> verificationJobInstanceIds) {
+    Preconditions.checkState(isNotEmpty(verificationJobInstanceIds), "Should have at least one element");
+    // TODO:  Currently taking just first element to respond. We need to talk to UX and create mocks to show the full
+    // details in case of multiple verificationJobInstances.
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceIds.get(0));
+    return getDeploymentVerificationJobInstanceSummary(verificationJobInstance);
   }
 
   @Override
@@ -755,7 +737,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                        .progressPercentage(verificationJobInstance.getProgressPercentage())
                        .remainingTimeMs(verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .riskScore(getLatestRiskScore(verificationJobInstance).orElse(null))
+                       .risk(getLatestRisk(verificationJobInstance).orElse(null))
                        .build())
             .collect(Collectors.toList());
     return DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary.builder()

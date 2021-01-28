@@ -19,6 +19,7 @@ public class TransactionMetricInfo {
   public static class TransactionMetric {
     String transactionName;
     String metricName;
-    private Double score;
+    private Double score; // is this score is needed in the UI?
+    private Risk risk;
   }
 }

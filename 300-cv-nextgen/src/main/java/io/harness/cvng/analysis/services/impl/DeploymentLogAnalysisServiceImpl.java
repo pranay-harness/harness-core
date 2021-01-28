@@ -4,6 +4,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -93,13 +94,13 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   }
 
   @Override
-  public Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
+  public Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
     DeploymentLogAnalysis recentHighestDeploymentLogAnalysis =
         getRecentHighestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
     if (recentHighestDeploymentLogAnalysis == null) {
       return Optional.empty();
     } else {
-      return Optional.of(recentHighestDeploymentLogAnalysis.getResultSummary().getScore());
+      return Optional.of(recentHighestDeploymentLogAnalysis.getResultSummary().getRisk());
     }
   }
 

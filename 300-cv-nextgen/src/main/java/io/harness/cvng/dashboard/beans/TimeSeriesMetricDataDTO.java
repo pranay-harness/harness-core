@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.beans;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 
@@ -38,11 +39,8 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
       metricDataList = new TreeSet<>();
     }
     totalRisk += risk.intValue();
-    metricDataList.add(MetricData.builder()
-                           .timestamp(timestamp)
-                           .value(value)
-                           .risk(TimeSeriesRisk.getRiskFromScore(risk.intValue()))
-                           .build());
+    metricDataList.add(
+        MetricData.builder().timestamp(timestamp).value(value).risk(Risk.valueOf(risk.intValue())).build());
   }
 
   @Override
@@ -61,36 +59,10 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
   public static class MetricData implements Comparable<MetricData> {
     private Long timestamp;
     private double value;
-    TimeSeriesRisk risk;
-
+    Risk risk;
     @Override
     public int compareTo(@NotNull MetricData o) {
       return timestamp.compareTo(o.timestamp);
-    }
-  }
-
-  public enum TimeSeriesRisk {
-    NO_DATA,
-    NO_ANALYSIS,
-    LOW_RISK,
-    MEDIUM_RISK,
-    HIGH_RISK;
-
-    public static TimeSeriesRisk getRiskFromScore(int risk) {
-      switch (risk) {
-        case -2:
-          return NO_ANALYSIS;
-        case -1:
-          return NO_DATA;
-        case 0:
-          return LOW_RISK;
-        case 1:
-          return MEDIUM_RISK;
-        case 2:
-          return HIGH_RISK;
-        default:
-          throw new UnsupportedOperationException("Unknown risk score: " + risk);
-      }
     }
   }
 }

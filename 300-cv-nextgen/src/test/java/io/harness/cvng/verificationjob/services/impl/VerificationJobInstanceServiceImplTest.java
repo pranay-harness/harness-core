@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.DataGenerator;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary;
@@ -28,6 +29,9 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
+import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
@@ -106,6 +110,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
   @Mock private Clock clock;
   private Instant fakeNow;
@@ -565,8 +570,37 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         .isEqualTo(ActivityVerificationSummary.builder()
                        .total(1)
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .riskScore(-1.0)
+                       .risk(null)
                        .notStarted(1)
+                       .durationMs(Duration.ofMinutes(15).toMillis())
+                       .remainingTimeMs(1200000)
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetAggregatedVerificationResult_runningStateWithAnalysis() {
+    VerificationJobInstance verificationJobInstance =
+        createVerificationJobInstance(verificationJobIdentifier, "prod", ExecutionStatus.RUNNING, CANARY);
+
+    DataGenerator dataGenerator = DataGenerator.builder().accountId(accountId).build();
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = dataGenerator.createDeploymentTimSeriesAnalysis(
+        verificationTaskService.getVerificationTaskId(accountId, cvConfigId, verificationJobInstance.getUuid()));
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+    DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
+        verificationJobInstanceService.getAggregatedVerificationResult(
+            Collections.singletonList(verificationJobInstance.getUuid()));
+    assertThat(deploymentActivityVerificationResultDTO).isNotNull();
+    assertThat(deploymentActivityVerificationResultDTO.getPreProductionDeploymentSummary()).isNull();
+    assertThat(deploymentActivityVerificationResultDTO.getPostDeploymentSummary()).isNull();
+    assertThat(deploymentActivityVerificationResultDTO.getProductionDeploymentSummary())
+        .isEqualTo(ActivityVerificationSummary.builder()
+                       .total(1)
+                       .progress(1)
+                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
+                       .risk(Risk.MEDIUM)
+                       .notStarted(0)
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
                        .build());
@@ -802,7 +836,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(deploymentVerificationJobInstanceSummary.getJobName())
         .isEqualTo(devVerificationJobInstance.getResolvedJob().getJobName());
     assertThat(deploymentVerificationJobInstanceSummary.getProgressPercentage()).isEqualTo(0);
-    assertThat(deploymentVerificationJobInstanceSummary.getRiskScore()).isNull();
+    assertThat(deploymentVerificationJobInstanceSummary.getRisk()).isNull();
     assertThat(deploymentVerificationJobInstanceSummary.getStatus()).isEqualTo(ActivityVerificationStatus.NOT_STARTED);
     assertThat(deploymentVerificationJobInstanceSummary.getAdditionalInfo())
         .isEqualTo(CanaryDeploymentAdditionalInfo.builder()

@@ -256,7 +256,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
           String groupName = metricRisk.getTransactionName();
           record.getTimeSeriesGroupValues().forEach(groupValue -> {
             if (groupName.equals(groupValue.getGroupName())) {
-              groupValue.setRiskScore(Math.max(metricRisk.getMetricRisk(), groupValue.getRiskScore()));
+              groupValue.setRiskScore(Math.max(metricRisk.getMetricRisk().getValue(), groupValue.getRiskScore()));
             }
           });
         });

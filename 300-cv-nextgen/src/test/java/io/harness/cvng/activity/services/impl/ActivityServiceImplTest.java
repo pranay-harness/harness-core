@@ -37,6 +37,7 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -1110,7 +1111,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     return ActivityVerificationSummary.builder()
         .total(1)
         .startTime(startTime.toEpochMilli())
-        .riskScore(20.0)
+        .risk(Risk.MEDIUM)
         .progress(1)
         .notStarted(0)
         .durationMs(Duration.ofMinutes(15).toMillis())

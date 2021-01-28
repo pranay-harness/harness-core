@@ -1,7 +1,10 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.TransactionMetricInfo;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
@@ -74,7 +77,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
     latestDeploymentTimeSeriesAnalysis.getTransactionMetricSummaries()
         .stream()
-        .filter(transactionMetricHostData -> filterAnomalousMetrics(transactionMetricHostData, anomalousMetricsOnly))
+        .filter(transactionMetricHostData
+            -> filterAnomalousMetrics(transactionMetricHostData, isNotEmpty(hostName), anomalousMetricsOnly))
         .forEach(transactionMetricHostData -> {
           TransactionMetricInfo transactionMetricInfo =
               TransactionMetricInfo.builder()
@@ -84,10 +88,12 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
           SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
           transactionMetricHostData.getHostData()
               .stream()
-              .filter(hostData -> filterByHostName(hostData, hostName))
+              .filter(hostData -> filterHostData(hostData, hostName, anomalousMetricsOnly))
               .forEach(hostData -> nodeDataSet.add(hostData));
-          transactionMetricInfo.setNodes(nodeDataSet);
-          transactionMetricInfoSet.add(transactionMetricInfo);
+          if (!nodeDataSet.isEmpty()) {
+            transactionMetricInfo.setNodes(nodeDataSet);
+            transactionMetricInfoSet.add(transactionMetricInfo);
+          }
         });
 
     List<TransactionMetricInfo> transactionMetricInfoList =
@@ -135,20 +141,24 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     }
   }
 
-  private boolean filterByHostName(DeploymentTimeSeriesAnalysisDTO.HostData hostData, String hostName) {
+  private boolean filterHostData(
+      DeploymentTimeSeriesAnalysisDTO.HostData hostData, String hostName, boolean anomalousMetricsOnly) {
     if (StringUtils.isBlank(hostName)) {
       return true;
     } else if (hostData.getHostName().isPresent()) {
-      return hostName.equals(hostData.getHostName().get());
+      return hostName.equals(hostData.getHostName().get()) && (!anomalousMetricsOnly || hostData.isAnomalous());
     } else {
       return false;
     }
   }
 
   private boolean filterAnomalousMetrics(
-      DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData,
+      DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData, boolean hostFilterExists,
       boolean anomalousMetricsOnly) {
-    return anomalousMetricsOnly ? transactionMetricHostData.getScore() >= 1 : Boolean.TRUE;
+    if (hostFilterExists) {
+      return true; // need to filter at host data level.
+    }
+    return !anomalousMetricsOnly || transactionMetricHostData.isAnomalous();
   }
 
   private TransactionMetricInfo.TransactionMetric createTransactionMetric(
@@ -157,6 +167,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .transactionName(transactionMetricHostData.getTransactionName())
         .metricName(transactionMetricHostData.getMetricName())
         .score(transactionMetricHostData.getScore())
+        .risk(transactionMetricHostData.getRisk())
         .build();
   }
 
@@ -168,13 +179,13 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
+  public Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId) {
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
         getRecentHighestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
     if (deploymentTimeSeriesAnalysis == null) {
       return Optional.empty();
     } else {
-      return Optional.of(deploymentTimeSeriesAnalysis.getScore());
+      return Optional.of(deploymentTimeSeriesAnalysis.getRisk());
     }
   }
   @Override

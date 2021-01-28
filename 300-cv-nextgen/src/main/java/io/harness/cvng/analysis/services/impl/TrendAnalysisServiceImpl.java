@@ -18,6 +18,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -305,7 +306,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
       String txnName = txnMetricAnalysis.getKey();
       ServiceGuardTxnMetricAnalysisDataDTO analysisDataDTO = txnMetricAnalysis.getValue().get(TREND_METRIC_NAME);
       LogAnalysisCluster cluster = logAnalysisClusterMap.get(Long.valueOf(txnName));
-      if (analysisDataDTO.getRisk() > 0) {
+      if (analysisDataDTO.getRisk().isGreaterThanEq(Risk.MEDIUM)) {
         unexpectedClusters.add(cluster.getLabel());
       }
       int index = cluster.getFrequencyTrend().size() - 1;
@@ -332,7 +333,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
           TimeSeriesRiskSummary.TransactionMetricRisk metricRisk = TimeSeriesRiskSummary.TransactionMetricRisk.builder()
                                                                        .transactionName(txnName)
                                                                        .metricName(metricName)
-                                                                       .metricRisk(metricData.getRisk())
+                                                                       .metricRisk(metricData.getRisk().getValue())
                                                                        .metricScore(metricData.getScore())
                                                                        .lastSeenTime(metricData.getLastSeenTime())
                                                                        .longTermPattern(metricData.isLongTermPattern())

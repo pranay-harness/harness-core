@@ -1,7 +1,6 @@
 package io.harness.cvng.analysis.beans;
 
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 
 import java.util.Set;
@@ -27,7 +26,7 @@ public class CanaryDeploymentAdditionalInfo extends AdditionalInfo {
   @EqualsAndHashCode(of = "hostName")
   public static class HostSummaryInfo {
     String hostName;
-    TimeSeriesRisk riskScore;
+    Risk risk;
     long anomalousMetricsCount;
     long anomalousLogClustersCount;
   }

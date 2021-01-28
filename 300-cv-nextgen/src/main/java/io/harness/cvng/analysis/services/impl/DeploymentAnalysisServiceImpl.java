@@ -4,6 +4,7 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.TrafficSplitPercentage;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
@@ -14,7 +15,7 @@ import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoB
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
+import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -22,6 +23,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -36,13 +38,14 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
   @Inject private ActivityService activityService;
 
   @Override
-  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
-    Optional<Double> recentHighestTimeSeriesRiskScore =
+  public Optional<Risk> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
+    Optional<Risk> recentHighestTimeSeriesRiskScore =
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
-    Optional<Double> latestLogRiskScore =
+    Optional<Risk> latestLogRiskScore =
         deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
     if (recentHighestTimeSeriesRiskScore.isPresent() && latestLogRiskScore.isPresent()) {
-      return Optional.of(Math.max(recentHighestTimeSeriesRiskScore.get(), latestLogRiskScore.get()));
+      return Optional.of(CVNGObjectUtils.max(
+          recentHighestTimeSeriesRiskScore.get(), latestLogRiskScore.get(), Comparator.naturalOrder()));
     } else if (recentHighestTimeSeriesRiskScore.isPresent()) {
       return recentHighestTimeSeriesRiskScore;
     } else if (latestLogRiskScore.isPresent()) {
@@ -120,10 +123,8 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
 
     if (deploymentTimeSeriesAnalysis != null) {
       deploymentTimeSeriesAnalysis.getHostSummaries().forEach(hostInfo -> {
-        HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder()
-                                              .hostName(hostInfo.getHostName())
-                                              .riskScore(TimeSeriesRisk.getRiskFromScore(hostInfo.getRisk()))
-                                              .build();
+        HostSummaryInfo hostSummaryInfo =
+            HostSummaryInfo.builder().hostName(hostInfo.getHostName()).risk(hostInfo.getRisk()).build();
 
         if (hostInfo.isPrimary()) {
           primary.add(hostSummaryInfo);
@@ -139,7 +140,7 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
                         .map(hostSummary
                             -> HostSummaryInfo.builder()
                                    .hostName(hostSummary.getHost())
-                                   .riskScore(TimeSeriesRisk.getRiskFromScore(hostSummary.getResultSummary().getRisk()))
+                                   .risk(hostSummary.getResultSummary().getRisk())
                                    .build())
                         .collect(Collectors.toSet()));
     }
@@ -154,7 +155,7 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
       }
     });
 
-    primary.forEach(hostSummaryInfo -> hostSummaryInfo.setRiskScore(null));
+    primary.forEach(hostSummaryInfo -> hostSummaryInfo.setRisk(null));
     return CanaryDeploymentAdditionalInfo.builder().primary(primary).canary(canary).build();
   }
 
@@ -171,23 +172,24 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
       int anomalousLogClustersCount[] = new int[] {0};
       if (deploymentTimeSeriesAnalysis != null) {
         deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-            -> anomalousMetricsCount[0] +=
-            transactionMetricHostData.getHostData()
-                .stream()
-                .filter(hostData
-                    -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName()) && hostData.getRisk() >= 1)
-                .count());
+            -> anomalousMetricsCount[0] += transactionMetricHostData.getHostData()
+                                               .stream()
+                                               .filter(hostData
+                                                   -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
+                                                       && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                                               .count());
       }
       if (deploymentLogAnalysis != null && deploymentLogAnalysis.getHostSummaries() != null) {
         deploymentLogAnalysis.getHostSummaries()
             .stream()
             .filter(hostSummary -> hostSummary.getHost().equals(hostSummaryInfo.getHostName()))
             .forEach(hostSummary
-                -> anomalousLogClustersCount[0] += hostSummary.getResultSummary()
-                                                       .getTestClusterSummaries()
-                                                       .stream()
-                                                       .filter(clusterSummary -> clusterSummary.getRisk() >= 1)
-                                                       .count());
+                -> anomalousLogClustersCount[0] +=
+                hostSummary.getResultSummary()
+                    .getTestClusterSummaries()
+                    .stream()
+                    .filter(clusterSummary -> clusterSummary.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                    .count());
       }
       hostSummaryInfo.setAnomalousMetricsCount(anomalousMetricsCount[0]);
       hostSummaryInfo.setAnomalousLogClustersCount(anomalousLogClustersCount[0]);
