@@ -21,4 +21,7 @@ public class ServiceGuardTxnMetricAnalysisDataDTO {
   private List<TimeSeriesAnomalies> anomalousPatterns;
   private TimeSeriesCumulativeSums.MetricSum cumulativeSums;
   private TimeSeriesMetricType metricType;
+  public Risk getRisk() {
+    return Risk.valueOf(risk);
+  }
 }

@@ -10,7 +10,7 @@ public class LogAnalysisClusterDTO {
   private String message;
   private int label;
   private DeploymentLogAnalysisDTO.ClusterType clusterType;
-  private int risk;
+  private Risk risk;
   private double score;
   private int count;
   private List<Double> controlFrequencyData;

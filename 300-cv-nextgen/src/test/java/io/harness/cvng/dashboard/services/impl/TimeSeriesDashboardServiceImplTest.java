@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -360,9 +361,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     assertThat(response.getContent().size()).isEqualTo(response.getPageSize());
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -420,9 +420,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -451,9 +450,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -490,7 +488,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       assertThat(timeSeriesMetricDataDTO.getMetricType()).isNotNull();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
+        assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW);
         if (TimeSeriesMetricType.ERROR.equals(timeSeriesMetricDataDTO.getMetricType())) {
           assertThat(metricData.getValue()).isGreaterThan(0.0);
         }

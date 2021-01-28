@@ -41,7 +41,6 @@ public interface VerificationJobInstanceService {
   Optional<String> getLastSuccessfulTestVerificationJobExecutionId(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier);
   ActivityVerificationSummary getActivityVerificationSummary(List<VerificationJobInstance> verificationJobInstances);
-  ActivityVerificationSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances);
   DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
       List<String> verificationJobInstanceIds);
   List<VerificationJobInstance> getRunningOrQueuedJobInstances(String accountI, String orgIdentifier,

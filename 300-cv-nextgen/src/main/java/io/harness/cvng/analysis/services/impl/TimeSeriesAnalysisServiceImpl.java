@@ -405,7 +405,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .map(timeSeriesRiskSummary -> timeSeriesRiskSummary.getTransactionMetricRiskList())
             .flatMap(List::stream)
             .collect(Collectors.toList());
-    Collections.sort(transactionMetricRisks, Comparator.comparingInt(TransactionMetricRisk::getMetricRisk));
+    Collections.sort(transactionMetricRisks, Comparator.comparing(TransactionMetricRisk::getMetricRisk));
     return transactionMetricRisks.subList(
         Math.max(0, transactionMetricRisks.size() - ANALYSIS_RISK_RESULTS_LIMIT), transactionMetricRisks.size());
   }
@@ -489,7 +489,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         TransactionMetricRisk metricRisk = TransactionMetricRisk.builder()
                                                .transactionName(txnName)
                                                .metricName(metricName)
-                                               .metricRisk(metricData.getRisk())
+                                               .metricRisk(metricData.getRisk().getValue())
                                                .metricScore(metricData.getScore())
                                                .lastSeenTime(metricData.getLastSeenTime())
                                                .longTermPattern(metricData.isLongTermPattern())

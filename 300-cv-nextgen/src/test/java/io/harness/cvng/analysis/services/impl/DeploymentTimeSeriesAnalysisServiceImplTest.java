@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +13,8 @@ import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.Risk;
+import io.harness.cvng.analysis.beans.TransactionMetricInfo;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
@@ -86,7 +87,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
 
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
@@ -106,7 +107,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
         .isEqualTo("AppDynamics Connector");
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
-        .isEqualTo(2);
+        .isEqualTo(3);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
                    .getContent()
                    .get(0)
@@ -114,9 +115,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
                    .first()
                    .getHostName()
                    .get())
-        .isEqualTo("node2");
+        .isEqualTo("node3");
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getScore())
-        .isEqualTo(2); // checks that sorting per node works correctly
+        .isEqualTo(2.0); // checks that sorting per node works correctly
   }
 
   @Test
@@ -128,7 +129,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", 0);
@@ -151,6 +152,36 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withHostNameFilterWithOnlyFewTxn() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    String verificationTaskId =
+        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node3", 0);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
+        .isEqualTo("AppDynamics Connector");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
+        .isEqualTo("node3");
+  }
+
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withWrongHostName() {
@@ -159,7 +190,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
     assertThatThrownBy(()
                            -> deploymentTimeSeriesAnalysisService.getMetrics(
                                accountId, verificationJobInstanceId, false, "randomNode", 0))
@@ -176,7 +207,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, 0);
@@ -201,30 +232,25 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node2", 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
-    assertThat(
-        transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getTransactionMetric().getScore())
-        .isEqualTo(2.5);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
-        .isEqualTo("AppDynamics Connector");
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
-        .isEqualTo(1);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
-                   .getContent()
-                   .get(0)
-                   .getNodes()
-                   .first()
-                   .getHostName()
-                   .get())
-        .isEqualTo("node2");
+    List<TransactionMetricInfo> content = transactionMetricInfoSummaryPageDTO.getPageResponse().getContent();
+    assertThat(content).isNotNull();
+    assertThat(content.size()).isEqualTo(2);
+    assertThat(content.get(0).getTransactionMetric().getScore()).isEqualTo(2.5);
+    assertThat(content.get(0).getConnectorName()).isEqualTo("AppDynamics Connector");
+    assertThat(content.get(0).getNodes().size()).isEqualTo(1);
+    assertThat(content.get(0).getNodes().first().getHostName().get()).isEqualTo("node2");
+
+    assertThat(content.get(0).getTransactionMetric().getTransactionName()).isEqualTo("/todolist/exception");
+    assertThat(content.get(0).getTransactionMetric().getMetricName()).isEqualTo("Calls per Minute");
+    assertThat(content.get(1).getTransactionMetric().getTransactionName()).isEqualTo("/todolist/inside");
+    assertThat(content.get(1).getTransactionMetric().getMetricName()).isEqualTo("Errors per Minute");
   }
   @Test
   @Owner(developers = NEMANJA)
@@ -235,12 +261,12 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    deploymentTimeSeriesAnalysisService.save(createDeploymentTimSeriesAnalysis(verificationTaskId));
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
     deploymentTimeSeriesAnalysis.setStartTime(Instant.now().plus(1, ChronoUnit.HOURS));
     DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData =
-        createTransactionMetricHostData("newTransaction", "newMetric", 5, 5.0,
+        createTransactionMetricHostData("newTransaction", "newMetric", 2, 5.0,
             deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().get(0).getHostData());
     deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(Arrays.asList(transactionMetricHostData));
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
@@ -271,7 +297,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
     List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
       transactionSummaries.add(createTransactionMetricHostData("transaction " + i, "metric", 0, 0.0,
@@ -355,7 +381,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimSeriesAnalysis(verificationTaskId);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
     List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
       transactionSummaries.add(createTransactionMetricHostData("transaction " + i, "metric", 0, 0.0,
@@ -365,7 +391,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
     assertThat(
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isCloseTo(.7, offset(.01));
+        .isEqualTo(Risk.MEDIUM);
   }
 
   @Test
@@ -380,8 +406,10 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     String verificationTaskId2 =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
 
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis1 = createDeploymentTimSeriesAnalysis(verificationTaskId1);
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis2 = createDeploymentTimSeriesAnalysis(verificationTaskId2);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis1 =
+        createDeploymentTimeSeriesAnalysis(verificationTaskId1);
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis2 =
+        createDeploymentTimeSeriesAnalysis(verificationTaskId2);
     deploymentTimeSeriesAnalysis2.setStartTime(
         deploymentTimeSeriesAnalysis1.getStartTime().minus(Duration.ofMinutes(2)));
     deploymentTimeSeriesAnalysis2.setEndTime(deploymentTimeSeriesAnalysis1.getStartTime().minus(Duration.ofMinutes(1)));
@@ -397,7 +425,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis2);
     assertThat(
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isCloseTo(.9, offset(.01));
+        .isEqualTo(Risk.MEDIUM);
   }
 
   private VerificationJobInstanceDTO createVerificationJobInstanceDTO() {
@@ -456,9 +484,10 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
-  private DeploymentTimeSeriesAnalysis createDeploymentTimSeriesAnalysis(String verificationTaskId) {
+  private DeploymentTimeSeriesAnalysis createDeploymentTimeSeriesAnalysis(String verificationTaskId) {
     DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, false, true);
     DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, false, true);
+    DeploymentTimeSeriesAnalysisDTO.HostInfo hostInfo3 = createHostInfo("node3", 2, 2.2, false, true);
     DeploymentTimeSeriesAnalysisDTO.HostData hostData1 =
         createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
     DeploymentTimeSeriesAnalysisDTO.HostData hostData2 =
@@ -472,17 +501,19 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         createHostData("node1", 0, 0.0, Arrays.asList(1D), Arrays.asList(1D));
     DeploymentTimeSeriesAnalysisDTO.HostData hostData4 =
         createHostData("node2", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
+    DeploymentTimeSeriesAnalysisDTO.HostData hostData5 =
+        createHostData("node3", 2, 2.0, Arrays.asList(1D), Arrays.asList(1D));
 
     DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData transactionMetricHostData2 =
         createTransactionMetricHostData(
-            "/todolist/exception", "Calls per Minute", 2, 2.5, Arrays.asList(hostData3, hostData4));
+            "/todolist/exception", "Calls per Minute", 2, 2.5, Arrays.asList(hostData3, hostData4, hostData5));
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(.7)
-        .risk(1)
+        .risk(Risk.MEDIUM)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
-        .hostSummaries(Arrays.asList(hostInfo1, hostInfo2))
+        .hostSummaries(Arrays.asList(hostInfo1, hostInfo2, hostInfo3))
         .startTime(Instant.now())
         .endTime(Instant.now().plus(1, ChronoUnit.MINUTES))
         .build();

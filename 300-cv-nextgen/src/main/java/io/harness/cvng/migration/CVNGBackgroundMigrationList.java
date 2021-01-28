@@ -5,6 +5,7 @@ import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigra
 import io.harness.cvng.migration.list.CVNGBaseMigration;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivityStatusMigration;
+import io.harness.cvng.migration.list.UpdateRiskIntToRiskEnum;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(2, RecreateMetricPackAndThresholdMigration.class))
         .add(Pair.of(3, UpdateActivityStatusMigration.class))
         .add(Pair.of(4, AddMonitoringSourcesToVerificationJobMigration.class))
+        .add(Pair.of(5, UpdateRiskIntToRiskEnum.class))
         .build();
   }
 }
