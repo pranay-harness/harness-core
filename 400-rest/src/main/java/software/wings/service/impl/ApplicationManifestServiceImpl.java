@@ -313,7 +313,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ApplicationManifest getById(String appId, String id) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                           .filter(ApplicationManifest.ID_KEY2, id)
+                                           .filter(ApplicationManifest.ID, id)
                                            .filter(ApplicationKeys.appId, appId);
     return query.get();
   }
@@ -330,7 +330,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ManifestFile getManifestFileById(String appId, String id) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
                                     .filter(ApplicationKeys.appId, appId)
-                                    .filter(ApplicationManifest.ID_KEY2, id);
+                                    .filter(ApplicationManifest.ID, id);
     return query.get();
   }
 
@@ -405,7 +405,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     // we'll have an extra perpetual task running for this.
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifestKeys.accountId, accountId)
-                                           .filter(ApplicationManifest.ID_KEY2, appManifestId)
+                                           .filter(ApplicationManifest.ID, appManifestId)
                                            .field(ApplicationManifestKeys.perpetualTaskId)
                                            .doesNotExist();
     UpdateOperations<ApplicationManifest> updateOperations =
@@ -551,7 +551,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifestKeys.accountId, accountId)
-                                           .filter(ApplicationManifest.ID_KEY2, appManifestId);
+                                           .filter(ApplicationManifest.ID, appManifestId);
 
     UpdateOperations<ApplicationManifest> updateOperations =
         wingsPersistence.createUpdateOperations(ApplicationManifest.class)

@@ -91,6 +91,7 @@ public abstract class InfrastructureMapping
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
   public static final String APP_ID_KEY = "appId";
+  public static final String ID = "_id";
 
   @SchemaIgnore @NotEmpty @NonNull @FdIndex String accountId;
   @NotEmpty @NonNull String infraMappingType;

@@ -7,7 +7,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -558,7 +557,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void updateSecretRef() {
@@ -1372,7 +1371,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void deleteSecretFile() throws IOException, InterruptedException {
@@ -1466,7 +1465,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
@@ -1534,7 +1533,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableSearchTags() throws InterruptedException {
@@ -1699,7 +1698,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableTemplateSearchTags() {
@@ -1886,7 +1885,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableEnvironmentSearchTags() {

@@ -38,9 +38,8 @@ public class AppKeywordsMigration implements Migration {
         ++i;
         Set<String> keywords = application.generateKeywords();
         bulkWriteOperation
-            .find(wingsPersistence.createQuery(Service.class)
-                      .filter(Service.ID_KEY2, application.getUuid())
-                      .getQueryObject())
+            .find(
+                wingsPersistence.createQuery(Service.class).filter(Service.ID, application.getUuid()).getQueryObject())
             .updateOne(new BasicDBObject("$set", new BasicDBObject("keywords", trimmedLowercaseSet(keywords))));
       }
     }

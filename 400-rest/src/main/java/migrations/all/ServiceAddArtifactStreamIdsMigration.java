@@ -50,9 +50,7 @@ public class ServiceAddArtifactStreamIdsMigration implements Migration {
                                              .collect(Collectors.toList());
         if (!isEmpty(artifactStreamIds)) {
           bulkWriteOperation
-              .find(wingsPersistence.createQuery(Service.class)
-                        .filter(Service.ID_KEY2, service.getUuid())
-                        .getQueryObject())
+              .find(wingsPersistence.createQuery(Service.class).filter(Service.ID, service.getUuid()).getQueryObject())
               .updateOne(
                   new BasicDBObject("$set", new BasicDBObject(ServiceKeys.artifactStreamIds, artifactStreamIds)));
           ++i;

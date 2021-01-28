@@ -54,6 +54,8 @@ public abstract class InfrastructureProvisioner
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";
+  public static final String ID = "_id";
+  public static final String APP_ID = "appId";
 
   @NotEmpty @Trimmed private String name;
   private String description;

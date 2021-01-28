@@ -33,6 +33,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 public class ApplicationManifest extends Base implements AccountAccess {
+  public static final String ID = "_id";
+
   @FdIndex private String accountId;
   private String serviceId;
   private String envId;

@@ -36,7 +36,7 @@ public class ServiceUtils {
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(Service.ACCOUNT_ID_KEY2, Operator.EQ, accountId);
 
     if (isNotEmpty(serviceIdList)) {
-      pageRequestBuilder.addFilter(Service.ID_KEY2, Operator.IN, serviceIdList.toArray());
+      pageRequestBuilder.addFilter(Service.ID, Operator.IN, serviceIdList.toArray());
     }
 
     return (PageRequest<Service>) pageRequestBuilder.build();
