@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 
 import java.util.ArrayList;

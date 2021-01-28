@@ -193,7 +193,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DeletedEntity;
@@ -900,7 +899,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DashboardSettings.class);
     set.add(DatadogCVServiceConfiguration.class);
     set.add(DatadogLogCVConfiguration.class);
-    set.add(Delegate.class);
     set.add(DelegateConnection.class);
     set.add(DelegateConnectionResult.class);
     set.add(DelegateSequenceConfig.class);

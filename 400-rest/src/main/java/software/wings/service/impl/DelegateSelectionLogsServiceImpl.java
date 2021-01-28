@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
@@ -24,7 +25,6 @@ import io.harness.selection.log.ProfileScopingRulesMetadata;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Application;
-import software.wings.beans.Delegate;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.service.intfc.DelegateSelectionLogsService;

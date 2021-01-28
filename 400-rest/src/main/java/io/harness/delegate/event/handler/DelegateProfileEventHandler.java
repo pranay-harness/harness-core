@@ -8,6 +8,8 @@ import static org.apache.commons.lang3.StringUtils.compare;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.WorkflowType;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.task.DelegateLogContext;
@@ -17,8 +19,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateProfileObserver;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;

@@ -17,6 +17,7 @@ import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.HttpConnectionParameters;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.ff.FeatureFlagService;
@@ -24,7 +25,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Delegate;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 

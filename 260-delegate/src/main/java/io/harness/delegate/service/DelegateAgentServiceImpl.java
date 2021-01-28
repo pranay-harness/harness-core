@@ -84,7 +84,9 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -138,8 +140,6 @@ import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;

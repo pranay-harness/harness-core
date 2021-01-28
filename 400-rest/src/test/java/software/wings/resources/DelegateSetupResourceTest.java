@@ -33,6 +33,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
@@ -41,7 +42,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
 import software.wings.beans.CEDelegateStatus;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.exception.WingsExceptionMapper;

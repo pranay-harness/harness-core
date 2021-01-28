@@ -25,12 +25,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.jre.JreConfig;

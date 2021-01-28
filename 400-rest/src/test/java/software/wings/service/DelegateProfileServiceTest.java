@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.Delegate.DelegateBuilder;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.NIKOLA;
@@ -8,7 +9,6 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Delegate.DelegateBuilder;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
 
@@ -21,6 +21,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
@@ -32,8 +34,6 @@ import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 
