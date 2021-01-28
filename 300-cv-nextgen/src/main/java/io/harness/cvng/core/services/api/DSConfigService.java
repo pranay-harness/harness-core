@@ -14,6 +14,7 @@ public interface DSConfigService {
   DSConfig getMonitoringSource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   PageResponse<MonitoringSourceDTO> listMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset, String filter);
+  List<String> getAvailableMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier);
   MonitoringSourceImportStatus getMonitoringSourceImportStatus(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 }

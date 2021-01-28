@@ -122,4 +122,16 @@ public class DSConfigResource {
     return new RestResponse<>(
         dsConfigService.getMonitoringSource(accountId, orgIdentifier, projectIdentifier, identifier));
   }
+
+  @GET
+  @Path("/available-monitoring-sources")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "gets a list of available monitoring sources", nickname = "getAvailableMonitoringSources")
+  public RestResponse<List<String>> getAvailableMonitoringSources(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier) {
+    return new RestResponse<>(
+        dsConfigService.getAvailableMonitoringSources(accountId, orgIdentifier, projectIdentifier));
+  }
 }

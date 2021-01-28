@@ -1,6 +1,7 @@
 package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DEFAULT_PORTAL_URL;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
@@ -21,9 +22,12 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
@@ -83,6 +87,8 @@ public abstract class VerificationJob
 
   private RuntimeParameter duration;
   private boolean isDefaultJob;
+
+  @JsonIgnore @Inject @Named("portalUrl") String portalUrl;
 
   public abstract VerificationJobType getType();
   public abstract VerificationJobDTO getVerificationJobDTO();
@@ -164,14 +170,16 @@ public abstract class VerificationJob
 
   public String getVerificationJobUrl() {
     URIBuilder jobUrlBuilder = new URIBuilder();
-    jobUrlBuilder.setPath("/verification-job");
+    jobUrlBuilder.setPath("cv/api/verification-job");
     jobUrlBuilder.addParameter(VerificationJobKeys.accountId, accountId);
     jobUrlBuilder.addParameter(VerificationJobKeys.orgIdentifier, orgIdentifier);
     jobUrlBuilder.addParameter(VerificationJobKeys.projectIdentifier, projectIdentifier);
     jobUrlBuilder.addParameter(VerificationJobKeys.identifier, identifier);
 
     try {
-      return jobUrlBuilder.build().toString();
+      String baseUrl = portalUrl == null ? DEFAULT_PORTAL_URL : portalUrl;
+      baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+      return baseUrl + jobUrlBuilder.build().toString();
     } catch (URISyntaxException e) {
       throw new IllegalStateException(e);
     }
