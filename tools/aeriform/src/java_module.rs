@@ -10,6 +10,7 @@ use crate::java_class::{class_dependencies, external_class, populate_internal_in
 #[derive(Debug)]
 pub struct JavaModule {
     pub name: String,
+    pub deprecated: bool,
     pub index: i32,
     pub directory: String,
     pub jar: String,
@@ -18,13 +19,16 @@ pub struct JavaModule {
 }
 
 pub fn modules() -> HashMap<String, JavaModule> {
-    let output = Command::new("bazel")
-        .args(&["query", "//...", "--output", "label_kind"])
-        .output()
-        .expect("not able to run bazel");
+    let mut command = Command::new("bazel");
+    command.args(&["query", "//...", "--output", "label_kind"]);
+    let output = command.output().expect("not able to run bazel");
 
     if !output.status.success() {
-        panic!("Command executed with failing error code");
+        panic!(
+            "Command executed with failing error code \n   {:?}\n   {:?}",
+            command,
+            String::from_utf8(output.stderr)
+        );
     }
 
     let modules = String::from_utf8(output.stdout)
@@ -55,18 +59,31 @@ pub fn modules() -> HashMap<String, JavaModule> {
     result
 }
 
-fn class(path: &String) -> String {
-    let main = "/src/main/java/";
-    let pos = path.find(main);
+fn class_for_prefix(path: &String, prefix: &str) -> Option<String> {
+    let pos = path.find(prefix);
     if pos.is_some() {
-        path.chars()
-            .skip(pos.unwrap() + main.len())
-            .take(path.len() - main.len() - pos.unwrap() - ".java".len())
-            .map(|ch| if ch == '/' { '.' } else { ch })
-            .collect()
+        Some(
+            path.chars()
+                .skip(pos.unwrap() + prefix.len())
+                .take(path.len() - prefix.len() - pos.unwrap() - ".java".len())
+                .map(|ch| if ch == '/' { '.' } else { ch })
+                .collect(),
+        )
     } else {
-        "".to_string()
+        None
     }
+}
+
+fn class(path: &String) -> String {
+    let prefixes = ["/src/main/java/", "/src/test/java/", "/src/generated/java/"];
+    let cls = prefixes
+        .iter()
+        .map(|&prefix| class_for_prefix(path, prefix))
+        .filter(|cls| cls.is_some())
+        .map(|cls| cls.unwrap())
+        .nth(0);
+
+    cls.expect(&format!("{} did not fit any prefix", path))
 }
 
 fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap<String, JavaClass> {
@@ -157,6 +174,7 @@ fn populate_dependencies(jar: &String) -> (MultiMap<String, String>, HashSet<Str
                 tuple.1.eq("com.google.protobuf.UnknownFieldSet") || tuple.1.eq("io.grpc.stub.AbstractStub")
             })
             .map(|tuple| tuple.0.clone())
+            .filter(|class| is_harness_class(class))
             .collect::<HashSet<String>>(),
     )
 }
@@ -231,6 +249,7 @@ fn populate_from_bazel(name: &String, modules: &HashSet<String>) -> JavaModule {
 
     JavaModule {
         name: name.clone(),
+        deprecated: name.contains("/400-rest:"),
         index: directory
             .chars()
             .take(3)
@@ -274,6 +293,7 @@ fn populate_from_external(artifactory: &str, package: &str, name: &str, version:
 
     JavaModule {
         name: name.to_string(),
+        deprecated: false,
         index: 1000,
         directory: "n/a".to_string(),
         jar: jar,
