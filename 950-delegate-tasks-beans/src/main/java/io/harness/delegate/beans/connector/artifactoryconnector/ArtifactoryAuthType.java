@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ArtifactoryAuthType {
   @JsonProperty(ArtifactoryConstants.USERNAME_PASSWORD) USER_PASSWORD(ArtifactoryConstants.USERNAME_PASSWORD),
-  NO_AUTH(ArtifactoryConstants.NO_AUTH);
+  @JsonProperty(ArtifactoryConstants.ANONYMOUS) ANONYMOUS(ArtifactoryConstants.ANONYMOUS);
 
   private final String displayName;
 
@@ -16,7 +16,6 @@ public enum ArtifactoryAuthType {
   public String getDisplayName() {
     return displayName;
   }
-
   @Override
   public String toString() {
     return displayName;
@@ -25,5 +24,14 @@ public enum ArtifactoryAuthType {
   @JsonValue
   final String displayName() {
     return this.displayName;
+  }
+
+  public static ArtifactoryAuthType fromString(String typeEnum) {
+    for (ArtifactoryAuthType enumValue : ArtifactoryAuthType.values()) {
+      if (enumValue.getDisplayName().equals(typeEnum)) {
+        return enumValue;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + typeEnum);
   }
 }

@@ -49,14 +49,14 @@
     "ArtifactoryAuthentication": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
         "type": {
           "type": "string",
           "enum": [
-            "UsernamePassword"
+            "UsernamePassword",
+            "Anonymous"
           ]
         }
       },
@@ -2446,14 +2446,14 @@
     "NexusAuthentication": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
         "type": {
           "type": "string",
           "enum": [
-            "UsernamePassword"
+            "UsernamePassword",
+            "Anonymous"
           ]
         }
       },

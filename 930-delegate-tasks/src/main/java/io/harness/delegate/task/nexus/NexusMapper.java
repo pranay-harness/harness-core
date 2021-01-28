@@ -22,7 +22,7 @@ public class NexusMapper {
             .isCertValidationRequired(false);
     final NexusAuthType authType = nexusConnectorDTO.getAuth().getAuthType();
 
-    if (authType == NexusAuthType.NO_AUTH) {
+    if (authType == NexusAuthType.ANONYMOUS) {
       return nexusRequestBuilder.hasCredentials(false).build();
     }
     final NexusUsernamePasswordAuthDTO credentials =

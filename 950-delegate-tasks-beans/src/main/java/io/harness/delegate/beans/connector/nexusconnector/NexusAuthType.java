@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NexusAuthType {
   @JsonProperty(NexusConstants.USERNAME_PASSWORD) USER_PASSWORD(NexusConstants.USERNAME_PASSWORD),
-  NO_AUTH(NexusConstants.NO_AUTH);
+  @JsonProperty(NexusConstants.ANONYMOUS) ANONYMOUS(NexusConstants.ANONYMOUS);
 
   private final String displayName;
 
@@ -25,5 +25,14 @@ public enum NexusAuthType {
   @JsonValue
   final String displayName() {
     return this.displayName;
+  }
+
+  public static NexusAuthType fromString(String typeEnum) {
+    for (NexusAuthType enumValue : NexusAuthType.values()) {
+      if (enumValue.getDisplayName().equals(typeEnum)) {
+        return enumValue;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + typeEnum);
   }
 }

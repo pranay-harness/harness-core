@@ -16,7 +16,7 @@ public class NexusEntityToDTO extends ConnectorEntityToDTOMapper<NexusConnectorD
   @Override
   public NexusConnectorDTO createConnectorDTO(NexusConnector nexusConnector) {
     NexusAuthenticationDTO nexusAuthenticationDTO = null;
-    if (nexusConnector.getAuthType() != NexusAuthType.NO_AUTH || nexusConnector.getNexusAuthentication() != null) {
+    if (nexusConnector.getAuthType() != NexusAuthType.ANONYMOUS || nexusConnector.getNexusAuthentication() != null) {
       NexusUserNamePasswordAuthentication nexusCredentials =
           (NexusUserNamePasswordAuthentication) nexusConnector.getNexusAuthentication();
       NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO =
@@ -29,6 +29,8 @@ public class NexusEntityToDTO extends ConnectorEntityToDTOMapper<NexusConnectorD
                                    .authType(nexusConnector.getAuthType())
                                    .credentials(nexusUsernamePasswordAuthDTO)
                                    .build();
+    } else {
+      nexusAuthenticationDTO = NexusAuthenticationDTO.builder().authType(nexusConnector.getAuthType()).build();
     }
 
     return NexusConnectorDTO.builder()

@@ -3,8 +3,8 @@ package io.harness.delegate.beans.connector.artifactoryconnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -15,16 +15,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("ArtifactoryAuthentication")
+@JsonDeserialize(using = ArtifactoryAuthDTODeserializer.class)
 public class ArtifactoryAuthenticationDTO {
-  @ApiModelProperty(allowableValues = ArtifactoryConstants.USERNAME_PASSWORD)
-  @NotNull
-  @JsonProperty("type")
-  ArtifactoryAuthType authType;
+  @NotNull @JsonProperty("type") ArtifactoryAuthType authType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @NotNull
   @Valid
   ArtifactoryAuthCredentialsDTO credentials;
 
