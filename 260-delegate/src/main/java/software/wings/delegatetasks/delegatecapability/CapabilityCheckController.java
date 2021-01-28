@@ -55,22 +55,26 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
         log.info("Checking Capability: " + delegateCapability.toString());
         CapabilityCheck capabilityCheck =
             capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType());
-        CapabilityParameters parameters = CapabilityProtoConverter.toProto(delegateCapability);
-        ProtoCapabilityCheck protoCheck = protoCapabilityCheckFactory.obtainCapabilityCheck(parameters);
-
         if (capabilityCheck == null) {
           log.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
           return;
         }
 
         CapabilityResponse capabilityResponse = capabilityCheck.performCapabilityCheck(delegateCapability);
-        if (CapabilityProtoConverter.shouldCompareResults(parameters)) {
-          CapabilitySubjectPermission permission = protoCheck.performCapabilityCheckWithProto(parameters);
-          if (CapabilityProtoConverter.hasDivergingResults(capabilityResponse, permission)) {
-            log.warn("Diverging capabilities: " + delegateCapability.toString() + " -vs- " + parameters);
-          } else {
-            log.info("Proto/execution capability have the same result: " + parameters);
+
+        try {
+          CapabilityParameters parameters = CapabilityProtoConverter.toProto(delegateCapability);
+          ProtoCapabilityCheck protoCheck = protoCapabilityCheckFactory.obtainCapabilityCheck(parameters);
+          if (CapabilityProtoConverter.shouldCompareResults(parameters)) {
+            CapabilitySubjectPermission permission = protoCheck.performCapabilityCheckWithProto(parameters);
+            if (CapabilityProtoConverter.hasDivergingResults(capabilityResponse, permission)) {
+              log.warn("Diverging capabilities: " + delegateCapability.toString() + " -vs- " + parameters);
+            } else {
+              log.info("Proto/execution capability have the same result: " + parameters);
+            }
           }
+        } catch (Exception e) {
+          log.warn("Comparison failing for capability : " + delegateCapability.toString() + "; caused by: " + e);
         }
 
         checkResponses.add(capabilityResponse);
