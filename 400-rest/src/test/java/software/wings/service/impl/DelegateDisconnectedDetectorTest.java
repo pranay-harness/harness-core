@@ -11,12 +11,12 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 
 import com.google.inject.Inject;

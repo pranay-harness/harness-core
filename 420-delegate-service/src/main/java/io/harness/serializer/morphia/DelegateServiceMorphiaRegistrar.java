@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.delegate.beans.Delegate;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -12,6 +13,7 @@ public class DelegateServiceMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(DelegateSelectionLog.class);
     set.add(DelegateSelectionLogTaskMetadata.class);
+    set.add(Delegate.class);
   }
 
   @Override

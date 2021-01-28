@@ -11,6 +11,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.eraro.ErrorCode;
@@ -18,8 +20,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;

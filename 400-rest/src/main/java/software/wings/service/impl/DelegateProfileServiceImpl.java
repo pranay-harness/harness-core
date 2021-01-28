@@ -15,6 +15,8 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
@@ -23,8 +25,6 @@ import io.harness.observer.Subject;
 import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.beans.Account;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;

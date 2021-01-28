@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -37,7 +38,6 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.beans.Delegate;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;

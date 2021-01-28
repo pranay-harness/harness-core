@@ -18,12 +18,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.alert.AlertType;
 import software.wings.dl.WingsPersistence;

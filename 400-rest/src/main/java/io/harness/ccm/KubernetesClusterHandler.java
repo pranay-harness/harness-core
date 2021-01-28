@@ -5,9 +5,9 @@ import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
 import io.harness.ccm.config.CCMConfig;
+import io.harness.delegate.beans.Delegate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 
-import software.wings.beans.Delegate;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.EnvFilter;

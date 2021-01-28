@@ -14,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.DelegateStatus;

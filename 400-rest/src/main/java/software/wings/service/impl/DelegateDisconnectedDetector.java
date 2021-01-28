@@ -9,13 +9,13 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
 
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.service.intfc.DelegateService;

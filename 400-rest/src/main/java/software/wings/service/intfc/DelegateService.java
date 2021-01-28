@@ -6,6 +6,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateInitializationDetails;
@@ -24,7 +25,6 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;

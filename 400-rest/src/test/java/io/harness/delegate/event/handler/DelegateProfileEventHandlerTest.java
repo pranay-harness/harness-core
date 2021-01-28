@@ -18,12 +18,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Delegate;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowExecutionService;

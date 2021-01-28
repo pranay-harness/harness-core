@@ -3,8 +3,8 @@ package software.wings.features;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.features.api.AbstractUsageLimitedFeature;
 import software.wings.features.api.ComplianceByLimitingUsage;
 import software.wings.features.api.FeatureRestrictions;

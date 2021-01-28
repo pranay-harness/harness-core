@@ -15,6 +15,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
@@ -33,9 +36,6 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 
