@@ -5,7 +5,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, populate_target_module, JavaClass};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
 
 #[derive(Debug)]
 pub struct JavaModule {
@@ -91,7 +91,7 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
-            let target_module = populate_target_module(&tuple.1);
+            let (target_module, break_dependencies_on) = populate_internal_info(&tuple.1);
             let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
@@ -100,6 +100,7 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
                     location: tuple.1,
                     dependencies: class_dependencies,
                     target_module: target_module,
+                    break_dependencies_on: break_dependencies_on,
                 },
             )
         })
