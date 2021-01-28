@@ -2,14 +2,18 @@ package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
-import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
+import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.HealthVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
-import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
@@ -51,7 +55,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
 
   @Override
   public void upsert(String accountId, VerificationJobDTO verificationJobDTO) {
-    VerificationJob verificationJob = verificationJobDTO.getVerificationJob();
+    VerificationJob verificationJob = fromDto(verificationJobDTO);
     verificationJob.setAccountId(accountId);
     VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getOrgIdentifier(),
         verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getIdentifier());
@@ -290,5 +294,29 @@ public class VerificationJobServiceImpl implements VerificationJobService {
         .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
         .filter(VerificationJobKeys.isDefaultJob, true)
         .get();
+  }
+
+  @Override
+  public VerificationJob fromDto(VerificationJobDTO verificationJobDTO) {
+    Preconditions.checkNotNull(verificationJobDTO);
+    VerificationJob job;
+    switch (verificationJobDTO.getType()) {
+      case HEALTH:
+        job = new HealthVerificationJob();
+        break;
+      case CANARY:
+        job = new CanaryVerificationJob();
+        break;
+      case TEST:
+        job = new TestVerificationJob();
+        break;
+      case BLUE_GREEN:
+        job = new BlueGreenVerificationJob();
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + verificationJobDTO.getType());
+    }
+    job.fromDTO(verificationJobDTO);
+    return job;
   }
 }

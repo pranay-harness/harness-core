@@ -22,13 +22,14 @@ import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.models.VerificationType;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
@@ -41,6 +42,7 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import java.util.Set;
@@ -58,7 +60,7 @@ public class CVEventServiceTest extends CvNextGenTest {
   @Mock private AbstractProducer eventProducer;
 
   @InjectMocks private CVEventServiceImpl eventService;
-
+  @Inject private VerificationJobService verificationJobService;
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
@@ -262,7 +264,7 @@ public class CVEventServiceTest extends CvNextGenTest {
     String projectIdentifier = generateUuid();
     String identifier = generateUuid();
 
-    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getEnvIdentifier(),
@@ -304,7 +306,7 @@ public class CVEventServiceTest extends CvNextGenTest {
     String projectIdentifier = generateUuid();
     String identifier = generateUuid();
 
-    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getServiceIdentifier(),
@@ -504,7 +506,7 @@ public class CVEventServiceTest extends CvNextGenTest {
   public void shouldSendVerificationJobEnvironmentDeleteEvent()
       throws ProducerShutdownException, InvalidProtocolBufferException {
     String accountId = generateUuid();
-    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
 
     eventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
@@ -532,7 +534,7 @@ public class CVEventServiceTest extends CvNextGenTest {
   public void shouldSendVerificationJobServiceDeleteEvent()
       throws ProducerShutdownException, InvalidProtocolBufferException {
     String accountId = generateUuid();
-    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
 
     eventService.sendVerificationJobServiceDeleteEvent(verificationJob);

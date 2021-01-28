@@ -1,8 +1,8 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.beans.job.VerificationJobType.CANARY;
+import static io.harness.cvng.beans.job.VerificationJobType.TEST;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-import static io.harness.cvng.verificationjob.beans.VerificationJobType.CANARY;
-import static io.harness.cvng.verificationjob.beans.VerificationJobType.TEST;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -33,6 +33,12 @@ import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
+import io.harness.cvng.beans.job.HealthVerificationJobDTO;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
@@ -47,14 +53,8 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
-import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -240,7 +240,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testProcessVerificationJobInstance_canaryAndTest() {
-    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
@@ -271,7 +271,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testProcessVerificationJobInstance_health() {
-    VerificationJob job = newHealthVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newHealthVerificationJobDTO());
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
@@ -307,7 +307,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void createDataCollectionTasks_validatePerpetualTaskCreationWithCorrectParams() {
-    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
@@ -334,7 +334,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void createDataCollectionTasks_validateDataCollectionTasksCreation() {
-    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
@@ -357,7 +357,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreateDataCollectionTasks_validateDataCollectionTasksCreationWithDefaultDataCollectionDelay() {
-    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     hPersistence.save(job);
@@ -1113,7 +1113,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCVConfigsForVerification() {
     String monSource = "monitoringSource1";
-    VerificationJob job = newCanaryVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setMonitoringSources(Arrays.asList(monSource));
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
@@ -1133,7 +1133,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetCVConfigsForVerification_defaultJob() {
     String monSource = "monitoringSource1";
-    VerificationJob job = newHealthVerificationJobDTO().getVerificationJob();
+    VerificationJob job = verificationJobService.fromDto(newHealthVerificationJobDTO());
     job.setMonitoringSources(Arrays.asList("ALL"));
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);

@@ -1,9 +1,9 @@
 package io.harness.cvng.verificationjob.entities;
 
+import io.harness.cvng.beans.job.HealthVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 
 import java.time.Instant;
 import java.util.List;
@@ -56,6 +56,11 @@ public class HealthVerificationJob extends VerificationJob {
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return getTimeRangesForDuration(startTime);
+  }
+
+  @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    addCommonFileds(verificationJobDTO);
   }
 
   @Override

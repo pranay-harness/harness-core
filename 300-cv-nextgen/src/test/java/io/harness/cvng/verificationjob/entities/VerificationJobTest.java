@@ -16,7 +16,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.rule.Owner;
 

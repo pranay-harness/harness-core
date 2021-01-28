@@ -31,13 +31,13 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
-import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;

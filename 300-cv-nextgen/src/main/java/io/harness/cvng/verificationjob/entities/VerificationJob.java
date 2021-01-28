@@ -8,9 +8,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -129,6 +129,26 @@ public abstract class VerificationJob
     verificationJobDTO.setActivitySourceIdentifier(activitySourceIdentifier);
     verificationJobDTO.setMonitoringSources(monitoringSources);
     verificationJobDTO.setVerificationJobUrl(getVerificationJobUrl());
+  }
+
+  public abstract void fromDTO(VerificationJobDTO verificationJobDTO);
+
+  public void addCommonFileds(VerificationJobDTO verificationJobDTO) {
+    this.setIdentifier(verificationJobDTO.getIdentifier());
+    this.setServiceIdentifier(verificationJobDTO.getServiceIdentifier(),
+        VerificationJobDTO.isRuntimeParam(verificationJobDTO.getServiceIdentifier()));
+    this.setEnvIdentifier(verificationJobDTO.getEnvIdentifier(),
+        VerificationJobDTO.isRuntimeParam(verificationJobDTO.getEnvIdentifier()));
+    this.setJobName(verificationJobDTO.getJobName());
+    this.setDuration(
+        verificationJobDTO.getDuration(), VerificationJobDTO.isRuntimeParam(verificationJobDTO.getDuration()));
+    this.setDataSources(verificationJobDTO.getDataSources());
+    this.setMonitoringSources(verificationJobDTO.getMonitoringSources());
+    this.setProjectIdentifier(verificationJobDTO.getProjectIdentifier());
+    this.setOrgIdentifier(verificationJobDTO.getOrgIdentifier());
+    this.setActivitySourceIdentifier(verificationJobDTO.getActivitySourceIdentifier());
+    this.setType(verificationJobDTO.getType());
+    this.setDefaultJob(verificationJobDTO.isDefaultJob());
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {

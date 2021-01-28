@@ -5,11 +5,11 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import io.harness.cvng.beans.job.BlueGreenVerificationJobDTO;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.BlueGreenVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,7 +25,7 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class BlueGreenVerificationJob extends VerificationJob {
-  private Sensitivity sensitivity;
+  private RuntimeParameter sensitivity;
   private Integer trafficSplitPercentage;
   @Override
   public VerificationJobType getType() {
@@ -35,10 +35,28 @@ public class BlueGreenVerificationJob extends VerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = new BlueGreenVerificationJobDTO();
-    blueGreenVerificationJobDTO.setSensitivity(sensitivity);
+    blueGreenVerificationJobDTO.setSensitivity(getSensitivity().name());
     blueGreenVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(blueGreenVerificationJobDTO);
     return blueGreenVerificationJobDTO;
+  }
+
+  public Sensitivity getSensitivity() {
+    if (sensitivity.isRuntimeParam()) {
+      return null;
+    }
+    return Sensitivity.valueOf(sensitivity.getValue());
+  }
+
+  public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
+    this.sensitivity = sensitivity == null
+        ? null
+        : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(sensitivity).build();
+  }
+
+  public void setSensitivity(Sensitivity sensitivity) {
+    this.sensitivity =
+        sensitivity == null ? null : RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.name()).build();
   }
 
   @Override
@@ -68,6 +86,15 @@ public class BlueGreenVerificationJob extends VerificationJob {
   @Override
   public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
     return null;
+  }
+
+  @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    addCommonFileds(verificationJobDTO);
+    BlueGreenVerificationJobDTO bgVerificationJobDTO = (BlueGreenVerificationJobDTO) verificationJobDTO;
+    this.setSensitivity(bgVerificationJobDTO.getSensitivity(),
+        VerificationJobDTO.isRuntimeParam(bgVerificationJobDTO.getSensitivity()));
+    this.setTrafficSplitPercentage(bgVerificationJobDTO.getTrafficSplitPercentage());
   }
 
   @Override

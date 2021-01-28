@@ -1,4 +1,4 @@
-package io.harness.cvng.verificationjob.beans;
+package io.harness.cvng.beans.job;
 
 import java.util.Arrays;
 import java.util.List;
