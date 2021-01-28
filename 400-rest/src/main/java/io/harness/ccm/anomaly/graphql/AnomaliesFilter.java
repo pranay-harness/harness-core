@@ -93,7 +93,7 @@ public interface AnomaliesFilter extends Filter {
         filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_PROJECT);
         break;
       case CloudBillingFilter.BILLING_GCP_SKU:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_SKU_ID);
+        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_SKU_DESCRIPTION);
         break;
       case CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT:
         filterBuilder.variable(AnomaliesDataTableSchema.fields.AWS_ACCOUNT);
