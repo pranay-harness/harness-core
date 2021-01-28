@@ -9,10 +9,12 @@ import static io.harness.NGResourceFilterConstants.SIZE_KEY;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.beans.MonitoringSourceDTO;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -88,12 +90,25 @@ public class DSConfigResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "gets list of monitoring sources", nickname = "listMonitoringSources")
-  public RestResponse<PageResponse<MonitoringSourceDTO>> listMonitoringSources(
+  public ResponseDTO<PageResponse<MonitoringSourceDTO>> listMonitoringSources(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(SIZE_KEY) @DefaultValue("100") int size, @QueryParam("filter") String filter) {
-    return new RestResponse<>(
+    return ResponseDTO.newResponse(
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, size, page, filter));
+  }
+
+  @GET
+  @Path("/getMonitoringStatus")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "gets the import status of monitoring sources", nickname = "getMonitoringSourceStatus")
+  public ResponseDTO<MonitoringSourceImportStatus> getMonitoringSourceImportStatus(
+      @NotNull @QueryParam("accountId") final String accountId, @NotNull @QueryParam(ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam("identifier") String identifier) {
+    return ResponseDTO.newResponse(
+        dsConfigService.getMonitoringSourceImportStatus(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
   @GET

@@ -18,7 +18,6 @@ public class MonitoringSourceDTO {
   String monitoringSourceIdentifier;
   String monitoringSourceName;
   DataSourceType type;
-  MonitoringSourceImportStatus importStatus;
   long numberOfServices;
   long importedAt;
 }

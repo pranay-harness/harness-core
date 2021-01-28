@@ -7,22 +7,29 @@ import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.ServiceMapping;
+import io.harness.cvng.core.beans.AppdynamicsImportStatus;
 import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.beans.MonitoringSourceDTO;
+import io.harness.cvng.core.beans.OnboardingRequestDTO;
+import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -43,8 +50,9 @@ import org.mockito.Mock;
 public class DSConfigServiceImplTest extends CvNextGenTest {
   @Inject DSConfigService dsConfigService;
   @Mock NextGenService nextGenService;
-  @Mock AppDynamicsService appDynamicsService;
+  @Inject AppDynamicsService appDynamicsService;
   @Mock private Injector injector;
+  @Mock private OnboardingService onboardingService;
   @Inject AppDynamicsCVConfigTransformer appDynamicsCVConfigTransformer;
   private String accountId;
   private String connectorIdentifier;
@@ -246,5 +254,30 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, 10, 0, null).getContent();
     assertThat(monitoringSourceDTOS.size()).isEqualTo(2);
     monitoringSourceDTOS.forEach(monitoringSource -> assertThat(monitoringSource.getNumberOfServices()).isEqualTo(2));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMonitoringSourceImportStatus() throws IllegalAccessException {
+    AppDynamicsDSConfig dataSourceCVConfig =
+        createAppDynamicsDataSourceCVConfig("appd application name", "monitoringSourceIdentifier");
+    dsConfigService.upsert(dataSourceCVConfig);
+    when(nextGenService.getEnvironmentCount(accountId, orgIdentifier, projectIdentifier)).thenReturn(5);
+    when(onboardingService.getOnboardingResponse(anyString(), any(OnboardingRequestDTO.class)))
+        .thenReturn(OnboardingResponseDTO.builder()
+                        .result(Lists.newArrayList(AppDynamicsApplication.builder().name(generateUuid()).id(55).build(),
+                            AppDynamicsApplication.builder().name(generateUuid()).id(19).build()))
+                        .build());
+    FieldUtils.writeField(appDynamicsService, "onboardingService", onboardingService, true);
+    AppdynamicsImportStatus importStatus = (AppdynamicsImportStatus) dsConfigService.getMonitoringSourceImportStatus(
+        accountId, orgIdentifier, projectIdentifier, "monitoringSourceIdentifier");
+    assertThat(importStatus)
+        .isEqualTo(AppdynamicsImportStatus.builder()
+                       .numberOfApplications(1)
+                       .numberOfEnvironments(1)
+                       .totalNumberOfApplications(2)
+                       .totalNumberOfEnvironments(5)
+                       .build());
   }
 }
