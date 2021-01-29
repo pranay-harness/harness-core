@@ -3000,6 +3000,39 @@ public class WorkflowServiceHelper {
     return new ArrayList<>();
   }
 
+  public static List<FailureStrategy> cleanupFailureStrategies(
+      List<FailureStrategy> failureStrategies, Set<String> validStepNames) {
+    if (isEmpty(failureStrategies)) {
+      return Collections.emptyList();
+    }
+
+    List<FailureStrategy> strategies = cleanupFailureStrategies(failureStrategies);
+    if (isEmpty(strategies)) {
+      return Collections.emptyList();
+    }
+    return strategies.stream()
+        .map(failureStrategy -> {
+          if (!isEmpty(failureStrategy.getSpecificSteps())) {
+            // Validate step names only if this failureStrategy applies to specificSteps.
+
+            List<String> cleanedStepNames = new ArrayList<>(failureStrategy.getSpecificSteps());
+            cleanedStepNames.removeIf(stepName -> !validStepNames.contains(stepName));
+
+            if (isEmpty(cleanedStepNames)) {
+              // If getSpecificSteps list becomes empty. Return false so that this strategy itself is deleted.
+              // Otherwise this FailureStrategy will start applying to all steps.
+              return null;
+            } else if (cleanedStepNames.size() != failureStrategy.getSpecificSteps().size()) {
+              // Some invalid steps were found.
+              return failureStrategy.toBuilder().specificSteps(cleanedStepNames).build();
+            }
+          }
+          return failureStrategy;
+        })
+        .filter(Objects::nonNull)
+        .collect(toList());
+  }
+
   public static List<FailureStrategy> cleanupFailureStrategies(List<FailureStrategy> failureStrategies) {
     if (isEmpty(failureStrategies)) {
       return Collections.emptyList();
@@ -3016,7 +3049,9 @@ public class WorkflowServiceHelper {
     if (phaseStep == null) {
       return;
     }
-
+    Set<String> validStepNames = phaseStep.getSteps() == null
+        ? Collections.emptySet()
+        : phaseStep.getSteps().stream().map(GraphNode::getName).collect(Collectors.toSet());
     Set<String> stepIds = phaseStep.getSteps() == null
         ? Collections.emptySet()
         : phaseStep.getSteps().stream().map(GraphNode::getId).collect(Collectors.toSet());
@@ -3040,7 +3075,7 @@ public class WorkflowServiceHelper {
     }
 
     if (isNotEmpty(phaseStep.getFailureStrategies())) {
-      phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies()));
+      phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies(), validStepNames));
     }
   }
 

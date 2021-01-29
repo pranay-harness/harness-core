@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.CloudProviderType.AWS;
@@ -145,8 +146,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1536,6 +1539,61 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     assertThat(phaseStep.getFailureStrategies()).isNotEmpty();
     assertThat(phaseStep.getFailureStrategies().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testCleanupFailureStrategiesInCaseOfInvalidStepNames() {
+    List<String> validSteps = Arrays.asList("validStep1", "validStep2");
+    Set<String> validStepsSet = new HashSet<>(validSteps);
+    List<String> invalidSteps = Arrays.asList("invalidStep1", "invalidStep2");
+    List<String> bothValidAndInvalidSteps = new ArrayList<>();
+    bothValidAndInvalidSteps.addAll(validSteps);
+    bothValidAndInvalidSteps.addAll(invalidSteps);
+
+    // FailureStrategy with no specific steps should not be modified.
+    {
+      FailureStrategy failureStrategy =
+          FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before).isEqualTo(after);
+    }
+
+    // For a FailureStrategy, if all specific steps are VALID, it should not be modified.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(validSteps)
+                                            .build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before).isEqualTo(after);
+    }
+
+    // For a FailureStrategy, if a subset of specific steps are INVALID, if should be cleaned up to contain only
+    // valid steps.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(new ArrayList<>(bothValidAndInvalidSteps))
+                                            .build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before.size()).isEqualTo(after.size());
+      assertThat(after.get(0).getSpecificSteps()).isEqualTo(validSteps);
+    }
+    // For a FailureStrategy, if all specific steps are INVALID, it should be removed.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(invalidSteps)
+                                            .build();
+      List<FailureStrategy> failureStrategies = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(failureStrategies, validStepsSet);
+      assertThat(after).isEqualTo(Collections.emptyList());
+    }
   }
 
   @Test
