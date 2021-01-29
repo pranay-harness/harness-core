@@ -39,6 +39,7 @@ public abstract class AbstractHttpClientFactory {
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
   private String clientId = "NextGenManager";
+  private final ObjectMapper objectMapper;
 
   public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
@@ -47,6 +48,7 @@ public abstract class AbstractHttpClientFactory {
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
     this.clientId = clientId;
+    objectMapper = getObjectMapper();
   }
 
   public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
@@ -55,11 +57,11 @@ public abstract class AbstractHttpClientFactory {
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
+    objectMapper = getObjectMapper();
   }
 
   protected Retrofit getRetrofit() {
     String baseUrl = serviceHttpClientConfig.getBaseUrl();
-    ObjectMapper objectMapper = getObjectMapper();
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(kryoConverterFactory)
