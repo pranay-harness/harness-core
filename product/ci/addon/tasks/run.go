@@ -179,7 +179,7 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	}
 
 	stepOutput := make(map[string]string)
-	if e.envVarOutputs != nil {
+	if len(e.envVarOutputs) != 0 {
 		var err error
 		outputVars, err := e.fetchOutputVariables(outputFile)
 		if err != nil {
