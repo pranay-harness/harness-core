@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -81,6 +82,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.beans.EnvironmentType")
+@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.InfrastructureMapping")
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
+@BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
+@BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds

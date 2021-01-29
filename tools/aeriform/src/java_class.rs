@@ -50,7 +50,7 @@ lazy_static! {
     static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
-pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<String>) {
+pub fn populate_internal_info(location: &str, module_type: &str) -> (Option<String>, HashSet<String>) {
     let code = fs::read_to_string(&format!("{}/{}", GIT_REPO_ROOT_DIR.as_str(), location)).expect(&format!(
         "failed to read file {}/{}",
         GIT_REPO_ROOT_DIR.as_str(),
@@ -62,7 +62,7 @@ pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<Str
         None
     } else {
         Some(format!(
-            "//{}:module",
+            "//{}:{}",
             captures_target_module
                 .unwrap()
                 .get(1)
@@ -70,7 +70,8 @@ pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<Str
                 .as_str()
                 .to_string()
                 .to_lowercase()
-                .replace('_', "-")
+                .replace('_', "-"),
+            module_type
         ))
     };
 
