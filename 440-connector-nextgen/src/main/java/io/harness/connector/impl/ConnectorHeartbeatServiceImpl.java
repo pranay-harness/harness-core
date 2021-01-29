@@ -11,11 +11,16 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -28,6 +33,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.util.Durations;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 
 @Singleton
@@ -37,12 +43,15 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
   private final long CONNECTIVITY_CHECK_TIMEOUT = 2;
   DelegateServiceGrpcClient delegateServiceGrpcClient;
   ConnectorService connectorService;
+  private Map<String, ConnectorValidationParamsProvider> connectorValidationParamsProviderMap;
 
   @Inject
   public ConnectorHeartbeatServiceImpl(DelegateServiceGrpcClient delegateServiceGrpcClient,
-      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService) {
+      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
+      Map<String, ConnectorValidationParamsProvider> connectorValidationParamsProviderMap) {
     this.delegateServiceGrpcClient = delegateServiceGrpcClient;
     this.connectorService = connectorService;
+    this.connectorValidationParamsProviderMap = connectorValidationParamsProviderMap;
   }
 
   private PerpetualTaskId createPerpetualTask(ConnectorInfoDTO connector, String accountIdentifier) {
@@ -114,5 +123,20 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
       log.info("{} Exception while deleting the heartbeat task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
           connectorFQN);
     }
+  }
+
+  @Override
+  public ConnectorValidationParams getConnectorValidationParams(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    final Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    return connectorResponseDTO
+        .map(connectorResponse -> {
+          final ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
+          return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
+              .getConnectorValidationParams(connectorResponse.getConnector().getConnectorConfig(),
+                  connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
+        })
+        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist"));
   }
 }

@@ -59,6 +59,7 @@ import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 
 import software.wings.app.CharsetResponseFilter;
+import software.wings.jersey.KryoFeature;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -147,7 +148,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
-    registerJerseyProviders(environment);
+    registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
@@ -240,7 +241,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  private void registerJerseyProviders(Environment environment) {
+  private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);

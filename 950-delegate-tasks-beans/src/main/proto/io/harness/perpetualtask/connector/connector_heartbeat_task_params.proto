@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 message ConnectorHeartbeatTaskParams {
   string account_identifier = 1;
-  bytes connector = 2;
-  bytes encryption_details = 3;
+  string org_identifier = 2;
+  string project_identifier = 3;
+  string connector_identifier = 4;
+  bytes connector_validation_params = 5;
 }

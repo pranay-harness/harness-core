@@ -7,25 +7,19 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 
-import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTask;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.exception.UnexpectedException;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.utils.RestCallToNGManagerClientUtils;
 
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.security.NGSecretService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,7 +28,6 @@ import com.google.protobuf.Message;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,53 +38,34 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServiceClient {
   private KryoSerializer kryoSerializer;
   private ConnectorResourceClient connectorResourceClient;
-  private NGSecretService ngSecretService;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     String accountIdentifier = clientParams.get(ACCOUNT_KEY);
-    ConnectorDTO connectorDTO = getConnector(clientParams);
-    ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(connectorDTO));
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDataDetails(connectorDTO, accountIdentifier);
-    ByteString encryptedDataDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptedDataDetails));
+    String orgIdentifier = clientParams.get(ORG_KEY);
+    String projectIdentifier = clientParams.get(PROJECT_KEY);
+    String connectorIdentifier = clientParams.get(CONNECTOR_IDENTIFIER_KEY);
+    final ConnectorValidationParams connectorValidationParams = getConnectorValidationParams(clientParams);
+    ByteString connectorValidatorBytes = ByteString.copyFrom(kryoSerializer.asBytes(connectorValidationParams));
     return ConnectorHeartbeatTaskParams.newBuilder()
         .setAccountIdentifier(accountIdentifier)
-        .setConnector(connectorConfigBytes)
-        .setEncryptionDetails(encryptedDataDetailsBytes)
+        .setConnectorValidationParams(connectorValidatorBytes)
+        .setProjectIdentifier(projectIdentifier)
+        .setOrgIdentifier(orgIdentifier)
+        .setConnectorIdentifier(connectorIdentifier)
         .build();
-  }
-
-  private List<EncryptedDataDetail> getEncryptionDataDetails(ConnectorDTO connectorDTO, String accountId) {
-    DecryptableEntity decryptableEntity = getDecryptableEntity(connectorDTO);
-    if (decryptableEntity == null) {
-      return Collections.emptyList();
-    }
-    ConnectorInfoDTO connectorInfoDTO = connectorDTO.getConnectorInfo();
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(accountId)
-                                       .orgIdentifier(connectorInfoDTO.getOrgIdentifier())
-                                       .projectIdentifier(connectorInfoDTO.getProjectIdentifier())
-                                       .build();
-
-    return ngSecretService.getEncryptionDetails(basicNGAccessObject, decryptableEntity);
-  }
-
-  private DecryptableEntity getDecryptableEntity(ConnectorDTO connectorDTO) {
-    if (connectorDTO == null || connectorDTO.getConnectorInfo() == null
-        || connectorDTO.getConnectorInfo().getConnectorConfig() == null) {
-      throw new UnexpectedException("The connector is null in the heartbeat framework");
-    }
-    ConnectorConfigDTO connectorConfigDTO = connectorDTO.getConnectorInfo().getConnectorConfig();
-    return connectorConfigDTO.getDecryptableEntity();
   }
 
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    ConnectorDTO connector = getConnector(clientParams);
-    List<ExecutionCapability> executionCapabilities =
-        connector.getConnectorInfo().fetchRequiredExecutionCapabilitiesForConnector(accountId, null);
+    ConnectorValidationParams connectorValidationParams = getConnectorValidationParams(clientParams);
+    List<ExecutionCapability> executionCapabilities = Collections.emptyList();
+    if (connectorValidationParams instanceof ExecutionCapabilityDemander) {
+      executionCapabilities =
+          ((ExecutionCapabilityDemander) connectorValidationParams).fetchRequiredExecutionCapabilities(null);
+    }
     return DelegateTask.builder()
         .accountId(accountId)
         .data(TaskData.builder()
@@ -103,20 +77,21 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
         .build();
   }
 
-  private ConnectorDTO getConnector(Map<String, String> clientParams) {
+  private ConnectorValidationParams getConnectorValidationParams(Map<String, String> clientParams) {
     String accountIdentifier = clientParams.get(ACCOUNT_KEY);
     String orgIdentifier = clientParams.get(ORG_KEY);
     String projectIdentifier = clientParams.get(PROJECT_KEY);
     String connectorIdentifier = clientParams.get(CONNECTOR_IDENTIFIER_KEY);
-    Optional<ConnectorDTO> connectorDTO = RestCallToNGManagerClientUtils.execute(
-        connectorResourceClient.get(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier));
-    if (!connectorDTO.isPresent()) {
+    ConnectorValidationParams connectorValidationParams =
+        RestCallToNGManagerClientUtils.execute(connectorResourceClient.getConnectorValidationParams(
+            connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    if (connectorValidationParams == null) {
       log.info(
           "{} The connector doesn't exists with the following ids accountId: {}, orgId: {}, projectId:{}, identifier:{}",
           CONNECTOR_HEARTBEAT_LOG_PREFIX, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
       throw new UnexpectedException(String.format("The " + CONNECTOR_STRING + " doesn't exists.", connectorIdentifier,
           accountIdentifier, orgIdentifier, projectIdentifier));
     }
-    return connectorDTO.get();
+    return connectorValidationParams;
   }
 }

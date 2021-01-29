@@ -18,6 +18,6 @@ public class DockerTestConnectionTaskParams implements TaskParameters, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return dockerConnector.fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return DockerCapabilityHelper.fetchRequiredExecutionCapabilities(dockerConnector, maskingEvaluator);
   }
 }

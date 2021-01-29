@@ -4,6 +4,7 @@ import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.CIK8ServicePodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -33,6 +34,6 @@ public class CIK8BuildTaskParams implements CIBuildSetupTaskParams, ExecutionCap
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
         (KubernetesClusterConfigDTO) k8sConnector.getConnectorConfig();
-    return kubernetesClusterConfigDTO.fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return K8sTaskCapabilityHelper.fetchRequiredExecutionCapabilities(kubernetesClusterConfigDTO, maskingEvaluator);
   }
 }

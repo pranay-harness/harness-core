@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
@@ -33,6 +34,7 @@ import org.mockito.MockitoAnnotations;
 public class GcpConnectorValidatorTest extends CategoryTest {
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
+  @Mock private EncryptionHelper encryptionHelper;
   @InjectMocks private GcpConnectorValidator gcpConnectorValidator;
 
   @Before
@@ -75,6 +77,7 @@ public class GcpConnectorValidatorTest extends CategoryTest {
                             .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(GcpValidationTaskResponse.builder()
                         .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
