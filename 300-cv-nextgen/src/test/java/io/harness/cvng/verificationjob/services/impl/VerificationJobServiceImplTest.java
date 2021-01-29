@@ -23,8 +23,8 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -47,7 +47,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class VerificationJobServiceImplTest extends CvNextGenTest {
-  @Mock private NextGenService nextGenService;
+  @Mock private EnvironmentServiceCache environmentServiceCache;
   @Mock private CVEventService cvEventService;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
@@ -65,8 +65,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     projectIdentifier = generateUuid();
     identifier = "test-verification-harness";
     accountId = generateUuid();
+    FieldUtils.writeField(verificationJobService, "environmentServiceCache", environmentServiceCache, true);
     portalUrl = "https://app.harness.io/";
-    FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(verificationJobService, "cvEventService", cvEventService, true);
   }
 
@@ -249,8 +249,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService
         .list(accountId, verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getOrgIdentifier(), 0, 10, null)
         .getContent();
-    verify(nextGenService, never()).getEnvironment(anyString(), anyString(), anyString(), anyString());
-    verify(nextGenService, never()).getService(anyString(), anyString(), anyString(), anyString());
+    verify(environmentServiceCache, never()).getEnvironment(anyString(), anyString(), anyString(), anyString());
+    verify(environmentServiceCache, never()).getService(anyString(), anyString(), anyString(), anyString());
   }
 
   @Test
@@ -316,12 +316,12 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
                                                 .name(verificationJobDTO.getServiceIdentifier())
                                                 .build();
 
-    when(nextGenService.getEnvironment(verificationJobDTO.getEnvIdentifier(), accountId,
-             verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()))
+    when(environmentServiceCache.getEnvironment(accountId, verificationJobDTO.getOrgIdentifier(),
+             verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getEnvIdentifier()))
         .thenReturn(environmentResponseDTO);
 
-    when(nextGenService.getService(verificationJobDTO.getServiceIdentifier(), accountId,
-             verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()))
+    when(environmentServiceCache.getService(accountId, verificationJobDTO.getOrgIdentifier(),
+             verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getServiceIdentifier()))
         .thenReturn(serviceResponseDTO);
   }
 

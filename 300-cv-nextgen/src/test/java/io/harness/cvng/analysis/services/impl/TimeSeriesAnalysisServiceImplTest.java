@@ -235,7 +235,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
                                                       .verificationTaskId(verificationTaskId)
                                                       .transactionMetricHistories(buildShortTermHistory())
                                                       .build();
-    hPersistence.save(shortTermHistory);
+    timeSeriesAnalysisService.saveShortTermHistory(shortTermHistory);
     Map<String, Map<String, List<Double>>> actual = timeSeriesAnalysisService.getShortTermHistory(verificationTaskId);
     Map<String, Map<String, List<Double>>> expected = shortTermHistory.convertToMap();
 

@@ -50,11 +50,11 @@ import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -109,7 +109,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Mock private NextGenService nextGenService;
+  @Mock private EnvironmentServiceCache environmentServiceCache;
   @Mock private VerificationTaskService verificationTaskService;
 
   private String projectIdentifier;
@@ -133,10 +133,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(activityService, "webhookService", mockWebhookService, true);
     FieldUtils.writeField(activityService, "verificationJobService", verificationJobService, true);
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
-    FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(activityService, "environmentServiceCache", environmentServiceCache, true);
     FieldUtils.writeField(activityService, "healthVerificationHeatMapService", healthVerificationHeatMapService, true);
     FieldUtils.writeField(activityService, "cvConfigService", cvConfigService, true);
-    when(nextGenService.getService(any(), any(), any(), any()))
+    when(environmentServiceCache.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
     when(mockWebhookService.validateWebhookToken(any(), any(), any())).thenReturn(true);
     when(cvConfigService.list(

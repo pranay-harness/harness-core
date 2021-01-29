@@ -8,8 +8,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -39,7 +39,7 @@ import org.apache.http.client.utils.URIBuilder;
 @Slf4j
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
-  @Inject private NextGenService nextGenService;
+  @Inject private EnvironmentServiceCache environmentServiceCache;
   @Inject private CVEventService cvEventService;
 
   @Override
@@ -155,13 +155,13 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     if (job != null) {
       VerificationJobDTO verificationJobDTO = job.getVerificationJobDTO();
       if (!job.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-        EnvironmentResponseDTO environmentResponseDTO = nextGenService.getEnvironment(
-            job.getEnvIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+        EnvironmentResponseDTO environmentResponseDTO = environmentServiceCache.getEnvironment(
+            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getEnvIdentifier());
         verificationJobDTO.setEnvName(environmentResponseDTO.getName());
       }
       if (!job.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-        ServiceResponseDTO serviceResponseDTO = nextGenService.getService(
-            job.getServiceIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+        ServiceResponseDTO serviceResponseDTO = environmentServiceCache.getService(
+            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getServiceIdentifier());
         verificationJobDTO.setServiceName(serviceResponseDTO.getName());
       }
       return verificationJobDTO;
@@ -215,8 +215,8 @@ public class VerificationJobServiceImpl implements VerificationJobService {
         continue;
       }
       if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-        EnvironmentResponseDTO environmentResponseDTO =
-            nextGenService.getEnvironment(verificationJob.getEnvIdentifier(), accountId, orgIdentifier, projectId);
+        EnvironmentResponseDTO environmentResponseDTO = environmentServiceCache.getEnvironment(
+            accountId, orgIdentifier, projectId, verificationJob.getEnvIdentifier());
 
         if (environmentResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
           verificationJobList.add(verificationJob.getVerificationJobDTO());
@@ -225,8 +225,8 @@ public class VerificationJobServiceImpl implements VerificationJobService {
       }
 
       if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-        ServiceResponseDTO serviceResponseDTO =
-            nextGenService.getService(verificationJob.getServiceIdentifier(), accountId, orgIdentifier, projectId);
+        ServiceResponseDTO serviceResponseDTO = environmentServiceCache.getService(
+            accountId, orgIdentifier, projectId, verificationJob.getServiceIdentifier());
 
         if (serviceResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
           verificationJobList.add(verificationJob.getVerificationJobDTO());

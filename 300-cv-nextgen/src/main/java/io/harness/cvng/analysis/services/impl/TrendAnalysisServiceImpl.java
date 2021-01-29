@@ -21,7 +21,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
-import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
@@ -34,16 +33,15 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisResultKeys;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.entities.ServiceGuardLogAnalysisTask;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TransactionMetricSums;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
-import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnomalousPatternsService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -84,6 +82,8 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
   @Inject private HeatMapService heatMapService;
+  @Inject private TimeSeriesAnomalousPatternsService timeSeriesAnomalousPatternsService;
+  @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @Override
   public Map<String, ExecutionStatus> getTaskStatus(List<String> taskIds) {
@@ -247,8 +247,8 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
 
     saveRisk(
         analysis, startTime, endTime, learningEngineTask.getVerificationTaskId(), logAnalysisTask.isBaselineWindow());
-    saveShortTermHistory(shortTermHistory);
-    saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
+    timeSeriesAnalysisService.saveShortTermHistory(shortTermHistory);
+    timeSeriesAnomalousPatternsService.saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(cumulativeSums);
     hPersistence.save(riskSummary);
     log.info("Saving analysis for verification task Id: {}", learningEngineTask.getVerificationTaskId());
@@ -348,31 +348,6 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
         .build();
   }
 
-  private void saveAnomalousPatterns(ServiceGuardTimeSeriesAnalysisDTO analysis, String verificationTaskId) {
-    TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
-    // change the filter to verificationTaskId
-    TimeSeriesAnomalousPatterns patternsFromDB =
-        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class, excludeAuthority)
-            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
-            .get();
-
-    if (patternsFromDB != null) {
-      patternsToSave.setUuid(patternsFromDB.getUuid());
-    }
-    hPersistence.save(patternsToSave);
-  }
-
-  private void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory) {
-    TimeSeriesShortTermHistory historyFromDB =
-        hPersistence.createQuery(TimeSeriesShortTermHistory.class, excludeAuthority)
-            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId())
-            .get();
-    if (historyFromDB != null) {
-      shortTermHistory.setUuid(historyFromDB.getUuid());
-    }
-    hPersistence.save(shortTermHistory);
-  }
-
   private TimeSeriesCumulativeSums buildCumulativeSums(
       ServiceGuardTimeSeriesAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     Map<String, Map<String, MetricSum>> cumulativeSumsMap = new HashMap<>();
@@ -410,21 +385,6 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
     return TimeSeriesShortTermHistory.builder()
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
-        .build();
-  }
-
-  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
-    Map<String, Map<String, List<TimeSeriesAnomalies>>> anomaliesMap = new HashMap<>();
-    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
-      anomaliesMap.put(txnName, new HashMap<>());
-      metricMap.forEach(
-          (metricName,
-              txnMetricData) -> anomaliesMap.get(txnName).put(metricName, txnMetricData.getAnomalousPatterns()));
-    });
-
-    return TimeSeriesAnomalousPatterns.builder()
-        .verificationTaskId(analysisDTO.getVerificationTaskId())
-        .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
         .build();
   }
 
