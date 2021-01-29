@@ -5,16 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.plan.ErrorResponse;
-import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
-import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -27,27 +23,23 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 public class VariableCreatorMergeService {
-  private Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
 
   private static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public VariableCreatorMergeService(
-      Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices,
-      PmsSdkHelper pmsSdkHelper) {
-    this.planCreatorServices = planCreatorServices;
+  public VariableCreatorMergeService(PmsSdkHelper pmsSdkHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
   }
 
@@ -55,19 +47,18 @@ public class VariableCreatorMergeService {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
-    YamlField pipelineField = YamlUtils.getPipelineField(processedYaml.getNode());
+    YamlField pipelineField = YamlUtils.getPipelineField(Objects.requireNonNull(processedYaml).getNode());
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
     VariablesCreationBlobResponse response = createVariablesForDependenciesRecursive(services, dependencies);
-    validateVariableCreationResponse(response);
 
     return VariableCreationBlobResponseUtils.getMergeServiceResponse(
         YamlUtils.writeYamlString(processedYaml), response);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) throws IOException {
+      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
     VariablesCreationBlobResponse.Builder responseBuilder =
         VariablesCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
     if (isEmpty(services) || isEmpty(dependencies)) {
@@ -79,8 +70,9 @@ public class VariableCreatorMergeService {
           obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap());
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
-        throw new InvalidRequestException(
-            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
+        VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
+        VariableCreationBlobResponseUtils.mergeErrorResponses(responseBuilder, variablesCreationBlobResponse);
+        return responseBuilder.build();
       }
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
@@ -103,41 +95,28 @@ public class VariableCreatorMergeService {
               VariablesCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
         } catch (Exception ex) {
           log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
-          return VariablesCreationResponse.newBuilder()
-              .setErrorResponse(ErrorResponse.newBuilder()
-                                    .addMessages(String.format("Error connecting with service: [%s]", entry.getKey()))
-                                    .build())
-              .build();
+          ErrorResponse errorResponse = ErrorResponse.newBuilder()
+                                            .addMessages(format("Error connecting with service: [%s]", entry.getKey()))
+                                            .build();
+          VariablesCreationBlobResponse blobResponse =
+              VariablesCreationBlobResponse.newBuilder().addErrorResponse(errorResponse).build();
+          return VariablesCreationResponse.newBuilder().setBlobResponse(blobResponse).build();
         }
       });
     }
 
-    List<ErrorResponse> errorResponses;
-    VariablesCreationBlobResponse.Builder builder = VariablesCreationBlobResponse.newBuilder();
     try {
+      VariablesCreationBlobResponse.Builder builder = VariablesCreationBlobResponse.newBuilder();
       List<VariablesCreationResponse> variablesCreationResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
-      errorResponses =
-          variablesCreationResponses.stream()
-              .filter(resp
-                  -> resp != null && resp.getResponseCase() == VariablesCreationResponse.ResponseCase.ERRORRESPONSE)
-              .map(VariablesCreationResponse::getErrorResponse)
-              .collect(Collectors.toList());
-      if (EmptyPredicate.isEmpty(errorResponses)) {
-        variablesCreationResponses.forEach(
-            response -> VariableCreationBlobResponseUtils.mergeResponses(builder, response.getBlobResponse()));
-      }
+      variablesCreationResponses.forEach(response -> {
+        VariableCreationBlobResponseUtils.mergeResponses(builder, response.getBlobResponse());
+        if (response.getResponseCase() == VariablesCreationResponse.ResponseCase.ERRORRESPONSE) {
+          builder.addErrorResponse(response.getErrorResponse());
+        }
+      });
+      return builder.build();
     } catch (Exception ex) {
       throw new UnexpectedException("Error fetching variables creation response from service", ex);
-    }
-
-    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating variables", errorResponses);
-    return builder.build();
-  }
-
-  private void validateVariableCreationResponse(VariablesCreationBlobResponse finalResponse) {
-    if (isNotEmpty(finalResponse.getDependenciesMap())) {
-      throw new InvalidRequestException(
-          format("Unable to resolve all dependencies: %s", finalResponse.getDependenciesMap().keySet().toString()));
     }
   }
 }
