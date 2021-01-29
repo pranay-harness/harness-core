@@ -226,8 +226,8 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
         accountId, orgIdentifier, projectIdentifier, metricPack.getIdentifier(), DataSourceType.APP_DYNAMICS);
 
-    assertThat(metricPackThresholds.size()).isEqualTo(4);
-    TimeSeriesThreshold timeSeriesThreshold = metricPackThresholds.get(2);
+    assertThat(metricPackThresholds.size()).isEqualTo(timeSeriesThresholds.size());
+    TimeSeriesThreshold timeSeriesThreshold = metricPackThresholds.get(0);
     assertThat(timeSeriesThreshold.getAccountId()).isEqualTo(accountId);
     assertThat(timeSeriesThreshold.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(timeSeriesThreshold.getMetricPackIdentifier()).isEqualTo(metricPack.getIdentifier());
@@ -239,7 +239,7 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     assertThat(timeSeriesThreshold.getCriteria().getOccurrenceCount()).isEqualTo(3);
     assertThat(timeSeriesThreshold.getCriteria().getThresholdType()).isEqualTo(TimeSeriesThresholdType.ACT_WHEN_HIGHER);
 
-    timeSeriesThreshold = metricPackThresholds.get(3);
+    timeSeriesThreshold = metricPackThresholds.get(1);
     assertThat(timeSeriesThreshold.getAccountId()).isEqualTo(accountId);
     assertThat(timeSeriesThreshold.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(timeSeriesThreshold.getMetricPackIdentifier()).isEqualTo(metricPack.getIdentifier());

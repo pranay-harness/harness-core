@@ -168,6 +168,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
+
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides

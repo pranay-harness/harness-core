@@ -21,6 +21,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -53,6 +54,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private NextGenService nextGenService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService eventService;
+  @Inject private EnvironmentServiceCache environmentServiceCache;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -185,6 +187,9 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
     Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
+    if (isEmpty(envToServicesMap)) {
+      return Collections.emptyList();
+    }
     Set<String> envIdentifiers = new HashSet<>();
     Set<String> serIdentifiers = new HashSet<>();
     envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
@@ -318,6 +323,9 @@ public class CVConfigServiceImpl implements CVConfigService {
       CVMonitoringCategory monitoringCategory) {
     List<CVConfig> configsForFilter =
         list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    if (isEmpty(configsForFilter)) {
+      return Collections.emptyList();
+    }
     Set<String> envIdentifiers = configsForFilter.stream().map(CVConfig::getEnvIdentifier).collect(toSet());
     Map<String, EnvironmentResponseDTO> environments =
         nextGenService.listEnvironmentsForProject(accountId, orgIdentifier, projectIdentifier, envIdentifiers);
@@ -335,8 +343,8 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public boolean isProductionConfig(CVConfig cvConfig) {
-    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getEnvIdentifier(),
-        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+    EnvironmentResponseDTO environment = environmentServiceCache.getEnvironment(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier());
     return EnvironmentType.Production.equals(environment.getType());
   }
 

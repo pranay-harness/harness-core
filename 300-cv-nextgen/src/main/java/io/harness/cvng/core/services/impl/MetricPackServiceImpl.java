@@ -100,6 +100,14 @@ public class MetricPackServiceImpl implements MetricPackService {
                                              .filter(MetricPackKeys.dataSourceType, dataSourceType)
                                              .asList();
 
+    if (isEmpty(metricPacksFromDb)) {
+      final Map<String, MetricPack> metricPackDefinitionsFromYaml =
+          getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
+      final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
+      hPersistence.save(metricPacks);
+      return metricPacks;
+    }
+
     metricPacksFromDb.forEach(metricPack -> metricPack.getMetrics().forEach(metricDefinition -> {
       if (metricDefinition.getThresholds() == null) {
         metricDefinition.setThresholds(Collections.emptyList());
@@ -207,13 +215,20 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public List<TimeSeriesThreshold> getMetricPackThresholds(String accountId, String orgIdentifier,
       String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
-    return hPersistence.createQuery(TimeSeriesThreshold.class, excludeAuthority)
-        .filter(TimeSeriesThresholdKeys.accountId, accountId)
-        .filter(TimeSeriesThresholdKeys.orgIdentifier, orgIdentifier)
-        .filter(TimeSeriesThresholdKeys.projectIdentifier, projectIdentifier)
-        .filter(TimeSeriesThresholdKeys.metricPackIdentifier, metricPackIdentifier)
-        .filter(TimeSeriesThresholdKeys.dataSourceType, dataSourceType)
-        .asList();
+    List<TimeSeriesThreshold> timeSeriesThresholds =
+        hPersistence.createQuery(TimeSeriesThreshold.class, excludeAuthority)
+            .filter(TimeSeriesThresholdKeys.accountId, accountId)
+            .filter(TimeSeriesThresholdKeys.orgIdentifier, orgIdentifier)
+            .filter(TimeSeriesThresholdKeys.projectIdentifier, projectIdentifier)
+            .filter(TimeSeriesThresholdKeys.metricPackIdentifier, metricPackIdentifier)
+            .filter(TimeSeriesThresholdKeys.dataSourceType, dataSourceType)
+            .asList();
+    if (isEmpty(timeSeriesThresholds)) {
+      return createDefaultIgnoreThresholds(
+          accountId, orgIdentifier, projectIdentifier, metricPackIdentifier, dataSourceType);
+    }
+
+    return timeSeriesThresholds;
   }
 
   private List<TimeSeriesThreshold> createDefaultIgnoreThresholds(String accountId, String orgIdentifier,

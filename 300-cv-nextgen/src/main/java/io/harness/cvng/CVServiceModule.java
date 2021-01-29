@@ -21,6 +21,7 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnomalousPatternsService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.analysis.services.impl.AnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentAnalysisServiceImpl;
@@ -31,6 +32,7 @@ import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsServiceImpl;
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
@@ -263,6 +265,7 @@ public class CVServiceModule extends AbstractModule {
       bind(CVNGLogService.class).to(CVNGLogServiceImpl.class);
       bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
+      bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
@@ -285,9 +288,9 @@ public class CVServiceModule extends AbstractModule {
   @Singleton
   @Named("cvParallelExecutor")
   public ExecutorService cvParallelExecutor() {
-    ExecutorService cvParallelExecutor = ThreadPool.create(4, 10, 5, TimeUnit.SECONDS,
+    ExecutorService cvParallelExecutor = ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("cvParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { cvParallelExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvParallelExecutor.shutdownNow()));
     return cvParallelExecutor;
   }
 }

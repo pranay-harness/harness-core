@@ -134,8 +134,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     if (updateResults.getUpdatedCount() == 0) {
       // https://harness.atlassian.net/browse/CVNG-1601
       log.info("Task is not in running state. Skipping the update {}", result);
-      throw new IllegalStateException(
-          "Task is not in running state. Skipping the update. Most likely previous updateStatus call succeeded.");
+      return;
     }
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
