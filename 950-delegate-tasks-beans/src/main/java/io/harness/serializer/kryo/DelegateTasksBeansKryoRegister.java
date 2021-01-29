@@ -297,6 +297,8 @@ import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
+import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
+import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
@@ -726,5 +728,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureARMRollbackParameters.class, 543246);
     kryo.register(AzureARMDeploymentResponse.class, 543247);
     kryo.register(AzureARMRollbackResponse.class, 543248);
+    kryo.register(K8sCanaryDeployRequest.class, 543249);
+    kryo.register(K8sCanaryDeployResponse.class, 543250);
   }
 }

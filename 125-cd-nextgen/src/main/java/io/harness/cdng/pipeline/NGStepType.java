@@ -33,9 +33,9 @@ public enum NGStepType {
       StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   DELETE("Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
-  CANARY_DEPLOYMENT(
-      "Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
+  @JsonProperty(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
+  CANARY_DEPLOYMENT("Deployment", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
+      StepSpecTypeConstants.K8S_CANARY_DEPLOY),
 
   // Infrastructure Provisioners
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)

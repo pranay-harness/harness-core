@@ -5,25 +5,24 @@ import static io.harness.k8s.manifest.ManifestHelper.getKubernetesResourceFromSp
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 
+import com.google.common.io.Resources;
 import com.google.inject.Singleton;
-import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import org.apache.commons.io.FileUtils;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sTestHelper {
-  private static String resourcePath = "./k8s";
+  private static String resourcePath = "k8s";
   private static String deploymentYaml = "deployment.yaml";
   private static String deploymentConfigYaml = "deployment-config.yaml";
   private static String configMapYaml = "configMap.yaml";
@@ -70,14 +69,9 @@ public class K8sTestHelper {
   }
 
   public static String readFileContent(String filePath, String resourcePath) throws IOException {
-    File yamlFile = null;
-    try {
-      yamlFile =
-          new File(K8sTestHelper.class.getClassLoader().getResource(resourcePath + PATH_DELIMITER + filePath).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + filePath);
-    }
-    return FileUtils.readFileToString(yamlFile, "UTF-8");
+    ClassLoader classLoader = K8sTestHelper.class.getClassLoader();
+    return Resources.toString(Objects.requireNonNull(classLoader.getResource(resourcePath + PATH_DELIMITER + filePath)),
+        StandardCharsets.UTF_8);
   }
 
   public static Release buildRelease(Release.Status status, int number) throws IOException {

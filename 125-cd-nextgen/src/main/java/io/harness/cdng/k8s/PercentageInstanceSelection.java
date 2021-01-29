@@ -15,4 +15,9 @@ public class PercentageInstanceSelection implements InstanceSelectionBase {
   public K8sInstanceUnitType getType() {
     return K8sInstanceUnitType.Percentage;
   }
+
+  @Override
+  public String getInstances() {
+    return percentage.getValue();
+  }
 }

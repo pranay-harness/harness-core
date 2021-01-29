@@ -8,6 +8,7 @@ import java.util.Set;
 public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("K8sRollingDeploy", "K8sRollingRollback", "Http", "ShellScript", "K8sScale");
+    return Sets.newHashSet(
+        "K8sRollingDeploy", "K8sRollingRollback", "Http", "ShellScript", "K8sScale", "K8sCanaryDeploy");
   }
 }
