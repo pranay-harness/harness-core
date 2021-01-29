@@ -1,7 +1,6 @@
 package io.harness.serializer.kryo;
 
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -74,7 +73,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(ArtifactStepParameters.class, 8001);
-    kryo.register(DockerArtifactOutcome.class, 8007);
     kryo.register(ServiceStepParameters.class, 8008);
     kryo.register(ArtifactListConfig.class, 8009);
     kryo.register(ServiceConfig.class, 8010);

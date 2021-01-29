@@ -1,6 +1,5 @@
 package io.harness.cdng.creator;
 
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
@@ -11,6 +10,7 @@ import io.harness.cdng.pipeline.executions.beans.InfraExecutionSummary;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;

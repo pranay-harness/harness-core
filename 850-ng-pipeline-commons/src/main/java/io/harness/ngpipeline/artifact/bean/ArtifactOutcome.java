@@ -1,4 +1,4 @@
-package io.harness.cdng.artifact.bean;
+package io.harness.ngpipeline.artifact.bean;
 
 import io.harness.ngpipeline.pipeline.executions.beans.WithArtifactSummary;
 import io.harness.pms.sdk.core.data.Outcome;

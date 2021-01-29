@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
