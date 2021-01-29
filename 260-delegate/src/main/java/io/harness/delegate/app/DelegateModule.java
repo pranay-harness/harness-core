@@ -41,6 +41,7 @@ import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
+import io.harness.delegate.k8s.K8sCanaryRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRollbackRequestHandler;
@@ -889,6 +890,7 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK.name())
         .to(K8sRollingRollbackRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.CANARY_DEPLOY.name()).to(K8sCanaryRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);

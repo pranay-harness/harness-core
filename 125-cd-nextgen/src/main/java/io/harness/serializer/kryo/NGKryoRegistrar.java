@@ -18,6 +18,9 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
+import io.harness.cdng.k8s.K8sCanaryOutcome;
+import io.harness.cdng.k8s.K8sCanaryStepInfo;
+import io.harness.cdng.k8s.K8sCanaryStepParameters;
 import io.harness.cdng.k8s.K8sInstanceUnitType;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
@@ -139,5 +142,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sInstanceUnitType.class, 12512);
     kryo.register(K8sScaleStepInfo.class, 12513);
     kryo.register(K8sScaleStepParameter.class, 12514);
+    kryo.register(K8sCanaryOutcome.class, 12515);
+    kryo.register(K8sCanaryStepInfo.class, 12516);
+    kryo.register(K8sCanaryStepParameters.class, 12517);
   }
 }
