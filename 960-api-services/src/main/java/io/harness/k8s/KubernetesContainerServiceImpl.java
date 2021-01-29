@@ -132,15 +132,12 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
-import io.kubernetes.client.openapi.models.V1ConfigMapList;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
-import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -994,16 +991,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
 
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-      String fieldSelector = format(K8S_SELECTOR_FORMAT, RESOURCE_NAME_FIELD, name);
-      V1ServiceList result = new CoreV1Api(apiClient).listNamespacedService(
-          namespace, null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(result.getItems()) ? null : result.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedService(name, namespace, null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Unable to get service. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
+  }
+
+  private boolean isResourceNotFoundException(int code) {
+    return code == 404;
   }
 
   @Override
@@ -1140,11 +1141,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public V1ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
     try {
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-      String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
-      V1ConfigMapList configMapList = new CoreV1Api(apiClient).listNamespacedConfigMap(
-          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(configMapList.getItems()) ? null : configMapList.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedConfigMap(name, kubernetesConfig.getNamespace(), null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Failed to get ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
@@ -1340,12 +1341,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-    String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, secretName);
     try {
-      V1SecretList secretList = new CoreV1Api(apiClient).listNamespacedSecret(
-          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(secretList.getItems()) ? null : secretList.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedSecret(
+          secretName, kubernetesConfig.getNamespace(), null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Failed to get Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
