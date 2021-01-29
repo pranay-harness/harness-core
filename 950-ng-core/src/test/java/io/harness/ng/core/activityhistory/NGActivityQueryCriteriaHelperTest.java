@@ -20,8 +20,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
-public class EntityActivityQueryCriteriaHelperTest extends CategoryTest {
-  @InjectMocks EntityActivityQueryCriteriaHelper entityActivityQueryCriteriaHelper;
+public class NGActivityQueryCriteriaHelperTest extends CategoryTest {
+  @InjectMocks NGActivityQueryCriteriaHelper ngActivityQueryCriteriaHelper;
 
   @Before
   public void setUp() throws Exception {
@@ -35,7 +35,7 @@ public class EntityActivityQueryCriteriaHelperTest extends CategoryTest {
     long startTime = 10;
     long endTime = 100;
     Criteria criteria = new Criteria();
-    entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
+    ngActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
     Document criteriaToTest = (Document) criteria.getCriteriaObject().get(ActivityHistoryEntityKeys.activityTime);
     assertThat(criteriaToTest.get("$gte")).isEqualTo(10L);
     assertThat(criteriaToTest.get("$lt")).isEqualTo(100L);
@@ -50,7 +50,7 @@ public class EntityActivityQueryCriteriaHelperTest extends CategoryTest {
     String projectIdentifier = "projectIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
     Criteria criteria = new Criteria();
-    entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
+    ngActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
     assertThat(criteria.getCriteriaObject().get(ActivityHistoryEntityKeys.referredEntityFQN))
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(

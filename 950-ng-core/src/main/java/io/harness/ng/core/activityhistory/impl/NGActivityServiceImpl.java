@@ -8,7 +8,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.grou
 
 import io.harness.EntityType;
 import io.harness.exception.UnexpectedException;
-import io.harness.ng.core.activityhistory.EntityActivityQueryCriteriaHelper;
+import io.harness.ng.core.activityhistory.NGActivityQueryCriteriaHelper;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO.ConnectivityCheckSummaryKeys;
@@ -45,7 +45,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class NGActivityServiceImpl implements NGActivityService {
   private NGActivityRepository activityRepository;
-  private EntityActivityQueryCriteriaHelper entityActivityQueryCriteriaHelper;
+  private NGActivityQueryCriteriaHelper ngActivityQueryCriteriaHelper;
   NGActivityEntityToDTOMapper activityEntityToDTOMapper;
   NGActivityDTOToEntityMapper activityDTOToEntityMapper;
   private static final String IS_SUCCESSFUL_CONNECTIVITY_CHECK_ACTIVITY = "isSuccessfulConnectivityCheckField";
@@ -100,9 +100,9 @@ public class NGActivityServiceImpl implements NGActivityService {
       String projectIdentifier, String referredEntityIdentifier, long start, long end) {
     Criteria criteria = new Criteria();
     criteria.and(ActivityHistoryEntityKeys.type).is(String.valueOf(CONNECTIVITY_CHECK));
-    entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
+    ngActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
-    entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, start, end);
+    ngActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, start, end);
     return criteria;
   }
 
@@ -128,12 +128,12 @@ public class NGActivityServiceImpl implements NGActivityService {
       EntityType referredEntityType, EntityType referredByEntityType) {
     Criteria criteria = new Criteria();
     criteria.and(ActivityHistoryEntityKeys.type).ne(String.valueOf(CONNECTIVITY_CHECK));
-    entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
+    ngActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
-    entityActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
-    entityActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
+    ngActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
+    ngActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
     populateActivityStatusCriteria(criteria, status);
-    entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
+    ngActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
     return criteria;
   }
 

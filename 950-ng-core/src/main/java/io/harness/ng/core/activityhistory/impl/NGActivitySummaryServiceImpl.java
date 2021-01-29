@@ -13,12 +13,12 @@ import static org.springframework.data.mongodb.core.aggregation.BooleanOperators
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
-import io.harness.ng.core.activityhistory.EntityActivityQueryCriteriaHelper;
+import io.harness.ng.core.activityhistory.NGActivityQueryCriteriaHelper;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO.NGActivitySummaryKeys;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.entity.NGActivity.ActivityHistoryEntityKeys;
-import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
+import io.harness.ng.core.activityhistory.service.NGActivitySummaryService;
 import io.harness.repositories.activityhistory.NGActivityRepository;
 
 import com.google.inject.Inject;
@@ -45,9 +45,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
-public class EntityActivitySummaryServiceImpl implements EntityActivitySummaryService {
+public class NGActivitySummaryServiceImpl implements NGActivitySummaryService {
   private NGActivityRepository activityRepository;
-  private EntityActivityQueryCriteriaHelper entityActivityQueryCriteriaHelper;
+  private NGActivityQueryCriteriaHelper ngActivityQueryCriteriaHelper;
   private static final String intervalField = "intervalField";
   private static final String isSuccessfulActivityField = "isSuccessfulActivity";
   private static final String isFailedActivityField = "isFailedActivity";
@@ -206,11 +206,11 @@ public class EntityActivitySummaryServiceImpl implements EntityActivitySummarySe
       String projectIdentifier, String referredEntityIdentifier, long startTime, long endTime,
       EntityType referredEntityType, EntityType referredByEntityType) {
     Criteria criteria = new Criteria();
-    entityActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
+    ngActivityQueryCriteriaHelper.populateEntityFQNFilterInCriteria(
         criteria, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier);
-    entityActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
-    entityActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
-    entityActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
+    ngActivityQueryCriteriaHelper.addTimeFilterInTheCriteria(criteria, startTime, endTime);
+    ngActivityQueryCriteriaHelper.addReferredEntityTypeCriteria(criteria, referredEntityType);
+    ngActivityQueryCriteriaHelper.addReferredByEntityTypeCriteria(criteria, referredByEntityType);
     return criteria;
   }
 }
