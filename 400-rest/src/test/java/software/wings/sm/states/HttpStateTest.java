@@ -47,6 +47,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.KeyValuePair;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -83,6 +84,7 @@ import software.wings.sm.WorkflowStandardParams;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.Collections;
@@ -107,7 +109,9 @@ public class HttpStateTest extends WingsBaseTest {
           .withName("healthCheck1")
           .withMethod("GET")
           .withUrl("http://${host.hostName}:8088/health/status")
-          .withHeader("Content-Type: application/xml, Accept: */*")
+          .withHeaders(Lists.newArrayList(KeyValuePair.builder().key("Content-Type").value("application/xml").build(),
+              KeyValuePair.builder().key("Content-Type").value("application/xml").build(),
+              KeyValuePair.builder().key("Accept").value("*/*").build()))
           .withAssertion(
               "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
 
@@ -196,7 +200,7 @@ public class HttpStateTest extends WingsBaseTest {
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
     assertThat(patternsForRequiredContextElementType).isNotEmpty();
     assertThat(patternsForRequiredContextElementType)
-        .contains("Content-Type: application/xml, Accept: */*",
+        .contains(
             "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
   }
 
@@ -204,21 +208,11 @@ public class HttpStateTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplatedHttpPatternsForRequiredContextElementType() {
-    HttpState.Builder jsonHttpStateBuilder =
-        aHttpState()
-            .withName("healthCheck1")
-            .withMethod("GET")
-            .withUrl("http://${url}")
-            .withHeader("Content-Type: ${contentType}, Accept: */*")
-            .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${buildNo}")
-            .withTemplateVariables(asList(aVariable().name("url").value("localhost:8088/health/status").build(),
-                aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
-                aVariable().name("contentType").value("application/json").build()));
     List<String> patternsForRequiredContextElementType =
         getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
     assertThat(patternsForRequiredContextElementType).isNotEmpty();
     assertThat(patternsForRequiredContextElementType)
-        .contains("Content-Type: application/xml, Accept: */*",
+        .contains(
             "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
   }
 
@@ -249,7 +243,9 @@ public class HttpStateTest extends WingsBaseTest {
             .withName("healthCheck1")
             .withMethod("GET")
             .withUrl("http://${host.hostName}:8088/health/status")
-            .withHeader("Content-Type: application/json, Accept: */*")
+            .withHeaders(
+                Lists.newArrayList(KeyValuePair.builder().key("Content-Type").value("application/json").build(),
+                    KeyValuePair.builder().key("Accept").value("*/*").build()))
             .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${artifact.buildNo}");
 
     HttpState httpState = getHttpState(jsonHttpStateBuilder.but(), context);
@@ -308,7 +304,8 @@ public class HttpStateTest extends WingsBaseTest {
             .withName("healthCheck1")
             .withMethod("GET")
             .withUrl("http://${url}")
-            .withHeader("Content-Type: ${contentType}, Accept: */*")
+            .withHeaders(Lists.newArrayList(KeyValuePair.builder().key("Content-Type").value("${contentType}").build(),
+                KeyValuePair.builder().key("Accept").value("*/*").build()))
             .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${buildNo}")
             .withTemplateVariables(asList(aVariable().name("url").value("localhost:8088/health/status").build(),
                 aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
@@ -440,7 +437,8 @@ public class HttpStateTest extends WingsBaseTest {
             .withName("healthCheck1")
             .withMethod("GET")
             .withUrl("http://${host.hostName}:8088/health/status")
-            .withHeader("Content-Type: application/xml, Accept: */*")
+            .withHeaders(Lists.newArrayList(KeyValuePair.builder().key("Content-Type").value("application/xml").build(),
+                KeyValuePair.builder().key("Accept").value("*/*").build()))
             .usesProxy(true)
             .withAssertion(
                 "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");

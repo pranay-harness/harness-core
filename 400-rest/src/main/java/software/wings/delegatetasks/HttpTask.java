@@ -37,7 +37,6 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         httpService.executeUrl(HttpInternalConfig.builder()
                                    .method(httpTaskParameters.getMethod())
                                    .body(httpTaskParameters.getBody())
-                                   .header(httpTaskParameters.getHeader())
                                    .headers(httpTaskParameters.getHeaders())
                                    .socketTimeoutMillis(httpTaskParameters.getSocketTimeoutMillis())
                                    .url(httpTaskParameters.getUrl())

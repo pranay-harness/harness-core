@@ -148,9 +148,6 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
                              .collect(Collectors.joining(","));
       putNotNull(
           executionDetails, "headers", ExecutionDataValue.builder().displayName("Header(s)").value(headerStr).build());
-    } else {
-      putNotNull(
-          executionDetails, "header", ExecutionDataValue.builder().displayName("Header(s)").value(header).build());
     }
     putNotNull(executionDetails, "httpResponseCode",
         ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
