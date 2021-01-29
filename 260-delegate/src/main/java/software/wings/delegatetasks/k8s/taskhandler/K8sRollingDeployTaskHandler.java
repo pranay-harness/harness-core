@@ -152,10 +152,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       boolean customWorkloadsStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
           client, customWorkloads, k8sDelegateTaskParams, executionLogCallback, true, steadyStateTimeoutInMillis);
 
-      // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
-      // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
-      // after the apply command has successfully run
-      k8sRollingBaseHandler.updateDeploymentConfigRevision(k8sDelegateTaskParams, release, client);
+      // We have to update the workload revision again as the rollout history command sometimes gives the older
+      // revision (known issue at least for Deployment and DeploymentConfig). There seems to be delay in handling of
+      // the workloads where it still gives older revision even after the apply command has successfully run
+      k8sRollingBaseHandler.updateManagedWorkloadsRevision(k8sDelegateTaskParams, release, client);
 
       if (!success || !customWorkloadsStatusSuccess) {
         releaseHistory.setReleaseStatus(Status.Failed);

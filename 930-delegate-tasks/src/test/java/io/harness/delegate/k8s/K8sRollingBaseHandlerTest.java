@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
@@ -127,13 +128,38 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
     when(resourceIdMock.getWorkload())
         .thenReturn(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build());
 
-    k8sRollingBaseHandler.updateDeploymentConfigRevision(delegateTaskParams, release, null);
+    k8sRollingBaseHandler.updateManagedWorkloadsRevision(delegateTaskParams, release, null);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(resourceIdMock).setRevision(captor.capture());
     assertThat(captor.getValue()).isEqualTo("2");
 
     when(resourceIdMock.getWorkload()).thenReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build());
     verify(resourceIdMock, times(1)).setRevision(anyString());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateMultipleWorkloadsRevision() throws Exception {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    Release.KubernetesResourceIdRevision deploymentId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release.KubernetesResourceIdRevision statefulSetId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release.KubernetesResourceIdRevision daemonSetId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release release = Release.builder().managedWorkloads(asList(deploymentId, statefulSetId, daemonSetId)).build();
+
+    doReturn("3")
+        .when(k8sTaskHelperBase)
+        .getLatestRevision(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class));
+
+    doReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build()).when(deploymentId).getWorkload();
+    doReturn(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build()).when(deploymentId).getWorkload();
+    doReturn(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build()).when(deploymentId).getWorkload();
+
+    k8sRollingBaseHandler.updateManagedWorkloadsRevision(delegateTaskParams, release, null);
+    verify(deploymentId, times(1)).setRevision("3");
+    verify(statefulSetId, times(1)).setRevision("3");
+    verify(daemonSetId, times(1)).setRevision("3");
   }
 
   private K8sPod buildPod(int name) {

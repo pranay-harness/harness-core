@@ -39,16 +39,14 @@ public class K8sRollingBaseHandler {
   @Inject K8sTaskHelperBase k8sTaskHelperBase;
 
   @VisibleForTesting
-  public void updateDeploymentConfigRevision(
+  public void updateManagedWorkloadsRevision(
       K8sDelegateTaskParams k8sDelegateTaskParams, Release release, Kubectl client) throws Exception {
     List<KubernetesResourceIdRevision> workloads = release.getManagedWorkloads();
 
     for (KubernetesResourceIdRevision kubernetesResourceIdRevision : workloads) {
-      if (Kind.DeploymentConfig.name().equals(kubernetesResourceIdRevision.getWorkload().getKind())) {
-        String latestRevision = k8sTaskHelperBase.getLatestRevision(
-            client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
-        kubernetesResourceIdRevision.setRevision(latestRevision);
-      }
+      String latestRevision = k8sTaskHelperBase.getLatestRevision(
+          client, kubernetesResourceIdRevision.getWorkload(), k8sDelegateTaskParams);
+      kubernetesResourceIdRevision.setRevision(latestRevision);
     }
   }
 
