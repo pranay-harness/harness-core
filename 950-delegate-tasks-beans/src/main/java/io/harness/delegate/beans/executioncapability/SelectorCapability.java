@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.executioncapability;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.time.Duration;
 import java.util.Set;
 import lombok.Builder;
@@ -7,6 +10,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._940_DELEGATE_BEANS)
 public class SelectorCapability implements ExecutionCapability {
   private Set<String> selectors;
   private String selectorOrigin;

@@ -305,9 +305,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
-@BreakDependencyOn("software.wings.service.intfc.AccountService")
+@BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
+@BreakDependencyOn("software.wings.service.intfc.AccountService")
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.

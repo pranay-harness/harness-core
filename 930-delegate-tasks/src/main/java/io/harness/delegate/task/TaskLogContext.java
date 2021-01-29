@@ -1,5 +1,7 @@
 package io.harness.delegate.task;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.logging.AutoLogContext;
@@ -7,6 +9,7 @@ import io.harness.logging.AutoLogContext;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 
+@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public class TaskLogContext extends AutoLogContext {
   // keys
   private static final String TASK_ID = "taskId";

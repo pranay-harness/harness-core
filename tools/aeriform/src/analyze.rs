@@ -13,6 +13,10 @@ pub struct Analyze {
     /// Filter the reports by affected module module_filter.
     #[clap(short, long)]
     module_filter: Option<String>,
+
+    /// Filter the reports by affected module root root_filter.
+    #[clap(short, long)]
+    root_filter: Option<String>,
 }
 
 #[derive(Debug, Copy, Clone, EnumIter)]
@@ -37,16 +41,20 @@ pub fn analyze(opts: Analyze) {
     let modules = modules();
     // println!("{:?}", modules);
 
-    let class_modules = modules
-        .values()
-        .flat_map(|module| {
-            module
-                .srcs
-                .iter()
-                .map(|src| (src.1, module))
-                .collect::<HashMap<&JavaClass, &JavaModule>>()
-        })
-        .collect::<HashMap<&JavaClass, &JavaModule>>();
+    let mut class_modules: HashMap<&JavaClass, &JavaModule> = HashMap::new();
+
+    modules.values().for_each(|module| {
+        module.srcs.iter().for_each(|src| match class_modules.get(src.1) {
+            None => {
+                class_modules.insert(src.1, module);
+            }
+            Some(&current) => {
+                if current.index < module.index {
+                    class_modules.insert(src.1, module);
+                }
+            }
+        });
+    });
 
     let classes = class_modules
         .keys()
@@ -56,6 +64,8 @@ pub fn analyze(opts: Analyze) {
 
     if opts.module_filter.is_some() {
         println!("analizing for module {} ...", opts.module_filter.as_ref().unwrap());
+    } else if opts.root_filter.is_some() {
+        println!("analizing for root {} ...", opts.root_filter.as_ref().unwrap());
     } else {
         println!("analizing...");
     }
@@ -86,7 +96,14 @@ pub fn analyze(opts: Analyze) {
 
     results
         .iter()
-        .filter(|report| opts.module_filter.is_none() || report.modules.contains(opts.module_filter.as_ref().unwrap()))
+        .filter(|&report| opts.module_filter.is_none() || report.modules.contains(opts.module_filter.as_ref().unwrap()))
+        .filter(|&report| {
+            opts.root_filter.is_none()
+                || report.modules.iter().any(|name| {
+                    let root = opts.root_filter.as_ref().unwrap();
+                    name.starts_with(root) && name.chars().nth(root.len()).unwrap() == ':'
+                })
+        })
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
             total[report.kind as usize] += 1;
@@ -277,7 +294,7 @@ fn check_for_moves(
                 results.push(Report {
                     kind: Kind::NOTE,
                     message: format!(
-                        "{} does not have untargeted dependencies to go to {}. First promote {}",
+                        "{} does not have untargeted dependencies to go to {}. First move {}",
                         class.name,
                         target_module.name,
                         not_ready_yet.join(", ")
