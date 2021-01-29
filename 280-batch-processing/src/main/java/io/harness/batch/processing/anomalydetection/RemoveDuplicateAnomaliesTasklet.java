@@ -57,14 +57,43 @@ public class RemoveDuplicateAnomaliesTasklet implements Tasklet {
     List<String> idList = new ArrayList<>();
 
     int currentDepth = -1;
+    AnomalyEntity previousAnomaly = null;
+    AnomalyEntity currentAnomaly = null;
 
     for (AnomalyEntity anomaly : sorted) {
-      if (getDepth(anomaly) < currentDepth) {
+      currentAnomaly = anomaly;
+      if (getDepth(anomaly) < currentDepth && isParent(currentAnomaly, previousAnomaly)) {
         idList.add(anomaly.getId());
       }
       currentDepth = getDepth(anomaly);
+      previousAnomaly = currentAnomaly;
     }
     return idList;
+  }
+
+  private boolean isParent(AnomalyEntity parent, AnomalyEntity child) {
+    if (child == null) {
+      return false;
+    }
+    return checkStrings(parent.getClusterId(), child.getClusterId())
+        && checkStrings(parent.getNamespace(), child.getNamespace())
+        && checkStrings(parent.getWorkloadName(), child.getWorkloadName())
+        && checkStrings(parent.getGcpProject(), child.getGcpProject())
+        && checkStrings(parent.getGcpProduct(), child.getGcpProduct())
+        && checkStrings(parent.getGcpSKUId(), child.getGcpSKUId())
+        && checkStrings(parent.getAwsAccount(), child.getAwsAccount())
+        && checkStrings(parent.getAwsService(), child.getAwsService());
+  }
+  private boolean checkStrings(String parent, String child) {
+    if (parent != null && child != null) {
+      return parent.equals(child);
+    } else if (parent != null && child == null) {
+      return false;
+    } else if (parent == null && child != null) {
+      return true;
+    } else {
+      return true;
+    }
   }
 
   private int getDepth(AnomalyEntity anomaly) {
