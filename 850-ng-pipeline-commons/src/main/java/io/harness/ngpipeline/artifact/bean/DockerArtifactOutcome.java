@@ -1,4 +1,4 @@
-package io.harness.cdng.artifact.bean;
+package io.harness.ngpipeline.artifact.bean;
 
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
@@ -31,6 +31,8 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   boolean primaryArtifact;
   /** domainName/imagePath:tag */
   String image;
+  /** imagePullSecret for docker credentials base encoded.*/
+  String imagePullSecret;
 
   @Override
   public ArtifactSummary getArtifactSummary() {

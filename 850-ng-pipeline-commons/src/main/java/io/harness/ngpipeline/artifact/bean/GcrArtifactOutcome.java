@@ -1,4 +1,4 @@
-package io.harness.cdng.artifact.bean;
+package io.harness.ngpipeline.artifact.bean;
 
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.GcrArtifactSummary;
@@ -23,6 +23,8 @@ public class GcrArtifactOutcome implements ArtifactOutcome {
   String tag;
   /** Tag regex is used to get latest build from builds matching regex. */
   String tagRegex;
+  /** RegistryHostname */
+  String registryHostname;
   /** Identifier for artifact. */
   String identifier;
   /** Type to identify whether primary and sidecars artifact. */
@@ -31,6 +33,8 @@ public class GcrArtifactOutcome implements ArtifactOutcome {
   boolean primaryArtifact;
   /** registryHostName/imagePath:tag */
   String image;
+  /** imagePullSecret for Gcr credentials base encoded.*/
+  String imagePullSecret;
 
   @Override
   public ArtifactSummary getArtifactSummary() {

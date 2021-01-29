@@ -145,6 +145,10 @@ public class YamlUtils {
   private boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
     if (jsonNode.isArray()) {
       ArrayNode arrayNode = (ArrayNode) jsonNode;
+      // Empty array is not primitive array
+      if (arrayNode.size() == 0) {
+        return false;
+      }
       for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
         if (!it.next().isValueNode()) {
           return false;
