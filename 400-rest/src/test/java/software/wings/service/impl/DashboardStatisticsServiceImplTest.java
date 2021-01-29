@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 
@@ -683,7 +684,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = {PRABU, DEEPAK_PUTHRAYA})
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetDeploymentHistoryWithManifest() {
@@ -718,8 +719,18 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                                .uuid(WORKFLOW_EXECUTION_ID)
                                                .name(WORKFLOW_NAME)
                                                .build();
+    ExecutionArgs executionArgs3 = new ExecutionArgs();
+    WorkflowExecution workflowExecution3 = WorkflowExecution.builder()
+                                               .appId(APP_1_ID)
+                                               .status(ExecutionStatus.SUCCESS)
+                                               .executionArgs(executionArgs3)
+                                               .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                               .workflowId(WORKFLOW_ID)
+                                               .uuid(WORKFLOW_EXECUTION_ID)
+                                               .name(WORKFLOW_NAME)
+                                               .build();
     PageResponse<WorkflowExecution> pageResponse =
-        aPageResponse().withResponse(asList(workflowExecution1, workflowExecution2)).build();
+        aPageResponse().withResponse(asList(workflowExecution1, workflowExecution2, workflowExecution3)).build();
     when(workflowExecutionService.listExecutions(any(), eq(false))).thenReturn(pageResponse);
     when(serviceResourceService.getWithDetails(APP_1_ID, SERVICE_ID)).thenReturn(Service.builder().build());
     when(artifactStreamServiceBindingService.listArtifactStreamIds(any(Service.class)))
@@ -727,7 +738,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
     List<DeploymentHistory> deploymentHistories =
         dashboardStatisticsService.getDeploymentHistory(ACCOUNT_ID, APP_1_ID, SERVICE_ID);
-    assertThat(deploymentHistories).hasSize(2);
+    assertThat(deploymentHistories).hasSize(3);
     DeploymentHistory deploymentHistory1 = deploymentHistories.get(0);
     assertThat(deploymentHistory1.getManifest().getName()).isEqualTo(CHART_NAME);
     assertThat(deploymentHistory1.getManifest().getVersionNo()).isEqualTo("1");
@@ -736,5 +747,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     assertThat(deploymentHistory2.getManifest().getName()).isEqualTo(CHART_NAME);
     assertThat(deploymentHistory2.getManifest().getVersionNo()).isEqualTo("2");
     assertThat(deploymentHistory2.getArtifact()).isNull();
+    DeploymentHistory deploymentHistory3 = deploymentHistories.get(2);
+    assertThat(deploymentHistory3.getManifest()).isNull();
+    assertThat(deploymentHistory3.getArtifact()).isNull();
   }
 }
