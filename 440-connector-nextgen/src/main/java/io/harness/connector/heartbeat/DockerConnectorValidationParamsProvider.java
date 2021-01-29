@@ -1,5 +1,6 @@
 package io.harness.connector.heartbeat;
 
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
@@ -12,9 +13,11 @@ import java.util.List;
 
 public class DockerConnectorValidationParamsProvider implements ConnectorValidationParamsProvider {
   @Inject EncryptionHelper encryptionHelper;
+
   @Override
-  public ConnectorValidationParams getConnectorValidationParams(ConnectorConfigDTO connectorConfigDTO,
-      String connectorName, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public ConnectorValidationParams getConnectorValidationParams(ConnectorInfoDTO connectorInfoDTO, String connectorName,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
     final List<EncryptedDataDetail> encryptionDetail = encryptionHelper.getEncryptionDetail(
         connectorConfigDTO.getDecryptableEntity(), accountIdentifier, orgIdentifier, projectIdentifier);
     return DockerValidationParams.builder()

@@ -8,7 +8,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class SplunkDTOToEntity extends ConnectorDTOToEntityMapper<SplunkConnectorDTO, SplunkConnector> {
+public class SplunkDTOToEntity implements ConnectorDTOToEntityMapper<SplunkConnectorDTO, SplunkConnector> {
   @Override
   public SplunkConnector toConnectorEntity(SplunkConnectorDTO connectorDTO) {
     return SplunkConnector.builder()

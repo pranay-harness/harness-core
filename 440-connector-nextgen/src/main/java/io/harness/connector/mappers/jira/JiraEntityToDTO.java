@@ -8,7 +8,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class JiraEntityToDTO extends ConnectorEntityToDTOMapper<JiraConnectorDTO, JiraConnector> {
+public class JiraEntityToDTO implements ConnectorEntityToDTOMapper<JiraConnectorDTO, JiraConnector> {
   @Override
   public JiraConnectorDTO createConnectorDTO(JiraConnector jiraConnector) {
     return JiraConnectorDTO.builder()

@@ -12,7 +12,8 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class ArtifactoryEntityToDTO extends ConnectorEntityToDTOMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
+public class ArtifactoryEntityToDTO
+    implements ConnectorEntityToDTOMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
   @Override
   public ArtifactoryConnectorDTO createConnectorDTO(ArtifactoryConnector artifactoryConnector) {
     ArtifactoryAuthenticationDTO artifactoryAuthenticationDTO = null;

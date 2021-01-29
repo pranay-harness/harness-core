@@ -12,9 +12,26 @@ import lombok.Value;
 @AllArgsConstructor
 //@Builder -- do not add this
 public class ConnectorRegistrar {
+  /**
+   * Category of the connector.
+   */
   ConnectorCategory connectorCategory;
+  /**
+   * The connector validator which will be executed during connector creation to check if connector is able to connect
+   * or not.
+   */
   Class<? extends ConnectionValidator> connectorValidator;
+  /**
+   * The connector Validation Params provider helps in perpetual task based validation of connectors every 10 minutes on
+   * delegate agent to see if connector is able to connect.
+   */
   Class<? extends ConnectorValidationParamsProvider> connectorValidationParams;
+  /**
+   * Rest model to db model mapper.
+   */
   Class<? extends ConnectorDTOToEntityMapper<?, ?>> connectorDTOToEntityMapper;
+  /**
+   * Db model to rest model mapper.
+   */
   Class<? extends ConnectorEntityToDTOMapper<?, ?>> connectorEntityToDTOMapper;
 }
