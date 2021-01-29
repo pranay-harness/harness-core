@@ -16,6 +16,6 @@ public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
-    engine.endTransition(nodeExecution);
+    engine.endTransition(nodeExecution, adviserResponse);
   }
 }

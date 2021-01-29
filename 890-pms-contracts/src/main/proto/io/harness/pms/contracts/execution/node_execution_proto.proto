@@ -7,6 +7,7 @@ option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
+import "io/harness/pms/contracts/advisers/advise.proto";
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
 import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/execution/execution_mode.proto";
@@ -43,8 +44,9 @@ message NodeExecutionProto {
   io.harness.pms.contracts.execution.skip.SkipInfo skipInfo = 17;
 
   repeated string retryIds = 18;
-
   bool oldRetry = 19;
+
+  io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 20;
 
   // Missing Fields which needs to be added
   // Interrupt Effect

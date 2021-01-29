@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 import "google/protobuf/duration.proto";
 
+import "io/harness/pms/contracts/commons/repair_action_code.proto";
+
 enum AdviseType {
   UNKNOWN = 0;
   NEXT_STEP = 1;
@@ -24,6 +26,7 @@ message AdviserResponse {
     MarkSuccessAdvise markSuccessAdvise = 6;
   }
   AdviseType type = 5;
+  io.harness.pms.contracts.commons.RepairActionCode repairActionCode = 7;
 }
 
 message NextStepAdvise {
