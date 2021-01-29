@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
-public class EntityActivityQueryCriteriaHelper {
+public class NGActivityQueryCriteriaHelper {
   public void addTimeFilterInTheCriteria(Criteria criteria, long startTime, long endTime) {
     criteria.and(ActivityHistoryEntityKeys.activityTime).gte(startTime).lt(endTime);
   }

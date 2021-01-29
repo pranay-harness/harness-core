@@ -15,8 +15,10 @@ public class EntitySetupUsageQueryFilterHelper {
     criteria.and(EntitySetupUsageKeys.accountIdentifier).is(accountIdentifier);
     criteria.and(EntitySetupUsageKeys.referredEntityFQN).is(referredEntityFQN);
     if (isNotBlank(searchTerm)) {
-      criteria.orOperator(Criteria.where(EntitySetupUsageKeys.referredByEntity).regex(searchTerm),
-          Criteria.where(EntitySetupUsageKeys.referredEntity).regex(searchTerm));
+      criteria.orOperator(Criteria.where(EntitySetupUsageKeys.referredEntityFQN).regex(searchTerm),
+          Criteria.where(EntitySetupUsageKeys.referredByEntityFQN).regex(searchTerm),
+          Criteria.where(EntitySetupUsageKeys.referredEntityName).regex(searchTerm),
+          Criteria.where(EntitySetupUsageKeys.referredByEntityName).regex(searchTerm));
     }
     return criteria;
   }

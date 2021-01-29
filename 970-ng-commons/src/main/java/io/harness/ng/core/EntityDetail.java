@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @NoArgsConstructor
+@FieldNameConstants(innerTypeName = "EntityDetailKeys")
 @JsonDeserialize(using = EntityDetailDeserializer.class)
 public class EntityDetail {
   EntityType type;

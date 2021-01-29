@@ -30,8 +30,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 @Slf4j
-public class EntityActivitySummaryServiceImplTest extends NGCoreTestBase {
-  @Inject @InjectMocks EntityActivitySummaryServiceImpl entityActivitySummaryService;
+public class NGActivitySummaryServiceImplTest extends NGCoreTestBase {
+  @Inject @InjectMocks NGActivitySummaryServiceImpl entityActivitySummaryService;
   @Inject NGActivityService ngActivityService;
 
   private static final long DAY_IN_MS = 1000 * 60 * 60 * 24;
