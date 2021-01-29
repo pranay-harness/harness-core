@@ -39,6 +39,7 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.data.StepOutcomeRef;
@@ -313,7 +314,7 @@ public class OrchestrationEngine {
     PlanNodeProto node = nodeExecution.getNode();
 
     if (isEmpty(node.getAdviserObtainmentsList())) {
-      endNodeExecution(nodeExecution, status);
+      endNodeExecution(nodeExecution, status, nodeExecution.getAdviserResponse());
       return;
     }
 
@@ -331,15 +332,18 @@ public class OrchestrationEngine {
         adviseEvent.getNotifyId());
   }
 
-  public void endNodeExecution(String nodeExecutionId, Status status) {
+  public void endNodeExecution(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    endNodeExecution(nodeExecution, status);
+    endNodeExecution(nodeExecution, status, adviserResponse);
   }
 
-  private void endNodeExecution(NodeExecution nodeExecution, Status status) {
-    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
-        nodeExecution.getUuid(), status, ops -> setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis()));
-    endTransition(updatedNodeExecution);
+  private void endNodeExecution(NodeExecution nodeExecution, Status status, AdviserResponse adviserResponse) {
+    NodeExecution updatedNodeExecution =
+        nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, ops -> {
+          setUnset(ops, NodeExecutionKeys.adviserResponse, adviserResponse);
+          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
+        });
+    endTransition(updatedNodeExecution, adviserResponse);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -373,7 +377,7 @@ public class OrchestrationEngine {
     return outcomeRefs;
   }
 
-  public void endTransition(NodeExecution nodeExecution) {
+  public void endTransition(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
@@ -383,6 +387,7 @@ public class OrchestrationEngine {
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
                                                 .status(nodeExecution.getStatus())
+                                                .adviserResponse(adviserResponse)
                                                 .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
@@ -529,7 +534,14 @@ public class OrchestrationEngine {
   }
 
   public void handleAdvise(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {
+    if (adviserResponse.getType() == AdviseType.UNKNOWN) {
+      nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserResponse, adviserResponse));
+      endNodeExecution(nodeExecutionId, status, null);
+      return;
+    }
+
     NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecutionId, status, ops -> {
+      ops.set(NodeExecutionKeys.adviserResponse, adviserResponse);
       if (AdviseTypeUtils.isWaitingAdviseType(adviserResponse.getType())
           || AdviseTypeUtils.isTerminalAdviseTypes(adviserResponse.getType())) {
         ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());

@@ -23,6 +23,8 @@ import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggeredByMorphiaConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentWriteConverter;
+import io.harness.serializer.spring.converters.advisers.response.AdviserResponseReadConverter;
+import io.harness.serializer.spring.converters.advisers.response.AdviserResponseWriteConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
@@ -141,5 +143,6 @@ public class OrchestrationRegistrars {
       ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class,
       ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
       TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
-      TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class);
+      TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
+      AdviserResponseWriteConverter.class);
 }

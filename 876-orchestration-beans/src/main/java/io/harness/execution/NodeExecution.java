@@ -8,6 +8,7 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -77,6 +78,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular private List<InterruptEffect> interruptHistories;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
+
   // Retries
   @Singular List<String> retryIds;
   boolean oldRetry;
@@ -88,6 +90,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   List<StepOutcomeRef> outcomeRefs;
 
   Map<String, List<ProgressData>> progressDataMap;
+
+  AdviserResponse adviserResponse;
 
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;

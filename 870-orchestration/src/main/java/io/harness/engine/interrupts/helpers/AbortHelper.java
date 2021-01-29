@@ -84,7 +84,7 @@ public class AbortHelper {
 
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
           nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
-      engine.endTransition(updatedNodeExecution);
+      engine.endTransition(updatedNodeExecution, null);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
