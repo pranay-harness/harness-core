@@ -503,6 +503,15 @@ newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowEx
 nodeExecutionEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 nodeExecutionEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
+nodeExecutions {"name": "parentId_status_idx", "background": true} {"parentId": 1, "status": 1}
+nodeExecutions {"name": "planExecutionId_idx", "background": true} {"ambiance.planExecutionId": 1}
+nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"ambiance.planExecutionId": 1, "notifyId": 1}
+nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
+nodeExecutions {"name": "planExecutionId_parentId_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1}
+nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
+nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1}
+nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
+nodeExecutions {"name": "planExecutionId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "status": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}
 notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
@@ -550,6 +559,8 @@ pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "c
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
+planExecutions {"name": "id_status_idx", "background": true} {"_id": 1, "status": 1}
+planExecutions {"name": "status_idx", "background": true} {"status": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
 preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "preference_index", "background": true} {"accountId": 1, "userId": 1, "name": 1}
