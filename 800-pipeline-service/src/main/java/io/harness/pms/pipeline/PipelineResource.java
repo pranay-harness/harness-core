@@ -224,14 +224,14 @@ public class PipelineResource {
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort,
       @QueryParam("filterIdentifier") String filterIdentifier, @QueryParam("module") String moduleName,
       FilterPropertiesDTO filterProperties) {
     log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName);
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
