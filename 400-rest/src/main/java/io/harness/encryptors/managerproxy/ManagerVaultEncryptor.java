@@ -12,6 +12,7 @@ import static software.wings.beans.TaskType.UPSERT_SECRET;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.SecretText;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegatetasks.DeleteSecretTaskParameters;
@@ -63,6 +64,7 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
     UpsertSecretTaskParameters parameters = UpsertSecretTaskParameters.builder()
                                                 .name(name)
                                                 .plaintext(plaintext)
+                                                .existingRecord(existingRecord)
                                                 .encryptionConfig(encryptionConfig)
                                                 .taskType(UPDATE)
                                                 .build();
@@ -149,7 +151,31 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
   }
 
   @Override
+  public boolean validateReference(String accountId, SecretText secretText, EncryptionConfig encryptionConfig) {
+    ValidateSecretReferenceTaskParameters parameters =
+        ValidateSecretReferenceTaskParameters.builder()
+            .encryptedRecord(
+                EncryptedRecordData.builder().path(secretText.getPath()).name(secretText.getName()).build())
+            .encryptionConfig(encryptionConfig)
+            .build();
+
+    return managerEncryptorHelper.validateReference(accountId, parameters);
+  }
+
+  @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
     return managerEncryptorHelper.fetchSecretValue(accountId, encryptedRecord, encryptionConfig);
+  }
+
+  @Override
+  public EncryptedRecord createSecret(String accountId, SecretText secretText, EncryptionConfig encryptionConfig) {
+    UpsertSecretTaskParameters parameters = UpsertSecretTaskParameters.builder()
+                                                .name(secretText.getName())
+                                                .plaintext(secretText.getValue())
+                                                .additionalMetadata(secretText.getAdditionalMetadata())
+                                                .encryptionConfig(encryptionConfig)
+                                                .taskType(CREATE)
+                                                .build();
+    return upsertSecret(accountId, parameters);
   }
 }

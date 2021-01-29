@@ -53,6 +53,7 @@ import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -257,5 +258,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(NGInstanceUnitType.class, 1445);
     kryo.register(AzureDeploymentMode.class, 1446);
     kryo.register(ARMScopeType.class, 1447);
+
+    kryo.register(AdditionalMetadata.class, 72101);
   }
 }

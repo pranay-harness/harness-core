@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import io.harness.beans.SecretText;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -62,8 +63,8 @@ public class ValidateSecretReferenceTask extends AbstractDelegateRunnableTask {
     EncryptedRecord encryptedRecord = parameters.getEncryptedRecord();
     EncryptionConfig encryptionConfig = parameters.getEncryptionConfig();
     VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(encryptionConfig.getEncryptionType());
-    boolean isReferenceValid =
-        vaultEncryptor.validateReference(encryptionConfig.getAccountId(), encryptedRecord.getPath(), encryptionConfig);
+    boolean isReferenceValid = vaultEncryptor.validateReference(encryptionConfig.getAccountId(),
+        SecretText.builder().path(encryptedRecord.getPath()).name(encryptedRecord.getName()).build(), encryptionConfig);
     return ValidateSecretReferenceTaskResponse.builder().isReferenceValid(isReferenceValid).build();
   }
 

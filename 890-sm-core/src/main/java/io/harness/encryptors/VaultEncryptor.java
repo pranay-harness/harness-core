@@ -3,6 +3,7 @@ package io.harness.encryptors;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretText;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -19,6 +20,26 @@ public interface VaultEncryptor {
 
   EncryptedRecord renameSecret(@NotEmpty String accountId, @NotEmpty String name,
       @NotNull EncryptedRecord existingRecord, @NotNull EncryptionConfig encryptionConfig);
+
+  default EncryptedRecord createSecret(
+      @NotEmpty String accountId, @NotNull SecretText secretText, @NotNull EncryptionConfig encryptionConfig) {
+    return createSecret(accountId, secretText.getName(), secretText.getValue(), encryptionConfig);
+  }
+
+  default EncryptedRecord updateSecret(@NotEmpty String accountId, @NotNull SecretText secretText,
+      @NotNull EncryptedRecord existingRecord, @NotNull EncryptionConfig encryptionConfig) {
+    return updateSecret(accountId, secretText.getName(), secretText.getValue(), existingRecord, encryptionConfig);
+  }
+
+  default EncryptedRecord renameSecret(@NotEmpty String accountId, @NotNull SecretText secretText,
+      @NotNull EncryptedRecord existingRecord, @NotNull EncryptionConfig encryptionConfig) {
+    return renameSecret(accountId, secretText.getName(), existingRecord, encryptionConfig);
+  }
+
+  default boolean validateReference(
+      @NotEmpty String accountId, @NotNull SecretText secretText, @NotNull EncryptionConfig encryptionConfig) {
+    return validateReference(accountId, secretText.getPath(), encryptionConfig);
+  }
 
   boolean deleteSecret(
       @NotEmpty String accountId, @NotNull EncryptedRecord existingRecord, @NotNull EncryptionConfig encryptionConfig);

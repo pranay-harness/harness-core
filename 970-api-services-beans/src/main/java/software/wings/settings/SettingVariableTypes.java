@@ -271,7 +271,9 @@ public enum SettingVariableTypes {
 
   KUBERNETES_CLUSTER_NG("Kubernetes Cluster"),
 
-  GIT_NG("Git Ng");
+  GIT_NG("Git Ng"),
+
+  GCP_SECRETS_MANAGER;
 
   @Getter private String displayName;
 

@@ -8,6 +8,7 @@ public enum EncryptionType {
   AZURE_VAULT("azurevault"),
   CYBERARK("cyberark"),
   VAULT("hashicorpvault"),
+  GCP_SECRETS_MANAGER("gcpsecretsmanager"),
   CUSTOM("custom");
 
   private final String yamlName;

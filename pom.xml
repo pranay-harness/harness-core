@@ -628,6 +628,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-secretmanager</artifactId>
+                <version>1.2.8</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-storage</artifactId>
                 <version>1.52.0</version>
             </dependency>

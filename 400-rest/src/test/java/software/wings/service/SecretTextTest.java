@@ -54,6 +54,7 @@ import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretService;
 import io.harness.secrets.setupusage.SecretSetupUsage;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
@@ -221,18 +222,20 @@ public class SecretTextTest extends WingsBaseTest {
           (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(vaultEncryptor.createSecret(anyString(), anyString(), anyString(), any())).then(invocation -> {
+    when(vaultEncryptor.createSecret(anyString(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      if (args[3] instanceof VaultConfig) {
-        return encrypt((String) args[0], (String) args[1], (String) args[2], (VaultConfig) args[3], null);
+      if (args[2] instanceof VaultConfig) {
+        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
+            (VaultConfig) args[2], null);
       }
       return null;
     });
 
-    when(vaultEncryptor.updateSecret(anyString(), anyString(), anyString(), any(), any())).then(invocation -> {
+    when(vaultEncryptor.updateSecret(anyString(), any(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      if (args[4] instanceof VaultConfig) {
-        return encrypt((String) args[0], (String) args[1], (String) args[2], (VaultConfig) args[4], null);
+      if (args[3] instanceof VaultConfig) {
+        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
+            (VaultConfig) args[3], null);
       }
       return null;
     });
@@ -1164,7 +1167,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretFileId =
         secretManagementResource
             .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null,
-                JsonUtils.asJson(new HashMap<>()), false, false)
+                JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), false, false)
             .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
@@ -1223,7 +1226,8 @@ public class SecretTextTest extends WingsBaseTest {
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToUpdate.length());
 
     secretManagementResource.updateFile(httpServletRequest, accountId, newSecretName, null,
-        JsonUtils.asJson(new HashMap<>()), encryptedUuid, new FileInputStream(fileToUpdate), false, false);
+        JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), encryptedUuid,
+        new FileInputStream(fileToUpdate), false, false);
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1262,7 +1266,7 @@ public class SecretTextTest extends WingsBaseTest {
     String newSecretFileId =
         secretManagementResource
             .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null,
-                JsonUtils.asJson(new HashMap<>()), false, false)
+                JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), false, false)
             .getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);

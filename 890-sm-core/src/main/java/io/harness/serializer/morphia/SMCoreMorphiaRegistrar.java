@@ -12,6 +12,7 @@ import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
@@ -26,6 +27,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CyberArkConfig.class);
     set.add(EncryptedData.class);
     set.add(GcpKmsConfig.class);
+    set.add(GcpSecretsManagerConfig.class);
     set.add(KmsConfig.class);
     set.add(LocalEncryptionConfig.class);
     set.add(SecretChangeLog.class);
@@ -41,6 +43,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.AzureVaultConfig", AzureVaultConfig.class);
     w.put("beans.CyberArkConfig", CyberArkConfig.class);
     w.put("beans.GcpKmsConfig", GcpKmsConfig.class);
+    w.put("beans.GcpSecretsManagerConfig", GcpSecretsManagerConfig.class);
     w.put("beans.KmsConfig", KmsConfig.class);
     w.put("beans.LocalEncryptionConfig", LocalEncryptionConfig.class);
     w.put("beans.SecretManagerConfig", SecretManagerConfig.class);
