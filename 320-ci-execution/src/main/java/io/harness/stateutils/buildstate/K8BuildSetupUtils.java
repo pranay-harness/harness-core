@@ -3,6 +3,8 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
@@ -11,10 +13,16 @@ import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
+import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
 import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
+import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
+import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -163,6 +171,7 @@ public class K8BuildSetupUtils {
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
         .namespace(k8PodDetails.getNamespace())
+        .labels(getBuildLabels(ambiance, k8PodDetails))
         .gitConnector(gitConnector)
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(workDir)
@@ -553,5 +562,47 @@ public class K8BuildSetupUtils {
       throw new IllegalArgumentException("Git connector is not set in CI codebase");
     }
     return connectorUtils.getConnectorDetails(ngAccess, codeBase.getConnectorRef());
+  }
+
+  private Map<String, String> getBuildLabels(Ambiance ambiance, K8PodDetails k8PodDetails) {
+    final String accountID = AmbianceHelper.getAccountId(ambiance);
+    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
+    final String pipelineExecutionID = ambiance.getPlanExecutionId();
+    final int buildNumber = ambiance.getMetadata().getRunSequence();
+    final String stageID = k8PodDetails.getStageID();
+
+    Map<String, String> labels = new HashMap<>();
+    if (isLabelAllowed(accountID)) {
+      labels.put(ACCOUNT_ID_ATTR, accountID);
+    }
+    if (isLabelAllowed(orgID)) {
+      labels.put(ORG_ID_ATTR, orgID);
+    }
+    if (isLabelAllowed(projectID)) {
+      labels.put(PROJECT_ID_ATTR, projectID);
+    }
+    if (isLabelAllowed(pipelineID)) {
+      labels.put(PIPELINE_ID_ATTR, pipelineID);
+    }
+    if (isLabelAllowed(pipelineExecutionID)) {
+      labels.put(PIPELINE_EXECUTION_ID_ATTR, pipelineExecutionID);
+    }
+    if (isLabelAllowed(stageID)) {
+      labels.put(STAGE_ID_ATTR, stageID);
+    }
+    if (isLabelAllowed(String.valueOf(buildNumber))) {
+      labels.put(BUILD_NUMBER_ATTR, String.valueOf(buildNumber));
+    }
+    return labels;
+  }
+
+  private boolean isLabelAllowed(String label) {
+    if (label == null) {
+      return false;
+    }
+
+    return label.matches(LABEL_REGEX);
   }
 }

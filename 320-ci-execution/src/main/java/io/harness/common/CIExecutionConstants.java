@@ -7,6 +7,16 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CIExecutionConstants {
+  // Pod labels
+  public static final String ACCOUNT_ID_ATTR = "accountID";
+  public static final String ORG_ID_ATTR = "orgID";
+  public static final String PROJECT_ID_ATTR = "projectID";
+  public static final String PIPELINE_ID_ATTR = "pipelineID";
+  public static final String PIPELINE_EXECUTION_ID_ATTR = "pipelineExecutionID";
+  public static final String STAGE_ID_ATTR = "stageID";
+  public static final String BUILD_NUMBER_ATTR = "buildNumber";
+  public static final String LABEL_REGEX = "^[a-z0-9A-Z][a-z0-9A-Z\\-_.]*[a-z0-9A-Z]$";
+
   // Pipeline constants
   public static final String CI_PIPELINE_CONFIG = "CI_PIPELINE_CONFIG";
 
