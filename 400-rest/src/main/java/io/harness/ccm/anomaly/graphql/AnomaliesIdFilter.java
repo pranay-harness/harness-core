@@ -1,7 +1,5 @@
 package io.harness.ccm.anomaly.graphql;
 
-import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 
 import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
@@ -62,6 +60,9 @@ public class AnomaliesIdFilter implements AnomaliesFilter {
       case GCP_SKU_ID:
         dbColumn = AnomaliesDataTableSchema.gcpSkuId;
         break;
+      case GCP_SKU_DESCRIPTION:
+        dbColumn = AnomaliesDataTableSchema.gcpSkuDescription;
+        break;
       case AWS_ACCOUNT:
         dbColumn = AnomaliesDataTableSchema.awsAccount;
         break;
@@ -114,33 +115,5 @@ public class AnomaliesIdFilter implements AnomaliesFilter {
         return null;
     }
     return condition;
-  }
-
-  public static AnomaliesIdFilter convertFromCloudBillingIdFilter(CloudBillingIdFilter filter) {
-    AnomaliesIdFilterBuilder filterBuilder = AnomaliesIdFilter.builder();
-
-    filterBuilder.operator(filter.getOperator());
-    filterBuilder.values((String[]) filter.getValues());
-
-    switch (filter.getVariable()) {
-      case CloudBillingFilter.BILLING_GCP_PRODUCT:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_PRODUCT);
-        break;
-      case CloudBillingFilter.BILLING_GCP_PROJECT:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_PROJECT);
-        break;
-      case CloudBillingFilter.BILLING_GCP_SKU:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_SKU_ID);
-        break;
-      case CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.AWS_ACCOUNT);
-        break;
-      case CloudBillingFilter.BILLING_AWS_SERVICE:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.AWS_SERVICE);
-        break;
-      default:
-        log.error("CloudBillingFilter : {} not supported in AnomaliesIdFilter", filter.getVariable());
-    }
-    return filterBuilder.build();
   }
 }
