@@ -8,7 +8,6 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -23,8 +22,10 @@ public class UpdateActivityStatusMigration implements CNVGMigration {
     Instant now = Instant.now();
     log.info("Begin migration for updating status of activities");
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class)
-                                        .field(ActivityKeys.activityStartTime)
-                                        .lessThan(now.minus(Duration.ofHours(2)));
+                                        .field(ActivityKeys.verificationJobInstanceIds)
+                                        .exists()
+                                        .field(ActivityKeys.verificationSummary)
+                                        .doesNotExist();
 
     try (HIterator<Activity> iterator = new HIterator<>(activityQuery.fetch())) {
       while (iterator.hasNext()) {

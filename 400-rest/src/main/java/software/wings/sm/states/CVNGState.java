@@ -55,7 +55,7 @@ public class CVNGState extends State {
   private String orgIdentifier;
   private String projectIdentifier;
   private String verificationJobIdentifier;
-  private List<ParamValue> params;
+  private List<ParamValue> cvngParams;
   @Data
   @NoArgsConstructor
   public static class ParamValue {
@@ -127,7 +127,8 @@ public class CVNGState extends State {
   }
 
   public String getValue(ExecutionContext context, String fieldName) {
-    Optional<ParamValue> optionalParam = params.stream().filter(param -> param.getName().equals(fieldName)).findAny();
+    Optional<ParamValue> optionalParam =
+        cvngParams.stream().filter(param -> param.getName().equals(fieldName)).findAny();
     if (optionalParam.isPresent()) {
       return context.renderExpression(optionalParam.get().getValue());
     } else {
@@ -147,7 +148,7 @@ public class CVNGState extends State {
   }
   private Map<String, String> getRuntimeValues(ExecutionContext context) {
     Map<String, String> runtimeValues = new HashMap<>();
-    for (ParamValue param : this.params) {
+    for (ParamValue param : this.cvngParams) {
       if (param.isEditable()) {
         runtimeValues.put(param.getName(), context.renderExpression(param.getValue()));
       }
