@@ -5,15 +5,10 @@ import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -56,17 +51,5 @@ public class ConnectorInfoDTO {
     this.tags = tags;
     this.connectorType = connectorType;
     this.connectorConfig = connectorConfig;
-  }
-
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesForConnector(
-      String accountIdentifier, ExpressionEvaluator maskingEvaluator) {
-    if (this.connectorConfig instanceof ExecutionCapabilityDemanderWithScope) {
-      return ((ExecutionCapabilityDemanderWithScope) this.connectorConfig)
-          .fetchRequiredExecutionCapabilities(accountIdentifier, orgIdentifier, projectIdentifier);
-    } else if (this.connectorConfig instanceof ExecutionCapabilityDemander) {
-      return ((ExecutionCapabilityDemander) this.connectorConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
-    }
-    throw new UnsupportedOperationException(
-        "The execution capability is not defined for the connector type " + connectorType);
   }
 }

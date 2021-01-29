@@ -24,7 +24,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
-public class BitbucketDTOToEntity extends ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
+public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());

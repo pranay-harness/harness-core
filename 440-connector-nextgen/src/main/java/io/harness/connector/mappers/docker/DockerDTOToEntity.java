@@ -13,7 +13,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class DockerDTOToEntity extends ConnectorDTOToEntityMapper<DockerConnectorDTO, DockerConnector> {
+public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConnectorDTO, DockerConnector> {
   @Override
   public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO) {
     DockerAuthType dockerAuthType = configDTO.getAuth().getAuthType();

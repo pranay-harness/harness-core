@@ -17,7 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 
 @Singleton
-public class AwsEntityToDTO extends ConnectorEntityToDTOMapper<AwsConnectorDTO, AwsConfig> {
+public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDTO, AwsConfig> {
   @Override
   public AwsConnectorDTO createConnectorDTO(AwsConfig connector) {
     final AwsCredentialType credentialType = connector.getCredentialType();

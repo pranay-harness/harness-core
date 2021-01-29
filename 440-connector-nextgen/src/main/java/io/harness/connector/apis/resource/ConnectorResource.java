@@ -55,7 +55,7 @@ import retrofit2.http.Body;
 
 @Api("/connectors")
 @Path("/connectors")
-@Produces({"application/json", "text/yaml", "text/html", "application/x-kryo"})
+@Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @ApiResponses(value =
     {

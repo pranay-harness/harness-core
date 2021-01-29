@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-public class CEAwsEntityToDTO extends ConnectorEntityToDTOMapper<CEAwsConnectorDTO, CEAwsConfig> {
+public class CEAwsEntityToDTO implements ConnectorEntityToDTOMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Override
   public CEAwsConnectorDTO createConnectorDTO(CEAwsConfig ceAwsConfig) {
     CEAwsConnectorDTOBuilder ceAwsConnectorDTOBuilder = CEAwsConnectorDTO.builder();

@@ -134,7 +134,7 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
         .map(connectorResponse -> {
           final ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
           return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
-              .getConnectorValidationParams(connectorResponse.getConnector().getConnectorConfig(),
+              .getConnectorValidationParams(connectorResponse.getConnector(),
                   connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
         })
         .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist"));

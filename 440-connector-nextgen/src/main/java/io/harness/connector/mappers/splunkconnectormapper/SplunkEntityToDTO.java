@@ -5,7 +5,7 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefHelper;
 
-public class SplunkEntityToDTO extends ConnectorEntityToDTOMapper<SplunkConnectorDTO, SplunkConnector> {
+public class SplunkEntityToDTO implements ConnectorEntityToDTOMapper<SplunkConnectorDTO, SplunkConnector> {
   @Override
   public SplunkConnectorDTO createConnectorDTO(SplunkConnector connector) {
     return SplunkConnectorDTO.builder()
