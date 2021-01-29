@@ -2,6 +2,7 @@ package io.harness.connector;
 
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsClientImpl;
+import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.impl.ConnectorFilterServiceImpl;
 import io.harness.connector.impl.ConnectorHeartbeatServiceImpl;
@@ -45,6 +46,8 @@ public class ConnectorModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
     MapBinder<String, ConnectionValidator> connectorValidatorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
+    MapBinder<String, ConnectorValidationParamsProvider> connectorValidationProviderMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ConnectorValidationParamsProvider.class);
 
     for (ConnectorType connectorType : ConnectorType.values()) {
       connectorValidatorMapBinder.addBinding(connectorType.getDisplayName())
@@ -53,6 +56,8 @@ public class ConnectorModule extends AbstractModule {
           .to(ConnectorRegistryFactory.getConnectorDTOToEntityMapper(connectorType));
       connectorEntityToDTOMapper.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorEntityToDTOMapper(connectorType));
+      connectorValidationProviderMapBinder.addBinding(connectorType.getDisplayName())
+          .to(ConnectorRegistryFactory.getConnectorValidationParamsProvider(connectorType));
     }
 
     bind(ConnectorService.class)

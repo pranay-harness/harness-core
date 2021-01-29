@@ -9,6 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
@@ -35,6 +36,7 @@ import org.mockito.MockitoAnnotations;
 public class AwsConnectorValidatorTest extends CategoryTest {
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
+  @Mock private EncryptionHelper encryptionHelper;
   @InjectMocks private AwsConnectorValidator awsConnectorValidator;
 
   @Before
@@ -55,6 +57,8 @@ public class AwsConnectorValidatorTest extends CategoryTest {
                             .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
+
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(AwsValidateTaskResponse.builder()
                         .connectorValidationResult(
@@ -82,6 +86,7 @@ public class AwsConnectorValidatorTest extends CategoryTest {
                     .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(AwsValidateTaskResponse.builder()
                         .connectorValidationResult(
