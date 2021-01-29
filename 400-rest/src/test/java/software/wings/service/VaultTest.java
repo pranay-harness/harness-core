@@ -217,6 +217,15 @@ public class VaultTest extends WingsBaseTest {
           (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
+    when(vaultEncryptor.createSecret(anyString(), any(), any())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      if (args[2] instanceof VaultConfig) {
+        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
+            (VaultConfig) args[2], null);
+      }
+      return null;
+    });
+
     when(vaultEncryptor.createSecret(anyString(), anyString(), anyString(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[3] instanceof VaultConfig) {
@@ -225,10 +234,11 @@ public class VaultTest extends WingsBaseTest {
       return null;
     });
 
-    when(vaultEncryptor.updateSecret(anyString(), anyString(), anyString(), any(), any())).then(invocation -> {
+    when(vaultEncryptor.updateSecret(anyString(), any(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      if (args[4] instanceof VaultConfig) {
-        return encrypt((String) args[0], (String) args[1], (String) args[2], (VaultConfig) args[4], null);
+      if (args[3] instanceof VaultConfig) {
+        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
+            (VaultConfig) args[3], null);
       }
       return null;
     });
@@ -243,7 +253,7 @@ public class VaultTest extends WingsBaseTest {
 
     when(vaultEncryptor.deleteSecret(anyString(), anyObject(), anyObject())).thenReturn(true);
 
-    when(vaultEncryptor.validateReference(anyString(), anyObject(), anyObject())).thenReturn(true);
+    when(vaultEncryptor.validateReference(anyString(), any(SecretText.class), anyObject())).thenReturn(true);
 
     when(kmsEncryptorsRegistry.getKmsEncryptor(any(KmsConfig.class))).thenReturn(kmsEncryptor);
     when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
