@@ -245,6 +245,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     validateIfAlreadyExists(dataCollectionTask);
     save(dataCollectionTask);
   }
+
   private void validateIfAlreadyExists(DataCollectionTask dataCollectionTask) {
     if (hPersistence.createQuery(DataCollectionTask.class)
             .filter(DataCollectionTaskKeys.accountId, dataCollectionTask.getAccountId())
@@ -259,6 +260,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
           "DataCollectionTask with same startTime already exist. This shouldn't be happening. Please check delegate logs");
     }
   }
+
   private void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
