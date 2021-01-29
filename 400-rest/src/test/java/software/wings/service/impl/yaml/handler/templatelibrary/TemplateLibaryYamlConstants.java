@@ -9,6 +9,7 @@ import static software.wings.common.TemplateConstants.PCF_PLUGIN;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.common.TemplateConstants.SSH;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.shell.ScriptType;
 
 import software.wings.beans.Variable;
@@ -27,6 +28,7 @@ import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class TemplateLibaryYamlConstants {
   //   Common Constants.
@@ -115,7 +117,9 @@ public class TemplateLibaryYamlConstants {
       + "type: HTTP\n"
       + "assertion: '200'\n"
       + "body: xyz\n"
-      + "header: testheader\n"
+      + "headers:\n"
+      + "- key: content-type\n"
+      + "  value: application/json\n"
       + "method: GET\n"
       + "timeoutMillis: 1000000\n"
       + "url: harness.io\n"
@@ -135,14 +139,16 @@ public class TemplateLibaryYamlConstants {
       + "- description: aslkdn\n"
       + "  name: abc\n"
       + "  value: xyz\n";
-  public static final BaseTemplate baseHttpTemplateObject = HttpTemplate.builder()
-                                                                .url("harness.io")
-                                                                .assertion("200")
-                                                                .body("xyz")
-                                                                .header("testheader")
-                                                                .method("GET")
-                                                                .timeoutMillis(1000000)
-                                                                .build();
+  public static final BaseTemplate baseHttpTemplateObject =
+      HttpTemplate.builder()
+          .url("harness.io")
+          .assertion("200")
+          .body("xyz")
+          .headers(
+              Collections.singletonList(KeyValuePair.builder().key("content-type").value("application/json").build()))
+          .method("GET")
+          .timeoutMillis(1000000)
+          .build();
   public static final String HTTP_TEMPLATE_VALID_YAML_FILE_PATH =
       "Setup/Template Library/Harness/" + httpTemplateName + ".yaml";
   public static final String INVALID_HTTP_TEMPLATE_VALID_YAML_FILE_PATH =

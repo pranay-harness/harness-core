@@ -340,9 +340,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     }
 
     if (StateType.HTTP.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
-      if (outputProperties.getOrDefault("headers", null) != null) {
-        outputProperties.remove("header");
-      }
+      outputProperties.remove("header");
     }
 
     if (StateType.APPROVAL.name().equals(step.getType()) && isNotEmpty(outputProperties)) {

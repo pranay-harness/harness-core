@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -28,13 +27,8 @@ public class HttpTemplateYamlHandler extends TemplateLibraryYamlHandler<HttpTemp
                                       .url(yaml.getUrl())
                                       .method(yaml.getMethod())
                                       .body(yaml.getBody())
+                                      .headers(yaml.getHeaders())
                                       .timeoutMillis(yaml.getTimeoutMillis());
-
-    if (isNotEmpty(yaml.getHeaders())) {
-      builder.headers(yaml.getHeaders());
-    } else {
-      builder.header(yaml.getHeader());
-    }
     template.setTemplateObject(builder.build());
   }
 
@@ -46,12 +40,8 @@ public class HttpTemplateYamlHandler extends TemplateLibraryYamlHandler<HttpTemp
                                           .method(httpTemplateBean.getMethod())
                                           .timeOutMillis(httpTemplateBean.getTimeoutMillis())
                                           .url(httpTemplateBean.getUrl())
+                                          .headers(httpTemplateBean.getHeaders())
                                           .body(httpTemplateBean.getBody());
-    if (isNotEmpty(httpTemplateBean.getHeaders())) {
-      builder.headers(httpTemplateBean.getHeaders());
-    } else {
-      builder.header(httpTemplateBean.getHeader());
-    }
     HttpTemplateYaml httpTemplateYaml = builder.build();
     super.toYaml(httpTemplateYaml, bean);
     return httpTemplateYaml;
