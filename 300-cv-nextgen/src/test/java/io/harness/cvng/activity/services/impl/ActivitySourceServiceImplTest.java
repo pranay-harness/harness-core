@@ -42,6 +42,7 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
+import io.harness.encryption.Scope;
 import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
@@ -53,11 +54,13 @@ import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,6 +83,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   private String serviceIdentifier;
   private String envIdentifier;
   private String perpetualTaskId;
+  private String connectorIdentifier;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -89,6 +93,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     perpetualTaskId = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
+    connectorIdentifier = generateUuid();
     when(verificationManagerService.createDataCollectionTask(
              eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(perpetualTaskId);
@@ -637,6 +642,96 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     int numberOfServicesInActivity =
         kubernetesActivitySourceService.getNumberOfKubernetesServicesSetup(accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServicesInActivity).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_projectScopedConnector() {
+    List<KubernetesActivitySourceDTO> kubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+
+    ActivitySource activitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : kubernetesActivitySourceDTOS) {
+      activitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+    String kubernetesSourceId =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, activitySource.toDTO());
+    KubernetesActivitySource kubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceList = Arrays.asList(kubernetesActivitySource);
+
+    List<KubernetesActivitySource> result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, Scope.PROJECT);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceList);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_orgScopedConnector() {
+    List<KubernetesActivitySourceDTO> projectScopedKubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+    ActivitySource projectScopedActivitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : projectScopedKubernetesActivitySourceDTOS) {
+      projectScopedActivitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+
+    String projectScopedConnectorIdentifier = connectorIdentifier;
+    connectorIdentifier = "org.connectorId";
+
+    String projectScopedKubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, projectScopedActivitySource.toDTO());
+    KubernetesActivitySource projectScopedKubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(projectScopedKubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceListKubernetesActivitySourceList =
+        Arrays.asList(projectScopedKubernetesActivitySource);
+
+    List<KubernetesActivitySourceDTO> kubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+
+    ActivitySource activitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : kubernetesActivitySourceDTOS) {
+      activitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+    String kubernetesSourceId =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, activitySource.toDTO());
+    KubernetesActivitySource kubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceList = Arrays.asList(kubernetesActivitySource);
+
+    List<KubernetesActivitySource> result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, "", "connectorId", Scope.ORG);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceList);
+
+    result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, projectScopedConnectorIdentifier, Scope.PROJECT);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceListKubernetesActivitySourceList);
+
+    result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
+    assertThat(result).isEmpty();
+  }
+
+  public List<KubernetesActivitySourceDTO> createKubernetesActivitySourceDTOs(int n) {
+    return IntStream.range(0, n).mapToObj(index -> createKubernetesActivitySourceDTO()).collect(Collectors.toList());
+  }
+
+  private KubernetesActivitySourceDTO createKubernetesActivitySourceDTO() {
+    return KubernetesActivitySourceDTO.builder()
+        .identifier(generateUuid())
+        .name("some-name")
+        .connectorIdentifier(connectorIdentifier)
+        .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                   .serviceIdentifier(generateUuid())
+                                                   .envIdentifier(generateUuid())
+                                                   .namespace(generateUuid())
+                                                   .workloadName(generateUuid())
+                                                   .build()))
+        .build();
   }
 
   private CVConfig createCVConfig() {

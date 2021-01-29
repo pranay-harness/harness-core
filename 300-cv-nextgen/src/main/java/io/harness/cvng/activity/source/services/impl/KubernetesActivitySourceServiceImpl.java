@@ -11,6 +11,7 @@ import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
@@ -22,6 +23,7 @@ import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.encryption.Scope;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.time.Timestamp;
@@ -35,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -159,5 +162,46 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
     List<String> kubernetesWorkloads = verificationManagerService.getKubernetesWorkloads(
         accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, filter);
     return PageUtils.offsetAndLimit(kubernetesWorkloads, offset, pageSize);
+  }
+
+  @Override
+  public void resetLiveMonitoringPerpetualTaskForKubernetesActivitySource(
+      KubernetesActivitySource kubernetesActivitySource) {
+    Map<String, String> params = new HashMap<>();
+
+    params.put(KubernetesActivitySourceKeys.connectorIdentifier, kubernetesActivitySource.getConnectorIdentifier());
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, kubernetesActivitySource.getUuid());
+    DataCollectionConnectorBundle dataCollectionConnectorBundle =
+        DataCollectionConnectorBundle.builder()
+            .dataCollectionType(DataCollectionType.KUBERNETES)
+            .params(params)
+            .activitySourceDTO(kubernetesActivitySource.toDTO())
+            .build();
+
+    verificationManagerService.resetDataCollectionTask(kubernetesActivitySource.getAccountId(),
+        kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+        kubernetesActivitySource.getDataCollectionTaskId(), dataCollectionConnectorBundle);
+  }
+
+  @Override
+  public List<KubernetesActivitySource> findByConnectorIdentifier(String accountId, @Nullable String orgIdentifier,
+      @Nullable String projectIdentifier, String connectorIdentifierWithoutScopePrefix, Scope scope) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(connectorIdentifierWithoutScopePrefix);
+    String connectorIdentifier = connectorIdentifierWithoutScopePrefix;
+    if (scope == Scope.ACCOUNT || scope == Scope.ORG) {
+      connectorIdentifier = scope.getYamlRepresentation() + "." + connectorIdentifierWithoutScopePrefix;
+    }
+    Query<KubernetesActivitySource> query =
+        hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+            .filter(ActivitySourceKeys.accountId, accountId)
+            .filter(KubernetesActivitySourceKeys.connectorIdentifier, connectorIdentifier);
+    if (scope == Scope.ORG) {
+      query = query.filter(ActivitySourceKeys.orgIdentifier, orgIdentifier);
+    }
+    if (scope == Scope.PROJECT) {
+      query = query.filter(ActivitySourceKeys.projectIdentifier, projectIdentifier);
+    }
+    return query.asList();
   }
 }
