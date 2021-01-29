@@ -93,13 +93,12 @@ public class PipelineResource {
   }
 
   @POST
-  @Path("/{pipelineIdentifier}/variables")
+  @Path("/variables")
   @ApiOperation(value = "Create variables for Pipeline", nickname = "createVariables")
   public ResponseDTO<VariableMergeServiceResponse> createVariables(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
       @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating variables for pipeline.");
 
