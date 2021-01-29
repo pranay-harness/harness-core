@@ -26,6 +26,10 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncOrchestra
               event.getNodeExecutionProto().getAmbiance(), eventType, event.getNodeExecutionProto()));
       return;
     }
+    if (Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STAGES.name())
+        || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.PIPELINE.name())) {
+      return;
+    }
     if (!Objects.equals(nodeExecutionProto.getNode().getSkipType(), SkipType.SKIP_NODE)
         && StatusUtils.brokeStatuses().contains(nodeExecutionProto.getStatus())) {
       notificationHelper.sendNotification(

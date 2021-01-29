@@ -297,7 +297,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         new ArrayList<>(Arrays.asList(PredefinedTemplate.PIPELINE_PLAIN_SLACK, PredefinedTemplate.PIPELINE_PLAIN_EMAIL,
             PredefinedTemplate.PIPELINE_PLAIN_PAGERDUTY, PredefinedTemplate.PIPELINE_PLAIN_MSTEAMS,
             PredefinedTemplate.STAGE_PLAIN_SLACK, PredefinedTemplate.STAGE_PLAIN_EMAIL,
-            PredefinedTemplate.STAGE_PLAIN_PAGERDUTY, PredefinedTemplate.STAGE_PLAIN_MSTEAMS));
+            PredefinedTemplate.STAGE_PLAIN_PAGERDUTY, PredefinedTemplate.STAGE_PLAIN_MSTEAMS,
+            PredefinedTemplate.STEP_PLAIN_EMAIL, PredefinedTemplate.STEP_PLAIN_SLACK,
+            PredefinedTemplate.STEP_PLAIN_MSTEAMS, PredefinedTemplate.STEP_PLAIN_PAGERDUTY));
 
     for (PredefinedTemplate template : templates) {
       try {

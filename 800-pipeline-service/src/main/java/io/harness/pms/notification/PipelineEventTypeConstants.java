@@ -2,6 +2,7 @@ package io.harness.pms.notification;
 
 public interface PipelineEventTypeConstants {
   String ALL_EVENTS = "AllEvents";
+  String PIPELINE_START = "PipelineStart";
   String PIPELINE_SUCCESS = "PipelineSuccess";
   String PIPELINE_FAILED = "PipelineFailed";
   String PIPELINE_PAUSED = "PipelinePaused";

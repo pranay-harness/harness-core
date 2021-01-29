@@ -70,6 +70,9 @@ public class ExecutionGraphMapper {
    * @return document representation of step parameters
    */
   private Document extractDocumentStepParameters(Object stepParameters) {
+    if (stepParameters == null) {
+      return Document.parse("{}");
+    }
     if (stepParameters instanceof Document) {
       return (Document) stepParameters;
     } else if (stepParameters instanceof Map) {
