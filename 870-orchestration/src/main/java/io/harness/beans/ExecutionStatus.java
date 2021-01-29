@@ -50,7 +50,8 @@ public enum ExecutionStatus {
   private static Set<ExecutionStatus> persistedStatuses =
       EnumSet.<ExecutionStatus>of(ABORTED, ERROR, FAILED, SUCCESS, REJECTED, EXPIRED, SKIPPED, RUNNING, PAUSED);
   private static Set<ExecutionStatus> persistedActiveStatuses = EnumSet.<ExecutionStatus>of(RUNNING, PAUSED);
-
+  public static Set<ExecutionStatus> resumableStatuses =
+      EnumSet.<ExecutionStatus>of(FAILED, ABORTED, REJECTED, EXPIRED, ERROR);
   ExecutionStatus() {}
 
   public static Set<ExecutionStatus> activeStatuses() {
