@@ -153,6 +153,19 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testHugeList() {
+    for (int i = 0; i < 2000; i++) {
+      Instance instance1 = buildInstance(UUIDGenerator.generateUuid(), false, System.currentTimeMillis(), false);
+      instanceService.save(instance1);
+    }
+    List<Instance> instanceList = instanceService.getInstancesForAppAndInframapping(GLOBAL_APP_ID, INFRA_MAPPING_ID);
+    assertThat(instanceList).hasSize(2000);
+    assertEquals(2000, instanceService.getInstanceCount(GLOBAL_APP_ID, INFRA_MAPPING_ID));
+  }
+
+  @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
