@@ -1,11 +1,11 @@
 use clap::Clap;
+use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::java_class::JavaClass;
+use crate::java_class::{JavaClass, JavaClassTraits};
 use crate::java_module::{modules, JavaModule};
-use std::cmp::Ordering::Equal;
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -21,17 +21,19 @@ pub struct Analyze {
 
 #[derive(Debug, Copy, Clone, EnumIter)]
 enum Kind {
-    CRITICAL,
-    ERROR,
-    ACTION,
-    NOTE,
-    TODO,
+    Critical,
+    Error,
+    AutoAction,
+    DevAction,
+    Blocked,
+    ToDo,
 }
 
 #[derive(Debug)]
 struct Report {
     kind: Kind,
     message: String,
+    action: String,
     modules: HashSet<String>,
 }
 
@@ -83,7 +85,7 @@ pub fn analyze(opts: Analyze) {
         results.extend(check_for_deprecated_module(tuple.0, tuple.1));
     });
 
-    let mut total = vec![0, 0, 0, 0, 0];
+    let mut total = vec![0, 0, 0, 0, 0, 0];
 
     results.sort_by(|a, b| {
         let ordering = (a.kind as usize).cmp(&(b.kind as usize));
@@ -106,6 +108,9 @@ pub fn analyze(opts: Analyze) {
         })
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
+            if !report.action.is_empty() {
+                println!("   {}", &report.action);
+            }
             total[report.kind as usize] += 1;
         });
 
@@ -133,8 +138,9 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
             }
 
             results.push(Report {
-                kind: Kind::CRITICAL,
+                kind: Kind::Critical,
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
+                action: Default::default(),
                 modules: modules,
             })
         });
@@ -157,8 +163,9 @@ fn check_for_classes_in_more_than_one_module(
             if tracked_module.name.ne(&module.name) {
                 println!("{:?}", class);
                 results.push(Report {
-                    kind: Kind::CRITICAL,
+                    kind: Kind::Critical,
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
+                    action: Default::default(),
                     modules: [module.name.clone(), tracked_module.name.clone()]
                         .iter()
                         .cloned()
@@ -180,11 +187,12 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
 
         if module.index >= dependent.index {
             results.push(Report {
-                kind: Kind::CRITICAL,
+                kind: Kind::Critical,
                 message: format!(
                     "Module {} depends on module {} that is not lower",
                     module.name, dependent.name
                 ),
+                action: Default::default(),
                 modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
             });
         }
@@ -202,11 +210,12 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
     } else {
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
-                kind: Kind::ACTION,
+                kind: Kind::AutoAction,
                 message: format!(
                     "{} target module is where it already is - remove the annotation",
                     class.name
                 ),
+                action: Default::default(),
                 modules: [module.name.clone()].iter().cloned().collect(),
             })
         }
@@ -253,11 +262,12 @@ fn check_for_moves(
                 issue = true;
                 results.push(if class.break_dependencies_on.contains(src) {
                     Report {
-                        kind: Kind::ACTION,
+                        kind: Kind::DevAction,
                         message: format!(
                             "{} depends on {} and this dependency has to be broken",
                             class.name, dependent_class.name
                         ),
+                        action: Default::default(),
                         modules: [dependent_target_module.name.clone(), target_module.name.clone()]
                             .iter()
                             .cloned()
@@ -265,11 +275,12 @@ fn check_for_moves(
                     }
                 } else {
                     Report {
-                        kind: Kind::ERROR,
+                        kind: Kind::Error,
                         message: format!(
                             "{} depends on {} that is in module {} but {} does not depend on it",
                             class.name, dependent_class.name, dependent_target_module.name, target_module.name
                         ),
+                        action: Default::default(),
                         modules: [dependent_target_module.name.clone(), target_module.name.clone()]
                             .iter()
                             .cloned()
@@ -284,22 +295,43 @@ fn check_for_moves(
         });
 
         if !issue {
+            let mdls = [target_module.name.clone()].iter().cloned().collect();
+
             if not_ready_yet.is_empty() {
-                results.push(Report {
-                    kind: Kind::ACTION,
-                    message: format!("{} is ready to go to {}", class.name, target_module.name),
-                    modules: [target_module.name.clone()].iter().cloned().collect(),
+                let module = class_modules.get(class);
+
+                let msg = format!("{} is ready to go to {}", class.name, target_module.name);
+
+                results.push(match module {
+                    None => Report {
+                        kind: Kind::DevAction,
+                        action: Default::default(),
+                        message: msg,
+                        modules: mdls,
+                    },
+                    Some(&module) => Report {
+                        kind: Kind::AutoAction,
+                        message: msg,
+                        action: format!(
+                            "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
+                            module.directory,
+                            class.relative_location(),
+                            target_module.directory
+                        ),
+                        modules: mdls,
+                    },
                 });
             } else {
                 results.push(Report {
-                    kind: Kind::NOTE,
+                    kind: Kind::Blocked,
                     message: format!(
                         "{} does not have untargeted dependencies to go to {}. First move {}",
                         class.name,
                         target_module.name,
                         not_ready_yet.join(", ")
                     ),
-                    modules: [target_module.name.clone()].iter().cloned().collect(),
+                    action: Default::default(),
+                    modules: mdls,
                 });
             }
         }
@@ -313,11 +345,12 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
 
     if class.target_module.is_none() && module.deprecated {
         results.push(Report {
-            kind: Kind::TODO,
+            kind: Kind::ToDo,
             message: format!(
                 "{} is in deprecated module {} and has no target module",
                 class.name, module.name
             ),
+            action: Default::default(),
             modules: [module.name.clone()].iter().cloned().collect(),
         });
     }
