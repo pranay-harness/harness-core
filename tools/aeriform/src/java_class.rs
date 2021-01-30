@@ -1,3 +1,4 @@
+use crate::repo::GIT_REPO_ROOT_DIR;
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use regex::Regex;
@@ -5,7 +6,6 @@ use std::collections::HashSet;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
-use std::process::Command;
 
 use crate::java_class;
 
@@ -16,6 +16,19 @@ pub struct JavaClass {
     pub dependencies: HashSet<String>,
     pub target_module: Option<String>,
     pub break_dependencies_on: HashSet<String>,
+}
+
+pub trait JavaClassTraits {
+    fn relative_location(&self) -> String;
+}
+
+impl JavaClassTraits for &JavaClass {
+    fn relative_location(&self) -> String {
+        self.location
+            .chars()
+            .skip(self.location.find('/').unwrap() + 1)
+            .collect()
+    }
 }
 
 impl PartialEq for JavaClass {
@@ -33,21 +46,8 @@ impl Hash for JavaClass {
 }
 
 lazy_static! {
-    static ref GIT_REPO_ROOT_DIR: String = String::from_utf8(
-        Command::new("git")
-            .args(&["rev-parse", "--show-toplevel"])
-            .output()
-            .unwrap()
-            .stdout
-    )
-    .unwrap()
-    .trim()
-    .to_string();
-}
-
-lazy_static! {
-    static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
-    static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
+    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
+    pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
 pub fn populate_internal_info(location: &str, module_type: &str) -> (Option<String>, HashSet<String>) {
