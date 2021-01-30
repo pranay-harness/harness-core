@@ -140,7 +140,7 @@ public class NGSecretServiceImpl implements NGSecretService {
     // Fetch secret manager with which this secret will be saved
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
@@ -227,7 +227,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       // get secret manager with which secret text was encrypted
       Optional<SecretManagerConfig> secretManagerConfigOptional =
           ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
@@ -286,7 +286,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
       // Get secret manager with which it was encrypted
       Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
-          accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier());
+          accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier(), true);
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
             && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
@@ -392,7 +392,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
             // get secret manager with which this was secret was encrypted
             Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(accountIdentifier,
-                orgIdentifier, projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier());
+                orgIdentifier, projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier(), true);
             if (secretManagerConfigOptional.isPresent()) {
               SecretManagerConfig encryptionConfig = secretManagerConfigOptional.get();
 

@@ -13,6 +13,7 @@ public class SMCoreRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .add(SMCoreKryoRegistrar.class)
           .build();
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

@@ -103,6 +103,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
@@ -171,6 +172,7 @@ import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskP
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -707,8 +709,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DockerValidationParams.class, 19531);
     kryo.register(K8sValidationParams.class, 19532);
     kryo.register(ScmValidationParams.class, 19533);
-    kryo.register(NoOpConnectorValidationParams.class, 19534);
-    kryo.register(ConnectorValidationParams.class, 19535);
+    kryo.register(VaultValidationParams.class, 19534);
+    kryo.register(GcpKmsValidationParams.class, 19535);
+    kryo.register(NoOpConnectorValidationParams.class, 19536);
+    kryo.register(ConnectorValidationParams.class, 19537);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

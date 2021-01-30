@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -135,7 +136,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testTestConnection() {
     doReturn(Optional.ofNullable(VaultConfig.builder().build()))
         .when(ngSecretManagerService)
-        .get(anyString(), anyString(), anyString(), anyString());
+        .get(anyString(), anyString(), anyString(), anyString(), eq(true));
     ConnectorValidationResult connectorValidationResult =
         ngSecretManagerService.testConnection("account", null, null, "identifier");
     assertThat(connectorValidationResult).isNotNull();
@@ -144,7 +145,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
     doReturn(Optional.ofNullable(GcpKmsConfig.builder().build()))
         .when(ngSecretManagerService)
-        .get(anyString(), anyString(), anyString(), anyString());
+        .get(anyString(), anyString(), anyString(), anyString(), eq(true));
     connectorValidationResult = ngSecretManagerService.testConnection("account", null, null, "identifier");
     assertThat(connectorValidationResult).isNotNull();
     assertThat(connectorValidationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
@@ -152,7 +153,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
     doReturn(Optional.ofNullable(LocalEncryptionConfig.builder().build()))
         .when(ngSecretManagerService)
-        .get(anyString(), anyString(), anyString(), anyString());
+        .get(anyString(), anyString(), anyString(), anyString(), eq(true));
     connectorValidationResult = ngSecretManagerService.testConnection("account", null, null, "identifier");
     assertThat(connectorValidationResult).isNotNull();
     assertThat(connectorValidationResult.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
@@ -163,7 +164,9 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testTestConnection_shouldFailDueToSecretManagerNotPresent() {
-    doReturn(Optional.empty()).when(ngSecretManagerService).get(anyString(), anyString(), anyString(), anyString());
+    doReturn(Optional.empty())
+        .when(ngSecretManagerService)
+        .get(anyString(), anyString(), anyString(), anyString(), eq(true));
     ConnectorValidationResult connectorValidationResult =
         ngSecretManagerService.testConnection("account", null, null, "identifier");
     assertThat(connectorValidationResult.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
@@ -201,7 +204,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         Optional.ofNullable(
             VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().harnessManaged(false).build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     when(vaultService.saveOrUpdateVaultConfig(any(), any(), anyBoolean())).thenReturn("abcde");
     doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
 
@@ -220,7 +223,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         Optional.ofNullable(
             GcpKmsConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().harnessManaged(false).build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     when(gcpSecretsManagerService.updateGcpKmsConfig(any(), any(), anyBoolean())).thenReturn("abcde");
     doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
 
@@ -239,7 +242,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         Optional.ofNullable(
             VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().harnessManaged(true).build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     try {
       ngSecretManagerService.update("account", null, null, "identifier",
           VaultConfigUpdateDTO.builder().encryptionType(EncryptionType.VAULT).build());
@@ -253,7 +256,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdate_shouldFailForSecretManagerNotFound() {
-    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any());
+    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     try {
       ngSecretManagerService.update("account", null, null, "identifier",
           VaultConfigUpdateDTO.builder().encryptionType(EncryptionType.VAULT).build());
@@ -269,7 +272,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testGetMetadata_ForExistingVault_withToken() {
     doReturn(Optional.ofNullable(VaultConfig.builder().build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
@@ -293,7 +296,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testGetMetadata_ForExistingVault_withAppRole() {
     doReturn(Optional.ofNullable(VaultConfig.builder().build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
@@ -315,7 +318,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testGetMetadata_ForNewVault() {
-    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any());
+    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
@@ -352,7 +355,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testDelete_withSoftDeleteFlagTrue() {
     doReturn(Optional.of(VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     boolean deleted = ngSecretManagerService.delete("account", null, null, "identifier", true);
     assertThat(deleted).isTrue();
@@ -365,7 +368,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testDelete_withSoftDeleteFlagFalse() {
     doReturn(Optional.of(VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     when(vaultService.deleteVaultConfig(any(), any())).thenReturn(true);
     boolean deleted = ngSecretManagerService.delete("account", null, null, "identifier", false);
@@ -374,7 +377,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
 
     doReturn(Optional.of(GcpKmsConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     when(gcpSecretsManagerService.deleteGcpKmsConfig(any(), any())).thenReturn(true);
     deleted = ngSecretManagerService.delete("account", null, null, "identifier", false);
     assertThat(deleted).isTrue();
@@ -388,7 +391,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     doReturn(
         Optional.of(AwsSecretsManagerConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
-        .get(any(), any(), any(), any());
+        .get(any(), any(), any(), any(), eq(true));
     doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     try {
       ngSecretManagerService.delete("account", null, null, "identifier", false);
@@ -402,13 +405,13 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testDelete_WhenSecretManagerDoesNotExist() {
-    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any());
+    doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     boolean deleted = ngSecretManagerService.delete("account", null, null, "identifier", false);
     assertThat(deleted).isFalse();
   }
 
   private void testUpdateWithRestrictedFields(VaultConfig configInDB, VaultConfigUpdateDTO updateDTO) {
-    doReturn(Optional.ofNullable(configInDB)).when(ngSecretManagerService).get(any(), any(), any(), any());
+    doReturn(Optional.ofNullable(configInDB)).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     when(vaultService.saveOrUpdateVaultConfig(any(), any(), anyBoolean())).thenReturn("abcde");
     doReturn(1L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
 

@@ -46,8 +46,8 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     final ConnectorHeartbeatTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ConnectorHeartbeatTaskParams.class);
     String accountId = taskParams.getAccountIdentifier();
-    String orgIdentifier = taskParams.getOrgIdentifier();
-    String projectIdentifier = taskParams.getProjectIdentifier();
+    String orgIdentifier = taskParams.getOrgIdentifier().getValue();
+    String projectIdentifier = taskParams.getProjectIdentifier().getValue();
     String connectorIdentifier = taskParams.getConnectorIdentifier();
     final ConnectorValidationParams connectorValidationParams =
         (ConnectorValidationParams) kryoSerializer.asObject(taskParams.getConnectorValidationParams().toByteArray());
