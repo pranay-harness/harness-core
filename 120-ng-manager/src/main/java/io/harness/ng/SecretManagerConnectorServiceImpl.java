@@ -1,6 +1,5 @@
 package io.harness.ng;
 
-import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -22,12 +21,10 @@ import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.eraro.ErrorCode;
-import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -35,7 +32,6 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -51,16 +47,13 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   private final ConnectorService defaultConnectorService;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorRepository connectorRepository;
-  private final NGErrorHelper ngErrorHelper;
 
   @Inject
   public SecretManagerConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
-      NGSecretManagerService ngSecretManagerService, ConnectorRepository connectorRepository,
-      NGErrorHelper ngErrorHelper) {
+      NGSecretManagerService ngSecretManagerService, ConnectorRepository connectorRepository) {
     this.defaultConnectorService = defaultConnectorService;
     this.ngSecretManagerService = ngSecretManagerService;
     this.connectorRepository = connectorRepository;
-    this.ngErrorHelper = ngErrorHelper;
   }
 
   @Override
@@ -187,25 +180,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    long currentTime = System.currentTimeMillis();
-    try {
-      return ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    } catch (Exception exception) {
-      log.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
-          projectIdentifier, connectorIdentifier, exception);
-      String errorMessage = exception.getMessage();
-      return ConnectorValidationResult.builder()
-          .status(FAILURE)
-          .testedAt(currentTime)
-          .errorSummary(ngErrorHelper.createErrorSummary("Invalid Credentials", errorMessage))
-          .errors(getErrorDetail(errorMessage))
-          .build();
-    }
-  }
-
-  private List<ErrorDetail> getErrorDetail(String errorMessage) {
-    return Collections.singletonList(
-        ErrorDetail.builder().message(errorMessage).code(450).reason("Invalid Credentials").build());
+    return defaultConnectorService.testConnection(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override

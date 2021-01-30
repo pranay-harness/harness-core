@@ -104,6 +104,9 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
   }
 
   private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
+    if (connector == null) {
+      return false;
+    }
     switch (connector.getConnectorType()) {
       case GCP_KMS:
         return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();

@@ -40,6 +40,11 @@ public class UpsertSecretTask extends AbstractDelegateRunnableTask {
   }
 
   private UpsertSecretTaskResponse run(UpsertSecretTaskParameters parameters) {
+    return run(parameters, vaultEncryptorsRegistry);
+  }
+
+  protected static UpsertSecretTaskResponse run(
+      UpsertSecretTaskParameters parameters, VaultEncryptorsRegistry vaultEncryptorsRegistry) {
     EncryptedRecord existingRecord = parameters.getExistingRecord();
     EncryptionConfig encryptionConfig = parameters.getEncryptionConfig();
     AdditionalMetadata additionalMetadata = parameters.getAdditionalMetadata();

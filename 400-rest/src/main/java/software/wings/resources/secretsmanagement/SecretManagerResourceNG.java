@@ -84,7 +84,7 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
     SecretManagerConfigDTO dto = null;
     if (secretManagerConfigOptional.isPresent()) {
       dto = secretManagerConfigOptional.get().toDTO(true);
