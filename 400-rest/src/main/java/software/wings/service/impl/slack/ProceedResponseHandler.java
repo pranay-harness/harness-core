@@ -32,7 +32,7 @@ public class ProceedResponseHandler implements SlackActionHandler {
   @Inject private SlackApprovalUtils slackApprovalUtils;
 
   @Override
-  public RestResponse<Boolean> handle(SlackApprovalParams slackApprovalParams, String slackNotificationMessage,
+  public RestResponse<Boolean> handle(SlackApprovalParams.External slackApprovalParams, String slackNotificationMessage,
       String sessionTimedOutMessage, String responseUrl) throws IOException {
     // Verifying JWT token
     if (!slackApprovalUtils.verifyJwtToken(slackApprovalParams)) {
@@ -73,7 +73,8 @@ public class ProceedResponseHandler implements SlackActionHandler {
     if (currentStatus == ExecutionStatus.PAUSED) {
       approve(slackApprovalParams.getAppId(), slackApprovalParams.getDeploymentId(),
           slackApprovalParams.getStateExecutionId(), details, workflowExecutionService);
-      return slackPostRequest(createBody(displayText.toString(), true), responseUrl);
+      return slackPostRequest(
+          createBody(SlackApprovalUtils.resetToInitialMessage(displayText.toString()), true), responseUrl);
     } else {
       RequestBody alreadyApprovedMessageBody =
           createBody(SlackApprovalMessageKeys.APPROVAL_STATE_CHANGED_MESSAGE, true);

@@ -4,8 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
+import org.modelmapper.ModelMapper;
 
 @OwnedBy(CDC)
 @Value
@@ -40,4 +44,31 @@ public class SlackApprovalParams {
   private String endDate;
   private String expiryDate;
   private String verb;
+
+  @Data
+  @Builder(toBuilder = true)
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class External {
+    private String routingId;
+    private String appId;
+    private String appName;
+    private String workflowId;
+    private String deploymentId;
+    private String approvalId;
+    private String stateExecutionId;
+    private String workflowExecutionName;
+    private String jwtToken;
+    private boolean pipeline;
+    private String actionType;
+    private String slackUsername;
+    private String slackUserId;
+    private boolean approve;
+    private boolean confirmation;
+  }
+
+  public static External getExternalParams(SlackApprovalParams slackApprovalParams) {
+    ModelMapper mapper = new ModelMapper();
+    return mapper.map(slackApprovalParams, External.class);
+  }
 }

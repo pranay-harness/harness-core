@@ -1525,7 +1525,7 @@ public class ApprovalStateTest extends WingsBaseTest {
                         .environments(Collections.singletonList(EnvSummary.builder().name("env").build()))
                         .build());
 
-    JSONObject customData = new JSONObject(slackApprovalParams);
+    JSONObject customData = new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
     String buttonValue = StringEscapeUtils.escapeJson(customData.toString());
     String displayText = createSlackApprovalMessage(
         slackApprovalParams, ApprovalState.class.getResource("/slack/workflow-approval-message.txt"));
@@ -1543,10 +1543,10 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTrimExcessiveServicesAndArtifactsDetails() {
     String excessiveInfo =
-        "first, second, third, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo";
+        "first,second,third,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo";
     WorkflowNotificationDetails serviceDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
     WorkflowNotificationDetails infraDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
-    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo));
+    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo.replace(",", ", ")));
     SlackApprovalParams slackApprovalParams =
         SlackApprovalParams.builder()
             .appId(APP_ID)
@@ -1575,13 +1575,19 @@ public class ApprovalStateTest extends WingsBaseTest {
             .expiryDate("someMockDate")
             .verb("paused")
             .build();
-    JSONObject customData =
-        approvalState.createCustomData(slackApprovalParams, serviceDetails, artifacts, infraDetails);
-    assertThat(customData.toString().length()).isLessThanOrEqualTo(2000);
-    assertThat(customData.get("servicesInvolved")).isEqualTo("*Services*: first, second, third... 25 more");
-    assertThat(customData.get("artifactsInvolved")).isEqualTo("*Artifacts:* first, second, third... 25 more");
-    assertThat(customData.get("infraDefinitionsInvolved"))
-        .isEqualTo("*Infrastructure Definitions*: first, second, third... 25 more");
+    String displayText = createSlackApprovalMessage(slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE));
+
+    String trimmedMessage = approvalState.validateMessageLength(displayText, slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE), serviceDetails,
+        artifacts, infraDetails);
+    assertThat(trimmedMessage.length()).isLessThanOrEqualTo(2000);
+    assertThat(trimmedMessage).contains("*Services*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getServicesInvolved());
+    assertThat(trimmedMessage).contains("*Artifacts:* first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getArtifactsInvolved());
+    assertThat(trimmedMessage).contains("*Infrastructure Definitions*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getInfraDefinitionsInvolved());
   }
 
   private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {
