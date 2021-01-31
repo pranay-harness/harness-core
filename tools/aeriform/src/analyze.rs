@@ -17,6 +17,9 @@ pub struct Analyze {
     /// Filter the reports by affected module root root_filter.
     #[clap(short, long)]
     root_filter: Option<String>,
+
+    #[clap(short, long)]
+    auto_actionable_filter: Option<bool>,
 }
 
 #[derive(Debug, Copy, Clone, EnumIter)]
@@ -106,6 +109,7 @@ pub fn analyze(opts: Analyze) {
                     name.starts_with(root) && name.chars().nth(root.len()).unwrap() == ':'
                 })
         })
+        .filter(|&report| opts.auto_actionable_filter.is_none() || !opts.auto_actionable_filter.unwrap() || !report.action.is_empty())
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
             if !report.action.is_empty() {
