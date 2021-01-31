@@ -31,7 +31,7 @@ public class RevertResponseHandler implements SlackActionHandler {
   @Inject private SlackApprovalUtils slackApprovalUtils;
 
   @Override
-  public RestResponse<Boolean> handle(SlackApprovalParams slackApprovalParams, String slackNotificationMessage,
+  public RestResponse<Boolean> handle(SlackApprovalParams.External slackApprovalParams, String slackNotificationMessage,
       String sessionTimedOutMessage, String responseUrl) throws IOException {
     // Verifying JWT token
     if (!slackApprovalUtils.verifyJwtToken(slackApprovalParams)) {
@@ -40,13 +40,14 @@ public class RevertResponseHandler implements SlackActionHandler {
     }
 
     // Creating json payload
-    final SlackApprovalParams revertParams = slackApprovalParams.toBuilder().confirmation(false).build();
+    final SlackApprovalParams.External revertParams = slackApprovalParams.toBuilder().confirmation(false).build();
     String buttonValue = new JSONObject(revertParams).toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
 
     URL templateUrl = this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_MESSAGE_PAYLOAD_TEMPLATE);
     Map<String, String> templateFillers = new HashMap<>();
-    templateFillers.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, slackNotificationMessage);
+    templateFillers.put(
+        SlackApprovalMessageKeys.APPROVAL_MESSAGE, SlackApprovalUtils.resetToInitialMessage(slackNotificationMessage));
     templateFillers.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
     String approvalPayload = createMessageFromTemplate(templateUrl, templateFillers);
 

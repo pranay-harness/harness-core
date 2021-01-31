@@ -31,10 +31,10 @@ public class ConfirmationHandler implements SlackActionHandler {
   @Inject private SlackApprovalUtils slackApprovalUtils;
 
   @Override
-  public RestResponse<Boolean> handle(final SlackApprovalParams slackApprovalParams, String slackNotificationMessage,
-      String sessionTimedOutMessage, String responseUrl) throws IOException {
+  public RestResponse<Boolean> handle(final SlackApprovalParams.External slackApprovalParams,
+      String slackNotificationMessage, String sessionTimedOutMessage, String responseUrl) throws IOException {
     boolean approve = slackApprovalParams.getActionType().equals(SlackApprovalMessageKeys.BUTTON_ACCEPT);
-    final SlackApprovalParams confirmationParams =
+    final SlackApprovalParams.External confirmationParams =
         slackApprovalParams.toBuilder().confirmation(true).approve(approve).build();
 
     // Verifying JWT token

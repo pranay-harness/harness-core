@@ -6,7 +6,9 @@ import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.states.ApprovalState.JSON;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.rest.RestResponse;
+import io.harness.serializer.JsonUtils;
 
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
@@ -29,7 +31,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.core.MultivaluedMap;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -58,15 +62,19 @@ public class SlackApprovalUtils {
     Map<String, String> action =
         ((ArrayList<Map>) mapper.readValue(body.getFirst("payload"), Map.class).get("actions")).get(0);
 
+    String initialApprovalMessage =
+        getInitialMessage(body).orElseThrow(() -> new InvalidArgumentsException("Failed to parse Slack response"));
+
     // Slack Details
     String actionType = action.get("action_id");
     String responseUrl = (String) mapper.readValue(body.getFirst("payload"), Map.class).get("response_url");
-    SlackApprovalParams slackApprovalParams = mapper.readValue(action.get("value"), SlackApprovalParams.class);
-    final SlackApprovalParams approvalParams = slackApprovalParams.toBuilder()
-                                                   .actionType(actionType)
-                                                   .slackUsername(slackUserDetails.get("name"))
-                                                   .slackUserId(slackUserDetails.get("id"))
-                                                   .build();
+    SlackApprovalParams.External slackApprovalParams =
+        mapper.readValue(action.get("value"), SlackApprovalParams.External.class);
+    final SlackApprovalParams.External approvalParams = slackApprovalParams.toBuilder()
+                                                            .actionType(actionType)
+                                                            .slackUsername(slackUserDetails.get("name"))
+                                                            .slackUserId(slackUserDetails.get("id"))
+                                                            .build();
 
     URL sessionTimeoutTemplateUrl =
         this.getClass().getResource(SlackApprovalMessageKeys.APPROVAL_EXPIRED_MESSAGE_TEMPLATE);
@@ -76,33 +84,33 @@ public class SlackApprovalUtils {
     sessionTimeoutTemplateFillers.put(SlackApprovalMessageKeys.APP_NAME, approvalParams.getAppName());
     String sessionTimedOutMessage = createMessageFromTemplate(sessionTimeoutTemplateUrl, sessionTimeoutTemplateFillers);
 
-    // Creating original slack notification message
-    URL notificationTemplateUrl;
-    if (approvalParams.isPipeline()) {
-      notificationTemplateUrl =
-          this.getClass().getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE);
-    } else {
-      notificationTemplateUrl =
-          this.getClass().getResource(SlackApprovalMessageKeys.WORKFLOW_APPROVAL_MESSAGE_TEMPLATE);
-    }
-    String slackNotificationMessage = createSlackApprovalMessage(approvalParams, notificationTemplateUrl);
-
     if (!approvalParams.isConfirmation()) {
-      return confirmationHandler.handle(approvalParams, slackNotificationMessage, sessionTimedOutMessage, responseUrl);
+      return confirmationHandler.handle(approvalParams, initialApprovalMessage, sessionTimedOutMessage, responseUrl);
     } else {
       // Confirmation Response : Proceed
       if (actionType.equals(SlackApprovalMessageKeys.BUTTON_PROCEED)) {
         return proceedResponseHandler.handle(
-            approvalParams, slackNotificationMessage, sessionTimedOutMessage, responseUrl);
+            approvalParams, initialApprovalMessage, sessionTimedOutMessage, responseUrl);
       } else {
         // Confirmation Response : Revert
         return revertResponseHandler.handle(
-            approvalParams, slackNotificationMessage, sessionTimedOutMessage, responseUrl);
+            approvalParams, initialApprovalMessage, sessionTimedOutMessage, responseUrl);
       }
     }
   }
 
-  public boolean verifyJwtToken(SlackApprovalParams slackApprovalParams) throws UnsupportedEncodingException {
+  private Optional<String> getInitialMessage(MultivaluedMap<String, String> body) {
+    // noinspection unchecked,rawtypes
+    return ((List) ((Map<String, Object>) JsonUtils.asObject(body.getFirst("payload"), Map.class).get("message"))
+                .get("blocks"))
+        .stream()
+        .filter(map -> ((Map) map).get("type").equals("section"))
+        .map(map -> ((Map) map).get("text"))
+        .map(map -> ((Map) map).get("text"))
+        .findFirst();
+  }
+
+  public boolean verifyJwtToken(SlackApprovalParams.External slackApprovalParams) throws UnsupportedEncodingException {
     Algorithm algorithm = Algorithm.HMAC256(secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET));
     JWTVerifier verifier = JWT.require(algorithm)
                                .withIssuer("Harness Inc")
@@ -197,5 +205,11 @@ public class SlackApprovalUtils {
 
     return workflowExecutionService.approveOrRejectExecution(
         appId, approvalStateExecutionData.getUserGroups(), approvalDetails);
+  }
+
+  public static String resetToInitialMessage(String decoratedMessage) {
+    return decoratedMessage.replace("\nAre you sure you want to *Reject* ?", "")
+        .replace("\nAre you sure you want to *Approve* ?", "")
+        .replace("\n*Approval Pending*, would you like to _approve_?", "");
   }
 }
