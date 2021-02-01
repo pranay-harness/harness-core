@@ -66,7 +66,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, final Class<T> entityClass) {
     if (document == null) {
-      log.warn("Null reference was passed in document");
+      log.info("Null reference was passed in document");
       return null;
     }
 
@@ -175,7 +175,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   public Document toDocument(Object entity, final Map<Object, Document> involvedObjects) {
     if (entity == null) {
-      log.warn("Null reference was passed as object");
+      log.info("Null reference was passed as object");
       return null;
     }
 
