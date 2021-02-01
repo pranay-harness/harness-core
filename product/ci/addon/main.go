@@ -31,8 +31,8 @@ var (
 type service struct {
 	ID         string   `arg:"--id, required" help:"Service ID"`
 	Image      string   `arg:"--image, required" help:"docker image name for the service"`
-	Entrypoint []string `arg:"--entrypoint" help:"entrypoint for the service"`
-	Args       []string `arg:"--args" help:"arguments for the service"`
+	Entrypoint []string `arg:"env:HARNESS_SERVICE_ENTRYPOINT" help:"entrypoint for the service"`
+	Args       []string `arg:"env:HARNESS_SERVICE_ARGS" help:"arguments for the service"`
 }
 
 var args struct {
