@@ -67,11 +67,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>340-ce-nextgen</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>400-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
