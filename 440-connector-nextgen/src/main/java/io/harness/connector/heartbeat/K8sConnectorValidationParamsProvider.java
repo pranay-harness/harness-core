@@ -9,8 +9,10 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
+@Singleton
 public class K8sConnectorValidationParamsProvider implements ConnectorValidationParamsProvider {
   @Inject EncryptionHelper encryptionHelper;
 

@@ -1,9 +1,11 @@
 package io.harness.connector;
 
+import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ScmConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.VaultConnectorValidationParamsProvider;
@@ -102,13 +104,13 @@ public class ConnectorRegistryFactory {
             NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
     registrar.put(ConnectorType.ARTIFACTORY,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, ArtifactoryConnectionValidator.class,
-            NoOpConnectorValidationParamsProvider.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
+            ArtifactoryValidationParamsProvider.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, NexusDTOToEntity.class, NexusEntityToDTO.class));
+            NexusValidationParamsProvider.class, NexusDTOToEntity.class, NexusEntityToDTO.class));
     registrar.put(ConnectorType.GITHUB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GithubConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class));

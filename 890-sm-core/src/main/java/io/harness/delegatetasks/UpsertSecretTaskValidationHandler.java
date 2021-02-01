@@ -11,7 +11,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.SecretManagementDelegateException;

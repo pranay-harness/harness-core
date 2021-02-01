@@ -11,8 +11,10 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
+@Singleton
 public class ScmConnectorValidationParamsProvider implements ConnectorValidationParamsProvider {
   @Inject EncryptionHelper encryptionHelper;
 

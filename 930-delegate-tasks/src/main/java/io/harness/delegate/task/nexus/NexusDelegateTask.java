@@ -6,6 +6,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusValidationParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskParams.TaskType;
@@ -14,8 +15,6 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.nexus.NexusClientImpl;
-import io.harness.nexus.NexusRequest;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -33,9 +32,9 @@ import org.apache.commons.lang3.NotImplementedException;
 public class NexusDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private TimeLimiter timeLimiter;
-  @Inject NexusClientImpl nexusClient;
   @Inject NexusMapper nexusMapper;
   @Inject NGErrorHelper ngErrorHelper;
+  @Inject NexusValidationHandler nexusValidationHandler;
 
   public NexusDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -53,12 +52,11 @@ public class NexusDelegateTask extends AbstractDelegateRunnableTask {
     final NexusConnectorDTO nexusConfig = taskParams.getNexusConnectorDTO();
     final List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     decryptionService.decrypt(nexusConfig.getAuth().getCredentials(), encryptionDetails);
-    final NexusRequest nexusRequest = nexusMapper.toNexusRequest(nexusConfig);
     final TaskType taskType = taskParams.getTaskType();
     try {
       switch (taskType) {
         case VALIDATE:
-          return validateNexusServer(nexusRequest);
+          return validateNexusServer(nexusConfig, encryptionDetails);
         default:
           throw new InvalidRequestException("No task found for " + taskType.name());
       }
@@ -77,22 +75,15 @@ public class NexusDelegateTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private NexusTaskResponse validateNexusServer(NexusRequest nexusRequest) {
-    ConnectorValidationResult connectorValidationResult;
-    boolean running = nexusClient.isRunning(nexusRequest);
-    if (running) {
-      connectorValidationResult = ConnectorValidationResult.builder()
-                                      .status(ConnectivityStatus.SUCCESS)
-                                      .testedAt(System.currentTimeMillis())
-                                      .delegateId(getDelegateId())
-                                      .build();
-    } else {
-      connectorValidationResult = ConnectorValidationResult.builder()
-                                      .status(ConnectivityStatus.FAILURE)
-                                      .testedAt(System.currentTimeMillis())
-                                      .delegateId(getDelegateId())
-                                      .build();
-    }
+  private NexusTaskResponse validateNexusServer(
+      NexusConnectorDTO nexusRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    final NexusValidationParams nexusValidationParams = NexusValidationParams.builder()
+                                                            .encryptedDataDetails(encryptedDataDetails)
+                                                            .nexusConnectorDTO(nexusRequest)
+                                                            .build();
+    ConnectorValidationResult connectorValidationResult =
+        nexusValidationHandler.validate(nexusValidationParams, getAccountId());
+    connectorValidationResult.setDelegateId(getDelegateId());
     return NexusTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }
 }

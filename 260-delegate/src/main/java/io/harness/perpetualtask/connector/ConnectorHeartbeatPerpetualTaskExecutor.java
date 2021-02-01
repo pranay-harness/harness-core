@@ -12,7 +12,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.NoOpConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.ng.core.dto.ErrorDetail;

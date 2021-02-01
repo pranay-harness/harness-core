@@ -3,12 +3,15 @@ package io.harness.delegate.task.git;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.delegate.task.ConnectorValidationHandler;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+@Singleton
 public class GitValidationHandler implements ConnectorValidationHandler {
   @Inject private GitCommandTaskHandler gitCommandTaskHandler;
+
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final ScmValidationParams scmValidationParams = (ScmValidationParams) connectorValidationParams;
