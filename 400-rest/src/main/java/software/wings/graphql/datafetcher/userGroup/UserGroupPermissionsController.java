@@ -16,6 +16,7 @@ import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.MANAGE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -50,6 +51,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.TEMPLAT
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
+import static software.wings.security.PermissionAttribute.PermissionType.WEBHOOK_TRIGGER_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
