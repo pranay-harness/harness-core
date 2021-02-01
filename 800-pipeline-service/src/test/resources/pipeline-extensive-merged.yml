@@ -3,16 +3,16 @@ pipeline:
   name: Test Pipline
   variables:
   - name: port
+    type: String
     value: 6060
-    type: String
   - name: port2
-    value: 8080
     type: String
+    value: 8080
   stages:
   - stage:
       identifier: qaStage
-      name: qa stage
       type: Deployment
+      name: qa stage
       spec:
         service:
           identifier: manager
@@ -60,8 +60,8 @@ pipeline:
           steps:
           - step:
               identifier: httpStep1
-              name: http step 1
               type: Http
+              name: http step 1
               spec:
                 socketTimeoutMillis: 1000
                 method: GET
@@ -69,24 +69,24 @@ pipeline:
           - parallel:
             - step:
                 identifier: httpStep2
-                name: http step 2
                 type: Http
+                name: http step 2
                 spec:
                   socketTimeoutMillis: 1000
                   method: POST
                   url: https://google.com
             - step:
                 identifier: httpStep3
-                name: http step 3
                 type: Http
+                name: http step 3
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
           - step:
               identifier: httpStep11
-              name: http step 11
               type: Http
+              name: http step 11
               spec:
                 socketTimeoutMillis: 60000
                 method: GET
@@ -94,16 +94,16 @@ pipeline:
           - parallel:
             - step:
                 identifier: httpStep21
-                name: http step 21
                 type: Http
+                name: http step 21
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
             - step:
                 identifier: httpStep31
-                name: http step 31
                 type: Http
+                name: http step 31
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
@@ -111,8 +111,8 @@ pipeline:
   - parallel:
     - stage:
         identifier: qaStage2
-        name: qa stage2
         type: Deployment
+        name: qa stage2
         spec:
           service:
             identifier: manager
@@ -163,24 +163,24 @@ pipeline:
             steps:
             - step:
                 identifier: httpStep3
-                name: http step 3
                 type: Http
+                name: http step 3
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
             - step:
                 identifier: httpStep4
-                name: http step 4
                 type: Http
+                name: http step 4
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
     - stage:
         identifier: qaStage3
-        name: qa stage3
         type: Deployment
+        name: qa stage3
         spec:
           service:
             identifier: manager
@@ -231,24 +231,24 @@ pipeline:
             steps:
             - step:
                 identifier: httpStep5
-                name: http step5
                 type: Http
+                name: http step5
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
             - step:
                 identifier: httpStep6
-                name: http step 6
                 type: Http
+                name: http step 6
                 spec:
                   socketTimeoutMillis: 1000
                   method: GET
                   url: https://google.com
   - stage:
       identifier: qaStage4
-      name: qa stage4
       type: Deployment
+      name: qa stage4
       spec:
         service:
           identifier: manager
@@ -299,16 +299,16 @@ pipeline:
           steps:
           - step:
               identifier: httpStep7
-              name: http step 7
               type: Http
+              name: http step 7
               spec:
                 socketTimeoutMillis: 1000
                 method: GET
                 url: https://google.com
           - step:
               identifier: httpStep8
-              name: http step 8
               type: Http
+              name: http step 8
               spec:
                 socketTimeoutMillis: 1000
                 method: GET

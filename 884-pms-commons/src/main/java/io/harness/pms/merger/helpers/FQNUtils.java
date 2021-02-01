@@ -180,14 +180,15 @@ public class FQNUtils {
       }
     }
     if (!tempMap.isEmpty()) {
-      if (!fieldNames.contains(YAMLFieldNameConstants.IDENTIFIER)) {
-        res.put(topKey, tempMap);
-      } else {
-        Map<String, Object> newTempMap = new LinkedHashMap<>();
+      Map<String, Object> newTempMap = new LinkedHashMap<>();
+      if (fieldNames.contains(YAMLFieldNameConstants.IDENTIFIER)) {
         newTempMap.put(YAMLFieldNameConstants.IDENTIFIER, originalYaml.get(YAMLFieldNameConstants.IDENTIFIER));
-        newTempMap.putAll(tempMap);
-        res.put(topKey, newTempMap);
       }
+      if (originalYaml.has(YAMLFieldNameConstants.TYPE)) {
+        newTempMap.put(YAMLFieldNameConstants.TYPE, originalYaml.get(YAMLFieldNameConstants.TYPE));
+      }
+      newTempMap.putAll(tempMap);
+      res.put(topKey, newTempMap);
     }
   }
 
@@ -294,6 +295,9 @@ public class FQNUtils {
         if (!tempMap.isEmpty()) {
           Map<String, Object> newTempMap = new LinkedHashMap<>();
           newTempMap.put(uuidKey, element.get(uuidKey));
+          if (element.has(YAMLFieldNameConstants.TYPE)) {
+            newTempMap.put(YAMLFieldNameConstants.TYPE, element.get(YAMLFieldNameConstants.TYPE));
+          }
           newTempMap.putAll(tempMap);
           topKeyList.add(newTempMap);
         }

@@ -4,6 +4,7 @@ pipeline:
   stages:
   - stage:
       identifier: qaStage
+      type: Deployment
       name: qa stage
       failureStrategies:
       - onFailure:
@@ -11,7 +12,6 @@ pipeline:
           - All
           action:
             type: StageRollback
-      type: Deployment
       spec:
         serviceConfig:
           service:
@@ -50,8 +50,8 @@ pipeline:
           steps:
           - step:
               identifier: httpStep1
-              name: http step 1
               type: Http
+              name: http step 1
               spec:
                 socketTimeoutMillis: 1000
                 method: GET
@@ -59,8 +59,8 @@ pipeline:
           rollbackSteps:
           - step:
               identifier: httpStepRollback1
-              name: http rollback step 1
               type: Http
+              name: http rollback step 1
               spec:
                 socketTimeoutMillis: 1000
                 method: GET
