@@ -75,23 +75,23 @@ public class EventsClientApplication extends Application<EventsClientApplication
     new Thread(new MessageProducer(channel, redisConfig, ColorConstants.TEXT_YELLOW)).start();
 
     /* Read via Consumer groups - order is important - Sync processing usecase (Gitsync) */
-    new Thread(new MessageConsumer(
-                   redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 3000, ColorConstants.TEXT_BLUE))
-        .start();
-    new Thread(new MessageConsumer(
-                   redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 1000, ColorConstants.TEXT_CYAN))
-        .start();
-    new Thread(new MessageConsumer(redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 500,
-                   ColorConstants.TEXT_PURPLE))
-        .start();
+    //    new Thread(new MessageConsumer(
+    //                   redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 3000,
+    //                   ColorConstants.TEXT_BLUE))
+    //        .start();
+    //    new Thread(new MessageConsumer(
+    //                   redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 1000,
+    //                   ColorConstants.TEXT_CYAN))
+    //        .start();
+    //    new Thread(new MessageConsumer(redisLocker, redisConfig, "serialConsumerGroups", channel, "group1", 500,
+    //                   ColorConstants.TEXT_PURPLE))
+    //        .start();
 
     /* Read via Consumer groups - order is not important - Load balancing usecase */
-    //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000,
-    //    ColorConstants.TEXT_BLUE))
-    //        .start();
-    //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 4000,
-    //    ColorConstants.TEXT_PURPLE))
-    //        .start();
+    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000, ColorConstants.TEXT_BLUE))
+        .start();
+    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 4000, ColorConstants.TEXT_PURPLE))
+        .start();
 
     while (true) {
       Thread.sleep(10000);
