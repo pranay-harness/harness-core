@@ -223,12 +223,13 @@ public class PipelineResource {
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("searchTerm") String searchTerm,
-      @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort,
-      @QueryParam("filterIdentifier") String filterIdentifier, @QueryParam("module") String moduleName,
-      FilterPropertiesDTO filterProperties) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @QueryParam("searchTerm") String searchTerm, @QueryParam("pipelineIdentifier") String pipelineIdentifier,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
+      @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
+      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties) {
     log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
         filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm);
