@@ -23,6 +23,7 @@ import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatus
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.view.CEMetaDataRecordUpdateService;
 import io.harness.batch.processing.view.ViewCostUpdateService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -68,6 +69,7 @@ public class EventJobScheduler {
   @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
   @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
+  @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
@@ -186,6 +188,16 @@ public class EventJobScheduler {
       log.info("Scheduled reports generated and sent");
     } catch (Exception ex) {
       log.error("Exception while running runScheduledReportJob", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 0 */1 ? * *")
+  public void updateCostMetadatRecord() {
+    try {
+      ceMetaDataRecordUpdateService.updateCloudProviderMetadata();
+      log.info("updated cost data");
+    } catch (Exception ex) {
+      log.error("Exception while running updateCostMetadatRecord", ex);
     }
   }
 

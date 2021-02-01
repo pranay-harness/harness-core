@@ -187,6 +187,7 @@ public class CEViewServiceImpl implements CEViewService {
                                  .id(view.getUuid())
                                  .name(view.getName())
                                  .totalCost(view.getTotalCost())
+                                 .createdBy(null != view.getCreatedBy() ? view.getCreatedBy().getEmail() : "")
                                  .createdAt(view.getCreatedAt())
                                  .lastUpdatedAt(view.getLastUpdatedAt())
                                  .chartType(vChartType)
