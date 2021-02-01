@@ -40,7 +40,8 @@ public class MergeHelper {
     fullMap.keySet().forEach(key -> {
       String value = fullMap.get(key).toString().replace("\"", "");
       if ((keepInput && NGExpressionUtils.matchesInputSetPattern(value))
-          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName())) {
+          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName()
+              && !key.isType())) {
         templateMap.put(key, fullMap.get(key));
       }
     });

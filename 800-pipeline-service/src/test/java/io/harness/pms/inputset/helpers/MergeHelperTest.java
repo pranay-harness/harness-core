@@ -174,11 +174,13 @@ public class MergeHelperTest extends CategoryTest {
             + "  stages:\n"
             + "  - stage:\n"
             + "      identifier: \"qaStage\"\n"
+            + "      type: \"Deployment\"\n"
             + "      spec:\n"
             + "        execution:\n"
             + "          steps:\n"
             + "          - step:\n"
             + "              identifier: \"httpStep1\"\n"
+            + "              type: \"Http\"\n"
             + "              spec:\n"
             + "                method: \"pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.\"\n");
     assertThat(errorWrapperDTOPMS.getUuidToErrorResponseMap().size()).isEqualTo(1);

@@ -1,5 +1,7 @@
 package io.harness.pms.merger.fqn;
 
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
@@ -46,7 +48,12 @@ public class FQN {
   public boolean isIdentifierOrVariableName() {
     boolean isVariableName = isVariableName();
     FQNNode lastNode = fqnList.get(fqnList.size() - 1);
-    return isVariableName || lastNode.getKey().equals("identifier");
+    return isVariableName || lastNode.getKey().equals(YAMLFieldNameConstants.IDENTIFIER);
+  }
+
+  public boolean isType() {
+    FQNNode lastNode = fqnList.get(fqnList.size() - 1);
+    return lastNode.getKey().equals(YAMLFieldNameConstants.TYPE);
   }
 
   public boolean isVariableName() {
@@ -55,7 +62,8 @@ public class FQN {
     }
     FQNNode lastNode = fqnList.get(fqnList.size() - 1);
     FQNNode secondLastNode = fqnList.get(fqnList.size() - 2);
-    return secondLastNode.getNodeType().equals(FQNNode.NodeType.UUID) && lastNode.getKey().equals("name");
+    return secondLastNode.getNodeType().equals(FQNNode.NodeType.UUID)
+        && lastNode.getKey().equals(YAMLFieldNameConstants.NAME);
   }
 
   public String getFieldName() {
