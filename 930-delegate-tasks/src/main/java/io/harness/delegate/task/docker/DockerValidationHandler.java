@@ -5,12 +5,12 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHelper;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
 
 import com.google.inject.Inject;

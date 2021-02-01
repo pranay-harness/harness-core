@@ -1,4 +1,4 @@
-package io.harness.delegate.task.k8s;
+package io.harness.delegate.task;
 
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;

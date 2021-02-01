@@ -69,6 +69,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthe
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConstants;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
+import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValidationParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConstants;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
@@ -130,6 +131,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConstants;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusValidationParams;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
@@ -713,6 +715,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpKmsValidationParams.class, 19535);
     kryo.register(NoOpConnectorValidationParams.class, 19536);
     kryo.register(ConnectorValidationParams.class, 19537);
+    kryo.register(NexusValidationParams.class, 19538);
+    kryo.register(ArtifactoryValidationParams.class, 19539);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.SecretManagementDelegateException;

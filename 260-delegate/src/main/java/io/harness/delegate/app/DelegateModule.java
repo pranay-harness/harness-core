@@ -62,11 +62,13 @@ import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.BuildSourceTask;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.MicrosoftTeamsSenderDelegateTask;
 import io.harness.delegate.task.PagerDutySenderDelegateTask;
 import io.harness.delegate.task.SlackSenderDelegateTask;
 import io.harness.delegate.task.artifactory.ArtifactoryDelegateTask;
+import io.harness.delegate.task.artifactory.ArtifactoryValidationHandler;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -92,12 +94,12 @@ import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
 import io.harness.delegate.task.jira.JiraTaskNG;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
+import io.harness.delegate.task.nexus.NexusValidationHandler;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegatetasks.DeleteSecretTask;
@@ -1316,5 +1318,9 @@ public class DelegateModule extends AbstractModule {
         .to(UpsertSecretTaskValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.GCP_KMS.getDisplayName())
         .to(EncryptSecretTaskValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
+        .to(ArtifactoryValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.NEXUS.getDisplayName())
+        .to(NexusValidationHandler.class);
   }
 }
