@@ -42,6 +42,10 @@ import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.timeout.TimeoutParameters;
+import io.harness.timeout.contracts.TimeoutObtainment;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
@@ -85,11 +89,18 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
     String nodeName;
+    long timeoutInMillis;
 
     if (EmptyPredicate.isEmpty(stepElement.getName())) {
       nodeName = stepElement.getIdentifier();
     } else {
       nodeName = stepElement.getName();
+    }
+
+    if (stepElement.getTimeout() == null) {
+      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
+    } else {
+      timeoutInMillis = stepElement.getTimeout().getTimeoutInMillis();
     }
 
     PlanNode stepPlanNode =
@@ -107,6 +118,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                        .build())
             .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
+            .timeoutObtainment(TimeoutObtainment.newBuilder()
+                                   .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                                       AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutInMillis).build())))
+                                   .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }

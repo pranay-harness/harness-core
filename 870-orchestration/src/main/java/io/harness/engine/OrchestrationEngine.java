@@ -91,8 +91,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -262,11 +260,10 @@ public class OrchestrationEngine {
       timeoutObtainmentList = Collections.singletonList(
           TimeoutObtainment.newBuilder()
               .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                  AbsoluteTimeoutParameters.builder()
-                      .timeoutMillis(
-                          Duration.of(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS, ChronoUnit.MINUTES).toMillis())
-                      .build())))
+              .setParameters(ByteString.copyFrom(
+                  kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
+                                             .timeoutMillis(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS)
+                                             .build())))
               .build());
     } else {
       timeoutObtainmentList = nodeExecution.getNode().getTimeoutObtainmentsList();
