@@ -67,16 +67,17 @@ fn copy_class(source_file: &String, target_file: &String) -> Result<()> {
 
     for line in lines {
         let l = line?;
-
-        if TARGET_MODULE_PATTERN.is_match(&l) {
-            continue;
-        }
-
         if MODULE_IMPORT.eq(&l) || TARGET_MODULE_IMPORT.eq(&l) {
             continue;
         }
 
-        writeln!(target, "{}", &l)?;
+        let final_line = TARGET_MODULE_PATTERN.replace(&l, "");
+
+        if final_line.is_empty() && !l.is_empty() {
+            continue;
+        }
+
+        writeln!(target, "{}", &final_line)?;
     }
 
     target.flush()?;
