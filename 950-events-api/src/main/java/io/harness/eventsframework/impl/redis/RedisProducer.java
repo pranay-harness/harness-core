@@ -33,7 +33,7 @@ public class RedisProducer extends AbstractProducer {
     super(topicName);
     this.maxTopicSize = maxTopicSize;
     this.redissonClient = RedisUtils.getClient(redisConfig);
-    this.stream = RedisUtils.getStream(topicName, redissonClient);
+    this.stream = RedisUtils.getStream(topicName, redissonClient, redisConfig.getEnvNamespace());
   }
 
   @Override

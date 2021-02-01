@@ -51,17 +51,17 @@ public class RedisUtils {
     return fromMillis(parseLong(messageId.split("-")[0]));
   }
 
-  public RStream<String, String> getStream(String topicName, RedissonClient client) {
-    return client.getStream(getStreamName(topicName), new StringCodec("UTF-8"));
+  public RStream<String, String> getStream(String topicName, RedissonClient client, String envNamespace) {
+    return client.getStream(getStreamName(envNamespace, topicName), new StringCodec("UTF-8"));
   }
 
-  public RStream<String, String> getDeadLetterStream(String topicName, RedissonClient client) {
+  public RStream<String, String> getDeadLetterStream(String topicName, RedissonClient client, String envNamespace) {
     String deadLetterStreamName = "deadletter_queue:" + topicName;
-    return getStream(deadLetterStreamName, client);
+    return getStream(deadLetterStreamName, client, envNamespace);
   }
 
-  public String getStreamName(String topicName) {
-    return "streams:" + topicName;
+  public String getStreamName(String envNamespace, String topicName) {
+    return (envNamespace.isEmpty() ? "" : envNamespace + ":") + "streams:" + topicName;
   }
 
   public StreamMessageId getStreamId(String messageId) {
