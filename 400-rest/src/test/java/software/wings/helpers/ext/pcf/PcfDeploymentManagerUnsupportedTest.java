@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -162,25 +163,11 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
-  public void testCheckIfAppAutoscalarInstalled() {
-    assertThatThrownBy(deploymentManager::checkIfAppAutoscalarInstalled).isInstanceOf(PivotalClientApiException.class);
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() {
     assertThatThrownBy(()
                            -> deploymentManager.checkIfAppHasAutoscalarAttached(
                                PcfAppAutoscalarRequestData.builder().build(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
-  public void testResolvePcfPluginHome() {
-    assertThat(deploymentManager.resolvePcfPluginHome()).isNull();
   }
 
   @Test

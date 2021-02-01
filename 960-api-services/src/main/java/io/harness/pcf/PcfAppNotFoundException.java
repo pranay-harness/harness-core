@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf;
 
 public class PcfAppNotFoundException extends PivotalClientApiException {
   public PcfAppNotFoundException(String s) {

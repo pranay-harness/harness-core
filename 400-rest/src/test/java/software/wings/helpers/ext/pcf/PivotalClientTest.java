@@ -49,6 +49,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
+import io.harness.pcf.PcfUtils;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -845,34 +847,6 @@ public class PivotalClientTest extends WingsBaseTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCheckIfAppAutoscalarInstalled() throws Exception {
-    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
-    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
-    doNothing().when(logCallback).saveExecutionLog(anyString());
-
-    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
-    ProcessResult processResult = mock(ProcessResult.class);
-
-    doReturn(processResult).when(processExecutor).execute();
-    doReturn("asd").doReturn(null).doReturn(EMPTY).when(processResult).outputUTF8();
-
-    doReturn(processExecutor).when(pcfClient).createExecutorForAutoscalarPluginCheck(anyMap());
-    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isTrue();
-
-    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isFalse();
-    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isFalse();
-
-    doThrow(Exception.class).when(processExecutor).execute();
-    try {
-      pcfClient.checkIfAppAutoscalarInstalled();
-    } catch (Exception e) {
-      assertThat(e instanceof PivotalClientApiException).isTrue();
-    }
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
   public void testChangeAutoscalarState() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
@@ -955,9 +929,8 @@ public class PivotalClientTest extends WingsBaseTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
     ProcessExecutor processExecutor =
-        pcfClient.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
+        PcfUtils.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
 
     assertThat(processExecutor.getCommand()).containsExactly("/bin/bash", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
     assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);

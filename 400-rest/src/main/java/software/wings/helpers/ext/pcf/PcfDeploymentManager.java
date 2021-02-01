@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import io.harness.pcf.PivotalClientApiException;
+
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
@@ -48,10 +50,8 @@ public interface PcfDeploymentManager {
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
   boolean changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
-  boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
   boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
-  String resolvePcfPluginHome();
   ApplicationDetail upsizeApplicationWithSteadyStateCheck(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
 

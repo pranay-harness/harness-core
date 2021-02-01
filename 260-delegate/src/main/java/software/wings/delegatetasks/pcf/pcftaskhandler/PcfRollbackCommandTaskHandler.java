@@ -22,6 +22,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PcfInstanceElement;
@@ -29,7 +30,6 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
