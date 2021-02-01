@@ -5,7 +5,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::java_class::{JavaClass, JavaClassTraits};
-use crate::java_module::{modules, JavaModule};
+use crate::java_module::{JavaModule, modules};
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -37,8 +37,11 @@ struct Report {
     kind: Kind,
     message: String,
     action: String,
-    modules: HashSet<String>,
-    classes: HashSet<String>,
+
+    for_class: String,
+    indirect_classes: HashSet<String>,
+
+    for_modules: HashSet<String>,
 }
 
 pub fn analyze(opts: Analyze) {
@@ -108,9 +111,9 @@ pub fn analyze(opts: Analyze) {
 
         results
             .iter()
-            .filter(|&report| filter_report(&opts, report) || report.classes.iter().any(|cls| original.contains(cls)))
+            .filter(|&report| filter_report(&opts, report) || original.contains(&report.for_class))
             .for_each(|report| {
-                indirect_classes.extend(&report.classes);
+                indirect_classes.extend(&report.indirect_classes);
             });
 
         if original.len() == indirect_classes.len() {
@@ -120,9 +123,9 @@ pub fn analyze(opts: Analyze) {
 
     results
         .iter()
-        .filter(|&report| {
-            filter_report(&opts, report) || report.classes.iter().any(|cls| indirect_classes.contains(cls))
-        })
+        .filter(|&report|
+            filter_report(&opts, report) || indirect_classes.contains(&report.for_class)
+        )
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
@@ -151,14 +154,14 @@ fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
 
 fn filter_by_root(opts: &Analyze, report: &Report) -> bool {
     opts.root_filter.is_none()
-        || report.modules.iter().any(|name| {
+        || report.for_modules.iter().any(|name| {
             let root = opts.root_filter.as_ref().unwrap();
             name.starts_with(root) && name.chars().nth(root.len()).unwrap() == ':'
         })
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    opts.module_filter.is_none() || report.modules.contains(opts.module_filter.as_ref().unwrap())
+    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
 }
 
 fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
@@ -179,8 +182,9 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
                 kind: Kind::Critical,
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
                 action: Default::default(),
-                modules: modules,
-                classes: [class.name.clone()].iter().cloned().collect(),
+                for_class:class.name.clone(),
+                indirect_classes: Default::default(),
+                for_modules: modules,
             })
         });
 
@@ -204,11 +208,12 @@ fn check_for_classes_in_more_than_one_module(
                     kind: Kind::Critical,
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
                     action: Default::default(),
-                    modules: [module.name.clone(), tracked_module.name.clone()]
+                    for_class:class.name.clone(),
+                    indirect_classes: Default::default(),
+                    for_modules: [module.name.clone(), tracked_module.name.clone()]
                         .iter()
                         .cloned()
                         .collect(),
-                    classes: [class.name.clone()].iter().cloned().collect(),
                 });
             }
         });
@@ -232,8 +237,9 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
                     module.name, dependent.name
                 ),
                 action: Default::default(),
-                modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
-                classes: Default::default(),
+                for_class:Default::default(),
+                indirect_classes: Default::default(),
+                for_modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
             });
         }
     });
@@ -256,8 +262,9 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
                     class.name
                 ),
                 action: Default::default(),
-                modules: [module.name.clone()].iter().cloned().collect(),
-                classes: [class.name.clone()].iter().cloned().collect(),
+                for_class:class.name.clone(),
+                indirect_classes: Default::default(),
+                for_modules: [module.name.clone()].iter().cloned().collect(),
             })
         }
 
@@ -306,7 +313,10 @@ fn check_for_moves(
                     .iter()
                     .cloned()
                     .collect();
-                let clss = [class.name.clone()].iter().cloned().collect();
+                let indirect_classes = [dependent_class.name.clone()]
+                    .iter()
+                    .cloned()
+                    .collect();
                 results.push(if class.break_dependencies_on.contains(src) {
                     Report {
                         kind: Kind::DevAction,
@@ -315,8 +325,9 @@ fn check_for_moves(
                             class.name, dependent_class.name
                         ),
                         action: Default::default(),
-                        modules: mdls,
-                        classes: clss,
+                        for_class:class.name.clone(),
+                        indirect_classes: indirect_classes,
+                        for_modules: mdls,
                     }
                 } else {
                     Report {
@@ -326,8 +337,9 @@ fn check_for_moves(
                             class.name, dependent_class.name, dependent_target_module.name, target_module.name
                         ),
                         action: Default::default(),
-                        modules: mdls,
-                        classes: clss,
+                        for_class:class.name.clone(),
+                        indirect_classes: indirect_classes,
+                        for_modules: mdls,
                     }
                 });
             }
@@ -340,7 +352,6 @@ fn check_for_moves(
 
         if !issue {
             let mdls = [target_module.name.clone()].iter().cloned().collect();
-            let clss = [class.name.clone()].iter().cloned().collect::<HashSet<String>>();
 
             if not_ready_yet.is_empty() {
                 let module = class_modules.get(class);
@@ -352,8 +363,9 @@ fn check_for_moves(
                         kind: Kind::DevAction,
                         action: Default::default(),
                         message: msg,
-                        modules: mdls,
-                        classes: clss,
+                        for_class:class.name.clone(),
+                        indirect_classes: Default::default(),
+                        for_modules: mdls,
                     },
                     Some(&module) => Report {
                         kind: Kind::AutoAction,
@@ -364,8 +376,9 @@ fn check_for_moves(
                             class.relative_location(),
                             target_module.directory
                         ),
-                        modules: mdls,
-                        classes: clss,
+                        for_class:class.name.clone(),
+                        indirect_classes: Default::default(),
+                        for_modules: mdls,
                     },
                 });
             } else {
@@ -380,8 +393,9 @@ fn check_for_moves(
                         not_ready_yet.join(", ")
                     ),
                     action: Default::default(),
-                    modules: mdls,
-                    classes: all_classes,
+                    for_class:class.name.clone(),
+                    indirect_classes: all_classes,
+                    for_modules: mdls,
                 });
             }
         }
@@ -401,8 +415,9 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
                 class.name, module.name
             ),
             action: Default::default(),
-            modules: [module.name.clone()].iter().cloned().collect(),
-            classes: [class.name.clone()].iter().cloned().collect(),
+            for_class:class.name.clone(),
+            indirect_classes: Default::default(),
+            for_modules: [module.name.clone()].iter().cloned().collect(),
         });
     }
 
