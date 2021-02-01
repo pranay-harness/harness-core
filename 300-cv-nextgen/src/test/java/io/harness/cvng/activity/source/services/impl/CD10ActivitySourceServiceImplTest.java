@@ -1,9 +1,10 @@
 package io.harness.cvng.activity.source.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -32,7 +33,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTest {
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     accountId = generateUuid();
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
@@ -40,55 +41,80 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testGet_accountIdAppId() {
+  public void getNextGenEnvIdentifier() {
     String activitySourceUUID = activitySourceService.saveActivitySource(
         accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
-
-    CD10ActivitySourceDTO activitySourceDTO =
-        (CD10ActivitySourceDTO) cd10ActivitySourceService.get(accountId, projectIdentifier, appId);
-
-    assertThat(activitySourceDTO).isNotNull();
-    assertThat(activitySourceDTO.getEnvMappings().size()).isEqualTo(10);
-    assertThat(activitySourceDTO.getServiceMappings().size()).isEqualTo(10);
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+    cd10ActivitySource.getEnvMappings().forEach(envMapping
+        -> assertThat(cd10ActivitySourceService.getNextGenEnvIdentifier(
+                          accountId, orgIdentifier, projectIdentifier, appId, envMapping.getEnvId()))
+               .isEqualTo(envMapping.getEnvIdentifier()));
+    assertThatThrownBy(()
+                           -> cd10ActivitySourceService.getNextGenEnvIdentifier(
+                               accountId, orgIdentifier, projectIdentifier, appId, generateUuid()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No envId to envIdentifier mapping exists");
   }
 
   @Test
-  @Owner(developers = PRAVEEN)
+  @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testGet_serviceEnv() {
+  public void getNextGenEnvIdentifier_noCDMappingPresent() {
     String activitySourceUUID = activitySourceService.saveActivitySource(
         accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
-    CD10ActivitySource activitySource =
+    CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
-    String envId = activitySource.getEnvMappings().iterator().next().getEnvId();
-    String envIdentifier = activitySource.getEnvMappings().iterator().next().getEnvIdentifier();
-    String serviceId = activitySource.getServiceMappings().iterator().next().getServiceId();
-    String serviceIdentidier = activitySource.getServiceMappings().iterator().next().getServiceIdentifier();
-    CD10ActivitySourceDTO activitySourceDTO =
-        (CD10ActivitySourceDTO) cd10ActivitySourceService.get(accountId, projectIdentifier, appId, envId, serviceId);
+    cd10ActivitySource.getEnvMappings().forEach(envMapping
+        -> assertThatThrownBy(()
+                                  -> cd10ActivitySourceService.getNextGenEnvIdentifier(
+                                      accountId, orgIdentifier, "project", appId, envMapping.getEnvId()))
+               .isInstanceOf(NullPointerException.class)
+               .hasMessage("No CD 1.0 mapping defined for projectIdentifier: project"));
+  }
 
-    assertThat(activitySourceDTO).isNotNull();
-    assertThat(activitySourceDTO.getEnvMappings().size()).isEqualTo(1);
-    assertThat(activitySourceDTO.getServiceMappings().size()).isEqualTo(1);
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void getNextGenServiceIdentifier() {
+    String activitySourceUUID = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+    cd10ActivitySource.getServiceMappings().forEach(serviceMappingDTO
+        -> assertThat(cd10ActivitySourceService.getNextGenServiceIdentifier(
+                          accountId, orgIdentifier, projectIdentifier, appId, serviceMappingDTO.getServiceId()))
+               .isEqualTo(serviceMappingDTO.getServiceIdentifier()));
+    assertThatThrownBy(()
+                           -> cd10ActivitySourceService.getNextGenServiceIdentifier(
+                               accountId, orgIdentifier, projectIdentifier, appId, generateUuid()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No serviceId to serviceIdentifier mapping exists");
+  }
 
-    String envIdFromDto = activitySourceDTO.getEnvMappings().iterator().next().getEnvId();
-    String envIdentifierFromDto = activitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier();
-    String serviceIdFromDto = activitySourceDTO.getServiceMappings().iterator().next().getServiceId();
-    String serviceIdentidierFromDto = activitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier();
-
-    assertThat(envId).isEqualTo(envIdFromDto);
-    assertThat(serviceId).isEqualTo(serviceIdFromDto);
-    assertThat(envIdentifier).isEqualTo(envIdentifierFromDto);
-    assertThat(serviceIdentidier).isEqualTo(serviceIdentidierFromDto);
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void getNextGenServiceIdentifier_noCDMappingPresent() {
+    String activitySourceUUID = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+    cd10ActivitySource.getServiceMappings().forEach(serviceMappingDTO
+        -> assertThatThrownBy(()
+                                  -> cd10ActivitySourceService.getNextGenServiceIdentifier(
+                                      accountId, orgIdentifier, "project", appId, serviceMappingDTO.getServiceId()))
+               .isInstanceOf(NullPointerException.class)
+               .hasMessage("No CD 1.0 mapping defined for projectIdentifier: project"));
   }
 
   private CD10ActivitySourceDTO createActivitySourceDTO() {
-    String identifier = generateUuid();
+    String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 4; i++) {
       cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
       cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
     }

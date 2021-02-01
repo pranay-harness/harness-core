@@ -39,7 +39,7 @@ public class InternalActivityResource {
   @ApiOperation(value = "registers CD 1.0 activity (Internal API) ", nickname = "registerInternalActivity")
   public RestResponse<String> registerActivity(
       @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
-    return new RestResponse<>(activityService.register(accountId, activityDTO));
+    return new RestResponse<>(activityService.registerCD10Activity(accountId, activityDTO));
   }
 
   @GET
