@@ -6,8 +6,6 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -28,6 +26,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFileChange;
+import io.harness.gitsync.common.TestConstants;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitCommit;
@@ -178,7 +177,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
     doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
 
     String response = yamlGitService.validateAndQueueWebhookRequest(
-        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
+        TestConstants.ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
     assertThat(response).isEqualTo(WEBHOOK_SUCCESS_MSG);
     verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
   }
@@ -193,13 +192,15 @@ public class YamlGitServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_handleGitChangeSet() {
     final GitWebhookRequestAttributes gitWebhookRequestAttributes = GitWebhookRequestAttributes.builder()
-                                                                        .gitConnectorId(SETTING_ID)
+                                                                        .gitConnectorId(TestConstants.SETTING_ID)
                                                                         .branchName("branchName")
                                                                         .headCommitId("commitId")
                                                                         .repo("repo")
                                                                         .build();
-    final YamlChangeSet yamlChangeSet =
-        YamlChangeSet.builder().accountId(ACCOUNT_ID).gitWebhookRequestAttributes(gitWebhookRequestAttributes).build();
+    final YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
+                                            .accountId(TestConstants.ACCOUNT_ID)
+                                            .gitWebhookRequestAttributes(gitWebhookRequestAttributes)
+                                            .build();
     yamlChangeSet.setUuid("changesetId");
 
     doReturn(Optional.empty()).when(gitCommitService).findGitCommitWithProcessedStatus(any(), any(), any(), any());
@@ -217,9 +218,9 @@ public class YamlGitServiceImplTest extends CategoryTest {
         .when(yamlGitConfigService)
         .getGitConnector(any(), any(), any(), any());
 
-    yamlGitService.handleGitChangeSet(yamlChangeSet, ACCOUNT_ID);
+    yamlGitService.handleGitChangeSet(yamlChangeSet, TestConstants.ACCOUNT_ID);
     verify(waitNotifyEngine, times(1)).waitForAllOn(eq(NG_ORCHESTRATION), any(GitCommandCallback.class), anyString());
     verify(yamlChangeSetService, times(0))
-        .updateStatus(eq(ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
+        .updateStatus(eq(TestConstants.ACCOUNT_ID), eq("changesetId"), any(YamlChangeSet.Status.class));
   }
 }

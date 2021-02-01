@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
-import io.harness.gitsync.GitSyncBaseTest;
+import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
@@ -33,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class GitSyncServiceImplTest extends GitSyncBaseTest {
+public class GitSyncServiceImplTest extends GitSyncTestBase {
   @Inject @Spy private GitSyncServiceImpl gitSyncService;
   @Inject GitFileActivityRepository gitFileActivityRepository;
   @Inject GitFileActivitySummaryRepository gitFileActivitySummaryRepository;
