@@ -91,7 +91,12 @@ public class TriggerAuthHandler {
 
   public void authorizeAppAccess(List<String> appIds, String accountId) {
     User user = UserThreadLocal.get();
-    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    UserPermissionInfo userPermissionInfo = null;
+    if (user.getUserRequestContext() != null && user.getUserRequestContext().getUserPermissionInfo() != null) {
+      userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+    } else {
+      userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+    }
     Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
     if (!allowedAppIds.containsAll(appIds)) {
       throw new UnauthorizedException("User Not authorized", ACCESS_DENIED, USER);
