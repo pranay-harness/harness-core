@@ -11,7 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitFileChange.GitFileChangeBuilder;
-import io.harness.gitsync.GitSyncBaseTest;
+import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.GitSuccessFulChangeDetail;
 import io.harness.gitsync.core.beans.HarnessSuccessFulChangeDetail;
@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
-public class ChangeSetRequestTimeFilterTest extends GitSyncBaseTest {
+public class ChangeSetRequestTimeFilterTest extends GitSyncTestBase {
   public static final String ACCOUNT_ID = "accountId";
   public static final String FILE1 = "Setup/Applications/app1/Services/service1.yaml";
   public static final String FILE2 = "Setup/Applications/app1/Services/service2.yaml";
