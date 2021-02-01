@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -36,6 +37,7 @@ import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PROVISION_INFRASTRUCTURE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
@@ -54,6 +56,7 @@ import static software.wings.service.impl.workflow.creation.abstractfactories.Ab
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 import static software.wings.sm.StateType.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
+import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -110,6 +113,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -1780,5 +1784,31 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties().size()).isEqualTo(1);
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties())
         .isEqualTo(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testResetNodeSelection() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("specificHosts", Boolean.TRUE);
+    properties.put("hostNames", "my-host");
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase()
+            .phaseSteps(
+                asList(aPhaseStep(INFRASTRUCTURE_NODE)
+                           .addStep(GraphNode.builder().type(DC_NODE_SELECT.name()).properties(properties).build())
+                           .build()))
+            .build();
+
+    workflowServiceHelper.resetNodeSelection(workflowPhase);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().size()).isEqualTo(1);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getType()).isEqualTo(DC_NODE_SELECT.name());
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties()).isNotNull();
+    Map<String, Object> expectedProperties = new HashMap<>();
+    expectedProperties.put("specificHosts", Boolean.FALSE);
+    expectedProperties.put("instanceCount", 1);
+    expectedProperties.put("instanceUnitType", InstanceUnitType.COUNT);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties()).isEqualTo(expectedProperties);
   }
 }

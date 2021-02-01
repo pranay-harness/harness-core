@@ -65,6 +65,7 @@ import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.AZURE_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
@@ -113,6 +114,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -2480,12 +2482,16 @@ public class WorkflowServiceHelper {
         .map(PhaseStep::getSteps)
         .filter(Objects::nonNull)
         .flatMap(Collection::stream)
-        .filter(step -> step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name()))
+        .filter(step
+            -> step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name())
+                || step.getType().equals(AZURE_NODE_SELECT.name()) || step.getType().equals(ROLLING_NODE_SELECT.name()))
         .map(GraphNode::getProperties)
         .filter(properties -> (Boolean) properties.get("specificHosts"))
         .forEach(properties -> {
           properties.put("specificHosts", Boolean.FALSE);
           properties.remove("hostNames");
+          properties.put("instanceCount", 1);
+          properties.put("instanceUnitType", InstanceUnitType.COUNT);
         });
   }
 
