@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -777,14 +778,6 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
-  public void testCheckIfAppAutoscalarInstalled() throws Exception {
-    deploymentManager.checkIfAppAutoscalarInstalled();
-    verify(client, times(1)).checkIfAppAutoscalarInstalled();
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() throws Exception {
     deploymentManager.checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData.builder().build(), logCallback);
     verify(client, times(1)).checkIfAppHasAutoscalarAttached(any(), any());
@@ -806,14 +799,6 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     when(client.getApplicationEnvironmentsByName(eq(pcfRequestConfig)))
         .thenReturn(ApplicationEnvironments.builder().build());
     assertThat(deploymentManager.isActiveApplication(pcfRequestConfig, logCallback)).isEqualTo(false);
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
-  public void testResolvePcfPluginHome() {
-    deploymentManager.resolvePcfPluginHome();
-    verify(client, times(1)).resolvePcfPluginHome();
   }
 
   @Test

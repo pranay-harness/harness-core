@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import io.harness.pcf.PivotalClientApiException;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -18,6 +20,7 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.zeroturnaround.exec.StartedProcess;
+
 public interface PcfClient {
   CloudFoundryClient getCloudFoundryClient(PcfRequestConfig pcfRequestConfig, ConnectionContext connectionContext)
       throws PivotalClientApiException;
@@ -67,12 +70,10 @@ public interface PcfClient {
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
   void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
-  boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
   boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
   boolean checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback logCallback) throws PivotalClientApiException;
-  String resolvePcfPluginHome();
 
   List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
       throws PivotalClientApiException;
