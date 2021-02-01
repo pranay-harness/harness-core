@@ -7,6 +7,8 @@ import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 public class LocalEntityToDTO implements ConnectorEntityToDTOMapper<LocalConnectorDTO, LocalConnector> {
   @Override
   public LocalConnectorDTO createConnectorDTO(LocalConnector connector) {
-    return LocalConnectorDTO.builder().isDefault(connector.isDefault()).build();
+    LocalConnectorDTO localConnectorDTO = LocalConnectorDTO.builder().isDefault(connector.isDefault()).build();
+    localConnectorDTO.setHarnessManaged(Boolean.TRUE.equals(connector.getHarnessManaged()));
+    return localConnectorDTO;
   }
 }
