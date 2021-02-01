@@ -9,9 +9,9 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -121,7 +122,17 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
     doReturn(groupPrefix).when(mockContext).renderExpression(anyString());
     ExecutionResponse executionResponse = state.handleAsyncResponse(mockContext, responseMap);
-    verify(mockSweepingOutputService, times(1)).save(any());
+
+    verify(mockSweepingOutputService).save(argThat(new ArgumentMatcher<SweepingOutputInstance>() {
+      @Override
+      public boolean matches(Object o) {
+        SweepingOutputInstance sweepingOutputInstance = (SweepingOutputInstance) o;
+        SpotInstSetupContextElement contextElement = (SpotInstSetupContextElement) sweepingOutputInstance.getValue();
+        return contextElement.getOldElastiGroupOriginalConfig().getName().equals("foo__1")
+            && contextElement.getNewElastiGroupOriginalConfig().getName().equals("foo__2");
+      }
+    }));
+
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
     List<ContextElement> notifyElements = executionResponse.getNotifyElements();
