@@ -7,12 +7,14 @@ import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 public class GcpKmsEntityToDTO implements ConnectorEntityToDTOMapper<GcpKmsConnectorDTO, GcpKmsConnector> {
   @Override
   public GcpKmsConnectorDTO createConnectorDTO(GcpKmsConnector connector) {
-    return GcpKmsConnectorDTO.builder()
-        .keyName(connector.getKeyName())
-        .keyRing(connector.getKeyRing())
-        .projectId(connector.getProjectId())
-        .region(connector.getRegion())
-        .isDefault(connector.isDefault())
-        .build();
+    GcpKmsConnectorDTO gcpKmsConnectorDTO = GcpKmsConnectorDTO.builder()
+                                                .keyName(connector.getKeyName())
+                                                .keyRing(connector.getKeyRing())
+                                                .projectId(connector.getProjectId())
+                                                .region(connector.getRegion())
+                                                .isDefault(connector.isDefault())
+                                                .build();
+    gcpKmsConnectorDTO.setHarnessManaged(Boolean.TRUE.equals(connector.getHarnessManaged()));
+    return gcpKmsConnectorDTO;
   }
 }
