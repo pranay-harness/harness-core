@@ -3,7 +3,9 @@ package software.wings.sm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
+import static software.wings.sm.StateMachine.MAPPING_ERROR_MESSAGE_PREFIX;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +24,15 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.GeneralNotifyEventListener;
+import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.Graph;
+import software.wings.beans.GraphNode;
+import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep.PhaseStepBuilder;
+import software.wings.beans.PhaseStepType;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
@@ -33,6 +43,8 @@ import software.wings.sm.states.RepeatState;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -110,6 +122,46 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.TRANSITION_TYPE_NULL.name());
     }
+  }
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void stateMachineShouldBeMarkedInvalidIfGivenPropertiesAreInvalid() {
+    /**
+     * This test Checks if properties for a given state are invalid, StateMachine should be marked invalid,
+     * The orchestrationWorkflow for Generated StateMachine should also marked invalid with appropriate
+     * validationMessage.
+     *
+     * This test specifically checks for APPROVAL state. In approval state timeoutMillis field is defined as
+     * Integer. If provided properties contains a bigger number (i.e. Long). Corresponding mapping would fail
+     * and generated StateMachine should contain an invalid orchestrationWorkflow.
+     */
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("userGroups", Collections.singletonList("qM90ydbbTfiAt-QF4ohD8Q"));
+    properties.put("timeoutMillis", 7776000000L); // This is a long, Where as timeoutMillis field in ApprovalState is
+                                                  // Integer.
+    properties.put("approvalStateType", "USER_GROUP");
+    properties.put("parentId", "mXgEfqzMQAGFptFi0-GM5A");
+
+    GraphNode node = GraphNode.builder().name("Approval").type("APPROVAL").origin(true).properties(properties).build();
+
+    Graph graph = Graph.Builder.aGraph().addNodes(node).build();
+
+    OrchestrationWorkflow orchestrationWorkflow =
+        CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow()
+            .withPreDeploymentSteps(
+                PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "pre-deploy").addStep(node).build())
+            .build();
+
+    Workflow workflow = WorkflowBuilder.aWorkflow().envId("env").orchestrationWorkflow(orchestrationWorkflow).build();
+
+    Map<String, StateTypeDescriptor> stencilMap = new HashMap<>();
+    stencilMap.put("APPROVAL", StateType.APPROVAL);
+
+    StateMachine sm = new StateMachine(workflow, 1, graph, stencilMap, false);
+    assertThat(sm.getOrchestrationWorkflow().isValid()).isFalse();
+    assertThat(sm.getOrchestrationWorkflow().getValidationMessage()).contains(MAPPING_ERROR_MESSAGE_PREFIX);
+    assertThat(sm.isValid()).isFalse();
   }
 
   /**
