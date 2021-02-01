@@ -5,6 +5,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO.DeploymentActivityDTOKeys;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO.VerificationJobDTOKeys;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.state.CVNGVerificationTask;
@@ -77,8 +78,6 @@ public class CVNGState extends State {
       DeploymentActivityDTO activityDTO =
           DeploymentActivityDTO.builder()
               .deploymentTag(getDeploymentTag(context))
-              .environmentIdentifier(getValue(context, VerificationJobDTOKeys.envIdentifier))
-              .serviceIdentifier(getValue(context, VerificationJobDTOKeys.serviceIdentifier))
               .accountIdentifier(context.getAccountId())
               .orgIdentifier(orgIdentifier)
               .projectIdentifier(projectIdentifier)
@@ -92,14 +91,27 @@ public class CVNGState extends State {
               .verificationJobRuntimeDetails(
                   Collections.singletonList(ActivityDTO.VerificationJobRuntimeDetails.builder()
                                                 .verificationJobIdentifier(verificationJobIdentifier)
-                                                .runtimeValues(getRuntimeValues(context))
+                                                .runtimeValues(getRuntimeValues(context, workflowExecution))
                                                 .build()))
               .build();
+      String serviceIdentifier = getValue(context, VerificationJobDTOKeys.serviceIdentifier);
+      String envIdentifier = getValue(context, VerificationJobDTOKeys.envIdentifier);
+
+      if (!VerificationJobDTO.isRuntimeParam(serviceIdentifier)) {
+        activityDTO.setServiceIdentifier(serviceIdentifier);
+      }
+      if (!VerificationJobDTO.isRuntimeParam(envIdentifier)) {
+        activityDTO.setEnvironmentIdentifier(envIdentifier);
+      }
       String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
       String correlationId = UUID.randomUUID().toString();
       CVNGStateExecutionData cvngStateExecutionData =
           CVNGStateExecutionData.builder()
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .projectIdentifier(projectIdentifier)
+              .orgIdentifier(orgIdentifier)
+              .deploymentTag(getDeploymentTag(context))
+              .serviceIdentifier(serviceIdentifier)
               .activityId(activityId)
               .status(ExecutionStatus.RUNNING)
               .build();
@@ -146,13 +158,21 @@ public class CVNGState extends State {
   private String getDeploymentTag(ExecutionContext executionContext) {
     return executionContext.renderExpression(this.deploymentTag);
   }
-  private Map<String, String> getRuntimeValues(ExecutionContext context) {
+  private Map<String, String> getRuntimeValues(ExecutionContext context, WorkflowExecution workflowExecution) {
     Map<String, String> runtimeValues = new HashMap<>();
     for (ParamValue param : this.cvngParams) {
-      if (param.isEditable()) {
+      if (param.isEditable() && !VerificationJobDTO.isRuntimeParam(param.getValue())) {
         runtimeValues.put(param.getName(), context.renderExpression(param.getValue()));
       }
     }
+    Preconditions.checkState(workflowExecution.getServiceIds().size() == 1, "WorkflowExecution serviceIds size: %s",
+        workflowExecution.getServiceIds());
+    String serviceId = workflowExecution.getServiceIds().get(0);
+    String envId = workflowExecution.getEnvId();
+    String appId = context.getAppId();
+    runtimeValues.put("harnessCdAppId", appId);
+    runtimeValues.put("harnessCdServiceId", serviceId);
+    runtimeValues.put("harnessCdEnvId", envId);
     return runtimeValues;
   }
 
@@ -175,6 +195,10 @@ public class CVNGState extends State {
   @Builder
   public static class CVNGStateExecutionData extends StateExecutionData {
     private String activityId;
+    private String projectIdentifier;
+    private String orgIdentifier;
+    private String deploymentTag;
+    private String serviceIdentifier;
     private String correlationId;
     private ExecutionStatus status;
     private String stateExecutionInstanceId;

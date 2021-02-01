@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -191,7 +192,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testSaveActivitySource_cd10ActivitySource() {
-    String identifier = generateUuid();
+    String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();
@@ -224,12 +225,12 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testSaveActivitySource_cd10ActivitySourceUpdate() {
+  public void testSaveActivitySource_invalidCD10Identifier() {
     String identifier = generateUuid();
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 2; i++) {
       String appId = generateUuid();
       appIds.add(appId);
       cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
@@ -241,6 +242,33 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                       .envMappings(cd10EnvMappingDTOS)
                                                       .serviceMappings(cd10ServiceMappingDTOS)
                                                       .build();
+    assertThatThrownBy(()
+                           -> activitySourceService.saveActivitySource(
+                               accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Only one CD 1.0 activity can be created with identifier: harness_cd10_activity_source");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testSaveActivitySource_cd10ActivitySourceUpdate() {
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO =
+        CD10ActivitySourceDTO.builder()
+            .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
+            .name("some-name")
+            .envMappings(cd10EnvMappingDTOS)
+            .serviceMappings(cd10ServiceMappingDTOS)
+            .build();
     String activitySourceUUID =
         activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
     cd10ActivitySourceDTO.setUuid(activitySourceUUID);
@@ -254,7 +282,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     assertThat(activitySource.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(activitySource.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(activitySource.getName()).isEqualTo("updated name");
-    assertThat(activitySource.getIdentifier()).isEqualTo(identifier);
+    assertThat(activitySource.getIdentifier()).isEqualTo(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER);
     assertThat(activitySource.getEnvMappings()).isEmpty();
     assertThat(activitySource.getServiceMappings())
         .isEqualTo(Collections.singleton(cd10ServiceMappingDTOS.iterator().next()));
@@ -264,7 +292,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testGetActivitySource() {
-    String identifier = generateUuid();
+    String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();

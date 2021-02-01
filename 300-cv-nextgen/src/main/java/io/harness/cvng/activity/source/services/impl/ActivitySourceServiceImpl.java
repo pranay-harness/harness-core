@@ -53,6 +53,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
+    activitySource.validate();
     return hPersistence.save(activitySource);
   }
 

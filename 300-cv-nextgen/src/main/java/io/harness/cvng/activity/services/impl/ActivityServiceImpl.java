@@ -22,6 +22,7 @@ import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKe
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -76,6 +77,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationManagerService verificationManagerService;
+  @Inject private CD10ActivitySourceService cd10ActivitySourceService;
 
   @Override
   public Activity get(String activityId) {
@@ -97,9 +99,7 @@ public class ActivityServiceImpl implements ActivityService {
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     return register(accountId, activityDTO);
   }
-
-  @Override
-  public String register(String accountId, ActivityDTO activityDTO) {
+  private String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
@@ -108,6 +108,31 @@ public class ActivityServiceImpl implements ActivityService {
     log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
         activity.getProjectIdentifier(), activity.getOrgIdentifier());
     return activity.getUuid();
+  }
+  @Override
+  public String registerCD10Activity(String accountId, ActivityDTO activityDTO) {
+    Preconditions.checkNotNull(activityDTO);
+    Preconditions.checkState(
+        activityDTO.getVerificationJobRuntimeDetails().size() == 1, "RuntimeDetails should be of size 1");
+    if (activityDTO.getServiceIdentifier() == null || activityDTO.getEnvironmentIdentifier() == null) {
+      Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
+      String harness10CdAppId = runtimeValues.get("harnessCdAppId");
+      String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
+      String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
+      Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
+      Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
+      Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
+      if (activityDTO.getEnvironmentIdentifier() == null) {
+        activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
+            activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
+      }
+      if (activityDTO.getServiceIdentifier() == null) {
+        activityDTO.setServiceIdentifier(
+            cd10ActivitySourceService.getNextGenServiceIdentifier(accountId, activityDTO.getOrgIdentifier(),
+                activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
+      }
+    }
+    return register(accountId, activityDTO);
   }
 
   @Override

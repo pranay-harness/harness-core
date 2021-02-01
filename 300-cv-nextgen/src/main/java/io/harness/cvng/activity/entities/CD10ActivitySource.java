@@ -6,6 +6,7 @@ import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 
+import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -24,6 +25,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 public class CD10ActivitySource extends ActivitySource {
+  public static final String HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER = "harness_cd10_activity_source";
   private Set<CD10EnvMappingDTO> envMappings;
   private Set<CD10ServiceMappingDTO> serviceMappings;
 
@@ -52,6 +54,12 @@ public class CD10ActivitySource extends ActivitySource {
         .identifier(getIdentifier())
         .name(getName())
         .build();
+  }
+
+  @Override
+  protected void validateParams() {
+    Preconditions.checkState(getIdentifier().equals(HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER),
+        "Only one CD 1.0 activity can be created with identifier: %s", HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER);
   }
 
   public static CD10ActivitySource fromDTO(
