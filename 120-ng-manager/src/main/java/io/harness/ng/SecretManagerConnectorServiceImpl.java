@@ -196,10 +196,11 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
-    defaultConnectorService.updateConnectivityDetailOfTheConnector(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorValidationResult);
+  public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
+      Long activityTime) {
+    defaultConnectorService.updateActivityDetailsInTheConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorValidationResult, activityTime);
   }
 
   @Override

@@ -1,12 +1,7 @@
 package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY;
 
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
@@ -15,42 +10,29 @@ import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Singleton
-public class EntityCRUDStreamConsumer implements Runnable {
+public class EntityActivityStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
-  private final Map<String, MessageProcessor> processorMap;
   private final List<MessageListener> messageListenersList;
 
   @Inject
-  public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
-      @Named(ORGANIZATION_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
-      @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
-      @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
-      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor) {
+  public EntityActivityStreamConsumer(@Named(ENTITY_ACTIVITY) Consumer redisConsumer,
+      @Named(ENTITY_ACTIVITY) MessageListener activityEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
-    messageListenersList.add(organizationEntityCRUDStreamListener);
-    messageListenersList.add(projectEntityCRUDStreamListener);
-    messageListenersList.add(connectorEntityCRUDStreamListener);
-
-    processorMap = new HashMap<>();
-    processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
+    messageListenersList.add(activityEventMessageProcessor);
   }
 
   @Override
   public void run() {
-    log.info("Started the consumer for entity crud stream");
+    log.info("Started the consumer for setup usage stream");
     SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
@@ -95,17 +77,6 @@ public class EntityCRUDStreamConsumer implements Runnable {
       }
     });
 
-    if (message.hasMessage()) {
-      Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.get(ENTITY_TYPE) != null) {
-        String entityType = metadataMap.get(ENTITY_TYPE);
-        if (processorMap.get(entityType) != null) {
-          if (!processorMap.get(entityType).processMessage(message)) {
-            success.set(false);
-          }
-        }
-      }
-    }
     return success.get();
   }
 }

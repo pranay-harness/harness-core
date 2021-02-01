@@ -1,6 +1,7 @@
 package io.harness.connector.entities;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
@@ -61,6 +62,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Version Long version;
   Long timeWhenConnectorIsLastUpdated;
   ConnectorConnectivityDetails connectivityDetails;
+  ConnectorActivityDetails activityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
 

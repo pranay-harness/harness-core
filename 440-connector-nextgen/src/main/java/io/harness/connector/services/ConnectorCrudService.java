@@ -34,8 +34,8 @@ public interface ConnectorCrudService {
 
   void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, ConnectorInfoDTO connector, String id);
 
-  void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String identifier, ConnectorValidationResult connectorValidationResult);
+  void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, ConnectorValidationResult connectorValidationResult, Long activityTime);
 
   List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
 }

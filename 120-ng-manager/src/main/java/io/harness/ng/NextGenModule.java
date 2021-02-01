@@ -24,6 +24,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
@@ -49,7 +50,7 @@ import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
-import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageProcessor;
+import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
@@ -279,9 +280,6 @@ public class NextGenModule extends AbstractModule {
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACTIVITY_ENTITY))
-        .to(EntityActivityCrudEventMessageProcessor.class);
 
     registerEventsFrameworkMessageListeners();
   }
@@ -305,6 +303,9 @@ public class NextGenModule extends AbstractModule {
         .to(ConnectorFeatureFlagStreamListener.class);
 
     bind(MessageListener.class).annotatedWith(Names.named(SETUP_USAGE)).to(SetupUsageChangeEventMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+        .to(EntityActivityCrudEventMessageListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

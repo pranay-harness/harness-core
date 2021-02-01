@@ -169,19 +169,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Objects.requireNonNull(connector.getIdentifier());
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    Optional<Connector> existingConnector =
+    Optional<Connector> existingConnectorOptional =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
-    if (!existingConnector.isPresent()) {
+    if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
     }
-    validateTheUpdateRequestIsValid(existingConnector.get(), connectorRequest.getConnectorInfo(), accountIdentifier);
+    Connector existingConnector = existingConnectorOptional.get();
+    validateTheUpdateRequestIsValid(existingConnector, connectorRequest.getConnectorInfo(), accountIdentifier);
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
-    newConnector.setId(existingConnector.get().getId());
-    newConnector.setVersion(existingConnector.get().getVersion());
-    newConnector.setConnectivityDetails(existingConnector.get().getConnectivityDetails());
-    newConnector.setCreatedAt(existingConnector.get().getCreatedAt());
+    newConnector.setId(existingConnector.getId());
+    newConnector.setVersion(existingConnector.getVersion());
+    newConnector.setConnectivityDetails(existingConnector.getConnectivityDetails());
+    newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
+    newConnector.setActivityDetails(existingConnector.getActivityDetails());
     Connector updatedConnector = connectorRepository.save(newConnector);
     return connectorMapper.writeDTO(updatedConnector);
   }
@@ -306,8 +308,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return validationResult;
   }
 
-  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
+  public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
+      Long activityTime) {
     return;
   }
 

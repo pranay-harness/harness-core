@@ -11,6 +11,9 @@ public class NoOpConnectorValidationHandler implements ConnectorValidationHandle
   @Override
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
-    return null;
+    return ConnectorValidationResult.builder()
+        .status(ConnectivityStatus.SUCCESS)
+        .testedAt(System.currentTimeMillis())
+        .build();
   }
 }

@@ -51,7 +51,6 @@ public class NGActivityDTOToEntityMapper {
         .activityStatus(String.valueOf(activityDTO.getActivityStatus()))
         .activityTime(activityDTO.getActivityTime())
         .description(activityDTO.getDescription())
-        .errorMessage(activityDTO.getErrorMessage())
         .referredEntityType(String.valueOf(activityDTO.getReferredEntity().getType()))
         .referredEntity(referredEntity)
         .type(String.valueOf(activityDTO.getType()));
@@ -64,7 +63,10 @@ public class NGActivityDTOToEntityMapper {
                                     .referredByEntityFQN(referredByEntity.getEntityRef().getFullyQualifiedName())
                                     .referredByEntityType(String.valueOf(referredByEntity.getType()))
                                     .referredByEntity(referredByEntity)
-                                    .activityStatusMessage(entityUsageDTO.getActivityStatusMessage());
+                                    .activityStatusMessage(entityUsageDTO.getActivityStatusMessage())
+                                    .errors(entityUsageDTO.getErrors())
+                                    .errorSummary(entityUsageDTO.getErrorSummary())
+                                    .status(entityUsageDTO.getStatus());
     populateCommonActivityProperties(builder, activityDTO);
     return builder.build();
   }

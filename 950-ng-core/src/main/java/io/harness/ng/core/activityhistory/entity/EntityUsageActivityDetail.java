@@ -1,7 +1,10 @@
 package io.harness.ng.core.activityhistory.entity;
 
+import io.harness.connector.ConnectivityStatus;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.dto.ErrorDetail;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,4 +28,7 @@ public class EntityUsageActivityDetail extends NGActivity {
   @NotBlank String referredByEntityType;
   @NotNull EntityDetail referredByEntity;
   @NotEmpty String activityStatusMessage;
+  List<ErrorDetail> errors;
+  String errorSummary;
+  ConnectivityStatus status;
 }
