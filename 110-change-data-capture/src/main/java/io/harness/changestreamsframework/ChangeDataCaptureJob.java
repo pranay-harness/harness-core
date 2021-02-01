@@ -2,6 +2,7 @@ package io.harness.changestreamsframework;
 
 import io.harness.ChangeDataCaptureServiceConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.dl.WingsPersistence;
@@ -22,6 +23,10 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Strings;
 import org.bson.BsonDocument;
+import org.bson.BsonDocumentReader;
+import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 
@@ -33,6 +38,7 @@ public class ChangeDataCaptureJob implements Runnable {
 
   @Inject private ChangeDataCaptureServiceConfig mainConfiguration;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject ChangeHandler changeHandler;
 
   @Override
   public void run() {
@@ -48,19 +54,32 @@ public class ChangeDataCaptureJob implements Runnable {
       MongoCursor<ChangeStreamDocument<DBObject>> cursor = changeStream.iterator();
       cursor.forEachRemaining(stream -> {
         String operationType = Strings.toUpperCase(stream.getOperationType().getValue());
-        BsonDocument documentKey = stream.getDocumentKey();
+        String uuid = getUuidFromBsonDocumentKey(stream.getDocumentKey());
         DBObject targetDoc = stream.getFullDocument();
         log.info("Received ChangeStream with Operation Type {}: {}", operationType, targetDoc);
-        log.info("Document Key: {}", documentKey);
-
+        log.info("Document UUID: {}", uuid);
+        CECloudAccount ceCloudAccount = CECloudAccount.builder().build();
         if (!operationType.equals("DELETE")) {
-          CECloudAccount ceCloudAccount = wingsPersistence.convertToEntity(CECloudAccount.class, targetDoc);
+          ceCloudAccount = wingsPersistence.convertToEntity(CECloudAccount.class, targetDoc);
           log.info("CECloudAccount: {}", ceCloudAccount);
+          changeHandler.handle(operationType, ceCloudAccount, uuid);
+        } else {
+          changeHandler.handle(operationType, ceCloudAccount, uuid);
         }
       });
     } catch (Exception e) {
       log.error("Exception While Watching Change Stream {}", e);
     }
+  }
+
+  private static Document convertBsonDocumentToDocument(BsonDocument bsonDocument) {
+    Codec<Document> codec = MongoClient.getDefaultCodecRegistry().get(Document.class);
+    return codec.decode(new BsonDocumentReader(bsonDocument), DecoderContext.builder().build());
+  }
+
+  private static String getUuidFromBsonDocumentKey(BsonDocument documentKey) {
+    Document uuidDocument = convertBsonDocumentToDocument(documentKey);
+    return (String) uuidDocument.get("_id");
   }
 
   private MongoClientURI mongoClientUri() {
