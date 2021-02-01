@@ -1,8 +1,5 @@
 package io.harness.perpetualtask;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -11,7 +8,6 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "PerpetualTaskClientContextKeys")
-@TargetModule(Module._420_DELEGATE_SERVICE)
 public class PerpetualTaskClientContext {
   // Unique key (provided by caller) that references the perpetual task in question
   private String clientId;

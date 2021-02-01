@@ -18,10 +18,10 @@ public class DelegateServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateAsyncTaskResponse.class);
     set.add(DelegateCallbackRecord.class);
     set.add(DelegateProfile.class);
+    set.add(DelegateScope.class);
     set.add(DelegateSyncTaskResponse.class);
     set.add(DelegateTaskProgressResponse.class);
     set.add(TaskSelectorMap.class);
-    set.add(DelegateScope.class);
   }
 
   @Override

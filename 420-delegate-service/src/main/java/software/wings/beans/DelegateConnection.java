@@ -4,8 +4,6 @@ import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -36,7 +34,6 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegateConnections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateConnection implements PersistentEntity, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
