@@ -13,7 +13,8 @@ public enum QLPermissionType implements QLEnum {
   WORKFLOW,
   PIPELINE,
   DEPLOYMENT,
-  PROVISIONER;
+  PROVISIONER,
+  WEBHOOK_TRIGGER_SECRETS;
 
   @Override
   public String getStringValue() {

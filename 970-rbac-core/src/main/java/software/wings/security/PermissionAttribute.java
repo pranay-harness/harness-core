@@ -314,6 +314,10 @@ public class PermissionAttribute {
      */
     EXECUTE_PIPELINE,
     /**
+     * Manage Action
+     */
+    MANAGE,
+    /**
      * default action.
      */
     DEFAULT
@@ -507,6 +511,11 @@ public class PermissionAttribute {
     /**
      * Create custom dashboard
      */
-    CREATE_CUSTOM_DASHBOARDS;
+    CREATE_CUSTOM_DASHBOARDS,
+
+    /**
+     * Webhook Trigger Secrets
+     */
+    WEBHOOK_TRIGGER_SECRETS;
   }
 }

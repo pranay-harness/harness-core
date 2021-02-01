@@ -13,7 +13,8 @@ public enum QLActions implements QLEnum {
   DELETE,
   @Deprecated EXECUTE,
   EXECUTE_WORKFLOW,
-  EXECUTE_PIPELINE;
+  EXECUTE_PIPELINE,
+  MANAGE;
   @Override
   public String getStringValue() {
     return this.name();

@@ -223,6 +223,8 @@ public class UserGroupPermissionsController {
         return EXECUTE_WORKFLOW;
       case EXECUTE_PIPELINE:
         return EXECUTE_PIPELINE;
+      case MANAGE:
+        return MANAGE;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }
@@ -246,6 +248,8 @@ public class UserGroupPermissionsController {
         return DEPLOYMENT;
       case PROVISIONER:
         return PROVISIONER;
+      case WEBHOOK_TRIGGER_SECRETS:
+        return WEBHOOK_TRIGGER_SECRETS;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
@@ -522,6 +526,8 @@ public class UserGroupPermissionsController {
         return QLActions.EXECUTE_PIPELINE;
       case EXECUTE_WORKFLOW:
         return QLActions.EXECUTE_WORKFLOW;
+      case MANAGE:
+        return QLActions.MANAGE;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }
@@ -545,6 +551,8 @@ public class UserGroupPermissionsController {
         return QLPermissionType.DEPLOYMENT;
       case PROVISIONER:
         return QLPermissionType.PROVISIONER;
+      case WEBHOOK_TRIGGER_SECRETS:
+        return QLPermissionType.WEBHOOK_TRIGGER_SECRETS;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
