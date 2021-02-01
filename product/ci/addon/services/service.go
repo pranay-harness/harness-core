@@ -86,7 +86,7 @@ func (s *integrationSvc) Run() error {
 }
 
 func (s *integrationSvc) getEntrypoint(ctx context.Context) ([]string, error) {
-	if len(s.entrypoint) != 0 && len(s.args) != 0 {
+	if len(s.entrypoint) != 0 {
 		return images.CombinedEntrypoint(s.entrypoint, s.args), nil
 	}
 
