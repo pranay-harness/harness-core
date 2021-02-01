@@ -31,7 +31,8 @@ public class PlanNodeProtoMapper {
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
-            .setServiceName(serviceName);
+            .setServiceName(serviceName)
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
@@ -57,7 +58,8 @@ public class PlanNodeProtoMapper {
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
             .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
-            .setSkipType(node.getSkipGraphType());
+            .setSkipType(node.getSkipGraphType())
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
