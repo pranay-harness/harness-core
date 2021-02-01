@@ -21,5 +21,6 @@ public class ConnectorResponseDTO {
   Long createdAt;
   Long lastModifiedAt;
   ConnectorConnectivityDetails status;
+  ConnectorActivityDetails activityDetails;
   boolean harnessManaged;
 }

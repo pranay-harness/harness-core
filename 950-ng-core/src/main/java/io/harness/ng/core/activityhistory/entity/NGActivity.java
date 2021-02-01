@@ -33,7 +33,6 @@ public class NGActivity implements PersistentEntity, NGAccountAccess {
   String activityStatus;
   @NotNull long activityTime;
   String description;
-  String errorMessage;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 

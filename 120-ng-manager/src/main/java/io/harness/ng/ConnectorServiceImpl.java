@@ -10,6 +10,7 @@ import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
@@ -237,10 +238,8 @@ public class ConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     Connector connector =
         getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    long connectivityTestedAt = getCurrentTimeIfActivityTimeIsNull(connectorValidationResult.getTestedAt());
-    connectorValidationResult.setTestedAt(connectivityTestedAt);
-    setAndSaveNewConnectivityStatusInConnector(
-        connector, connectorValidationResult, connectivityTestedAt, connector.getConnectivityDetails());
+    setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
+    connectorRepository.save(connector);
   }
 
   private Connector getConnectorWithIdentifier(
@@ -257,11 +256,11 @@ public class ConnectorServiceImpl implements ConnectorService {
                 accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)));
   }
 
-  private void setAndSaveNewConnectivityStatusInConnector(Connector connector,
-      ConnectorValidationResult connectorValidationResult, long connectivityTestedAt,
-      ConnectorConnectivityDetails lastStatus) {
+  private void setConnectivityStatusInConnector(Connector connector,
+      ConnectorValidationResult connectorValidationResult, ConnectorConnectivityDetails lastStatus) {
     setLastUpdatedTimeIfNotPresent(connector);
     if (connectorValidationResult != null) {
+      long connectivityTestedAt = getCurrentTimeIfActivityTimeIsNull(connectorValidationResult.getTestedAt());
       ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
           ConnectorConnectivityDetails.builder()
               .status(connectorValidationResult.getStatus())
@@ -274,7 +273,6 @@ public class ConnectorServiceImpl implements ConnectorService {
             .errors(connectorValidationResult.getErrors());
       }
       connector.setConnectivityDetails(connectorConnectivityDetailsBuilder.build());
-      connectorRepository.save(connector);
     }
   }
 
@@ -298,18 +296,24 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
-    if (connectorValidationResult == null) {
-      log.info("Got null validation result for the {}",
-          String.format(CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier));
-      return;
-    }
-    long testingTime = connectorValidationResult.getTestedAt() != 0L ? connectorValidationResult.getTestedAt()
-                                                                     : System.currentTimeMillis();
+  public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
+      Long activityTime) {
     Connector connector = getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    setAndSaveNewConnectivityStatusInConnector(
-        connector, connectorValidationResult, testingTime, connector.getConnectivityDetails());
+    if (activityTime != null) {
+      setActivityDetailInTheConnector(connector, activityTime);
+    }
+    if (connectorValidationResult != null) {
+      setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
+    }
+    connectorRepository.save(connector);
+  }
+
+  private void setActivityDetailInTheConnector(Connector connector, long activityTime) {
+    long lastActivityTime = getCurrentTimeIfActivityTimeIsNull(activityTime);
+    ConnectorActivityDetails connectorActivityDetails =
+        ConnectorActivityDetails.builder().lastActivityTime(lastActivityTime).build();
+    connector.setActivityDetails(connectorActivityDetails);
   }
 
   @Override

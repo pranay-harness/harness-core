@@ -6,6 +6,9 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -40,6 +43,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -74,6 +78,9 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+            .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }

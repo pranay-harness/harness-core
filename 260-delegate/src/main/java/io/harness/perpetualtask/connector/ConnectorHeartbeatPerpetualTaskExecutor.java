@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.NoOpConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
 import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -54,8 +55,13 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     String connectorMessage =
         String.format(CONNECTOR_STRING, connectorIdentifier, accountId, orgIdentifier, projectIdentifier);
 
-    ConnectorValidationHandler connectorValidationHandler =
-        connectorTypeToConnectorValidationHandlerMap.get(connectorValidationParams.getConnectorType().getDisplayName());
+    ConnectorValidationHandler connectorValidationHandler;
+    if (connectorValidationParams instanceof NoOpConnectorValidationParams) {
+      connectorValidationHandler = new NoOpConnectorValidationHandler();
+    } else {
+      connectorValidationHandler = connectorTypeToConnectorValidationHandlerMap.get(
+          connectorValidationParams.getConnectorType().getDisplayName());
+    }
     if (connectorValidationHandler == null || connectorValidationHandler instanceof NoOpConnectorValidationHandler) {
       log.info("The connector validation handler is not registered for the connector.");
       return getPerpetualTaskResponse(null);

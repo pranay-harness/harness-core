@@ -34,7 +34,6 @@ public class NGActivityDTOToEntityMapperTest extends CategoryTest {
   String referredEntityOrgIdentifier = "referredEntityOrgIdentifier";
   String referredEntityProjIdentifier = "referredEntityProjIdentifier";
   String referredEntityIdentifier = "referredEntityIdentifier";
-  String errorMessage = "errorMessage";
   String activityDescription = "activityDescription";
   String accountIdentifier = "accountIdentifier";
   String referredByEntityIdentifier = "referredByEntityIdentifier";
@@ -92,7 +91,6 @@ public class NGActivityDTOToEntityMapperTest extends CategoryTest {
         .description(activityDescription)
         .detail(activityDetail)
         .referredEntity(referredEntity)
-        .errorMessage(errorMessage)
         .type(ngActivityType)
         .build();
   }
@@ -103,7 +101,6 @@ public class NGActivityDTOToEntityMapperTest extends CategoryTest {
     assertThat(activityEntity.getReferredEntity()).isEqualTo(activityEntity.getReferredEntity());
     assertThat(activityEntity.getActivityTime()).isEqualTo(activityTime);
     assertThat(activityEntity.getDescription()).isEqualTo(activityDescription);
-    assertThat(activityEntity.getErrorMessage()).isEqualTo(errorMessage);
     assertThat(activityEntity.getReferredEntityType()).isEqualTo(CONNECTORS.toString());
     assertThat(activityEntity.getType()).isEqualTo(ngActivityType.toString());
     assertThat(activityEntity.getActivityStatus()).isEqualTo(SUCCESS.toString());

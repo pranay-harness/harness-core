@@ -56,7 +56,6 @@ public class EntityActivityProtoToRestDTOMapperTest extends CategoryTest {
     assertThat(activityDTO.getType()).isEqualTo(NGActivityType.CONNECTIVITY_CHECK);
     assertThat(activityDTO.getActivityTime()).isEqualTo(time);
     assertThat(activityDTO.getDescription()).isEqualTo("CONNECTIVITY_CHECK_DESCRIPTION");
-    assertThat(activityDTO.getErrorMessage()).isEqualTo(errorMessage);
     assertThat(activityDTO.getReferredEntity().getEntityRef().getAccountIdentifier()).isEqualTo(accountIdentifier);
     assertThat(activityDTO.getReferredEntity().getEntityRef().getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(activityDTO.getReferredEntity().getEntityRef().getProjectIdentifier()).isEqualTo(projectIdentifier);

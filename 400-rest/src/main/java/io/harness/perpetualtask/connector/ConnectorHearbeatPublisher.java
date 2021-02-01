@@ -41,7 +41,7 @@ public class ConnectorHearbeatPublisher {
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Inject
-  public ConnectorHearbeatPublisher(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+  public ConnectorHearbeatPublisher(@Named(EventsFrameworkConstants.ENTITY_ACTIVITY) Producer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.eventProducer = eventProducer;
     this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
@@ -64,7 +64,7 @@ public class ConnectorHearbeatPublisher {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE,
-                  EventsFrameworkMetadataConstants.ACTIVITY_ENTITY, EventsFrameworkMetadataConstants.ACTION,
+                  EventsFrameworkConstants.ENTITY_ACTIVITY, EventsFrameworkMetadataConstants.ACTION,
                   EventsFrameworkMetadataConstants.CREATE_ACTION))
               .setData(ngActivityDTO.toByteString())
               .build());

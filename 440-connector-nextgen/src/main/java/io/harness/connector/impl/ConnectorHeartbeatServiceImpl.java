@@ -140,6 +140,8 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
               .getConnectorValidationParams(connectorResponse.getConnector(),
                   connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
         })
-        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist"));
+        .orElseThrow(()
+                         -> new InvalidRequestException(String.format(CONNECTOR_STRING, connectorIdentifier,
+                             accountIdentifier, orgIdentifier, projectIdentifier)));
   }
 }
