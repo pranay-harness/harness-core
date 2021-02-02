@@ -24,6 +24,8 @@ public class SSHTaskParams implements TaskParameters, ExecutionCapabilityDemande
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(SocketConnectivityExecutionCapability.builder()
                                          .hostName(host)
+                                         .url("")
+                                         .scheme("")
                                          .port(String.valueOf(sshKeySpec.getPort()))
                                          .build());
   }
