@@ -1957,6 +1957,11 @@ maven_install(
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
         "io.dropwizard:dropwizard-testing:1.3.24",
+        "com.spotify:docker-client:8.16.0",
+        "io.rest-assured:rest-assured:3.2.0",
+        "org.jboss.aerogear:aerogear-otp-java:1.0.0",
+        "org.jsoup:jsoup:1.8.3",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",

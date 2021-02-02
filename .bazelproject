@@ -1,5 +1,6 @@
 directories:
   136-git-sync-manager
+  230-model-test
   260-delegate
   310-ci-manager
   320-ci-execution
