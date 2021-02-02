@@ -32,7 +32,6 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -56,7 +55,6 @@ import software.wings.exception.ShellScriptException;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -146,8 +144,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                             .parameters(new Object[] {taskParameters})
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(),
-        TaskCategory.DELEGATE_TASK_V2, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
+    return StepUtils.prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
   }
 
   private Map<String, String> getEnvironmentVariables(List<NGVariable> inputVariables) {

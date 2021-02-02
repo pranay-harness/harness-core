@@ -78,7 +78,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
                                   .taskType(NGTaskType.HTTP_TASK_NG.name())
                                   .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
                                   .build();
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
   }
 
   @Override

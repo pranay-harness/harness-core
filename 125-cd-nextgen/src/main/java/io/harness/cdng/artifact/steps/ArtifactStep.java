@@ -68,7 +68,7 @@ public class ArtifactStep {
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
   }
 
   public StepOutcome processDelegateResponse(

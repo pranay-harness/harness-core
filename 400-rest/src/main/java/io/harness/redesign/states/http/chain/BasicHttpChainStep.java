@@ -27,7 +27,6 @@ import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
@@ -81,8 +80,8 @@ public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainSte
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(),
-        TaskCategory.DELEGATE_TASK_V1, Collections.emptyList());
+    return StepUtils.prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
   }
 
   @NotNull
