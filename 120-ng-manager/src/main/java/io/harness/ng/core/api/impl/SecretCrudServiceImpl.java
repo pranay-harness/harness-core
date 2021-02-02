@@ -54,8 +54,10 @@ import com.google.protobuf.StringValue;
 import java.io.InputStream;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +92,21 @@ public class SecretCrudServiceImpl implements SecretCrudService {
         SecretType.SecretFile, secretFileService, SecretType.SSHKey, sshSecretService));
   }
 
+  private void checkEqualityOrThrow(Object str1, Object str2) {
+    if (!Objects.equals(str1, str2)) {
+      throw new InvalidRequestException(
+          "Cannot change organization, project, identifier or type of a secret after creation.", INVALID_REQUEST, USER);
+    }
+  }
+
+  private void validateUpdateRequest(
+      String orgIdentifier, String projectIdentifier, String identifier, SecretType secretType, SecretDTOV2 updateDTO) {
+    checkEqualityOrThrow(orgIdentifier, updateDTO.getOrgIdentifier());
+    checkEqualityOrThrow(projectIdentifier, updateDTO.getProjectIdentifier());
+    checkEqualityOrThrow(identifier, updateDTO.getIdentifier());
+    checkEqualityOrThrow(secretType, updateDTO.getType());
+  }
+
   private SecretModifyService getService(SecretType secretType) {
     SecretModifyService secretModifyService = secretTypeToServiceMap.get(secretType);
     if (secretModifyService == null) {
@@ -97,12 +114,6 @@ public class SecretCrudServiceImpl implements SecretCrudService {
           SECRET_MANAGEMENT_ERROR, "No handler found for secret type: " + secretType, SRE);
     }
     return secretModifyService;
-  }
-
-  private void validateUpdateRequest(SecretDTOV2 existingSecret, SecretDTOV2 dto) {
-    if (existingSecret.getType() != dto.getType()) {
-      throw new InvalidRequestException("Cannot change type of secret after creation.", INVALID_REQUEST, USER);
-    }
   }
 
   private SecretResponseWrapper getResponseWrapper(@NotNull Secret secret) {
@@ -228,22 +239,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
   }
 
-  @Override
-  public SecretResponseWrapper update(String accountIdentifier, SecretDTOV2 dto) {
-    Optional<SecretResponseWrapper> secretOptional =
-        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
-    if (!secretOptional.isPresent()) {
-      throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
-    }
-
-    validateUpdateRequest(secretOptional.get().getSecret(), dto);
-
-    boolean remoteUpdateSuccess =
-        getService(dto.getType()).update(accountIdentifier, secretOptional.get().getSecret(), dto);
-    Secret updatedSecret = null;
-    if (remoteUpdateSuccess) {
-      updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
-    }
+  private SecretResponseWrapper processAndGetSecret(boolean remoteUpdateSuccess, Secret updatedSecret) {
     if (remoteUpdateSuccess && updatedSecret != null) {
       publishEvent(updatedSecret, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return getResponseWrapper(updatedSecret);
@@ -257,35 +253,35 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
-  public SecretResponseWrapper updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
+  public SecretResponseWrapper update(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, SecretDTOV2 dto) {
+    SecretDTOV2 existingSecret =
+        validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
+
+    boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, existingSecret, dto);
+    Secret updatedSecret = null;
+    if (remoteUpdateSuccess) {
+      updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
+    }
+    return processAndGetSecret(remoteUpdateSuccess, updatedSecret);
+  }
+
+  @Override
+  public SecretResponseWrapper updateViaYaml(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, SecretDTOV2 dto) {
     if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
       throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
 
-    Optional<SecretResponseWrapper> secretOptional =
-        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
-    if (!secretOptional.isPresent()) {
-      throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
-    }
+    SecretDTOV2 existingSecret =
+        validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
 
-    validateUpdateRequest(secretOptional.get().getSecret(), dto);
-
-    boolean remoteUpdateSuccess =
-        getService(dto.getType()).update(accountIdentifier, secretOptional.get().getSecret(), dto);
+    boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, existingSecret, dto);
     Secret updatedSecret = null;
     if (remoteUpdateSuccess) {
       updatedSecret = ngSecretService.update(accountIdentifier, dto, true);
     }
-    if (remoteUpdateSuccess && updatedSecret != null) {
-      publishEvent(updatedSecret, EventsFrameworkMetadataConstants.UPDATE_ACTION);
-      return getResponseWrapper(updatedSecret);
-    }
-    if (!remoteUpdateSuccess) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret remotely", USER);
-    } else {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Unable to update secret locally, data might be inconsistent", USER);
-    }
+    return processAndGetSecret(remoteUpdateSuccess, updatedSecret);
   }
 
   private void publishEvent(Secret secret, String action) {
@@ -340,16 +336,25 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to create secret file remotely", USER);
   }
 
-  @SneakyThrows
-  @Override
-  public SecretResponseWrapper updateFile(String accountIdentifier, SecretDTOV2 dto, @NotNull InputStream inputStream) {
+  private SecretDTOV2 validateUpdateRequestAndGetSecret(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, SecretDTOV2 updateDTO) {
     Optional<SecretResponseWrapper> secretOptional =
-        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (!secretOptional.isPresent()) {
       throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
     }
 
-    validateUpdateRequest(secretOptional.get().getSecret(), dto);
+    SecretDTOV2 existingSecret = secretOptional.get().getSecret();
+    validateUpdateRequest(existingSecret.getOrgIdentifier(), existingSecret.getProjectIdentifier(),
+        existingSecret.getIdentifier(), existingSecret.getType(), updateDTO);
+    return existingSecret;
+  }
+
+  @SneakyThrows
+  @Override
+  public SecretResponseWrapper updateFile(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, @Valid SecretDTOV2 dto, @NotNull InputStream inputStream) {
+    validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
 
     EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
@@ -377,7 +382,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, SecretValidationMetaData metadata) {
+      String projectIdentifier, String identifier, @Valid SecretValidationMetaData metadata) {
     return ngSecretService.validateSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, metadata);
   }
 }

@@ -67,6 +67,7 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
       default:
         break;
     }
+    builder.withSshConnectionTimeout(30000);
     return builder.build();
   }
 

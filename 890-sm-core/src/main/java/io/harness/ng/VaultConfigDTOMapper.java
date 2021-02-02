@@ -13,6 +13,7 @@ import lombok.experimental.UtilityClass;
 public class VaultConfigDTOMapper {
   public static VaultConfigUpdateDTO getVaultConfigUpdateDTO(
       ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+    vaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return VaultConfigUpdateDTO.builder()
         .authToken(vaultConnectorDTO.getAuthToken())
@@ -33,6 +34,7 @@ public class VaultConfigDTOMapper {
 
   public static VaultConfigDTO getVaultConfigDTO(
       String accountIdentifier, ConnectorDTO connectorRequestDTO, VaultConnectorDTO vaultConnectorDTO) {
+    vaultConnectorDTO.validate();
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return VaultConfigDTO.builder()
         .authToken(vaultConnectorDTO.getAuthToken())
