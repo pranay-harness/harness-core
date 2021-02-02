@@ -128,6 +128,7 @@ public class K8sListFunctionalTest extends AbstractFunctionalTest {
         getExecutionArgs(cleanupWorkflow, savedEnvironment.getUuid(), savedService.getUuid()));
 
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
