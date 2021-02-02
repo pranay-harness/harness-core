@@ -46,12 +46,14 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
 
@@ -177,6 +179,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

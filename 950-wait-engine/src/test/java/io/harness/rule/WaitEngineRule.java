@@ -186,6 +186,6 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

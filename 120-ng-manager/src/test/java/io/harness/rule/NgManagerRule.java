@@ -146,6 +146,6 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

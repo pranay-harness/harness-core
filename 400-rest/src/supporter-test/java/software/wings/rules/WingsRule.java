@@ -11,6 +11,9 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.getProperty;
+import static java.lang.System.setProperty;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
@@ -185,11 +188,11 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
    */
   protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
       throws Throwable {
-    System.setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
+    setProperty("javax.cache.spi.CachingProvider", "com.hazelcast.cache.HazelcastCachingProvider");
     initializeLogging();
     forceMaintenance(false);
     MongoClient mongoClient;
-    String dbName = System.getProperty("dbName", "harness");
+    String dbName = getProperty("dbName", "harness");
 
     configuration = getConfiguration(annotations, dbName);
 
@@ -236,7 +239,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(0, cacheModule);
     addPMSSdkModule(modules);
+    long start = currentTimeMillis();
     injector = Guice.createInjector(modules);
+    long diff = currentTimeMillis() - start;
+    log.info("Creating guice injector took: {}ms", diff);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
     registerProviders();
@@ -312,9 +318,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.getPortal().setCriticalDelegateTaskRejectAtLimit(100000);
     configuration.setApiUrl("http:localhost:8080");
     configuration.setMongoConnectionFactory(
-        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
-    configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
-    configuration.getServiceSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+        MongoConfig.builder().uri(getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
+    configuration.getBackgroundSchedulerConfig().setAutoStart(getProperty("setupScheduler", "false"));
+    configuration.getServiceSchedulerConfig().setAutoStart(getProperty("setupScheduler", "false"));
 
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());

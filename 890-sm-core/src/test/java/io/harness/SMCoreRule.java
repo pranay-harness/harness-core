@@ -7,7 +7,14 @@ import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.VaultEncryptor;
-import io.harness.encryptors.clients.*;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
+import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
+import io.harness.encryptors.clients.AzureVaultEncryptor;
+import io.harness.encryptors.clients.CyberArkVaultEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
+import io.harness.encryptors.clients.HashicorpVaultEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -214,6 +221,6 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

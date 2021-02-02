@@ -46,6 +46,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -55,6 +56,7 @@ import org.junit.runners.model.Statement;
  * Initiates mongo connection and register classes for running UTs
  */
 
+@Slf4j
 public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   @Rule public CIExecutionTestModule testRule = new CIExecutionTestModule();
@@ -153,6 +155,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

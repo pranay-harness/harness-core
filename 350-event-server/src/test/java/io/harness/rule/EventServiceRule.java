@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@Slf4j
 public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   public static final String DEFAULT_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   public static final String DEFAULT_ACCOUNT_SECRET = "2f6b0988b6fb3370073c3d0505baee59";
@@ -89,7 +91,7 @@ public class EventServiceRule implements MethodRule, InjectorRuleMixin, MongoRul
       @Override
       public void evaluate() throws Throwable {
         try {
-          applyInjector(base, method, target).evaluate();
+          applyInjector(log, base, method, target).evaluate();
         } finally {
           closingFactory.stopServers();
         }
