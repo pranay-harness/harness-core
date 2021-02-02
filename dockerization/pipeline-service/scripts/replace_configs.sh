@@ -144,3 +144,7 @@ fi
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
 fi
+
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
+fi
