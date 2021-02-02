@@ -21,7 +21,7 @@ public enum CIStepInfoType {
   RESTORE_CACHE(CI_LITE_ENGINE, "restoreCacheStepInfo"),
   ECR(CI_LITE_ENGINE, "BuildAndPushECR"),
   GCR(CI_LITE_ENGINE, "BuildAndPushGCR"),
-  DOCKER(CI_LITE_ENGINE, "BuildAndPushDockerHub"),
+  DOCKER(CI_LITE_ENGINE, "BuildAndPushDockerRegistry"),
   UPLOAD_GCS(CI_LITE_ENGINE, "GCSUpload"),
   UPLOAD_S3(CI_LITE_ENGINE, "S3Upload"),
   SAVE_CACHE_GCS(CI_LITE_ENGINE, "SaveCacheGCS"),
@@ -30,9 +30,8 @@ public enum CIStepInfoType {
   RESTORE_CACHE_S3(CI_LITE_ENGINE, "RestoreCacheS3"),
   UPLOAD_ARTIFACTORY(CI_LITE_ENGINE, "ArtifactoryUpload");
 
-  @Getter private CIStepExecEnvironment ciStepExecEnvironment;
-
-  private String displayName;
+  @Getter private final CIStepExecEnvironment ciStepExecEnvironment;
+  private final String displayName;
 
   @JsonValue
   public String getDisplayName() {

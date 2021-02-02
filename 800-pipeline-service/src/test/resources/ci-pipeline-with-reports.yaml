@@ -32,7 +32,7 @@ pipeline:
                     - file1.xml
           - step:
               identifier: Build_and_push_image_to_DockerHub
-              type: BuildAndPushDockerHub
+              type: BuildAndPushDockerRegistry
               name: Build and push image to DockerHub
               spec:
                 connectorRef: account.harnessimage

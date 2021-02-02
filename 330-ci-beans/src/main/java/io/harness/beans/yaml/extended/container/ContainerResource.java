@@ -1,7 +1,10 @@
 package io.harness.beans.yaml.extended.container;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
+
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +31,10 @@ public class ContainerResource {
   @TypeAlias("resource_limits")
   public static class Limits {
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Min(0) private ParameterField<String> memory;
-    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Min(0) private ParameterField<String> cpu;
+    @YamlSchemaTypes(value = {number})
+    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+    @Min(0)
+    private ParameterField<String> cpu;
 
     @Builder
     @JsonCreator

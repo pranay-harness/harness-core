@@ -164,7 +164,7 @@ pipeline:
               - step:
                   name: Build and push to DcokerHub
                   identifier: docker
-                  type: BuildAndPushDockerHub
+                  type: BuildAndPushDockerRegistry
                   description: build and push an image to DcokerHub
                   timeout: 90s
                   spec:
