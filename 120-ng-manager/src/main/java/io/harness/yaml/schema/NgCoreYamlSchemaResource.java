@@ -56,7 +56,7 @@ public class NgCoreYamlSchemaResource implements YamlSchemaResource {
     if (schema == null) {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
-    if (entityType == EntityType.CONNECTORS) {
+    if (entityType == EntityType.CONNECTORS && entitySubtype != null) {
       schema = yamlSchemaProvider.updateArrayFieldAtSecondLevelInSchema(
           schema, CONNECTOR_TYPES, ENUM_NODE, entitySubtype.getDisplayName());
     }
