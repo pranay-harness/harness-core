@@ -564,7 +564,7 @@ public class BuildJobEnvInfoBuilder {
                   .build());
 
           break;
-        case "BuildAndPushDockerHub":
+        case "BuildAndPushDockerRegistry":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
                   .connectorRef(resolveStringParameter(

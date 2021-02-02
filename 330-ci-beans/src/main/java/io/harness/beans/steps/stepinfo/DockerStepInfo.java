@@ -31,7 +31,7 @@ import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("BuildAndPushDockerHub")
+@JsonTypeName("BuildAndPushDockerRegistry")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("dockerStepInfo")
 public class DockerStepInfo implements PluginCompatibleStep {
