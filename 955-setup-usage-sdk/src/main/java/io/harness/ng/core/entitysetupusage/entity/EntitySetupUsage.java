@@ -2,6 +2,7 @@ package io.harness.ng.core.entitysetupusage.entity;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
@@ -60,12 +61,12 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   }
 
   @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotBlank String accountIdentifier;
+  @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
-  @NotBlank String referredEntityFQN;
+  @FdIndex @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
-  @NotBlank String referredByEntityFQN;
+  @FdIndex @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;
   // todo @deepak: Add the support for activity
   @CreatedDate Long createdAt;

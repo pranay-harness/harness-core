@@ -135,6 +135,8 @@ configFiles {"name": "app_template_entityId", "background": true} {"appId": 1, "
 configFiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 configFiles {"name": "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1", "unique": true} {"entityId": 1, "templateId": 1, "relativeFilePath": 1, "configOverrideType": 1, "instances": 1, "configOverrideExpression": 1}
 connectors {"name": "accountId_orgId_projectId_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+connectors {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
+connectors {"name": "fullyQualifiedIdentifier_1", "background": true} {"fullyQualifiedIdentifier": 1}
 connectors {"name": "fullyQualifiedIdentifier_deleted_Index", "background": true} {"fullyQualifiedIdentifier": 1, "deleted": 1}
 connectors {"name": "unique_fullyQualifiedIdentifier", "unique": true} {"fullyQualifiedIdentifier": 1}
 containerDeploymentInfo {"name": "appId_1", "background": true} {"appId": 1}
@@ -236,6 +238,10 @@ encryptedRecords {"name": "nextMigrationIteration_1", "background": true} {"next
 encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.secretManagerIdentifier": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
+entityActivity {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
+entityActivity {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
+entityActivity {"name": "referredFqn_type_referredByType", "background": true} {"referredEntityFQN": 1, "referredEntityType": 1, "referredByEntityType": 1}
+entityActivity {"name": "referredFqn_type_time_referredByType", "background": true} {"referredEntityFQN": 1, "referredEntityType": 1, "activityTime": 1, "referredByEntityType": 1}
 entityAuditRecords {"name": "entityRecordIndex_1", "background": true} {"auditHeaderId": 1, "createdAt": -1}
 entityAuditRecords {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 entityVersions {"name": "accountId_1", "background": true} {"accountId": 1}
