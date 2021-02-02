@@ -26,6 +26,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.UserClientModule;
+import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -143,6 +144,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(new YamlSchemaClientModule(configuration.getCiManagerClientConfig(),
         configuration.getCiManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
+        PIPELINE_SERVICE.getServiceId()));
+    install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
 
