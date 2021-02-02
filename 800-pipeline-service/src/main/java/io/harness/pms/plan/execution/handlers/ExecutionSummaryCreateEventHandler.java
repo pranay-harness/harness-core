@@ -107,6 +107,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     } else {
       deploymentsMap.put(strDate, 1);
     }
+    executionSummaryInfo.setDeployments(deploymentsMap);
     executionSummaryInfo.setLastExecutionTs(todaysDate.getTime());
     pmsPipelineService.saveExecutionInfo(accountId, orgId, projectId, pipelineId, executionSummaryInfo);
   }
