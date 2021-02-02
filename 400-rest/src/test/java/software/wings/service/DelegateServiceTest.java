@@ -130,6 +130,7 @@ import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
+import software.wings.FeatureTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.FileUploadLimit;
@@ -238,6 +239,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private DelegateGrpcConfig delegateGrpcConfig;
 
+  @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -1660,7 +1662,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadKubernetesWithCiEnabled() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    enableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
+    featureTestHelper.enableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
     File gzipFile = delegateService.downloadKubernetes(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "");
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
@@ -1679,7 +1681,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
     }
-    disableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
+    featureTestHelper.disableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
   }
 
   @Test

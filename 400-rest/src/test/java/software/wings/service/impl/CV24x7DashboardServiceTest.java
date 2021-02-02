@@ -21,6 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.security.EncryptionUtils;
 import io.harness.time.Timestamp;
 
+import software.wings.FeatureTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -75,6 +76,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject CV24x7DashboardService cv24x7DashboardService;
   @Inject CVConfigurationService cvConfigurationService;
+  @Inject private FeatureTestHelper featureTestHelper;
 
   private String accountId;
   private String appId;
@@ -250,7 +252,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
-    disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
+    featureTestHelper.disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
@@ -311,7 +313,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   public void testGetAnalysisSummaryFeedbackData() throws Exception {
     String cvConfigId = generateUuid();
     createAndSaveSumoConfig(cvConfigId, true);
-    disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
+    featureTestHelper.disableFeatureFlag(FeatureName.DISABLE_LOGML_NEURAL_NET);
 
     long endTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(10);
     long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(25);
