@@ -13,6 +13,7 @@ import io.harness.cvng.state.CVNGVerificationTask.Status;
 import io.harness.cvng.state.CVNGVerificationTaskService;
 import io.harness.tasks.ResponseData;
 
+import software.wings.api.ExecutionDataValue;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -105,6 +106,9 @@ public class CVNGState extends State {
       }
       String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
       String correlationId = UUID.randomUUID().toString();
+      String serviceIdentifier = getValue(context, VerificationJobDTOKeys.serviceIdentifier);
+      String envIdentifier = getValue(context, VerificationJobDTOKeys.envIdentifier);
+
       CVNGStateExecutionData cvngStateExecutionData =
           CVNGStateExecutionData.builder()
               .stateExecutionInstanceId(context.getStateExecutionInstanceId())
@@ -114,7 +118,13 @@ public class CVNGState extends State {
               .serviceIdentifier(serviceIdentifier)
               .activityId(activityId)
               .status(ExecutionStatus.RUNNING)
+              .deploymentTag(deploymentTag)
+              .envIdentifier(envIdentifier)
+              .serviceIdentifier(serviceIdentifier)
+              .orgIdentifier(orgIdentifier)
+              .projectIdentifier(projectIdentifier)
               .build();
+
       CVNGVerificationTask cvngVerificationTask = CVNGVerificationTask.builder()
                                                       .accountId(context.getAccountId())
                                                       .status(Status.IN_PROGRESS)
@@ -193,6 +203,7 @@ public class CVNGState extends State {
 
   @Value
   @Builder
+  @FieldNameConstants(innerTypeName = "CVNGStateExecutionDataKeys")
   public static class CVNGStateExecutionData extends StateExecutionData {
     private String activityId;
     private String projectIdentifier;
@@ -202,6 +213,38 @@ public class CVNGState extends State {
     private String correlationId;
     private ExecutionStatus status;
     private String stateExecutionInstanceId;
+    private String orgIdentifier;
+    private String projectIdentifier;
+    private String deploymentTag;
+    private String serviceIdentifier;
+    private String envIdentifier;
+
+    @Override
+    public Map<String, ExecutionDataValue> getExecutionSummary() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+      setExecutionData(executionDetails);
+      return executionDetails;
+    }
+
+    @Override
+    public Map<String, ExecutionDataValue> getExecutionDetails() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+      setExecutionData(executionDetails);
+      return executionDetails;
+    }
+
+    private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
+      Map<String, String> idsMap = new HashMap<>();
+      idsMap.put(CVNGStateExecutionDataKeys.activityId, activityId);
+      idsMap.put(CVNGStateExecutionDataKeys.orgIdentifier, orgIdentifier);
+      idsMap.put(CVNGStateExecutionDataKeys.projectIdentifier, projectIdentifier);
+      idsMap.put(CVNGStateExecutionDataKeys.envIdentifier, envIdentifier);
+      idsMap.put(CVNGStateExecutionDataKeys.serviceIdentifier, serviceIdentifier);
+      idsMap.put(CVNGStateExecutionDataKeys.deploymentTag, deploymentTag);
+
+      putNotNull(
+          executionDetails, "cvngIds", ExecutionDataValue.builder().displayName("cvngIds").value(idsMap).build());
+    }
   }
 
   @Value

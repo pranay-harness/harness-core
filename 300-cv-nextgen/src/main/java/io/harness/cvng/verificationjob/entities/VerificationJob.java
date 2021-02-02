@@ -4,6 +4,7 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DEFAULT_PORTAL_URL;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.RUNTIME_STRING;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -122,12 +123,12 @@ public abstract class VerificationJob
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);
     verificationJobDTO.setJobName(this.jobName);
-    verificationJobDTO.setDuration(this.duration.isRuntimeParam() ? "${duration}" : this.duration.getValue());
+    verificationJobDTO.setDuration(this.duration.isRuntimeParam() ? RUNTIME_STRING : this.duration.getValue());
 
     verificationJobDTO.setServiceIdentifier(
-        this.serviceIdentifier.isRuntimeParam() ? "${serviceIdentifier}" : (String) serviceIdentifier.getValue());
+        this.serviceIdentifier.isRuntimeParam() ? RUNTIME_STRING : (String) serviceIdentifier.getValue());
     verificationJobDTO.setEnvIdentifier(
-        this.envIdentifier.isRuntimeParam() ? "${envIdentifier}" : (String) envIdentifier.getValue());
+        this.envIdentifier.isRuntimeParam() ? RUNTIME_STRING : (String) envIdentifier.getValue());
     verificationJobDTO.setDataSources(this.dataSources);
     verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
     verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
@@ -275,7 +276,7 @@ public abstract class VerificationJob
 
     public String string() {
       if (isRuntimeParam) {
-        return "${input}";
+        return RUNTIME_STRING;
       }
       return value;
     }
