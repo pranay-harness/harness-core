@@ -1,9 +1,11 @@
-package software.wings.service;
+package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
@@ -14,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -34,12 +37,12 @@ import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.service.impl.notifications.NotificationDispatcher;
-import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.UserGroupService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
@@ -51,7 +54,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class NotificationDispatcherServiceTest extends WingsBaseTest {
-  @Inject @InjectMocks private NotificationDispatcherService notificationDispatcherService;
+  @Inject @InjectMocks private NotificationDispatcherServiceImpl notificationDispatcherService;
 
   @Mock private UserGroupService userGroupService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
@@ -135,5 +138,42 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     notificationDispatcherService.dispatchNotification(notification, Collections.singletonList(notificationRule));
     verifyZeroInteractions(notificationGroupDispatcher);
     verify(userGroupNotificationDispatcher).dispatch(Collections.singletonList(notification), userGroup);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnDistinctUserGroups() {
+    UserGroup firstGroup = UserGroup.builder().uuid("1").build();
+    UserGroup secondGroup = UserGroup.builder().uuid("2").build();
+    NotificationRule firstRule = aNotificationRule().withUserGroupIds(Arrays.asList("1", "2")).build();
+    NotificationRule secondRule = aNotificationRule().withUserGroupIds(Arrays.asList("1", "unknownOne")).build();
+    List<NotificationRule> notificationRules = Arrays.asList(firstRule, secondRule);
+    when(userGroupService.get(ACCOUNT_ID, "1")).thenReturn(firstGroup);
+    when(userGroupService.get(ACCOUNT_ID, "2")).thenReturn(secondGroup);
+    when(userGroupService.get(ACCOUNT_ID, "unknownOne")).thenReturn(null);
+    List<UserGroup> distinctUserGroups =
+        notificationDispatcherService.getDistinctUserGroups(notificationRules, ACCOUNT_ID);
+
+    assertThat(distinctUserGroups).hasSize(2);
+    assertThat(distinctUserGroups).containsExactlyInAnyOrder(firstGroup, secondGroup);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnDistinctNotificationGroups() {
+    NotificationGroup firstGroup = NotificationGroupBuilder.aNotificationGroup().withUuid("1").build();
+    NotificationGroup secondGroup = NotificationGroupBuilder.aNotificationGroup().withUuid("2").build();
+    NotificationRule firstRule =
+        aNotificationRule().withNotificationGroups(Arrays.asList(firstGroup, secondGroup)).build();
+    NotificationRule secondRule =
+        aNotificationRule().withNotificationGroups(Collections.singletonList(secondGroup)).build();
+    List<NotificationRule> notificationRules = Arrays.asList(firstRule, secondRule);
+    List<NotificationGroup> distinctNotificationGroups =
+        notificationDispatcherService.getDistinctNotificationGroups(notificationRules);
+
+    assertThat(distinctNotificationGroups).hasSize(2);
+    assertThat(distinctNotificationGroups).containsExactlyInAnyOrder(firstGroup, secondGroup);
   }
 }
