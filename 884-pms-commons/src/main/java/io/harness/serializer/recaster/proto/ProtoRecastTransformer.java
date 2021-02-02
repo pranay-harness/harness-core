@@ -1,4 +1,4 @@
-package io.harness.serializer.recaster;
+package io.harness.serializer.recaster.proto;
 
 import io.harness.beans.CastedField;
 import io.harness.transformers.RecastTransformer;

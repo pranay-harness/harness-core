@@ -12,6 +12,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.YamlField;
@@ -21,12 +22,14 @@ import io.harness.rule.Owner;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -44,11 +47,23 @@ public class RecastTest extends PmsSdkCoreTestBase {
   @Category(UnitTests.class)
   public void shouldTestRecastWithProtoAsAField() throws InvalidProtocolBufferException {
     ExecutionErrorInfo executionErrorInfo = ExecutionErrorInfo.newBuilder().setMessage("some-message").build();
-    ProtoAsAFieldClass protoAsAFieldClass = ProtoAsAFieldClass.builder().executionErrorInfo(executionErrorInfo).build();
+    ProtoAsAFieldClass protoAsAFieldClass =
+        ProtoAsAFieldClass.builder()
+            .executionErrorInfo(executionErrorInfo)
+            .failureTypeSet(Sets.newHashSet(FailureType.APPLICATION_FAILURE, FailureType.AUTHORIZATION_FAILURE))
+            .build();
 
-    Document expectedDocument = new Document()
-                                    .append(RECAST_KEY, ProtoAsAFieldClass.class.getName())
-                                    .append("executionErrorInfo", JsonFormat.printer().print(executionErrorInfo));
+    Document expectedDocument =
+        new Document()
+            .append(RECAST_KEY, ProtoAsAFieldClass.class.getName())
+            .append("executionErrorInfo", JsonFormat.printer().print(executionErrorInfo))
+            .append("failureTypeSet",
+                Sets.newHashSet(new Document()
+                                    .append(RECAST_KEY, FailureType.class.getName())
+                                    .append(ENCODED_VALUE, FailureType.APPLICATION_FAILURE.name()),
+                    new Document()
+                        .append(RECAST_KEY, FailureType.class.getName())
+                        .append(ENCODED_VALUE, FailureType.AUTHORIZATION_FAILURE.name())));
 
     Document document = RecastOrchestrationUtils.toDocument(protoAsAFieldClass);
     assertThat(document).isNotNull();
@@ -64,6 +79,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
   @EqualsAndHashCode
   private static class ProtoAsAFieldClass {
     private ExecutionErrorInfo executionErrorInfo;
+    private Set<FailureType> failureTypeSet;
   }
 
   @Test

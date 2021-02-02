@@ -17,7 +17,6 @@ import org.bson.Document;
 
 public class IterableRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
-  @SuppressWarnings("unchecked")
   public Object decode(final Class<?> targetClass, final Object fromDBObject, final CastedField castedField) {
     return decodeInternal(targetClass, fromDBObject, castedField);
   }
