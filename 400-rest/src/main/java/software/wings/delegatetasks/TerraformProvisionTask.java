@@ -741,21 +741,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @VisibleForTesting
   public byte[] getTerraformPlanFile(String scriptDirectory, TerraformProvisionParameters parameters)
       throws IOException {
-    return isEmpty(parameters.getWorkspace())
-        ? Files.readAllBytes(Paths.get(scriptDirectory, getPlanName(parameters)))
-        : Files.readAllBytes(Paths.get(scriptDirectory,
-            getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace())));
+    return Files.readAllBytes(Paths.get(scriptDirectory, getPlanName(parameters)));
   }
 
   @VisibleForTesting
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
-    File tfPlanFile = isEmpty(parameters.getWorkspace())
-        ? Paths.get(scriptDirectory, getPlanName(parameters)).toFile()
-        : Paths
-              .get(scriptDirectory,
-                  getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace()))
-              .toFile();
+    File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
 
     byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedTerraformPlan(
         parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());

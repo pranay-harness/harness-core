@@ -540,4 +540,33 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
   }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveAndGetTerraformPlanFileWorkspaceSet() throws IOException {
+    String scriptDirectory = "repository/testSaveAndGetTerraformPlanFileWorkspaceSet";
+    FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
+    byte[] planContent = "terraformPlanContent".getBytes();
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder()
+            .command(TerraformProvisionParameters.TerraformCommand.APPLY)
+            .workspace("workspace")
+            .secretManagerConfig(KmsConfig.builder().build())
+            .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedTerraformPlan(any(), any());
+
+    terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
+    List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
+    assertThat(fileDataList.size()).isEqualTo(1);
+    assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
+
+    TerraformProvisionParameters provisionParameters =
+        TerraformProvisionParameters.builder().command(TerraformProvisionParameters.TerraformCommand.APPLY).build();
+    byte[] retrievedTerraformPlanContent =
+        terraformProvisionTask.getTerraformPlanFile(scriptDirectory, provisionParameters);
+    assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
+
+    FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
+  }
 }
