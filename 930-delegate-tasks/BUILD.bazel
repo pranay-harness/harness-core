@@ -9,7 +9,6 @@ sources()
 
 shared_dependencies = [
     "//:lombok",
-    "//460-capability:module",  #TODO: remove this dependency
     "//950-delegate-tasks-beans:module",
     "//960-api-services:module",
     "//970-api-services-beans:module",

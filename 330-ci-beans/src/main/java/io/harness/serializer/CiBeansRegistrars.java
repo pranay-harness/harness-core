@@ -20,7 +20,6 @@ public class CiBeansRegistrars {
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .build();
 

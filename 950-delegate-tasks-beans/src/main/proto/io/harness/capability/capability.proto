@@ -59,7 +59,7 @@ message SmbConnectionParameters {
 message HelmInstallationParameters {
   // Next ID: 3
   enum HelmVersion {
-    UNKNOWN_VERSION = 0;
+    HELM_VERSION_UNSPECIFIED = 0;
     V2 = 1;
     V3 = 2;
   }

@@ -18,7 +18,6 @@ public class DelegateServiceRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(CommonEntitiesKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)
