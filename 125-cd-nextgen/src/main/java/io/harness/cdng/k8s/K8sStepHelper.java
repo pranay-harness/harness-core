@@ -54,7 +54,6 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -65,7 +64,6 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.AuthenticationScheme;
-import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.validation.Validator;
@@ -84,7 +82,6 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -278,8 +275,7 @@ public class K8sStepHelper {
                             .async(true)
                             .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2, Collections.emptyList());
+    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -328,14 +324,7 @@ public class K8sStepHelper {
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
-    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
-
-    List<String> commandUnits =
-        Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
-            K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
-
-    final TaskRequest taskRequest = prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2, commandUnits);
+    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -347,6 +336,13 @@ public class K8sStepHelper {
         .taskRequest(taskRequest)
         .passThroughData(k8sStepPassThroughData)
         .build();
+  }
+
+  @Nonnull
+  private List<String> getCommandUnits() {
+    return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
+        K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState,
+        K8sCommandUnitConstants.WrapUp);
   }
 
   public TaskChainResponse startChainLink(
