@@ -186,8 +186,10 @@ public class OrchestrationEngine {
       String skipCondition = nodeExecution.getNode().getSkipCondition();
       if (EmptyPredicate.isNotEmpty(skipCondition)) {
         SkipCheck skipCheck = shouldSkipNodeExecution(ambiance, skipCondition);
-        skipNodeExecution(nodeExecution.getUuid(), skipCheck);
-        return;
+        if (!skipCheck.isSuccessful() || skipCheck.getEvaluatedSkipCondition()) {
+          skipNodeExecution(nodeExecution.getUuid(), skipCheck);
+          return;
+        }
       }
 
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
