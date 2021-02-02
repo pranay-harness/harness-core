@@ -22,6 +22,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse;
 
+import software.wings.FeatureTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -67,7 +68,9 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject protected MetricDataAnalysisService metricAnalysisService;
   @Inject protected CVActivityLogService cvActivityLogService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private FeatureTestHelper featureTestHelper;
   @Mock private ExecutionContext executionContext;
+
   private AppDynamicsState appDynamicsState = new AppDynamicsState(generateUuid());
   private String accountId;
   private String stateExecutionId;
@@ -130,7 +133,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncNoAnalysisQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
     ExecutionResponse executionResponse = appDynamicsState.handleAsyncResponse(executionContext, dataAnalysisResponse);
     ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
@@ -146,7 +149,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncQANotFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
 
@@ -303,7 +306,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncNoMetricsQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
     wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
                               .analysisMinute(5)
@@ -327,7 +330,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     metadata.setManualOverride(true);
     wingsPersistence.save(metadata);
 
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
     wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
                               .analysisMinute(5)
@@ -347,7 +350,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   public void testHandleAsyncV2QANotFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
-    enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
+    featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
     saveMetricAnalysisRecord(RiskLevel.HIGH);
 

@@ -1,16 +1,12 @@
 package software.wings;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.beans.EncryptedData;
-import io.harness.beans.FeatureFlag;
-import io.harness.beans.FeatureFlag.FeatureFlagKeys;
-import io.harness.beans.FeatureName;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.eraro.ErrorCode;
@@ -51,7 +47,6 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -382,23 +377,5 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .withEnvId(UUID.randomUUID().toString())
         .withName(UUID.randomUUID().toString())
         .build();
-  }
-
-  protected void enableFeatureFlag(FeatureName featureName) {
-    featureFlagService.initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
-    wingsPersistence.update(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, true));
-    assertThat(featureFlagService.isEnabledReloadCache(featureName, generateUuid())).isTrue();
-  }
-
-  protected void disableFeatureFlag(FeatureName featureName) {
-    featureFlagService.initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
-    wingsPersistence.update(
-        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class)
-            .set(FeatureFlagKeys.enabled, false)
-            .set(FeatureFlagKeys.accountIds, Collections.emptyList()));
-    assertThat(featureFlagService.isEnabledReloadCache(featureName, generateUuid()));
   }
 }
