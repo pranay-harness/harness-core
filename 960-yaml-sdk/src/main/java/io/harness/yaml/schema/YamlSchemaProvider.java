@@ -99,13 +99,22 @@ public class YamlSchemaProvider {
     return (ObjectNode) schema.get(DEFINITIONS_NODE).get(refNodeValue);
   }
 
-  public JsonNode getYamlSchemaWithArrayFieldUpdatedAtSecondLevel(EntityType entityType, String orgIdentifier,
-      String projectIdentifier, Scope scope, String nodeKey, String key, String... values) {
-    final JsonNode yamlSchema = getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
+  public JsonNode updateArrayFieldAtSecondLevelInSchema(JsonNode schema, String nodeKey, String key, String... values) {
+    final JsonNode yamlSchema = schema.deepCopy();
     try {
       final ObjectNode objectNodeRemovingWrapper = getSecondLevelNodeProperties(getSecondLevelNode(yamlSchema));
       JsonNodeUtils.setPropertiesInJsonNodeWithArrayKey(
           (ObjectNode) objectNodeRemovingWrapper.get(nodeKey), key, values);
+    } catch (Exception e) {
+      log.error("Encountered error while setting  for key: {}", nodeKey, e);
+    }
+    return yamlSchema;
+  }
+  public JsonNode upsertInObjectFieldAtSecondLevelInSchema(JsonNode schema, String nodeKey, String key, String value) {
+    JsonNode yamlSchema = schema.deepCopy();
+    try {
+      final ObjectNode objectNodeRemovingWrapper = getSecondLevelNodeProperties(getSecondLevelNode(yamlSchema));
+      JsonNodeUtils.upsertPropertyInObjectNode((ObjectNode) objectNodeRemovingWrapper.get(nodeKey), key, value);
     } catch (Exception e) {
       log.error("Encountered error while setting  for key: {}", nodeKey, e);
     }

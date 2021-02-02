@@ -50,6 +50,9 @@
         "type"
       ],
       "properties": {
+        "identifier": {
+          "type": "string"
+        },
         "type": {
           "type": "string",
           "enum": [

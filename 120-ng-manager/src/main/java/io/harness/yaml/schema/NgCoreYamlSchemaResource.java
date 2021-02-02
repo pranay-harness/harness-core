@@ -1,13 +1,14 @@
 package io.harness.yaml.schema;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.Scope;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,20 +50,19 @@ public class NgCoreYamlSchemaResource implements YamlSchemaResource {
   public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
       @QueryParam("subtype") ConnectorType entitySubtype,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    JsonNode schema = null;
-    if (entitySubtype == null) {
-      schema = yamlSchemaProvider.getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
-      if (schema == null) {
-        throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
-      }
-    } else {
-      if (entityType == EntityType.CONNECTORS) {
-        schema = yamlSchemaProvider.getYamlSchemaWithArrayFieldUpdatedAtSecondLevel(entityType, orgIdentifier,
-            projectIdentifier, scope, CONNECTOR_TYPES, ENUM_NODE, entitySubtype.getDisplayName());
-      } else {
-        throw new InvalidRequestException("Subtypes are only supported for connectors");
-      }
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope,
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+    JsonNode schema = yamlSchemaProvider.getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
+    if (schema == null) {
+      throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
+    }
+    if (entityType == EntityType.CONNECTORS) {
+      schema = yamlSchemaProvider.updateArrayFieldAtSecondLevelInSchema(
+          schema, CONNECTOR_TYPES, ENUM_NODE, entitySubtype.getDisplayName());
+    }
+    if (isNotEmpty(identifier)) {
+      schema = yamlSchemaProvider.upsertInObjectFieldAtSecondLevelInSchema(
+          schema, NGCommonEntityConstants.IDENTIFIER_KEY, CONST_NODE, identifier);
     }
     return ResponseDTO.newResponse(schema);
   }
