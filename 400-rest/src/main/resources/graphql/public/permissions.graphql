@@ -16,6 +16,7 @@ enum Actions {
   EXECUTE
   EXECUTE_WORKFLOW
   EXECUTE_PIPELINE
+  MANAGE
 }
 
 input AccountPermissionInput {

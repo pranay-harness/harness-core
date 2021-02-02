@@ -30,6 +30,7 @@ enum AppPermissionType {
   PIPELINE
   DEPLOYMENT
   PROVISIONER
+  WEBHOOK_TRIGGER_SECRETS
 }
 
 enum FilterType {
