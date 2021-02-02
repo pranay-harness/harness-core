@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.expressions.HttpExpressionEvaluator;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
-import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -73,13 +72,12 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       httpTaskParametersNgBuilder.body(stepParameters.getRequestBody().getValue());
     }
 
-    final TaskData taskData =
-        TaskData.builder()
-            .async(true)
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.HTTP_TASK_NG.name())
-            .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
-            .build();
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(TaskData.DEFAULT_ASYNC_CALL_TIMEOUT)
+                                  .taskType(NGTaskType.HTTP_TASK_NG.name())
+                                  .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
+                                  .build();
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 

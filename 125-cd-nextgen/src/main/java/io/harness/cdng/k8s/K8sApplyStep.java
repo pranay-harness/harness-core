@@ -3,7 +3,6 @@ package io.harness.cdng.k8s;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -61,8 +60,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
