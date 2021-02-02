@@ -46,6 +46,7 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -270,13 +271,12 @@ public class K8sStepHelper {
 
   public TaskChainResponse queueK8sTask(K8sStepParameters k8sStepParameters, K8sDeployRequest k8sDeployRequest,
       Ambiance ambiance, InfrastructureOutcome infrastructure) {
-    TaskData taskData =
-        TaskData.builder()
-            .parameters(new Object[] {k8sDeployRequest})
-            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .async(true)
-            .build();
+    TaskData taskData = TaskData.builder()
+                            .parameters(new Object[] {k8sDeployRequest})
+                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
+                            .timeout(getTimeout(k8sStepParameters))
+                            .async(true)
+                            .build();
 
     final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer,
         StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2, Collections.emptyList());
@@ -321,13 +321,12 @@ public class K8sStepHelper {
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
-    final TaskData taskData =
-        TaskData.builder()
-            .async(true)
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
-            .parameters(new Object[] {gitFetchRequest})
-            .build();
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .parameters(new Object[] {gitFetchRequest})
+                                  .build();
 
     LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
 
@@ -360,7 +359,6 @@ public class K8sStepHelper {
 
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
     Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());
-    Validator.notEmptyCheck("Timeout cannot be empty", k8sStepParameters.getTimeout().getValue());
 
     K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
     List<ValuesManifestOutcome> aggregatedValuesManifests =
@@ -456,5 +454,13 @@ public class K8sStepHelper {
       // TODO: for local store, add files directly
     }
     return valuesFileContents;
+  }
+
+  public static int getTimeout(K8sStepParameters stepParameters) {
+    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+        ? StepConstants.defaultTimeout
+        : stepParameters.getTimeout().getValue();
+
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
   }
 }
