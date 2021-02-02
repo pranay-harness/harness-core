@@ -18,7 +18,7 @@ pipeline:
                 command: <+input>
           - step:
               identifier: Build_and_push_image_to_DockerHub
-              type: BuildAndPushDockerHub
+              type: BuildAndPushDockerRegistry
               spec:
                 repo: <+input>
         infrastructure:
