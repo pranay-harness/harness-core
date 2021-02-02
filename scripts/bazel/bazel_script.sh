@@ -29,8 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//230-model-test/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/...  -//230-model-test/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//230-model-test/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//230-model-test/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/...   || true
   # 400-rest and 260-delegate modules are excluded.
 fi
 

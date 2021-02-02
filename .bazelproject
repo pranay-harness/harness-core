@@ -1,4 +1,6 @@
 directories:
+  120-ng-manager
+  125-cd-nextgen
   136-git-sync-manager
   230-model-test
   260-delegate
