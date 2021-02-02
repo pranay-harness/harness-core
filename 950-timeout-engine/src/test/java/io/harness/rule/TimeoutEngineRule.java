@@ -112,6 +112,6 @@ public class TimeoutEngineRule implements MethodRule, InjectorRuleMixin, MongoRu
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

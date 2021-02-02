@@ -3,7 +3,6 @@ package io.harness.rule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
@@ -76,6 +75,6 @@ public class NGCommonsRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

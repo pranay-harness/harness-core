@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +29,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 @OwnedBy(PL)
+@Slf4j
 public class DefaultOrganizationInterceptorTest {
   public static class DefaultOrgRule implements InjectorRuleMixin, MethodRule {
     @Override
@@ -37,7 +39,7 @@ public class DefaultOrganizationInterceptorTest {
 
     @Override
     public Statement apply(Statement base, FrameworkMethod method, Object target) {
-      return applyInjector(base, method, target);
+      return applyInjector(log, base, method, target);
     }
   }
   @Rule public DefaultOrgRule defaultOrgRule = new DefaultOrgRule();
