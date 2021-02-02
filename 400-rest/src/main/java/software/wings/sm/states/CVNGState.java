@@ -106,8 +106,6 @@ public class CVNGState extends State {
       }
       String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
       String correlationId = UUID.randomUUID().toString();
-      String serviceIdentifier = getValue(context, VerificationJobDTOKeys.serviceIdentifier);
-      String envIdentifier = getValue(context, VerificationJobDTOKeys.envIdentifier);
 
       CVNGStateExecutionData cvngStateExecutionData =
           CVNGStateExecutionData.builder()
@@ -213,10 +211,6 @@ public class CVNGState extends State {
     private String correlationId;
     private ExecutionStatus status;
     private String stateExecutionInstanceId;
-    private String orgIdentifier;
-    private String projectIdentifier;
-    private String deploymentTag;
-    private String serviceIdentifier;
     private String envIdentifier;
 
     @Override
