@@ -90,7 +90,6 @@ public class OrchestrationRegistrars {
           .addAll(DelegateTasksRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)

@@ -11,13 +11,9 @@ sources()
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resource_jars = [
-        "//460-capability/src/main/proto:460_capability_java_proto",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//460-capability/src/main/proto:460_capability_java_proto",
         "//950-delegate-tasks-beans:module",
         "//960-persistence:module",
         "@maven//:com_google_protobuf_protobuf_java",
