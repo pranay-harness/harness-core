@@ -36,6 +36,6 @@ public abstract class VerificationJobDTO {
   public abstract VerificationJobType getType();
 
   public static boolean isRuntimeParam(String value) {
-    return isNotEmpty(value) && (value.equals("<+input>") || (value.startsWith("${") && value.endsWith("}")));
+    return isNotEmpty(value) && value.equals("<+input>");
   }
 }

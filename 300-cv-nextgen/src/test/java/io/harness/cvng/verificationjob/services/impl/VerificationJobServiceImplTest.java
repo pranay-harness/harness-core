@@ -1,6 +1,7 @@
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.RUNTIME_STRING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -168,8 +169,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testDelete_dontSendEventsWithRunTimeParams() {
     VerificationJobDTO verificationJobDTO = createDTO();
-    verificationJobDTO.setEnvIdentifier("${envIdentifier}");
-    verificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
+    verificationJobDTO.setEnvIdentifier(RUNTIME_STRING);
+    verificationJobDTO.setServiceIdentifier(RUNTIME_STRING);
 
     verificationJobService.upsert(accountId, verificationJobDTO);
     verificationJobService.delete(accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
@@ -345,8 +346,8 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   private VerificationJobDTO createDTOWithRuntimeParams() {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
     testVerificationJobDTO.setIdentifier(identifier);
-    testVerificationJobDTO.setEnvIdentifier("${envIdentifier}");
-    testVerificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
+    testVerificationJobDTO.setEnvIdentifier(RUNTIME_STRING);
+    testVerificationJobDTO.setServiceIdentifier(RUNTIME_STRING);
     testVerificationJobDTO.setJobName("job-Name");
     return testVerificationJobDTO;
   }

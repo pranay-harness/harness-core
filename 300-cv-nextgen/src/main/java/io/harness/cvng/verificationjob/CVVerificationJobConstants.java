@@ -7,4 +7,5 @@ public interface CVVerificationJobConstants {
   String DURATION_KEY = "duration";
   String SENSITIVITY_KEY = "sensitivity";
   String DEFAULT_PORTAL_URL = "https://localhost:6060/";
+  String RUNTIME_STRING = "<+input>";
 }

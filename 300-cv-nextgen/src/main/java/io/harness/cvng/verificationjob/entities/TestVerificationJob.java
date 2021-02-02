@@ -55,7 +55,7 @@ public class TestVerificationJob extends VerificationJob {
   public VerificationJobDTO getVerificationJobDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
-    testVerificationJobDTO.setSensitivity(getSensitivity().name());
+    testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
     testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
     return testVerificationJobDTO;
   }

@@ -60,7 +60,7 @@ public class CanaryVerificationJob extends VerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
-    canaryVerificationJobDTO.setSensitivity(getSensitivity().name());
+    canaryVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
     canaryVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;
