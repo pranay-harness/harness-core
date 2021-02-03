@@ -12,6 +12,8 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
@@ -53,6 +55,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterator.Handler<Delegate> {
   private static final long CAPABILITIES_CHECK_TASK_TIMEOUT_IN_MINUTES = 2L;
   private static final long CAPABILITIES_CHECK_INTERVAL_IN_MINUTES = 10L;

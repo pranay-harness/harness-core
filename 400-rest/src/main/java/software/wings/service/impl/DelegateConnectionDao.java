@@ -11,6 +11,8 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateConnection;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
 

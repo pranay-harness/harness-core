@@ -15,6 +15,8 @@ import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGAT
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
@@ -78,6 +80,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateSetupResource {
   private static final String DOWNLOAD_URL = "downloadUrl";
   private static final String ACCOUNT_ID = "?accountId=";
