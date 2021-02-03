@@ -87,6 +87,10 @@
           "value": ""
         },
         {
+          "name": "KUSTOMIZE_PATH",
+          "value": ""
+        },
+        {
           "name": "MANAGER_SERVICE_SECRET",
           "value": "${managerServiceSecret}"
         }
