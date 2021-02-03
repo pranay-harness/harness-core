@@ -1,4 +1,4 @@
-FROM harness/alpine:safe-alpine3.12-sec908-apm
+FROM harness/alpine:safe-alpine3.12-sec993-apm
 
 WORKDIR /code
 RUN apk add --no-cache python3 py3-pip
