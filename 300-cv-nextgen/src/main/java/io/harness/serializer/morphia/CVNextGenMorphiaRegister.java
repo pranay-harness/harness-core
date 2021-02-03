@@ -29,7 +29,6 @@ import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
-import io.harness.cvng.core.entities.ApiCallLog;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
@@ -134,7 +133,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ServiceGuardLogAnalysisTask.class);
     set.add(TimeSeriesLearningEngineTask.class);
     set.add(CVNGLog.class);
-    set.add(ApiCallLog.class);
   }
 
   @Override

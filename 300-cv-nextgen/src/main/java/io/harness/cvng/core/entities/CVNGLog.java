@@ -1,10 +1,15 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogType;
 import io.harness.cvng.beans.cvnglog.TraceableType;
+import io.harness.cvng.core.entities.cvnglogs.ApiCallLogRecord;
+import io.harness.cvng.core.entities.cvnglogs.CVNGLogRecord;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -14,18 +19,18 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -35,17 +40,33 @@ import org.mongodb.morphia.annotations.Id;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "cvngLogs")
+@Entity(value = "cvngLogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @SuperBuilder
-public abstract class CVNGLog implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, UpdatedAtAware {
+public class CVNGLog implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(CVNGLogKeys.accountId)
+                 .field(CVNGLogKeys.logType)
+                 .field(CVNGLogKeys.traceableType)
+                 .field(CVNGLogKeys.traceableId)
+                 .field(CVNGLogKeys.endTime)
+                 .field(CVNGLogKeys.startTime)
+                 .build())
+        .build();
+  }
+  List<CVNGLogRecord> logRecords;
+
   @Id private String uuid;
-  @NonNull @FdIndex private String accountId;
-  @NotEmpty private String traceableId;
-  private long createdAt;
+  @FdIndex private String accountId;
+  private String traceableId;
   private Instant startTime;
   private Instant endTime;
   private TraceableType traceableType;
+  private CVNGLogType logType;
+  private long createdAt;
   private long lastUpdatedAt;
   @JsonIgnore
   @SchemaIgnore
@@ -53,5 +74,14 @@ public abstract class CVNGLog implements PersistentEntity, UuidAware, CreatedAtA
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
-  public abstract CVNGLogType getType();
+  public static CVNGLogRecord toCVNGLogRecord(CVNGLogDTO cvngLogDTO) {
+    switch (cvngLogDTO.getType()) {
+      case API_CALL_LOG:
+        return ApiCallLogRecord.toCVNGLogRecord(cvngLogDTO);
+      case EXECUTION_LOG:
+        throw new UnsupportedOperationException("Type: ExecutionLog. To be implemented");
+      default:
+        throw new IllegalStateException("CVNG Logs: Log Type cannot be null");
+    }
+  }
 }
