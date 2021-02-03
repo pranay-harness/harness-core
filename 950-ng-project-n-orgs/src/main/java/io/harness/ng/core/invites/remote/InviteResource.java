@@ -51,8 +51,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -61,7 +59,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Path("/invites")
 @Produces({"application/json", "text/yaml"})
 @Consumes({"application/json", "text/yaml"})
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -76,8 +73,17 @@ public class InviteResource {
   private static final String INVALID_TOKEN_REDIRECT_URL = "account/%s/error?code=INVITE_EXPIRED";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
-  @Named("uiBaseUrl") String uiBaseUrl;
-  @Named("ngUiBaseUrl") String ngUiBaseUrl;
+  private final String uiBaseUrl;
+  private final String ngUiBaseUrl;
+
+  @Inject
+  InviteResource(InvitesService invitesService, NgUserService ngUserService, @Named("uiBaseUrl") String uiBaseUrl,
+      @Named("ngUiBaseUrl") String ngUiBaseUrl) {
+    this.invitesService = invitesService;
+    this.ngUserService = ngUserService;
+    this.uiBaseUrl = uiBaseUrl;
+    this.ngUiBaseUrl = ngUiBaseUrl;
+  }
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
@@ -152,7 +158,7 @@ public class InviteResource {
   public Response verify(
       @QueryParam("token") @NotNull String jwtToken, @QueryParam("accountIdentifier") String accountIdentifier) {
     Optional<Invite> inviteOpt = invitesService.verify(jwtToken);
-    URI redirectURI = null;
+    URI redirectURI;
     if (inviteOpt.isPresent()) {
       Invite invite = inviteOpt.get();
 
