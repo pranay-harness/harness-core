@@ -28,6 +28,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
+  @Inject private SecretManager secretManager;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;

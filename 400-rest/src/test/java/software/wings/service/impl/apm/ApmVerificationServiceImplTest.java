@@ -24,6 +24,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.service.impl.SettingValidationService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.apm.ApmVerificationService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 
@@ -42,11 +43,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class ApmVerificationServiceImplTest extends WingsBaseTest {
+  @Mock private NewRelicService newRelicService;
+
   @Inject private ApmVerificationService apmVerificationService;
   @Inject private SecretManagementResource secretManagementResource;
-  @Inject private SettingValidationService settingValidationService;
   @Inject private SecretSetupUsageService secretSetupUsageService;
-  @Mock private NewRelicService newRelicService;
+  @Inject private SettingsService settingsService;
+  @Inject private SettingValidationService settingValidationService;
 
   private String accountId;
   private String appId;

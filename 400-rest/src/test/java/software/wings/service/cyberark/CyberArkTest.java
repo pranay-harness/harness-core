@@ -52,9 +52,11 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
@@ -82,6 +84,8 @@ import org.mockito.Mock;
 public class CyberArkTest extends WingsBaseTest {
   @Inject private CyberArkResource cyberArkResource;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private SecretManager secretManager;
+  @Inject protected EncryptionService encryptionService;
 
   @Mock private AccountService accountService;
   @Inject private LocalSecretManagerService localSecretManagerService;

@@ -42,7 +42,6 @@ import org.mockito.MockitoAnnotations;
 public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   @Mock GitSyncService gitSyncService;
   @Mock AppService appService;
-
   @InjectMocks @Inject GitSyncEntitiesExpiryHandler gitSyncEntitiesExpiryHandler;
 
   private final Long ONE_MONTH_IN_MILLS = 2592000000L;
