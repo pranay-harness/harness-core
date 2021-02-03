@@ -1,6 +1,6 @@
-package io.harness.accesscontrol.permissions.core;
+package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.permissions.PermissionDTO;
+import io.harness.accesscontrol.scopes.Scope;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,7 @@ public interface PermissionService {
 
   Optional<PermissionDTO> get(@NotEmpty String identifier);
 
-  List<PermissionDTO> list(String scope);
+  List<PermissionDTO> list(Scope scope, String resourceType);
 
   String update(@Valid PermissionDTO permissionDTO);
 

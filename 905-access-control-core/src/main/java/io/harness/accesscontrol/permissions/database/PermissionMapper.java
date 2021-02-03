@@ -13,7 +13,7 @@ class PermissionMapper {
         .resourceType(dto.getResourceType())
         .action(dto.getAction())
         .status(dto.getStatus())
-        .validScopes(dto.getValidScopes())
+        .scopes(dto.getScopes())
         .version(dto.getVersion())
         .build();
   }
@@ -25,7 +25,7 @@ class PermissionMapper {
         .resourceType(permission.getResourceType())
         .action(permission.getAction())
         .status(permission.getStatus())
-        .validScopes(permission.getValidScopes())
+        .scopes(permission.getScopes())
         .version(permission.getVersion())
         .build();
   }

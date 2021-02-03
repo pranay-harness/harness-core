@@ -30,6 +30,26 @@ java_library(
     ],
 )
 
+java_binary(
+    name = "accesscontrol",
+    srcs = glob(["src/main/**/*.java"]),
+    data = ["//:resource"],
+    main_class = "io.harness.accesscontrol.AccessControlApplication",
+    resources = [],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "@maven//:com_google_guava_guava",
+        # keeping guava on top of maven_deps for right version resoulution
+        "@maven//:io_netty_netty_all",
+        # keeping guava on top of maven_deps for right version resoulution
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
 java_library(
     name = "test_deps",
     exports = [
