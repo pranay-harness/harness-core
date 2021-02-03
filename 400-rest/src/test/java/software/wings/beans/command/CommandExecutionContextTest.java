@@ -22,7 +22,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -62,7 +61,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SystemEnvCheckerCapability.class);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SelectorCapability.class);
   }
 
   @Test

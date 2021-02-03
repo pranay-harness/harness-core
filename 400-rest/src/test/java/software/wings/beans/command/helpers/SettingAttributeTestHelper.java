@@ -30,6 +30,7 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.utils.WingsTestConstants;
 
 import com.amazonaws.regions.Regions;
+import java.util.HashSet;
 
 public class SettingAttributeTestHelper {
   public static SettingAttribute obtainKubernetesClusterSettingAttribute(boolean useK8sDelegate) {
@@ -79,6 +80,7 @@ public class SettingAttributeTestHelper {
         .accountId(ACCOUNT_ID)
         .skipValidation(false)
         .useKubernetesDelegate(useK8sDelegate)
+        .delegateSelectors(new HashSet<>(singletonList("delegateSelectors")))
         .build();
   }
 

@@ -7,8 +7,6 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
 import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
-import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
-import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sTaskParams;
 import static software.wings.utils.Utils.emptyIfNull;
 
 import static java.util.Objects.nonNull;
@@ -52,7 +50,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.ListUtils;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -146,7 +143,6 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskData.getServiceId())
-        .tags(fetchTagsFromK8sCloudProvider(delegateTaskParams))
         .build();
   }
 
@@ -166,8 +162,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .accountId(taskData.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
         .waitId(UUIDGenerator.generateUuid())
-        .tags(ListUtils.union(fetchTagsFromK8sTaskParams(delegateTaskParams),
-            awsCommandHelper.getAwsConfigTagsFromK8sConfig(delegateTaskParams)))
+        .tags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(delegateTaskParams))
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.K8S_COMMAND_TASK.name())

@@ -60,6 +60,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -365,8 +367,10 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).isEmpty();
 
     doReturn(K8sClusterConfig.builder()
-                 .cloudProvider(
-                     KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
+                 .cloudProvider(KubernetesClusterConfig.builder()
+                                    .useKubernetesDelegate(true)
+                                    .delegateSelectors(new HashSet<>(Collections.singletonList("delegateSelectors")))
+                                    .build())
                  .build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(), any());
@@ -375,7 +379,12 @@ public class K8sStateHelperTest extends WingsBaseTest {
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(4)).executeTask(captor.capture());
     delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).contains("delegateName");
+    K8sInstanceSyncTaskParameters syncTaskParameters =
+        (K8sInstanceSyncTaskParameters) delegateTask.getData().getParameters()[0];
+
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) syncTaskParameters.getK8sClusterConfig().getCloudProvider();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
 
     when(delegateService.executeTask(any()))
         .thenReturn(ErrorNotifyResponseData.builder().errorMessage("ErrorMessage").build());

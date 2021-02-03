@@ -85,6 +85,7 @@ import migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import migrations.all.MigrateServiceNowCriteriaInPipelines;
 import migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import migrations.all.MoveDelegateNameToDelegateSelectorsMigration;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveDeletedAppIdsFromUserGroups;
 import migrations.all.RemoveDeprecatedFieldsFromHarnessUserGroup;
@@ -305,6 +306,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(185, ConvertHttpHeadersStringTypeToList.class))
         .add(Pair.of(186, DeleteOrphanPerpetualTaskMigration.class))
         .add(Pair.of(187, BaseMigration.class))
+        .add(Pair.of(188, MoveDelegateNameToDelegateSelectorsMigration.class))
         .build();
   }
 }

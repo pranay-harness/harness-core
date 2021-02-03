@@ -9,7 +9,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -54,6 +53,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
@@ -153,14 +153,17 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
             .cloudProviderName("Direct")
             .clusterName("cluster")
             .namespace("namespace")
-            .cloudProvider(KubernetesClusterConfig.builder().delegateName("tag1").useKubernetesDelegate(true).build())
+            .cloudProvider(KubernetesClusterConfig.builder()
+                               .delegateSelectors(new HashSet<>(singletonList("delegateSelector")))
+                               .useKubernetesDelegate(true)
+                               .build())
             .build();
     prepareK8sTaskData(k8sClusterConfig);
     assertThat(client.getValidationTask(getClientContext(true), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .tags(ImmutableList.of("tag1", "tag2"))
+                       .tags(ImmutableList.of("awsTag"))
                        .data(TaskData.builder()
                                  .async(false)
                                  .taskType(TaskType.K8S_COMMAND_TASK.name())
@@ -192,7 +195,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
             DelegateTask.builder()
                 .accountId(ACCOUNT_ID)
                 .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                .tags(emptyList())
                 .data(TaskData.builder()
                           .async(false)
                           .taskType(TaskType.CONTAINER_VALIDATION.name())
@@ -229,7 +231,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .tags(emptyList())
                        .data(TaskData.builder()
                                  .async(false)
                                  .taskType(TaskType.CONTAINER_VALIDATION.name())
@@ -313,7 +314,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(k8sClusterConfig).when(containerDeploymentManagerHelper).getK8sClusterConfig(infraMapping, null);
-    doReturn(singletonList("tag2")).when(awsCommandHelper).getAwsConfigTagsFromK8sConfig(Mockito.any());
+    doReturn(singletonList("awsTag")).when(awsCommandHelper).getAwsConfigTagsFromK8sConfig(Mockito.any());
     mockStatic(UUIDGenerator.class);
     when(UUIDGenerator.generateUuid()).thenReturn("12345");
   }

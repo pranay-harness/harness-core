@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -16,6 +17,9 @@ import software.wings.beans.yaml.ChangeContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +37,14 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
         KubernetesClusterConfig.Yaml.builder().harnessApiVersion(getHarnessApiVersion()).build();
     yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
     yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
+
+    if (isNotEmpty(kubernetesClusterConfig.getDelegateName())
+        && isEmpty(kubernetesClusterConfig.getDelegateSelectors())) {
+      yaml.setDelegateSelectors(Collections.singletonList(kubernetesClusterConfig.getDelegateName()));
+    } else if (isNotEmpty(kubernetesClusterConfig.getDelegateSelectors())) {
+      yaml.setDelegateSelectors(new ArrayList<>(kubernetesClusterConfig.getDelegateSelectors()));
+    }
+
     yaml.setType(kubernetesClusterConfig.getType());
     yaml.setMasterUrl(kubernetesClusterConfig.getMasterUrl());
     yaml.setUsername(
@@ -137,6 +149,13 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
     kubernetesClusterConfig.setUseKubernetesDelegate(yaml.isUseKubernetesDelegate());
     kubernetesClusterConfig.setDelegateName(yaml.getDelegateName());
+
+    if (isNotEmpty(yaml.getDelegateName()) && isEmpty(yaml.getDelegateSelectors())) {
+      kubernetesClusterConfig.setDelegateSelectors(Collections.singleton(yaml.getDelegateName()));
+    } else if (isNotEmpty(yaml.getDelegateSelectors())) {
+      kubernetesClusterConfig.setDelegateSelectors(new HashSet<>(yaml.getDelegateSelectors()));
+    }
+
     kubernetesClusterConfig.setMasterUrl(yaml.getMasterUrl());
     kubernetesClusterConfig.setUsername(yaml.getUsername() != null ? yaml.getUsername().toCharArray() : null);
     kubernetesClusterConfig.setClientKeyAlgo(yaml.getClientKeyAlgo());

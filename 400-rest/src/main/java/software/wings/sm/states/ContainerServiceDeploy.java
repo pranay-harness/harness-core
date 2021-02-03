@@ -198,24 +198,24 @@ public abstract class ContainerServiceDeploy extends State {
       CommandStateExecutionData executionData = executionDataBuilder.build();
       executionData.setServiceCounts(params.getOriginalServiceCounts());
 
-      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                            .accountId(contextData.app.getAccountId())
-                                                            .appId(contextData.app.getUuid())
-                                                            .envId(contextData.env.getUuid())
-                                                            .activityId(activity.getUuid())
-                                                            .cloudProviderSetting(contextData.settingAttribute)
-                                                            .cloudProviderCredentials(contextData.encryptedDataDetails)
-                                                            .containerResizeParams(params)
-                                                            .deploymentType(deploymentType.name())
-                                                            .build();
+      List<String> delegateSelectorsFromK8sCloudProvider =
+          K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(contextData.settingAttribute.getValue());
+
+      CommandExecutionContext commandExecutionContext =
+          aCommandExecutionContext()
+              .accountId(contextData.app.getAccountId())
+              .appId(contextData.app.getUuid())
+              .envId(contextData.env.getUuid())
+              .activityId(activity.getUuid())
+              .cloudProviderSetting(contextData.settingAttribute)
+              .cloudProviderCredentials(contextData.encryptedDataDetails)
+              .containerResizeParams(params)
+              .deploymentType(deploymentType.name())
+              .delegateSelectors(
+                  isNotEmpty(delegateSelectorsFromK8sCloudProvider) ? delegateSelectorsFromK8sCloudProvider : null)
+              .build();
 
       List<String> allTaskTags = new ArrayList<>();
-      List<String> cloudProviderTags =
-          K8sStateHelper.fetchDelegateNameAsTagFromK8sCloudProvider(contextData.settingAttribute.getValue());
-      if (isNotEmpty(cloudProviderTags)) {
-        allTaskTags.addAll(cloudProviderTags);
-      }
-
       List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
       if (isNotEmpty(awsConfigTags)) {
         allTaskTags.addAll(awsConfigTags);

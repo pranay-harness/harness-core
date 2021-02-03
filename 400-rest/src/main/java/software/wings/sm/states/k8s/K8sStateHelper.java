@@ -83,6 +83,18 @@ public class K8sStateHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private EnvironmentService environmentService;
 
+  public static List<String> fetchDelegateSelectorsFromK8sCloudProvider(SettingValue settingValue) {
+    if (!(settingValue instanceof KubernetesClusterConfig)) {
+      return emptyList();
+    }
+    KubernetesClusterConfig config = (KubernetesClusterConfig) settingValue;
+    if (config.isUseKubernetesDelegate() && !config.getDelegateSelectors().isEmpty()) {
+      return new ArrayList<>(config.getDelegateSelectors());
+    }
+
+    return emptyList();
+  }
+
   public static List<String> fetchDelegateNameAsTagFromK8sCloudProvider(SettingValue settingValue) {
     if (!(settingValue instanceof KubernetesClusterConfig)) {
       return emptyList();
@@ -100,7 +112,6 @@ public class K8sStateHelper {
     if (containerServiceParams == null || containerServiceParams.getSettingAttribute() == null) {
       return emptyList();
     }
-
     SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
     return fetchDelegateNameAsTagFromK8sCloudProvider(settingAttribute.getValue());
   }
@@ -253,7 +264,6 @@ public class K8sStateHelper {
 
     List tags = new ArrayList();
     tags.addAll(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sInstanceSyncTaskParameters));
-    tags.addAll(fetchTagsFromK8sTaskParams(k8sInstanceSyncTaskParameters));
 
     String waitId = generateUuid();
     DelegateTask delegateTask =

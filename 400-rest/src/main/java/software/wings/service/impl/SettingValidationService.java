@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -256,6 +257,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
+      if (((KubernetesClusterConfig) settingValue).isUseKubernetesDelegate()) {
+        validateDelegateSelectorsProvided(settingValue);
+      }
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
         validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails);
       }
@@ -341,6 +345,12 @@ public class SettingValidationService {
     }
 
     return true;
+  }
+
+  private void validateDelegateSelectorsProvided(SettingValue settingValue) {
+    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+      throw new InvalidRequestException("No Delegate Selector Provided.", USER);
+    }
   }
 
   private void validateCEAwsConfig(SettingAttribute settingAttribute) {
