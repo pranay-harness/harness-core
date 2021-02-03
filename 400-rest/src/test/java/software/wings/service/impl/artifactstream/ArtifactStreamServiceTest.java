@@ -3175,7 +3175,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     verify(alertService).deleteByArtifactStream(any(), eq(updatedArtifactStream.getUuid()));
-    verify(artifactStreamServiceBindingService).deleteByArtifactStream(eq(updatedArtifactStream.getUuid()));
+    verify(artifactStreamServiceBindingService).deleteByArtifactStream(eq(updatedArtifactStream.getUuid()), eq(false));
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
