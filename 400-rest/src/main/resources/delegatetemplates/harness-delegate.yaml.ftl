@@ -148,6 +148,8 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
+        - name: KUSTOMIZE_PATH
+          value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
         - name: GRPC_SERVICE_ENABLED
