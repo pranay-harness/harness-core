@@ -41,6 +41,29 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestRecasterWithEnum() {
+    Recast recast = new Recast(recaster, ImmutableSet.of(DummyEnum.class));
+    DummyEnum dummyEnum = DummyEnum.builder().types(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY)).build();
+
+    Document document = recast.toDocument(dummyEnum);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get("types")).isEqualTo(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY.name()));
+
+    DummyEnum recastedDummyEnum = recast.fromDocument(document, DummyEnum.class);
+    assertThat(recastedDummyEnum).isNotNull();
+    assertThat(recastedDummyEnum.types).isEqualTo(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY));
+  }
+
+  @Builder
+  @AllArgsConstructor
+  private static class DummyEnum {
+    private List<Type> types;
+    private enum Type { SUPER_DUMMY }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestRecasterWithSimpleList() {
     final List<Integer> list = Arrays.asList(1, 2, 3);
 
