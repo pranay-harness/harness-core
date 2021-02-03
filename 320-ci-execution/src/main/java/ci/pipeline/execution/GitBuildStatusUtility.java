@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
@@ -66,6 +67,20 @@ public class GitBuildStatusUtility {
     if (buildStatusUpdateParameter != null) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
           getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus());
+
+      /* This check is require because delegate is not honouring the ordering and
+         there are instances where we are overriding final status with prev state status i.e running specially in case
+         time interval is minuscule
+      */
+
+      if (isFinalStatus(nodeExecution.getStatus())) {
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException exception) {
+          // Ignore
+        }
+      }
+
       if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
         DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                       .accountId(accountId)
