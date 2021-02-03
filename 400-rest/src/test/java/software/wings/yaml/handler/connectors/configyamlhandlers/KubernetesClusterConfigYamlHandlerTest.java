@@ -3,6 +3,7 @@ package software.wings.yaml.handler.connectors.configyamlhandlers;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAUNAK;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -30,6 +31,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -86,6 +88,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
     Yaml yaml = Yaml.builder()
                     .useKubernetesDelegate(true)
                     .delegateName(SAMPLE_STRING)
+                    .delegateSelectors(Arrays.asList(SAMPLE_STRING))
                     .masterUrl(SAMPLE_STRING)
                     .username(SAMPLE_STRING)
                     .clientKeyAlgo(SAMPLE_STRING)
@@ -116,6 +119,32 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
     assertThat(clusterConfig.getEncryptedCaCert()).isEqualTo(SAMPLE_STRING);
     assertThat(clusterConfig.getEncryptedOidcPassword()).isEqualTo(SAMPLE_STRING);
     assertThat(clusterConfig.getEncryptedServiceAccountToken()).isEqualTo(SAMPLE_STRING);
+    assertThat(clusterConfig.getDelegateSelectors()).contains(SAMPLE_STRING);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testToBeanWithOnlyDelegateName() {
+    Yaml yaml = Yaml.builder().useKubernetesDelegate(true).delegateName(SAMPLE_STRING).build();
+
+    Change change = Change.Builder.aFileChange()
+                        .withAccountId("ABC")
+                        .withFilePath("Setup/Cloud Providers/test-harness.yaml")
+                        .build();
+    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                            .withYamlType(YamlType.CLOUD_PROVIDER)
+                                            .withYaml(yaml)
+                                            .withChange(change)
+                                            .build();
+
+    SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
+    KubernetesClusterConfig clusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
+
+    assertThat(clusterConfig).isNotNull();
+    assertThat(clusterConfig.isUseKubernetesDelegate()).isTrue();
+    assertThat(clusterConfig.getDelegateName()).isEqualTo(SAMPLE_STRING);
+    assertThat(clusterConfig.getDelegateSelectors()).contains(SAMPLE_STRING);
   }
 
   @Test

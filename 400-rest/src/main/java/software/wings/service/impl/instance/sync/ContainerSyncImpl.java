@@ -3,8 +3,6 @@ package software.wings.service.impl.instance.sync;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
-
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -32,7 +30,6 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -146,9 +143,6 @@ public class ContainerSyncImpl implements ContainerSync {
             getContainerServiceParams(containerInfraMapping, containerMetadata.getContainerServiceName(),
                 containerMetadata.getNamespace(), containerMetadata.getReleaseName());
 
-        List<String> tags = new ArrayList<>();
-        tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
-
         Application app = appService.get(containerInfraMapping.getAppId());
         SyncTaskContext syncTaskContext =
             SyncTaskContext.builder()
@@ -158,7 +152,6 @@ public class ContainerSyncImpl implements ContainerSync {
                 .infrastructureMappingId(containerInfraMapping.getUuid())
                 .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
                 .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
-                .tags(tags)
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)

@@ -32,6 +32,7 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -335,7 +336,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     SettingValue cloudProvider = settingsService.get(cloudProviderId).getValue();
     if (cloudProvider instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig k8sCloudProvider = (KubernetesClusterConfig) cloudProvider;
-      delegateName = k8sCloudProvider.getDelegateName();
+      delegateName = !EmptyPredicate.isEmpty(k8sCloudProvider.getDelegateSelectors())
+          ? k8sCloudProvider.getDelegateSelectors().iterator().next()
+          : null;
     } else if (cloudProvider instanceof AwsConfig) {
       AwsConfig awsCloudProvider = (AwsConfig) cloudProvider;
       delegateName = awsCloudProvider.getTag();

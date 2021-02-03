@@ -152,6 +152,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -211,6 +212,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -362,6 +364,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
           .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
                                 .withValue(KubernetesClusterConfig.builder()
                                                .delegateName("delegateName")
+                                               .delegateSelectors(new HashSet<>(singletonList("delegateSelectors")))
                                                .useKubernetesDelegate(true)
                                                .build())
                                 .build())
@@ -759,7 +762,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
@@ -1214,8 +1217,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
-
-    verifyDelegateNameInTags();
   }
 
   @Test
@@ -1284,15 +1285,13 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.HELM_VALUES_FETCH);
-
-    verifyDelegateNameInTags();
   }
 
-  private void verifyDelegateNameInTags() {
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+  private void verifyDelegateSelectorInDelegateTaskParams(DelegateTask delegateTask) {
+    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) delegateTask.getData().getParameters()[0];
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) helmCommandRequest.getContainerServiceParams().getSettingAttribute().getValue();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
   }
 
   @Test
@@ -1745,7 +1744,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);

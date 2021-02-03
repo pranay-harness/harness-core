@@ -7,6 +7,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,5 +17,6 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLInheritClusterDetails {
   private RequestField<String> delegateName;
+  private RequestField<Set<String>> delegateSelectors;
   private RequestField<QLUsageScope> usageScope;
 }

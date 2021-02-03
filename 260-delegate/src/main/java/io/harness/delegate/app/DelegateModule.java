@@ -390,7 +390,6 @@ import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationImpl;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverDelegateServiceImpl;
@@ -444,7 +443,6 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-import software.wings.service.intfc.security.CustomSecretsManagerValidation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
@@ -1239,7 +1237,6 @@ public class DelegateModule extends AbstractModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CustomSecretsManagerValidation.class).to(CustomSecretsManagerValidationImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
 
     binder()

@@ -599,8 +599,10 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).isEmpty();
 
     doReturn(K8sClusterConfig.builder()
-                 .cloudProvider(
-                     KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
+                 .cloudProvider(KubernetesClusterConfig.builder()
+                                    .useKubernetesDelegate(true)
+                                    .delegateSelectors(new HashSet<>(singletonList("delegateSelectors")))
+                                    .build())
                  .build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
@@ -609,7 +611,13 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
     delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).contains("delegateName");
+
+    K8sRollingDeployTaskParameters taskParameters =
+        (K8sRollingDeployTaskParameters) delegateTask.getData().getParameters()[0];
+
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) taskParameters.getK8sClusterConfig().getCloudProvider();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
   }
 
   @Test
