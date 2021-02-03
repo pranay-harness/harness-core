@@ -102,7 +102,6 @@ pipeline:
                         socketTimeoutMillis: 1000
                         method: GET
                         url: https://google.com
-            rollbackSteps: []
     - parallel:
         - stage:
             identifier: qaStage2
@@ -172,7 +171,6 @@ pipeline:
                         socketTimeoutMillis: 1000
                         method: <+input>
                         url: https://google.com
-                rollbackSteps: []
         - stage:
             identifier: qaStage3
             name: qa stage3
@@ -216,7 +214,6 @@ pipeline:
                         socketTimeoutMillis: 1000
                         method: GET
                         url: https://google.com
-                rollbackSteps: []
     - stage:
         identifier: qaStage4
         name: qa stage4
@@ -285,4 +282,3 @@ pipeline:
                     socketTimeoutMillis: 1000
                     method: GET
                     url: https://google.com
-            rollbackSteps: []
