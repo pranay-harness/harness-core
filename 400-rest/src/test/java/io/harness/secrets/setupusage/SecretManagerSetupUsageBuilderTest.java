@@ -21,6 +21,7 @@ import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -44,6 +45,8 @@ import org.mockito.Mock;
 public class SecretManagerSetupUsageBuilderTest extends WingsBaseTest {
   @Mock SecretManagerConfigService secretManagerConfigService;
   @Inject @InjectMocks SecretManagerSetupUsageBuilder secretManagerSetupUsageBuilder;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
+
   @Inject private FeatureFlagService featureFlagService;
   private Account account;
   private EncryptedData encryptedData;
@@ -69,7 +72,7 @@ public class SecretManagerSetupUsageBuilderTest extends WingsBaseTest {
     encryptedData.setUuid(null);
     encryptedData.setType(SettingVariableTypes.KMS);
     encryptedData.setUuid(UUIDGenerator.generateUuid());
-    kmsConfig = getKmsConfig();
+    kmsConfig = secretManagementTestHelper.getKmsConfig();
     kmsConfig.setEncryptionType(KMS);
     kmsConfig.setKmsArn(encryptedData.getUuid());
     kmsConfig.setSecretKey(encryptedData.getUuid());

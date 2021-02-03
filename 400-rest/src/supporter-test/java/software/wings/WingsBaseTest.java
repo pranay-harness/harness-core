@@ -8,14 +8,8 @@ import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.MigrateSecretTask;
-import io.harness.encryptors.clients.AwsKmsEncryptor;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.queue.QueueConsumer;
-import io.harness.security.encryption.EncryptedRecord;
-import io.harness.security.encryption.EncryptionType;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -23,16 +17,10 @@ import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.AwsSecretsManagerConfig;
-import software.wings.beans.AzureVaultConfig;
-import software.wings.beans.CyberArkConfig;
-import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.beans.VaultConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
@@ -41,26 +29,17 @@ import software.wings.rules.WingsRule;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-import javax.crypto.spec.SecretKeySpec;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-/**
- * Created by anubhaw on 4/28/16.
- */
 public abstract class WingsBaseTest extends CategoryTest implements MockableTestMixin {
-  private static final String plainTextKey = "1234567890123456";
-
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   // I am not absolutely sure why, but there is dependency between wings io.harness.rule and
@@ -75,184 +54,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected QueueConsumer<MigrateSecretTask> transitionKmsQueue;
   @Inject protected SettingsService settingsService;
   @Inject protected FeatureFlagService featureFlagService;
-  @Inject protected LocalSecretManagerService localSecretManagerService;
   @Inject protected MainConfiguration mainConfiguration;
-
-  protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
-    if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new SecretManagementException(
-          ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
-    }
-    char[] encryptedValue = value == null
-        ? null
-        : AwsKmsEncryptor.encrypt(new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
-
-    return EncryptedData.builder()
-        .encryptionKey(plainTextKey)
-        .encryptedValue(encryptedValue)
-        .encryptionType(EncryptionType.KMS)
-        .kmsId(kmsConfig.getUuid())
-        .enabled(true)
-        .accountId(accountId)
-        .build();
-  }
-
-  protected char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
-    return AwsKmsEncryptor.decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
-        .toCharArray();
-  }
-
-  protected boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig) {
-    if (Objects.equals(cyberArkConfig.getCyberArkUrl(), "invalidUrl")) {
-      throw new SecretManagementException("Invalid Url");
-    }
-    if (Objects.equals(cyberArkConfig.getClientCertificate(), "invalidCertificate")) {
-      throw new SecretManagementException("Invalid credentials");
-    }
-    return true;
-  }
-
-  protected EncryptedData encrypt(String value, CyberArkConfig cyberArkConfig) throws Exception {
-    if (cyberArkConfig.getClientCertificate().equals("invalidCertificate")) {
-      throw new SecretManagementException(
-          ErrorCode.SECRET_MANAGEMENT_ERROR, "Invalid credentials", WingsException.USER);
-    }
-    char[] encryptedValue =
-        value == null ? null : AwsKmsEncryptor.encrypt(value, new SecretKeySpec(plainTextKey.getBytes(), "AES"));
-
-    return EncryptedData.builder()
-        .encryptionKey(plainTextKey)
-        .encryptedValue(encryptedValue)
-        .encryptionType(EncryptionType.CYBERARK)
-        .kmsId(cyberArkConfig.getUuid())
-        .enabled(true)
-        .accountId(cyberArkConfig.getAccountId())
-        .build();
-  }
-
-  protected char[] decrypt(EncryptedRecord data, CyberArkConfig cyberArkConfig) throws Exception {
-    return "Cyberark1".toCharArray();
-  }
-
-  protected EncryptedData encrypt(String accountId, String name, String value, VaultConfig vaultConfig,
-      EncryptedData savedEncryptedData) throws IOException {
-    if (vaultConfig.getAuthToken().equals("invalidKey")) {
-      throw new SecretManagementException("invalidKey");
-    }
-
-    return EncryptedData.builder()
-        .encryptionKey(name)
-        .encryptedValue(value == null ? null : value.toCharArray())
-        .encryptionType(EncryptionType.VAULT)
-        .enabled(true)
-        .accountId(accountId)
-        .kmsId(vaultConfig.getUuid())
-        .build();
-  }
-
-  protected char[] decrypt(EncryptedRecord data, VaultConfig vaultConfig) throws IOException {
-    if (data.getEncryptedValue() == null) {
-      return null;
-    }
-    return data.getEncryptedValue();
-  }
-
-  private VaultConfig getCommonVaultConfig() {
-    VaultConfig vaultConfig =
-        VaultConfig.builder().vaultUrl("http://127.0.0.1:8200").name("myVault").secretEngineVersion(1).build();
-    vaultConfig.setDefault(true);
-    vaultConfig.setReadOnly(false);
-    vaultConfig.setEncryptionType(EncryptionType.VAULT);
-    vaultConfig.setSecretEngineName("secret");
-    vaultConfig.setSecretEngineVersion(2);
-    vaultConfig.setUsageRestrictions(
-        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
-    return vaultConfig;
-  }
-
-  protected VaultConfig getVaultConfigWithAuthToken() {
-    return getVaultConfigWithAuthToken(generateUuid());
-  }
-
-  protected VaultConfig getVaultConfigWithAuthToken(String authToken) {
-    VaultConfig vaultConfig = getCommonVaultConfig();
-    vaultConfig.setAuthToken(authToken);
-    return vaultConfig;
-  }
-
-  protected VaultConfig getVaultConfigWithAppRole(String appRoleId, String secretId) {
-    VaultConfig vaultConfig = getCommonVaultConfig();
-    vaultConfig.setAppRoleId(appRoleId);
-    vaultConfig.setSecretId(secretId);
-    return vaultConfig;
-  }
-
-  protected KmsConfig getKmsConfig() {
-    final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setName("myKms");
-    kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn(generateUuid());
-    kmsConfig.setAccessKey(generateUuid());
-    kmsConfig.setSecretKey(generateUuid());
-    kmsConfig.setEncryptionType(EncryptionType.KMS);
-    kmsConfig.setUsageRestrictions(
-        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
-    return kmsConfig;
-  }
-
-  protected GcpKmsConfig getGcpKmsConfig() {
-    GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("gcpKms", "projectId", "region", "keyRing", "keyName", "{\"abc\": \"value\"}".toCharArray());
-    gcpKmsConfig.setDefault(true);
-    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
-    gcpKmsConfig.setUsageRestrictions(
-        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
-    return gcpKmsConfig;
-  }
-
-  protected CyberArkConfig getCyberArkConfig() {
-    return getCyberArkConfig(null);
-  }
-
-  protected CyberArkConfig getCyberArkConfig(String clientCertificate) {
-    final CyberArkConfig cyberArkConfig = new CyberArkConfig();
-    cyberArkConfig.setName("myCyberArk");
-    cyberArkConfig.setDefault(false);
-    cyberArkConfig.setCyberArkUrl("https://app.harness.io"); // Just a valid URL.
-    cyberArkConfig.setAppId(generateUuid());
-    cyberArkConfig.setClientCertificate(clientCertificate);
-    cyberArkConfig.setEncryptionType(EncryptionType.CYBERARK);
-    cyberArkConfig.setUsageRestrictions(
-        localSecretManagerService.getEncryptionConfig(generateUuid()).getUsageRestrictions());
-    return cyberArkConfig;
-  }
-
-  protected AzureVaultConfig getAzureVaultConfig() {
-    AzureVaultConfig azureVaultConfig = new AzureVaultConfig();
-    azureVaultConfig.setName("myAzureVault");
-    azureVaultConfig.setSecretKey(generateUuid());
-    azureVaultConfig.setDefault(true);
-    azureVaultConfig.setVaultName(generateUuid());
-    azureVaultConfig.setClientId(generateUuid());
-    azureVaultConfig.setSubscription(generateUuid());
-    azureVaultConfig.setTenantId(generateUuid());
-    azureVaultConfig.setEncryptionType(EncryptionType.AZURE_VAULT);
-    return azureVaultConfig;
-  }
-
-  protected AwsSecretsManagerConfig getAwsSecretManagerConfig() {
-    AwsSecretsManagerConfig secretsManagerConfig = AwsSecretsManagerConfig.builder()
-                                                       .name("myAwsSecretManager")
-                                                       .accessKey(generateUuid())
-                                                       .secretKey(generateUuid())
-                                                       .region("us-east-1")
-                                                       .secretNamePrefix(generateUuid())
-                                                       .build();
-    secretsManagerConfig.setDefault(true);
-    secretsManagerConfig.setEncryptionType(EncryptionType.AWS_SECRETS_MANAGER);
-
-    return secretsManagerConfig;
-  }
 
   protected Account getAccount(String accountType) {
     Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
