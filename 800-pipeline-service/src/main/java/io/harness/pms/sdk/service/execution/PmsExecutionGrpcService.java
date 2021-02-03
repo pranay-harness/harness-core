@@ -110,6 +110,12 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     if (Objects.equals(nodeExecution.getNode().getGroup(), "STAGE")) {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".startTs",
+          nodeExecution.getStartTs());
+      if (ExecutionStatus.isTerminal(status)) {
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
+            nodeExecution.getEndTs());
+      }
     }
 
     Criteria criteria =
