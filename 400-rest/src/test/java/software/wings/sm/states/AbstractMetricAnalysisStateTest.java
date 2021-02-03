@@ -17,6 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -70,6 +71,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private FeatureTestHelper featureTestHelper;
   @Mock private ExecutionContext executionContext;
+  @Inject private FeatureFlagService featureFlagService;
 
   private AppDynamicsState appDynamicsState = new AppDynamicsState(generateUuid());
   private String accountId;

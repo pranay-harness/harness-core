@@ -98,6 +98,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.ServiceVariableResource;
 import software.wings.resources.secretsmanagement.KmsResource;
+import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
@@ -115,6 +116,7 @@ import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -180,7 +182,9 @@ public class KmsTest extends WingsBaseTest {
   @Inject private LocalEncryptor localEncryptor;
   @Inject private LocalSecretManagerService localSecretManagerService;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
-
+  @Inject private ConfigService configService;
+  @Inject private SecretManagementResource secretManagementResource;
+  @Inject private QueueConsumer<MigrateSecretTask> transitionKmsQueue;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;

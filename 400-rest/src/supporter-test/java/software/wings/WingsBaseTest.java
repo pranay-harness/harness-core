@@ -7,11 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.beans.EncryptedData;
-import io.harness.beans.MigrateSecretTask;
-import io.harness.ff.FeatureFlagService;
-import io.harness.queue.QueueConsumer;
 
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
@@ -24,9 +20,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.dl.WingsPersistence;
-import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.rules.WingsRule;
-import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -46,15 +40,10 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   // MockitoJUnit io.harness.rule and they have to be listed in these order
   @Rule public WingsRule wingsRule = new WingsRule();
 
-  @Inject protected SecretManagementResource secretManagementResource;
   @Inject protected SecretManager secretManager;
   @Inject protected WingsPersistence wingsPersistence;
-  @Inject protected ConfigService configService;
   @Inject protected EncryptionService encryptionService;
-  @Inject protected QueueConsumer<MigrateSecretTask> transitionKmsQueue;
   @Inject protected SettingsService settingsService;
-  @Inject protected FeatureFlagService featureFlagService;
-  @Inject protected MainConfiguration mainConfiguration;
 
   protected Account getAccount(String accountType) {
     Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());
