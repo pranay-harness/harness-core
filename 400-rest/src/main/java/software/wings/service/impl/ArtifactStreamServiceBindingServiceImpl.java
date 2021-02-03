@@ -524,7 +524,7 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   }
 
   @Override
-  public void deleteByArtifactStream(String artifactStreamId) {
+  public void deleteByArtifactStream(String artifactStreamId, boolean syncFromGit) {
     // Only applicable for feature flag off as after the refactor artifact streams are unrelated to services.
     // We can't fetch the artifact stream here as it is most likely already deleted from the DB.
     List<Service> services = serviceResourceService.listByArtifactStreamId(artifactStreamId);
@@ -532,7 +532,10 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
       return;
     }
 
-    services.forEach(service -> deleteOld(service, artifactStreamId));
+    services.forEach(service -> {
+      service.setSyncFromGit(syncFromGit);
+      deleteOld(service, artifactStreamId);
+    });
   }
 
   private boolean deleteOld(Service service, String artifactStreamId) {

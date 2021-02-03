@@ -574,7 +574,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
-    srs.pruneDescendingEntities(APP_ID, SERVICE_ID);
+    srs.pruneDescendingEntities(APP_ID, SERVICE_ID, false);
     InOrder inOrder = inOrder(mockWingsPersistence, workflowService, notificationService, serviceTemplateService,
         configService, serviceVariableService, artifactStreamService);
     inOrder.verify(artifactStreamService).pruneByService(APP_ID, SERVICE_ID);

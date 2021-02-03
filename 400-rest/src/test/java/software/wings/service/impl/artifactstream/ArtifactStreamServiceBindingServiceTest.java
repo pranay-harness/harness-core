@@ -144,11 +144,11 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
 
-    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1, false);
     assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
 
-    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2, false);
     assertThat(service1.getArtifactStreamIds()).isNullOrEmpty();
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
   }
@@ -171,11 +171,11 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_1)).thenReturn(asList(service1, service2));
     when(serviceResourceService.listByArtifactStreamId(ARTIFACT_STREAM_ID_2)).thenReturn(asList(service1));
 
-    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_1, false);
     assertThat(service1.getArtifactStreamIds()).isEqualTo(Arrays.asList(ARTIFACT_STREAM_ID_2));
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
 
-    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2);
+    artifactStreamServiceBindingService.deleteByArtifactStream(ARTIFACT_STREAM_ID_2, false);
     assertThat(service1.getArtifactStreamIds()).isNullOrEmpty();
     assertThat(service2.getArtifactStreamIds()).isNullOrEmpty();
   }

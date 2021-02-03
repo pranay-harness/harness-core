@@ -1196,7 +1196,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId, boolean syncFromGit) {
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
@@ -1397,7 +1397,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, false));
 
       pruneDeploymentSpecifications(service);
-      pruneDescendingEntities(appId, serviceUuid);
+      pruneDescendingEntities(appId, serviceUuid, false);
       harnessTagService.pruneTagLinks(service.getAccountId(), serviceUuid);
     }
 
