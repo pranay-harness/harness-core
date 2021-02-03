@@ -55,7 +55,7 @@ public class OverviewAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLB
     String queryStatement = "";
     try {
       log.info("Query step 1/3 : Constructing SQL Query");
-      queryStatement = new AnomalyDataQueryBuilder().overviewQuery(accountId, filters);
+      queryStatement = AnomalyDataQueryBuilder.overviewQuery(accountId, filters);
     } catch (InvalidArgumentsException | InvalidRequestException e) {
       log.error("Error while constructing query for OverviewAnomaliesDataFetcher, Exception : {} ", e.toString());
       return listAnomalies;

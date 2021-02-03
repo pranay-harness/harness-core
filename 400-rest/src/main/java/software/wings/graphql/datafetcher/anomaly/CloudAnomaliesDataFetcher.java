@@ -54,7 +54,7 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
     String queryStatement = null;
     try {
       log.info("Query Step 1/3 : Constructing Query");
-      queryStatement = new AnomalyDataQueryBuilder().formCloudQuery(accountId, filters, groupBy);
+      queryStatement = AnomalyDataQueryBuilder.formCloudQuery(accountId, filters, groupBy);
     } catch (InvalidArgumentsException | InvalidRequestException e) {
       log.error("Error while constructing query for CloudAnomaliesDataFetcher, Exception : {} ", e.toString());
       return listAnomalies;

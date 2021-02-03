@@ -30,7 +30,6 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
   }
 
   int MAX_RETRY_COUNT = 3;
-  AnomalyDataQueryBuilder queryBuilder = new AnomalyDataQueryBuilder();
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -46,7 +45,7 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
   }
 
   private void updateAnomaly(String accountId, QLAnomalyInput input) {
-    String query = queryBuilder.formAnomalyUpdateQuery(accountId, input);
+    String query = AnomalyDataQueryBuilder.formAnomalyUpdateQuery(accountId, input);
 
     int retryCount = 0;
     int count = 0;
@@ -69,7 +68,7 @@ public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyIn
 
   private QLUpdateAnomalyPayLoad getUpdatedAnomaly(String accountId, QLAnomalyInput input) {
     QLAnomalyData anomalyData = null;
-    String query = queryBuilder.formAnomalyFetchQuery(accountId, input);
+    String query = AnomalyDataQueryBuilder.formAnomalyFetchQuery(accountId, input);
     ResultSet resultSet;
 
     int retryCount = 0;

@@ -2,7 +2,10 @@ package io.harness.ccm.anomaly.dao;
 
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityBuilder;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -12,6 +15,8 @@ import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.DeleteQuery;
 import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.InsertQuery;
+import com.healthmarketscience.sqlbuilder.UpdateQuery;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +26,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -28,9 +34,59 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Slf4j
 public class AnomalyEntityDao {
-  static int MAX_RETRY = 3;
+  static final int MAX_RETRY = 3;
+  static final int BATCH_SIZE = 50;
 
   @Inject @Autowired private TimeScaleDBService dbService;
+
+  public AnomalyEntity update(AnomalyEntity anomaly) {
+    String updateStatement = getUpdateQuery(anomaly);
+    log.info("Prepared Statement for update AnomalyEntity: {} ", updateStatement);
+
+    int retryCount = 0;
+    int count = 0;
+    while (retryCount < MAX_RETRY) {
+      try (Connection dbConnection = dbService.getDBConnection();
+           Statement statement = dbConnection.createStatement()) {
+        count = statement.executeUpdate(updateStatement);
+        log.info(" Update Query status : {} , after retry count : {}", count, retryCount + 1);
+        if (count > 0) {
+          return anomaly;
+        }
+      } catch (SQLException e) {
+        retryCount++;
+      }
+    }
+    return null;
+  }
+
+  private String getUpdateQuery(AnomalyEntity anomaly) {
+    UpdateQuery query = new UpdateQuery(AnomaliesDataTableSchema.table);
+
+    if (EmptyPredicate.isNotEmpty(anomaly.getId())) {
+      query.addCondition(BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.id, anomaly.getId()));
+    } else {
+      throw new InvalidArgumentsException("Update cannot be done since given anomaly doesn't contain id");
+    }
+
+    if (EmptyPredicate.isNotEmpty(anomaly.getAccountId())) {
+      query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, anomaly.getAccountId()));
+    }
+
+    if (EmptyPredicate.isNotEmpty(anomaly.getNote())) {
+      query.addSetClause(AnomaliesDataTableSchema.note, anomaly.getNote());
+    }
+
+    if (anomaly.getFeedback() != null) {
+      query.addCustomSetClause(AnomaliesDataTableSchema.feedBack, anomaly.getFeedback());
+    }
+
+    query.addSetClause(AnomaliesDataTableSchema.slackInstantNotification, anomaly.isSlackInstantNotification());
+    query.addSetClause(AnomaliesDataTableSchema.slackDailyNotification, anomaly.isSlackDailyNotification());
+    query.addSetClause(AnomaliesDataTableSchema.slackWeeklyNotification, anomaly.isSlackWeeklyNotification());
+
+    return query.validate().toString();
+  }
 
   public List<AnomalyEntity> list(String queryStatement) {
     List<AnomalyEntity> listAnomalies = new ArrayList<>();
@@ -133,6 +189,15 @@ public class AnomalyEntityDao {
           case AWS_USAGE_TYPE:
             anomalyBuilder.awsUsageType(resultSet.getString(field.getFieldName()));
             break;
+          case SLACK_DAILY_NOTIFICATION:
+            anomalyBuilder.slackDailyNotification(resultSet.getBoolean(field.getFieldName()));
+            break;
+          case SLACK_INSTANT_NOTIFICATION:
+            anomalyBuilder.slackInstantNotification(resultSet.getBoolean(field.getFieldName()));
+            break;
+          case SLACK_WEEKLY_NOTIFICATION:
+            anomalyBuilder.slackWeeklyNotification(resultSet.getBoolean(field.getFieldName()));
+            break;
           default:
             log.error("Unknown field : {} encountered while Resultset conversion in AnomalyDao", field);
         }
@@ -170,5 +235,64 @@ public class AnomalyEntityDao {
     query.addCondition(
         BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, date.truncatedTo(ChronoUnit.DAYS)));
     return query.validate().toString();
+  }
+
+  public void insert(List<AnomalyEntity> anomaliesList) {
+    boolean successfulInsert = false;
+    if (dbService.isValid() && !anomaliesList.isEmpty()) {
+      int retryCount = 0;
+      int index = 0;
+      while (!successfulInsert && retryCount < MAX_RETRY) {
+        try (Connection dbConnection = dbService.getDBConnection();
+             Statement statement = dbConnection.createStatement()) {
+          index = 0;
+          for (AnomalyEntity anomaly : anomaliesList) {
+            statement.addBatch(getInsertQuery(anomaly));
+            index++;
+            if (index % BATCH_SIZE == 0 || index == anomaliesList.size()) {
+              log.debug("Prepared Statement in AnomalyEntityDao: {} ", statement);
+              int[] count = statement.executeBatch();
+              log.debug("Successfully inserted {} anomalies into timescaledb", IntStream.of(count).sum());
+            }
+          }
+          successfulInsert = true;
+        } catch (SQLException e) {
+          log.error(
+              "Failed to save anomalies data,[{}],retryCount=[{}], Exception: ", anomaliesList.size(), retryCount, e);
+          retryCount++;
+        }
+      }
+    } else {
+      log.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
+          dbService.isValid());
+    }
+  }
+
+  private String getInsertQuery(AnomalyEntity anomaly) {
+    return new InsertQuery(software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema.table)
+        .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
+        .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
+        .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
+        .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
+        .addColumn(AnomaliesDataTableSchema.anomalyTime, anomaly.getAnomalyTime())
+        .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
+        .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
+        .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
+        .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
+        .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
+        .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
+        .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
+        .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
+        .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
+        .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
+        .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
+        .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
+        .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
+        .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
+        .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
+        .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
+        .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+        .validate()
+        .toString();
   }
 }

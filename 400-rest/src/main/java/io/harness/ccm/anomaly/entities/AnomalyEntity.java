@@ -9,11 +9,13 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
+@FieldNameConstants(innerTypeName = "AnomalyEntityKeys")
 public class AnomalyEntity {
   String id;
   String accountId;
@@ -50,6 +52,37 @@ public class AnomalyEntity {
   String awsInstanceType;
   String awsUsageType;
 
+  boolean slackDailyNotification;
+  boolean slackInstantNotification;
+  boolean slackWeeklyNotification;
+
+  public EntityType getEntityType() {
+    if (workloadName != null) {
+      return EntityType.WORKLOAD;
+    }
+    if (namespace != null) {
+      return EntityType.NAMESPACE;
+    }
+    if (clusterId != null) {
+      return EntityType.CLUSTER;
+    }
+    if (gcpSKUId != null) {
+      return EntityType.GCP_SKU_ID;
+    }
+    if (gcpProduct != null) {
+      return EntityType.GCP_PRODUCT;
+    }
+    if (gcpProject != null) {
+      return EntityType.GCP_PROJECT;
+    }
+    if (awsService != null) {
+      return EntityType.AWS_SERVICE;
+    }
+    if (awsAccount != null) {
+      return EntityType.AWS_ACCOUNT;
+    }
+    return null;
+  }
   public static class AnomaliesDataTableSchema {
     enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE, BOOLEAN }
 
@@ -81,7 +114,10 @@ public class AnomalyEntity {
       AWS_USAGE_TYPE("awsusagetype", DataType.STRING),
       AWS_INSTANCE_TYPE("awsinstancetype", DataType.STRING),
       ANOMALY_SCORE("anomalyScore", DataType.DOUBLE),
-      REPORTED_BY("reportedby", DataType.STRING);
+      REPORTED_BY("reportedby", DataType.STRING),
+      SLACK_INSTANT_NOTIFICATION("slackInstantNotification", DataType.BOOLEAN),
+      SLACK_DAILY_NOTIFICATION("slackDailyNotification", DataType.BOOLEAN),
+      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN);
 
       private DataType dataType;
       private String fieldName;
@@ -100,44 +136,48 @@ public class AnomalyEntity {
       }
     }
 
-    public static DbSpec spec;
-    public static DbSchema schema;
-    public static DbTable table;
+    public static final DbSpec spec;
+    public static final DbSchema schema;
+    public static final DbTable table;
 
-    public static DbColumn id;
-    public static DbColumn accountId;
+    public static final DbColumn id;
+    public static final DbColumn accountId;
 
-    public static DbColumn actualCost;
-    public static DbColumn expectedCost;
+    public static final DbColumn actualCost;
+    public static final DbColumn expectedCost;
 
-    public static DbColumn anomalyTime;
-    public static DbColumn timeGranularity;
+    public static final DbColumn anomalyTime;
+    public static final DbColumn timeGranularity;
 
-    public static DbColumn note;
-    public static DbColumn feedBack;
+    public static final DbColumn note;
+    public static final DbColumn feedBack;
 
-    public static DbColumn clusterId;
-    public static DbColumn clusterName;
+    public static final DbColumn clusterId;
+    public static final DbColumn clusterName;
 
-    public static DbColumn workloadName;
-    public static DbColumn workloadType;
+    public static final DbColumn workloadName;
+    public static final DbColumn workloadType;
 
-    public static DbColumn namespace;
+    public static final DbColumn namespace;
 
-    public static DbColumn region;
+    public static final DbColumn region;
 
-    public static DbColumn gcpProject;
-    public static DbColumn gcpProduct;
-    public static DbColumn gcpSkuId;
-    public static DbColumn gcpSkuDescription;
+    public static final DbColumn gcpProject;
+    public static final DbColumn gcpProduct;
+    public static final DbColumn gcpSkuId;
+    public static final DbColumn gcpSkuDescription;
 
-    public static DbColumn awsAccount;
-    public static DbColumn awsService;
-    public static DbColumn awsUsageType;
-    public static DbColumn awsInstanceType;
+    public static final DbColumn awsAccount;
+    public static final DbColumn awsService;
+    public static final DbColumn awsUsageType;
+    public static final DbColumn awsInstanceType;
 
-    public static DbColumn anomalyScore;
-    public static DbColumn reportedBy;
+    public static final DbColumn anomalyScore;
+    public static final DbColumn reportedBy;
+
+    public static final DbColumn slackInstantNotification;
+    public static final DbColumn slackDailyNotification;
+    public static final DbColumn slackWeeklyNotification;
 
     static {
       spec = new DbSpec();
@@ -175,6 +215,10 @@ public class AnomalyEntity {
 
       anomalyScore = table.addColumn("anomalyscore");
       reportedBy = table.addColumn("reportedby");
+
+      slackInstantNotification = table.addColumn("slackInstantNotification");
+      slackDailyNotification = table.addColumn("slackDailyNotification");
+      slackWeeklyNotification = table.addColumn("slackWeeklyNotification");
     }
   }
 }
