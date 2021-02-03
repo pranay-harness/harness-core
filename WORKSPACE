@@ -1606,6 +1606,8 @@ maven_install(
         "jaxen:jaxen:1.1.6",
         "joda-time:joda-time:2.10.1",
         "junit:junit:4.12",
+        "org.junit.jupiter:junit-jupiter-engine:5.3.1",
+        "org.testng:testng:7.3.0",
         "me.snowdrop:istio-client-uberjar:1.0.1",
         "me.snowdrop:istio-client:1.0.1",
         "me.snowdrop:istio-common:1.0.1",

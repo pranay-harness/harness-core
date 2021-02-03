@@ -71,6 +71,7 @@ directories:
   970-ng-commons
   970-rbac-core
   980-commons
+  980-java-agent
   990-commons-test
   tools/bazel
 

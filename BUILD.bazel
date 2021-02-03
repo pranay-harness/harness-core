@@ -97,6 +97,7 @@ modules = [
     "//970-ng-commons",
     "//980-commons",
     "//990-commons-test",
+    "//980-java-agent",
     "//955-filters-sdk",
 ]
 
