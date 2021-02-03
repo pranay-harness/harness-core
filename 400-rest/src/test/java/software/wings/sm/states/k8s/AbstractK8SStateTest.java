@@ -84,6 +84,7 @@ import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
@@ -124,7 +125,6 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
-import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
@@ -221,7 +221,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
   @InjectMocks private AbstractK8sState abstractK8SState = mock(AbstractK8sState.class, CALLS_REAL_METHODS);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject KryoSerializer kryoSerializer;
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private SweepingOutputService sweepingOutputService;
@@ -519,7 +519,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .withValue(KubernetesClusterConfig.builder().build())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
 
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
@@ -580,7 +580,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .withValue(KubernetesClusterConfig.builder().build())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
 
     abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
 
@@ -591,7 +591,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     settingAttribute.setValue(
         KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
     abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
@@ -606,7 +606,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                  .build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
     abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
@@ -1063,8 +1063,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                     .applicationManifestId(APPLICATION_MANIFEST_ID)
                                     .build();
     manifestFile.setAppId(APP_ID);
-    wingsPersistence.save(appManifest);
-    wingsPersistence.save(manifestFile);
+    persistence.save(appManifest);
+    persistence.save(manifestFile);
 
     K8sDelegateManifestConfig delegateManifestConfig =
         abstractK8SState.createDelegateManifestConfig(context, appManifest);
@@ -1107,8 +1107,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     ApplicationManifest applicationManifest = createApplicationManifest();
     ManifestFile manifestFile = createManifestFile();
-    wingsPersistence.save(applicationManifest);
-    wingsPersistence.save(manifestFile);
+    persistence.save(applicationManifest);
+    persistence.save(manifestFile);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(createGCPInfraMapping());
 
     Set<String> serviceArtifactVariableNames = new HashSet<>();

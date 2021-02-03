@@ -20,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -28,7 +29,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -50,7 +50,7 @@ import org.mockito.MockitoAnnotations;
 
 public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestBase {
   @Inject private SettingsService settingsService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private WorkflowExecutionService workflowExecutionService;

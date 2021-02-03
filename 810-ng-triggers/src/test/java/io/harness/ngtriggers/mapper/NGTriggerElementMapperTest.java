@@ -5,8 +5,11 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
-import static io.harness.rule.OwnerRule.*;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -32,7 +35,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -196,18 +201,18 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     String sDate21 = "30-Dec-1998 18:37:50";
 
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-    List<TriggerEventHistory> triggerEventHistories = Arrays.asList(
-        generateEventHistoryWithTimestamp(formatter, sDate0), generateEventHistoryWithTimestamp(formatter, sDate1),
-        generateEventHistoryWithTimestamp(formatter, sDate2), generateEventHistoryWithTimestamp(formatter, sDate3),
-        generateEventHistoryWithTimestamp(formatter, sDate4), generateEventHistoryWithTimestamp(formatter, sDate5),
-        generateEventHistoryWithTimestamp(formatter, sDate6), generateEventHistoryWithTimestamp(formatter, sDate7),
-        generateEventHistoryWithTimestamp(formatter, sDate8), generateEventHistoryWithTimestamp(formatter, sDate9),
-        generateEventHistoryWithTimestamp(formatter, sDate10), generateEventHistoryWithTimestamp(formatter, sDate11),
-        generateEventHistoryWithTimestamp(formatter, sDate12), generateEventHistoryWithTimestamp(formatter, sDate13),
-        generateEventHistoryWithTimestamp(formatter, sDate14), generateEventHistoryWithTimestamp(formatter, sDate15),
-        generateEventHistoryWithTimestamp(formatter, sDate16), generateEventHistoryWithTimestamp(formatter, sDate17),
-        generateEventHistoryWithTimestamp(formatter, sDate18), generateEventHistoryWithTimestamp(formatter, sDate19),
-        generateEventHistoryWithTimestamp(formatter, sDate20), generateEventHistoryWithTimestamp(formatter, sDate21));
+    List<TriggerEventHistory> triggerEventHistories = asList(generateEventHistoryWithTimestamp(formatter, sDate0),
+        generateEventHistoryWithTimestamp(formatter, sDate1), generateEventHistoryWithTimestamp(formatter, sDate2),
+        generateEventHistoryWithTimestamp(formatter, sDate3), generateEventHistoryWithTimestamp(formatter, sDate4),
+        generateEventHistoryWithTimestamp(formatter, sDate5), generateEventHistoryWithTimestamp(formatter, sDate6),
+        generateEventHistoryWithTimestamp(formatter, sDate7), generateEventHistoryWithTimestamp(formatter, sDate8),
+        generateEventHistoryWithTimestamp(formatter, sDate9), generateEventHistoryWithTimestamp(formatter, sDate10),
+        generateEventHistoryWithTimestamp(formatter, sDate11), generateEventHistoryWithTimestamp(formatter, sDate12),
+        generateEventHistoryWithTimestamp(formatter, sDate13), generateEventHistoryWithTimestamp(formatter, sDate14),
+        generateEventHistoryWithTimestamp(formatter, sDate15), generateEventHistoryWithTimestamp(formatter, sDate16),
+        generateEventHistoryWithTimestamp(formatter, sDate17), generateEventHistoryWithTimestamp(formatter, sDate18),
+        generateEventHistoryWithTimestamp(formatter, sDate19), generateEventHistoryWithTimestamp(formatter, sDate20),
+        generateEventHistoryWithTimestamp(formatter, sDate21));
 
     Integer[] executionData = ngTriggerElementMapper.prepareExecutionDataArray(
         formatter.parse("30-Dec-1998 21:37:50").getTime(), triggerEventHistories);

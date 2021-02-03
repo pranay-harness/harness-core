@@ -10,11 +10,11 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -32,7 +32,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
 
   @Mock private AppService appService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
 
   @Test

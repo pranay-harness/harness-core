@@ -14,12 +14,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import com.google.inject.Inject;
@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 
 public class HelmChartServiceTest extends WingsBaseTest {
   private String APPLICATION_MANIFEST_ID = "APPLICATION_MANIFEST_ID";
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject private HelmChartService helmChartService;
 

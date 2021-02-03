@@ -8,12 +8,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
 import com.google.inject.Inject;
@@ -32,7 +32,7 @@ import org.junit.experimental.categories.Category;
 public class ExecutionGenTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject KryoSerializer kryoSerializer;
 
   @Test

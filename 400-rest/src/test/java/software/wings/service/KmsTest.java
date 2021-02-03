@@ -95,6 +95,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.ServiceVariableResource;
 import software.wings.resources.secretsmanagement.KmsResource;
@@ -186,7 +187,8 @@ public class KmsTest extends WingsBaseTest {
   @Inject private SecretManagementResource secretManagementResource;
   @Inject private QueueConsumer<MigrateSecretTask> transitionKmsQueue;
   @Inject private SecretManager secretManager;
-  @Inject protected EncryptionService encryptionService;
+  @Inject private EncryptionService encryptionService;
+  @Inject private WingsPersistence wingsPersistence;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;

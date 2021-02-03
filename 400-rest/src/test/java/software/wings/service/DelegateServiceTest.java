@@ -151,7 +151,6 @@ import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.jre.JreConfig;
@@ -251,7 +250,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateTaskService delegateTaskService;
   @Mock private UsageLimitedFeature delegatesFeature;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
   private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
 

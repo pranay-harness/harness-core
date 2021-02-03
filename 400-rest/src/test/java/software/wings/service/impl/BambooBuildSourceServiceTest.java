@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -21,7 +22,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
@@ -50,7 +50,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private ArtifactStreamType streamType = ArtifactStreamType.BAMBOO;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private BambooBuildService bambooBuildService;
   @Inject private ScmSecret scmSecret;
 

@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -13,7 +14,6 @@ import software.wings.beans.Account;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -35,7 +35,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
   private static final int MONTHS_INSTANCES_DATA_TO_GENERATE_EXCLUDING_CURRENT_MONTH = 11;
   private static final int MONTHS_INSTANCE_STATS_DATA_TO_GENERATE_EXCLUDING_CURRENT_MONTH = 11;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject @InjectMocks private InstancesPurgeJob job;
 

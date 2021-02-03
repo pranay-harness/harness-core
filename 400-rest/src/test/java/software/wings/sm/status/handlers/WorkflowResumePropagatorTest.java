@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -22,7 +23,6 @@ import software.wings.beans.Application;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.utils.WingsTestConstants;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class WorkflowResumePropagatorTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private WorkflowResumePropagator resumePropagator;
   @Inject private AccountService accountService;
 

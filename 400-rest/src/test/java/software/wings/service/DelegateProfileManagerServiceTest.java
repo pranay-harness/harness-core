@@ -33,6 +33,7 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
@@ -69,6 +70,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Mock private AppService appService;
   @InjectMocks @Inject private DelegateProfileManagerServiceImpl delegateProfileManagerService;
+  @Inject private HPersistence wingsPersistence;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

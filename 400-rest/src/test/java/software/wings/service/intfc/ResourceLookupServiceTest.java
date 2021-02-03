@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -28,6 +29,7 @@ import org.mockito.InjectMocks;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ResourceLookupServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private ResourceLookupService resourceLookupService;
+  @Inject private HPersistence wingsPersistence;
 
   private EntityAuditRecord entityAuditRecord;
   private Account account;

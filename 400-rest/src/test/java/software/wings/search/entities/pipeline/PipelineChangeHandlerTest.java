@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -50,6 +51,7 @@ import org.mockito.Mock;
 public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject @InjectMocks private PipelineChangeHandler pipelineChangeHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private static final String APP_NAME = "PipelineHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "PipelineHandlerTestForService" + System.currentTimeMillis();

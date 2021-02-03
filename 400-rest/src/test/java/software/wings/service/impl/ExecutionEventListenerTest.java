@@ -20,11 +20,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.sm.StateMachineExecutor;
 
@@ -39,7 +39,7 @@ import org.mockito.Mock;
  */
 public class ExecutionEventListenerTest extends WingsBaseTest {
   @Inject @InjectMocks private ExecutionEventListener executionEventListener;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private StateMachineExecutor stateMachineExecutor;
   @Mock private AppService appService;
 

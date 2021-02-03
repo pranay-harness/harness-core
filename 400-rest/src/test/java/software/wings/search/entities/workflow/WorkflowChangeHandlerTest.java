@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -55,6 +56,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   @Inject @InjectMocks private WorkflowChangeHandler workflowChangeHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private static final String APP_NAME = "WorkflowHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "WorkflowHandlerTestForService" + System.currentTimeMillis();

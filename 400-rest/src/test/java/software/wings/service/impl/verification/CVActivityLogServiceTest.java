@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -37,15 +38,18 @@ import org.junit.experimental.categories.Category;
 
 public class CVActivityLogServiceTest extends WingsBaseTest {
   @Inject CVActivityLogService cvActivityLogService;
+  @Inject private HPersistence wingsPersistence;
+
   private String stateExecutionId;
   private String accountId;
+
   @Before
   public void setupTests() {
     accountId = generateUuid();
     stateExecutionId = generateUuid();
   }
-  @Test
 
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testSavingLog() {

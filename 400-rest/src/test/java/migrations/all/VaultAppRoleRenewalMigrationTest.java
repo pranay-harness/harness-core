@@ -6,6 +6,7 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -17,6 +18,7 @@ import org.junit.experimental.categories.Category;
 
 public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
   @Inject private VaultAppRoleRenewalMigration vaultAppRoleRenewalMigration;
+  @Inject private HPersistence wingsPersistence;
 
   @Test
   @Owner(developers = UTKARSH)

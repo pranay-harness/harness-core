@@ -56,6 +56,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -139,6 +140,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private VersionInfoManager versionInfoManager;
   @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setUp() throws IllegalAccessException {

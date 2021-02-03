@@ -16,6 +16,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -43,6 +44,7 @@ import org.mockito.Mock;
 
 public class YamlGitConfigServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks YamlGitConfigService yamlGitConfigService;
+  @Inject private HPersistence wingsPersistence;
   @Mock AccountService accountService;
   @Mock AuthService authService;
   @Mock AppService appService;

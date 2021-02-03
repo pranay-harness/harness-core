@@ -1,7 +1,5 @@
 package io.harness.connector.jacksontests;
 
-import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
-
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;

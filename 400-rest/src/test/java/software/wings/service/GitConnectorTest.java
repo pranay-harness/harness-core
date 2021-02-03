@@ -10,12 +10,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.SettingValidationService;
@@ -36,7 +36,7 @@ import org.mockito.Mockito;
  * 07/May/2019
  */
 public class GitConnectorTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private AccountService accountService;
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private SettingValidationService settingValidationService;

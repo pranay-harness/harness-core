@@ -14,6 +14,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.SecretSetupUsage;
 import io.harness.secrets.setupusage.SecretSetupUsageService;
@@ -50,6 +51,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
   @Inject private SecretSetupUsageService secretSetupUsageService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
+  @Inject private HPersistence wingsPersistence;
 
   private String accountId;
   private String appId;

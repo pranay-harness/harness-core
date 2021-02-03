@@ -12,6 +12,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.commandlibrary.api.dto.CommandDTO;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.api.commandlibrary.EnrichedCommandVersionDTO;
@@ -33,6 +34,7 @@ import org.mockito.Spy;
 public class ImportedTemplateServiceImplTest extends TemplateBaseTestHelper {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject TemplateService templateService;
+  @Inject private HPersistence wingsPersistence;
   @Spy @Inject private ImportedTemplateServiceImpl importedTemplateService;
 
   private String COMMAND_NAME = "commandName";

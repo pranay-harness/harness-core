@@ -102,6 +102,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -133,7 +134,6 @@ import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.PermissionAttribute.Action;
@@ -184,7 +184,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @InjectMocks @Inject private DashboardStatisticsService dashboardService = spy(DashboardStatisticsServiceImpl.class);
 
   private Instance instance1;

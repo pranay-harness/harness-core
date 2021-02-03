@@ -118,6 +118,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
@@ -258,7 +259,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();

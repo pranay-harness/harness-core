@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -39,7 +40,6 @@ import software.wings.beans.ServiceInstance.ServiceInstanceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -67,7 +67,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Inject @InjectMocks private AppService appService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;

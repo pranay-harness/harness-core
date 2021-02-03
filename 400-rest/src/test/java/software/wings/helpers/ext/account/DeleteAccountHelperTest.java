@@ -30,6 +30,7 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
@@ -73,6 +74,7 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
   @Mock private LicenseService licenseService;
   @Inject private Morphia morphia;
   @Inject FeatureFlagService featureFlagService;
+  @Inject private HPersistence wingsPersistence;
 
   private final String appId = UUID.randomUUID().toString();
   private static final String GROUP_NAME = "GROUP_NAME";

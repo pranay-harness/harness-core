@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -44,6 +45,7 @@ import org.mockito.Mock;
 public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject @InjectMocks DeploymentChangeHandler deploymentChangeHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private static final String APP_NAME = "DeploymentHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "DeploymentHandlerTestForService" + System.currentTimeMillis();

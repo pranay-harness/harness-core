@@ -6,17 +6,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 
+import com.google.inject.Inject;
 import com.mongodb.DBObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
 public class ExportExecutionsRequestQueryTest extends WingsBaseTest {
+  @Inject private HPersistence wingsPersistence;
+
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)

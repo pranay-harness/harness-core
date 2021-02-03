@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -20,7 +21,6 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.intfc.SettingsService;
 
@@ -30,7 +30,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
 
   @InjectMocks @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;

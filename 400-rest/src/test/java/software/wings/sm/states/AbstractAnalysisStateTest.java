@@ -22,6 +22,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -63,7 +64,7 @@ import org.mockito.Mockito;
  * Created by sriram_parthasarathy on 12/7/17.
  */
 public class AbstractAnalysisStateTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private StateExecutionService stateExecutionService;

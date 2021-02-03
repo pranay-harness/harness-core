@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -39,6 +40,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Mock private ElasticsearchClient elasticsearchClient;
   @Inject @InjectMocks private ApplicationSearchEntity aSearchEntity;
   @Inject @InjectMocks private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
+  @Inject private HPersistence wingsPersistence;
 
   @Test
   @Owner(developers = UTKARSH)

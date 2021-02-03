@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
@@ -12,7 +13,6 @@ import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
@@ -35,7 +35,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends IntegrationTestBase {
   @Inject private GCPUsageReportServiceImpl gcpUsageReportService;
   @Inject private GCPMarketPlaceServiceImpl gcpMarketPlaceService;
   @Inject private InstanceStatServiceImpl statService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   private boolean indexesEnsured;
 
   // namespacing accountId so that other tests are not impacted by this

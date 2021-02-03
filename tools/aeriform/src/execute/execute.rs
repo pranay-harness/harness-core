@@ -1,5 +1,6 @@
-use crate::execute_class_move::{move_class, MoveClass};
 use clap::Clap;
+
+use crate::execute_class_move::{move_class, MoveClass};
 
 #[derive(Clap)]
 enum Action {

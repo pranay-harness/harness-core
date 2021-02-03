@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -46,8 +47,9 @@ public class SecretManagerSetupUsageBuilderTest extends WingsBaseTest {
   @Mock SecretManagerConfigService secretManagerConfigService;
   @Inject @InjectMocks SecretManagerSetupUsageBuilder secretManagerSetupUsageBuilder;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
-
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HPersistence wingsPersistence;
+
   private Account account;
   private EncryptedData encryptedData;
   private KmsConfig kmsConfig;

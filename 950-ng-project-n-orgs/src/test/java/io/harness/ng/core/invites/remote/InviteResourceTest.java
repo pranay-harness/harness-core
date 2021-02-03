@@ -6,7 +6,6 @@ import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITE_RES
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -41,6 +42,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   @Mock private ElasticsearchIndexManager elasticsearchIndexManager;
   @Mock private ElasticsearchClient elasticsearchClient;
   @Inject @InjectMocks private ElasticsearchServiceImpl elasticsearchService;
+  @Inject private HPersistence wingsPersistence;
 
   @Test
   @Owner(developers = UTKARSH)

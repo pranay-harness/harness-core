@@ -29,6 +29,7 @@ import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateProfileObserver;
 
@@ -63,6 +64,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
   @Mock private AuditServiceHelper auditServiceHelper;
   @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
+  @Inject private HPersistence wingsPersistence;
 
   private DelegateProfileBuilder createDelegateProfileBuilder() {
     return DelegateProfile.builder()

@@ -5,7 +5,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
+use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info};
 
 #[derive(Debug)]
 pub struct JavaModule {

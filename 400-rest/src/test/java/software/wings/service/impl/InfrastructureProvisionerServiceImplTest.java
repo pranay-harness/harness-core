@@ -53,6 +53,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -140,7 +141,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WorkflowExecutionService workflowExecutionService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   private String blankString = "     ";
 

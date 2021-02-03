@@ -24,6 +24,7 @@ import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardAccessPermissions;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -59,6 +60,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Inject private TestUtils testUtils;
   @Mock private FeatureFlagService featureFlagService;
+  @Inject private HPersistence wingsPersistence;
 
   private User user;
   private Account account;

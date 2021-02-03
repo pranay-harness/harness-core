@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -63,6 +64,8 @@ import org.mockito.Mock;
 public class GitSyncErrorServiceImplTest extends WingsBaseTest {
   @Mock private GitConfigHelperService gitConfigHelperService;
   @InjectMocks @Inject private GitSyncErrorServiceImpl gitSyncErrorService;
+  @Inject private HPersistence wingsPersistence;
+
   private final String accountId = generateUuid();
   private static final String WEBHOOK_TOKEN = "Webhook_Token";
   String yamlFilePath = "filePath";

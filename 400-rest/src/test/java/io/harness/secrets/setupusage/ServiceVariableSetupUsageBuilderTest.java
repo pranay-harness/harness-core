@@ -17,6 +17,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
@@ -49,6 +50,7 @@ import org.mockito.Mock;
 public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
   @Mock ServiceVariableService serviceVariableService;
   @Inject @InjectMocks ServiceVariableSetupUsageBuilder serviceVariableSetupUsageBuilder;
+  @Inject private HPersistence wingsPersistence;
   private List<ServiceVariable> serviceVariables;
   private Account account;
   private EncryptedData encryptedData;

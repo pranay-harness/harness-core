@@ -12,10 +12,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.VerificationService;
@@ -41,7 +41,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
   @Inject private VerificationService learningEngineService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   private String cvConfigId;
 

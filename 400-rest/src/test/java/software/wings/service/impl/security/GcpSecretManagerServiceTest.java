@@ -20,6 +20,7 @@ import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.expression.SecretString;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 
@@ -56,6 +57,8 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
   @Mock KmsEncryptor kmsEncryptor;
   @Inject @InjectMocks AlertService alertService;
   @Inject @InjectMocks GcpSecretsManagerService gcpSecretsManagerService;
+  @Inject private HPersistence wingsPersistence;
+
   private Account account;
 
   public void setup() {

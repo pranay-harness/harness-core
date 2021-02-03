@@ -15,6 +15,7 @@ import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsTestUtils.UsageMetricsTestKeys;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -43,6 +44,7 @@ public class UpdateEnvSvcCPInDeploymentTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock ResultSet resultSet;
   @Inject WorkflowService workflowService;
+  @Inject private HPersistence wingsPersistence;
 
   @Spy @Inject @InjectMocks UpdateEnvSvcCPInDeployment updateEnvSvcCPInDeployment;
 

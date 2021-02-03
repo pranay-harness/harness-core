@@ -69,6 +69,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
@@ -87,7 +88,6 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
@@ -131,7 +131,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Captor ArgumentCaptor<Command> commandCaptor;
   @Captor ArgumentCaptor<Boolean> booleanCaptor;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private HarnessTagService harnessTagService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;

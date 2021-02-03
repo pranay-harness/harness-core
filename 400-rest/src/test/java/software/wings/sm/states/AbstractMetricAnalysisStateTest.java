@@ -18,6 +18,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -72,6 +73,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject private FeatureTestHelper featureTestHelper;
   @Mock private ExecutionContext executionContext;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HPersistence persistence;
 
   private AppDynamicsState appDynamicsState = new AppDynamicsState(generateUuid());
   private String accountId;
@@ -83,20 +85,20 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     initMocks(this);
     FieldUtils.writeField(appDynamicsState, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(appDynamicsState, "continuousVerificationService", continuousVerificationService, true);
-    FieldUtils.writeField(appDynamicsState, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(appDynamicsState, "wingsPersistence", persistence, true);
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "metricAnalysisService", metricAnalysisService, true);
     FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
-    accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
-    appId = wingsPersistence.save(anApplication().name("Harness Verification").accountId(accountId).build());
+    accountId = persistence.save(anAccount().withAccountName(generateUuid()).build());
+    appId = persistence.save(anApplication().name("Harness Verification").accountId(accountId).build());
     stateExecutionId = generateUuid();
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
-    wingsPersistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
-                              .uuid(stateExecutionId)
-                              .displayName("name")
-                              .stateExecutionMap(new HashMap<String, StateExecutionData>(
-                                  ImmutableMap.of("name", new VerificationStateAnalysisExecutionData())))
-                              .build());
+    persistence.save(StateExecutionInstance.Builder.aStateExecutionInstance()
+                         .uuid(stateExecutionId)
+                         .displayName("name")
+                         .stateExecutionMap(new HashMap<String, StateExecutionData>(
+                             ImmutableMap.of("name", new VerificationStateAnalysisExecutionData())))
+                         .build());
   }
 
   @Test
@@ -108,7 +110,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
       Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(executionStatus, errorMsg);
       createMetaDataExecutionData(ExecutionStatus.RUNNING);
       ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData =
-          wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+          persistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
               .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId)
               .get();
       assertThat(continuousVerificationExecutionMetaData.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
@@ -120,12 +122,12 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
           .isEqualTo(((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
                          .getStateExecutionData());
       continuousVerificationExecutionMetaData =
-          wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+          persistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
               .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId)
               .get();
       assertThat(continuousVerificationExecutionMetaData.getExecutionStatus()).isEqualTo(executionStatus);
       continuousVerificationExecutionMetaData.setExecutionStatus(ExecutionStatus.RUNNING);
-      wingsPersistence.save(continuousVerificationExecutionMetaData);
+      persistence.save(continuousVerificationExecutionMetaData);
     }
   }
 
@@ -310,11 +312,11 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
-    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
-                              .analysisMinute(5)
-                              .appId(appId)
-                              .stateExecutionId(stateExecutionId)
-                              .build());
+    persistence.save(NewRelicMetricAnalysisRecord.builder()
+                         .analysisMinute(5)
+                         .appId(appId)
+                         .stateExecutionId(stateExecutionId)
+                         .build());
     ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
         .getStateExecutionData()
         .setAnalysisMinute(0);
@@ -330,15 +332,15 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     ContinuousVerificationExecutionMetaData metadata = createMetaDataExecutionData(ExecutionStatus.RUNNING);
     metadata.setExecutionStatus(ExecutionStatus.SUCCESS);
     metadata.setManualOverride(true);
-    wingsPersistence.save(metadata);
+    persistence.save(metadata);
 
     featureTestHelper.enableFeatureFlag(FeatureName.CV_SUCCEED_FOR_ANOMALY);
     saveAnalysisContext(dataAnalysisResponse);
-    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
-                              .analysisMinute(5)
-                              .appId(appId)
-                              .stateExecutionId(stateExecutionId)
-                              .build());
+    persistence.save(NewRelicMetricAnalysisRecord.builder()
+                         .analysisMinute(5)
+                         .appId(appId)
+                         .stateExecutionId(stateExecutionId)
+                         .build());
     ((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
         .getStateExecutionData()
         .setAnalysisMinute(0);
@@ -380,7 +382,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
     createMetaDataExecutionData(ExecutionStatus.RUNNING);
     saveAnalysisContext(dataAnalysisResponse);
-    wingsPersistence.save(
+    persistence.save(
         NewRelicMetricAnalysisRecord.builder()
             .analysisMinute(5)
             .appId(appId)
@@ -419,7 +421,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   private void validateExecutionResponse(Map<String, ResponseData> dataAnalysisResponse,
       ExecutionResponse executionResponse, ExecutionStatus executionStatus) {
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+        persistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId)
             .get();
     assertThat(continuousVerificationExecutionMetaData.getExecutionStatus()).isEqualTo(executionStatus);
@@ -429,7 +431,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
         .isEqualTo(((VerificationDataAnalysisResponse) dataAnalysisResponse.values().iterator().next())
                        .getStateExecutionData());
     continuousVerificationExecutionMetaData =
-        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
+        persistence.createQuery(ContinuousVerificationExecutionMetaData.class, excludeAuthority)
             .filter(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, stateExecutionId)
             .get();
     assertThat(continuousVerificationExecutionMetaData.getExecutionStatus()).isEqualTo(executionStatus);
@@ -442,7 +444,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
 
     ExecutionStatus executionStatus = random.nextBoolean() ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, executionStatus);
-    final NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, correlationId);
+    final NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, correlationId);
     assertThat(notifyResponse).isNotNull();
     VerificationDataAnalysisResponse verificationDataAnalysisResponse =
         (VerificationDataAnalysisResponse) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
@@ -456,11 +458,11 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   }
 
   private ContinuousVerificationExecutionMetaData createMetaDataExecutionData(ExecutionStatus executionStatus) {
-    String uuId = wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
-                                            .stateExecutionId(stateExecutionId)
-                                            .executionStatus(executionStatus)
-                                            .build());
-    return wingsPersistence.get(ContinuousVerificationExecutionMetaData.class, uuId);
+    String uuId = persistence.save(ContinuousVerificationExecutionMetaData.builder()
+                                       .stateExecutionId(stateExecutionId)
+                                       .executionStatus(executionStatus)
+                                       .build());
+    return persistence.get(ContinuousVerificationExecutionMetaData.class, uuId);
   }
 
   private Map<String, ResponseData> createDataAnalysisResponse(ExecutionStatus executionStatus, String message) {
@@ -513,18 +515,18 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
         node -> testNodes.put(node, DEFAULT_GROUP_NAME));
     analysisContext.setControlNodes(controlNodes);
     analysisContext.setTestNodes(testNodes);
-    wingsPersistence.save(analysisContext);
+    persistence.save(analysisContext);
   }
 
   private void saveMetricAnalysisRecord(RiskLevel... riskLevel) {
     List<NewRelicMetricAnalysis> analyses = new ArrayList<>();
     Arrays.asList(riskLevel).forEach(
         risk -> { analyses.add(NewRelicMetricAnalysis.builder().metricName(generateUuid()).riskLevel(risk).build()); });
-    wingsPersistence.save(NewRelicMetricAnalysisRecord.builder()
-                              .analysisMinute(5)
-                              .appId(appId)
-                              .stateExecutionId(stateExecutionId)
-                              .metricAnalyses(analyses)
-                              .build());
+    persistence.save(NewRelicMetricAnalysisRecord.builder()
+                         .analysisMinute(5)
+                         .appId(appId)
+                         .stateExecutionId(stateExecutionId)
+                         .metricAnalyses(analyses)
+                         .build());
   }
 }
