@@ -53,7 +53,7 @@ public class K8sAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLBillin
     String queryStatement = "";
     try {
       log.info("Query Step 1/3 : Constructing Query");
-      queryStatement = new AnomalyDataQueryBuilder().formK8SQuery(accountId, filters, groupBy);
+      queryStatement = AnomalyDataQueryBuilder.formK8SQuery(accountId, filters, groupBy);
     } catch (InvalidArgumentsException | InvalidRequestException e) {
       log.error("Error while constructing query for K8SAnomaliesDataFetcher, Exception : {} ", e.toString());
       return listAnomalies;

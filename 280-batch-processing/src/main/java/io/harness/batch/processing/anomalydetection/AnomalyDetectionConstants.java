@@ -6,5 +6,6 @@ public class AnomalyDetectionConstants {
   public static final double MINIMUM_AMOUNT = 75.0;
   public static final int MIN_DAYS_REQUIRED_DAILY = 14;
   public static final int BATCH_SIZE = 50;
+
   private AnomalyDetectionConstants() {}
 }

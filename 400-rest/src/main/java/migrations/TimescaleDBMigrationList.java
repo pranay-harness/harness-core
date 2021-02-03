@@ -20,7 +20,7 @@ import migrations.timescaledb.AddPercentagesToCostEvents;
 import migrations.timescaledb.AddRequestColumnToBillingData;
 import migrations.timescaledb.AddRollbackToDeployment;
 import migrations.timescaledb.AddSchemaForServiceGuardStats;
-import migrations.timescaledb.AddStorageSupportK8sUtilTable;
+import migrations.timescaledb.AddSlackNotificationSupportAnomalies;
 import migrations.timescaledb.AddSystemCostBillingData;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.AlterCEUtilizationDataTables;
@@ -84,7 +84,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(35, CreateAnomaliesDataV2.class))
         .add(Pair.of(36, AddAccountIdStatusIndexToDeployment.class))
         .add(Pair.of(37, AddFeedbackToAnomalies.class))
-        .add(Pair.of(38, AddStorageSupportK8sUtilTable.class))
+        .add(Pair.of(38, AddSlackNotificationSupportAnomalies.class))
         .build();
   }
 }
