@@ -7,6 +7,7 @@ import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -59,6 +60,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     // Adding infrastructure node
     YamlField infraField =
         ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    if (infraField == null) {
+      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
+    }
     YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
@@ -75,6 +79,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     // Add dependency for execution
     YamlField executionField =
         ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
+    if (executionField == null) {
+      throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
+    }
     dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
     planCreationResponseMap.put(
