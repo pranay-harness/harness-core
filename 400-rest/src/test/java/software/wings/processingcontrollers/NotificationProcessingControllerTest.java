@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -15,7 +16,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 
 public class NotificationProcessingControllerTest extends WingsBaseTest {
   @Inject private NotificationProcessingController notificationProcessingController;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   private static final long ONE_DAY_TIME_DIFF = 86400000L;
   private static final long ONE_DAY_EXPIRY = System.currentTimeMillis() + ONE_DAY_TIME_DIFF;

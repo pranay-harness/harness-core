@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
@@ -43,6 +44,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
 import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
 import org.junit.Ignore;
@@ -50,6 +52,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
+  @Inject private HPersistence wingsPersistence;
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)

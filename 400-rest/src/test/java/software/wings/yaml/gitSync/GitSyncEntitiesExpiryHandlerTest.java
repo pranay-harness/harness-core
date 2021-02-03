@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -43,6 +44,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   @Mock GitSyncService gitSyncService;
   @Mock AppService appService;
   @InjectMocks @Inject GitSyncEntitiesExpiryHandler gitSyncEntitiesExpiryHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private final Long ONE_MONTH_IN_MILLS = 2592000000L;
   private final Long TWELVE_MONTH_IN_MILLS = 31104000000L;

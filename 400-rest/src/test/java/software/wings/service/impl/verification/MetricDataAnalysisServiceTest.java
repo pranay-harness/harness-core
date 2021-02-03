@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
@@ -50,7 +50,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   private String delegateTaskId;
   private Integer analysisMinute;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   @Before

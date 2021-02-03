@@ -28,6 +28,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.shell.ScriptType;
@@ -66,6 +67,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private TemplateService templateService;
   @Inject @InjectMocks private TemplateGalleryService templateGalleryService;
   @Inject @InjectMocks private CustomSecretsManagerService customSecretsManagerService;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setup() throws IllegalAccessException {

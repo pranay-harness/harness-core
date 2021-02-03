@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -24,7 +25,6 @@ import software.wings.alerts.AlertStatus;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -49,7 +49,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   private String accountId;
   private String cvConfigId;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private AlertService alertService;
   @Inject private CVConfigurationService cvConfigurationService;

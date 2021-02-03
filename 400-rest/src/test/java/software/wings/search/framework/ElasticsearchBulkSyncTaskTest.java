@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -38,6 +39,8 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
   @Mock private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
   @Inject @InjectMocks private ApplicationSearchEntity aSearchEntity;
   @Inject @InjectMocks private ElasticsearchBulkSyncTask elasticsearchBulkSyncTask;
+  @Inject private HPersistence wingsPersistence;
+
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test

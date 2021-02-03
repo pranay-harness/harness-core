@@ -10,6 +10,7 @@ import static software.wings.common.TemplateConstants.SSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -21,7 +22,6 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -39,7 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class YamlGitServiceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private TemplateService templateService;
   @InjectMocks @Inject private YamlGitServiceImpl yamlGitService;
   @Inject protected TemplateGalleryService templateGalleryService;

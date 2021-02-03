@@ -7,6 +7,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -27,6 +28,8 @@ import org.junit.experimental.categories.Category;
 
 public class GitSyncServiceTest extends WingsBaseTest {
   @Inject GitSyncService gitSyncService;
+  @Inject private HPersistence wingsPersistence;
+
   private GitRepositoryInfo repositoryInfo = GitRepositoryInfo.builder()
                                                  .url("https://abc.com/xyz.git")
                                                  .displayUrl("xyz")

@@ -269,6 +269,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
@@ -335,7 +336,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.workflow.StepSkipStrategy;
-import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
@@ -421,7 +421,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private static final String CLONE = " - (clone)";
   private static String envId = generateUuid();
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;

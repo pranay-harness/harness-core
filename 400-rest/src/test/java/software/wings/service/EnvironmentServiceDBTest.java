@@ -19,6 +19,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -27,7 +28,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
@@ -40,7 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class EnvironmentServiceDBTest extends WingsBaseTest {
-  @Inject @InjectMocks private WingsPersistence wingsPersistence;
+  @Inject @InjectMocks private HPersistence wingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
   @Mock private YamlPushService yamlPushService;
 

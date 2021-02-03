@@ -15,6 +15,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -24,7 +25,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.K8sContainerInfo;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @InjectMocks @Inject private UpdateInstanceInfoWithLastArtifactIdMigration instanceInfoMigration;
 

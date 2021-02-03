@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -44,6 +45,7 @@ import org.mockito.InjectMocks;
 public class DeploymentElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentElasticsearchRequestHandler deploymentSearchRequestHandler;
   @Inject private TestUtils eventTestHelper;
+  @Inject private HPersistence wingsPersistence;
 
   protected String accountId;
   protected String appId1;

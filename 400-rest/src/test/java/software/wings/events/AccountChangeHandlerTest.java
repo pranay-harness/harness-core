@@ -75,6 +75,8 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private SalesforceApiCheck salesforceApiCheck;
   @Inject private HPersistence hPersistence;
   @Inject private TestUtils eventTestHelper;
+  @Inject private HPersistence persistence;
+
   private User user;
   private Account account;
   private AccountChangeHandler accountChangeHandler;
@@ -107,7 +109,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
 
     Service service = new Service();
     service.setAccountId(account.getUuid());
-    wingsPersistence.save(service);
+    persistence.save(service);
   }
 
   private SegmentConfig initializeSegmentConfig() {

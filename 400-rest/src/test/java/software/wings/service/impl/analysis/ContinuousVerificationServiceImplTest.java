@@ -35,6 +35,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
@@ -148,7 +149,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private APMDelegateService apmDelegateService;
   @Mock private DatadogService datadogService;
   @Mock private MLServiceUtils mlServiceUtils;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private DelegateService delegateService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
   @Mock private CVActivityLogService cvActivityLogService;

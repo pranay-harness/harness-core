@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -53,6 +54,7 @@ public class EnvironmentElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Mock @Named(AuditTrailFeature.FEATURE_NAME) PremiumFeature auditTrailFeature;
   @Inject @InjectMocks EnvironmentElasticsearchRequestHandler environmentSearchRequestHandler;
   @Inject private TestUtils eventTestHelper;
+  @Inject private HPersistence wingsPersistence;
 
   protected String accountId;
   protected String appId1;

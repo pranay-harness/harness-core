@@ -32,6 +32,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -43,7 +44,6 @@ import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
@@ -62,7 +62,7 @@ import org.mockito.Mock;
 
 public class StatisticsServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private WingsPersistence wingsPersistence;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private HPersistence wingsPersistence;
 
   @Mock private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject @InjectMocks private StatisticsService statisticsService;

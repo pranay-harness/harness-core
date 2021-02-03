@@ -10,10 +10,8 @@ import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.dl.WingsPersistence;
 import software.wings.rules.WingsRule;
 
-import com.google.inject.Inject;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -24,8 +22,6 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   // I am not absolutely sure why, but there is dependency between wings io.harness.rule and
   // MockitoJUnit io.harness.rule and they have to be listed in these order
   @Rule public WingsRule wingsRule = new WingsRule();
-
-  @Inject protected WingsPersistence wingsPersistence;
 
   protected static Account getAccount(String accountType) {
     Builder accountBuilder = Builder.anAccount().withUuid(generateUuid());

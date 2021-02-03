@@ -16,6 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -36,6 +37,7 @@ public class GitChangeSetRunnableNewTest extends WingsBaseTest {
   @Inject @Spy GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
   @Inject @Spy YamlChangeSetService yamlChangeSetService;
   @Mock private YamlGitService yamlGitSyncService;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject @Spy @InjectMocks private GitChangeSetRunnable gitChangeSetRunnable;
 

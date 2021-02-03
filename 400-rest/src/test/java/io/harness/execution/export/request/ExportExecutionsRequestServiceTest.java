@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
 import io.harness.execution.export.request.ExportExecutionsRequest.OutputFormat;
 import io.harness.execution.export.request.ExportExecutionsRequest.Status;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -27,6 +28,7 @@ import org.mockito.InjectMocks;
 
 public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private ExportExecutionsRequestService exportExecutionsRequestService;
+  @Inject private HPersistence wingsPersistence;
 
   @Test
   @Owner(developers = GARVIT)

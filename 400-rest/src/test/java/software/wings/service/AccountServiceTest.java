@@ -132,9 +132,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-/**
- * Created by peeyushaggarwal on 10/11/16.
- */
 public class AccountServiceTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -437,12 +434,12 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldUpdateCompanyName() {
-    Account account = wingsPersistence.saveAndGet(Account.class,
-        anAccount()
-            .withCompanyName("Wings")
-            .withAccountName("Wings")
-            .withWhitelistedDomains(Collections.singleton("mike@harness.io"))
-            .build());
+    Account account = anAccount()
+                          .withCompanyName("Wings")
+                          .withAccountName("Wings")
+                          .withWhitelistedDomains(Collections.singleton("mike@harness.io"))
+                          .build();
+    wingsPersistence.save(account);
     account.setCompanyName(HARNESS_NAME);
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
@@ -452,7 +449,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAccountByCompanyName() {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     assertThat(accountService.getByName(HARNESS_NAME)).isEqualTo(account);
   }
 
@@ -460,8 +458,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetAccountByAccountName() {
-    Account account = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withAccountName(HARNESS_NAME).withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withAccountName(HARNESS_NAME).withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     assertThat(accountService.getByAccountName(HARNESS_NAME)).isEqualTo(account);
   }
 
@@ -469,7 +467,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAccount() {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
   }
 
@@ -494,7 +493,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListAllAccounts() {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
     assertThat(accountService.listAllAccounts()).isNotEmpty();
     assertThat(accountService.listAccounts(Collections.emptySet())).isNotEmpty();
@@ -510,14 +510,15 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldListNonExpiredAndNonDeletedAccounts() {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setLicenseUnits(100);
 
-    Account account1 = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withCompanyName(HARNESS_NAME + "1").withLicenseInfo(licenseInfo).build());
+    Account account1 = anAccount().withCompanyName(HARNESS_NAME + "1").withLicenseInfo(licenseInfo).build();
+    wingsPersistence.save(account1);
 
     assertThat(accountService.listAllActiveAccounts().size()).isEqualTo(1);
   }
@@ -526,7 +527,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetAccountWithDefaults() {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    Account account = anAccount().withCompanyName(HARNESS_NAME).build();
+    wingsPersistence.save(account);
     assertThat(account).isNotNull();
 
     List<SettingAttribute> settingAttributes = asList(aSettingAttribute()
@@ -670,9 +672,7 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setStateType(StateType.NEW_RELIC);
 
     wingsPersistence.save(Environment.Builder.anEnvironment().appId(appId).uuid(envId).build());
-
-    wingsPersistence.saveAndGet(
-        Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
+    wingsPersistence.save(Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
     wingsPersistence.save(Application.Builder.anApplication().uuid(appId).name("appName").build());
     wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {

@@ -96,6 +96,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UsageRestrictions;
@@ -164,6 +165,7 @@ public class VaultTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private AppService appService;
   @Inject private ConfigService configService;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject protected EncryptionService encryptionService;
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;

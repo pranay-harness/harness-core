@@ -31,6 +31,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -39,7 +40,6 @@ import software.wings.beans.Account;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -68,7 +68,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class YamlGitServiceImplTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Mock private DelegateService delegateService;
   @Mock private AlertService alertService;

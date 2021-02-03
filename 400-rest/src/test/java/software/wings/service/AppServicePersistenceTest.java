@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.rule.Owner;
 
@@ -25,7 +26,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
-import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEvent;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AlertService;
@@ -43,7 +43,7 @@ import org.quartz.SchedulerException;
 
 @SetupScheduler
 public class AppServicePersistenceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject private AlertService alertService;
 

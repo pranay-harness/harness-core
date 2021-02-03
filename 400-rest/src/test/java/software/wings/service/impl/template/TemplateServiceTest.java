@@ -58,6 +58,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.CommandCategory;
@@ -115,6 +116,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Inject private TemplateServiceImpl templateServiceImpl;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Inject private ImportedTemplateService importedTemplateService;
+  @Inject private HPersistence wingsPersistence;
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)

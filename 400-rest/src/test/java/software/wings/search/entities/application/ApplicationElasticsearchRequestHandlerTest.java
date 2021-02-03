@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -50,6 +51,7 @@ public class ApplicationElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Mock @Named(AuditTrailFeature.FEATURE_NAME) PremiumFeature auditTrailFeature;
   @Inject @InjectMocks ApplicationElasticsearchRequestHandler applicationSearchRequestHandler;
   @Inject private TestUtils eventTestHelper;
+  @Inject private HPersistence wingsPersistence;
 
   protected String accountId;
   protected String appId1;

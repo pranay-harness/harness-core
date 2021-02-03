@@ -10,13 +10,13 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -36,7 +36,7 @@ import org.reflections.Reflections;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Spy private YamlHelper yamlHelper;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private CVConfigurationService cvConfigurationService;
 
   private DatadogCvConfigurationYamlHandler yamlHandler = new DatadogCvConfigurationYamlHandler();

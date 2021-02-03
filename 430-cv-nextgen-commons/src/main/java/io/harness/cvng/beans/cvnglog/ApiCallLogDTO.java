@@ -1,6 +1,5 @@
 package io.harness.cvng.beans.cvnglog;
 
-import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

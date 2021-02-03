@@ -15,6 +15,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -24,7 +25,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AzureVaultConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
@@ -40,7 +40,7 @@ import org.mockito.Mock;
 
 public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
 

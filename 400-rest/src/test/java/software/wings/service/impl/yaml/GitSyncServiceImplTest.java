@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.shell.AuthenticationScheme;
 
@@ -33,7 +34,6 @@ import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
@@ -61,7 +61,7 @@ import org.mockito.Mock;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @InjectMocks @Inject private GitSyncErrorService gitSyncErrorService;
   @Mock YamlGitConfigService yamlGitConfigService;
   @Mock GitConfigHelperService gitConfigHelperService;

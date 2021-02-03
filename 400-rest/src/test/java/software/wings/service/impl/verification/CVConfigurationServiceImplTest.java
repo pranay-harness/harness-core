@@ -31,6 +31,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.YamlUtils;
 
@@ -127,6 +128,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
+  @Inject private HPersistence wingsPersistence;
 
   private String accountId;
   private String appId;

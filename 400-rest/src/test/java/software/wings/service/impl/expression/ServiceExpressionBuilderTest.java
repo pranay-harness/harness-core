@@ -8,6 +8,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -24,6 +25,7 @@ import org.junit.experimental.categories.Category;
 public class ServiceExpressionBuilderTest extends WingsBaseTest {
   private String appId;
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setUp() {

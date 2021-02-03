@@ -16,6 +16,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.security.encryption.EncryptionType;
@@ -47,6 +48,8 @@ import org.mockito.Mock;
 public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Inject @InjectMocks private ConfigFileSetupUsageBuilder configFileSetupUsageBuilder;
+  @Inject private HPersistence wingsPersistence;
+
   private List<ConfigFile> configFiles;
   private Account account;
   private EncryptedData encryptedData;

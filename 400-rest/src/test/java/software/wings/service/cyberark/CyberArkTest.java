@@ -24,6 +24,7 @@ import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretService;
@@ -82,29 +83,30 @@ import org.mockito.Mock;
  */
 @RunWith(Parameterized.class)
 public class CyberArkTest extends WingsBaseTest {
+  @Mock private AccountService accountService;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  @Mock private KmsEncryptor kmsEncryptor;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Mock private PremiumFeature secretsManagementFeature;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private VaultEncryptor vaultEncryptor;
+  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Mock protected AuditServiceHelper auditServiceHelper;
+
+  @Inject @InjectMocks private CyberArkService cyberArkService;
+  @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
+  @Inject @InjectMocks private SecretService secretService;
   @Inject private CyberArkResource cyberArkResource;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private SecretManager secretManager;
-  @Inject protected EncryptionService encryptionService;
-
-  @Mock private AccountService accountService;
-  @Inject private LocalSecretManagerService localSecretManagerService;
-  @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Mock private SecretManagementDelegateService secretManagementDelegateService;
-  @Mock private PremiumFeature secretsManagementFeature;
-  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
-  @Mock protected AuditServiceHelper auditServiceHelper;
-  @Mock private KmsEncryptor kmsEncryptor;
-  @Mock private VaultEncryptor vaultEncryptor;
-  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
-  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private LocalEncryptor localEncryptor;
+  @Inject private LocalSecretManagerService localSecretManagerService;
   @Inject private SecretManagementResource secretManagementResource;
-  @Inject @InjectMocks private SecretService secretService;
-  @Inject @InjectMocks private KmsService kmsService;
-  @Inject @InjectMocks private CyberArkService cyberArkService;
-  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
+  @Inject private SecretManager secretManager;
+  @Inject private HPersistence wingsPersistence;
+  @Inject protected EncryptionService encryptionService;
 
   private final int numOfEncryptedValsForCyberArk = 1;
   private final int numOfEncryptedValsForCyberKms = 3;

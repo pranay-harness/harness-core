@@ -1,4 +1,3 @@
-use crate::repo::GIT_REPO_ROOT_DIR;
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use regex::Regex;
@@ -8,6 +7,7 @@ use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
 
 use crate::java_class;
+use crate::repo::GIT_REPO_ROOT_DIR;
 
 #[derive(Debug)]
 pub struct JavaClass {

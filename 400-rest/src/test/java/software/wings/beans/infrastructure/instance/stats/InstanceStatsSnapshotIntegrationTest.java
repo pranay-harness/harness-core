@@ -5,12 +5,12 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 
 import com.google.inject.Inject;
@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class InstanceStatsSnapshotIntegrationTest extends IntegrationTestBase {
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   private boolean indexesEnsured;
 
   // namespacing accountId so that other tests are not impacted by this

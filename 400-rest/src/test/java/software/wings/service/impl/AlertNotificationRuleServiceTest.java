@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertNotificationRuleService;
 
 import com.google.inject.Inject;
@@ -31,11 +31,11 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private AlertNotificationRuleService alertNotificationRuleService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void purgeAllRules() {
-    wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class));
+    persistence.delete(persistence.createQuery(AlertNotificationRule.class));
   }
 
   @Test

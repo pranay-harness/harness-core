@@ -20,6 +20,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.SecretManagementTestHelper;
@@ -29,7 +30,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.SettingsService;
@@ -56,7 +56,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PowerMockIgnore({"javax.security.*", "javax.crypto.*", "javax.net.*"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private NewRelicService newRelicService;

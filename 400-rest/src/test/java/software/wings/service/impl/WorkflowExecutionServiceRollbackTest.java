@@ -48,6 +48,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -62,7 +63,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.execution.WorkflowExecutionInfo;
-import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.intfc.AppService;
@@ -89,7 +89,7 @@ import org.mockito.Mock;
 public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private FeatureFlagService featureFlagService;

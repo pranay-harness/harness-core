@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -36,6 +37,7 @@ public class YamlSuccessfulChangeServiceImplTest extends WingsBaseTest {
   public static final String COMMITID = "commitid";
 
   @Inject @Spy YamlSuccessfulChangeService yamlSuccessfulChangeService;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setUp() throws Exception {

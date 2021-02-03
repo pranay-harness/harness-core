@@ -13,6 +13,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -50,6 +51,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
 
   @Inject @InjectMocks private ApplicationChangeHandler applicationChangeHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private static final String APP_NAME = "ApplicationHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "ApplicationHandlerTestForService" + System.currentTimeMillis();

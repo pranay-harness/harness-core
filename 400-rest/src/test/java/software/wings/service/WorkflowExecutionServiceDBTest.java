@@ -44,6 +44,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -69,7 +70,6 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.WingsPersistence;
 import software.wings.events.TestUtils;
 import software.wings.resources.WorkflowResource;
 import software.wings.rules.Listeners;
@@ -115,7 +115,7 @@ import org.mockito.Mock;
 public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private WorkflowResource workflowResource;
   @Inject private HostService hostService;

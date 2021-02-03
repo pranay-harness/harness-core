@@ -21,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -42,6 +43,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject private DelegateProfileEventHandler delegateProfileEventHandler;
+  @Inject private HPersistence wingsPersistence;
 
   private Workflow createWorkflow(String accountId) {
     Workflow workflow = new Workflow();

@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -38,6 +39,7 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
 
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private DelegateService delegateService;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setUp() {

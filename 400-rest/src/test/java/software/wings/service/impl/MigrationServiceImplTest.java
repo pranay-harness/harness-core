@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -20,6 +21,7 @@ import org.mongodb.morphia.query.Query;
 
 public class MigrationServiceImplTest extends WingsBaseTest {
   @Inject MigrationServiceImpl migrationService;
+  @Inject private HPersistence wingsPersistence;
 
   @Test
   @Owner(developers = ABHINAV)

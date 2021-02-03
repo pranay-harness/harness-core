@@ -44,6 +44,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
@@ -69,7 +70,6 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.collect.CollectEvent;
-import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -103,7 +103,7 @@ import org.mockito.Spy;
 public class ArtifactServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   private static final String SETTING_ID = "SETTING_ID";
-  @Inject @Spy private WingsPersistence wingsPersistence;
+  @Inject @Spy private HPersistence wingsPersistence;
 
   @Mock private FileService fileService;
   @Mock private ArtifactStreamService artifactStreamService;

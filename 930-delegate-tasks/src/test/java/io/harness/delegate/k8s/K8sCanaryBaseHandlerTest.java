@@ -11,9 +11,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
-import static java.util.Arrays.parallelPrefix;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -46,7 +44,6 @@ import io.harness.rule.Owner;
 import com.esotericsoftware.yamlbeans.YamlException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +174,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis))
         .thenReturn(allPods);
     when(k8sTaskHelperBase.getPodDetailsWithTrack(kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis))
-        .thenReturn(Arrays.asList(canaryPod));
+        .thenReturn(asList(canaryPod));
 
     final List<K8sPod> pods = k8sCanaryBaseHandler.getAllPods(canaryHandlerConfig, releaseName, timeoutInMillis);
     assertThat(pods).hasSize(3);
@@ -218,7 +215,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
 
   public void cannotDeployMoreThanEmptyWorkload() throws Exception {
     K8sCanaryHandlerConfig canaryHandlerConfig = new K8sCanaryHandlerConfig();
-    List<KubernetesResource> resources = Arrays.asList(
+    List<KubernetesResource> resources = asList(
         KubernetesResource.builder()
             .resourceId(KubernetesResourceId.builder().versioned(true).name("object-1").kind("configMap").build())
             .build());

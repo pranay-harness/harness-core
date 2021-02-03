@@ -41,6 +41,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -56,7 +57,6 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -94,7 +94,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
   @Inject KryoSerializer kryoSerializer;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   private static final String APPLICATION_MANIFEST_ID = "AppManifestId";
 

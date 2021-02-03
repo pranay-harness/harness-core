@@ -37,6 +37,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -68,6 +69,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks protected TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;
+  @Inject private HPersistence wingsPersistence;
 
   @Mock private AccountService accountService;
 

@@ -13,6 +13,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.SecretManagementException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -20,7 +21,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.GcpSecretsManagerConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
@@ -36,7 +36,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class GcpSecretManagerServiceV2ImplTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject @Spy @InjectMocks private GcpSecretsManagerServiceV2 gcpSecretsManagerService;
 
   private String accountId;

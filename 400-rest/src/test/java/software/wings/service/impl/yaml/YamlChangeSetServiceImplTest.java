@@ -16,6 +16,7 @@ import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -35,6 +36,7 @@ import org.mockito.MockitoAnnotations;
 
 public class YamlChangeSetServiceImplTest extends WingsBaseTest {
   @Inject private YamlChangeSetServiceImpl yamlChangeSetService;
+  @Inject private HPersistence wingsPersistence;
 
   @Before
   public void setup() {
