@@ -9,10 +9,10 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO.CategoryRisk;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -71,7 +71,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private AlertRuleService alertRuleService;
   @Inject private ExecutorService defaultExecutorService;
   @Inject private CVParallelExecutor cvParallelExecutor;
-  @Inject private EnvironmentServiceCache environmentServiceCache;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
@@ -286,7 +286,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       RiskSummaryPopoverDTO.EnvSummary.EnvSummaryBuilder envSummaryBuilder =
           RiskSummaryPopoverDTO.EnvSummary.builder()
               .envIdentifier(envServiceRiskDTO.getEnvIdentifier())
-              .envName(environmentServiceCache
+              .envName(nextGenService
                            .getEnvironment(accountId, envServiceRiskDTO.getOrgIdentifier(),
                                envServiceRiskDTO.getProjectIdentifier(), envServiceRiskDTO.getEnvIdentifier())
                            .getName())
@@ -301,7 +301,7 @@ public class HeatMapServiceImpl implements HeatMapService {
                 .serviceIdentifier(serviceRisk.getServiceIdentifier())
                 .analysisRisks(analysisRisk)
                 .serviceName(
-                    environmentServiceCache
+                    nextGenService
                         .getService(accountId, orgIdentifier, projectIdentifier, serviceRisk.getServiceIdentifier())
                         .getName())
                 .build());

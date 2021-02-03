@@ -7,7 +7,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -21,7 +20,6 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -54,7 +52,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private NextGenService nextGenService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService eventService;
-  @Inject private EnvironmentServiceCache environmentServiceCache;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -197,19 +194,16 @@ public class CVConfigServiceImpl implements CVConfigService {
       serIdentifiers.addAll(serviceIdentifiers);
     });
 
-    Map<String, EnvironmentResponseDTO> environments =
-        nextGenService.listEnvironmentsForProject(accountId, orgIdentifier, projectIdentifier, envIdentifiers);
-    Map<String, ServiceResponseDTO> services =
-        nextGenService.listServicesForProject(accountId, orgIdentifier, projectIdentifier, serIdentifiers);
-
     List<EnvToServicesDTO> envToServicesDTOS = new ArrayList<>();
     envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
-      EnvironmentResponseDTO environment = environments.get(envIdentifier);
+      EnvironmentResponseDTO environment =
+          nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier);
       Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
           envIdentifier, accountId, orgIdentifier, projectIdentifier);
       Set<ServiceResponseDTO> serviceDTOS = new HashSet<>();
       serviceIdentifiers.forEach(serviceIdentifier -> {
-        ServiceResponseDTO serviceResponseDTO = services.get(serviceIdentifier);
+        ServiceResponseDTO serviceResponseDTO =
+            nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
         Preconditions.checkNotNull(serviceResponseDTO,
             "no service with identifier %s found for account %s org %s project %s", serviceIdentifier, accountId,
             orgIdentifier, projectIdentifier);
@@ -326,12 +320,10 @@ public class CVConfigServiceImpl implements CVConfigService {
     if (isEmpty(configsForFilter)) {
       return Collections.emptyList();
     }
-    Set<String> envIdentifiers = configsForFilter.stream().map(CVConfig::getEnvIdentifier).collect(toSet());
-    Map<String, EnvironmentResponseDTO> environments =
-        nextGenService.listEnvironmentsForProject(accountId, orgIdentifier, projectIdentifier, envIdentifiers);
     List<CVConfig> configsToReturn = new ArrayList<>();
     configsForFilter.forEach(config -> {
-      EnvironmentResponseDTO environment = environments.get(config.getEnvIdentifier());
+      EnvironmentResponseDTO environment =
+          nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, config.getEnvIdentifier());
       Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
           config.getEnvIdentifier(), accountId, orgIdentifier, projectIdentifier);
       if (environment.getType().equals(EnvironmentType.Production)) {
@@ -343,7 +335,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public boolean isProductionConfig(CVConfig cvConfig) {
-    EnvironmentResponseDTO environment = environmentServiceCache.getEnvironment(cvConfig.getAccountId(),
+    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getAccountId(),
         cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier());
     return EnvironmentType.Production.equals(environment.getType());
   }

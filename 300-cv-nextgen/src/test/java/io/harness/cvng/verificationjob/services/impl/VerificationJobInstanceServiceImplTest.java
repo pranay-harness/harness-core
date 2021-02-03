@@ -43,6 +43,7 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -52,7 +53,6 @@ import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -108,7 +108,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Mock private VerificationManagerService verificationManagerService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
-  @Mock private EnvironmentServiceCache environmentServiceCache;
+  @Mock private NextGenService nextGenService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
 
@@ -142,10 +142,10 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(
         verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
-    FieldUtils.writeField(verificationJobInstanceService, "environmentServiceCache", environmentServiceCache, true);
+    FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
 
-    when(environmentServiceCache.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
+    when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))
         .thenReturn(EnvironmentResponseDTO.builder()
                         .accountId(accountId)
                         .identifier("dev")
@@ -155,7 +155,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                         .orgIdentifier(orgIdentifier)
                         .build());
 
-    when(environmentServiceCache.getEnvironment(accountId, orgIdentifier, projectIdentifier, "prod"))
+    when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "prod"))
         .thenReturn(EnvironmentResponseDTO.builder()
                         .accountId(accountId)
                         .identifier("prod")
