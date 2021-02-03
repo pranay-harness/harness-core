@@ -29,7 +29,7 @@ enableAuth: false
 notificationClient:
   messageBroker:
     type: MONGO
-    uri: mongodb://localhost:27017/notificationChannel
+    uri: mongodb://localhost:27017/notification
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000

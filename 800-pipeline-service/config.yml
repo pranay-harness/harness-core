@@ -86,7 +86,7 @@ managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwV
 notificationClient:
   messageBroker:
     type: MONGO
-    uri: mongodb://localhost:27017/notificationChannel
+    uri: mongodb://localhost:27017/notification
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000
