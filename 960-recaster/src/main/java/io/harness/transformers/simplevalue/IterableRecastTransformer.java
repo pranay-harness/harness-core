@@ -46,7 +46,7 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
         } else if (o instanceof Iterable) {
           values.add(decodeInternal(o.getClass(), o, castedField));
         } else {
-          values.add(transformer.decode(o.getClass(), o, castedField));
+          values.add(transformer.decode(getRealTypeFromCastedField(castedField), o, castedField));
         }
       }
     } else {
@@ -63,6 +63,19 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
     } else {
       return values;
     }
+  }
+
+  private Class<?> getRealTypeFromCastedField(CastedField castedField) {
+    CastedField currentCastedField = castedField;
+    while (!currentCastedField.getTypeParameters().isEmpty()) {
+      if (currentCastedField.isMap()) {
+        currentCastedField = currentCastedField.getTypeParameters().get(1);
+      } else {
+        currentCastedField = currentCastedField.getTypeParameters().get(0);
+      }
+    }
+
+    return currentCastedField.getRealType();
   }
 
   @Override
