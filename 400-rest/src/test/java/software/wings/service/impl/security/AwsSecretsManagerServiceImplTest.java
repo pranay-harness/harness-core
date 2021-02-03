@@ -30,6 +30,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
+import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -49,6 +50,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private PremiumFeature secretsManagementFeature;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
+  @Inject private SecretManager secretManager;
 
   @Inject KryoSerializer kryoSerializer;
 

@@ -106,9 +106,12 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -161,12 +164,14 @@ public class VaultTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private AppService appService;
   @Inject private ConfigService configService;
+  @Inject protected EncryptionService encryptionService;
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
   @Inject @InjectMocks private EntityVersionService entityVersionService;
   @Inject @InjectMocks private SecretService secretService;
-
+  @Inject protected SettingsService settingsService;
+  @Inject private SecretManager secretManager;
   @Inject private QueueConsumer<MigrateSecretTask> kmsTransitionConsumer;
   @Inject protected LocalSecretManagerService localSecretManagerService;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
@@ -734,8 +739,8 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+    final AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -779,7 +784,8 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    List<SettingAttribute> settingAttributes =
+        SecretManagementTestHelper.getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
 
     Collection<SecretManagerConfig> vaultConfigs =
@@ -796,8 +802,8 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+    final AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -882,8 +888,8 @@ public class VaultTest extends WingsBaseTest {
     String vaultId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+    final AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -928,8 +934,8 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     String password = UUID.randomUUID().toString();
-    final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+    final AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
     String savedAttributeId = wingsPersistence.save(settingAttribute);
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
@@ -965,7 +971,8 @@ public class VaultTest extends WingsBaseTest {
     assertThat(secretChangeLog.getDescription()).isEqualTo("Created");
 
     final String newPassWord = UUID.randomUUID().toString();
-    final AppDynamicsConfig newAppDynamicsConfig = getAppDynamicsConfig(accountId, newPassWord);
+    final AppDynamicsConfig newAppDynamicsConfig =
+        SecretManagementTestHelper.getAppDynamicsConfig(accountId, newPassWord);
 
     updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1167,9 +1174,10 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    List<SettingAttribute> settingAttributes =
+        SecretManagementTestHelper.getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
+    secretManagementTestHelper.validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
   }
 
   @Test
@@ -1180,15 +1188,17 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
 
     int numOfSettingAttributes = 5;
-    List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    List<SettingAttribute> settingAttributes =
+        SecretManagementTestHelper.getSettingAttributes(accountId, numOfSettingAttributes);
     for (SettingAttribute settingAttribute : settingAttributes) {
       wingsPersistence.save(settingAttribute);
     }
-    validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
+    secretManagementTestHelper.validateSettingAttributes(settingAttributes, numOfEncRecords + numOfSettingAttributes);
 
-    settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+    settingAttributes = SecretManagementTestHelper.getSettingAttributes(accountId, numOfSettingAttributes);
     wingsPersistence.save(settingAttributes);
-    validateSettingAttributes(settingAttributes, numOfEncRecords + 2 * numOfSettingAttributes);
+    secretManagementTestHelper.validateSettingAttributes(
+        settingAttributes, numOfEncRecords + 2 * numOfSettingAttributes);
   }
 
   @Test
@@ -1206,8 +1216,9 @@ public class VaultTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+        final AppDynamicsConfig appDynamicsConfig =
+            SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -1313,7 +1324,8 @@ public class VaultTest extends WingsBaseTest {
       vaultService.saveOrUpdateVaultConfig(accountId, fromConfig, true);
 
       int numOfSettingAttributes = 5;
-      List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
+      List<SettingAttribute> settingAttributes =
+          SecretManagementTestHelper.getSettingAttributes(accountId, numOfSettingAttributes);
       wingsPersistence.save(settingAttributes);
 
       Query<EncryptedData> query =
@@ -1385,8 +1397,9 @@ public class VaultTest extends WingsBaseTest {
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
-        final AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-        SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+        final AppDynamicsConfig appDynamicsConfig =
+            SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+        SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(null);
@@ -1582,8 +1595,8 @@ public class VaultTest extends WingsBaseTest {
     int numOfSettingAttributes = 5;
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
-    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
+    AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, password);
+    SettingAttribute settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
     attributeIds.add(wingsPersistence.save(settingAttribute));
 
@@ -1597,8 +1610,8 @@ public class VaultTest extends WingsBaseTest {
     assertThat(yamlRef.contains("#value")).isTrue();
 
     for (int i = 1; i < numOfSettingAttributes; i++) {
-      appDynamicsConfig = getAppDynamicsConfig(accountId, null, yamlRef);
-      settingAttribute = getSettingAttribute(appDynamicsConfig);
+      appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, null, yamlRef);
+      settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
 
       attributeIds.add(wingsPersistence.save(settingAttribute));
     }
@@ -1727,6 +1740,29 @@ public class VaultTest extends WingsBaseTest {
     encryptedData = response.getResponse().get(0);
     assertThat(encryptedData.getName()).isEqualTo(secretName);
     assertThat(encryptedData.getEncryptedBy()).isNotEmpty();
+  }
+
+  private static WinRmConnectionAttributes getWinRmConnectionAttribute(String accountId, String password) {
+    return WinRmConnectionAttributes.builder()
+        .accountId(accountId)
+        .password(password.toCharArray())
+        .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.NTLM)
+        .port(5164)
+        .skipCertChecks(true)
+        .useSSL(true)
+        .username("mark.lu")
+        .build();
+  }
+
+  private static SettingAttribute getSettingAttribute(WinRmConnectionAttributes winRmConnectionAttributes) {
+    return SettingAttribute.Builder.aSettingAttribute()
+        .withAccountId(winRmConnectionAttributes.getAccountId())
+        .withValue(winRmConnectionAttributes)
+        .withAppId(UUID.randomUUID().toString())
+        .withCategory(SettingCategory.SETTING)
+        .withEnvId(UUID.randomUUID().toString())
+        .withName(UUID.randomUUID().toString())
+        .build();
   }
 
   @Test

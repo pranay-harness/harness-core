@@ -22,6 +22,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.rule.Owner;
 
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -114,8 +115,8 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
 
     String secretId = wingsPersistence.save(encryptedData);
     encryptedData.setUuid(secretId);
-    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, null, secretId);
-    settingAttribute = getSettingAttribute(appDynamicsConfig);
+    AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, null, secretId);
+    settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
     settingAttribute.setName("testAttribute");
     settingAttribute.setUsageRestrictions(usageRestrictions);
     String settingAttributeId = wingsPersistence.save(settingAttribute);

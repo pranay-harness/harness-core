@@ -16,9 +16,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AccountThreadLocal;
 import software.wings.security.UserRequestContext;
@@ -80,15 +77,6 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
     when(mockHttpServletRequest.getScheme()).thenReturn("scheme");
     when(mockHttpServletRequest.getServerName()).thenReturn("server");
     when(mockHttpServletRequest.getServerPort()).thenReturn(0);
-  }
-
-  protected LicenseInfo getLicenseInfo() {
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setAccountType(AccountType.PAID);
-    licenseInfo.setLicenseUnits(100);
-    licenseInfo.setExpireAfterDays(15);
-    return licenseInfo;
   }
 
   @Test
