@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.InjectorRuleMixin;
@@ -30,7 +31,7 @@ import org.junit.runners.model.Statement;
 
 @OwnedBy(PL)
 @Slf4j
-public class DefaultOrganizationInterceptorTest {
+public class DefaultOrganizationInterceptorTest extends CategoryTest {
   public static class DefaultOrgRule implements InjectorRuleMixin, MethodRule {
     @Override
     public List<Module> modules(List<Annotation> annotations) throws Exception {
