@@ -53,6 +53,15 @@ public class StepUtils {
 
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+
+    for (ResponseData responseData : responseDataMap.values()) {
+      if (((StepResponseNotifyData) responseData).getStatus() == Status.FAILED) {
+        responseBuilder.status(Status.FAILED);
+        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+        return responseBuilder.build();
+      }
+    }
+
     for (ResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
