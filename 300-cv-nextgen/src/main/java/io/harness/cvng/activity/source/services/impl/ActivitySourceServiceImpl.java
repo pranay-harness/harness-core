@@ -10,6 +10,7 @@ import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
@@ -37,24 +38,38 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO) {
     if (isNotEmpty(activitySourceDTO.getUuid())) {
       update(activitySourceDTO);
+      return activitySourceDTO.getUuid();
+    } else {
+      ActivitySource activitySource;
+      switch (activitySourceDTO.getType()) {
+        case KUBERNETES:
+          activitySource = KubernetesActivitySource.fromDTO(
+              accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
+          sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
+          break;
+        case HARNESS_CD10:
+          validateSingleCD10Activity(accountId, orgIdentifier, projectIdentifier);
+          activitySource = CD10ActivitySource.fromDTO(
+              accountId, orgIdentifier, projectIdentifier, (CD10ActivitySourceDTO) activitySourceDTO);
+          break;
+        default:
+          throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+      }
+      activitySource.validate();
+      return hPersistence.save(activitySource);
     }
+  }
 
-    ActivitySource activitySource;
-    switch (activitySourceDTO.getType()) {
-      case KUBERNETES:
-        activitySource = KubernetesActivitySource.fromDTO(
-            accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
-        sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
-        break;
-      case HARNESS_CD10:
-        activitySource = CD10ActivitySource.fromDTO(
-            accountId, orgIdentifier, projectIdentifier, (CD10ActivitySourceDTO) activitySourceDTO);
-        break;
-      default:
-        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+  private void validateSingleCD10Activity(String accountId, String orgIdentifier, String projectIdentifier) {
+    CD10ActivitySource cd10ActivitySource = hPersistence.createQuery(CD10ActivitySource.class)
+                                                .filter(ActivitySourceKeys.accountId, accountId)
+                                                .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                                .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                                .filter(ActivitySourceKeys.type, ActivitySourceType.HARNESS_CD10)
+                                                .get();
+    if (cd10ActivitySource != null) {
+      throw new IllegalStateException("There can only be one CD 1.0 activity source per project");
     }
-    activitySource.validate();
-    return hPersistence.save(activitySource);
   }
 
   private void sendKubernetesActivitySourceCreateEvent(KubernetesActivitySource activitySource) {

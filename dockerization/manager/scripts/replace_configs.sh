@@ -756,3 +756,7 @@ fi
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi
+
+if [[ "" != "$CVNG_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
+fi

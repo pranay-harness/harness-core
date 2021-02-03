@@ -225,7 +225,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testSaveActivitySource_invalidCD10Identifier() {
+  public void testSaveActivitySource_multipleCD10ActivitySource() {
     String identifier = generateUuid();
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
@@ -242,11 +242,18 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                       .envMappings(cd10EnvMappingDTOS)
                                                       .serviceMappings(cd10ServiceMappingDTOS)
                                                       .build();
+    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    CD10ActivitySourceDTO secondCd10ActivitySource = CD10ActivitySourceDTO.builder()
+                                                         .identifier("second identifier")
+                                                         .name("some-name")
+                                                         .envMappings(cd10EnvMappingDTOS)
+                                                         .serviceMappings(cd10ServiceMappingDTOS)
+                                                         .build();
     assertThatThrownBy(()
                            -> activitySourceService.saveActivitySource(
-                               accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO))
+                               accountId, orgIdentifier, projectIdentifier, secondCd10ActivitySource))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Only one CD 1.0 activity can be created with identifier: harness_cd10_activity_source");
+        .hasMessage("There can only be one CD 1.0 activity source per project");
   }
 
   @Test

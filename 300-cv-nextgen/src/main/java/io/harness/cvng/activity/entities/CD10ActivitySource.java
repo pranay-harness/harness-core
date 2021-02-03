@@ -6,7 +6,6 @@ import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 
-import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -58,8 +57,7 @@ public class CD10ActivitySource extends ActivitySource {
 
   @Override
   protected void validateParams() {
-    Preconditions.checkState(getIdentifier().equals(HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER),
-        "Only one CD 1.0 activity can be created with identifier: %s", HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER);
+    // no op
   }
 
   public static CD10ActivitySource fromDTO(
