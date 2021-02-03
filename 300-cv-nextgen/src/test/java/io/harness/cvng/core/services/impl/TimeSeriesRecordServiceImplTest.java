@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -8,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +24,6 @@ import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
@@ -441,10 +442,10 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testGetTimeSeriesMetricDefinitions() {
-    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS);
+  public void testGetTimeSeriesMetricDefinitions_notIncludedMetricsInCVConfig() {
+    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, APP_DYNAMICS);
     AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
     appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
@@ -459,10 +460,124 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
-    appDynamicsCVConfig.setMetricPack(MetricPack.builder()
-                                          .identifier(PERFORMANCE_PACK_IDENTIFIER)
-                                          .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))
-                                          .build());
+    appDynamicsCVConfig.setMetricPack(
+        MetricPack.builder()
+            .identifier(PERFORMANCE_PACK_IDENTIFIER)
+            .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder()
+                                         .included(true)
+                                         .name("metric")
+                                         .type(TimeSeriesMetricType.INFRA)
+                                         .thresholds(Collections.singletonList(
+                                             TimeSeriesThreshold.builder()
+                                                 .action(TimeSeriesThresholdActionType.IGNORE)
+                                                 .criteria(TimeSeriesThresholdCriteria.builder()
+                                                               .criteria("< 10")
+                                                               .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                                               .type(TimeSeriesThresholdComparisonType.ABSOLUTE)
+                                                               .build())
+                                                 .build()))
+                                         .build(),
+                MetricPack.MetricDefinition.builder()
+                    .included(false)
+                    .name("metric2")
+                    .type(TimeSeriesMetricType.INFRA)
+                    .thresholds(Collections.singletonList(
+                        TimeSeriesThreshold.builder()
+                            .action(TimeSeriesThresholdActionType.IGNORE)
+                            .criteria(TimeSeriesThresholdCriteria.builder()
+                                          .criteria("< 10")
+                                          .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                          .type(TimeSeriesThresholdComparisonType.ABSOLUTE)
+                                          .build())
+                            .build()))
+                    .build()))
+            .build());
+    AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);
+
+    List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
+        timeSeriesRecordService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+
+    assertThat(timeSeriesMetricDefinitions.size()).isEqualTo(1);
+    timeSeriesMetricDefinitions.forEach(timeSeriesMetricDefinition -> {
+      assertThat(timeSeriesMetricDefinition.getMetricName()).isNotEmpty();
+      assertThat(timeSeriesMetricDefinition.getMetricType()).isNotNull();
+      assertThat(timeSeriesMetricDefinition.getActionType()).isEqualTo(TimeSeriesThresholdActionType.IGNORE);
+      assertThat(timeSeriesMetricDefinition.getMetricGroupName()).isEqualTo("*");
+    });
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetTimeSeriesMetricDefinitions_projectLevelThresholdsNotncluded() {
+    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, APP_DYNAMICS);
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
+    appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsCVConfig.setOrgIdentifier(orgIdentifier);
+    appDynamicsCVConfig.setAccountId(accountId);
+    appDynamicsCVConfig.setConnectorIdentifier(connectorIdentifier);
+    appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
+    appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
+    appDynamicsCVConfig.setIdentifier(groupId);
+    appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
+    appDynamicsCVConfig.setTierName("docker-tier");
+    appDynamicsCVConfig.setApplicationName("cv-app");
+    appDynamicsCVConfig.setTierName("tierName");
+    appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setMetricPack(
+        MetricPack.builder()
+            .identifier(PERFORMANCE_PACK_IDENTIFIER)
+            .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder()
+                                         .included(true)
+                                         .name("metric")
+                                         .type(TimeSeriesMetricType.INFRA)
+                                         .thresholds(Collections.singletonList(
+                                             TimeSeriesThreshold.builder()
+                                                 .action(TimeSeriesThresholdActionType.IGNORE)
+                                                 .criteria(TimeSeriesThresholdCriteria.builder()
+                                                               .criteria("< 10")
+                                                               .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                                               .type(TimeSeriesThresholdComparisonType.ABSOLUTE)
+                                                               .build())
+                                                 .build()))
+                                         .build()))
+            .build());
+    AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);
+
+    List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
+        timeSeriesRecordService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+
+    assertThat(timeSeriesMetricDefinitions.size()).isEqualTo(1);
+    timeSeriesMetricDefinitions.forEach(timeSeriesMetricDefinition -> {
+      assertThat(timeSeriesMetricDefinition.getMetricName()).isNotEmpty();
+      assertThat(timeSeriesMetricDefinition.getMetricType()).isNotNull();
+      assertThat(timeSeriesMetricDefinition.getActionType()).isEqualTo(TimeSeriesThresholdActionType.IGNORE);
+      assertThat(timeSeriesMetricDefinition.getMetricGroupName()).isEqualTo("*");
+    });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetTimeSeriesMetricDefinitions_projectLevelThresholdsIncluded() {
+    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, APP_DYNAMICS);
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
+    appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsCVConfig.setOrgIdentifier(orgIdentifier);
+    appDynamicsCVConfig.setAccountId(accountId);
+    appDynamicsCVConfig.setConnectorIdentifier(connectorIdentifier);
+    appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
+    appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
+    appDynamicsCVConfig.setIdentifier(groupId);
+    appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
+    appDynamicsCVConfig.setTierName("docker-tier");
+    appDynamicsCVConfig.setApplicationName("cv-app");
+    appDynamicsCVConfig.setTierName("tierName");
+    appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setMetricPack(
+        MetricPack.builder().identifier(PERFORMANCE_PACK_IDENTIFIER).metrics(new HashSet<>()).build());
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);
 
     List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
@@ -479,6 +594,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
     cvConfig.getMetricPack().getMetrics().add(
         MetricPack.MetricDefinition.builder()
             .name("m1")
+            .included(true)
             .type(TimeSeriesMetricType.ERROR)
             .thresholds(
                 Lists.newArrayList(TimeSeriesThreshold.builder()
