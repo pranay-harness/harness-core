@@ -66,25 +66,32 @@ public class ImageSecretBuilder {
 
   private String getJSONEncodedDockerCredentials(ConnectorDetails connectorDetails) {
     DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
-    if (dockerConfig.getAuth().getAuthType() != DockerAuthType.USER_PASSWORD) {
+    if (dockerConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
+      DockerUserNamePasswordDTO dockerUserNamePasswordDTO = (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
+          dockerConfig.getAuth().getCredentials(), connectorDetails.getEncryptedDataDetails());
+
+      String registryUrl = dockerConfig.getDockerRegistryUrl();
+      String username = dockerUserNamePasswordDTO.getUsername();
+      if (isEmpty(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
+        throw new InvalidArgumentsException(
+            format("Password should not be empty for docker connector: %s", connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+      String password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
+
+      validateDecodedDockerCredentials(username, password, connectorDetails.getIdentifier());
+      validateDecodedDockerRegistryUrl(registryUrl, connectorDetails.getIdentifier());
+      return jsonEncodeCredentials(registryUrl, username, password);
+    } else if (dockerConfig.getAuth().getAuthType() == DockerAuthType.ANONYMOUS) {
+      String registryUrl = dockerConfig.getDockerRegistryUrl();
+      validateDecodedDockerRegistryUrl(registryUrl, connectorDetails.getIdentifier());
+      return null;
+    } else {
       throw new InvalidArgumentsException(
           format("Invalid auth type: %s for docker connector: %s", dockerConfig.getAuth().getAuthType().toString(),
               connectorDetails.getIdentifier()),
           WingsException.USER);
     }
-
-    DockerUserNamePasswordDTO dockerUserNamePasswordDTO = (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
-        dockerConfig.getAuth().getCredentials(), connectorDetails.getEncryptedDataDetails());
-
-    String registryUrl = dockerConfig.getDockerRegistryUrl();
-    String username = dockerUserNamePasswordDTO.getUsername();
-    String password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
-    if (isEmpty(registryUrl) || isEmpty(username) || isEmpty(password)) {
-      return null;
-    }
-
-    validateDecodeDockerCredentials(username, password, registryUrl, connectorDetails.getIdentifier());
-    return jsonEncodeCredentials(registryUrl, username, password);
   }
 
   private String getJSONEncodedGCRCredentials(String imageName, ConnectorDetails connectorDetails) {
@@ -162,13 +169,7 @@ public class ImageSecretBuilder {
         .toString();
   }
 
-  private void validateDecodeDockerCredentials(
-      String username, String password, String registryUrl, String connectorId) {
-    if (isEmpty(registryUrl)) {
-      throw new InvalidArgumentsException(
-          format("Registry url should not be empty for docker connector %s", connectorId), WingsException.USER);
-    }
-
+  private void validateDecodedDockerCredentials(String username, String password, String connectorId) {
     if (isEmpty(username)) {
       throw new InvalidArgumentsException(
           format("Username should not be empty for docker connector %s", connectorId), WingsException.USER);
@@ -177,6 +178,13 @@ public class ImageSecretBuilder {
     if (isEmpty(password)) {
       throw new InvalidArgumentsException(
           format("Password should not be empty for docker connector %s", connectorId), WingsException.USER);
+    }
+  }
+
+  private void validateDecodedDockerRegistryUrl(String registryUrl, String connectorId) {
+    if (isEmpty(registryUrl)) {
+      throw new InvalidArgumentsException(
+          format("Registry url should not be empty for docker connector %s", connectorId), WingsException.USER);
     }
   }
 }

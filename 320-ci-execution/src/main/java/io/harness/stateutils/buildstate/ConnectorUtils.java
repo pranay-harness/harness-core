@@ -22,6 +22,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -338,9 +339,17 @@ public class ConnectorUtils {
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
     DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
-    encryptedDataDetails =
-        secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    DockerAuthType dockerAuthType = dockerConnectorDTO.getAuth().getAuthType();
+    if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
+      encryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (dockerAuthType == DockerAuthType.ANONYMOUS) {
+      return connectorDetailsBuilder.build();
+    } else {
+      throw new InvalidArgumentsException(
+          format("Unsupported docker credential type:[%s] on connector:[%s]", dockerAuthType, dockerConnectorDTO));
+    }
   }
 
   private ConnectorDetails getK8sConnectorDetails(

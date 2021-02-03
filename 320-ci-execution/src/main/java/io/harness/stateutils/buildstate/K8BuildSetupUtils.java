@@ -28,6 +28,7 @@ import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
@@ -36,6 +37,8 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.StringUtils.trimLeadingCharacter;
+import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
@@ -54,10 +57,11 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.HostAliasParams;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector.ImageDetailsWithConnectorBuilder;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
@@ -74,6 +78,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -87,6 +92,8 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -229,13 +236,17 @@ public class K8BuildSetupUtils {
         stepConnectorDetails = singletonMap(connectorDetails.getIdentifier(), connectorDetails);
       }
     }
-    ImageDetailsWithConnectorBuilder imageDetailsWithConnectorBuilder =
-        ImageDetailsWithConnector.builder().imageDetails(
-            containerDefinitionInfo.getContainerImageDetails().getImageDetails());
+
+    ImageDetails imageDetails = containerDefinitionInfo.getContainerImageDetails().getImageDetails();
+    ConnectorDetails connectorDetails = null;
     if (containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier() != null) {
-      imageDetailsWithConnectorBuilder.imageConnectorDetails(connectorUtils.getConnectorDetails(
-          ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier()));
+      connectorDetails = connectorUtils.getConnectorDetails(
+          ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier());
+      String fullyQualifiedImageName = getImageName(connectorDetails, imageDetails.getName());
+      imageDetails.setName(fullyQualifiedImageName);
     }
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        ImageDetailsWithConnector.builder().imageConnectorDetails(connectorDetails).imageDetails(imageDetails).build();
 
     return CIK8ContainerParams.builder()
         .name(containerDefinitionInfo.getName())
@@ -249,7 +260,7 @@ public class K8BuildSetupUtils {
         .commands(containerDefinitionInfo.getCommands())
         .ports(containerDefinitionInfo.getPorts())
         .args(containerDefinitionInfo.getArgs())
-        .imageDetailsWithConnector(imageDetailsWithConnectorBuilder.build())
+        .imageDetailsWithConnector(imageDetailsWithConnector)
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();
@@ -604,5 +615,28 @@ public class K8BuildSetupUtils {
     }
 
     return label.matches(LABEL_REGEX);
+  }
+
+  private String getImageName(ConnectorDetails connectorDetails, String imageName) {
+    ConnectorType connectorType = connectorDetails.getConnectorType();
+    if (connectorType == DOCKER) {
+      DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
+      if (dockerConnectorDTO.getAuth().getAuthType() == DockerAuthType.ANONYMOUS) {
+        String dockerRegistryUrl = dockerConnectorDTO.getDockerRegistryUrl();
+        try {
+          String registryHostName = "";
+          URL url = new URL(dockerRegistryUrl);
+          registryHostName = url.getHost();
+          if (url.getPort() != -1) {
+            registryHostName = url.getHost() + ":" + url.getPort();
+          }
+          return trimTrailingCharacter(registryHostName, '/') + '/' + trimLeadingCharacter(imageName, '/');
+        } catch (MalformedURLException e) {
+          throw new CIStageExecutionException(
+              format("Malformed registryUrl in docker connector id: %s", connectorDetails.getIdentifier()));
+        }
+      }
+    }
+    return null;
   }
 }
