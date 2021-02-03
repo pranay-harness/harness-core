@@ -1,9 +1,13 @@
 package io.harness.accesscontrol.permissions.database;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.accesscontrol.permissions.PermissionDTO;
+import io.harness.accesscontrol.scopes.Scope;
 import io.harness.exception.DuplicateFieldException;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 
+@Singleton
 @ValidateOnExecution
 public class PermissionDaoImpl implements PermissionDao {
   private final PermissionRepository permissionRepository;
@@ -32,8 +37,12 @@ public class PermissionDaoImpl implements PermissionDao {
   }
 
   @Override
-  public List<PermissionDTO> list(String scope) {
-    Collection<Permission> permissions = permissionRepository.findAllByScopesContaining(scope);
+  public List<PermissionDTO> list(Scope scope, String resourceType) {
+    Collection<Permission> permissions;
+    if (isNotEmpty(resourceType)) {
+      permissions = permissionRepository.findAllByScopesContainingAndResourceType(scope, resourceType);
+    }
+    permissions = permissionRepository.findAllByScopesContaining(scope);
     return permissions.stream().map(PermissionMapper::fromPermission).collect(Collectors.toList());
   }
 

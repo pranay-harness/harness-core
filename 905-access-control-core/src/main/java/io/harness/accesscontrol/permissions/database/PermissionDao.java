@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.permissions.database;
 
 import io.harness.accesscontrol.permissions.PermissionDTO;
+import io.harness.accesscontrol.scopes.Scope;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface PermissionDao {
   String create(@Valid PermissionDTO permission);
 
-  List<PermissionDTO> list(@NotEmpty String scope);
+  List<PermissionDTO> list(@NotEmpty Scope scope, String resourceType);
 
   Optional<PermissionDTO> get(@NotEmpty String identifier);
 

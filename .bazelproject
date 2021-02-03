@@ -33,7 +33,7 @@ directories:
   884-pms-commons
   890-pms-contracts
   890-sm-core
-  901-access-control-core
+  905-access-control-core
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -87,3 +87,4 @@ import_run_configurations:
   run-configurations/Notification Microservice.xml
   run-configurations/Notification Client.xml
   run-configurations/EventsFrameworkTest.xml
+  run-configurations/AccessControlMicroservice.xml

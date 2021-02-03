@@ -1,7 +1,7 @@
-package io.harness.accesscontrol.permissions.core;
+package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.permissions.PermissionDTO;
 import io.harness.accesscontrol.permissions.database.PermissionDao;
+import io.harness.accesscontrol.scopes.Scope;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,8 +30,8 @@ public class PermissionServiceImpl implements PermissionService {
   }
 
   @Override
-  public List<PermissionDTO> list(String scope) {
-    return permissionDao.list(scope);
+  public List<PermissionDTO> list(Scope scope, String resourceType) {
+    return permissionDao.list(scope, resourceType);
   }
 
   @Override

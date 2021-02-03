@@ -75,7 +75,7 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
-  //901-access-control-core:module \
+  //905-access-control-core:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -280,7 +280,7 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
-build_bazel_module 901-access-control-core
+build_bazel_module 905-access-control-core
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 915-pms-delegate-service-driver

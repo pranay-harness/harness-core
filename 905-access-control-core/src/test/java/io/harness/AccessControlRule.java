@@ -44,7 +44,6 @@ public class AccessControlRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(AccessControlModule.getInstance());
     return modules;
   }
 

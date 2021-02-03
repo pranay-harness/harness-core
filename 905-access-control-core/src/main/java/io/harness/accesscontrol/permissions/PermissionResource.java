@@ -1,7 +1,6 @@
 package io.harness.accesscontrol.permissions;
 
-import io.harness.NGCommonEntityConstants;
-import io.harness.accesscontrol.permissions.harness.HPermissionService;
+import io.harness.accesscontrol.scopes.Scope;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -18,7 +17,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/permissions")
 @Path("/permissions")
@@ -31,22 +29,17 @@ import org.hibernate.validator.constraints.NotEmpty;
     })
 @ValidateOnExecution
 public class PermissionResource {
-  private final HPermissionService hPermissionService;
+  private final PermissionService permissionService;
 
   @Inject
-  public PermissionResource(HPermissionService hPermissionService) {
-    this.hPermissionService = hPermissionService;
+  public PermissionResource(PermissionService permissionService) {
+    this.permissionService = permissionService;
   }
 
   @GET
-  @Path("available")
-  @ApiOperation(value = "Get Available Permissions", nickname = "getAvailablePermissionList")
+  @ApiOperation(value = "Get All Permissions", nickname = "getPermissionList")
   public ResponseDTO<List<PermissionDTO>> get(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam("resourceType") String resourceType) {
-    return ResponseDTO.newResponse(
-        hPermissionService.list(accountIdentifier, orgIdentifier, projectIdentifier, resourceType));
+      @QueryParam("scope") Scope scope, @QueryParam("resourceType") String resourceType) {
+    return ResponseDTO.newResponse(permissionService.list(scope, resourceType));
   }
 }
