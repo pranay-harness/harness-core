@@ -637,6 +637,6 @@ public class K8BuildSetupUtils {
         }
       }
     }
-    return null;
+    return imageName;
   }
 }
