@@ -3,16 +3,19 @@ package io.harness.secrets.validation.validators;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GCP_SECRET_OPERATION_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.HarnessSecret;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.exception.SecretManagementException;
 import io.harness.secrets.SecretsDao;
 import io.harness.secrets.validation.BaseSecretValidator;
+import io.harness.security.encryption.EncryptedRecord;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -73,6 +76,15 @@ public class GcpSecretManagerValidator extends BaseSecretValidator {
     super.validateSecretTextUpdate(secretText, existingRecord, secretManagerConfig);
     if (secretText.isInlineSecret()) {
       verifyInlineSecret(secretText);
+    } else {
+      checkIfSecretCanBeUpdated(secretText, existingRecord);
+    }
+  }
+
+  private void checkIfSecretCanBeUpdated(HarnessSecret secretText, EncryptedRecord existingRecord) {
+    if (secretText.getName() != null && !secretText.getName().equals(existingRecord.getEncryptionKey())) {
+      throw new SecretManagementException(
+          GCP_SECRET_OPERATION_ERROR, "Renaming Secrets in GCP Secret Manager is not supported", USER);
     }
   }
 
@@ -87,6 +99,7 @@ public class GcpSecretManagerValidator extends BaseSecretValidator {
   public void validateSecretFileUpdate(
       SecretFile secretFile, EncryptedData existingRecord, SecretManagerConfig secretManagerConfig) {
     super.validateSecretFileUpdate(secretFile, existingRecord, secretManagerConfig);
+    checkIfSecretCanBeUpdated(secretFile, existingRecord);
     validateSecretName(secretFile.getName());
     verifyFileSizeWithinLimit(secretFile.getFileContent());
   }
