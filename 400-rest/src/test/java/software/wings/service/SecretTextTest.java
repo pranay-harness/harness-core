@@ -60,6 +60,8 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 import io.harness.testlib.RealMongo;
 
+import software.wings.EncryptTestUtils;
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -95,6 +97,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -160,6 +163,9 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private LocalEncryptor localEncryptor;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
+  @Inject private LocalSecretManagerService localSecretManagerService;
+
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ConfigFileAuthHandler configFileAuthHandler;
@@ -207,7 +213,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(kmsEncryptor.encryptSecret(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
+        return EncryptTestUtils.encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
       }
       return localEncryptor.encryptSecret(
           (String) args[0], (String) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
@@ -216,7 +222,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(kmsEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
+        return EncryptTestUtils.decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
       }
       return localEncryptor.fetchSecretValue(
           (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
@@ -225,8 +231,8 @@ public class SecretTextTest extends WingsBaseTest {
     when(vaultEncryptor.createSecret(anyString(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof VaultConfig) {
-        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
-            (VaultConfig) args[2], null);
+        return EncryptTestUtils.encrypt((String) args[0], ((SecretText) args[1]).getName(),
+            ((SecretText) args[1]).getValue(), (VaultConfig) args[2], null);
       }
       return null;
     });
@@ -234,8 +240,8 @@ public class SecretTextTest extends WingsBaseTest {
     when(vaultEncryptor.updateSecret(anyString(), any(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[3] instanceof VaultConfig) {
-        return encrypt((String) args[0], ((SecretText) args[1]).getName(), ((SecretText) args[1]).getValue(),
-            (VaultConfig) args[3], null);
+        return EncryptTestUtils.encrypt((String) args[0], ((SecretText) args[1]).getName(),
+            ((SecretText) args[1]).getValue(), (VaultConfig) args[3], null);
       }
       return null;
     });
@@ -243,7 +249,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(vaultEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof VaultConfig) {
-        return decrypt((EncryptedRecord) args[1], (VaultConfig) args[2]);
+        return EncryptTestUtils.decrypt((EncryptedRecord) args[1], (VaultConfig) args[2]);
       }
       return null;
     });
@@ -277,13 +283,13 @@ public class SecretTextTest extends WingsBaseTest {
         break;
 
       case KMS:
-        KmsConfig kmsConfig = getKmsConfig();
+        KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
         kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
         encryptedBy = kmsConfig.getName();
         break;
 
       case VAULT:
-        VaultConfig vaultConfig = getVaultConfigWithAuthToken();
+        VaultConfig vaultConfig = secretManagementTestHelper.getVaultConfigWithAuthToken();
         kmsId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
         encryptedBy = vaultConfig.getName();
         break;

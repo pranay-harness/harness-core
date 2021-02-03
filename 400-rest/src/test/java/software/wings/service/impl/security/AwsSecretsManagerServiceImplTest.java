@@ -21,6 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -47,6 +48,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Inject @Spy @InjectMocks private AwsSecretsManagerService awsSecretsManagerService;
   @Mock private AccountService accountService;
   @Mock private PremiumFeature secretsManagementFeature;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
 
   @Inject KryoSerializer kryoSerializer;
 
@@ -70,7 +72,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void saveAwsSecretManagerConfig_shouldPass() {
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     String savedConfigId = awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, awsSecretManagerConfig);
@@ -84,7 +86,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveAwsSecretManagerConfigIfFeatureNotAvailable_shouldThrowException() {
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     try {
@@ -99,7 +101,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void updateAwsSecretManagerConfigNonSecretKey_shouldPass() {
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -123,7 +125,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void updateAwsSecretManagerConfigSecretKey_shouldPass() {
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -145,7 +147,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAwsSecretManagerConfigWithNoEncryptedSecrets_shouldPass() {
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -162,7 +164,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAwsSecretManagerConfigWithEncryptedSecrets_shouldFail() {
-    AwsSecretsManagerConfig awsSecretManagerConfig = getAwsSecretManagerConfig();
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
     String savedConfigId =
