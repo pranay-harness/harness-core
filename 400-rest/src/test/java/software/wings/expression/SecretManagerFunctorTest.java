@@ -29,6 +29,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
@@ -38,6 +39,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 public class SecretManagerFunctorTest extends WingsBaseTest {
+  @Inject private FeatureFlagService featureFlagService;
   @Mock private ManagerDecryptionService managerDecryptionService;
   @Mock private SecretManager secretManager;
   private static final String ACCOUNT_ID = "ACCOUNT_ID";

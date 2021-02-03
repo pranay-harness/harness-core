@@ -46,6 +46,7 @@ import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.CyberArkResource;
+import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
@@ -94,6 +95,7 @@ public class CyberArkTest extends WingsBaseTest {
   @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private LocalEncryptor localEncryptor;
+  @Inject private SecretManagementResource secretManagementResource;
   @Inject @InjectMocks private SecretService secretService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private CyberArkService cyberArkService;
