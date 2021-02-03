@@ -54,9 +54,17 @@ public class FQNUtils {
       JsonNode value = map.get(key);
       FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
       if (value.getNodeType() == JsonNodeType.ARRAY) {
+        if (value.size() == 0) {
+          res.put(currFQN, value);
+          continue;
+        }
         ArrayNode arrayNode = (ArrayNode) value;
         generateFQNMapFromList(arrayNode, currFQN, res);
       } else if (value.getNodeType() == JsonNodeType.OBJECT) {
+        if (value.size() == 0) {
+          res.put(currFQN, value);
+          continue;
+        }
         generateFQNMap(value, currFQN, res);
       } else {
         res.put(currFQN, value);
@@ -66,6 +74,7 @@ public class FQNUtils {
 
   private void generateFQNMapFromList(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     if (list == null || list.get(0) == null) {
+      res.put(baseFQN, list);
       return;
     }
     JsonNode firstNode = list.get(0);
