@@ -27,6 +27,7 @@ import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
@@ -41,7 +42,6 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
@@ -103,7 +103,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private OrchestrationService orchestrationService;
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private EnvironmentServiceCache environmentServiceCache;
+  @Inject private NextGenService nextGenService;
   // TODO: this is only used in test. Get rid of this API
   @Override
   public String create(String accountId, String orgIdentifier, String projectIdentifier,
@@ -747,7 +747,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private EnvironmentResponseDTO getEnvironment(VerificationJob verificationJob) {
-    return environmentServiceCache.getEnvironment(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
+    return nextGenService.getEnvironment(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
         verificationJob.getProjectIdentifier(), verificationJob.getEnvIdentifier());
   }
 

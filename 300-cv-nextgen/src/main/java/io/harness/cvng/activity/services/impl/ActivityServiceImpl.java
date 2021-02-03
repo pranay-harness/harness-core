@@ -29,11 +29,11 @@ import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -73,7 +73,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
-  @Inject private EnvironmentServiceCache environmentServiceCache;
+  @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationManagerService verificationManagerService;
@@ -496,7 +496,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private String getServiceNameFromActivity(Activity activity) {
-    return environmentServiceCache
+    return nextGenService
         .getService(activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
             activity.getServiceIdentifier())
         .getName();

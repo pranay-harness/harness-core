@@ -19,6 +19,7 @@ import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -26,7 +27,6 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
-import io.harness.cvng.core.utils.EnvironmentServiceCache;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.beans.HeatMapDTO;
@@ -84,7 +84,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private DSConfigService dsConfigService;
   @Mock private CVConfigService cvConfigService;
-  @Mock private EnvironmentServiceCache environmentServiceCache;
+  @Mock private NextGenService nextGenService;
   @Mock private AnalysisService analysisService;
   private Clock clock;
 
@@ -121,7 +121,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(heatMapService, "clock", clock, true);
-    FieldUtils.writeField(heatMapService, "environmentServiceCache", environmentServiceCache, true);
+    FieldUtils.writeField(heatMapService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(heatMapService, "analysisService", analysisService, true);
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
@@ -656,9 +656,9 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         RiskSummaryPopoverDTO.AnalysisRisk.builder().name("exception").risk(30).build();
     when(analysisService.getTop3AnalysisRisks(any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.singletonList(analysisRisk));
-    when(environmentServiceCache.getEnvironment(anyString(), anyString(), anyString(), anyString()))
+    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(envToServicesDTO.getEnvironment());
-    when(environmentServiceCache.getService(anyString(), anyString(), anyString(), anyString()))
+    when(nextGenService.getService(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(envToServicesDTO.getServices().iterator().next());
     when(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier))
         .thenReturn(Lists.newArrayList(envToServicesDTO));
@@ -703,9 +703,9 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
         RiskSummaryPopoverDTO.AnalysisRisk.builder().name("exception").risk(30).build();
     when(analysisService.getTop3AnalysisRisks(any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.singletonList(analysisRisk));
-    when(environmentServiceCache.getEnvironment(anyString(), anyString(), anyString(), anyString()))
+    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(envToServicesDTO.getEnvironment());
-    when(environmentServiceCache.getService(anyString(), anyString(), anyString(), anyString()))
+    when(nextGenService.getService(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(envToServicesDTO.getServices().iterator().next());
     when(cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier))
         .thenReturn(Lists.newArrayList(envToServicesDTO));

@@ -3,6 +3,8 @@ package io.harness.cvng.beans;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -33,6 +35,14 @@ public class DataCollectionConnectorBundle implements ExecutionCapabilityDemande
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    // TODO: this is a stop gap fix, we will be refactoring it once DX team works on their proposal
+    switch (connectorDTO.getConnectorType()) {
+      case KUBERNETES_CLUSTER:
+        return K8sTaskCapabilityHelper.fetchRequiredExecutionCapabilities(
+            (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig(), maskingEvaluator);
+      default:
+        break;
+    }
     Preconditions.checkState(getConnectorConfigDTO() instanceof ExecutionCapabilityDemander,
         "ConnectorConfigDTO should impalement ExecutionCapabilityDemander");
     return ((ExecutionCapabilityDemander) getConnectorConfigDTO()).fetchRequiredExecutionCapabilities(maskingEvaluator);
