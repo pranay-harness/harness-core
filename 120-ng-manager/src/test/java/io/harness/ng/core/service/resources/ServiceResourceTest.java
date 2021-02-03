@@ -7,15 +7,16 @@ import static software.wings.beans.Service.ServiceKeys;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
-import io.harness.NgManagerTest;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
-import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
+import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -25,8 +26,6 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,9 +33,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-public class ServiceResourceTest extends NgManagerTest {
-  @Mock ServiceEntityServiceImpl serviceEntityService;
-  @InjectMocks ServiceResource serviceResource;
+public class ServiceResourceTest extends CategoryTest {
+  private ServiceResource serviceResource;
+  private ServiceEntityService serviceEntityService;
 
   ServiceRequestDTO serviceRequestDTO;
   ServiceResponseDTO serviceResponseDTO;
@@ -45,6 +44,8 @@ public class ServiceResourceTest extends NgManagerTest {
 
   @Before
   public void setUp() {
+    serviceEntityService = mock(ServiceEntityService.class);
+    serviceResource = new ServiceResource(serviceEntityService);
     tags = Arrays.asList(NGTag.builder().key("k1").value("v1").build());
     serviceRequestDTO = ServiceRequestDTO.builder()
                             .identifier("IDENTIFIER")

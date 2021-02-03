@@ -14,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-public class OrganizationRepositoryCustomImplTest {
+public class OrganizationRepositoryCustomImplTest extends CategoryTest {
   private MongoTemplate mongoTemplate;
   private OrganizationRepositoryCustomImpl organizationRepository;
 

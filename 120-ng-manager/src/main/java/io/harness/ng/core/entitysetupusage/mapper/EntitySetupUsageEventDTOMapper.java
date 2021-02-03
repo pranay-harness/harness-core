@@ -17,7 +17,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @Singleton
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 public class EntitySetupUsageEventDTOMapper {
   EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
 
