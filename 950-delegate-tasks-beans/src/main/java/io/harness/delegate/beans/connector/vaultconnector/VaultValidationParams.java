@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
 
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -23,6 +24,6 @@ public class VaultValidationParams implements ConnectorValidationParams, Executi
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return vaultConnectorDTO.fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return Collections.emptyList();
   }
 }

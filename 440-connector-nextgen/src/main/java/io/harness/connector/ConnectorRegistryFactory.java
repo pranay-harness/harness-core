@@ -134,6 +134,7 @@ public class ConnectorRegistryFactory {
   public static ConnectorCategory getConnectorCategory(ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorCategory();
   }
+
   public static Class<? extends ConnectorDTOToEntityMapper<?, ?>> getConnectorDTOToEntityMapper(
       ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorDTOToEntityMapper();

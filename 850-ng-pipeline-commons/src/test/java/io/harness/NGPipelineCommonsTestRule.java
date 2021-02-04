@@ -10,7 +10,6 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
-import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -88,7 +87,6 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NGPipelineRegistrars.morphiaRegistrars)
-            .addAll(FiltersRegistrars.morphiaRegistrars)
             .build();
       }
 
