@@ -51,6 +51,8 @@ java_library(
 )
 
 modules = [
+    "//220-graphql-test",
+    "//230-model-test",
     "//960-ng-core-beans",
     "//920-delegate-agent-beans",
     "//960-persistence",

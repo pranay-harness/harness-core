@@ -32,7 +32,7 @@ import io.fabric8.utils.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
+public class InstanceControllerManagerTest extends GraphQLMockTestBase {
   @Inject InstanceControllerManager instanceControllerManager;
 
   private static final String TEST_ACCOUNT_ID = "TESTACCOUNTID";

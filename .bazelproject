@@ -3,6 +3,7 @@ directories:
   125-cd-nextgen
   136-git-sync-manager
   160-model-gen-tool
+  220-graphql-test
   230-model-test
   260-delegate
   310-ci-manager
