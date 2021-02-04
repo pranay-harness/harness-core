@@ -36,7 +36,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class GcpSecretManagerServiceV2ImplTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject @Spy @InjectMocks private GcpSecretsManagerServiceV2 gcpSecretsManagerService;
 
   private String accountId;

@@ -49,7 +49,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   private String accountId;
   private String cvConfigId;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private AppService appService;
   @Inject private AlertService alertService;
   @Inject private CVConfigurationService cvConfigurationService;
@@ -58,12 +58,12 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    accountId = wingsPersistence.save(anAccount().withAccountName(generateUuid()).build());
-    appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
+    accountId = persistence.save(anAccount().withAccountName(generateUuid()).build());
+    appId = persistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     CVConfiguration cvConfiguration = new CVConfiguration();
     cvConfiguration.setName(generateUuid());
     cvConfiguration.setAppId(appId);
-    cvConfigId = wingsPersistence.save(cvConfiguration);
+    cvConfigId = persistence.save(cvConfiguration);
   }
 
   @Test

@@ -19,7 +19,7 @@ import org.junit.experimental.categories.Category;
 
 public class VaultConfigRenewalIntervalMigrationTest extends WingsBaseTest {
   @Inject private VaultConfigRenewalIntervalMigration vaultConfigRenewalIntervalMigration;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -28,9 +28,9 @@ public class VaultConfigRenewalIntervalMigrationTest extends WingsBaseTest {
     VaultConfig vaultConfig =
         VaultConfig.builder().name("test").vaultUrl("test.com").authToken("authToken").renewIntervalHours(0).build();
     vaultConfig.setEncryptionType(VAULT);
-    String configId = wingsPersistence.save(vaultConfig);
+    String configId = persistence.save(vaultConfig);
     vaultConfigRenewalIntervalMigration.migrate();
-    VaultConfig returnedVaultConfig = wingsPersistence.get(VaultConfig.class, configId);
+    VaultConfig returnedVaultConfig = persistence.get(VaultConfig.class, configId);
     assertThat(returnedVaultConfig.getRenewalInterval()).isEqualTo(0);
   }
 
@@ -41,9 +41,9 @@ public class VaultConfigRenewalIntervalMigrationTest extends WingsBaseTest {
     VaultConfig vaultConfig =
         VaultConfig.builder().name("test").vaultUrl("test.com").authToken("authToken").renewIntervalHours(2).build();
     vaultConfig.setEncryptionType(VAULT);
-    String configId = wingsPersistence.save(vaultConfig);
+    String configId = persistence.save(vaultConfig);
     vaultConfigRenewalIntervalMigration.migrate();
-    VaultConfig returnedVaultConfig = wingsPersistence.get(VaultConfig.class, configId);
+    VaultConfig returnedVaultConfig = persistence.get(VaultConfig.class, configId);
     assertThat(returnedVaultConfig.getRenewalInterval()).isEqualTo(Duration.ofHours(2).toMinutes());
   }
 }

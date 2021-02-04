@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class WorkflowResumePropagatorTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private WorkflowResumePropagator resumePropagator;
   @Inject private AccountService accountService;
 
@@ -100,39 +100,38 @@ public class WorkflowResumePropagatorTest extends WingsBaseTest {
   }
 
   private WorkflowExecution fetchExecution(String appId, String workflowExecutionId) {
-    return wingsPersistence.createQuery(WorkflowExecution.class)
+    return persistence.createQuery(WorkflowExecution.class)
         .filter(WorkflowExecutionKeys.appId, appId)
         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
         .get();
   }
 
   private void buildAndSave(ExecutionStatus internalStatus) {
-    wingsPersistence.save(
-        WorkflowExecution.builder()
-            .uuid(PIPELINE_EXECUTION_ID)
-            .appId(APP_ID)
-            .appName(APP_NAME)
-            .accountId(ACCOUNT_ID)
-            .workflowId(generateUuid())
-            .workflowType(WorkflowType.PIPELINE)
-            .status(ExecutionStatus.PAUSED)
-            .pipelineExecution(aPipelineExecution()
-                                   .withPipelineStageExecutions(
-                                       singletonList(PipelineStageExecution.builder().status(internalStatus).build()))
-                                   .build())
-            .build());
-    wingsPersistence.save(WorkflowExecution.builder()
-                              .uuid(WORKFLOW_EXECUTION_ID)
-                              .appId(APP_ID)
-                              .appName(APP_NAME)
-                              .accountId(ACCOUNT_ID)
-                              .workflowId(generateUuid())
-                              .workflowType(WorkflowType.ORCHESTRATION)
-                              .pipelineExecutionId(PIPELINE_EXECUTION_ID)
-                              .status(ExecutionStatus.PAUSED)
-                              .build());
+    persistence.save(WorkflowExecution.builder()
+                         .uuid(PIPELINE_EXECUTION_ID)
+                         .appId(APP_ID)
+                         .appName(APP_NAME)
+                         .accountId(ACCOUNT_ID)
+                         .workflowId(generateUuid())
+                         .workflowType(WorkflowType.PIPELINE)
+                         .status(ExecutionStatus.PAUSED)
+                         .pipelineExecution(aPipelineExecution()
+                                                .withPipelineStageExecutions(singletonList(
+                                                    PipelineStageExecution.builder().status(internalStatus).build()))
+                                                .build())
+                         .build());
+    persistence.save(WorkflowExecution.builder()
+                         .uuid(WORKFLOW_EXECUTION_ID)
+                         .appId(APP_ID)
+                         .appName(APP_NAME)
+                         .accountId(ACCOUNT_ID)
+                         .workflowId(generateUuid())
+                         .workflowType(WorkflowType.ORCHESTRATION)
+                         .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                         .status(ExecutionStatus.PAUSED)
+                         .build());
 
-    wingsPersistence.save(
+    persistence.save(
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build());
   }
 }

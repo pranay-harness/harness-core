@@ -39,7 +39,7 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
 
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private DelegateService delegateService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
@@ -62,9 +62,8 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
     delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID,
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build(),
         ConnectionMode.POLLING);
-    DelegateConnection connection = wingsPersistence.createQuery(DelegateConnection.class)
-                                        .filter(DelegateConnectionKeys.accountId, ACCOUNT_ID)
-                                        .get();
+    DelegateConnection connection =
+        persistence.createQuery(DelegateConnection.class).filter(DelegateConnectionKeys.accountId, ACCOUNT_ID).get();
     assertThat(connection.getVersion()).isEqualTo("1.0.1");
   }
 
@@ -105,12 +104,12 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
                                                 .disconnected(false)
                                                 .build();
 
-    wingsPersistence.save(delegateConnection);
+    persistence.save(delegateConnection);
 
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
 
     DelegateConnection retrievedDelegateConnection =
-        wingsPersistence.createQuery(DelegateConnection.class)
+        persistence.createQuery(DelegateConnection.class)
             .filter(DelegateConnectionKeys.uuid, delegateConnection.getUuid())
             .get();
 

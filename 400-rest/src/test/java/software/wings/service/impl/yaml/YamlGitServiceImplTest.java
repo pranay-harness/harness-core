@@ -68,7 +68,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class YamlGitServiceImplTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Mock private DelegateService delegateService;
   @Mock private AlertService alertService;
@@ -182,8 +182,8 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     final YamlChangeSet yamlChangeSet = YamlChangeSet.builder().build();
     yamlChangeSet.setUuid("uuid");
     doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
-    wingsPersistence.save(settingAttribute);
-    wingsPersistence.save(yamlGitConfig);
+    persistence.save(settingAttribute);
+    persistence.save(yamlGitConfig);
 
     String response = yamlGitService.validateAndQueueWebhookRequest(
         ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
@@ -221,8 +221,8 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
 
     YamlGitConfig yamlGitConfig =
         YamlGitConfig.builder().accountId(ACCOUNT_ID).gitConnectorId(SETTING_ID).branchName("branchName").build();
-    wingsPersistence.save(settingAttribute);
-    wingsPersistence.save(yamlGitConfig);
+    persistence.save(settingAttribute);
+    persistence.save(yamlGitConfig);
     yamlGitService.handleGitChangeSet(yamlChangeSet, ACCOUNT_ID);
     verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
     verify(waitNotifyEngine, times(1)).waitForAllOn(eq(GENERAL), any(GitCommandCallback.class), anyString());
@@ -245,16 +245,16 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void testSaveForRepoNameValidationOnAccountLevelConnector() {
-    String gitConfig = wingsPersistence.save(aSettingAttribute()
-                                                 .withAccountId(ACCOUNT_ID)
-                                                 .withUuid(SETTING_ID)
-                                                 .withName("gitconnectorid")
-                                                 .withValue(GitConfig.builder()
-                                                                .urlType(GitConfig.UrlType.ACCOUNT)
-                                                                .accountId(ACCOUNT_ID)
-                                                                .webhookToken(WEBHOOK_TOKEN)
-                                                                .build())
-                                                 .build());
+    String gitConfig = persistence.save(aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withUuid(SETTING_ID)
+                                            .withName("gitconnectorid")
+                                            .withValue(GitConfig.builder()
+                                                           .urlType(GitConfig.UrlType.ACCOUNT)
+                                                           .accountId(ACCOUNT_ID)
+                                                           .webhookToken(WEBHOOK_TOKEN)
+                                                           .build())
+                                            .build());
 
     yamlGitService.save(YamlGitConfig.builder().gitConnectorId(gitConfig).build(), false);
   }
@@ -263,16 +263,16 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void testSaveForRepoNameValidationOnRepoLevelConnector() {
-    String gitConfig = wingsPersistence.save(aSettingAttribute()
-                                                 .withAccountId(ACCOUNT_ID)
-                                                 .withUuid(SETTING_ID)
-                                                 .withName("gitconnectorid")
-                                                 .withValue(GitConfig.builder()
-                                                                .urlType(GitConfig.UrlType.REPO)
-                                                                .accountId(ACCOUNT_ID)
-                                                                .webhookToken(WEBHOOK_TOKEN)
-                                                                .build())
-                                                 .build());
+    String gitConfig = persistence.save(aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withUuid(SETTING_ID)
+                                            .withName("gitconnectorid")
+                                            .withValue(GitConfig.builder()
+                                                           .urlType(GitConfig.UrlType.REPO)
+                                                           .accountId(ACCOUNT_ID)
+                                                           .webhookToken(WEBHOOK_TOKEN)
+                                                           .build())
+                                            .build());
 
     yamlGitService.save(
         YamlGitConfig.builder().gitConnectorId(gitConfig).repositoryName("should-not-have-repo-name").build(), false);

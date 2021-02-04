@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 
 public class HelmChartServiceTest extends WingsBaseTest {
   private String APPLICATION_MANIFEST_ID = "APPLICATION_MANIFEST_ID";
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject private HelmChartService helmChartService;
 

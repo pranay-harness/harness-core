@@ -44,7 +44,7 @@ import org.mockito.Mock;
 
 public class YamlGitConfigServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks YamlGitConfigService yamlGitConfigService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock AccountService accountService;
   @Mock AuthService authService;
   @Mock AppService appService;
@@ -83,8 +83,8 @@ public class YamlGitConfigServiceImplTest extends WingsBaseTest {
                                                .entityType(EntityType.ACCOUNT)
                                                .gitConnectorId(gitConnectorId)
                                                .build();
-      wingsPersistence.save(yamlGitConfig);
-      wingsPersistence.save(yamlGitConfig1);
+      persistence.save(yamlGitConfig);
+      persistence.save(yamlGitConfig1);
       List<YamlGitConfig> yamlGitConfigSet =
           yamlGitConfigService.getYamlGitConfigAccessibleToUserWithEntityName(accountId);
       assertThat(yamlGitConfigSet.size()).isEqualTo(2);

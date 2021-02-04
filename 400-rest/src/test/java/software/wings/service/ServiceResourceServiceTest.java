@@ -259,7 +259,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
@@ -335,14 +335,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.createUpdateOperations(Service.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);
 
-    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(wingsPersistence.createQuery(Service.class));
+    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(persistence.createQuery(Service.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class, excludeAuthority))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
-    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
+    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(persistence.createQuery(Command.class));
     when(mockWingsPersistence.createQuery(ContainerTask.class))
-        .thenReturn(wingsPersistence.createQuery(ContainerTask.class));
+        .thenReturn(persistence.createQuery(ContainerTask.class));
 
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
@@ -1294,9 +1294,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   private void prepareServiceCommandMocks() {
     when(mockWingsPersistence.createUpdateOperations(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(ServiceCommand.class));
+        .thenReturn(persistence.createUpdateOperations(ServiceCommand.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
   }
 
   @Test
@@ -1433,7 +1433,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     prepareServiceCommandMocks();
 
     when(mockWingsPersistence.createUpdateOperations(Command.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(Command.class));
+        .thenReturn(persistence.createUpdateOperations(Command.class));
 
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(
@@ -1830,8 +1830,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     prepareServiceCommandMocks();
 
     when(mockWingsPersistence.createUpdateOperations(Command.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(Command.class));
-    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
+        .thenReturn(persistence.createUpdateOperations(Command.class));
+    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(persistence.createQuery(Command.class));
 
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(
@@ -2449,12 +2449,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdateContainerTaskAdvanced() {
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesContainerTask containerTask = new KubernetesContainerTask();
     containerTask.setAppId(APP_ID);
     containerTask.setServiceId(SERVICE_ID);
     containerTask.setUuid("TASK_ID");
-    wingsPersistence.save(containerTask);
+    persistence.save(containerTask);
     KubernetesPayload payload = new KubernetesPayload();
 
     when(mockWingsPersistence.saveAndGet(ContainerTask.class, containerTask)).thenAnswer(t -> t.getArguments()[1]);
@@ -3107,7 +3107,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         aServiceCommand().withName("START").withAppId(APP_ID).withServiceId(SERVICE_ID).withCommand(command).build();
     Service service = serviceBuilder.build();
     service.setServiceCommands(Arrays.asList(serviceCommand));
-    wingsPersistence.save(serviceCommand);
+    persistence.save(serviceCommand);
     when(entityVersionService.newEntityVersion(
              APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.CREATED, null))
         .thenReturn(anEntityVersion().withVersion(2).build());
@@ -3130,7 +3130,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testsetConfigMapYaml() {
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesPayload payload = new KubernetesPayload();
     payload.setAdvancedConfig("${DOCKER_IMAGE_NAME}");
     srs.setConfigMapYaml(APP_ID, SERVICE_ID, payload);
@@ -3148,7 +3148,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     applicationManifest.setAppId(APP_ID);
     applicationManifest.setUuid("APPMANIFEST_ID");
     Service service = Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     srs.setK8v2ServiceFromAppManifest(applicationManifest, ApplicationManifest.AppManifestSource.SERVICE);
     verify(mockWingsPersistence).createUpdateOperations(Service.class);
     verify(updateOperations).set("isK8sV2", true);

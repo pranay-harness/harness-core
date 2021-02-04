@@ -54,7 +54,7 @@ public class ServiceElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Mock @Named(AuditTrailFeature.FEATURE_NAME) PremiumFeature auditTrailFeature;
   @Inject @InjectMocks ServiceElasticsearchRequestHandler serviceSearchRequestHandler;
   @Inject private TestUtils eventTestHelper;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   protected String accountId;
   protected String appId1;
@@ -80,7 +80,7 @@ public class ServiceElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void translateHitsToSearchResultsTest() {
     Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
     SearchResponse searchResponse = SearchRequestHandlerTestUtils.getSearchResponse(ServiceSearchEntity.TYPE);
     when(auditTrailFeature.isAvailableForAccount(accountId)).thenReturn(true);
 

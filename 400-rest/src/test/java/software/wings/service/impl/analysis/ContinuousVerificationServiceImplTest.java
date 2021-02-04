@@ -149,7 +149,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private APMDelegateService apmDelegateService;
   @Mock private DatadogService datadogService;
   @Mock private MLServiceUtils mlServiceUtils;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private DelegateService delegateService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
   @Mock private CVActivityLogService cvActivityLogService;
@@ -662,7 +662,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetCVExecutionMetaData_NoEntries() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
     ContinuousVerificationExecutionMetaData cvMetaData =
         continuousVerificationService.getCVExecutionMetaData(stateExecutionId);
     assertThat(cvMetaData).isNull();
@@ -672,11 +672,11 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetCVExecutionMetaData_NonNullEntries() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
     ContinuousVerificationExecutionMetaData savedData =
         ContinuousVerificationExecutionMetaData.builder().stateExecutionId(stateExecutionId).build();
     savedData.setUuid(generateUuid());
-    wingsPersistence.save(savedData);
+    persistence.save(savedData);
     ContinuousVerificationExecutionMetaData cvMetaData =
         continuousVerificationService.getCVExecutionMetaData(stateExecutionId);
     assertThat(cvMetaData).isNotNull();
@@ -732,7 +732,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testNotifyWorkflowVerificationState_nullAnalysisContext() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
     boolean notifyStatus =
         continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
     assertThat(notifyStatus).isFalse();
@@ -742,18 +742,17 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testNotifyWorkflowVerificationState_logAnalysisWithSuccessState() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
 
     AnalysisContext context =
         AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
-    wingsPersistence.save(context);
+    persistence.save(context);
     boolean notifyStatus =
         continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
 
     assertThat(notifyStatus).isTrue();
 
-    LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    LogMLAnalysisRecord mlAnalysisRecord = persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
     assertThat(mlAnalysisRecord).isNotNull();
     assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
     assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
@@ -767,18 +766,17 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testNotifyWorkflowVerificationState_logAnalysisWithErrorState() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
 
     AnalysisContext context =
         AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
-    wingsPersistence.save(context);
+    persistence.save(context);
     boolean notifyStatus =
         continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, ERROR);
 
     assertThat(notifyStatus).isTrue();
 
-    LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    LogMLAnalysisRecord mlAnalysisRecord = persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
     assertThat(mlAnalysisRecord).isNotNull();
     assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
     assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
@@ -794,19 +792,18 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNotifyWorkflowVerificationState_logAnalysisWithSuccessStateButNotifyFailed()
       throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
     when(waitNotifyEngine.doneWith(anyString(), any())).thenThrow(new IllegalArgumentException(""));
 
     AnalysisContext context =
         AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
-    wingsPersistence.save(context);
+    persistence.save(context);
     boolean notifyStatus =
         continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, SUCCESS);
 
     assertThat(notifyStatus).isFalse();
 
-    LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    LogMLAnalysisRecord mlAnalysisRecord = persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
     assertThat(mlAnalysisRecord).isNotNull();
     assertThat(mlAnalysisRecord.getAccountId()).isEqualTo(accountId);
     assertThat(mlAnalysisRecord.getAnalysisStatus()).isEqualTo(FEEDBACK_ANALYSIS_COMPLETE);
@@ -837,7 +834,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCollectCVDataForWorkflow_moreThanFiveHosts() throws Exception {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     encryptedDataDetails.add(mock(EncryptedDataDetail.class));
     when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(encryptedDataDetails);
@@ -856,7 +853,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     type = new TypeToken<StackDriverLogDataCollectionInfo>() {}.getType();
     StackDriverLogDataCollectionInfo dataCollectionInfo = gson.fromJson(textLoad, type);
     context.setDataCollectionInfo(dataCollectionInfo);
-    wingsPersistence.save(context);
+    persistence.save(context);
     continuousVerificationService.collectCVDataForWorkflow("sampleUuid", 26452678);
     ArgumentCaptor<DelegateTask> taskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(4)).queueTask(taskArgumentCaptor.capture());

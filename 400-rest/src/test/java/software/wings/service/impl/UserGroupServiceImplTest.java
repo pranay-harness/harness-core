@@ -196,7 +196,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private CCMSettingService ccmSettingService;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
   @InjectMocks @Inject private UserService userService;
   @InjectMocks @Inject private UserGroupServiceImpl userGroupService;
@@ -214,15 +214,15 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(rbacFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
     when(rbacFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(false);
-    wingsPersistence.save(user);
+    persistence.save(user);
   }
 
   private Account createAndSaveAccount(String id) {
     Account account = new Account();
     account.setUuid(id);
     account.setLicenseInfo(LicenseInfo.builder().accountType("PAID").build());
-    String accountId = wingsPersistence.save(account);
-    return wingsPersistence.get(Account.class, accountId);
+    String accountId = persistence.save(account);
+    return persistence.get(Account.class, accountId);
   }
 
   private User createUserAndSave(
@@ -726,28 +726,28 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testIsUserAuthorizedToAcceptOrRejectApproval() {
     User user = createUser("User");
-    wingsPersistence.save(user);
+    persistence.save(user);
     UserThreadLocal.set(user);
 
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, null)).isFalse();
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, null)).isFalse();
 
     UserGroup userGroup = createUserGroup(null);
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
         .isFalse();
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, asList(userGroup.getUuid())))
         .isFalse();
 
     userGroup = createUserGroup(asList(user.getUuid()));
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
         .isTrue();
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, asList(userGroup.getUuid())))
         .isTrue();
 
     User user1 = createUser("User1");
-    wingsPersistence.save(user1);
+    persistence.save(user1);
     UserThreadLocal.set(user1);
     assertThat(userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(ACCOUNT_ID, asList(userGroup.getUuid())))
         .isFalse();
@@ -766,7 +766,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void shouldNotDeleteAdminUserGroup() {
     UserGroup defaultUserGroup =
         builder().accountId(ACCOUNT_ID).name(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME).isDefault(true).build();
-    wingsPersistence.save(defaultUserGroup);
+    persistence.save(defaultUserGroup);
 
     boolean deleted = userGroupService.delete(ACCOUNT_ID, defaultUserGroup.getUuid(), false);
     assertThat(deleted).isFalse();
@@ -778,7 +778,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void shouldDeleteNonAdminUserGroup() {
     UserGroup nonDefaultUserGroup =
         builder().accountId(ACCOUNT_ID).name(DEFAULT_READ_ONLY_USER_GROUP_NAME).isDefault(true).build();
-    wingsPersistence.save(nonDefaultUserGroup);
+    persistence.save(nonDefaultUserGroup);
 
     boolean deleted = userGroupService.delete(ACCOUNT_ID, nonDefaultUserGroup.getUuid(), false);
 
@@ -802,8 +802,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                         .isDefault(false)
                                         .build();
 
-    wingsPersistence.save(defaultUserGroup);
-    wingsPersistence.save(nonDefaultUserGroup);
+    persistence.save(defaultUserGroup);
+    persistence.save(nonDefaultUserGroup);
 
     assertThat(getIds(userGroupService.listByAccountId(ACCOUNT_ID, user, true)))
         .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
@@ -871,7 +871,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void shouldNotAllowDuplicateUserGroups_tc1() {
     UserGroup userGroup1 =
         builder().accountId(accountId).uuid(userGroupId).description(description).name(userGroupName).build();
-    wingsPersistence.save(userGroup1);
+    persistence.save(userGroup1);
     UserGroup userGroup2 =
         builder().accountId(accountId).description(description).name(userGroupName).description(description).build();
     userGroupService.save(userGroup2);
@@ -885,8 +885,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
         builder().accountId(accountId).uuid(userGroupId).description(description).name(userGroupName).build();
     UserGroup userGroup2 =
         builder().accountId(accountId).uuid(userGroup2Id).description(description).name(userGroupName2).build();
-    wingsPersistence.save(userGroup1);
-    wingsPersistence.save(userGroup2);
+    persistence.save(userGroup1);
+    persistence.save(userGroup2);
     userGroup2.setName(userGroupName);
     userGroupService.updateOverview(userGroup2);
   }
@@ -908,11 +908,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(appPermissions)
                               .build();
 
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
 
     userGroupService.pruneByApplication("222");
 
-    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+    UserGroup prunedGroup = persistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
                                 .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
@@ -945,11 +945,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(appPermissions)
                               .build();
 
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
 
     userGroupService.pruneByApplication("444");
 
-    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+    UserGroup prunedGroup = persistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
                                 .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
@@ -978,11 +978,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(appPermissions)
                               .build();
 
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
 
     userGroupService.pruneByApplication("111");
 
-    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+    UserGroup prunedGroup = persistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
                                 .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
@@ -1007,11 +1007,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(appPermissions)
                               .build();
 
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
 
     userGroupService.pruneByApplication("111");
 
-    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+    UserGroup prunedGroup = persistence.createQuery(UserGroup.class, excludeAuthority)
                                 .filter(UserGroupKeys.accountId, accountId)
                                 .filter(UserGroup.ID_KEY2, userGroupId)
                                 .get();
@@ -1039,13 +1039,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                               .appPermissions(appPermissions)
                               .build();
 
-    wingsPersistence.save(userGroup);
+    persistence.save(userGroup);
 
     Set<String> nonExistingAppIds = new HashSet(Arrays.asList("111", "333", "444", "555", "666"));
 
     userGroupService.removeAppIdsFromAppPermissions(userGroup, nonExistingAppIds);
 
-    UserGroup cleanedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+    UserGroup cleanedGroup = persistence.createQuery(UserGroup.class, excludeAuthority)
                                  .filter(UserGroupKeys.accountId, accountId)
                                  .filter(UserGroup.ID_KEY2, userGroupId)
                                  .get();

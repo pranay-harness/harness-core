@@ -421,7 +421,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private static final String CLONE = " - (clone)";
   private static String envId = generateUuid();
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
@@ -565,7 +565,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
     String smId = sm.getUuid();
-    sm = wingsPersistence.get(StateMachine.class, smId);
+    sm = persistence.get(StateMachine.class, smId);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
   }
 
@@ -1045,7 +1045,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private PageResponse findStateMachine(Workflow workflow) {
-    return wingsPersistence.query(StateMachine.class,
+    return persistence.query(StateMachine.class,
         aPageRequest()
             .addFilter("appId", Operator.EQ, APP_ID)
             .addFilter("originId", Operator.EQ, workflow.getUuid())
@@ -2373,7 +2373,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
-    wingsPersistence.save(workflow2);
+    persistence.save(workflow2);
   }
 
   @Test

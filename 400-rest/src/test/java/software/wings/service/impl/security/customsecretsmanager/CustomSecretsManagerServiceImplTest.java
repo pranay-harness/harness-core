@@ -67,7 +67,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private TemplateService templateService;
   @Inject @InjectMocks private TemplateGalleryService templateGalleryService;
   @Inject @InjectMocks private CustomSecretsManagerService customSecretsManagerService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -111,12 +111,12 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
 
   private String obtainSshSettingAttribute() {
     SettingAttribute settingAttribute = obtainSSHSettingAttributeConfig();
-    return wingsPersistence.save(settingAttribute);
+    return persistence.save(settingAttribute);
   }
 
   private String obtainWinrmSettingAttribute() {
     SettingAttribute settingAttribute = obtainWinRmSettingAttributeConfig();
-    return wingsPersistence.save(settingAttribute);
+    return persistence.save(settingAttribute);
   }
 
   private List<String> obtainDelegateSelectors() {
@@ -142,7 +142,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -273,7 +273,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -309,7 +309,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -430,7 +430,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -464,7 +464,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -497,7 +497,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     String configId = customSecretsManagerService.saveSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    CustomSecretsManagerConfig savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    CustomSecretsManagerConfig savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -516,7 +516,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     configId = customSecretsManagerService.updateSecretsManager(GLOBAL_ACCOUNT_ID, config);
     assertThat(configId).isNotNull();
 
-    savedConfig = wingsPersistence.get(CustomSecretsManagerConfig.class, configId);
+    savedConfig = persistence.get(CustomSecretsManagerConfig.class, configId);
     assertThat(savedConfig.getName()).isEqualTo(config.getName());
     assertThat(savedConfig.getTemplateId()).isEqualTo(config.getTemplateId());
     assertThat(savedConfig.getDelegateSelectors()).isEqualTo(config.getDelegateSelectors());
@@ -651,7 +651,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
                                       .kmsId(configId)
                                       .encryptionType(CUSTOM)
                                       .build();
-    wingsPersistence.save(encryptedData);
+    persistence.save(encryptedData);
     customSecretsManagerService.deleteSecretsManager(GLOBAL_ACCOUNT_ID, configId);
   }
 

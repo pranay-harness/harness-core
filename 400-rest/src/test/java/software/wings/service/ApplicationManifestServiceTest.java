@@ -73,7 +73,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private EnvironmentService environmentService;
 
   @Inject @InjectMocks ApplicationManifestService applicationManifestService;
@@ -118,7 +118,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     assertThat(savedManifest.getServiceId()).isEqualTo(SERVICE_ID);
     assertThat(savedManifest.getStoreType()).isEqualTo(Local);
 
-    ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
+    ApplicationManifest manifest = persistence.createQuery(ApplicationManifest.class)
                                        .filter(ApplicationManifest.APP_ID_KEY2, APP_ID)
                                        .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
@@ -137,7 +137,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     applicationManifestService.update(savedManifest);
 
-    ApplicationManifest manifest = wingsPersistence.createQuery(ApplicationManifest.class)
+    ApplicationManifest manifest = persistence.createQuery(ApplicationManifest.class)
                                        .filter(ApplicationManifest.APP_ID_KEY2, APP_ID)
                                        .filter(ApplicationManifestKeys.serviceId, SERVICE_ID)
                                        .get();
@@ -183,7 +183,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   public void testDuplicateManifestFileNames() {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
 
-    wingsPersistence.ensureIndexForTesting(ManifestFile.class);
+    persistence.ensureIndexForTesting(ManifestFile.class);
     applicationManifestService.create(applicationManifest);
 
     ManifestFile manifestFileWithSameName =
@@ -220,11 +220,11 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     SettingAttribute setting =
         aSettingAttribute().withUuid(GIT_CONNECTOR_ID).withValue(GitConfig.builder().build()).build();
-    wingsPersistence.save(setting);
+    persistence.save(setting);
 
     GitFileConfig gitFileConfig = GitFileConfig.builder()
                                       .connectorId(GIT_CONNECTOR_ID)
@@ -296,7 +296,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     applicationManifest.setKind(AppManifestKind.VALUES);
     ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
@@ -310,7 +310,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(FILE_NAME).build();
     manifestFile.setAppId(APP_ID);
@@ -328,11 +328,11 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     ManifestFile manifestFile = ManifestFile.builder().fileContent(FILE_CONTENT).fileName(FILE_NAME).build();
     manifestFile.setAppId(APP_ID);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
 
     manifestFile.setFileName("updated" + FILE_NAME);
     manifestFile.setFileContent("updated" + FILE_CONTENT);
@@ -429,7 +429,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(Local).kind(K8S_MANIFEST).serviceId(SERVICE_ID).build();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     ManifestFile manifestFile1 = getManifestFileWithName("a/b/c");
     ManifestFile manifestFile2 = getManifestFileWithName("a/b");
@@ -666,7 +666,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testDuplicateManifestFileName() {
-    wingsPersistence.ensureIndexForTesting(ManifestFile.class);
+    persistence.ensureIndexForTesting(ManifestFile.class);
     upsertManifestFile("abc/def", "abc/def");
   }
 
@@ -1008,7 +1008,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetOverrideManifestFilesByEnvId() {
-    wingsPersistence.save(Environment.Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
+    persistence.save(Environment.Builder.anEnvironment().appId(APP_ID).uuid(ENV_ID).build());
 
     ManifestFile localManifestFile = ManifestFile.builder().fileName("val.yaml").fileContent("values").build();
     environmentService.createValues(APP_ID, ENV_ID, null, localManifestFile, null);

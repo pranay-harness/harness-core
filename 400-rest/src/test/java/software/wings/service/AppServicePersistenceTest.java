@@ -43,7 +43,7 @@ import org.quartz.SchedulerException;
 
 @SetupScheduler
 public class AppServicePersistenceTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject private AlertService alertService;
 
@@ -63,7 +63,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    assertThat(wingsPersistence.get(Application.class, appId)).isNull();
+    assertThat(persistence.get(Application.class, appId)).isNull();
 
     // Create some other application. We make this to make sure that deleting items that belong to one
     // application does not affect others.
@@ -76,7 +76,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     appService.save(application);
 
     // Make sure that we can obtain the application after we saved it
-    assertThat(wingsPersistence.get(Application.class, APP_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, APP_ID)).isNotNull();
 
     // Add alert to the dummy and the target application
     alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build())
@@ -99,7 +99,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     pruneEventQueueListener.pumpAll();
 
     // Make sure we cannot access the application after it was deleted
-    assertThat(wingsPersistence.get(Application.class, APP_ID)).isNull();
+    assertThat(persistence.get(Application.class, APP_ID)).isNull();
 
     // Make sure that just the alert for the application are deleted
     alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, EQ, ACCOUNT_ID).build());

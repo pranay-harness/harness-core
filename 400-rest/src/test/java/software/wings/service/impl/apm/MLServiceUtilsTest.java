@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 
 public class MLServiceUtilsTest extends WingsBaseTest {
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
@@ -35,14 +35,14 @@ public class MLServiceUtilsTest extends WingsBaseTest {
 
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().appId(appId).status(ExecutionStatus.SUCCESS).workflowId(workflowId).build();
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .displayName("context")
                                                         .executionUuid(workflowExecution.getUuid())
                                                         .stateType(StateType.PHASE.toString())
                                                         .status(ExecutionStatus.SUCCESS)
                                                         .build();
-    wingsPersistence.save(stateExecutionInstance);
+    persistence.save(stateExecutionInstance);
     DataDogSetupTestNodeData nodeData =
         DataDogSetupTestNodeData.builder()
             .workflowId(workflowExecution.getWorkflowId())

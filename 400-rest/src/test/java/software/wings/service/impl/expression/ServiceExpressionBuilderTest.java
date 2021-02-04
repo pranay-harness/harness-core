@@ -25,18 +25,18 @@ import org.junit.experimental.categories.Category;
 public class ServiceExpressionBuilderTest extends WingsBaseTest {
   private String appId;
   @Inject private ServiceExpressionBuilder serviceExpressionBuilder;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
-    appId = wingsPersistence.save(anApplication().name(generateUuid()).accountId(generateUuid()).build());
+    appId = persistence.save(anApplication().name(generateUuid()).accountId(generateUuid()).build());
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldNotReturnPcfExpression() {
-    final String serviceId = wingsPersistence.save(
+    final String serviceId = persistence.save(
         Service.builder().appId(appId).name(generateUuid()).deploymentType(DeploymentType.ECS).build());
     final List<String> continuousVerificationVariables =
         serviceExpressionBuilder.getContinuousVerificationVariables(appId, serviceId);
@@ -49,7 +49,7 @@ public class ServiceExpressionBuilderTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldReturnPcfExpression() {
-    final String serviceId = wingsPersistence.save(
+    final String serviceId = persistence.save(
         Service.builder().appId(appId).name(generateUuid()).deploymentType(DeploymentType.PCF).build());
     final List<String> continuousVerificationVariables =
         serviceExpressionBuilder.getContinuousVerificationVariables(appId, serviceId);

@@ -135,7 +135,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
@@ -788,12 +788,12 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     final Map<String, String> metadata = new HashMap<>();
     metadata.put("image", "image1:version1");
-    wingsPersistence.save(anArtifact()
-                              .withUuid(ARTIFACT_ID)
-                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                              .withAppId("app_id")
-                              .withMetadata(metadata)
-                              .build());
+    persistence.save(anArtifact()
+                         .withUuid(ARTIFACT_ID)
+                         .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                         .withAppId("app_id")
+                         .withMetadata(metadata)
+                         .build());
 
     containerInstanceHandler.handleNewDeployment(Arrays.asList(DeploymentSummary.builder()
                                                                    .deploymentInfo(K8sDeploymentInfo.builder()
@@ -850,7 +850,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
 
-    wingsPersistence.delete(Artifact.class, ARTIFACT_ID);
+    persistence.delete(Artifact.class, ARTIFACT_ID);
     when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")

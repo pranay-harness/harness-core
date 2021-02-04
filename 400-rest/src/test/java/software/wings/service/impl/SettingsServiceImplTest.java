@@ -108,7 +108,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
@@ -150,7 +150,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldValidateCEDelegateSetting() throws IllegalAccessException {
-    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(settingsService, "wingsPersistence", persistence, true);
 
     when(settingValidationService.validateCEK8sDelegateSetting(any()))
         .thenReturn(CEK8sDelegatePrerequisite.builder().build());
@@ -241,7 +241,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void testEnsureHelmConnectorSafeToDelete() throws IllegalAccessException {
-    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(settingsService, "wingsPersistence", persistence, true);
     SettingAttribute helmConnector =
         SettingAttribute.Builder.aSettingAttribute()
             .withAccountId(ACCOUNT_ID)

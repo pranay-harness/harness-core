@@ -105,7 +105,7 @@ public class CyberArkTest extends WingsBaseTest {
   @Inject private SecretManagementResource secretManagementResource;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
   @Inject private SecretManager secretManager;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject protected EncryptionService encryptionService;
 
   private final int numOfEncryptedValsForCyberArk = 1;
@@ -166,14 +166,14 @@ public class CyberArkTest extends WingsBaseTest {
 
     FieldUtils.writeField(cyberArkService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
-    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(persistence, "secretManager", secretManager, true);
     FieldUtils.writeField(cyberArkResource, "cyberArkService", cyberArkService, true);
     FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
     FieldUtils.writeField(secretService, "kmsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(secretService, "vaultRegistry", vaultEncryptorsRegistry, true);
     FieldUtils.writeField(encryptionService, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(encryptionService, "vaultEncryptorsRegistry", vaultEncryptorsRegistry, true);
-    userId = wingsPersistence.save(user);
+    userId = persistence.save(user);
     UserThreadLocal.set(user);
 
     if (isGlobalKmsEnabled) {
@@ -246,8 +246,7 @@ public class CyberArkTest extends WingsBaseTest {
     CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getSecretManager(
         cyberArkConfig.getAccountId(), cyberArkConfig.getUuid());
     assertThat(savedConfig.getName()).isEqualTo(name);
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
+    List<EncryptedData> encryptedDataList = persistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     if (isGlobalKmsEnabled) {
       assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk + numOfEncryptedValsForCyberKms);
     } else {
@@ -265,7 +264,7 @@ public class CyberArkTest extends WingsBaseTest {
     savedConfig.setName(name);
     cyberArkResource.saveCyberArkConfig(accountId, savedConfig);
     encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
+        persistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
     assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
     for (EncryptedData encryptedData : encryptedDataList) {
       assertThat(encryptedData.getParents()).hasSize(1);

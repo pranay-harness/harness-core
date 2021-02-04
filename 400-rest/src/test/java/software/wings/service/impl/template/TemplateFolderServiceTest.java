@@ -52,7 +52,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = SRINIVAS)
@@ -722,7 +722,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
                                       .enabled(true)
                                       .syncMode(YamlGitConfig.SyncMode.BOTH)
                                       .build();
-    wingsPersistence.save(yamlGitConfig);
+    persistence.save(yamlGitConfig);
     TemplateGallery templateGallery =
         templateGalleryService.getByAccount(GLOBAL_ACCOUNT_ID, templateGalleryService.getAccountGalleryKey());
     TemplateFolder parentFolder =
@@ -742,7 +742,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
                              .name(TEMPLATE_NAME)
                              .build());
     templateFolderService.delete(childFolder.getUuid());
-    assertThat(wingsPersistence.createQuery(YamlChangeSet.class).get().getGitFileChanges().get(0).getFilePath())
+    assertThat(persistence.createQuery(YamlChangeSet.class).get().getGitFileChanges().get(0).getFilePath())
         .isEqualTo("Setup/Template Library/" + parentFolder.getName() + PATH_DELIMITER + myTemplateFolder.getName()
             + PATH_DELIMITER + childFolder.getName() + PATH_DELIMITER + TEMPLATE_NAME + ".yaml");
   }

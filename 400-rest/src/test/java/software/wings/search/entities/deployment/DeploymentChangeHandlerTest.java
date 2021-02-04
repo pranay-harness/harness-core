@@ -45,7 +45,7 @@ import org.mockito.Mock;
 public class DeploymentChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject @InjectMocks DeploymentChangeHandler deploymentChangeHandler;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private static final String APP_NAME = "DeploymentHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "DeploymentHandlerTestForService" + System.currentTimeMillis();
@@ -79,25 +79,25 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(accountId, appId, APP_NAME);
     assertThat(application).isNotNull();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
     service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
-    wingsPersistence.save(environment);
+    persistence.save(environment);
 
     workflow = WorkflowEntityTestUtils.createWorkflow(
         accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
-    wingsPersistence.save(workflow);
+    persistence.save(workflow);
 
     pipeline =
         PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
-    wingsPersistence.save(pipeline);
+    persistence.save(pipeline);
 
     executionArgs = DeploymentEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
     assertThat(executionArgs).isNotNull();
@@ -105,12 +105,12 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
     workflowExecutionPipeline = DeploymentEntityTestUtils.createWorkflowExecution(workflowExecutionId, appId, APP_NAME,
         environmentId, serviceId, workflowId, pipelineId, executionArgs, WorkflowType.PIPELINE, SUCCESS);
     assertThat(workflowExecutionPipeline).isNotNull();
-    wingsPersistence.save(workflowExecutionPipeline);
+    persistence.save(workflowExecutionPipeline);
 
     workflowExecutionOrchestration = DeploymentEntityTestUtils.createWorkflowExecution(workflowExecutionId, appId,
         APP_NAME, environmentId, serviceId, workflowId, pipelineId, executionArgs, WorkflowType.PIPELINE, SUCCESS);
     assertThat(workflowExecutionOrchestration).isNotNull();
-    wingsPersistence.save(workflowExecutionOrchestration);
+    persistence.save(workflowExecutionOrchestration);
 
     workflowExecutionPipelineInsertChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
         WorkflowExecution.class, workflowExecutionPipeline, ChangeType.INSERT);

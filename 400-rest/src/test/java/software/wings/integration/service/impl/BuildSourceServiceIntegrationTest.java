@@ -101,7 +101,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
   private Application application;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private JenkinsBuildService jenkinsBuildService;
   @Inject private BambooBuildService bambooBuildService;
   @Inject private NexusBuildService nexusBuildService;
@@ -347,7 +347,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
         return;
       default:
         Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-        wingsPersistence.save(service);
+        persistence.save(service);
         Map<String, String> plans = buildSourceService.getPlans(
             appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
         assertThat(plans.isEmpty()).isFalse();
@@ -406,7 +406,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
             return;
           case "maven":
             Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-            wingsPersistence.save(service);
+            persistence.save(service);
             BuildDetails build =
                 buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
             assertThat(build).isNotNull();
@@ -418,7 +418,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
 
       default:
         Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-        wingsPersistence.save(service);
+        persistence.save(service);
         BuildDetails build =
             buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
         assertThat(build).isNotNull();

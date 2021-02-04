@@ -250,7 +250,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateTaskService delegateTaskService;
   @Mock private UsageLimitedFeature delegatesFeature;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
   private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
 
@@ -326,7 +326,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     assertThat(delegateService.list(aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build()))
         .hasSize(1)
         .containsExactly(delegate);
@@ -339,7 +339,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     assertThat(delegateService.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
@@ -358,7 +358,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
 
-    wingsPersistence.save(Arrays.asList(delegate, deletedDelegate));
+    persistence.save(Arrays.asList(delegate, deletedDelegate));
 
     delegateService.registerHeartbeat(accountId, delegate.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
@@ -386,7 +386,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegateWithoutScalingGroup = createDelegateBuilder().build();
     delegateWithoutScalingGroup.setAccountId(accountId);
 
-    wingsPersistence.save(Arrays.asList(delegateWithoutScalingGroup, deletedDelegate));
+    persistence.save(Arrays.asList(delegateWithoutScalingGroup, deletedDelegate));
     delegateService.registerHeartbeat(accountId, delegateWithoutScalingGroup.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
         ConnectionMode.POLLING);
@@ -429,7 +429,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateWithScalingGroup5.setAccountId(accountId);
     delegateWithScalingGroup5.setDelegateGroupName("test3");
 
-    wingsPersistence.save(Arrays.asList(deletedDelegate, delegateWithScalingGroup1, delegateWithScalingGroup2,
+    persistence.save(Arrays.asList(deletedDelegate, delegateWithScalingGroup1, delegateWithScalingGroup2,
         delegateWithScalingGroup3, delegateWithScalingGroup4, delegateWithScalingGroup5));
     delegateService.registerHeartbeat(accountId, delegateWithScalingGroup1.getUuid(),
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version(VERSION).build(),
@@ -477,7 +477,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
     deletedDelegate.setDelegateGroupName("test");
-    wingsPersistence.save(deletedDelegate);
+    persistence.save(deletedDelegate);
 
     DelegateStatus status = delegateService.getDelegateStatusWithScalingGroups(accountId);
 
@@ -493,12 +493,12 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(DelegateInstanceStatus.DISABLED);
     delegate.setDelegateProfileId(delegateProfileId);
     delegateService.update(delegate);
-    Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
+    Delegate updatedDelegate = persistence.get(Delegate.class, delegate.getUuid());
     assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
@@ -517,7 +517,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
-    wingsPersistence.save(existingDelegate);
+    persistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.ACTIVATE);
 
@@ -538,7 +538,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
-    wingsPersistence.save(existingDelegate);
+    persistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.REJECT);
 
@@ -557,11 +557,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setDelegateType(ECS);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(DelegateInstanceStatus.DISABLED);
     delegateService.update(delegate);
-    Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
+    Delegate updatedDelegate = persistence.get(Delegate.class, delegate.getUuid());
     assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
@@ -587,7 +587,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegate = delegateService.add(delegate);
 
-    assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
@@ -640,7 +640,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateWithoutProfile = delegateService.add(delegateWithoutProfile);
 
-    Delegate savedDelegate = wingsPersistence.get(Delegate.class, delegateWithoutProfile.getUuid());
+    Delegate savedDelegate = persistence.get(Delegate.class, delegateWithoutProfile.getUuid());
     assertThat(savedDelegate).isEqualToIgnoringGivenFields(delegateWithoutProfile, DelegateKeys.delegateProfileId);
     assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
     verify(eventEmitter)
@@ -657,7 +657,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateWithNonExistingProfile = delegateService.add(delegateWithNonExistingProfile);
 
-    savedDelegate = wingsPersistence.get(Delegate.class, delegateWithNonExistingProfile.getUuid());
+    savedDelegate = persistence.get(Delegate.class, delegateWithNonExistingProfile.getUuid());
     assertThat(savedDelegate)
         .isEqualToIgnoringGivenFields(delegateWithNonExistingProfile, DelegateKeys.delegateProfileId);
     assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
@@ -693,10 +693,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    String id = wingsPersistence.save(createDelegateBuilder().build());
+    String id = persistence.save(createDelegateBuilder().build());
     delegateService.delete(ACCOUNT_ID, id);
-    assertThat(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, ACCOUNT_ID).asList())
-        .hasSize(0);
+    assertThat(persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, ACCOUNT_ID).asList()).hasSize(0);
   }
 
   @Test
@@ -1194,8 +1193,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
-    assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+    assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
   }
 
@@ -1231,8 +1229,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
 
     delegateService.queueTask(delegateTask);
-    assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+    assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
   }
 
@@ -1279,8 +1276,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+    assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
         .doneWith(
@@ -1297,8 +1293,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+    assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
   }
 
@@ -1312,7 +1307,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
+    delegateTask = persistence.get(DelegateTask.class, delegateTask.getUuid());
     assertThat(delegateTask).isNull();
   }
 
@@ -1334,7 +1329,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                               .build())
                                     .tags(new ArrayList<>())
                                     .build();
-    wingsPersistence.save(delegateTask);
+    persistence.save(delegateTask);
 
     when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList("delegate1", "delegate2"));
 
@@ -1349,7 +1344,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .build());
 
     DelegateTask updatedDelegateTask =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
+        persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
 
     assertThat(updatedDelegateTask).isNotNull();
   }
@@ -1372,7 +1367,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                               .build())
                                     .tags(new ArrayList<>())
                                     .build();
-    wingsPersistence.save(delegateTask);
+    persistence.save(delegateTask);
 
     when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList(DELEGATE_ID));
 
@@ -1387,7 +1382,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .build());
 
     DelegateTask updatedDelegateTask =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
+        persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
 
     assertThat(updatedDelegateTask).isEqualTo(null);
   }
@@ -1691,7 +1686,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateScripts delegateScripts =
         delegateService.getDelegateScripts(ACCOUNT_ID, "0.0.0", "https://localhost:9090", "https://localhost:7070");
     assertThat(delegateScripts.isDoUpgrade()).isTrue();
@@ -1706,7 +1701,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateScripts delegateScripts =
         delegateService.getDelegateScripts(ACCOUNT_ID, "9.9.9", "https://localhost:9090", "https://localhost:7070");
     assertThat(delegateScripts.isDoUpgrade()).isFalse();
@@ -1723,7 +1718,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(true);
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     DelegateTaskPackage delegateTaskPackage =
         delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
@@ -1745,7 +1740,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(true);
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
   }
@@ -1760,7 +1755,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(false);
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNull();
   }
@@ -1777,7 +1772,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(true);
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNull();
   }
@@ -1789,7 +1784,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldNotAcquireTaskWhenAlreadyAcquired() {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID + "1");
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID + "1", delegateTask.getUuid())).isNull();
   }
@@ -1894,14 +1889,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     delegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     DelegateTaskPackage delegateTaskPackage =
         delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
     assertThat(delegateTaskPackage).isNull();
 
     delegate.setStatus(DelegateInstanceStatus.DELETED);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     delegateTaskPackage = delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
     assertThat(delegateTaskPackage).isNull();
@@ -1923,7 +1918,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(ACCOUNT_ID + "1");
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     assertThat(delegateService.filter(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
@@ -1934,7 +1929,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(ACCOUNT_ID + "1");
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.filter(DELEGATE_ID,
                    aDelegateTaskAbortEvent()
@@ -1951,7 +1946,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     assertThat(delegateService.filter(delegate.getAccountId(), DELEGATE_ID)).isTrue();
   }
 
@@ -1980,7 +1975,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     jenkinsExecutionResponse = JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
-    wingsPersistence.save(delegateTask);
+    persistence.save(delegateTask);
     delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
@@ -2007,7 +2002,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setUuid(generateUuid());
-    wingsPersistence.save(deletedDelegate);
+    persistence.save(deletedDelegate);
 
     DelegateProfileParams delegateProfileParams =
         delegateService.checkForProfile(accountId, deletedDelegate.getUuid(), "", 0);
@@ -2017,7 +2012,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     wapprDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     wapprDelegate.setAccountId(accountId);
     wapprDelegate.setUuid(generateUuid());
-    wingsPersistence.save(wapprDelegate);
+    persistence.save(wapprDelegate);
 
     delegateProfileParams = delegateService.checkForProfile(accountId, wapprDelegate.getUuid(), "", 0);
 
@@ -2031,7 +2026,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profile1").build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
     profile.setUuid("profile1");
     profile.setLastUpdatedAt(100L);
@@ -2081,7 +2076,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profileSecret").build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateProfile profile = builder()
                                   .accountId(ACCOUNT_ID)
                                   .name("A Secret Profile")
@@ -2113,7 +2108,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldSaveProfileResult_NoPrevious() {
     Delegate previousDelegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build();
-    wingsPersistence.save(previousDelegate);
+    persistence.save(previousDelegate);
 
     String content = "This is the profile result text";
     FormDataContentDisposition fileDetail =
@@ -2135,7 +2130,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                     .obfuscatedIpAddress(obfuscate("1.2.3.4"))
                     .build()));
 
-    Delegate delegate = wingsPersistence.get(Delegate.class, DELEGATE_ID);
+    Delegate delegate = persistence.get(Delegate.class, DELEGATE_ID);
     assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
     assertThat(delegate.isProfileError()).isFalse();
     assertThat(delegate.getProfileResult()).isEqualTo("file_id");
@@ -2148,7 +2143,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate previousDelegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build();
     previousDelegate.setProfileResult("previous-result");
-    wingsPersistence.save(previousDelegate);
+    persistence.save(previousDelegate);
 
     String content = "This is the profile result text";
     FormDataContentDisposition fileDetail =
@@ -2172,7 +2167,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     verify(fileService).deleteFile(eq("previous-result"), eq(FileBucket.PROFILE_RESULTS));
 
-    Delegate delegate = wingsPersistence.get(Delegate.class, DELEGATE_ID);
+    Delegate delegate = persistence.get(Delegate.class, DELEGATE_ID);
     assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
     assertThat(delegate.isProfileError()).isTrue();
     assertThat(delegate.getProfileResult()).isEqualTo("file_id");
@@ -2185,7 +2180,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate =
         Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build();
     delegate.setProfileResult("result_file_id");
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     String content = "This is the profile result text";
 
@@ -2212,7 +2207,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     delegate = Delegate.builder()
                    .accountId(ACCOUNT_ID)
                    .ip("127.0.0.1")
@@ -2222,7 +2217,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .status(DelegateInstanceStatus.ENABLED)
                    .lastHeartBeat(System.currentTimeMillis())
                    .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     List<String> k8sNames = delegateService.getKubernetesDelegateNames(ACCOUNT_ID);
     assertThat(k8sNames.size()).isEqualTo(1);
     assertThat(k8sNames.get(0)).isEqualTo("k8s-name");
@@ -2246,7 +2241,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateProfileId(delegateProfile.getUuid())
                             .tags(ImmutableList.of("abc"))
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     delegate = Delegate.builder()
                    .accountId(ACCOUNT_ID)
                    .ip("127.0.0.1")
@@ -2259,7 +2254,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .tags(ImmutableList.of("def"))
                    .build();
 
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
@@ -2285,7 +2280,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .lastHeartBeat(System.currentTimeMillis())
                             .delegateProfileId(delegateProfile.getUuid())
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
@@ -2305,7 +2300,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .lastHeartBeat(System.currentTimeMillis())
                             .tags(ImmutableList.of("abc", "qwe", "xde"))
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(3);
@@ -2334,7 +2329,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateProfileId(delegateProfile.getUuid())
                             .tags(ImmutableList.of("abc", "bbb", "abc"))
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
 
@@ -2352,7 +2347,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .accountId(ACCOUNT_ID)
                                           .selectors(ImmutableList.of("jkl", "fgh"))
                                           .build();
-    wingsPersistence.save(delegateProfile);
+    persistence.save(delegateProfile);
 
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
@@ -2362,7 +2357,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> selectors = delegateService.retrieveDelegateSelectors(delegate);
@@ -2381,7 +2376,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(0);
@@ -2399,7 +2394,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(1);
@@ -2421,7 +2416,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .lastHeartBeat(System.currentTimeMillis())
                             .tags(ImmutableList.of("abc", "qwe"))
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
@@ -2480,7 +2475,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                               .validated(true)
                               .build()));
     assertThat(delegateTaskPackage).isNotNull();
-    assertThat(wingsPersistence.get(DelegateTask.class, delegateTask.getUuid()).getDelegateId()).isEqualTo(DELEGATE_ID);
+    assertThat(persistence.get(DelegateTask.class, delegateTask.getUuid()).getDelegateId()).isEqualTo(DELEGATE_ID);
   }
 
   @Test
@@ -2525,7 +2520,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
     delegateService.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).get()).isNull();
+    assertThat(persistence.createQuery(DelegateTask.class).get()).isNull();
   }
 
   @Test
@@ -2542,7 +2537,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         + "  -  Following delegates were validating but never returned: [  ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.";
     RemoteMethodReturnValueData notifyResponse = (RemoteMethodReturnValueData) kryoSerializer.asInflatedObject(
-        wingsPersistence.createQuery(DelegateSyncTaskResponse.class).get().getResponseData());
+        persistence.createQuery(DelegateSyncTaskResponse.class).get().getResponseData());
 
     assertThat(notifyResponse.getException().getMessage()).isEqualTo(expectedMessage);
   }
@@ -2553,7 +2548,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldFailIfAllDelegatesFailed_notAll() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID, "delegate2"), QUEUED);
     delegateService.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
+    assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
   @Test
@@ -2564,7 +2559,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(singletonList("delegate2"));
     delegateService.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
+    assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
   @Test
@@ -2573,7 +2568,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldExpireTask() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     delegateService.expireTask(ACCOUNT_ID, delegateTask.getUuid());
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ERROR);
+    assertThat(persistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ERROR);
   }
 
   @Test
@@ -2586,7 +2581,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(oldTask.getUuid()).isEqualTo(delegateTask.getUuid());
     assertThat(oldTask.getStatus()).isEqualTo(QUEUED);
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ABORTED);
+    assertThat(persistence.createQuery(DelegateTask.class).get().getStatus()).isEqualTo(ABORTED);
   }
 
   @Test
@@ -2607,7 +2602,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId1)).thenReturn(Integer.MAX_VALUE);
 
     delegate = delegateService.add(delegate);
-    assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
 
     List<String> accountIds = Arrays.asList(accountId1, accountId2);
     List<Integer> countOfDelegatesForAccounts = delegateService.getCountOfDelegatesForAccounts(accountIds);
@@ -2632,7 +2627,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .tags(ImmutableList.of("abc", "qwe"))
                             .build();
 
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     when(licenseService.isAccountDeleted(anyString())).thenReturn(true);
 
     Delegate result = delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate);
@@ -2699,7 +2694,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .taskGroup(TaskGroup.HTTP)
                                     .selectors(commandMapSelectors)
                                     .build();
-    wingsPersistence.save(sampleMap);
+    persistence.save(sampleMap);
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
@@ -2781,9 +2776,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.saveDelegateTask(delegateTask, QUEUED);
 
     if (status != delegateTask.getStatus()) {
-      delegateTask = wingsPersistence.findAndModify(
-          wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
+      delegateTask = persistence.findAndModify(
+          persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
+          persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
           HPersistence.returnNewOptions);
     }
 

@@ -44,7 +44,7 @@ public class UpdateEnvSvcCPInDeploymentTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock ResultSet resultSet;
   @Inject WorkflowService workflowService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Spy @Inject @InjectMocks UpdateEnvSvcCPInDeployment updateEnvSvcCPInDeployment;
 
@@ -54,7 +54,7 @@ public class UpdateEnvSvcCPInDeploymentTest extends WingsBaseTest {
   public void testMigrate() throws SQLException {
     String workflowExecutionId = generateUuid();
     WorkflowExecution workflowExecution = createWorkflowExecution(0);
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
 
     when(timeScaleDBService.isValid()).thenReturn(true);
     Connection connection = mock(Connection.class);

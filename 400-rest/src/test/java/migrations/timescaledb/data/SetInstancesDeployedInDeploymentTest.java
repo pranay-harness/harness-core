@@ -41,7 +41,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock ResultSet resultSet;
   @Inject WorkflowService workflowService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Spy @Inject @InjectMocks SetInstancesDeployedInDeployment setInstancesDeployedInDeployment;
 
   @Test
@@ -50,7 +50,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   public void testMigrate() throws SQLException {
     String workflowExecutionId = generateUuid();
     WorkflowExecution workflowExecution = createWorkflowExecution(workflowExecutionId);
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
 
     when(timeScaleDBService.isValid()).thenReturn(true);
     Connection connection = mock(Connection.class);

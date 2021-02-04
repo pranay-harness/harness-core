@@ -22,6 +22,10 @@
             <artifactId>maven-plugin-annotations</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-yaml-sdk</artifactId>
             <version>${project.parent.version}</version>

@@ -57,7 +57,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private Account account;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @InjectMocks @Inject private InstanceService instanceService;
 
   private String instanceId = UUIDGenerator.generateUuid();

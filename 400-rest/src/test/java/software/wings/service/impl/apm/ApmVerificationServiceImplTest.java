@@ -51,7 +51,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
   @Inject private SecretSetupUsageService secretSetupUsageService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private String accountId;
   private String appId;
@@ -82,7 +82,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAddParents() {
     secretTextIds.forEach(secretId -> {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretId);
       assertThat(encryptedData.getParents()).isEmpty();
     });
 
@@ -98,7 +98,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
         aSettingAttribute().withUuid(settingId).withAccountId(accountId).withValue(apmVerificationConfig).build());
 
     secretTextIds.forEach(secretId -> {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretId);
       assertThat(encryptedData.getParents()).isNotEmpty();
       assertThat(encryptedData.getParents().size()).isEqualTo(1);
 
@@ -112,7 +112,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateParents() {
     secretTextIds.forEach(secretId -> {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretId);
       assertThat(encryptedData.getParents()).isEmpty();
     });
 
@@ -128,7 +128,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
         aSettingAttribute().withUuid(settingId).withAccountId(accountId).withValue(apmVerificationConfig).build());
 
     for (int i = 0; i < secretTextIds.size(); i++) {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretTextIds.get(i));
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretTextIds.get(i));
       if (i % 3 == 0) {
         assertThat(encryptedData.getParents()).isNotEmpty();
         assertThat(encryptedData.getParents().size()).isEqualTo(1);
@@ -151,7 +151,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
         existingSecretIdsToFieldNameMap);
 
     for (int i = 0; i < secretTextIds.size(); i++) {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretTextIds.get(i));
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretTextIds.get(i));
       if (i % 2 == 0) {
         assertThat(encryptedData.getParents()).isNotEmpty();
         assertThat(encryptedData.getParents().size()).isEqualTo(1);
@@ -201,7 +201,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
 
     assertThat(((APMVerificationConfig) settingAttribute.getValue()).getSecretIdsToFieldNameMap().size()).isEqualTo(4);
     for (int i = 0; i < secretTextIds.size(); i++) {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretTextIds.get(i));
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretTextIds.get(i));
       String filedName;
       switch (i) {
         case 0:
@@ -269,7 +269,7 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
     assertThat(((APMVerificationConfig) settingAttribute.getValue()).getSecretIdsToFieldNameMap().size()).isEqualTo(5);
 
     for (int i = 0; i < secretTextIds.size(); i++) {
-      final EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretTextIds.get(i));
+      final EncryptedData encryptedData = persistence.get(EncryptedData.class, secretTextIds.get(i));
 
       // this should be option
       if (i == 1) {

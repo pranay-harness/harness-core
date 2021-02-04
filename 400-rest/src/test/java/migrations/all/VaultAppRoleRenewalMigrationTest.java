@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 
 public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
   @Inject private VaultAppRoleRenewalMigration vaultAppRoleRenewalMigration;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -27,9 +27,9 @@ public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
     VaultConfig vaultConfig =
         VaultConfig.builder().name("test").vaultUrl("test.com").authToken("authToken").renewalInterval(0).build();
     vaultConfig.setEncryptionType(VAULT);
-    String configId = wingsPersistence.save(vaultConfig);
+    String configId = persistence.save(vaultConfig);
     vaultAppRoleRenewalMigration.migrate();
-    VaultConfig returnedVaultConfig = wingsPersistence.get(VaultConfig.class, configId);
+    VaultConfig returnedVaultConfig = persistence.get(VaultConfig.class, configId);
     assertThat(returnedVaultConfig.getRenewalInterval()).isEqualTo(0);
   }
 
@@ -40,9 +40,9 @@ public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
     VaultConfig vaultConfig =
         VaultConfig.builder().name("test").vaultUrl("test.com").appRoleId("appRoleId").renewalInterval(10).build();
     vaultConfig.setEncryptionType(VAULT);
-    String configId = wingsPersistence.save(vaultConfig);
+    String configId = persistence.save(vaultConfig);
     vaultAppRoleRenewalMigration.migrate();
-    VaultConfig returnedVaultConfig = wingsPersistence.get(VaultConfig.class, configId);
+    VaultConfig returnedVaultConfig = persistence.get(VaultConfig.class, configId);
     assertThat(returnedVaultConfig.getRenewalInterval()).isEqualTo(10);
   }
 
@@ -53,9 +53,9 @@ public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
     VaultConfig vaultConfig =
         VaultConfig.builder().name("test").vaultUrl("test.com").appRoleId("appRoleId").renewalInterval(0).build();
     vaultConfig.setEncryptionType(VAULT);
-    String configId = wingsPersistence.save(vaultConfig);
+    String configId = persistence.save(vaultConfig);
     vaultAppRoleRenewalMigration.migrate();
-    VaultConfig returnedVaultConfig = wingsPersistence.get(VaultConfig.class, configId);
+    VaultConfig returnedVaultConfig = persistence.get(VaultConfig.class, configId);
     assertThat(returnedVaultConfig.getRenewalInterval()).isEqualTo(15);
   }
 }

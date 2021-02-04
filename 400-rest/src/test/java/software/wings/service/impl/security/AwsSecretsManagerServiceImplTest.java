@@ -44,7 +44,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject @Spy @InjectMocks private AwsSecretsManagerService awsSecretsManagerService;
   @Mock private AccountService accountService;
@@ -172,11 +172,11 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, kryoSerializer.clone(awsSecretManagerConfig));
 
-    wingsPersistence.save(EncryptedData.builder()
-                              .accountId(accountId)
-                              .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
-                              .kmsId(savedConfigId)
-                              .build());
+    persistence.save(EncryptedData.builder()
+                         .accountId(accountId)
+                         .encryptionType(EncryptionType.AWS_SECRETS_MANAGER)
+                         .kmsId(savedConfigId)
+                         .build());
 
     try {
       awsSecretsManagerService.deleteAwsSecretsManagerConfig(accountId, savedConfigId);

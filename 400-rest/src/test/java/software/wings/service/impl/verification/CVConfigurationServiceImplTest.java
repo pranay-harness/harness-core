@@ -128,17 +128,15 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
   @Mock private YamlPushService yamlPushService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private String accountId;
   private String appId;
 
   @Before
   public void setupTest() throws Exception {
-    accountId =
-        wingsPersistence.save(anAccount().withAccountName(generateUuid()).withCompanyName(generateUuid()).build());
-    appId =
-        wingsPersistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
+    accountId = persistence.save(anAccount().withAccountName(generateUuid()).withCompanyName(generateUuid()).build());
+    appId = persistence.save(Application.Builder.anApplication().name(generateUuid()).accountId(accountId).build());
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(cvConfigurationService, "yamlPushService", yamlPushService, true);
@@ -241,7 +239,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration cvServiceConfiguration =
         PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
     addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
-    wingsPersistence.save(cvServiceConfiguration);
+    persistence.save(cvServiceConfiguration);
 
     timeSeriesToAnalyze.removeIf(ts -> ts.getMetricType().equals(MetricType.INFRA.name()));
 
@@ -249,8 +247,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfigurationService.updateConfiguration(
         accountId, appId, StateType.PROMETHEUS, cvServiceConfiguration, cvServiceConfiguration.getUuid());
 
-    PrometheusCVServiceConfiguration savedConfig = (PrometheusCVServiceConfiguration) wingsPersistence.get(
-        CVConfiguration.class, cvServiceConfiguration.getUuid());
+    PrometheusCVServiceConfiguration savedConfig =
+        (PrometheusCVServiceConfiguration) persistence.get(CVConfiguration.class, cvServiceConfiguration.getUuid());
     assertThat(savedConfig.getTimeSeriesToAnalyze()).isEqualTo(timeSeriesToAnalyze);
   }
 
@@ -284,7 +282,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration cvServiceConfiguration =
         PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
     addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
-    wingsPersistence.save(cvServiceConfiguration);
+    persistence.save(cvServiceConfiguration);
 
     PrometheusCVServiceConfiguration newConfig = (PrometheusCVServiceConfiguration) cvServiceConfiguration.deepCopy();
     newConfig.setEnabled24x7(true);
@@ -326,7 +324,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     PrometheusCVServiceConfiguration cvServiceConfiguration =
         PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesToAnalyze).build();
     addBasePropertiesToCVConfig(cvServiceConfiguration, StateType.PROMETHEUS);
-    wingsPersistence.save(cvServiceConfiguration);
+    persistence.save(cvServiceConfiguration);
 
     timeSeriesToAnalyze.removeIf(ts -> ts.getMetricType().equals(MetricType.THROUGHPUT.name()));
 
@@ -438,7 +436,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNullCvConfig() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(false);
-    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    String cvConfigId = persistence.save(logsCVConfig);
     cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, null);
   }
 
@@ -447,7 +445,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateWithNoBaselineSet() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
-    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    String cvConfigId = persistence.save(logsCVConfig);
 
     final LogsCVConfiguration updatedConfig = createLogsCVConfig(true);
     updatedConfig.setBaselineStartMinute(0);
@@ -501,17 +499,17 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResetWithBaselineSet() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
-    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    String cvConfigId = persistence.save(logsCVConfig);
 
     final LogsCVConfiguration updatedConfig = createLogsCVConfig(false);
     updatedConfig.setBaselineStartMinute(301);
     updatedConfig.setBaselineEndMinute(360);
 
-    LogsCVConfiguration fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    LogsCVConfiguration fetchedConfig = persistence.get(LogsCVConfiguration.class, cvConfigId);
     assertThat(fetchedConfig.isEnabled24x7()).isTrue();
 
     cvConfigId = cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, updatedConfig);
-    fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    fetchedConfig = persistence.get(LogsCVConfiguration.class, cvConfigId);
     assertThat(fetchedConfig.isEnabled24x7()).isTrue();
     assertThat(fetchedConfig.getBaselineStartMinute()).isEqualTo(updatedConfig.getBaselineStartMinute());
     assertThat(fetchedConfig.getBaselineEndMinute()).isEqualTo(updatedConfig.getBaselineEndMinute());
@@ -522,10 +520,9 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateStackDriverMetrics() throws Exception {
     testCreateStackDriverMetrics();
-    StackDriverMetricCVConfiguration configuration =
-        wingsPersistence.createQuery(StackDriverMetricCVConfiguration.class)
-            .filter(CVConfigurationKeys.stateType, StateType.STACK_DRIVER)
-            .get();
+    StackDriverMetricCVConfiguration configuration = persistence.createQuery(StackDriverMetricCVConfiguration.class)
+                                                         .filter(CVConfigurationKeys.stateType, StateType.STACK_DRIVER)
+                                                         .get();
 
     configuration.getMetricDefinitions().get(0).setMetricName("UpdatedMetricName");
 
@@ -533,7 +530,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
         accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration, configuration.getUuid());
 
     StackDriverMetricCVConfiguration updatedConfig =
-        wingsPersistence.get(StackDriverMetricCVConfiguration.class, configuration.getUuid());
+        persistence.get(StackDriverMetricCVConfiguration.class, configuration.getUuid());
 
     assertThat(updatedConfig).isNotNull();
     assertThat(updatedConfig.getMetricDefinitions()).isNotNull();
@@ -545,10 +542,9 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateStackDriverMetricsWithInvalidFields() throws Exception {
     testCreateStackDriverMetrics();
-    StackDriverMetricCVConfiguration configuration =
-        wingsPersistence.createQuery(StackDriverMetricCVConfiguration.class)
-            .filter(CVConfigurationKeys.stateType, StateType.STACK_DRIVER)
-            .get();
+    StackDriverMetricCVConfiguration configuration = persistence.createQuery(StackDriverMetricCVConfiguration.class)
+                                                         .filter(CVConfigurationKeys.stateType, StateType.STACK_DRIVER)
+                                                         .get();
 
     configuration.getMetricDefinitions().get(0).setMetricType("THROUGHPUT");
     cvConfigurationService.updateConfiguration(
@@ -560,17 +556,17 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResetBaselineWithData() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
-    String cvConfigId = wingsPersistence.save(logsCVConfig);
+    String cvConfigId = persistence.save(logsCVConfig);
     int numOfAnalysisRecords = 17;
     for (int i = 0; i < numOfAnalysisRecords * CRON_POLL_INTERVAL_IN_MINUTES; i += CRON_POLL_INTERVAL_IN_MINUTES) {
-      wingsPersistence.save(
+      persistence.save(
           LogMLAnalysisRecord.builder().logCollectionMinute(i).cvConfigId(cvConfigId).accountId(accountId).build());
-      wingsPersistence.save(LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).build());
+      persistence.save(LearningEngineAnalysisTask.builder().cvConfigId(cvConfigId).build());
     }
 
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count())
+    assertThat(persistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count())
         .isEqualTo(numOfAnalysisRecords);
-    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
+    assertThat(persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
         .isEqualTo(numOfAnalysisRecords);
     int numOfAnalysisToKeep = 8;
 
@@ -579,17 +575,17 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     updatedConfig.setBaselineEndMinute(numOfAnalysisRecords * CRON_POLL_INTERVAL_IN_MINUTES);
 
     String newCvConfigId = cvConfigurationService.resetBaseline(logsCVConfig.getAppId(), cvConfigId, updatedConfig);
-    LogsCVConfiguration fetchedConfig = wingsPersistence.get(LogsCVConfiguration.class, newCvConfigId);
+    LogsCVConfiguration fetchedConfig = persistence.get(LogsCVConfiguration.class, newCvConfigId);
     assertThat(fetchedConfig.isEnabled24x7()).isTrue();
     assertThat(fetchedConfig.getBaselineStartMinute()).isEqualTo(updatedConfig.getBaselineStartMinute());
     assertThat(fetchedConfig.getBaselineEndMinute()).isEqualTo(updatedConfig.getBaselineEndMinute());
 
-    assertThat(wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count()).isEqualTo(0);
-    assertThat(wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
+    assertThat(persistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).count()).isEqualTo(0);
+    assertThat(persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).count())
         .isEqualTo(numOfAnalysisToKeep);
 
     sleep(ofSeconds(2));
-    wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().forEach(logMLAnalysisRecord -> {
+    persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).asList().forEach(logMLAnalysisRecord -> {
       assertThat(logMLAnalysisRecord.getCvConfigId()).isEqualTo(newCvConfigId);
       assertThat(logMLAnalysisRecord.isDeprecated()).isTrue();
     });
@@ -672,7 +668,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testUpdateCustomLogConfig() throws Exception {
     testCreateCustomLogsConfig();
     CustomLogCVServiceConfiguration configuration =
-        wingsPersistence.createQuery(CustomLogCVServiceConfiguration.class)
+        persistence.createQuery(CustomLogCVServiceConfiguration.class)
             .filter(CVConfigurationKeys.stateType, StateType.LOG_VERIFICATION)
             .get();
 
@@ -718,15 +714,14 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfigurationService.updateConfiguration(stackDriverConfig, stackDriverConfig.getAppId());
 
     StackDriverMetricCVConfiguration updatedConfig =
-        (StackDriverMetricCVConfiguration) wingsPersistence.get(CVConfiguration.class, savedConfig.getUuid());
+        (StackDriverMetricCVConfiguration) persistence.get(CVConfiguration.class, savedConfig.getUuid());
     assertThat(updatedConfig).isNotNull();
     assertThat(updatedConfig.getMetricDefinitions().size()).isEqualTo(3);
     assertThat(updatedConfig.getMetricDefinitions().get(0).getMetricName()).isEqualTo(updatedMetricName);
 
-    TimeSeriesMetricTemplates definition =
-        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
-            .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, savedConfig.getUuid())
-            .get();
+    TimeSeriesMetricTemplates definition = persistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+                                               .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, savedConfig.getUuid())
+                                               .get();
 
     assertThat(definition).isNotNull();
     assertThat(definition.getMetricTemplates().size()).isEqualTo(3);
@@ -778,7 +773,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     String cvConfigId = generateUuid();
     DatadogCVServiceConfiguration configuration = createDatadogCVConfiguration(true, true);
     configuration.setUuid(cvConfigId);
-    wingsPersistence.save(configuration);
+    persistence.save(configuration);
 
     alertService.openAlert(accountId, appId, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
         ContinuousVerificationDataCollectionAlert.builder()
@@ -786,7 +781,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
             .message("test alert message")
             .build());
 
-    Alert alert = wingsPersistence.createQuery(Alert.class)
+    Alert alert = persistence.createQuery(Alert.class)
                       .filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
                       .get();
 
@@ -797,11 +792,11 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     cvConfigurationService.pruneByEnvironment(appId, configuration.getEnvId());
 
     // verify
-    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    CVConfiguration cvConfiguration = persistence.get(CVConfiguration.class, cvConfigId);
 
     assertThat(cvConfiguration).isNull();
 
-    alert = wingsPersistence.createQuery(Alert.class)
+    alert = persistence.createQuery(Alert.class)
                 .filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
                 .get();
 
@@ -892,11 +887,11 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     config.setEnvId(oldEnvId);
     config.setTimeSeriesToAnalyze(timeSeries);
     config.setStateType(StateType.PROMETHEUS);
-    wingsPersistence.save(config);
+    persistence.save(config);
 
     cvConfigurationService.cloneServiceGuardConfigs(oldEnvId, newEnvId);
 
-    List<CVConfiguration> configs = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+    List<CVConfiguration> configs = persistence.createQuery(CVConfiguration.class, excludeAuthority)
                                         .filter(CVConfigurationKeys.accountId, accountId)
                                         .asList();
 
@@ -910,7 +905,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     // Assert that templates are also copied along with cv configuration
     if (newConfig.isPresent()) {
       List<TimeSeriesMetricTemplates> definitions =
-          wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+          persistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
               .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, newConfig.get().getUuid())
               .asList();
       assertThat(definitions.size()).isEqualTo(1);
@@ -988,7 +983,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     APMCVServiceConfiguration apmcvServiceConfiguration = createAPMCVConfig(true, appId, accountId);
     String cvConfigId = generateUuid();
     apmcvServiceConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(apmcvServiceConfiguration);
+    persistence.save(apmcvServiceConfiguration);
     Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId);
     assertThat(metricTxnMap).isNotEmpty();
     assertThat(metricTxnMap.size()).isEqualTo(1);
@@ -1003,7 +998,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     Map<String, String> metricTxnMap = cvConfigurationService.getTxnMetricPairsForAPMCVConfig(cvConfigId);
     assertThat(metricTxnMap).isNull();
   }
@@ -1030,7 +1025,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     cvConfigurationService.saveKeyTransactionsForCVConfiguration(accountId, cvConfigId, null);
   }
 
@@ -1041,7 +1036,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
         accountId, cvConfigId, Arrays.asList("transaction1", "tranasaction2"));
     assertThat(saved).isTrue();
@@ -1059,7 +1054,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
         accountId, cvConfigId, Arrays.asList("transaction1", "transaction2"));
     assertThat(saved).isTrue();
@@ -1087,7 +1082,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
         accountId, cvConfigId, Arrays.asList("transaction1", "transaction2"));
     assertThat(saved).isTrue();
@@ -1114,7 +1109,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
     String cvConfigId = generateUuid();
     cvConfiguration.setUuid(cvConfigId);
-    wingsPersistence.save(cvConfiguration);
+    persistence.save(cvConfiguration);
     boolean saved = cvConfigurationService.saveKeyTransactionsForCVConfiguration(
         accountId, cvConfigId, Arrays.asList("transaction1"));
     assertThat(saved).isTrue();
@@ -1128,7 +1123,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     assertThat(saved).isTrue();
     TimeSeriesKeyTransactions transactions =
-        wingsPersistence.createQuery(TimeSeriesKeyTransactions.class).filter("cvConfigId", cvConfigId).get();
+        persistence.createQuery(TimeSeriesKeyTransactions.class).filter("cvConfigId", cvConfigId).get();
     assertThat(transactions).isNull();
   }
 
@@ -1138,12 +1133,12 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testWhenDeleteConfiguration_DeletesAlerts() {
     final APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     apmVerificationConfig.setAccountId(accountId);
-    final String connectorId = wingsPersistence.save(aSettingAttribute()
-                                                         .withAccountId(accountId)
-                                                         .withAppId(appId)
-                                                         .withName(generateUuid())
-                                                         .withValue(apmVerificationConfig)
-                                                         .build());
+    final String connectorId = persistence.save(aSettingAttribute()
+                                                    .withAccountId(accountId)
+                                                    .withAppId(appId)
+                                                    .withName(generateUuid())
+                                                    .withValue(apmVerificationConfig)
+                                                    .build());
     APMCVServiceConfiguration config1 = createAPMCVConfig(true, appId, accountId);
     config1.setConnectorId(connectorId);
     APMCVServiceConfiguration config2 = createAPMCVConfig(true, appId, accountId);
@@ -1187,26 +1182,23 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
 
     long numOfOpenAlerts = waitTillAlertsSteady(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2 + numOfNonCvAlert);
     assertThat(numOfOpenAlerts).isEqualTo(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2 + numOfNonCvAlert);
-    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
-                   .filter(AlertKeys.status, AlertStatus.Closed)
-                   .count())
+    assertThat(
+        persistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Closed).count())
         .isEqualTo(0);
 
     cvConfigurationService.deleteConfiguration(accountId, appId, configId1);
 
     numOfOpenAlerts = waitTillAlertsSteady(numOfAlertsForCvConfig2 + numOfNonCvAlert);
     assertThat(numOfOpenAlerts).isEqualTo(numOfAlertsForCvConfig2 + numOfNonCvAlert);
-    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
-                   .filter(AlertKeys.status, AlertStatus.Closed)
-                   .count())
+    assertThat(
+        persistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Closed).count())
         .isEqualTo(numOfAlertsForCvConfig1);
 
     cvConfigurationService.deleteConfiguration(accountId, appId, configId2);
     numOfOpenAlerts = waitTillAlertsSteady(numOfNonCvAlert);
     assertThat(numOfOpenAlerts).isEqualTo(numOfNonCvAlert);
-    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
-                   .filter(AlertKeys.status, AlertStatus.Closed)
-                   .count())
+    assertThat(
+        persistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Closed).count())
         .isEqualTo(numOfAlertsForCvConfig1 + numOfAlertsForCvConfig2);
   }
 
@@ -1216,25 +1208,25 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testDeleteSettingAttribute_whenUsedInServiceGuard() throws Exception {
     String connectorName = generateUuid();
     final String connectorId =
-        wingsPersistence.save(aSettingAttribute()
-                                  .withName(connectorName)
-                                  .withAccountId(accountId)
-                                  .withValue(DatadogConfig.builder().url(generateUuid()).accountId(accountId).build())
-                                  .build());
+        persistence.save(aSettingAttribute()
+                             .withName(connectorName)
+                             .withAccountId(accountId)
+                             .withValue(DatadogConfig.builder().url(generateUuid()).accountId(accountId).build())
+                             .build());
 
     final DatadogCVServiceConfiguration datadogCVConfiguration = createDatadogCVConfiguration(false, false);
     datadogCVConfiguration.setConnectorId(connectorId);
-    final String cvConfigId = wingsPersistence.save(datadogCVConfiguration);
+    final String cvConfigId = persistence.save(datadogCVConfiguration);
     assertThatThrownBy(() -> settingsService.delete(appId, connectorId))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Connector " + connectorName + " is referenced by 1 Service Guard(s). Source ["
             + datadogCVConfiguration.getName() + "].");
 
-    assertThat(wingsPersistence.get(SettingAttribute.class, connectorId)).isNotNull();
+    assertThat(persistence.get(SettingAttribute.class, connectorId)).isNotNull();
 
-    wingsPersistence.delete(CVConfiguration.class, cvConfigId);
+    persistence.delete(CVConfiguration.class, cvConfigId);
     settingsService.delete(appId, connectorId);
-    assertThat(wingsPersistence.get(SettingAttribute.class, connectorId)).isNull();
+    assertThat(persistence.get(SettingAttribute.class, connectorId)).isNull();
   }
 
   @Test
@@ -1285,10 +1277,10 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     LogsCVConfiguration logsCVConfiguration = createLogsCVConfig(true);
     logsCVConfiguration.setUuid(cvConfigId);
     assertThat(logsCVConfiguration.isEnabled24x7()).isTrue();
-    wingsPersistence.save(logsCVConfiguration);
+    persistence.save(logsCVConfiguration);
 
     cvConfigurationService.disableConfig(cvConfigId);
-    logsCVConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
+    logsCVConfiguration = (LogsCVConfiguration) persistence.get(CVConfiguration.class, cvConfigId);
 
     assertThat(logsCVConfiguration.isEnabled24x7()).isFalse();
   }
@@ -1336,9 +1328,8 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     long numOfOpenAlerts;
     int numOfTrials = 0;
     do {
-      numOfOpenAlerts = wingsPersistence.createQuery(Alert.class, excludeAuthority)
-                            .filter(AlertKeys.status, AlertStatus.Open)
-                            .count();
+      numOfOpenAlerts =
+          persistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Open).count();
       numOfTrials++;
       log.info("trial: {} numOfAlerts: {}", numOfTrials, numOfOpenAlerts);
       sleep(ofMillis(100));

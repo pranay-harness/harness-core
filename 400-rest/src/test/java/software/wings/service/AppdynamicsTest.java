@@ -57,7 +57,7 @@ import org.mockito.Mock;
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private NewRelicService newRelicService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private EncryptionService encryptionService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private ScmSecret scmSecret;
@@ -83,7 +83,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     initMocks(this);
-    wingsPersistence.save(user);
+    persistence.save(user);
     UserThreadLocal.set(user);
     FieldUtils.writeField(appdynamicsDelegateService, "encryptionService", encryptionService, true);
     when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
@@ -106,7 +106,7 @@ public class AppdynamicsTest extends WingsBaseTest {
                            .withAccountId(accountId)
                            .withValue(appDynamicsConfig)
                            .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
   }
 
   @Test

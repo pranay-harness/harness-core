@@ -61,7 +61,7 @@ import org.mockito.Mock;
 
 public class GitSyncServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private GitSyncServiceImpl gitSyncService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @InjectMocks @Inject private GitSyncErrorService gitSyncErrorService;
   @Mock YamlGitConfigService yamlGitConfigService;
   @Mock GitConfigHelperService gitConfigHelperService;
@@ -85,7 +85,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                           .branch("branchName")
                                           .build())
                            .build();
-    gitConnectorId = wingsPersistence.save(settingAttribute);
+    gitConnectorId = persistence.save(settingAttribute);
   }
 
   @Test
@@ -108,7 +108,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                            .accountId(accountId)
                                            .build();
 
-    wingsPersistence.save(Arrays.asList(gitSyncError1, gitSyncError2));
+    persistence.save(Arrays.asList(gitSyncError1, gitSyncError2));
 
     final PageRequest pageRequest = aPageRequest().withOffset("0").withLimit("2").build();
 
@@ -182,7 +182,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
             .gitToHarness(true)
             .build();
 
-    wingsPersistence.save(gitFileActivitySummary);
+    persistence.save(gitFileActivitySummary);
     final PageResponse pageResponse =
         gitSyncService.fetchGitCommits(aPageRequest().withLimit("1").build(), true, accountId, appId);
     assertThat(pageResponse).isNotNull();
@@ -213,7 +213,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                                              .status(GitFileActivity.Status.SUCCESS)
                                              .build();
 
-    wingsPersistence.save(fileActivity);
+    persistence.save(fileActivity);
     final PageResponse pageResponse =
         gitSyncService.fetchGitSyncActivity(aPageRequest().withLimit("1").build(), accountId, appId, false);
     assertThat(pageResponse).isNotNull();
@@ -230,15 +230,15 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   public void test_shouldupdateStatusOfGitFileActivity() {
     final String commitId = "commitId";
     final String filePath = "file1.yaml";
-    wingsPersistence.save(GitFileActivity.builder()
-                              .accountId(accountId)
-                              .commitId(commitId)
-                              .processingCommitId(commitId)
-                              .filePath(filePath)
-                              .status(Status.QUEUED)
-                              .build());
+    persistence.save(GitFileActivity.builder()
+                         .accountId(accountId)
+                         .commitId(commitId)
+                         .processingCommitId(commitId)
+                         .filePath(filePath)
+                         .status(Status.QUEUED)
+                         .build());
     gitSyncService.updateStatusOfGitFileActivity(commitId, Arrays.asList(filePath), Status.SUCCESS, "", accountId);
-    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+    final GitFileActivity fileActivity = persistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.processingCommitId, commitId)
                                              .get();
@@ -266,7 +266,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                           .withChangeFromAnotherCommit(Boolean.TRUE)
                           .build()),
         Status.SUCCESS, true, false, accountId, commitId, commitMessage);
-    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+    final GitFileActivity fileActivity = persistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.commitId, commitId)
                                              .get();
@@ -302,7 +302,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                           .withChangeFromAnotherCommit(Boolean.TRUE)
                           .build()),
         Status.SUCCESS, true, false, accountId, "", "");
-    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+    final GitFileActivity fileActivity = persistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.commitId, commitId)
                                              .get();
@@ -322,13 +322,13 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   public void test_shouldLogActivityForSkippedFiles() {
     final String commitId = "commitId";
     final String filePath = "file1.yaml";
-    wingsPersistence.save(GitFileActivity.builder()
-                              .accountId(accountId)
-                              .commitId(commitId)
-                              .processingCommitId(commitId)
-                              .filePath(filePath)
-                              .status(Status.QUEUED)
-                              .build());
+    persistence.save(GitFileActivity.builder()
+                         .accountId(accountId)
+                         .commitId(commitId)
+                         .processingCommitId(commitId)
+                         .filePath(filePath)
+                         .status(Status.QUEUED)
+                         .build());
     final GitFileChange changeFile1 = GitFileChange.Builder.aGitFileChange()
                                           .withFilePath(filePath)
                                           .withAccountId(accountId)
@@ -345,7 +345,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     gitSyncService.logActivityForSkippedFiles(Arrays.asList(changeFile2),
         GitDiffResult.builder().commitId(commitId).gitFileChanges(Arrays.asList(changeFile1, changeFile2)).build(),
         "skipped for testing", accountId);
-    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+    final GitFileActivity fileActivity = persistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.processingCommitId, commitId)
                                              .get();
@@ -367,31 +367,31 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     String appId1 = "appId1";
     String appId2 = "appId2";
     String branchName = "branchName";
-    wingsPersistence.save(GitFileActivity.builder()
-                              .accountId(accountId)
-                              .commitId(commitId)
-                              .processingCommitId(commitId)
-                              .filePath(filePath1)
-                              .gitConnectorId(gitConnectorId)
-                              .branchName(branchName)
-                              .appId(appId1)
-                              .commitMessage(commitMessage)
-                              .status(Status.SUCCESS)
-                              .build());
-    wingsPersistence.save(GitFileActivity.builder()
-                              .accountId(accountId)
-                              .commitId(commitId)
-                              .processingCommitId(commitId)
-                              .gitConnectorId(gitConnectorId)
-                              .branchName(branchName)
-                              .commitMessage(commitMessage)
-                              .filePath(filePath2)
-                              .appId(appId2)
-                              .status(Status.SUCCESS)
-                              .build());
+    persistence.save(GitFileActivity.builder()
+                         .accountId(accountId)
+                         .commitId(commitId)
+                         .processingCommitId(commitId)
+                         .filePath(filePath1)
+                         .gitConnectorId(gitConnectorId)
+                         .branchName(branchName)
+                         .appId(appId1)
+                         .commitMessage(commitMessage)
+                         .status(Status.SUCCESS)
+                         .build());
+    persistence.save(GitFileActivity.builder()
+                         .accountId(accountId)
+                         .commitId(commitId)
+                         .processingCommitId(commitId)
+                         .gitConnectorId(gitConnectorId)
+                         .branchName(branchName)
+                         .commitMessage(commitMessage)
+                         .filePath(filePath2)
+                         .appId(appId2)
+                         .status(Status.SUCCESS)
+                         .build());
     gitSyncService.createGitFileActivitySummaryForCommit(commitId, accountId, true, COMPLETED);
     List<GitFileActivitySummary> gitFileActivitySummaries =
-        wingsPersistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).asList();
+        persistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).asList();
     assertThat(gitFileActivitySummaries.size()).isEqualTo(2);
     GitFileActivitySummary fileActivitySummaryForApp1 =
         gitFileActivitySummaries.stream().filter(activity -> activity.getAppId().equals(appId1)).findFirst().get();
@@ -441,7 +441,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     when(yamlGitConfigService.getAppIdsForYamlGitConfig(any())).thenReturn(Collections.singleton(appId));
     gitSyncService.createGitFileSummaryForFailedOrSkippedCommit(gitCommit, true);
     GitFileActivitySummary gitFileActivitySummary =
-        wingsPersistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).get();
+        persistence.createQuery(GitFileActivitySummary.class).filter("commitId", commitId).get();
     assertThat(gitFileActivitySummary.getAccountId()).isEqualTo(accountId);
     assertThat(gitFileActivitySummary.getCommitId()).isEqualTo(commitId);
     assertThat(gitFileActivitySummary.getGitConnectorId()).isEqualTo(gitConnectorId);
@@ -457,15 +457,15 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_shouldMarkRemainingFilesAsSkipped() {
     final String commitId = "gitCommitId";
-    wingsPersistence.save(GitFileActivity.builder()
-                              .accountId(accountId)
-                              .commitId(commitId)
-                              .processingCommitId(commitId)
-                              .filePath("filePath1")
-                              .status(Status.QUEUED)
-                              .build());
+    persistence.save(GitFileActivity.builder()
+                         .accountId(accountId)
+                         .commitId(commitId)
+                         .processingCommitId(commitId)
+                         .filePath("filePath1")
+                         .status(Status.QUEUED)
+                         .build());
     gitSyncService.markRemainingFilesAsSkipped(commitId, accountId);
-    final GitFileActivity fileActivity = wingsPersistence.createQuery(GitFileActivity.class)
+    final GitFileActivity fileActivity = persistence.createQuery(GitFileActivity.class)
                                              .filter(GitFileActivityKeys.accountId, accountId)
                                              .filter(GitFileActivityKeys.processingCommitId, commitId)
                                              .get();
@@ -513,7 +513,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
     gitSyncService.logActivityForGitOperation(
         Arrays.asList(change1, change2), Status.QUEUED, true, false, "", commitId, "");
     gitSyncService.logActivitiesForFailedChanges(failedYamlFileChangeMap, accountId, false, commitMessage);
-    List<GitFileActivity> gitFileActivities = wingsPersistence.createQuery(GitFileActivity.class)
+    List<GitFileActivity> gitFileActivities = persistence.createQuery(GitFileActivity.class)
                                                   .filter(GitFileActivityKeys.accountId, accountId)
                                                   .filter("commitId", commitId)
                                                   .asList();
@@ -542,18 +542,18 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void test_getGitConnectorMap() {
-    String uuid1 = wingsPersistence.save(aSettingAttribute()
-                                             .withAccountId(ACCOUNT_ID)
-                                             .withValue(GitConfig.builder().build())
-                                             .withName(SETTING_NAME)
-                                             .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-                                             .build());
-    String uuid2 = wingsPersistence.save(aSettingAttribute()
-                                             .withAccountId(ACCOUNT_ID)
-                                             .withValue(GitConfig.builder().build())
-                                             .withName(SETTING_NAME)
-                                             .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-                                             .build());
+    String uuid1 = persistence.save(aSettingAttribute()
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withValue(GitConfig.builder().build())
+                                        .withName(SETTING_NAME)
+                                        .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                        .build());
+    String uuid2 = persistence.save(aSettingAttribute()
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withValue(GitConfig.builder().build())
+                                        .withName(SETTING_NAME)
+                                        .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                        .build());
     assertThat(gitSyncService.getGitConnectorMap(Arrays.asList(generateUuid()), ACCOUNT_ID)).isEmpty();
     Map<String, SettingAttribute> gitConnectorMap =
         gitSyncService.getGitConnectorMap(Arrays.asList(uuid1, uuid2), ACCOUNT_ID);

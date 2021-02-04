@@ -50,7 +50,7 @@ import org.mockito.Mock;
 public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
   @Mock ServiceVariableService serviceVariableService;
   @Inject @InjectMocks ServiceVariableSetupUsageBuilder serviceVariableSetupUsageBuilder;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   private List<ServiceVariable> serviceVariables;
   private Account account;
   private EncryptedData encryptedData;
@@ -60,7 +60,7 @@ public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
   public void setup() {
     initMocks(this);
     account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
+    account.setUuid(persistence.save(account));
     serviceVariables = new ArrayList<>();
 
     encryptedData = EncryptedData.builder()
@@ -74,7 +74,7 @@ public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
                         .name("xyz")
                         .build();
 
-    String encryptedDataId = wingsPersistence.save(encryptedData);
+    String encryptedDataId = persistence.save(encryptedData);
     encryptedData.setUuid(encryptedDataId);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -90,19 +90,19 @@ public class ServiceVariableSetupUsageBuilderTest extends WingsBaseTest {
                                           .type(ServiceVariable.Type.ENCRYPTED_TEXT)
                                           .build();
 
-    serviceVariables.add(wingsPersistence.get(ServiceVariable.class, wingsPersistence.save(serviceVariable)));
+    serviceVariables.add(persistence.get(ServiceVariable.class, persistence.save(serviceVariable)));
 
     ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate()
                                           .withName(UUIDGenerator.generateUuid())
                                           .withServiceId(UUIDGenerator.generateUuid())
                                           .build();
-    String serviceTemplateId = wingsPersistence.save(serviceTemplate);
+    String serviceTemplateId = persistence.save(serviceTemplate);
 
     serviceVariable.setUuid(null);
     serviceVariable.setName("service_variable_2");
     serviceVariable.setEntityType(EntityType.SERVICE_TEMPLATE);
     serviceVariable.setEntityId(serviceTemplateId);
-    serviceVariables.add(wingsPersistence.get(ServiceVariable.class, wingsPersistence.save(serviceVariable)));
+    serviceVariables.add(persistence.get(ServiceVariable.class, persistence.save(serviceVariable)));
 
     encryptionDetail =
         EncryptionDetail.builder().secretManagerName("secretManagerName").encryptionType(EncryptionType.LOCAL).build();

@@ -29,7 +29,7 @@ import org.mockito.InjectMocks;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ResourceLookupServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private ResourceLookupService resourceLookupService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private EntityAuditRecord entityAuditRecord;
   private Account account;
@@ -59,14 +59,14 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
   public void TC0_testSaveResourceLookupRecordIfNeeded() {
     resourceLookupService.saveResourceLookupRecordIfNeeded(entityAuditRecord, account.getUuid());
     ResourceLookup resourceLookup =
-        wingsPersistence.createQuery(ResourceLookup.class)
+        persistence.createQuery(ResourceLookup.class)
             .filter(ResourceLookupKeys.accountId, account.getUuid())
             .filter(ResourceLookupKeys.resourceType, entityAuditRecord.getAffectedResourceType())
             .filter(ResourceLookupKeys.resourceId, entityAuditRecord.getAffectedResourceId())
             .disableValidation()
             .get();
     assertThat(resourceLookup).isNotNull();
-    wingsPersistence.delete(resourceLookup);
+    persistence.delete(resourceLookup);
   }
 
   @Test
@@ -84,7 +84,7 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
     resourceLookupService.updateResourceLookupRecordIfNeeded(entityAuditRecord, account.getUuid(), updatedUser, user);
 
     ResourceLookup resourceLookup =
-        wingsPersistence.createQuery(ResourceLookup.class)
+        persistence.createQuery(ResourceLookup.class)
             .filter(ResourceLookupKeys.accountId, account.getUuid())
             .filter(ResourceLookupKeys.resourceType, entityAuditRecord.getAffectedResourceType())
             .filter(ResourceLookupKeys.resourceId, entityAuditRecord.getAffectedResourceId())
@@ -114,11 +114,11 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
                                             .appId(appId)
                                             .resourceName("user")
                                             .build();
-    wingsPersistence.save(resourceLookupSave);
+    persistence.save(resourceLookupSave);
 
     resourceLookupService.updateResourceLookupRecordIfNeeded(entityAuditRecord, account.getUuid(), updatedUser, user);
     ResourceLookup resourceLookup =
-        wingsPersistence.createQuery(ResourceLookup.class)
+        persistence.createQuery(ResourceLookup.class)
             .filter(ResourceLookupKeys.accountId, account.getUuid())
             .filter(ResourceLookupKeys.resourceType, entityAuditRecord.getAffectedResourceType())
             .filter(ResourceLookupKeys.resourceId, entityAuditRecord.getAffectedResourceId())
@@ -128,7 +128,7 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
     assertThat(resourceLookup).isNotNull();
     assertThat(resourceLookup.getResourceName()).isEqualTo("updated_user");
 
-    wingsPersistence.delete(resourceLookup);
+    persistence.delete(resourceLookup);
   }
 
   @Test
@@ -143,17 +143,17 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
                                         .resourceType(ResourceType.USER.name())
                                         .build();
 
-    wingsPersistence.save(resourceLookup);
+    persistence.save(resourceLookup);
 
     resourceLookup.setResourceName("updated_name");
 
     resourceLookupService.updateResourceName(resourceLookup);
 
-    ResourceLookup updatedResourceLookup = wingsPersistence.get(ResourceLookup.class, uuid);
+    ResourceLookup updatedResourceLookup = persistence.get(ResourceLookup.class, uuid);
 
     assertThat(updatedResourceLookup).isNotNull();
     assertThat(updatedResourceLookup.getResourceName()).isEqualTo("updated_name");
-    wingsPersistence.delete(resourceLookup);
+    persistence.delete(resourceLookup);
   }
 
   @Test
@@ -168,13 +168,13 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
                                         .resourceType(ResourceType.USER.name())
                                         .build();
 
-    wingsPersistence.save(resourceLookup);
+    persistence.save(resourceLookup);
     resourceLookupService.delete(resourceLookup);
 
-    ResourceLookup updatedResourceLookup = wingsPersistence.get(ResourceLookup.class, uuid);
+    ResourceLookup updatedResourceLookup = persistence.get(ResourceLookup.class, uuid);
 
     assertThat(updatedResourceLookup).isNull();
-    wingsPersistence.delete(resourceLookup);
+    persistence.delete(resourceLookup);
   }
 
   @Test
@@ -189,12 +189,12 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
                                         .resourceType(ResourceType.USER.name())
                                         .build();
 
-    wingsPersistence.save(resourceLookup);
+    persistence.save(resourceLookup);
 
     resourceLookupService.deleteResourceLookupRecordIfNeeded(entityAuditRecord, account.getUuid());
 
     ResourceLookup updatedResourceLookup =
-        wingsPersistence.createQuery(ResourceLookup.class)
+        persistence.createQuery(ResourceLookup.class)
             .filter(ResourceLookupKeys.accountId, account.getUuid())
             .filter(ResourceLookupKeys.resourceId, entityAuditRecord.getAffectedResourceId())
             .get();
@@ -213,13 +213,13 @@ public class ResourceLookupServiceTest extends WingsBaseTest {
                                         .resourceType("negative_resource_type")
                                         .build();
     entityAuditRecord.setEntityType("negative_resource_type");
-    wingsPersistence.save(resourceLookup);
+    persistence.save(resourceLookup);
 
     resourceLookupService.deleteResourceLookupRecordIfNeeded(entityAuditRecord, account.getUuid());
 
-    ResourceLookup updatedResourceLookup = wingsPersistence.get(ResourceLookup.class, uuid);
+    ResourceLookup updatedResourceLookup = persistence.get(ResourceLookup.class, uuid);
     assertThat(updatedResourceLookup).isNotNull();
 
-    wingsPersistence.delete(resourceLookup);
+    persistence.delete(resourceLookup);
   }
 }

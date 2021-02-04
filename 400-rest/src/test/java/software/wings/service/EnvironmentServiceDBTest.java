@@ -40,7 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class EnvironmentServiceDBTest extends WingsBaseTest {
-  @Inject @InjectMocks private HPersistence wingsPersistence;
+  @Inject @InjectMocks private HPersistence persistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
   @Mock private YamlPushService yamlPushService;
 
@@ -49,7 +49,7 @@ public class EnvironmentServiceDBTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDeleteConfigMapYamlByServiceTemplateId() {
     Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).appId(APP_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     Map<String, String> configMapYamlByServiceTemplateId = new HashMap<>();
     configMapYamlByServiceTemplateId.put(SERVICE_TEMPLATE_ID, "abc");
@@ -62,8 +62,8 @@ public class EnvironmentServiceDBTest extends WingsBaseTest {
     Application application =
         Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build();
 
-    wingsPersistence.save(environment);
-    wingsPersistence.save(application);
+    persistence.save(environment);
+    persistence.save(application);
 
     ServiceTemplate serviceTemplate = aServiceTemplate()
                                           .withAppId(APP_ID)
@@ -72,9 +72,9 @@ public class EnvironmentServiceDBTest extends WingsBaseTest {
                                           .withServiceId(SERVICE_ID)
                                           .withUuid(SERVICE_TEMPLATE_ID)
                                           .build();
-    wingsPersistence.save(serviceTemplate);
+    persistence.save(serviceTemplate);
     environmentService.deleteConfigMapYamlByServiceTemplateId(APP_ID, SERVICE_TEMPLATE_ID);
-    Environment updatedEnvironment = wingsPersistence.get(Environment.class, ENV_ID);
+    Environment updatedEnvironment = persistence.get(Environment.class, ENV_ID);
     assertThat(updatedEnvironment.getConfigMapYamlByServiceTemplateId()).isNullOrEmpty();
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(ACCOUNT_ID, environment, updatedEnvironment, Event.Type.UPDATE, false, false);

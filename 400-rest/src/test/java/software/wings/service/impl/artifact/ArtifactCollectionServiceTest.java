@@ -111,7 +111,7 @@ import org.mongodb.morphia.query.Query;
 public class ArtifactCollectionServiceTest extends WingsBaseTest {
   public static final String LATEST_BUILD_NUMBER = "latest";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-  @Inject @Spy private HPersistence wingsPersistence;
+  @Inject @Spy private HPersistence persistence;
   @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @InjectMocks @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
@@ -142,7 +142,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(wingsPersistence.get(Artifact.class, ARTIFACT_ID)).thenReturn(artifact);
+    when(persistence.get(Artifact.class, ARTIFACT_ID)).thenReturn(artifact);
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
   }
 

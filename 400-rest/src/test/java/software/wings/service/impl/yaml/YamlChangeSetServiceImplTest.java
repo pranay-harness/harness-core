@@ -36,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 
 public class YamlChangeSetServiceImplTest extends WingsBaseTest {
   @Inject private YamlChangeSetServiceImpl yamlChangeSetService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setup() {
@@ -186,8 +186,8 @@ public class YamlChangeSetServiceImplTest extends WingsBaseTest {
 
     YamlGitConfig yamlGitConfig =
         YamlGitConfig.builder().accountId(accountId).gitConnectorId(SETTING_ID).branchName("master").build();
-    wingsPersistence.save(settingAttribute);
-    wingsPersistence.save(yamlGitConfig);
+    persistence.save(settingAttribute);
+    persistence.save(yamlGitConfig);
 
     final YamlChangeSet changeSetToBeSkipped = yamlChangeSetService.save(
         YamlChangeSet.builder()
@@ -231,7 +231,7 @@ public class YamlChangeSetServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateStatusAndIncrementPushCount() {
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder().status(RUNNING).accountId(ACCOUNT_ID).build();
-    wingsPersistence.save(yamlChangeSet);
+    persistence.save(yamlChangeSet);
     yamlChangeSetService.updateStatusAndIncrementPushCount(ACCOUNT_ID, yamlChangeSet.getUuid(), QUEUED);
     YamlChangeSet yamlChangeSetAfterUpdate = yamlChangeSetService.get(ACCOUNT_ID, yamlChangeSet.getUuid());
     assertThat(yamlChangeSetAfterUpdate.getStatus()).isEqualTo(QUEUED);

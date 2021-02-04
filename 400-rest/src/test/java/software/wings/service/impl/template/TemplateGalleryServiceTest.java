@@ -69,7 +69,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks protected TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Mock private AccountService accountService;
 
@@ -300,7 +300,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withAppId(GLOBAL_APP_ID)
                           .build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(ACCOUNT_ID, ACCOUNT_NAME);
     assertThat(templateGalleryService.getByAccount(ACCOUNT_ID, GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY)).isNotNull();
   }

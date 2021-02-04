@@ -57,14 +57,14 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
   @Mock KmsEncryptor kmsEncryptor;
   @Inject @InjectMocks AlertService alertService;
   @Inject @InjectMocks GcpSecretsManagerService gcpSecretsManagerService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private Account account;
 
   public void setup() {
     account = getAccount(AccountType.PAID);
     account.setLocalEncryptionEnabled(false);
-    wingsPersistence.save(account);
+    persistence.save(account);
     List<Account> accounts = new ArrayList<>();
     accounts.add(account);
     User user = User.Builder.anUser()
@@ -434,7 +434,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
                                       .name("Dummy record")
                                       .type(SettingVariableTypes.GCP_KMS)
                                       .build();
-    String encryptedRecordId = wingsPersistence.save(encryptedData);
+    String encryptedRecordId = persistence.save(encryptedData);
 
     boolean result = false;
     String alertId = UUIDGenerator.generateUuid();
@@ -448,7 +448,7 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
                         .status(Pending)
                         .alertData(alertData)
                         .build();
-      wingsPersistence.save(alert);
+      persistence.save(alert);
       result = gcpSecretsManagerService.deleteGcpKmsConfig(account.getUuid(), configId);
     } catch (SecretManagementException e) {
       assertThat(e).isNotNull();
@@ -456,10 +456,10 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
       assertThat(result).isFalse();
     }
 
-    wingsPersistence.delete(EncryptedData.class, encryptedRecordId);
+    persistence.delete(EncryptedData.class, encryptedRecordId);
     result = gcpSecretsManagerService.deleteGcpKmsConfig(account.getUuid(), configId);
     assertThat(result).isTrue();
-    Alert alert = wingsPersistence.get(Alert.class, alertId);
+    Alert alert = persistence.get(Alert.class, alertId);
     assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
   }
 

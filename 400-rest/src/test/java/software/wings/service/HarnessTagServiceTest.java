@@ -63,7 +63,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private AccountService accountService;
 
   private String colorTagKey = "color";
