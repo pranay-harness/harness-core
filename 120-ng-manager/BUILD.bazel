@@ -22,11 +22,14 @@ java_library(
         "//400-rest:module",
         "//440-connector-nextgen:module",
         "//920-delegate-service-beans:module",
+        "//940-feature-flag:module",
         "//940-secret-manager-client:module",
         "//950-events-api:module",
         "//955-filters-sdk:module",
         "//960-notification-beans:module",
+        "//960-persistence:module",
         "//960-yaml-sdk:module",
+        "@maven//:org_apache_commons_commons_lang3",
     ],
 )
 
@@ -43,6 +46,7 @@ java_library(
     deps = [
         "module",
         "//:lombok",
+        "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_github_benas_random_beans",
