@@ -40,6 +40,8 @@ public class Tracer {
     ShutdownHook.init();
 
     Set<String> includes = new HashSet<>(Arrays.asList(Config.getInst().instrPackages()));
+    System.setProperty("net.bytebuddy.raw", "true"); // don't resolve generics as it causes JVM crashes in some cases in
+                                                     // jdk1.8. for later versions beyond 1.8, we can enable
     new ByteBuddyInstr(includes).instrument(instrumentation);
   }
 }
