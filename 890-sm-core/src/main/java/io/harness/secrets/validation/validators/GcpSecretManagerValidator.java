@@ -1,6 +1,7 @@
 package io.harness.secrets.validation.validators;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GCP_SECRET_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -82,7 +83,11 @@ public class GcpSecretManagerValidator extends BaseSecretValidator {
   }
 
   private void checkIfSecretCanBeUpdated(HarnessSecret secretText, EncryptedRecord existingRecord) {
-    if (secretText.getName() != null && !secretText.getName().equals(existingRecord.getEncryptionKey())) {
+    String secretName =
+        existingRecord.getEncryptionKey() != null ? existingRecord.getEncryptionKey() : existingRecord.getName();
+    if (isEmpty(secretText.getName())) {
+      throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR, "Null or Empty Secret Name is not allowed", USER);
+    } else if (!secretText.getName().equals(secretName)) {
       throw new SecretManagementException(
           GCP_SECRET_OPERATION_ERROR, "Renaming Secrets in GCP Secret Manager is not supported", USER);
     }
