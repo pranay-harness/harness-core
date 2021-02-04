@@ -81,14 +81,13 @@ public class StatusUtils {
       case ASYNC_WAITING:
       case TASK_WAITING:
       case PAUSING:
+      case SKIPPED:
         return EnumSet.of(QUEUED, RUNNING);
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
         return EnumSet.of(
             QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
-      case SKIPPED:
-        return EnumSet.of(QUEUED);
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:

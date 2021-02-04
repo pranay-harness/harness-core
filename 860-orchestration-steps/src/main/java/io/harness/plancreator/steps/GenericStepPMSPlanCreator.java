@@ -88,25 +88,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
-    String nodeName;
-    long timeoutInMillis;
-
-    if (EmptyPredicate.isEmpty(stepElement.getName())) {
-      nodeName = stepElement.getIdentifier();
-    } else {
-      nodeName = stepElement.getName();
-    }
-
-    if (stepElement.getTimeout() == null) {
-      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
-    } else {
-      timeoutInMillis = stepElement.getTimeout().getTimeoutInMillis();
-    }
-
     PlanNode stepPlanNode =
         PlanNode.builder()
             .uuid(ctx.getCurrentField().getNode().getUuid())
-            .name(nodeName)
+            .name(getName(stepElement))
             .identifier(stepElement.getIdentifier())
             .stepType(stepElement.getStepSpecType().getStepType())
             .group(StepOutcomeGroup.STEP.name())
@@ -118,16 +103,37 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                        .build())
             .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
-            .timeoutObtainment(TimeoutObtainment.newBuilder()
-                                   .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-                                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                                       AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutInMillis).build())))
-                                   .build())
+            .timeoutObtainment(
+                TimeoutObtainment.newBuilder()
+                    .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                        AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
+                    .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
+  protected String getName(StepElementConfig stepElement) {
+    String nodeName;
+    if (EmptyPredicate.isEmpty(stepElement.getName())) {
+      nodeName = stepElement.getIdentifier();
+    } else {
+      nodeName = stepElement.getName();
+    }
+    return nodeName;
+  }
+
+  protected long getTimeoutInMillis(StepElementConfig stepElement) {
+    long timeoutInMillis;
+    if (stepElement.getTimeout() == null) {
+      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
+    } else {
+      timeoutInMillis = stepElement.getTimeout().getTimeoutInMillis();
+    }
+    return timeoutInMillis;
+  }
+
+  protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainmentList = new ArrayList<>();
     AdviserObtainment onSuccessAdviserObtainment = getOnSuccessAdviserObtainment(currentField);
     if (onSuccessAdviserObtainment != null) {
