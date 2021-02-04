@@ -104,4 +104,6 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
+apiUrl: https://localhost:8181/#/
+
 shouldConfigureWithPMS: false

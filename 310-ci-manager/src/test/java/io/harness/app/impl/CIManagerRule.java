@@ -127,6 +127,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
             .ngManagerClientConfig(ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build())
             .managerClientConfig(ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build())
             .ngManagerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
+            .apiUrl("https://localhost:8181/#/")
             .build();
 
     modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
