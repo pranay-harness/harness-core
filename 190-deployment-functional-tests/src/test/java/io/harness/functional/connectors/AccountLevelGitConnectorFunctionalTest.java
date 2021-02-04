@@ -71,7 +71,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTest {
-  private static final long TIMEOUT = 1200000; // 20 minutes
   private static final String RESOURCE_NAME_FORMAT = "git-account-level-%s-%s";
   private static final String PCF_FUNCTIONAL_TEST_REPO_NAME = "pcf-functional-test";
   private static final String K8S_FUNCTIONAL_TEST_REPO_NAME = "k8s-functional-test";
@@ -104,7 +103,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     logManagerFeatureFlags(application.getAccountId());
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testPcfUsingAccountLevelGitConnector() {
@@ -128,7 +127,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testK8sUsingAccountLevelGitConnector() {
@@ -151,7 +150,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testHelmUsingAccountLevelGitConnector() {
