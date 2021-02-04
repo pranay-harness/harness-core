@@ -2,9 +2,11 @@ package io.harness.delegate.task.gitapi.client.impl;
 
 import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
 import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.TOKEN;
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.cistatus.service.GithubAppConfig;
@@ -21,13 +23,15 @@ import io.harness.delegate.beans.gitapi.GitApiTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse.GitApiTaskResponseBuilder;
 import io.harness.delegate.task.gitapi.client.GitApiClient;
+import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.git.GitClientHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +43,7 @@ public class GithubApiClient implements GitApiClient {
   private final SecretDecryptionService secretDecryptionService;
 
   private static final String GITHUB_API_URL = "https://api.github.com/";
+  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)";
 
   @Override
   public DelegateResponseData findPullRequest(GitApiTaskParams gitApiTaskParams) {
@@ -74,12 +79,30 @@ public class GithubApiClient implements GitApiClient {
   }
 
   private String getGitApiURL(String url) {
-    if (GitClientHelper.isGithubSAAS(url)) {
+    Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
+    Matcher m = GIT_URL.matcher(url);
+
+    String domain = extractDomain(url, m);
+    if (domain.equalsIgnoreCase("github.com")) {
       return GITHUB_API_URL;
     } else {
-      String domain = GitClientHelper.getGitSCM(url);
       return "https://" + domain + "/api/v3/";
     }
+  }
+
+  private String extractDomain(String url, Matcher m) {
+    String group = EMPTY;
+    try {
+      if (m.find()) {
+        group = m.toMatchResult().group(3);
+      } else {
+        throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
+      }
+
+    } catch (Exception e) {
+      throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+    return group;
   }
 
   private String retrieveAuthToken(ConnectorDetails gitConnector) {

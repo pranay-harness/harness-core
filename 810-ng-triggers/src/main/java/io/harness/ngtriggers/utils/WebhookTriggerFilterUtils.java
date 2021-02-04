@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
 import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
@@ -9,6 +10,7 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_R
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.exception.TriggerException;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
@@ -34,6 +36,12 @@ public class WebhookTriggerFilterUtils {
         && checkIfPayloadConditionsMatch(webhookPayloadData, webhookTriggerConfigSpec.getPayloadConditions());
   }
 
+  public boolean evaluateEventAndActionFilters(
+      WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
+    return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent())
+        && checkIfActionMatches(webhookPayloadData, webhookTriggerConfigSpec);
+  }
+
   public boolean checkIfEventTypeMatches(
       io.harness.ngtriggers.beans.scm.WebhookEvent.Type eventTypeFromPayload, WebhookEvent eventTypeFromTrigger) {
     if (eventTypeFromPayload.equals(io.harness.ngtriggers.beans.scm.WebhookEvent.Type.PR)) {
@@ -45,6 +53,9 @@ public class WebhookTriggerFilterUtils {
       return eventTypeFromTrigger.equals(WebhookEvent.PUSH);
     }
 
+    if (eventTypeFromPayload.equals(io.harness.ngtriggers.beans.scm.WebhookEvent.Type.ISSUE_COMMENT)) {
+      return eventTypeFromTrigger.equals(WebhookEvent.ISSUE_COMMENT);
+    }
     return false;
   }
 
@@ -120,6 +131,36 @@ public class WebhookTriggerFilterUtils {
     }
 
     return allConditionsMatched;
+  }
+
+  public boolean checkIfJexlConditionsMatch(WebhookPayloadData webhookPayloadData, String jexlExpression) {
+    if (isBlank(jexlExpression)) {
+      return true;
+    }
+
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        generatorPMSExpressionEvaluator(webhookPayloadData.getOriginalEvent().getPayload());
+    Object result = triggerExpressionEvaluator.evaluateExpression(jexlExpression);
+    if (result != null && Boolean.class.isAssignableFrom(result.getClass())) {
+      return (Boolean) result;
+    }
+
+    StringBuilder errorMsg = new StringBuilder(128);
+    if (result == null) {
+      errorMsg.append("Expression ")
+          .append(jexlExpression)
+          .append(" was evaluated to null. Expected type is Boolean")
+          .toString();
+    } else {
+      errorMsg.append("Expression ")
+          .append(jexlExpression)
+          .append(":  was evaluated to type: ")
+          .append(result.getClass())
+          .append(". Expected type is Boolean")
+          .toString();
+    }
+
+    throw new TriggerException(errorMsg.toString(), USER);
   }
 
   public boolean checkIfCustomPayloadConditionsMatch(String payload, WebhookTriggerSpec triggerSpec) {

@@ -32,12 +32,15 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
+import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetadataBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.GitRepoSpec;
+import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -124,11 +127,35 @@ public class NGTriggerElementMapper {
       WebhookMetadataBuilder metadata = WebhookMetadata.builder();
       if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
         metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+      } else if (isGitSpec(webhookTriggerConfig)) {
+        metadata.git(prepareGitMetadata(webhookTriggerConfig));
       }
-      metadata.type(webhookTriggerConfig.getType()).repoURL(webhookTriggerConfig.getSpec().getRepoUrl()).build();
+
+      metadata.type(webhookTriggerConfig.getType());
       return NGTriggerMetadata.builder().webhook(metadata.build()).build();
     }
     throw new InvalidRequestException("Type " + type.toString() + " is invalid");
+  }
+
+  @VisibleForTesting
+  boolean isGitSpec(WebhookTriggerConfig webhookTriggerConfig) {
+    return webhookTriggerConfig.getSpec().getType() == GITHUB || webhookTriggerConfig.getSpec().getType() == GITLAB
+        || webhookTriggerConfig.getSpec().getType() == BITBUCKET;
+  }
+
+  @VisibleForTesting
+  GitMetadata prepareGitMetadata(WebhookTriggerConfig webhookTriggerConfig) {
+    RepoSpec repoSpec = webhookTriggerConfig.getSpec().getRepoSpec();
+    if (repoSpec != null && GitRepoSpec.class.isAssignableFrom(repoSpec.getClass())) {
+      GitRepoSpec gitRepoSpec = (GitRepoSpec) repoSpec;
+
+      return GitMetadata.builder()
+          .connectorIdentifier(gitRepoSpec.getIdentifier())
+          .repoName(gitRepoSpec.getRepoName())
+          .build();
+    }
+
+    return null;
   }
 
   @VisibleForTesting

@@ -18,6 +18,7 @@ import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.eventmapper.impl.CustomWebhookEventToTriggerMapper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.rule.Owner;

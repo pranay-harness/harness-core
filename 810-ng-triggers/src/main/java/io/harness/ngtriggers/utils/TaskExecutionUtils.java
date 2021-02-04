@@ -3,7 +3,7 @@ package io.harness.ngtriggers.utils;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,8 +16,8 @@ public class TaskExecutionUtils {
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public BinaryResponseData executeSyncTask(DelegateTaskRequest taskRequest) {
-    return (BinaryResponseData) delegateServiceGrpcClient.executeSyncTaskReturningResponseData(
+  public ResponseData executeSyncTask(DelegateTaskRequest taskRequest) {
+    return delegateServiceGrpcClient.executeSyncTaskReturningResponseData(
         taskRequest, delegateCallbackTokenSupplier.get());
   }
 }
