@@ -8,6 +8,6 @@ import java.time.Duration;
 
 @OwnedBy(CDC)
 public interface TimeoutParameters {
-  Long DEFAULT_TIMEOUT_IN_MILLIS = Duration.ofMinutes(10).toMillis();
+  Long DEFAULT_TIMEOUT_IN_MILLIS = Duration.ofHours(10).toMillis();
   long getTimeoutMillis();
 }
