@@ -84,7 +84,7 @@ public class QueueListenerTest extends PersistenceTestBase {
     }
   }
 
-  @Test(timeout = 5000)
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldStopOnInterruptedException() {
@@ -104,7 +104,7 @@ public class QueueListenerTest extends PersistenceTestBase {
     }
   }
 
-  @Test(timeout = 5000)
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExtendHeartbeat() throws Exception {
@@ -135,7 +135,7 @@ public class QueueListenerTest extends PersistenceTestBase {
     }
   }
 
-  @Test(timeout = 5000)
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldContinueProcessingOnAnyOtherException() throws Exception {

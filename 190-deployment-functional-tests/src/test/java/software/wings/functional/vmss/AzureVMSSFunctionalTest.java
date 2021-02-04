@@ -87,8 +87,6 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
   public static final int CUSTOM_DESIRED_VM_INSTANCES = 1;
   public static final int CUSTOM_MIN_VM_INSTANCES = 1;
 
-  private static final long TIMEOUT = 20 * 60 * 1000; // 20 minutes
-
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
@@ -120,7 +118,7 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
     return environment;
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = {ANIL, IVAN})
   @Category(CDFunctionalTests.class)
   public void testVMSSBasicWorkflow() {
@@ -143,7 +141,7 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
     verifyExecution(workflowExecution);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = {ANIL, IVAN})
   @Category(CDFunctionalTests.class)
   public void testVMSSBlueGreenWorkflow() {

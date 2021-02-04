@@ -44,8 +44,6 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
 
-  private static final long TIMEOUT = 1200000; // 20 minutes
-
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
   Application application;
@@ -57,21 +55,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     assertThat(application).isNotNull();
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = YOGESH)
   @Category(CDFunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = YOGESH)
   @Category({CDFunctionalTests.class})
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = YOGESH)
   @Category(CDFunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
