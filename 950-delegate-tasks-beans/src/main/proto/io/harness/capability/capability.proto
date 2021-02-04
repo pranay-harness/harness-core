@@ -5,7 +5,7 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 13
+// Next ID: 14
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -13,6 +13,7 @@ message CapabilityParameters {
     GitInstallationParameters git_installation_parameters = 11;
     HelmInstallationParameters helm_installation_parameters = 10;
     HttpConnectionParameters http_connection_parameters = 6;
+    KustomizeParameters kustomize_parameters = 13;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -85,6 +86,11 @@ message SocketConnectivityParameters {
 message SystemEnvParameters {
   string property = 1;
   string comparate = 2;
+}
+
+// Checks whether kustomize is installed or not
+message KustomizeParameters {
+  string plugin_root_dir = 1;
 }
 
 // A testing method for capabilities

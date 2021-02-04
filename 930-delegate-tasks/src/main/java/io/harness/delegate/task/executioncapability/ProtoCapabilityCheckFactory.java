@@ -1,6 +1,7 @@
 package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
+import io.harness.exception.GeneralException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,6 +13,7 @@ public class ProtoCapabilityCheckFactory {
   @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
@@ -47,7 +49,7 @@ public class ProtoCapabilityCheckFactory {
       case SYSTEM_ENV_PARAMETERS:
         return systemEnvCapabilityCheck;
       default:
-        return null;
+        throw new GeneralException("capability is not registered");
     }
   }
 }

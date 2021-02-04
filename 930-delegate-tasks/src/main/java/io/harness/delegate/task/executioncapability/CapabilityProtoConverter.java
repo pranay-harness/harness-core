@@ -7,6 +7,7 @@ import io.harness.capability.ChartMuseumParameters;
 import io.harness.capability.GitInstallationParameters;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.capability.HttpConnectionParameters;
+import io.harness.capability.KustomizeParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
@@ -37,6 +39,7 @@ public class CapabilityProtoConverter {
       case GIT_INSTALLATION_PARAMETERS:
       case HELM_INSTALLATION_PARAMETERS:
       case HTTP_CONNECTION_PARAMETERS:
+      case KUSTOMIZE_PARAMETERS:
       case PROCESS_EXECUTOR_PARAMETERS:
       case SFTP_CAPABILITY_PARAMETERS:
       case SMB_CONNECTION_PARAMETERS:
@@ -73,6 +76,12 @@ public class CapabilityProtoConverter {
         return builder
             .setHttpConnectionParameters(
                 HttpConnectionParameters.newBuilder().setUrl(httpConnectionExecutionCapability.fetchCapabilityBasis()))
+            .build();
+      case KUSTOMIZE:
+        KustomizeCapability kustomizeCapability = (KustomizeCapability) executionCapability;
+        return builder
+            .setKustomizeParameters(
+                KustomizeParameters.newBuilder().setPluginRootDir(kustomizeCapability.getPluginRootDir()))
             .build();
       case PROCESS_EXECUTOR:
         ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) executionCapability;

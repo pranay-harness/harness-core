@@ -1,22 +1,20 @@
-package io.harness.delegate.beans.executioncapability;
+package io.harness.delegate.task.executioncapability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
+import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-
-import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.kustomize.KustomizeConfig;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class KustomizeCapabilityTest extends WingsBaseTest {
+public class KustomizeCapabilityTest extends CategoryTest {
   private KustomizeCapability capability =
-      KustomizeCapability.builder()
-          .kustomizeConfig(new KustomizeConfig("/home/kustomize_plugins/", "examples/"))
-          .build();
+      KustomizeCapability.builder().pluginRootDir("/home/kustomize_plugins/").build();
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
