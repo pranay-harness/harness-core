@@ -626,13 +626,19 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       boolean hasAllNonProdEnvAccess =
           hasAllEnvAccessOfType(usageRestrictionsFromUserPermissions, appId, FilterType.NON_PROD);
       Set<EntityReference> envSet = Sets.newHashSet();
-      value.forEach(envId
-          -> envSet.add(EntityReference.builder()
-                            .name(envMap.get(envId))
-                            .id(envId)
-                            .appId(appId)
-                            .entityType(envTypeMap.get(envId).toString())
-                            .build()));
+      value.forEach(envId -> {
+        if (envTypeMap.get(envId) != null) {
+          envSet.add(EntityReference.builder()
+                         .name(envMap.get(envId))
+                         .id(envId)
+                         .appId(appId)
+                         .entityType(envTypeMap.get(envId).toString())
+                         .build());
+        } else {
+          log.info("No Environment Type present for envId: {}, accountId: {}", envId, accountId);
+          envSet.add(EntityReference.builder().name(envMap.get(envId)).id(envId).appId(appId).build());
+        }
+      });
 
       AppRestrictionsSummary appRestrictionsSummary = AppRestrictionsSummary.builder()
                                                           .application(EntityReference.builder()
