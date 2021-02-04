@@ -11,7 +11,6 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
@@ -22,6 +21,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
@@ -43,7 +43,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvngLogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @SuperBuilder
-public class CVNGLog implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, UpdatedAtAware {
+public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -66,7 +66,6 @@ public class CVNGLog implements PersistentEntity, UuidAware, CreatedAtAware, Acc
   private Instant endTime;
   private TraceableType traceableType;
   private CVNGLogType logType;
-  private long createdAt;
   private long lastUpdatedAt;
   @JsonIgnore
   @SchemaIgnore
@@ -83,5 +82,23 @@ public class CVNGLog implements PersistentEntity, UuidAware, CreatedAtAware, Acc
       default:
         throw new IllegalStateException("CVNG Logs: Log Type cannot be null");
     }
+  }
+
+  public List<CVNGLogDTO> toCVNGLogDTOs() {
+    List<CVNGLogDTO> cvngLogDTOS = new ArrayList<>();
+    logRecords.forEach(logRecord -> {
+      CVNGLogDTO cvngLogDTO = logRecord.toCVNGLogDTO();
+      commonFieldsSetUp(cvngLogDTO);
+      cvngLogDTOS.add(cvngLogDTO);
+    });
+    return cvngLogDTOS;
+  }
+
+  private void commonFieldsSetUp(CVNGLogDTO cvngLogDTO) {
+    cvngLogDTO.setAccountId(accountId);
+    cvngLogDTO.setTraceableId(traceableId);
+    cvngLogDTO.setTraceableType(traceableType);
+    cvngLogDTO.setStartTime(startTime);
+    cvngLogDTO.setEndTime(endTime);
   }
 }

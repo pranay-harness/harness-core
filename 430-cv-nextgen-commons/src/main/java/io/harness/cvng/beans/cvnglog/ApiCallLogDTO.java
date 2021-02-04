@@ -62,6 +62,15 @@ public class ApiCallLogDTO extends CVNGLogDTO {
             .build());
   }
 
+  public void addFieldToResponse(ApiCallLogDTOField field) {
+    Preconditions.checkNotNull(field, "Api call log response field is null.");
+
+    if (this.responses == null) {
+      this.responses = new ArrayList<>();
+    }
+    responses.add(field);
+  }
+
   private String getResponseToLog(Object response, FieldType fieldType) {
     if (fieldType == null) {
       return response.toString();
