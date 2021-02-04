@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>945-connector-beans</artifactId>
+            <artifactId>954-connector-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

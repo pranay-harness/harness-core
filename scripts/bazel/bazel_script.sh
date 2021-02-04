@@ -92,7 +92,6 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
   //940-secret-manager-client:module \
-  //945-connector-beans:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -105,6 +104,7 @@ BAZEL_MODULES="\
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
+  //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
   //960-api-services:module \
@@ -291,7 +291,6 @@ build_bazel_module 930-ng-core-clients
 build_bazel_module 940-delegate-beans
 build_bazel_module 940-feature-flag
 build_bazel_module 940-secret-manager-client
-build_bazel_module 945-connector-beans
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
@@ -302,6 +301,7 @@ build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 960-api-services

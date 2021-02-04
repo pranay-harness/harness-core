@@ -25,6 +25,6 @@ public class ArtifactoryValidationParams implements ConnectorValidationParams, E
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return null;
+    return ArtifactoryCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, artifactoryConnectorDTO);
   }
 }
