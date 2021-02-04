@@ -64,7 +64,7 @@ numberOfRemindersBeforeAccountDeletion: 3
 
 jobsFrequencyConfig:
   accountLicenseCheckJobFrequencyInMinutes: 60
-  accountBackgroundJobFrequencyInMinutes: 60
+  accountBackgroundJobFrequencyInMinutes: 720
   accountDeletionJobFrequencyInMinutes: 300
 
 ceSetUpConfig:
