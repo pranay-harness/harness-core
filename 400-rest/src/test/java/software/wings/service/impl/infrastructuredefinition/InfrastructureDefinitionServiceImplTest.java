@@ -62,6 +62,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -72,7 +73,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
@@ -146,9 +146,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
+public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
   @Mock private ExecutionContext executionContext;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -176,6 +177,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    MockitoAnnotations.initMocks(this);
     hostedZones1 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone1").build(),
         AwsRoute53HostedZoneData.builder().hostedZoneName("zone2").build());
     hostedZones2 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone3").build(),

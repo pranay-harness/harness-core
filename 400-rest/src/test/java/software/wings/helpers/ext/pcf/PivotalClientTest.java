@@ -47,6 +47,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.PcfUtils;
@@ -56,7 +57,6 @@ import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
@@ -113,6 +113,7 @@ import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -121,7 +122,7 @@ import org.zeroturnaround.exec.StartedProcess;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PivotalClientTest extends WingsBaseTest {
+public class PivotalClientTest extends CategoryTest {
   @Spy PcfClientImpl pcfClient = new PcfClientImpl();
   @Mock CloudFoundryOperationsWrapper wrapper;
   @Mock CloudFoundryOperations operations;
@@ -137,6 +138,7 @@ public class PivotalClientTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() throws Exception {
+    MockitoAnnotations.initMocks(this);
     when(wrapper.getCloudFoundryOperations()).thenReturn(operations);
     when(operations.applications()).thenReturn(applications);
     when(operations.routes()).thenReturn(routes);
