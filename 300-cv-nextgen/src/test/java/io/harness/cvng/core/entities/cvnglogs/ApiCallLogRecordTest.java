@@ -7,9 +7,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
+import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
+import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.core.entities.cvnglogs.ApiCallLogRecord.ApiCallLogField;
 import io.harness.rule.Owner;
 
+import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,11 +21,15 @@ import org.junit.experimental.categories.Category;
 public class ApiCallLogRecordTest {
   private String name;
   private String value;
+  private Instant requestTime;
+  private Instant responseTime;
 
   @Before
   public void setup() {
     this.name = generateUuid();
     this.value = generateUuid();
+    this.requestTime = Instant.now().minusSeconds(5);
+    this.responseTime = Instant.now();
   }
 
   @Test
@@ -66,5 +74,45 @@ public class ApiCallLogRecordTest {
     assertThat(apiCallLogRecord.getResponses()).hasSize(1);
     assertThat(apiCallLogRecord.getResponses().get(0).getName()).isEqualTo(name);
     assertThat(apiCallLogRecord.getResponses().get(0).getValue()).isEqualTo(value);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testToCVNGLogRecord() {
+    ApiCallLogDTOField apiCallLogDTOField = ApiCallLogDTOField.builder().name(name).value(value).build();
+    ApiCallLogDTO apiCallLogDTO = ApiCallLogDTO.builder().requestTime(requestTime).responseTime(responseTime).build();
+    apiCallLogDTO.addFieldToRequest(apiCallLogDTOField);
+    apiCallLogDTO.addFieldToResponse(apiCallLogDTOField);
+
+    CVNGLogRecord cvngLogRecord = ApiCallLogRecord.toCVNGLogRecord(apiCallLogDTO);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getRequestTime()).isEqualTo(requestTime);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getResponseTime()).isEqualTo(responseTime);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests()).hasSize(1);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getResponses()).hasSize(1);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests().get(0).getName()).isEqualTo(name);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests().get(0).getValue()).isEqualTo(value);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getResponses().get(0).getName()).isEqualTo(name);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getResponses().get(0).getValue()).isEqualTo(value);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testToCVNGLogDTO() {
+    ApiCallLogRecord apiCallLogRecord =
+        ApiCallLogRecord.builder().requestTime(requestTime).responseTime(responseTime).build();
+    ApiCallLogField apiCallLogField = ApiCallLogField.builder().name(name).value(value).build();
+    apiCallLogRecord.addFieldToRequest(apiCallLogField);
+    apiCallLogRecord.addFieldToResponse(apiCallLogField);
+    CVNGLogDTO cvngLogDTO = apiCallLogRecord.toCVNGLogDTO();
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequestTime()).isEqualTo(requestTime);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponseTime()).isEqualTo(responseTime);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequests()).hasSize(1);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponses()).hasSize(1);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequests().get(0).getName()).isEqualTo(name);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getRequests().get(0).getValue()).isEqualTo(value);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponses().get(0).getName()).isEqualTo(name);
+    assertThat(((ApiCallLogDTO) cvngLogDTO).getResponses().get(0).getValue()).isEqualTo(value);
   }
 }

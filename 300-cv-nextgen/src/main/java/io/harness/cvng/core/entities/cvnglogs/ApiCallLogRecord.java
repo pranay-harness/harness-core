@@ -14,7 +14,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ApiCallLogRecord implements CVNGLogRecord {
+public class ApiCallLogRecord extends CVNGLogRecord {
   private List<ApiCallLogField> requests;
   private List<ApiCallLogField> responses;
   private Instant requestTime;
@@ -81,6 +81,27 @@ public class ApiCallLogRecord implements CVNGLogRecord {
 
   private static FieldType toApiCallLogFieldType(ApiCallLogDTO.FieldType dtoFieldType) {
     return FieldType.valueOf(dtoFieldType.name());
+  }
+
+  @Override
+  public CVNGLogDTO toCVNGLogDTO() {
+    ApiCallLogDTO apiCallLogDTO =
+        ApiCallLogDTO.builder().requestTime(requestTime).responseTime(responseTime).createdAt(getCreatedAt()).build();
+    getRequests().forEach(logRecord -> apiCallLogDTO.addFieldToRequest(toApiCallLogDTOField(logRecord)));
+    getResponses().forEach(logRecord -> apiCallLogDTO.addFieldToResponse(toApiCallLogDTOField(logRecord)));
+    return apiCallLogDTO;
+  }
+
+  private ApiCallLogDTOField toApiCallLogDTOField(ApiCallLogField apiCallLogField) {
+    return ApiCallLogDTOField.builder()
+        .name(apiCallLogField.getName())
+        .type(toApiCallLogDTOFieldType(apiCallLogField.getType()))
+        .value(apiCallLogField.getValue())
+        .build();
+  }
+
+  private ApiCallLogDTO.FieldType toApiCallLogDTOFieldType(FieldType fieldType) {
+    return ApiCallLogDTO.FieldType.valueOf(fieldType.name());
   }
 
   @Data
