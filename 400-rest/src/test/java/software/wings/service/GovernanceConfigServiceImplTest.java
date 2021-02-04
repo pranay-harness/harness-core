@@ -68,13 +68,13 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveAndGetDeploymentFreeze() {
     GovernanceConfig governanceConfig =
-        JsonUtils.readResourceFile("./governance/governance_config.json", GovernanceConfig.class);
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
 
     GovernanceConfig savedGovernanceConfig =
         governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
     savedGovernanceConfig.setUuid("GOVERNANCE_CONFIG_ID");
     JsonNode actual = JsonUtils.toJsonNode(savedGovernanceConfig);
-    JsonNode expected = JsonUtils.readResourceFile("./governance/governance_config_expected.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("governance/governance_config_expected.json", JsonNode.class);
     assertThat(actual).hasToString(expected.toString());
   }
 
@@ -83,7 +83,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionForCustomEnvWithNonCustomApp() {
     GovernanceConfig governanceConfig =
-        JsonUtils.readResourceFile("./governance/governance_config.json", GovernanceConfig.class);
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
     governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).setFilterType(
         BlackoutWindowFilterType.ALL);
 
@@ -97,7 +97,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionForCustomEnvWithMultipleApps() {
     GovernanceConfig governanceConfig =
-        JsonUtils.readResourceFile("./governance/governance_config.json", GovernanceConfig.class);
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
     CustomAppFilter appConfig =
         (CustomAppFilter) governanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0);
     appConfig.getApps().add("app2");
@@ -314,7 +314,7 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionForDuplicateNames() {
     GovernanceConfig governanceConfig =
-        JsonUtils.readResourceFile("./governance/governance_config.json", GovernanceConfig.class);
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
     TimeRangeBasedFreezeConfig freeze1 = governanceConfig.getTimeRangeBasedFreezeConfigs().get(0);
     governanceConfig.getTimeRangeBasedFreezeConfigs().add(freeze1);
 

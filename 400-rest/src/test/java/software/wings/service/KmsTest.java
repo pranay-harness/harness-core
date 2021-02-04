@@ -334,7 +334,7 @@ public class KmsTest extends WingsBaseTest {
     String randomAccountId = UUID.randomUUID().toString();
 
     String secretName = UUID.randomUUID().toString();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -345,7 +345,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretFileId).isNotNull();
 
     String newSecretName = UUID.randomUUID().toString();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     secretFile = SecretFile.builder()
                      .name(newSecretName)
                      .kmsId(kmsId)
@@ -2131,7 +2131,7 @@ public class KmsTest extends WingsBaseTest {
       wingsPersistence.save(service);
 
       String secretName = UUID.randomUUID().toString();
-      File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+      File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
       SecretFile secretFile = SecretFile.builder()
                                   .name(secretName)
                                   .kmsId(kmsId)
@@ -2273,7 +2273,7 @@ public class KmsTest extends WingsBaseTest {
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(renameAppId);
 
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
 
     String configFileId = configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
     File download = configService.download(renameAppId, configFileId);
@@ -2289,7 +2289,7 @@ public class KmsTest extends WingsBaseTest {
 
     // now make the same file encrypted
     String secretName = UUID.randomUUID().toString();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -2322,7 +2322,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(encryptedData.getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
 
     // now make the same file not encrypted
-    fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     configFile.setEncrypted(false);
     configService.update(configFile, new BoundedInputStream(new FileInputStream(fileToUpdate)));
     download = configService.download(renameAppId, configFileId);
@@ -2391,7 +2391,7 @@ public class KmsTest extends WingsBaseTest {
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(renameAppId);
 
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
 
     configService.save(configFile, new BoundedInputStream(new FileInputStream(fileToSave)));
     File download = configService.download(renameAppId, configFile.getUuid());
@@ -2426,7 +2426,7 @@ public class KmsTest extends WingsBaseTest {
     wingsPersistence.save(activity);
 
     String secretName = UUID.randomUUID().toString();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -2483,7 +2483,7 @@ public class KmsTest extends WingsBaseTest {
 
     // test update
     String newSecretName = UUID.randomUUID().toString();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     SecretFile updateSecretFile = SecretFile.builder()
                                       .name(newSecretName)
                                       .kmsId(kmsId)
@@ -2573,7 +2573,7 @@ public class KmsTest extends WingsBaseTest {
     wingsPersistence.save(activity);
 
     String secretName = UUID.randomUUID().toString();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -2629,7 +2629,7 @@ public class KmsTest extends WingsBaseTest {
     assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     SecretFile secretFileUpdate = SecretFile.builder()
                                       .name(secretName)
                                       .kmsId(kmsId)

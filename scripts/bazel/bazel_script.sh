@@ -29,9 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//230-model-test/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/... -//230-model-test/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
-  # 400-rest and 260-delegate modules are excluded.
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//260-delegate/... -//230-model-test/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//260-delegate/... -//230-model-test/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -50,6 +49,9 @@ fi
 
 
 BAZEL_MODULES="\
+  //400-rest:module \
+  //400-rest:supporter-test \
+  //400-rest:module_deploy.jar \
   //420-delegate-agent:module \
   //420-delegate-service:module \
   //430-cv-nextgen-commons:module \
@@ -257,6 +259,7 @@ build_proto_module() {
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 940-notification-client
+build_bazel_application 400-rest
 
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
@@ -321,6 +324,7 @@ build_bazel_module 980-java-agent
 build_bazel_module 990-commons-test
 
 build_bazel_tests 960-persistence
+build_bazel_tests 400-rest
 
 build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 940-delegate-beans

@@ -1168,7 +1168,7 @@ public class SecretTextTest extends WingsBaseTest {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToSave.length());
     String secretFileId =
         secretManagementResource
@@ -1228,7 +1228,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(userEmail);
 
     String newSecretName = generateUuid();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToUpdate.length());
 
     secretManagementResource.updateFile(httpServletRequest, accountId, newSecretName, null,
@@ -1265,8 +1265,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(userName);
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(userEmail);
 
-    File newFileToSave =
-        new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File newFileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(newFileToSave.length());
 
     String newSecretFileId =
@@ -1292,7 +1291,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File(("400-rest/src/test/resources/encryption/file_to_encrypt.txt"));
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -1390,7 +1389,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -1484,7 +1483,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)

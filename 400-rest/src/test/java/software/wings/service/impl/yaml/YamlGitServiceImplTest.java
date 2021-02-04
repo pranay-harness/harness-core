@@ -86,7 +86,8 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   private static final String TEST_GIT_REPO_USER = "user";
   private static final String TEST_GIT_REPO_PASSWORD = "password";
   private static final String WEBHOOK_TOKEN = "Webhook_Token";
-  private static final String GH_PUSH_REQ_FILE = "software/wings/service/impl/webhook/github_push_request.json";
+  private static final String GH_PUSH_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/github_push_request.json";
 
   @Before
   public void setup() {
@@ -194,7 +195,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   private String obtainPayload(String filePath) throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
 
-    File file = new File(classLoader.getResource(filePath).getFile());
+    File file = new File(filePath);
     return FileUtils.readFileToString(file, Charset.defaultCharset());
   }
 

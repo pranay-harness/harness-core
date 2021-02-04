@@ -993,6 +993,14 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
+load("@bazel_tools//tools/build_defs/repo:maven_rules.bzl", "maven_jar")
+
+http_jar(
+    name = "com_github_tomakehurst_wiremock",
+    sha256 = "9f9061fcfb34bc014ad3d026651ce41cc8c4681c0592d0ace1700ef237d96d9b",
+    url = "https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock/1.57/wiremock-1.57-standalone.jar",
+)
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
 
@@ -1964,9 +1972,11 @@ maven_install(
         "org.jboss.aerogear:aerogear-otp-java:1.0.0",
         "org.jsoup:jsoup:1.8.3",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
+        "com.github.heremaps:oksse:0.9.0",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
+        "io.netty:netty-all",
     ],
     maven_install_json = "//:maven_install.json",
     override_targets = {

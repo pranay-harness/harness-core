@@ -224,8 +224,8 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   @BeforeClass
   public static void readMockData() throws IOException {
-    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
-    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+    projects = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_statuses"), JSONArray.class);
   }
 
   @Before

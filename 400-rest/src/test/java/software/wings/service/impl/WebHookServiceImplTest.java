@@ -225,8 +225,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pullrequest:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -243,8 +242,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     // convert JSON string to Map
@@ -266,8 +264,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_push_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_push_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     // convert JSON string to Map
@@ -286,8 +283,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_push_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_push_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     // convert JSON string to Map
@@ -307,8 +303,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pullrequest:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -329,8 +324,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(triggerWithBranchNameRegex);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(
-        classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request_created.json").getFile());
+    File file =
+        new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_pull_request_created.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pullrequest:created").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -351,8 +346,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(
-        classLoader.getResource("software/wings/service/impl/webhook/bitbucket_ref_changes_request.json").getFile());
+    File file =
+        new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_ref_changes_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("repo:refs_changed").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -372,8 +367,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_fork_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -394,8 +388,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_fork_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -415,8 +408,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_fork_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_fork_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("repo:fork").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -444,9 +436,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
                                  .build();
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
-    ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -477,8 +467,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -509,8 +498,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -540,8 +528,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -573,7 +560,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(classLoader.getResource("software/wings/service/impl/webhook/github_release.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_release.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("release").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -604,7 +591,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(classLoader.getResource("software/wings/service/impl/webhook/github_release.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_release.json");
 
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
@@ -635,7 +622,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(classLoader.getResource("software/wings/service/impl/webhook/github_release.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_release.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("release").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -667,7 +654,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(classLoader.getResource("software/wings/service/impl/webhook/github_package.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_package.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("package").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -697,7 +684,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file = new File(classLoader.getResource("software/wings/service/impl/webhook/github_package.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_package.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("package").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -728,8 +715,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_package_updated.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_package_updated.json");
 
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
@@ -749,8 +735,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    File file =
-        new File(classLoader.getResource("software/wings/service/impl/webhook/github_push_request.json").getFile());
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_push_request.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("push").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
@@ -790,9 +775,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     ClassLoader classLoader = getClass().getClassLoader();
     File file = new File(
-        classLoader
-            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
-            .getFile());
+        "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pr:merged").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -814,9 +797,8 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     ClassLoader classLoader = getClass().getClassLoader();
     File file = new File(
-        classLoader
-            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
-            .getFile());
+        "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json");
+
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pr:reviewer:approved").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -838,9 +820,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     ClassLoader classLoader = getClass().getClassLoader();
     File file = new File(
-        classLoader
-            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
-            .getFile());
+        "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pr:comment:added").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
@@ -862,9 +842,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     ClassLoader classLoader = getClass().getClassLoader();
     File file = new File(
-        classLoader
-            .getResource("software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json")
-            .getFile());
+        "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_deployment_trigger_pull_request_onprem.json");
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pullrequest:comment_deleted").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
