@@ -50,6 +50,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
 
   private String managerServiceSecret;
   private String jwtAuthSecret;
+  private String jwtIdentityServiceSecret;
   private boolean enableAuth;
   private String managerTarget;
   private String managerAuthority;

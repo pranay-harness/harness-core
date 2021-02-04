@@ -49,6 +49,10 @@ if [[ "" != "$MANAGER_JWT_AUTH_SECRET" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtAuthSecret "$MANAGER_JWT_AUTH_SECRET"
 fi
 
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
 if [[ "" != "$NG_MANAGER_URL" ]]; then
   yq write -i $CONFIG_FILE nextGen.ngManagerUrl "$NG_MANAGER_URL"
 fi

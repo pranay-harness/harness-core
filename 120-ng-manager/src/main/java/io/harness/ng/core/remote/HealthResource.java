@@ -11,6 +11,7 @@ import io.harness.exception.NoResultFoundException;
 import io.harness.health.HealthException;
 import io.harness.health.HealthService;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @ExposeInternalException
 @Slf4j
+@PublicApi
 public class HealthResource {
   private HealthService healthService;
 

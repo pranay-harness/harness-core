@@ -2,6 +2,7 @@ package io.harness.cvng;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -66,7 +67,7 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -509,8 +510,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
         || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
     serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getManagerAuthConfig().getJwtAuthSecret());
     serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), configuration.getManagerAuthConfig().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(
         DEFAULT.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
-    environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 

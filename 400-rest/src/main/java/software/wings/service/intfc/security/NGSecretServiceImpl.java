@@ -151,7 +151,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       if (isReadOnlySecretManager(secretManagerConfig)
           && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
         throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Cannot create a secret in read only secret manager", USER);
+            SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
       }
 
       // validate format of path as per type of secret manager
@@ -236,7 +236,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
             && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
           throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "Cannot update a secret in read only secret manager", USER);
+              SECRET_MANAGEMENT_ERROR, "Cannot update to an Inline secret in read only secret manager", USER);
         }
         validatePath(dto.getPath(), secretManagerConfigOptional.get().getEncryptionType());
 
@@ -294,7 +294,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
             && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
           throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "Cannot delete a secret in read only secret manager", USER);
+              SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
         }
         // if  secret text was created inline (not referenced), delete the secret in secret manager also
         if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
