@@ -34,7 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @InjectMocks @Inject private UpdateInstanceInfoWithLastArtifactIdMigration instanceInfoMigration;
 
@@ -43,10 +43,10 @@ public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBase
   @Category(UnitTests.class)
   public void testMigrate() {
     Account account = anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build();
-    wingsPersistence.save(account);
+    persistence.save(account);
 
     Application application = anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).appId(APP_ID).build();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
     Instance instance1 = Instance.builder()
                              .uuid("instance1")
@@ -71,26 +71,26 @@ public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBase
                              .isDeleted(true)
                              .build();
 
-    wingsPersistence.save(instance1);
-    wingsPersistence.save(instance2);
-    wingsPersistence.save(instance3);
+    persistence.save(instance1);
+    persistence.save(instance2);
+    persistence.save(instance3);
 
     Artifact artifact =
         anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID + "2").build();
-    wingsPersistence.save(artifact);
+    persistence.save(artifact);
 
     instanceInfoMigration.migrate();
-    Instance instance = wingsPersistence.get(Instance.class, "instance2");
+    Instance instance = persistence.get(Instance.class, "instance2");
     assertThat(instance).isNotNull();
     assertThat(instance.getLastArtifactId()).isNull();
 
     Map<String, String> metadata = new HashMap<>();
     metadata.put("image", "image:latest");
     artifact.setMetadata(metadata);
-    wingsPersistence.save(artifact);
+    persistence.save(artifact);
 
     instanceInfoMigration.migrate();
-    instance = wingsPersistence.get(Instance.class, "instance2");
+    instance = persistence.get(Instance.class, "instance2");
     assertThat(instance).isNotNull();
     assertThat(instance.getLastArtifactId()).isEqualTo(ARTIFACT_ID);
   }

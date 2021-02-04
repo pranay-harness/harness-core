@@ -38,7 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private ApplicationManifestService applicationManifestService;
   @InjectMocks @Inject private ServiceHelmValuesToManifestFileMigration serviceHelmValuesToManifestFileMigration;
 
@@ -55,7 +55,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   public void setupMocks() {
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
-    wingsPersistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    persistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
 
     service = Service.builder()
                   .uuid(SERVICE_ID)
@@ -71,7 +71,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testMigrateHelmValuesInServices() {
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     serviceHelmValuesToManifestFileMigration.migrate();
 

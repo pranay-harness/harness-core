@@ -48,7 +48,7 @@ import org.mockito.Mock;
 public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Inject @InjectMocks private ConfigFileSetupUsageBuilder configFileSetupUsageBuilder;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private List<ConfigFile> configFiles;
   private Account account;
@@ -59,7 +59,7 @@ public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
   public void setup() {
     initMocks(this);
     account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
+    account.setUuid(persistence.save(account));
     configFiles = new ArrayList<>();
 
     encryptedData = EncryptedData.builder()
@@ -73,7 +73,7 @@ public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
                         .name("xyz")
                         .fileSize(200)
                         .build();
-    String encryptedDataId = wingsPersistence.save(encryptedData);
+    String encryptedDataId = persistence.save(encryptedData);
     encryptedData.setUuid(encryptedDataId);
 
     ConfigFile configFile = ConfigFile.builder()
@@ -84,7 +84,7 @@ public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
                                 .description(UUIDGenerator.generateUuid())
                                 .envIdVersionMapString(UUIDGenerator.generateUuid())
                                 .setAsDefault(true)
-                                .encryptedFileId(wingsPersistence.save(encryptedData))
+                                .encryptedFileId(persistence.save(encryptedData))
                                 .encrypted(true)
                                 .build();
 
@@ -93,19 +93,19 @@ public class ConfigFileSetupUsageBuilderTest extends WingsBaseTest {
     configFile.setFileName(UUIDGenerator.generateUuid());
     configFile.setAppId(UUIDGenerator.generateUuid());
 
-    configFiles.add(wingsPersistence.get(ConfigFile.class, wingsPersistence.save(configFile)));
+    configFiles.add(persistence.get(ConfigFile.class, persistence.save(configFile)));
 
     ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate()
                                           .withName(UUIDGenerator.generateUuid())
                                           .withServiceId(UUIDGenerator.generateUuid())
                                           .build();
-    String serviceTemplateId = wingsPersistence.save(serviceTemplate);
+    String serviceTemplateId = persistence.save(serviceTemplate);
 
     configFile.setUuid(null);
     configFile.setName(UUIDGenerator.generateUuid());
     configFile.setEntityType(EntityType.SERVICE_TEMPLATE);
     configFile.setEntityId(serviceTemplateId);
-    configFiles.add(wingsPersistence.get(ConfigFile.class, wingsPersistence.save(configFile)));
+    configFiles.add(persistence.get(ConfigFile.class, persistence.save(configFile)));
 
     encryptionDetail =
         EncryptionDetail.builder().secretManagerName("secretManagerName").encryptionType(EncryptionType.LOCAL).build();

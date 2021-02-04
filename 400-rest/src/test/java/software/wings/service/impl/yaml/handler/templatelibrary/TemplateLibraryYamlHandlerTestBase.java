@@ -41,7 +41,7 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
   @Mock protected YamlPushService yamlPushService;
   @Inject private TemplateGalleryService templateGalleryService;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   public static String TEMPLATE_GALLERY_UUID = "uuid";
   protected void setup(String yamlFilePath, String templateName) {
@@ -55,7 +55,7 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
                                           .accountId(GLOBAL_ACCOUNT_ID)
                                           .uuid(TEMPLATE_GALLERY_UUID)
                                           .build();
-    wingsPersistence.save(templateGallery);
+    persistence.save(templateGallery);
   }
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(

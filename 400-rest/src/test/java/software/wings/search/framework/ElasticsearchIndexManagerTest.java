@@ -37,7 +37,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Mock ElasticsearchClient elasticsearchClient;
   @Mock MainConfiguration mainConfiguration;
   @Inject @InjectMocks ElasticsearchIndexManager elasticsearchIndexManager;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -168,7 +168,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
 
     SearchEntityIndexState searchEntityIndexState =
         new SearchEntityIndexState(ApplicationSearchEntity.class.getCanonicalName(), "0.1", indexName, false);
-    wingsPersistence.save(searchEntityIndexState);
+    persistence.save(searchEntityIndexState);
     receivedIndexName = elasticsearchIndexManager.getIndexName(ApplicationSearchEntity.TYPE);
     assertThat(receivedIndexName).isEqualTo(indexName);
   }

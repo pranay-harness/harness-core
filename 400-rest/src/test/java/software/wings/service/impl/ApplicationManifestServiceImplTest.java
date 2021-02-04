@@ -102,7 +102,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlPushService yamlPushService;
   @Mock private SettingsService settingsService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private HelmChartService helmChartService;
   @Spy private HelmHelper helmHelper;
@@ -112,7 +112,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", wingsPersistence);
+    Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", persistence);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
   }
 
@@ -725,7 +725,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setAccountId(ACCOUNT_ID);
     applicationManifest.setAppId(APP_ID);
     applicationManifest.setPollForChanges(true);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
     applicationManifestServiceImpl.deleteAppManifest(APP_ID, applicationManifest.getUuid());
@@ -785,18 +785,18 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   private void setUpForListPollingEnabled() {
     ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     ApplicationManifest applicationManifest1 = getHelmChartApplicationManifest();
     applicationManifest1.setAppId(APP_ID);
     applicationManifest1.setPollForChanges(true);
-    wingsPersistence.save(applicationManifest1);
+    persistence.save(applicationManifest1);
 
     ApplicationManifest applicationManifest2 = getHelmChartApplicationManifest();
     applicationManifest2.setAppId(APP_ID);
     applicationManifest2.setPollForChanges(true);
     applicationManifest2.setServiceId("SERVICE_ID_1");
-    wingsPersistence.save(applicationManifest2);
+    persistence.save(applicationManifest2);
 
     when(serviceResourceService.getServiceNames(anyString(), anySet()))
         .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
@@ -849,7 +849,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     ManifestFile oldManifestFile = buildManifestFile(applicationManifest);
 
-    wingsPersistence.save(oldManifestFile);
+    persistence.save(oldManifestFile);
 
     ManifestFile newManifestFile = buildManifestFile(applicationManifest);
     newManifestFile.setUuid(oldManifestFile.getUuid());
@@ -869,7 +869,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     ManifestFile oldManifestFile = buildManifestFile(applicationManifest);
 
-    wingsPersistence.save(oldManifestFile);
+    persistence.save(oldManifestFile);
 
     ManifestFile newManifestFile = buildManifestFile(applicationManifest);
     newManifestFile.setUuid(oldManifestFile.getUuid());

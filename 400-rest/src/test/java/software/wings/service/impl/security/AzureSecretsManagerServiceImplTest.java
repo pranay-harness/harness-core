@@ -40,7 +40,7 @@ import org.mockito.Mock;
 
 public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
 
@@ -159,11 +159,11 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, kryoSerializer.clone(azureVaultConfig));
 
-    wingsPersistence.save(EncryptedData.builder()
-                              .accountId(accountId)
-                              .encryptionType(EncryptionType.AZURE_VAULT)
-                              .kmsId(savedConfigId)
-                              .build());
+    persistence.save(EncryptedData.builder()
+                         .accountId(accountId)
+                         .encryptionType(EncryptionType.AZURE_VAULT)
+                         .kmsId(savedConfigId)
+                         .build());
 
     try {
       azureSecretsManagerService.deleteConfig(accountId, savedConfigId);

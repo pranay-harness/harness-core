@@ -38,7 +38,7 @@ import org.mockito.Mock;
 
 public class ArtifactCheckStateTest extends WingsBaseTest {
   @Inject private ArtifactService artifactService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private ExecutionContext context;
   @Mock DelayEventHelper delayEventHelper;
 
@@ -70,8 +70,8 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void failedArtifacts() {
-    String failedArtifactId = wingsPersistence.save(anArtifact().withStatus(Status.FAILED).withAppId(appId).build());
-    String errorArtifactId = wingsPersistence.save(anArtifact().withStatus(Status.ERROR).withAppId(appId).build());
+    String failedArtifactId = persistence.save(anArtifact().withStatus(Status.FAILED).withAppId(appId).build());
+    String errorArtifactId = persistence.save(anArtifact().withStatus(Status.ERROR).withAppId(appId).build());
     workflowStandardParams.setArtifactIds(Lists.newArrayList(failedArtifactId, errorArtifactId));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
@@ -82,18 +82,18 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void allDownloadedArtifacts() {
-    String artifactId1 = wingsPersistence.save(anArtifact()
-                                                   .withStatus(Status.READY)
-                                                   .withAppId(appId)
-                                                   .withContentStatus(ContentStatus.DOWNLOADED)
-                                                   .withDisplayName("artifact1")
-                                                   .build());
-    String artifactId2 = wingsPersistence.save(anArtifact()
-                                                   .withStatus(Status.READY)
-                                                   .withAppId(appId)
-                                                   .withContentStatus(ContentStatus.DOWNLOADED)
-                                                   .withDisplayName("artifact2")
-                                                   .build());
+    String artifactId1 = persistence.save(anArtifact()
+                                              .withStatus(Status.READY)
+                                              .withAppId(appId)
+                                              .withContentStatus(ContentStatus.DOWNLOADED)
+                                              .withDisplayName("artifact1")
+                                              .build());
+    String artifactId2 = persistence.save(anArtifact()
+                                              .withStatus(Status.READY)
+                                              .withAppId(appId)
+                                              .withContentStatus(ContentStatus.DOWNLOADED)
+                                              .withDisplayName("artifact2")
+                                              .build());
     workflowStandardParams.setArtifactIds(Lists.newArrayList(artifactId1, artifactId2));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
@@ -107,27 +107,27 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   public void kickDownloadArtifacts() {
     ArtifactStream artifactStream1 = new JenkinsArtifactStream();
     artifactStream1.setAppId(appId);
-    String artifactStreamId1 = wingsPersistence.save(artifactStream1);
+    String artifactStreamId1 = persistence.save(artifactStream1);
 
-    String artifactId1 = wingsPersistence.save(anArtifact()
-                                                   .withStatus(Status.READY)
-                                                   .withAppId(appId)
-                                                   .withContentStatus(ContentStatus.NOT_DOWNLOADED)
-                                                   .withDisplayName("artifact1")
-                                                   .withArtifactStreamId(artifactStreamId1)
-                                                   .build());
+    String artifactId1 = persistence.save(anArtifact()
+                                              .withStatus(Status.READY)
+                                              .withAppId(appId)
+                                              .withContentStatus(ContentStatus.NOT_DOWNLOADED)
+                                              .withDisplayName("artifact1")
+                                              .withArtifactStreamId(artifactStreamId1)
+                                              .build());
 
     ArtifactStream artifactStream2 = new JenkinsArtifactStream();
     artifactStream2.setAppId(appId);
-    String artifactStreamId2 = wingsPersistence.save(artifactStream2);
+    String artifactStreamId2 = persistence.save(artifactStream2);
 
-    String artifactId2 = wingsPersistence.save(anArtifact()
-                                                   .withStatus(Status.READY)
-                                                   .withAppId(appId)
-                                                   .withContentStatus(ContentStatus.NOT_DOWNLOADED)
-                                                   .withDisplayName("artifact2")
-                                                   .withArtifactStreamId(artifactStreamId2)
-                                                   .build());
+    String artifactId2 = persistence.save(anArtifact()
+                                              .withStatus(Status.READY)
+                                              .withAppId(appId)
+                                              .withContentStatus(ContentStatus.NOT_DOWNLOADED)
+                                              .withDisplayName("artifact2")
+                                              .withArtifactStreamId(artifactStreamId2)
+                                              .build());
     workflowStandardParams.setArtifactIds(Lists.newArrayList(artifactId1, artifactId2));
 
     ExecutionResponse executionResponse = artifactCheckState.execute(context);

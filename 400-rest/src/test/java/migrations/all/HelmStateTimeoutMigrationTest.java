@@ -60,7 +60,7 @@ public class HelmStateTimeoutMigrationTest extends WingsBaseTest {
   @Mock private Application application;
   @Mock private Account account;
   @Mock private EnvironmentService environmentService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowService workflowService;
@@ -80,9 +80,9 @@ public class HelmStateTimeoutMigrationTest extends WingsBaseTest {
                         .infrastructure(GoogleKubernetesEngine.builder().build())
                         .appId(APP_ID)
                         .build());
-    wingsPersistence.save(anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    persistence.save(anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountName("ACCOUNT_NAME").build();
-    wingsPersistence.save(account);
+    persistence.save(account);
   }
 
   @Test

@@ -131,7 +131,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Captor ArgumentCaptor<Command> commandCaptor;
   @Captor ArgumentCaptor<Boolean> booleanCaptor;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private HarnessTagService harnessTagService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
@@ -268,7 +268,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmVersionIfNotPresent() {
     Service service = Service.builder().appId(APP_ID).uuid("1972510").deploymentType(HELM).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmVersionWithDefault(APP_ID, service.getUuid())).isEqualTo(V2);
   }
 
@@ -277,20 +277,20 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmVersionIfPresent() {
     Service service = Service.builder().appId(APP_ID).uuid("017071").helmVersion(V2).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmVersionWithDefault(APP_ID, service.getUuid())).isEqualTo(V2);
 
     service.setHelmVersion(V3);
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmVersionWithDefault(APP_ID, service.getUuid())).isEqualTo(V3);
   }
 
   private Service updateAndGetService(Service oldService, Service newService) {
-    wingsPersistence.save(newService);
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    persistence.save(newService);
+    UpdateOperations<Service> updateOperations = persistence.createUpdateOperations(Service.class);
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
-    wingsPersistence.update(newService, updateOperations);
-    newService = wingsPersistence.get(Service.class, newService.getUuid());
+    persistence.update(newService, updateOperations);
+    newService = persistence.get(Service.class, newService.getUuid());
     return newService;
   }
 
@@ -307,7 +307,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   private void opsMapShouldNotBeUpdatedWhenNonHelmK8sService() {
     Service newService = Service.builder().appId(APP_ID).deploymentType(SSH).build();
     Service oldService = Service.builder().appId(APP_ID).deploymentType(SSH).build();
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    UpdateOperations<Service> updateOperations = persistence.createUpdateOperations(Service.class);
 
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
 
@@ -320,7 +320,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   private void opsMapShouldNotBeUpdatedWhenVersionNotPresentInNewService() {
     Service newService = Service.builder().appId(APP_ID).deploymentType(HELM).build();
     Service oldService = Service.builder().appId(APP_ID).deploymentType(HELM).helmVersion(V2).build();
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    UpdateOperations<Service> updateOperations = persistence.createUpdateOperations(Service.class);
 
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
 
@@ -333,7 +333,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   private void opsMapShouldNotBeUpdatedWhenVersionNotPresentInOldAndNewService() {
     Service newService = Service.builder().appId(APP_ID).deploymentType(HELM).build();
     Service oldService = Service.builder().appId(APP_ID).deploymentType(HELM).build();
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    UpdateOperations<Service> updateOperations = persistence.createUpdateOperations(Service.class);
 
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
 
@@ -346,7 +346,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   private void opsMapShouldBeUpdatedWhenVersionPresent() {
     Service newService = Service.builder().appId(APP_ID).deploymentType(HELM).helmVersion(V2).build();
     Service oldService = Service.builder().appId(APP_ID).deploymentType(HELM).helmVersion(V3).build();
-    UpdateOperations<Service> updateOperations = wingsPersistence.createUpdateOperations(Service.class);
+    UpdateOperations<Service> updateOperations = persistence.createUpdateOperations(Service.class);
 
     serviceResourceService.updateOperationsForHelmVersion(oldService, newService, updateOperations);
 
@@ -719,11 +719,11 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testListByDeploymentType() {
-    wingsPersistence.save(Service.builder().uuid("1").appId(APP_ID).deploymentType(SSH).build());
-    wingsPersistence.save(Service.builder().uuid("2").appId(APP_ID).deploymentType(KUBERNETES).build());
-    wingsPersistence.save(Service.builder().uuid("3").appId(APP_ID).artifactType(ArtifactType.JAR).build());
-    wingsPersistence.save(Service.builder().uuid("4").appId(APP_ID).artifactType(ArtifactType.AWS_CODEDEPLOY).build());
-    wingsPersistence.save(
+    persistence.save(Service.builder().uuid("1").appId(APP_ID).deploymentType(SSH).build());
+    persistence.save(Service.builder().uuid("2").appId(APP_ID).deploymentType(KUBERNETES).build());
+    persistence.save(Service.builder().uuid("3").appId(APP_ID).artifactType(ArtifactType.JAR).build());
+    persistence.save(Service.builder().uuid("4").appId(APP_ID).artifactType(ArtifactType.AWS_CODEDEPLOY).build());
+    persistence.save(
         Service.builder().uuid("5").appId(APP_ID).deploymentType(CUSTOM).deploymentTypeTemplateId(TEMPLATE_ID).build());
     assertThat(serviceResourceService.listByDeploymentType(APP_ID, SSH.name(), null)
                    .stream()
@@ -736,7 +736,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
                    .map(Service::getUuid)
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder("3", "5");
-    asList("1", "2", "3", "4", "5").forEach(id -> wingsPersistence.delete(Service.class, id));
+    asList("1", "2", "3", "4", "5").forEach(id -> persistence.delete(Service.class, id));
   }
 
   @Test
@@ -750,7 +750,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
                           .deploymentType(CUSTOM)
                           .deploymentTypeTemplateId(TEMPLATE_ID)
                           .build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     serviceResourceService.update(service);
 
     verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(service);
@@ -786,9 +786,9 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
                           .serviceCommands(serviceCommands)
                           .build();
 
-    wingsPersistence.save(command);
-    wingsPersistence.save(serviceCommand);
-    wingsPersistence.save(service);
+    persistence.save(command);
+    persistence.save(serviceCommand);
+    persistence.save(service);
 
     serviceResourceService.delete(APP_ID, SERVICE_ID);
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
@@ -821,7 +821,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmCommandFlags() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).helmVersion(V2).deploymentType(HELM).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
         .containsExactlyInAnyOrder(LIST, INSTALL, TEMPLATE, ROLLBACK, VERSION, DELETE, UPGRADE, HISTORY, FETCH);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
@@ -838,7 +838,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
 
     service.setDeploymentType(KUBERNETES);
     service.setHelmVersion(V3);
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(V2, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
         .containsExactlyInAnyOrder(FETCH, VERSION, TEMPLATE);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, StoreType.HelmChartRepo))
@@ -859,7 +859,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmCommandFlagsForOldServices() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, null)).isEmpty();
   }
 
@@ -919,7 +919,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testaddArtifactStreamId() {
     Service service = Service.builder().uuid(SERVICE_ID).appId(APP_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID, false);
     Service updatedService = serviceResourceService.addArtifactStreamId(service, ARTIFACT_STREAM_ID);
     assertThat(updatedService.getArtifactStreamIds()).isNotNull();
@@ -931,7 +931,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testsetHelmValueYaml() {
     Service service = Service.builder().uuid(SERVICE_ID).appId(APP_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     ManifestFile manifestFile =
         ManifestFile.builder().applicationManifestId("APPMANIFEST_ID").fileName("manifestFile1").build();
@@ -939,7 +939,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     when(applicationManifestService.getManifestFileByFileName("APPMANIFEST_ID", "values.yaml"))
         .thenReturn(manifestFile);
 
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.VALUES))
         .thenReturn(applicationManifest);
     when(applicationManifestService.getByServiceId(APP_ID, SERVICE_ID, AppManifestKind.VALUES))
@@ -958,7 +958,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testgetWithHelmValues() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID);
     assertThat(serviceResourceService.getWithHelmValues(APP_ID, SERVICE_ID, null)).isNotNull();
   }
@@ -968,7 +968,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testupdateWithHelmValues() {
     Service service = Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.VALUES))
         .thenReturn(applicationManifest);
     ManifestFile manifestFile = ManifestFile.builder()
@@ -997,7 +997,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testupsertHelmChartSpecification() {
     Service service = getService();
-    wingsPersistence.save(service);
+    persistence.save(service);
     HelmChartSpecification helmChartSpecification =
         HelmChartSpecification.builder().chartName("chartName").chartVersion("1.0").build();
     helmChartSpecification.setAppId(APP_ID);
@@ -1017,7 +1017,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   public void testlistByCustomDeploymentTypeId() {
     Service service = getService();
     service.setDeploymentTypeTemplateId("DeploymentTypeTemplate");
-    wingsPersistence.save(service);
+    persistence.save(service);
     assertThat(
         serviceResourceService.listByCustomDeploymentTypeId(ACCOUNT_ID, Arrays.asList("DeploymentTypeTemplate"), 10))
         .isNotEmpty();
@@ -1027,7 +1027,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testfetchServicesByUuids() {
-    wingsPersistence.save(getService());
+    persistence.save(getService());
     List serviceUuids = Arrays.asList(SERVICE_ID, "SERVICE_ID1");
     List<Service> services = serviceResourceService.fetchServicesByUuids(APP_ID, serviceUuids);
     assertThat(services).isNotEmpty();
@@ -1038,7 +1038,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testfetchServicesByUuidsByAccountId() {
-    wingsPersistence.save(getService());
+    persistence.save(getService());
     List serviceUuids = Arrays.asList(SERVICE_ID, "SERVICE_ID1");
     List<Service> services = serviceResourceService.fetchServicesByUuidsByAccountId(ACCOUNT_ID, serviceUuids);
     assertThat(services).isNotEmpty();

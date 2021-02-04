@@ -36,7 +36,7 @@ import org.mockito.Mockito;
  * 07/May/2019
  */
 public class GitConnectorTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private AccountService accountService;
   @Mock private GitConfigHelperService gitConfigHelperService;
   @Mock private SettingValidationService settingValidationService;

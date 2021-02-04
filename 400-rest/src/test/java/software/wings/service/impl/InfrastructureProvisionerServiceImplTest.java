@@ -141,7 +141,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WorkflowExecutionService workflowExecutionService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private String blankString = "     ";
 
@@ -692,7 +692,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void checkForDuplicate() {
     InfrastructureProvisionerServiceImpl provisionerService = spy(InfrastructureProvisionerServiceImpl.class);
-    Reflect.on(provisionerService).set("wingsPersistence", wingsPersistence);
+    Reflect.on(provisionerService).set("wingsPersistence", persistence);
     testSaveProvisionerWithNewName(provisionerService);
     testSaveProvisionerWithExistingName(provisionerService);
     testUpdateProvisionerWithNewName(provisionerService);
@@ -736,13 +736,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .uuid(PROVISIONER_ID + "_2")
                                                         .build();
 
-    wingsPersistence.save(existingProvisioner);
+    persistence.save(existingProvisioner);
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.checkForDuplicate(provisioner))
         .withMessageContaining("Provisioner with name");
 
-    wingsPersistence.delete(provisioner);
+    persistence.delete(provisioner);
   }
 
   private void testUpdateProvisionerWithNewName(InfrastructureProvisionerServiceImpl provisionerService) {
@@ -756,9 +756,9 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .name("some-other-name")
                                                         .uuid(PROVISIONER_ID + "_2")
                                                         .build();
-    wingsPersistence.save(existingProvisioner);
+    persistence.save(existingProvisioner);
     provisionerService.checkForDuplicate(provisioner);
-    wingsPersistence.delete(existingProvisioner);
+    persistence.delete(existingProvisioner);
   }
 
   private void testSaveProvisionerWithExistingName(InfrastructureProvisionerServiceImpl provisionerService) {
@@ -770,11 +770,11 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .uuid(PROVISIONER_ID)
                                                         .build();
 
-    wingsPersistence.save(existingProvisioner);
+    persistence.save(existingProvisioner);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.checkForDuplicate(provisioner))
         .withMessageContaining("Provisioner with name");
-    wingsPersistence.delete(existingProvisioner);
+    persistence.delete(existingProvisioner);
   }
 
   private void testSaveProvisionerWithNewName(InfrastructureProvisionerServiceImpl provisionerService) {
@@ -791,7 +791,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .name(provisioner.getName())
                                                         .uuid(PROVISIONER_ID)
                                                         .build();
-    wingsPersistence.save(existingProvisioner);
+    persistence.save(existingProvisioner);
     provisionerService.checkForDuplicate(provisioner);
   }
 

@@ -47,7 +47,7 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   @Mock SettingsService settingsService;
   @Inject @InjectMocks SettingAttributeSetupUsageBuilder settingAttributeSetupUsageBuilder;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private Account account;
   private EncryptedData encryptedData;
@@ -58,7 +58,7 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   public void setup() {
     initMocks(this);
     account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
+    account.setUuid(persistence.save(account));
 
     encryptedData = EncryptedData.builder()
                         .encryptionKey("plainTextKey")

@@ -74,7 +74,7 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
   @Mock private LicenseService licenseService;
   @Inject private Morphia morphia;
   @Inject FeatureFlagService featureFlagService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private final String appId = UUID.randomUUID().toString();
   private static final String GROUP_NAME = "GROUP_NAME";
@@ -130,13 +130,13 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
                     .build();
     Application application = createApplication();
     ServiceTemplate serviceTemplate = createServiceTemplate(application);
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    wingsPersistence.save(serviceTemplate);
+    persistence.save(account);
+    persistence.save(application);
+    persistence.save(serviceTemplate);
     when(userService.getUsersOfAccount(ACCOUNT_ID)).thenReturn(Arrays.asList(user));
     boolean deleted = deleteAccountHelper.deleteExportableAccountData(ACCOUNT_ID);
     assertThat(deleted).isTrue();
-    assertThat(wingsPersistence.get(Account.class, account.getUuid())).isNull();
+    assertThat(persistence.get(Account.class, account.getUuid())).isNull();
   }
 
   @Test
@@ -165,10 +165,10 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     collections.sort(String::compareTo);
     System.out.println(String.join(System.lineSeparator(), collections));
     Application application = createApplication();
-    wingsPersistence.save(application);
-    assertThat(wingsPersistence.get(Application.class, appId)).isNotNull();
+    persistence.save(application);
+    assertThat(persistence.get(Application.class, appId)).isNotNull();
     assertThat(deleteAccountHelper.deleteEntityUsingAccountId(ACCOUNT_ID, Application.class)).isTrue();
-    assertThat(wingsPersistence.get(Application.class, appId)).isNull();
+    assertThat(persistence.get(Application.class, appId)).isNull();
   }
 
   @Test
@@ -178,12 +178,12 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     Account account = createAccount(AccountStatus.EXPIRED);
     Application application = createApplication();
     ServiceTemplate serviceTemplate = createServiceTemplate(application);
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    wingsPersistence.save(serviceTemplate);
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
+    persistence.save(account);
+    persistence.save(application);
+    persistence.save(serviceTemplate);
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
     assertThat(deleteAccountHelper.deleteEntityUsingAppId(ACCOUNT_ID, ServiceTemplate.class)).isTrue();
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
   }
 
   @Test
@@ -193,16 +193,16 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     Account account = createAccount(AccountStatus.EXPIRED);
     Application application = createApplication();
     ServiceTemplate serviceTemplate = createServiceTemplate(application);
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    wingsPersistence.save(serviceTemplate);
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
+    persistence.save(account);
+    persistence.save(application);
+    persistence.save(serviceTemplate);
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNotNull();
     assertThat(deleteAccountHelper.deleteApplicationAccessEntities(ACCOUNT_ID)).isEmpty();
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNotNull();
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
   }
 
   @Test
@@ -211,13 +211,13 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
   public void testDeleteAccountAccessEntities() {
     Account account = createAccount(AccountStatus.EXPIRED);
     Application application = createApplication();
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
+    persistence.save(account);
+    persistence.save(application);
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNotNull();
     assertThat(deleteAccountHelper.deleteAccountAccessEntities(ACCOUNT_ID)).isEmpty();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNull();
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNull();
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
   }
 
   @Test
@@ -226,13 +226,13 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
   public void testDeleteOwnedByAccountEntities() {
     Account account = createAccount(AccountStatus.EXPIRED);
     Application application = createApplication();
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
+    persistence.save(account);
+    persistence.save(application);
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNotNull();
     assertThat(deleteAccountHelper.deleteOwnedByAccountEntities(ACCOUNT_ID)).isEmpty();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNull();
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNull();
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
   }
 
   @Test
@@ -250,20 +250,20 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
                                   .accountIds(Sets.newHashSet(ACCOUNT_ID, "abc", "def", "ghi"))
                                   .obsolete(false)
                                   .build();
-    wingsPersistence.save(account);
-    wingsPersistence.save(application);
-    wingsPersistence.save(serviceTemplate);
-    wingsPersistence.save(usageBucket1);
-    wingsPersistence.save(featureFlag);
+    persistence.save(account);
+    persistence.save(application);
+    persistence.save(serviceTemplate);
+    persistence.save(usageBucket1);
+    persistence.save(featureFlag);
 
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNotNull();
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNotNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNotNull();
     assertThat(deleteAccountHelper.deleteAllEntities(ACCOUNT_ID)).isEmpty();
-    assertThat(wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
-    assertThat(wingsPersistence.get(Application.class, application.getUuid())).isNull();
-    assertThat(wingsPersistence.get(Account.class, ACCOUNT_ID)).isNotNull();
-    assertThat(wingsPersistence.get(UsageBucket.class, USAGE_BUCKET_KEY_1)).isNull();
+    assertThat(persistence.get(ServiceTemplate.class, serviceTemplate.getUuid())).isNull();
+    assertThat(persistence.get(Application.class, application.getUuid())).isNull();
+    assertThat(persistence.get(Account.class, ACCOUNT_ID)).isNotNull();
+    assertThat(persistence.get(UsageBucket.class, USAGE_BUCKET_KEY_1)).isNull();
 
     // It is not a proper use to take the FeatureFlag and keep it. It should be always obtained from the service
     // right before it is used.
@@ -278,13 +278,13 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     UsageBucket usageBucket1 = new UsageBucket(USAGE_BUCKET_KEY_1, EMPTY_LIST);
     UsageBucket usageBucket2 = new UsageBucket(USAGE_BUCKET_KEY_2, EMPTY_LIST);
     UsageBucket usageBucket3 = new UsageBucket(USAGE_BUCKET_KEY_3, EMPTY_LIST);
-    wingsPersistence.save(usageBucket1);
-    wingsPersistence.save(usageBucket2);
-    wingsPersistence.save(usageBucket3);
+    persistence.save(usageBucket1);
+    persistence.save(usageBucket2);
+    persistence.save(usageBucket3);
     deleteAccountHelper.removeAccountFromUsageBucketsCollection(ACCOUNT_ID);
-    assertThat(wingsPersistence.get(UsageBucket.class, USAGE_BUCKET_KEY_1)).isNull();
-    assertThat(wingsPersistence.get(UsageBucket.class, USAGE_BUCKET_KEY_2)).isNotNull();
-    assertThat(wingsPersistence.get(UsageBucket.class, USAGE_BUCKET_KEY_3)).isNull();
+    assertThat(persistence.get(UsageBucket.class, USAGE_BUCKET_KEY_1)).isNull();
+    assertThat(persistence.get(UsageBucket.class, USAGE_BUCKET_KEY_2)).isNotNull();
+    assertThat(persistence.get(UsageBucket.class, USAGE_BUCKET_KEY_3)).isNull();
   }
 
   @Test
@@ -303,7 +303,7 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(perpetualTaskRecord));
     doReturn(entitiesRemainingForDeletion).when(deleteAccountHelperSpy).deleteAllEntities(ACCOUNT_ID);
     when(licenseService.updateAccountLicense(anyString(), any())).thenReturn(true);
-    wingsPersistence.save(account);
+    persistence.save(account);
 
     deleteAccountHelperSpy.deleteAccount(ACCOUNT_ID);
 
@@ -326,14 +326,12 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
     when(perpetualTaskService.listAllTasksForAccount(ACCOUNT_ID))
         .thenReturn(Collections.singletonList(perpetualTaskRecord));
     when(licenseService.updateAccountLicense(anyString(), any())).thenReturn(true);
-    wingsPersistence.save(account);
+    persistence.save(account);
 
     deleteAccountHelperSpy.deleteAccount(ACCOUNT_ID);
 
-    List<DeletedEntity> deletedEntities = wingsPersistence.createQuery(DeletedEntity.class, excludeAuthority)
-                                              .field("entityId")
-                                              .equal(ACCOUNT_ID)
-                                              .asList();
+    List<DeletedEntity> deletedEntities =
+        persistence.createQuery(DeletedEntity.class, excludeAuthority).field("entityId").equal(ACCOUNT_ID).asList();
 
     assertThat(deletedEntities.size()).isEqualTo(1);
     assertThat(deletedEntities.get(0).getEntityId()).isEqualTo(ACCOUNT_ID);
@@ -347,15 +345,14 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
         new SegmentGroupEventJobContext(0L, Collections.singletonList("accountId1"));
     SegmentGroupEventJobContext segmentGroupEventJobContext2 =
         new SegmentGroupEventJobContext(0L, Arrays.asList("accountId1", "accountId2"));
-    wingsPersistence.save(segmentGroupEventJobContext1);
-    wingsPersistence.save(segmentGroupEventJobContext2);
+    persistence.save(segmentGroupEventJobContext1);
+    persistence.save(segmentGroupEventJobContext2);
 
     deleteAccountHelper.removeAccountFromSegmentGroupEventContextCollection("accountId1");
 
-    assertThat(wingsPersistence.get(SegmentGroupEventJobContext.class, segmentGroupEventJobContext1.getUuid()))
-        .isNull();
+    assertThat(persistence.get(SegmentGroupEventJobContext.class, segmentGroupEventJobContext1.getUuid())).isNull();
     assertThat(
-        wingsPersistence.get(SegmentGroupEventJobContext.class, segmentGroupEventJobContext2.getUuid()).getAccountIds())
+        persistence.get(SegmentGroupEventJobContext.class, segmentGroupEventJobContext2.getUuid()).getAccountIds())
         .hasSameElementsAs(Collections.singletonList("accountId2"));
   }
 }

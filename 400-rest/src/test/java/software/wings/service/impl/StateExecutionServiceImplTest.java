@@ -65,7 +65,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
   @Mock private SweepingOutputService sweepingOutputService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @InjectMocks private StateExecutionServiceImpl stateExecutionService = spy(new StateExecutionServiceImpl());
 
@@ -74,7 +74,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     Reflect.on(stateExecutionService).set("featureFlagService", featureFlagService);
     Reflect.on(stateExecutionService).set("appService", appService);
     Reflect.on(stateExecutionService).set("sweepingOutputService", sweepingOutputService);
-    Reflect.on(stateExecutionService).set("wingsPersistence", wingsPersistence);
+    Reflect.on(stateExecutionService).set("wingsPersistence", persistence);
   }
 
   @Test
@@ -291,7 +291,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchExecutionStatesMap() {
     StateExecutionInstance stateExecutionInstance = createStateExecutionInstance();
-    wingsPersistence.save(stateExecutionInstance);
+    persistence.save(stateExecutionInstance);
     Map<String, StateExecutionInstance> executionStateMap = stateExecutionService.executionStatesMap(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
     assertThat(executionStateMap).isNotEmpty();
@@ -379,7 +379,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testListByIdsUsingSecondary() {
-    String id = wingsPersistence.save(createStateExecutionInstance());
+    String id = persistence.save(createStateExecutionInstance());
 
     List<StateExecutionInstance> stateExecutionInstances =
         stateExecutionService.listByIdsUsingSecondary(Collections.emptyList());
@@ -397,7 +397,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAppendDelegateTaskDetails() {
     StateExecutionInstance instance = createStateExecutionInstance();
-    String id = wingsPersistence.save(instance);
+    String id = persistence.save(instance);
 
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("key3", "value3");

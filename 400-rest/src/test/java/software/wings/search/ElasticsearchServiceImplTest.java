@@ -42,7 +42,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   @Mock private ElasticsearchIndexManager elasticsearchIndexManager;
   @Mock private ElasticsearchClient elasticsearchClient;
   @Inject @InjectMocks private ElasticsearchServiceImpl elasticsearchService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -51,7 +51,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   public void testGetSearchResults() throws IOException {
     String searchString = "value";
     Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
 
     SearchResponse searchResponse = SearchRequestHandlerTestUtils.getSearchResponse(ApplicationSearchEntity.TYPE);
 

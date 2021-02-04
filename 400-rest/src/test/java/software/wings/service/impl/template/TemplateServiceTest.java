@@ -116,7 +116,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Inject private TemplateServiceImpl templateServiceImpl;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Inject private ImportedTemplateService importedTemplateService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = SRINIVAS)
@@ -444,7 +444,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                             .customSecretsManagerShellScript(script)
                                             .testVariables(new HashSet<>())
                                             .build();
-    wingsPersistence.save(config);
+    persistence.save(config);
     templateService.delete(savedTemplate.getAccountId(), savedTemplate.getUuid());
   }
 
@@ -1253,7 +1253,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                      .templateUuid(template.getUuid())
                                      .templateType(SSH)
                                      .build();
-    wingsPersistence.save(newVersion);
+    persistence.save(newVersion);
     saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandName_1, commandStoreName, "2.1", false);
 
     List<ImportedCommand> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
@@ -1532,7 +1532,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                               .commandStoreName(commandStoreName)
                                               .templateId(template.getUuid())
                                               .build();
-      wingsPersistence.save(importedTemplate);
+      persistence.save(importedTemplate);
     }
 
     return templateService.get(template.getUuid());

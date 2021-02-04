@@ -32,7 +32,7 @@ import org.junit.experimental.categories.Category;
 public class ExecutionGenTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject KryoSerializer kryoSerializer;
 
   @Test
@@ -42,7 +42,7 @@ public class ExecutionGenTest extends WingsBaseTest {
   public void generateData() {
     PageRequest<WorkflowExecution> pageRequest = aPageRequest().withLimit("500").build();
 
-    PageResponse<WorkflowExecution> response = wingsPersistence.query(WorkflowExecution.class, pageRequest);
+    PageResponse<WorkflowExecution> response = persistence.query(WorkflowExecution.class, pageRequest);
 
     for (int i = 0; i < 50; i++) {
       WorkflowExecution workflowExecution = kryoSerializer.clone(response.get(random.nextInt(response.size())));
@@ -55,7 +55,7 @@ public class ExecutionGenTest extends WingsBaseTest {
       long interval = day * 24 * 3600 * 1000;
       workflowExecution.setCreatedAt(workflowExecution.getCreatedAt() - interval);
 
-      wingsPersistence.save(workflowExecution);
+      persistence.save(workflowExecution);
     }
     log.info("response size: {}", response.size());
   }

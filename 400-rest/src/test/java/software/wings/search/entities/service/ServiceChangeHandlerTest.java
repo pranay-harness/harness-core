@@ -56,7 +56,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   @Inject @InjectMocks private ServiceChangeHandler serviceChangeHandler;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private static final String APP_NAME = "ServiceHandlerTestForApplication" + System.currentTimeMillis();
   private static final String SERVICE_NAME = "ServiceHandlerTestForService" + System.currentTimeMillis();
@@ -90,40 +90,40 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(accountId, appId, APP_NAME);
     assertThat(application).isNotNull();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
     service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
-    wingsPersistence.save(environment);
+    persistence.save(environment);
 
     workflow = WorkflowEntityTestUtils.createWorkflow(
         accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
-    wingsPersistence.save(workflow);
+    persistence.save(workflow);
 
     pipeline =
         PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
-    wingsPersistence.save(pipeline);
+    persistence.save(pipeline);
 
     workflowExecution = RelatedDeploymentEntityTestUtils.createWorkflowExecution(
         workflowExecutionId, appId, serviceId, environmentId, workflowId, pipelineId, WorkflowType.ORCHESTRATION);
     assertThat(workflowExecution).isNotNull();
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, accountId, appId, serviceId, EntityType.SERVICE.name(), Type.DELETE.name(), true);
     assertThat(deleteAuditHeader).isNotNull();
-    wingsPersistence.save(deleteAuditHeader);
+    persistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, accountId, appId, serviceId, EntityType.SERVICE.name(), Type.UPDATE.name(), true);
     assertThat(nonDeleteAuditHeader).isNotNull();
-    wingsPersistence.save(nonDeleteAuditHeader);
+    persistence.save(nonDeleteAuditHeader);
 
     deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         deleteAuditHeader, appId, ChangeType.UPDATE, serviceId, Type.DELETE.name());
@@ -136,7 +136,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     nonResourceTypeAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, accountId, appId, serviceId, EntityType.SERVICE.name(), Type.UPDATE.name(), false);
     assertThat(nonResourceTypeAuditHeader).isNotNull();
-    wingsPersistence.save(nonResourceTypeAuditHeader);
+    persistence.save(nonResourceTypeAuditHeader);
 
     nonResourceTypeAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         nonResourceTypeAuditHeader, appId, ChangeType.UPDATE, serviceId, Type.UPDATE.name());

@@ -44,7 +44,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   @Mock GitSyncService gitSyncService;
   @Mock AppService appService;
   @InjectMocks @Inject GitSyncEntitiesExpiryHandler gitSyncEntitiesExpiryHandler;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private final Long ONE_MONTH_IN_MILLS = 2592000000L;
   private final Long TWELVE_MONTH_IN_MILLS = 31104000000L;
@@ -62,16 +62,16 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   public void testGitSyncError() {
     GitSyncError gitSyncError =
         builder().gitCommitId("commitId").accountId(account.getUuid()).fullSyncPath(false).build();
-    wingsPersistence.save(gitSyncError);
+    persistence.save(gitSyncError);
     GitSyncError gitSyncError_1 =
         builder().gitCommitId("commitId1").accountId(account.getUuid()).fullSyncPath(false).build();
-    wingsPersistence.save(gitSyncError_1);
+    persistence.save(gitSyncError_1);
     gitSyncError_1.setCreatedAt(gitSyncError_1.getCreatedAt() + 2);
-    wingsPersistence.save(gitSyncError_1);
+    persistence.save(gitSyncError_1);
 
     gitSyncEntitiesExpiryHandler.handleGitError(account, gitSyncError_1.getCreatedAt() - 1);
 
-    assertThat(wingsPersistence.createQuery(GitSyncError.class)
+    assertThat(persistence.createQuery(GitSyncError.class)
                    .filter(GitSyncErrorKeys.accountId, account.getUuid())
                    .asList()
                    .size())
@@ -87,34 +87,34 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
     final String accountId = account.getUuid();
     GitCommit gitCommit = buildGitCommit(connectorId, branchName, GitCommit.Status.COMPLETED, accountId);
     GitCommit gitCommit_1 = buildGitCommit(connectorId, branchName, GitCommit.Status.FAILED, accountId);
-    wingsPersistence.save(gitCommit);
-    wingsPersistence.save(gitCommit_1);
+    persistence.save(gitCommit);
+    persistence.save(gitCommit_1);
 
     // When we have failed commit followed by success one we dont delete any.
     testGitCommitsForExpiredCommits(account, 2, System.currentTimeMillis() + 2 * TWELVE_MONTH_IN_MILLS);
 
     GitCommit gitCommit_2 = buildGitCommit(connectorId, branchName, GitCommit.Status.COMPLETED_WITH_ERRORS, accountId);
-    wingsPersistence.save(gitCommit_2);
+    persistence.save(gitCommit_2);
     GitCommit gitCommit_3 = buildGitCommit(connectorId, branchName, GitCommit.Status.COMPLETED, accountId);
-    wingsPersistence.save(gitCommit_3);
+    persistence.save(gitCommit_3);
 
     testGitCommitsForExpiredCommits(account, 1, System.currentTimeMillis() + 2 * TWELVE_MONTH_IN_MILLS);
 
-    wingsPersistence.save(gitCommit);
-    wingsPersistence.save(gitCommit_1);
-    wingsPersistence.save(gitCommit_2);
-    wingsPersistence.save(gitCommit_3);
+    persistence.save(gitCommit);
+    persistence.save(gitCommit_1);
+    persistence.save(gitCommit_2);
+    persistence.save(gitCommit_3);
 
     testGitCommitsForExpiredCommits(account, 4, gitCommit_2.getCreatedAt() - 1);
 
-    wingsPersistence.save(gitCommit);
-    wingsPersistence.save(gitCommit_1);
-    wingsPersistence.save(gitCommit_2);
-    wingsPersistence.save(gitCommit_3);
+    persistence.save(gitCommit);
+    persistence.save(gitCommit_1);
+    persistence.save(gitCommit_2);
+    persistence.save(gitCommit_3);
     gitCommit_3.setCreatedAt(gitCommit_3.getCreatedAt() + 2);
-    wingsPersistence.save(gitCommit_3);
+    persistence.save(gitCommit_3);
     gitCommit_2.setCreatedAt(gitCommit_2.getCreatedAt() + 1);
-    wingsPersistence.save(gitCommit_2);
+    persistence.save(gitCommit_2);
 
     testGitCommitsForExpiredCommits(account, 2, gitCommit_2.getCreatedAt() + 1);
   }
@@ -137,7 +137,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
     commits.add(
         buildGitCommit(connectorId, branchName, repository, GitCommit.Status.COMPLETED_WITH_ERRORS, accountId, 6L));
     commits.add(buildGitCommit(connectorId, branchName, repository, GitCommit.Status.FAILED, accountId, 7L));
-    wingsPersistence.save(commits);
+    persistence.save(commits);
     testGitCommitsForExpiredCommits(account, 4, 8L);
   }
 
@@ -162,7 +162,7 @@ public class GitSyncEntitiesExpiryHandlerTest extends WingsBaseTest {
   private void testGitCommitsForExpiredCommits(Account account, int expectedNotDeletedCount, long expiryTime) {
     gitSyncEntitiesExpiryHandler.handleGitCommits(account, expiryTime);
     List<GitCommit> postDeletedCommits =
-        wingsPersistence.createQuery(GitCommit.class).filter(GitCommit.ACCOUNT_ID_KEY2, account.getUuid()).asList();
+        persistence.createQuery(GitCommit.class).filter(GitCommit.ACCOUNT_ID_KEY2, account.getUuid()).asList();
     assertThat(postDeletedCommits.size()).isEqualTo(expectedNotDeletedCount);
   }
 

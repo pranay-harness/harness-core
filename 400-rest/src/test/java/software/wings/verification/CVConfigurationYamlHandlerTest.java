@@ -36,7 +36,7 @@ import org.reflections.Reflections;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Spy private YamlHelper yamlHelper;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private CVConfigurationService cvConfigurationService;
 
   private DatadogCvConfigurationYamlHandler yamlHandler = new DatadogCvConfigurationYamlHandler();
@@ -68,7 +68,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
     cvServiceConfiguration.setName(configName);
     cvServiceConfiguration.setUuid(configId);
 
-    wingsPersistence.save(cvServiceConfiguration);
+    persistence.save(cvServiceConfiguration);
 
     FieldUtils.writeField(yamlHandler, "yamlHelper", yamlHelper, true);
     FieldUtils.writeField(yamlHandler, "cvConfigurationService", cvConfigurationService, true);
@@ -139,7 +139,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
         "Setup/Applications/HarnessSampleApp/Environments/prod/Service Verification/" + configName + ".yaml";
     doReturn(configName).when(yamlHelper).getNameFromYamlFilePath(filePath);
 
-    CVConfiguration originalConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
     ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
@@ -152,7 +152,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
             .build();
     yamlHandler.delete(changeContext);
 
-    CVConfiguration updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
   }
 
@@ -164,7 +164,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
         "Setup/Applications/HarnessSampleApp/Environments/prod/Service Verification/" + configName + ".yaml";
     doReturn(configName).when(yamlHelper).getNameFromYamlFilePath(filePath);
 
-    CVConfiguration originalConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
     ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
@@ -177,11 +177,11 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
             .build();
     yamlHandler.delete(changeContext);
 
-    CVConfiguration updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
 
     yamlHandler.delete(changeContext);
-    updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
   }
 }

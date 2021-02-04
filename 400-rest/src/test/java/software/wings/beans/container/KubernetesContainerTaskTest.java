@@ -32,7 +32,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   static final String DOCKER_IMAGE_NAME_REGEX = "(\\s*\"?image\"?\\s*:\\s*\"?)";
 
   @Mock private AppService appService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
 
   @Test
@@ -155,8 +155,8 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDecimalCPUInKubernetesContainerTask() {
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
-    wingsPersistence.save(anApplication().uuid(APP_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(anApplication().uuid(APP_ID).build());
 
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
     ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(0.5).build();

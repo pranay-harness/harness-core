@@ -62,7 +62,7 @@ import org.mockito.Mock;
 
 public class StatisticsServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private HPersistence wingsPersistence;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private HPersistence persistence;
 
   @Mock private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject @InjectMocks private StatisticsService statisticsService;

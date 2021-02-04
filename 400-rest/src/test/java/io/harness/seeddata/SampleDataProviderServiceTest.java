@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class SampleDataProviderServiceTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject private SampleDataProviderServiceImpl sampleDataProviderService;
   @Inject private SettingsService settingsService;
@@ -53,7 +53,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   public void shouldCreateSampleAppWithInfraDefinitions() {
     Account account =
         anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build();
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
 
     assertThat(accountId).isNotNull();
 

@@ -86,7 +86,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private EncryptionService encryptionService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private RequestExecutor requestExecutor;
@@ -130,7 +130,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
     String savedAttributeId = saveAppdynamicsConfig();
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    SettingAttribute settingAttribute = persistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     final List<NewRelicApplication> applications = appdynamicsService.getApplications(savedAttributeId);
     assertThat(applications.size()).isEqualTo(1);
@@ -408,7 +408,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                             .withName(UUID.randomUUID().toString())
                                             .build();
 
-    return wingsPersistence.save(settingAttribute);
+    return persistence.save(settingAttribute);
   }
 
   private void handleClone(Call restCall) {

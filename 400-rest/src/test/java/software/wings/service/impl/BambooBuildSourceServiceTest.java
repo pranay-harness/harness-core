@@ -50,7 +50,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private ArtifactStreamType streamType = ArtifactStreamType.BAMBOO;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private BambooBuildService bambooBuildService;
   @Inject private ScmSecret scmSecret;
 
@@ -74,7 +74,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
                            .password(scmSecret.decryptToCharArray(new SecretName("bamboo_config_password")))
                            .build())
             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
   }
 
   @Test
@@ -101,7 +101,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Ignore("Unit tests should not access external resources")
   public void getPlansWithType() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     Map<String, String> plans =
         buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), "");
     assertThat(plans.isEmpty()).isFalse();
@@ -124,13 +124,13 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Ignore("Unit tests should not access external resources")
   public void getBuilds() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     BambooArtifactStream artifactStream = new BambooArtifactStream();
     artifactStream.setJobname("TOD-TOD");
     artifactStream.setArtifactPaths(Collections.singletonList("artifacts/todolist.war"));
     artifactStream.setServiceId(service.getUuid());
     artifactStream.setAppId(appId);
-    wingsPersistence.save(artifactStream);
+    persistence.save(artifactStream);
 
     List<BuildDetails> builds =
         buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
@@ -143,13 +143,13 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Ignore("Unit tests should not access external resources")
   public void getLastSuccessfulBuild() {
     Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     BambooArtifactStream artifactStream = new BambooArtifactStream();
     artifactStream.setJobname("TOD-TOD");
     artifactStream.setArtifactPaths(Collections.singletonList("artifacts/todolist.war"));
     artifactStream.setServiceId(service.getUuid());
     artifactStream.setAppId(appId);
-    wingsPersistence.save(artifactStream);
+    persistence.save(artifactStream);
 
     BuildDetails build =
         buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());

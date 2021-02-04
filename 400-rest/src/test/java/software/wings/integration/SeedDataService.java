@@ -20,7 +20,7 @@ public class SeedDataService {
   private String SEED_SERVICE_WAR = "SEED_SERVICE_WAR";
   private String SEED_WORKFLOW_SSH_BASIC = "SEED_WORKFLOW_SSH_BASIC";
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;

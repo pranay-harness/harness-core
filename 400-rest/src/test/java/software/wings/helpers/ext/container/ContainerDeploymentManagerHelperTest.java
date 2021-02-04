@@ -30,7 +30,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private SettingsService settingsService;
 
   @InjectMocks @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
@@ -45,7 +45,7 @@ public class ContainerDeploymentManagerHelperTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .withValue(KubernetesClusterConfig.builder().build())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
 
     DirectKubernetesInfrastructureMapping infraMapping = aDirectKubernetesInfrastructureMapping()
                                                              .withNamespace("default")

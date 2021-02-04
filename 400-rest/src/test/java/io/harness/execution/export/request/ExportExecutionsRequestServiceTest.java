@@ -28,7 +28,7 @@ import org.mockito.InjectMocks;
 
 public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private ExportExecutionsRequestService exportExecutionsRequestService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = GARVIT)
@@ -39,7 +39,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class);
 
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest(Status.READY);
-    wingsPersistence.save(request);
+    persistence.save(request);
 
     ExportExecutionsRequest savedRequest =
         exportExecutionsRequestService.get(RequestTestUtils.ACCOUNT_ID, RequestTestUtils.REQUEST_ID);
@@ -55,7 +55,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   public void testGetExpired() {
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest(Status.READY);
     request.setExpiresAt(System.currentTimeMillis() - 1000);
-    wingsPersistence.save(request);
+    persistence.save(request);
 
     ExportExecutionsRequest savedRequest =
         exportExecutionsRequestService.get(RequestTestUtils.ACCOUNT_ID, RequestTestUtils.REQUEST_ID);
@@ -72,7 +72,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   public void testQueueExportExecutionRequest() {
     saveWorkflowExecution();
     String requestId = exportExecutionsRequestService.queueExportExecutionRequest(RequestTestUtils.ACCOUNT_ID,
-        wingsPersistence.createQuery(WorkflowExecution.class),
+        persistence.createQuery(WorkflowExecution.class),
         ExportExecutionsUserParams.builder()
             .notifyOnlyTriggeringUser(false)
             .userGroupIds(asList("ug1", "ug2"))
@@ -89,7 +89,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
     assertThat(request.getCreatedByType()).isEqualTo(CreatedByType.USER);
 
     requestId = exportExecutionsRequestService.queueExportExecutionRequest(RequestTestUtils.ACCOUNT_ID,
-        wingsPersistence.createQuery(WorkflowExecution.class),
+        persistence.createQuery(WorkflowExecution.class),
         ExportExecutionsUserParams.builder()
             .notifyOnlyTriggeringUser(true)
             .userGroupIds(asList("ug1", "ug2"))
@@ -114,10 +114,10 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   public void testPrepareLimitChecks() {
     saveWorkflowExecution();
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest();
-    wingsPersistence.save(request);
+    persistence.save(request);
 
     ExportExecutionsRequestLimitChecks limitChecks = exportExecutionsRequestService.prepareLimitChecks(
-        RequestTestUtils.ACCOUNT_ID, wingsPersistence.createQuery(WorkflowExecution.class));
+        RequestTestUtils.ACCOUNT_ID, persistence.createQuery(WorkflowExecution.class));
     assertThat(limitChecks).isNotNull();
     assertThat(limitChecks.getQueuedRequests()).isNotNull();
     assertThat(limitChecks.getQueuedRequests().getValue()).isEqualTo(1);
@@ -134,7 +134,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> exportExecutionsRequestService.readyRequest(request, fileId))
         .isInstanceOf(ExportExecutionsException.class);
 
-    String requestId = wingsPersistence.save(request);
+    String requestId = persistence.save(request);
     exportExecutionsRequestService.readyRequest(request, fileId);
     assertThat(request.getStatus()).isEqualTo(Status.READY);
     assertThat(request.getFileId()).isEqualTo(fileId);
@@ -150,7 +150,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   public void testFailRequest() {
     String errorMsg = "new_errMsg";
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest();
-    String requestId = wingsPersistence.save(request);
+    String requestId = persistence.save(request);
 
     exportExecutionsRequestService.failRequest(request, errorMsg);
     assertThat(request.getFileId()).isNull();
@@ -168,7 +168,7 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExpireRequest() {
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest(Status.READY);
-    String requestId = wingsPersistence.save(request);
+    String requestId = persistence.save(request);
 
     String oldFileId = exportExecutionsRequestService.expireRequest(request);
     assertThat(request.getFileId()).isNull();
@@ -181,17 +181,17 @@ public class ExportExecutionsRequestServiceTest extends WingsBaseTest {
   }
 
   private ExportExecutionsRequest fetchRequest(String requestId) {
-    return wingsPersistence.createQuery(ExportExecutionsRequest.class)
+    return persistence.createQuery(ExportExecutionsRequest.class)
         .filter(ExportExecutionsRequestKeys.uuid, requestId)
         .get();
   }
 
   private void saveWorkflowExecution() {
-    wingsPersistence.save(WorkflowExecution.builder()
-                              .accountId(RequestTestUtils.ACCOUNT_ID)
-                              .appId("appId")
-                              .status(ExecutionStatus.SUCCESS)
-                              .endTs(System.currentTimeMillis() - 10 * 6 * 1000)
-                              .build());
+    persistence.save(WorkflowExecution.builder()
+                         .accountId(RequestTestUtils.ACCOUNT_ID)
+                         .appId("appId")
+                         .status(ExecutionStatus.SUCCESS)
+                         .endTs(System.currentTimeMillis() - 10 * 6 * 1000)
+                         .build());
   }
 }

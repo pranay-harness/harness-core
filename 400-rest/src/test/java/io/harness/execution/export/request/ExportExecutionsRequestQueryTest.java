@@ -19,7 +19,7 @@ import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
 public class ExportExecutionsRequestQueryTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = GARVIT)
@@ -28,12 +28,12 @@ public class ExportExecutionsRequestQueryTest extends WingsBaseTest {
   public void testConversion() {
     assertThat(ExportExecutionsRequestQuery.fromQuery(null)).isNull();
 
-    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class).filter("accountId", "aid");
+    Query<WorkflowExecution> query = persistence.createQuery(WorkflowExecution.class).filter("accountId", "aid");
     ExportExecutionsRequestQuery requestQuery = ExportExecutionsRequestQuery.fromQuery(query);
     assertThat(requestQuery).isNotNull();
     assertThat(requestQuery.getDbObjectJson()).isNotNull();
 
-    Query<WorkflowExecution> newQuery = wingsPersistence.createQuery(WorkflowExecution.class);
+    Query<WorkflowExecution> newQuery = persistence.createQuery(WorkflowExecution.class);
     assertThatCode(() -> ExportExecutionsRequestQuery.updateQuery(null, requestQuery)).doesNotThrowAnyException();
     assertThatCode(() -> ExportExecutionsRequestQuery.updateQuery(query, null)).doesNotThrowAnyException();
 

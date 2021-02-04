@@ -56,7 +56,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PowerMockIgnore({"javax.security.*", "javax.crypto.*", "javax.net.*"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private NewRelicService newRelicService;
@@ -97,7 +97,7 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
 
   private void createSettingAttribute() {
     Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
     account.setUuid(accountId);
     UsageRestrictions usageRestrictions =
         usageRestrictionsService.getDefaultUsageRestrictions(account.getUuid(), "appId", "envId");
@@ -113,17 +113,17 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
                         .hideFromListing(true)
                         .build();
 
-    String secretId = wingsPersistence.save(encryptedData);
+    String secretId = persistence.save(encryptedData);
     encryptedData.setUuid(secretId);
     AppDynamicsConfig appDynamicsConfig = SecretManagementTestHelper.getAppDynamicsConfig(accountId, null, secretId);
     settingAttribute = SecretManagementTestHelper.getSettingAttribute(appDynamicsConfig);
     settingAttribute.setName("testAttribute");
     settingAttribute.setUsageRestrictions(usageRestrictions);
-    String settingAttributeId = wingsPersistence.save(settingAttribute);
+    String settingAttributeId = persistence.save(settingAttribute);
     settingAttribute.setUuid(settingAttributeId);
 
-    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
-    settingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttributeId);
+    encryptedData = persistence.get(EncryptedData.class, secretId);
+    settingAttribute = persistence.get(SettingAttribute.class, settingAttributeId);
   }
 
   @Test
@@ -132,11 +132,11 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   public void testHandle_shouldSucceed() {
     createSettingAttribute();
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
-    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    SettingAttribute updatedSettingAttribute = persistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(updatedSettingAttribute).isNotNull();
     assertThat(updatedSettingAttribute.isSecretsMigrated()).isTrue();
 
-    EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
+    EncryptedData updatedEncryptedData = persistence.get(EncryptedData.class, encryptedData.getUuid());
     assertThat(updatedEncryptedData).isNotNull();
     assertThat(updatedEncryptedData.getType()).isEqualTo(SECRET_TEXT);
     assertThat(updatedEncryptedData.getUsageRestrictions()).isEqualTo(settingAttribute.getUsageRestrictions());
@@ -151,14 +151,14 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
     createSettingAttribute();
     encryptedData.setType(SECRET_TEXT);
     encryptedData.setHideFromListing(false);
-    wingsPersistence.save(encryptedData);
+    persistence.save(encryptedData);
 
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
-    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    SettingAttribute updatedSettingAttribute = persistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(updatedSettingAttribute).isNotNull();
     assertThat(updatedSettingAttribute.isSecretsMigrated()).isTrue();
 
-    EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
+    EncryptedData updatedEncryptedData = persistence.get(EncryptedData.class, encryptedData.getUuid());
     assertThat(updatedEncryptedData).isNotNull();
     assertThat(updatedEncryptedData.getType()).isEqualTo(SECRET_TEXT);
     assertThat(updatedEncryptedData.getUsageRestrictions()).isNull();
@@ -172,14 +172,14 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
   public void testHandle_shouldPass_secretNotFound() {
     createSettingAttribute();
     ((AppDynamicsConfig) settingAttribute.getValue()).setEncryptedPassword(generateUuid());
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
 
     settingAttributesSecretsMigrationHandler.handle(settingAttribute);
-    SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    SettingAttribute updatedSettingAttribute = persistence.get(SettingAttribute.class, settingAttribute.getUuid());
     assertThat(updatedSettingAttribute).isNotNull();
     assertThat(updatedSettingAttribute.isSecretsMigrated()).isTrue();
 
-    EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
+    EncryptedData updatedEncryptedData = persistence.get(EncryptedData.class, encryptedData.getUuid());
     assertThat(updatedEncryptedData.getParents()).isEmpty();
   }
 }

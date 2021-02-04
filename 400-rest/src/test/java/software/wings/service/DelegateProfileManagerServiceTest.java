@@ -70,7 +70,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Mock private AppService appService;
   @InjectMocks @Inject private DelegateProfileManagerServiceImpl delegateProfileManagerService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -358,7 +358,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     ScopingValues scopingValuesAppId = ScopingValues.newBuilder().addValue("Harness App").build();
 
     Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(APP_ID_FIELD, scopingValuesAppId);
@@ -376,9 +376,9 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
-    Application retrievedApplication = wingsPersistence.get(Application.class, application.getUuid());
+    Application retrievedApplication = persistence.get(Application.class, application.getUuid());
 
     scopingEntitiesIds.add(retrievedApplication.getName());
 
@@ -395,13 +395,13 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Service service1 = Service.builder().uuid("SERVICE_ID1").name("To-Do List K8s").build();
-    wingsPersistence.save(service1);
+    persistence.save(service1);
 
     Service service2 = Service.builder().uuid("SERVICE_ID2").name("To-Do List Docker").build();
-    wingsPersistence.save(service2);
+    persistence.save(service2);
 
-    Service retrievedService1 = wingsPersistence.get(Service.class, service1.getUuid());
-    Service retrievedService2 = wingsPersistence.get(Service.class, service2.getUuid());
+    Service retrievedService1 = persistence.get(Service.class, service1.getUuid());
+    Service retrievedService2 = persistence.get(Service.class, service2.getUuid());
 
     scopingEntitiesIds.add(retrievedService1.getName());
     scopingEntitiesIds.add(retrievedService2.getName());
@@ -419,9 +419,9 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID).name("qa").build();
-    wingsPersistence.save(environment);
+    persistence.save(environment);
 
-    Environment retrievedEnvironment = wingsPersistence.get(Environment.class, environment.getUuid());
+    Environment retrievedEnvironment = persistence.get(Environment.class, environment.getUuid());
 
     scopingEntitiesIds.add(retrievedEnvironment.getName());
 

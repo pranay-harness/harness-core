@@ -59,7 +59,7 @@ import org.mindrot.jbcrypt.BCrypt;
 @Singleton
 @Slf4j
 public class UserResourceRestClient {
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private AccountService accountService;
   @Inject private RoleService roleService;
 
@@ -127,7 +127,7 @@ public class UserResourceRestClient {
       }
     }
 
-    User user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
+    User user = persistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
 
     if (user == null) {
       user = anUser().email(adminUserEmail).name(adminUserName).password(adminPassword).build();
@@ -139,16 +139,15 @@ public class UserResourceRestClient {
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
       try {
-        wingsPersistence.save(user);
+        persistence.save(user);
       } catch (Exception e) {
-        user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
+        user = persistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
       }
     } else {
       Account finalAccount = account;
       if (isEmpty(user.getAccounts())
           || !user.getAccounts().stream().anyMatch(account1 -> finalAccount.getUuid().equals(account1.getUuid()))) {
-        wingsPersistence.update(
-            user, wingsPersistence.createUpdateOperations(User.class).addToSet(UserKeys.accounts, account));
+        persistence.update(user, persistence.createUpdateOperations(User.class).addToSet(UserKeys.accounts, account));
       }
     }
 

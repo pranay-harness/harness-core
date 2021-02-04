@@ -37,7 +37,7 @@ public class YamlSuccessfulChangeServiceImplTest extends WingsBaseTest {
   public static final String COMMITID = "commitid";
 
   @Inject @Spy YamlSuccessfulChangeService yamlSuccessfulChangeService;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() throws Exception {
@@ -64,7 +64,7 @@ public class YamlSuccessfulChangeServiceImplTest extends WingsBaseTest {
   }
 
   private String createYamlSuccessfulChange(YamlSuccessfulChangeBuilder changeBuilder) {
-    return wingsPersistence.save(changeBuilder.accountId(ACCOUNT_ID).build());
+    return persistence.save(changeBuilder.accountId(ACCOUNT_ID).build());
   }
   @Test
   @Owner(developers = OwnerRule.ROHIT_KUMAR)

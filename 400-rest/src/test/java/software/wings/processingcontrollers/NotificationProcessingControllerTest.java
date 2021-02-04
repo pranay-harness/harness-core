@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 
 public class NotificationProcessingControllerTest extends WingsBaseTest {
   @Inject private NotificationProcessingController notificationProcessingController;
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private static final long ONE_DAY_TIME_DIFF = 86400000L;
   private static final long ONE_DAY_EXPIRY = System.currentTimeMillis() + ONE_DAY_TIME_DIFF;
@@ -44,7 +44,7 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
   public void shouldProcessActiveAccount() {
     Account account =
         anAccount().withUuid(ACCOUNT_ID).withLicenseInfo(getLicenseInfo(AccountStatus.ACTIVE, ONE_DAY_EXPIRY)).build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isTrue();
   }
 
@@ -56,7 +56,7 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withLicenseInfo(getLicenseInfo(AccountStatus.INACTIVE, ONE_DAY_EXPIRY))
                           .build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 
@@ -66,7 +66,7 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
   public void shouldNotProcessDeletedAccount() {
     Account account =
         anAccount().withUuid(ACCOUNT_ID).withLicenseInfo(getLicenseInfo(AccountStatus.DELETED, ONE_DAY_EXPIRY)).build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 
@@ -78,7 +78,7 @@ public class NotificationProcessingControllerTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withLicenseInfo(getLicenseInfo(AccountStatus.INACTIVE, ONE_DAY_EXPIRY))
                           .build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     assertThat(notificationProcessingController.canProcessAccount(ACCOUNT_ID)).isFalse();
   }
 }
