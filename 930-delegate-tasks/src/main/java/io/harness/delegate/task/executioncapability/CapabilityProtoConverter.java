@@ -98,13 +98,19 @@ public class CapabilityProtoConverter {
       case SOCKET:
         SocketConnectivityExecutionCapability socketConnectivityExecutionCapability =
             (SocketConnectivityExecutionCapability) executionCapability;
-        return builder
-            .setSocketConnectivityParameters(
-                SocketConnectivityParameters.newBuilder()
-                    .setHostName(socketConnectivityExecutionCapability.getHostName())
-                    .setPort(Integer.parseInt(socketConnectivityExecutionCapability.getPort()))
-                    .setUrl(socketConnectivityExecutionCapability.getUrl()))
-            .build();
+        SocketConnectivityParameters.Builder socketConnectivityParametersBuilder =
+            SocketConnectivityParameters.newBuilder();
+        if (socketConnectivityExecutionCapability.getHostName() != null) {
+          socketConnectivityParametersBuilder.setHostName(socketConnectivityExecutionCapability.getHostName());
+        }
+        if (socketConnectivityExecutionCapability.getPort() != null) {
+          socketConnectivityParametersBuilder.setPort(
+              Integer.parseInt(socketConnectivityExecutionCapability.getPort()));
+        }
+        if (socketConnectivityExecutionCapability.getUrl() != null) {
+          socketConnectivityParametersBuilder.setUrl(socketConnectivityExecutionCapability.getUrl());
+        }
+        return builder.setSocketConnectivityParameters(socketConnectivityParametersBuilder).build();
       case SYSTEM_ENV:
         SystemEnvCheckerCapability systemEnvCheckerCapability = (SystemEnvCheckerCapability) executionCapability;
         return builder
