@@ -3,10 +3,9 @@ package software.wings.infra;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -26,6 +25,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -38,9 +38,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@NgUniqueIndex(name = "infraDefinitionIdx", fields = { @Field("appId")
-                                                       , @Field("envId"), @Field("name") })
-@CdIndex(name = "infrastructure_cloudProviderId", fields = { @Field("infrastructure.cloudProviderId") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -50,6 +47,22 @@ import org.mongodb.morphia.annotations.Id;
 public class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                ApplicationAccess, CustomDeploymentTypeAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("infraDefinitionIdx")
+                 .unique(true)
+                 .field(InfrastructureDefinitionKeys.appId)
+                 .field(InfrastructureDefinitionKeys.envId)
+                 .field(InfrastructureDefinitionKeys.name)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("infrastructure_cloudProviderId")
+                 .field(InfrastructureDefinitionKeys.infrastructure + ".cloudProviderId")
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore private long createdAt;
