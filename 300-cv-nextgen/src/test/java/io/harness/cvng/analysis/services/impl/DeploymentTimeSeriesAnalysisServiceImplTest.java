@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.BadRequestException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -191,11 +190,10 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
-    assertThatThrownBy(()
-                           -> deploymentTimeSeriesAnalysisService.getMetrics(
-                               accountId, verificationJobInstanceId, false, "randomNode", 0))
-        .isInstanceOf(BadRequestException.class)
-        .hasMessageContaining("Host Name randomNode doesn't exist");
+    TransactionMetricInfoSummaryPageDTO summaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "randomNode", 0);
+    assertThat(summaryPageDTO).isNotNull();
+    assertThat(summaryPageDTO.getPageResponse().getTotalItems()).isEqualTo(0);
   }
 
   @Test
