@@ -53,6 +53,7 @@ import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -221,11 +222,21 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                .runtimeValues(runtimeValues)
                                .build());
     deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    String activityId = activityService.registerCD10Activity(accountId, deploymentActivity);
-    DeploymentActivity updated = (DeploymentActivity) activityService.get(activityId);
+    CD10RegisterActivityDTO cd10RegisterActivityDTO =
+        activityService.registerCD10Activity(accountId, deploymentActivity);
+    DeploymentActivity updated = (DeploymentActivity) activityService.get(cd10RegisterActivityDTO.getActivityId());
+    VerificationJobRuntimeDetails updatedDetails = updated.getVerificationJobRuntimeDetails().get(0);
     assertThat(updated.getEnvironmentIdentifier())
         .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
     assertThat(updated.getServiceIdentifier())
+        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
+    assertThat(cd10RegisterActivityDTO.getEnvIdentifier())
+        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
+    assertThat(cd10RegisterActivityDTO.getServiceIdentifier())
+        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
+    assertThat(updatedDetails.getRuntimeValues().get(ENV_IDENTIFIER_KEY))
+        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
+    assertThat(updatedDetails.getRuntimeValues().get(SERVICE_IDENTIFIER_KEY))
         .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
   }
 

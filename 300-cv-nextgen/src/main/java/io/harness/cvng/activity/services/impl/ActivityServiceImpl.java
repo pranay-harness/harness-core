@@ -28,6 +28,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
@@ -35,6 +36,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
@@ -110,7 +112,7 @@ public class ActivityServiceImpl implements ActivityService {
     return activity.getUuid();
   }
   @Override
-  public String registerCD10Activity(String accountId, ActivityDTO activityDTO) {
+  public CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Preconditions.checkState(
         activityDTO.getVerificationJobRuntimeDetails().size() == 1, "RuntimeDetails should be of size 1");
@@ -125,14 +127,21 @@ public class ActivityServiceImpl implements ActivityService {
       if (activityDTO.getEnvironmentIdentifier() == null) {
         activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
             activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
+        runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
       }
       if (activityDTO.getServiceIdentifier() == null) {
         activityDTO.setServiceIdentifier(
             cd10ActivitySourceService.getNextGenServiceIdentifier(accountId, activityDTO.getOrgIdentifier(),
                 activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
+        runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
       }
     }
-    return register(accountId, activityDTO);
+    String activityId = register(accountId, activityDTO);
+    return CD10RegisterActivityDTO.builder()
+        .activityId(activityId)
+        .serviceIdentifier(activityDTO.getServiceIdentifier())
+        .envIdentifier(activityDTO.getEnvironmentIdentifier())
+        .build();
   }
 
   @Override

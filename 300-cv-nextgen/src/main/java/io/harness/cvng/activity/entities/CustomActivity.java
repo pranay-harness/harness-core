@@ -20,7 +20,7 @@ public class CustomActivity extends Activity {
   @Override
   public void fromDTO(ActivityDTO activityDTO) {
     setType(ActivityType.CUSTOM);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override

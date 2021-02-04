@@ -191,6 +191,37 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
+  public void testDeleteActivitySource_cd10ActivitySource() {
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(generateUuid())
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    String activitySourceUUID =
+        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    // delete and test
+    assertThat(activitySourceService.deleteActivitySource(
+                   accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO.getIdentifier()))
+        .isTrue();
+    List<ActivitySourceDTO> activitySourceDTOS =
+        activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
+            .getContent();
+    assertThat(activitySourceDTOS.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
   public void testSaveActivitySource_cd10ActivitySource() {
     String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();

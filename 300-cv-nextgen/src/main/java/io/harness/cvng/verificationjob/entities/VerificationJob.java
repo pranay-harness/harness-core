@@ -126,9 +126,9 @@ public abstract class VerificationJob
     verificationJobDTO.setDuration(this.duration.isRuntimeParam() ? RUNTIME_STRING : this.duration.getValue());
 
     verificationJobDTO.setServiceIdentifier(
-        this.serviceIdentifier.isRuntimeParam() ? RUNTIME_STRING : (String) serviceIdentifier.getValue());
+        this.serviceIdentifier.isRuntimeParam() ? RUNTIME_STRING : serviceIdentifier.getValue());
     verificationJobDTO.setEnvIdentifier(
-        this.envIdentifier.isRuntimeParam() ? RUNTIME_STRING : (String) envIdentifier.getValue());
+        this.envIdentifier.isRuntimeParam() ? RUNTIME_STRING : envIdentifier.getValue());
     verificationJobDTO.setDataSources(this.dataSources);
     verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
     verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
