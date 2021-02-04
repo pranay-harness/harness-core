@@ -187,7 +187,7 @@ function checkAndCreateMongoFiles() {
 function setUpTimeScaleDB(){
   echo "#############################Setting up TimeScale DB ##########################################"
   printf "\n\n\n\n"
-  docker run -d --name harness-timescaledb -v $runtime_dir/timescaledb/data:/var/lib/postgresql/data:Z -p $timescaledb_port:5432 --rm -e POSTGRES_USER=$timescaledb_username -e POSTGRES_DB=$timescale_db -e POSTGRES_PASSWORD=$timescaledb_password timescale/timescaledb:$TIMESCALE_VERSION
+  docker run -d --security-opt=no-new-privileges --read-only --rm -p $timescaledb_port:5432 --name harness-timescaledb -v $runtime_dir/timescaledb/data:/var/lib/postgresql/data:Z -v /var/run/postgresql --tmpfs /tmp:rw -e POSTGRES_USER=$timescaledb_username -e POSTGRES_DB=$timescale_db -e POSTGRES_PASSWORD=$timescaledb_password timescale/timescaledb:$TIMESCALE_VERSION
 
   if [[ $(checkDockerImageRunning "harness-timescaledb") -eq 1 ]]; then
       echo "TimescaleDB is not running"
@@ -201,7 +201,7 @@ function setUpMongoDBFirstTime(){
 
     printf "\n\n\n\n"
 
-    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z --rm harness/mongo:$MONGO_VERSION --port $mongodb_port
+    docker run -d --security-opt=no-new-privileges --read-only --rm -p $mongodb_port:$mongodb_port --name mongoContainer -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z  --tmpfs /var/run:rw --tmpfs /tmp:rw harness/mongo:$MONGO_VERSION --port $mongodb_port
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
 
@@ -226,8 +226,13 @@ function setUpMongoDB(){
 
     echo "################################Starting up MongoDB################################"
     mv config/mongo/mongod.conf $runtime_dir/mongo
+    sed -i -e "s+LOG_PATH+${runtime_dir}/mongo/log/mongod.log+g" $runtime_dir/mongo/mongod.conf
+    mkdir -p $runtime_dir/mongo/log
+    touch $runtime_dir/mongo/log/mongod.log
+    chown -R 999 $runtime_dir/mongo/*
+    chmod -R 777 $runtime_dir/mongo
 
-    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf:Z -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z --rm harness/mongo:$MONGO_VERSION -f /etc/mongod.conf
+    docker run -d --security-opt=no-new-privileges --read-only --rm -p $mongodb_port:$mongodb_port --name mongoContainer  -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf:Z -v $runtime_dir/mongo/data/db:/data/db:Z -v $runtime_dir/mongo/scripts:/scripts:Z --tmpfs $runtime_dir/mongo/log:rw  --tmpfs /var/run:rw --tmpfs /tmp:rw harness/mongo:$MONGO_VERSION -f /etc/mongod.conf
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
 
@@ -290,7 +295,7 @@ function populateEnvironmentVariablesFromMongo(){
 function setUpProxy(){
     echo "################################ Setting up proxy ################################"
 
-    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www:Z  harness/proxy-signed:$PROXY_VERSION
+    docker run --security-opt=no-new-privileges --read-only -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www:Z -v /etc/nginx/conf.d -v /var/run --tmpfs /var/cache/nginx:rw  --tmpfs /tmp:rw  harness/proxy-signed:$PROXY_VERSION
     sleep 5
 
     if [[ $(checkDockerImageRunning "harness-proxy") -eq 1 ]]; then
@@ -495,7 +500,7 @@ function setupClientUtils(){
             cp images/harness-pywinrm/${platform}/$harnessPywinrmVersion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
         done
 
-        for helmversion in v2.13.1; do
+        for helmversion in v2.13.1 v3.0.2 v3.1.2; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
             cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
         done
@@ -513,6 +518,11 @@ function setupClientUtils(){
         for ocversion in v4.2.16; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
             cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
+        done
+
+        for kustomizeVersion in v3.5.4; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
+            cp images/kustomize/${platform}/$kustomizeVersion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
         done
     done
 }
