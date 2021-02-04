@@ -31,7 +31,7 @@
         <dependency>
             <groupId>io.harness.cf</groupId>
             <artifactId>cf-client-sdk-java</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0-20210126.200034-12</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
