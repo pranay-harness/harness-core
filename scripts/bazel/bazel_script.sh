@@ -29,8 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//260-delegate/... -//230-model-test/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//260-delegate/... -//230-model-test/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -49,6 +49,8 @@ fi
 
 
 BAZEL_MODULES="\
+  //220-graphql-test:supporter-test \
+  //230-model-test:module \
   //400-rest:module \
   //400-rest:supporter-test \
   //400-rest:module_deploy.jar \
@@ -322,9 +324,11 @@ build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
 build_bazel_module 980-java-agent
 build_bazel_module 990-commons-test
+build_bazel_module 230-model-test
 
 build_bazel_tests 960-persistence
 build_bazel_tests 400-rest
+build_bazel_tests 220-graphql-test
 
 build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 940-delegate-beans

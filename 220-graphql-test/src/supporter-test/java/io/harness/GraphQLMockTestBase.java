@@ -21,7 +21,7 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class GraphQLMockBaseTest extends CategoryTest implements MockableTestMixin {
+public abstract class GraphQLMockTestBase extends CategoryTest implements MockableTestMixin {
   private static final String plainTextKey = "1234567890123456";
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
