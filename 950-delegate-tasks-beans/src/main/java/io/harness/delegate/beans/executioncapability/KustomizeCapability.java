@@ -4,8 +4,6 @@ import static io.harness.delegate.beans.executioncapability.CapabilityType.KUSTO
 
 import io.harness.data.structure.HarnessStringUtils;
 
-import software.wings.helpers.ext.kustomize.KustomizeConfig;
-
 import java.time.Duration;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +11,7 @@ import lombok.Data;
 @Data
 @Builder
 public class KustomizeCapability implements ExecutionCapability {
-  private KustomizeConfig kustomizeConfig;
+  private String pluginRootDir;
 
   @Override
   public EvaluationMode evaluationMode() {
@@ -27,7 +25,7 @@ public class KustomizeCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return HarnessStringUtils.join(":", "kustomizePluginDir", kustomizeConfig.getPluginRootDir());
+    return HarnessStringUtils.join(":", "kustomizePluginDir", pluginRootDir);
   }
 
   @Override

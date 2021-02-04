@@ -40,7 +40,9 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
     executionCapabilities.addAll(k8sClusterConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
     if (kustomizeValidationNeeded()) {
       executionCapabilities.add(
-          KustomizeCapability.builder().kustomizeConfig(fetchKustomizeConfig((ManifestAwareTaskParams) this)).build());
+          KustomizeCapability.builder()
+              .pluginRootDir(fetchKustomizeConfig((ManifestAwareTaskParams) this).getPluginRootDir())
+              .build());
     }
 
     return executionCapabilities;
