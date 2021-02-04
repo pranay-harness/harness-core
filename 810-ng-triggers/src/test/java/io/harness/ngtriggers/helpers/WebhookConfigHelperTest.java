@@ -18,7 +18,6 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.REOPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.SYNCHRONIZED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.UNLABELED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.DELETE;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.ISSUE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PUSH;
@@ -67,7 +66,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
     }
 
     // Need to ad support for these
-    assertThat(eventsNotPresent).containsOnly(ISSUE, DELETE, REPOSITORY);
+    assertThat(eventsNotPresent).containsOnly(DELETE, REPOSITORY);
   }
 
   @Test

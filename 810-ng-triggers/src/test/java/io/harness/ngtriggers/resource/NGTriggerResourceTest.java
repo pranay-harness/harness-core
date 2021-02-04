@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.resource;
 
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -77,10 +78,7 @@ public class NGTriggerResourceTest extends CategoryTest {
 
     ngTriggerConfig = YamlPipelineUtils.read(ngTriggerYaml, NGTriggerConfig.class);
     WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
-    WebhookMetadata metadata = WebhookMetadata.builder()
-                                   .type(webhookTriggerConfig.getType())
-                                   .repoURL(webhookTriggerConfig.getSpec().getRepoUrl())
-                                   .build();
+    WebhookMetadata metadata = WebhookMetadata.builder().type(webhookTriggerConfig.getType()).build();
     NGTriggerMetadata ngTriggerMetadata = NGTriggerMetadata.builder().webhook(metadata).build();
 
     ngTriggerResponseDTO = NGTriggerResponseDTO.builder()
@@ -206,5 +204,18 @@ public class NGTriggerResourceTest extends CategoryTest {
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0).getName()).isEqualTo(ngTriggerDetailsResponseDTO.getName());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testGitConnectorTrigger() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "ng-trigger-git-connector.yaml";
+    String triggerYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
+    WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
+    assertThat(webhookTriggerConfig.getSpec().getRepoSpec().getIdentifier()).isEqualTo("account.gitAccount");
   }
 }

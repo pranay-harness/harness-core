@@ -72,6 +72,8 @@ public enum WebhookAction {
         return EnumSet.of(CLOSED, EDITED, LABELED, OPENED, REOPENED, SYNCHRONIZED, UNLABELED);
       case PUSH:
         return emptySet();
+      case ISSUE_COMMENT:
+        return EnumSet.of(CREATED, EDITED, DELETED);
       default:
         throw new InvalidRequestException("Event " + event.name() + " not a github event");
     }

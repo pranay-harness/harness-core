@@ -1,10 +1,18 @@
 package io.harness.ngtriggers.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER_SRE;
+
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.connector.ConnectorResourceClient;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.exception.TriggerException;
+import io.harness.network.SafeHttpCall;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -33,6 +41,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
+  private final ConnectorResourceClient connectorResourceClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -42,7 +51,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       return ngTriggerRepository.save(ngTriggerEntity);
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
-          String.format(DUP_KEY_EXP_FORMAT_STRING, ngTriggerEntity.getIdentifier()), WingsException.USER_SRE, e);
+          String.format(DUP_KEY_EXP_FORMAT_STRING, ngTriggerEntity.getIdentifier()), USER_SRE, e);
     }
   }
 
@@ -82,15 +91,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   @Override
   public Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable) {
     return ngTriggerRepository.findAll(criteria, pageable);
-  }
-
-  @Override
-  public Page<NGTriggerEntity> listWebhookTriggers(
-      TriggerWebhookEvent triggerWebhookEvent, List<String> repoUrls, boolean isDeleted, boolean enabledOnly) {
-    return list(TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
-                    triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), repoUrls, "",
-                    false, enabledOnly),
-        Pageable.unpaged());
   }
 
   @Override
@@ -138,6 +138,44 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         Pageable.unpaged());
 
     return triggersPage.get().collect(Collectors.toList());
+  }
+
+  @Override
+  public List<NGTriggerEntity> listEnabledTriggersForCurrentProject(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    Optional<List<NGTriggerEntity>> enabledTriggerForProject;
+
+    // Now kept for backward compatibility, but will be changed soon to validate for non-empty project and
+    // orgIdentifier.
+    if (isNotEmpty(projectIdentifier) && isNotEmpty(orgIdentifier)) {
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
+          accountId, orgIdentifier, projectIdentifier, true);
+    } else if (isNotEmpty(orgIdentifier)) {
+      enabledTriggerForProject =
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabled(accountId, orgIdentifier, true);
+    } else {
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabled(accountId, true);
+    }
+
+    if (enabledTriggerForProject.isPresent()) {
+      return enabledTriggerForProject.get();
+    }
+
+    return emptyList();
+  }
+
+  @Override
+  public List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountIdentifier, List<String> fqns) {
+    if (isEmpty(fqns)) {
+      return emptyList();
+    }
+    try {
+      return SafeHttpCall.executeWithExceptions(connectorResourceClient.listConnectorByFQN(accountIdentifier, fqns))
+          .getData();
+    } catch (Exception e) {
+      log.error("Failed while retrieving connectors", e);
+      throw new TriggerException("Failed while retrieving connectors" + e.getMessage(), e, USER_SRE);
+    }
   }
 
   private Criteria getTriggerWebhookEventEqualityCriteria(TriggerWebhookEvent webhookEventQueueRecord) {

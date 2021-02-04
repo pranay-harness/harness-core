@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class WebhookMetadata {
-  String type;
-  GitMetadata git;
-  CustomMetadata custom;
+public class GitMetadata {
+  String connectorIdentifier;
+  String repoName;
 }

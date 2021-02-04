@@ -27,6 +27,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ConditionEvaluator {
   public boolean evaluate(String input, String standard, String operator) {
+    if (isBlank(input) && isBlank(standard) && isBlank(operator)) {
+      return true;
+    }
     OperationEvaluator operationEvaluator = evaluatorMap.get(operator);
     if (operationEvaluator == null) {
       throw new InvalidArgumentsException(

@@ -19,6 +19,7 @@ import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData.WebhookEventHeader
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.BranchWebhookEvent;
 import io.harness.ngtriggers.beans.scm.CommitDetails;
+import io.harness.ngtriggers.beans.scm.IssueCommentWebhookEvent;
 import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
@@ -28,6 +29,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuil
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.GitProvider;
 import io.harness.product.ci.scm.proto.Header;
+import io.harness.product.ci.scm.proto.IssueCommentHook;
 import io.harness.product.ci.scm.proto.ParseWebhookRequest;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
@@ -93,9 +95,13 @@ public class WebhookEventPayloadParser {
         throw new InvalidRequestException("Tag event not supported", USER);
       }
       webhookPayloadDataBuilder = convertPushHook(pushHook);
+    } else if (parseWebhookResponse.hasComment() && parseWebhookResponse.getComment().getIssue() != null
+        && parseWebhookResponse.getComment().getIssue().getPr() != null) {
+      IssueCommentHook commentHook = parseWebhookResponse.getComment();
+      webhookPayloadDataBuilder = convertComment(commentHook);
     } else {
-      log.error("Unknown webhook event");
-      throw new InvalidRequestException("Unknown webhook event", USER);
+      log.error("Unsupported webhook event");
+      throw new InvalidRequestException("Unsupported webhook event", USER);
     }
 
     return webhookPayloadDataBuilder.originalEvent(triggerWebhookEvent)
@@ -120,6 +126,24 @@ public class WebhookEventPayloadParser {
     return WebhookPayloadData.builder()
         .webhookGitUser(webhookGitUser)
         .repository(webhookEvent.getRepository())
+        .webhookEvent(webhookEvent);
+  }
+
+  WebhookPayloadDataBuilder convertComment(IssueCommentHook commentHook) {
+    Repository repository = convertRepository(commentHook.getRepo());
+    WebhookGitUser webhookGitUser = convertUser(commentHook.getSender());
+
+    IssueCommentWebhookEvent webhookEvent =
+        IssueCommentWebhookEvent.builder()
+            .commentBody(commentHook.getComment().getBody())
+            .pullRequestNum(Integer.toString(commentHook.getIssue().getNumber()))
+            .repository(repository)
+            .baseAttributes(WebhookBaseAttributes.builder().action(commentHook.getAction().name()).build())
+            .build();
+
+    return WebhookPayloadData.builder()
+        .webhookGitUser(webhookGitUser)
+        .repository(repository)
         .webhookEvent(webhookEvent);
   }
 
@@ -171,7 +195,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  private PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
+  public PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
     // TODO Add commit details
     PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
