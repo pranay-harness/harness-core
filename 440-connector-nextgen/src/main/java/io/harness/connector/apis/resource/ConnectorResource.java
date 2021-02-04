@@ -27,6 +27,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -246,6 +247,7 @@ public class ConnectorResource {
   @GET
   @Path("{identifier}/validation-params")
   @ApiOperation(hidden = true, value = "Gets connector validation params")
+  @InternalApi
   @Produces("application/x-kryo")
   public ResponseDTO<ConnectorValidationParams> getConnectorValidationParams(
 

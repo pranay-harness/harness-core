@@ -24,7 +24,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -220,9 +220,13 @@ public class NotificationApplication extends Application<NotificationConfigurati
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
               != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getNotificationSecrets().getJwtAuthSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
+          configuration.getNotificationSecrets().getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
           configuration.getNotificationSecrets().getManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }
 
