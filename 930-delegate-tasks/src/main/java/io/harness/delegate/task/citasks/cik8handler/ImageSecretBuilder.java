@@ -72,11 +72,13 @@ public class ImageSecretBuilder {
 
       String registryUrl = dockerConfig.getDockerRegistryUrl();
       String username = dockerUserNamePasswordDTO.getUsername();
-      if (isEmpty(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
+      if (dockerUserNamePasswordDTO == null || dockerUserNamePasswordDTO.getPasswordRef() == null
+          || isEmpty(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
         throw new InvalidArgumentsException(
             format("Password should not be empty for docker connector: %s", connectorDetails.getIdentifier()),
             WingsException.USER);
       }
+
       String password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
 
       validateDecodedDockerCredentials(username, password, connectorDetails.getIdentifier());
@@ -114,6 +116,14 @@ public class ImageSecretBuilder {
     GcpManualDetailsDTO credentialConfig = (GcpManualDetailsDTO) secretDecryptionService.decrypt(
         (GcpManualDetailsDTO) gcpConnectorConfig.getCredential().getConfig(),
         connectorDetails.getEncryptedDataDetails());
+
+    if (credentialConfig == null || credentialConfig.getSecretKeyRef() == null
+        || credentialConfig.getSecretKeyRef().getDecryptedValue() == null) {
+      throw new InvalidArgumentsException(
+          format("Credentials should not be empty for GCR connector: %s", connectorDetails.getIdentifier()),
+          WingsException.USER);
+    }
+
     String password = String.valueOf(credentialConfig.getSecretKeyRef().getDecryptedValue());
     String username = GCR_USERNAME;
     if (isEmpty(password)) {
