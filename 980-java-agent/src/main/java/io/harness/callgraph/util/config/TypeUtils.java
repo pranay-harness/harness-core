@@ -40,7 +40,7 @@ public class TypeUtils {
       String[] elems = value.split(",");
       Object[] array = (Object[]) Array.newInstance(inner, elems.length);
       for (int i = 0; i < elems.length; i++) {
-        array[i] = cast(inner, elems[i]);
+        array[i] = cast(inner, elems[i].trim());
       }
       return array;
     } else {
