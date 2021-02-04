@@ -17,6 +17,6 @@ public interface DeploymentTimeSeriesAnalysisService {
   DeploymentTimeSeriesAnalysis getRecentHighestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId);
 
-  DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+  List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId);
 }

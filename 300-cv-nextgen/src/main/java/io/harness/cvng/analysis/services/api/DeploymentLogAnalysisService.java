@@ -24,5 +24,5 @@ public interface DeploymentLogAnalysisService {
 
   DeploymentLogAnalysis getRecentHighestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId);
 
-  DeploymentLogAnalysis getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId);
+  List<DeploymentLogAnalysis> getLatestDeploymentLogAnalysis(String accountId, String verificationJobInstanceId);
 }

@@ -842,6 +842,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         .isEqualTo(CanaryDeploymentAdditionalInfo.builder()
                        .primary(Collections.emptySet())
                        .canary(Collections.emptySet())
+                       .primaryInstancesLabel("before")
+                       .canaryInstancesLabel("after")
                        .build());
   }
 

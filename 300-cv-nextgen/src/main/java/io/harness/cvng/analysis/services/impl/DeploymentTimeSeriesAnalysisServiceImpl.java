@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.connector.ConnectorInfoDTO;
@@ -32,7 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import org.apache.commons.lang3.StringUtils;
@@ -57,10 +57,10 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
 
-    DeploymentTimeSeriesAnalysis latestDeploymentTimeSeriesAnalysis =
+    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
 
-    if (latestDeploymentTimeSeriesAnalysis == null) {
+    if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return TransactionMetricInfoSummaryPageDTO.builder()
           .pageResponse(formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE))
           .build();
@@ -68,38 +68,37 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
     TimeRange deploymentTimeRange = TimeRange.builder()
                                         .startTime(verificationJobInstance.getStartTime())
-                                        .endTime(latestDeploymentTimeSeriesAnalysis.getEndTime())
+                                        .endTime(latestDeploymentTimeSeriesAnalysis.get(0).getEndTime())
                                         .build();
 
-    validateHostName(latestDeploymentTimeSeriesAnalysis.getHostSummaries(), hostName);
     Set<TransactionMetricInfo> transactionMetricInfoSet = new HashSet();
-    String connectorName = getConnectorName(latestDeploymentTimeSeriesAnalysis);
+    for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
+      String connectorName = getConnectorName(timeSeriesAnalysis);
 
-    latestDeploymentTimeSeriesAnalysis.getTransactionMetricSummaries()
-        .stream()
-        .filter(transactionMetricHostData
-            -> filterAnomalousMetrics(transactionMetricHostData, isNotEmpty(hostName), anomalousMetricsOnly))
-        .forEach(transactionMetricHostData -> {
-          TransactionMetricInfo transactionMetricInfo =
-              TransactionMetricInfo.builder()
-                  .transactionMetric(createTransactionMetric(transactionMetricHostData))
-                  .connectorName(connectorName)
-                  .build();
-          SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
-          transactionMetricHostData.getHostData()
-              .stream()
-              .filter(hostData -> filterHostData(hostData, hostName, anomalousMetricsOnly))
-              .forEach(hostData -> nodeDataSet.add(hostData));
-          if (!nodeDataSet.isEmpty()) {
+      timeSeriesAnalysis.getTransactionMetricSummaries()
+          .stream()
+          .filter(transactionMetricHostData
+              -> filterAnomalousMetrics(transactionMetricHostData, isNotEmpty(hostName), anomalousMetricsOnly))
+          .forEach(transactionMetricHostData -> {
+            TransactionMetricInfo transactionMetricInfo =
+                TransactionMetricInfo.builder()
+                    .transactionMetric(createTransactionMetric(transactionMetricHostData))
+                    .connectorName(connectorName)
+                    .build();
+            SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
+            transactionMetricHostData.getHostData()
+                .stream()
+                .filter(hostData -> filterHostData(hostData, hostName, anomalousMetricsOnly))
+                .forEach(hostData -> nodeDataSet.add(hostData));
             transactionMetricInfo.setNodes(nodeDataSet);
-            transactionMetricInfoSet.add(transactionMetricInfo);
-          }
-        });
+            if (isNotEmpty(nodeDataSet)) {
+              transactionMetricInfoSet.add(transactionMetricInfo);
+            }
+          });
+    }
 
-    List<TransactionMetricInfo> transactionMetricInfoList =
-        transactionMetricInfoSet.stream().collect(Collectors.toList());
-
-    Collections.sort(transactionMetricInfoList,
+    List<TransactionMetricInfo> transactionMetricInfoList = new ArrayList<>(transactionMetricInfoSet);
+    transactionMetricInfoList.sort(
         (d1, d2) -> Double.compare(d2.getTransactionMetric().getScore(), d1.getTransactionMetric().getScore()));
 
     return TransactionMetricInfoSummaryPageDTO.builder()
@@ -208,15 +207,21 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+  public List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
-    return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
-        .field(DeploymentTimeSeriesAnalysisKeys.verificationTaskId)
-        .in(verificationTaskIds)
-        .order(Sort.descending(DeploymentTimeSeriesAnalysisKeys.startTime))
-        .get();
+    List<DeploymentTimeSeriesAnalysis> timeSeriesAnalyses = new ArrayList<>();
+    verificationTaskIds.forEach(taskId -> {
+      DeploymentTimeSeriesAnalysis analysis = hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
+                                                  .filter(DeploymentTimeSeriesAnalysisKeys.verificationTaskId, taskId)
+                                                  .order(Sort.descending(DeploymentTimeSeriesAnalysisKeys.startTime))
+                                                  .get();
+      if (analysis != null) {
+        timeSeriesAnalyses.add(analysis);
+      }
+    });
+    return timeSeriesAnalyses;
   }
 
   @Nullable
