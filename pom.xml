@@ -26,7 +26,7 @@
         <module>340-ce-nextgen</module>
         <module>350-event-server</module>
         <module>380-cg-graphql</module>
-        <module>400-rest</module>
+        <!--<module>400-rest</module>-->
         <module>830-notification-service</module>
         <module>899-yaml-schema-plugin</module>
     </modules>

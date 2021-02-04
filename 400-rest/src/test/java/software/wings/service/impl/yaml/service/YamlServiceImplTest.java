@@ -90,7 +90,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject YamlServiceImpl yamlService = new YamlServiceImpl();
   @Spy @InjectMocks private AuditHelper auditHelper;
   @Mock private AuditService auditService;
-  private static final String resourcePath = "./yaml";
+  private static final String resourcePath = "400-rest/src/test/resources/yaml";
   @Mock ApplicationYamlHandler applicationYamlHandler;
   @Mock BaseYamlHandler baseYamlHandler;
   @Mock HarnessTagYamlHelper harnessTagYamlHelper;
@@ -249,7 +249,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VARDAN_BANSAL)
   @Category(UnitTests.class)
-  public void shouldPerformYAMLOperationWithAuditsLogged() throws InvalidActivityException {
+  public void shouldPerformYAMLOperationWithAuditsLogged() throws InvalidActivityException, FileNotFoundException {
     final AuditHeader auditHeader = AuditHeader.Builder.anAuditHeader().build();
     final String auditId = "AUDIT_ID";
     final String testAccountId = "TEST_ACCOUNT_ID";
@@ -316,15 +316,9 @@ public class YamlServiceImplTest extends WingsBaseTest {
         .isInstanceOf(YamlProcessingException.class)
         .hasMessageEndingWith("Error while processing some yaml files in the changeset.");
   }
-  private InputStream setupInputStreamFromZipFile(final String fileName) {
+  private InputStream setupInputStreamFromZipFile(final String fileName) throws FileNotFoundException {
     File file = null;
-    try {
-      file =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName + ".zip").toURI());
-      return new FileInputStream(file);
-    } catch (URISyntaxException | FileNotFoundException e) {
-      assertThat(false).isTrue();
-    }
-    return null;
+    file = new File(resourcePath + PATH_DELIMITER + fileName + ".zip");
+    return new FileInputStream(file);
   }
 }

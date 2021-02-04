@@ -363,9 +363,7 @@ public class VaultTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void createEncryptedFile_WithReadOnlyVault() throws FileNotFoundException, IOException {
     String secretFileName = UUID.randomUUID().toString();
-    URL url = getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt");
-    assertThat(url).isNotNull();
-    File file = new File(url.getFile());
+    File file = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
 
     VaultConfig vaultConfig = secretManagementTestHelper.getVaultConfigWithAuthToken(VAULT_TOKEN);
     vaultConfig.setReadOnly(true);
@@ -1487,7 +1485,7 @@ public class VaultTest extends WingsBaseTest {
     vaultService.saveOrUpdateVaultConfig(accountId, fromConfig, true);
 
     String secretName = UUID.randomUUID().toString();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .inheritScopesFromSM(true)
                                 .name(secretName)
@@ -1549,7 +1547,7 @@ public class VaultTest extends WingsBaseTest {
     assertThat(isEmpty(encryptedFileData.get(0).getParents())).isFalse();
     // test update
     String newSecretName = UUID.randomUUID().toString();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     SecretFile secretFileUpdate = SecretFile.builder()
                                       .inheritScopesFromSM(true)
                                       .name(newSecretName)

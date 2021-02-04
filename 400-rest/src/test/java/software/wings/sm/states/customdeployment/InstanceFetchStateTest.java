@@ -119,7 +119,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
-  private static String resourcePath = "./software/wings/customdeployment";
+  private static String resourcePath = "400-rest/src/test/resources/software/wings/customdeployment";
 
   @Before
   public void setUp() throws Exception {
@@ -390,11 +390,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
 
   private String readFile(String fileName) throws IOException {
     File file = null;
-    try {
-      file = new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find file " + fileName);
-    }
+    file = new File(resourcePath + PATH_DELIMITER + fileName);
+
     assertThat(file).isNotNull();
     return FileUtils.readFileToString(file, "UTF-8");
   }

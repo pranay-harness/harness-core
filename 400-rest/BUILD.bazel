@@ -8,21 +8,9 @@ load("//:macros.bzl", "sources")
 sources()
 
 java_library(
-    name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
-    ]),
-    data = ["//:resource"],
-    resources = [
-        "//400-rest/src/main/resources:resource",
-    ],
+    name = "maven_deps",
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//400-rest/src/main/resources",
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
+    exports = [
         "//:lombok",
         "//420-delegate-service:module",
         "//430-cv-nextgen-commons:module",
@@ -37,6 +25,7 @@ java_library(
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
         "//920-delegate-agent-beans:module",
+        "//920-delegate-agent-beans/src/main/proto:920_delegate_agent_beans_java_proto",
         "//920-delegate-service-beans:module",
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//930-delegate-tasks:module",
@@ -48,6 +37,8 @@ java_library(
         "//950-command-library-common:module",
         "//950-common-entities:module",
         "//950-delegate-tasks-beans:module",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
         "//950-events-api:module",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
@@ -62,7 +53,6 @@ java_library(
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
-        "//960-recaster:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-ng-commons:module",
@@ -139,6 +129,7 @@ java_library(
         "@maven//:com_github_dikhan_pagerduty_client",
         "@maven//:com_github_dirkraft_dropwizard_file_assets_dropwizard_file_assets",
         "@maven//:com_github_fge_json_schema_core",
+        "@maven//:com_github_heremaps_oksse",
         "@maven//:com_github_mifmif_generex",
         "@maven//:com_github_reinert_jjschema",
         "@maven//:com_github_scribejava_scribejava_apis",
@@ -693,10 +684,25 @@ java_library(
 )
 
 java_binary(
-    name = "application_deploy",
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/generated/**/*.java",
+    ]),
+    data = ["//:resource"],
     main_class = "software.wings.app.WingsApplication",
+    resources = [
+        "//400-rest/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
     runtime_deps = [
-        ":module",
+        "//400-rest/src/main/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        # keep it up above maven_deps. This comment is intentionally added
+        "@maven//:io_netty_netty_all",
+        "maven_deps",
     ],
 )
 
@@ -733,8 +739,10 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "maven_deps",
         "module",
         "//:lombok",
+        "//980-commons:module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_github_tomakehurst_wiremock",
@@ -764,6 +772,7 @@ java_library(
     resources = [
         "//:resource",
         "//400-rest/src/main/resources:resource",
+        "//400-rest/src/test/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
@@ -780,10 +789,13 @@ java_library(
         ":module",
         ":supporter-test",
         "//:lombok",
+        "//960-api-services:module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_github_tomakehurst_wiremock",
         "@maven//:com_github_tomakehurst_wiremock_standalone",
+        # This comment is intentionally added. Do not remove this comment
+        "@com_github_tomakehurst_wiremock//jar",
         "@maven//:com_google_guava_guava",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
@@ -799,3 +811,15 @@ java_library(
 )
 
 run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":module",
+    ],
+)
+
+pmd()

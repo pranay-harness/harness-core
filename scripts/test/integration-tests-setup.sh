@@ -55,14 +55,14 @@ if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
        -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar \
-       -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar 400-rest/config.yml > portal.log 2>&1 &
+       -Dfile.encoding=UTF-8 -jar /home/jenkins/.bazel-dirs/out/k8-fastbuild/bin/400-rest/module_deploy.jar 400-rest/config.yml > portal.log 2>&1 &
 else
   echo "SERVER_BUILD_DIR is set, using prebuilt server build"
   echo $SERVER_BUILD_DIR
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
          -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
          -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar \
-         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/400-rest/target/rest-capsule.jar 400-rest/config.yml > portal.log 2>&1 &
+         -Dfile.encoding=UTF-8 -jar /home/jenkins/.bazel-dirs/out/k8-fastbuild/bin/400-rest/module_deploy.jar 400-rest/config.yml > portal.log 2>&1 &
 fi
 
 echo 'sleep for server to start'

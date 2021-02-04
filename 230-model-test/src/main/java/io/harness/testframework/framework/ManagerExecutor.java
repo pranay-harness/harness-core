@@ -77,8 +77,12 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(directory.getPath(), "400-rest", "target", "rest-capsule.jar");
+    //    final Path jar = Paths.get(directory.getPath(), "400-rest", "target", "rest-capsule.jar");
+    final Path jar = Paths.get(System.getProperty("user.home") + "/.m2/repository/"
+        + "software/wings/400-rest/0.0.1-SNAPSHOT/400-rest-0.0.1-SNAPSHOT-capsule.jar");
+
     final Path config = Paths.get(directory.getPath(), "400-rest", "modified_config.yml");
+
     String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
     if (!new File(alpn).exists()) {

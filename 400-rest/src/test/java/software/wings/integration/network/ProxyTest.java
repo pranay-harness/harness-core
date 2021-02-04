@@ -138,6 +138,7 @@ public class ProxyTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("ignoring Deprecated IntegrationTests for bazel")
   public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
     OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -245,6 +246,7 @@ public class ProxyTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("ignoring Deprecated IntegrationTests for bazel")
   public void testGetResponseFromUrlNoProxy() throws IOException {
     Executor executor = Executor.newInstance();
     org.apache.http.client.fluent.Request request =

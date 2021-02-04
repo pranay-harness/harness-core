@@ -40,70 +40,76 @@ public class UsageMetricsTestUtils {
   public static void validateTimeSeriesEventInfo(DeploymentTimeSeriesEvent timeSeriesEvent, int number) {
     TimeSeriesEventInfo timeSeriesEventInfo = timeSeriesEvent.getTimeSeriesEventInfo();
     assertThat(timeSeriesEventInfo).isNotNull();
-    assertThat(timeSeriesEventInfo.getAccountId()).isEqualTo(UsageMetricsTestKeys.ACCOUNTID);
+    assertThat(timeSeriesEventInfo.getAccountId()).isEqualTo(UsageMetricsTestUtils.UsageMetricsTestKeys.ACCOUNTID);
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.EXECUTIONID))
-        .isEqualTo(UsageMetricsTestKeys.EXECUTIONID + number);
+        .isEqualTo(UsageMetricsTestUtils.UsageMetricsTestKeys.EXECUTIONID + number);
     assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.STARTTIME)).isEqualTo(100L);
     assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ENDTIME)).isEqualTo(200L);
     assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.DURATION)).isEqualTo(100L);
     assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION)).isEqualTo(100L);
-    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.APPID)).isEqualTo(UsageMetricsTestKeys.APPID);
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.APPID))
+        .isEqualTo(UsageMetricsTestUtils.UsageMetricsTestKeys.APPID);
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.STATUS))
         .isEqualTo(ExecutionStatus.SUCCESS.name());
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION))
-        .contains(UsageMetricsTestKeys.PIPELINEEXECUTIONID);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.PIPELINEEXECUTIONID);
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PIPELINE))
-        .contains(UsageMetricsTestKeys.PIPELINEID);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.PIPELINEID);
     assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.CLOUD_PROVIDER_LIST))
-        .contains(UsageMetricsTestKeys.CLOUDPROVIDER1);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER1);
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGER_ID))
-        .contains(UsageMetricsTestKeys.TRIGGER1);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.TRIGGER1);
     assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGERED_BY))
-        .contains(UsageMetricsTestKeys.USER1);
-    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENV_LIST)).contains(UsageMetricsTestKeys.ENV1);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.USER1);
+    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENV_LIST))
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.ENV1);
     assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENVTYPES)).contains(EnvironmentType.PROD.name());
     assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.SERVICE_LIST))
-        .contains(UsageMetricsTestKeys.SERVICE1);
+        .contains(UsageMetricsTestUtils.UsageMetricsTestKeys.SERVICE1);
   }
 
   public static WorkflowExecution generateWorkflowExecution(int number) {
     Map<String, String> artifactBuildNumber = new HashMap<>();
     artifactBuildNumber.put(ArtifactKeys.metadata_buildNo, "123");
     return WorkflowExecution.builder()
-        .uuid(UsageMetricsTestKeys.EXECUTIONID + number)
-        .accountId(UsageMetricsTestKeys.ACCOUNTID)
-        .appId(UsageMetricsTestKeys.APPID)
+        .uuid(UsageMetricsTestUtils.UsageMetricsTestKeys.EXECUTIONID + number)
+        .accountId(UsageMetricsTestUtils.UsageMetricsTestKeys.ACCOUNTID)
+        .appId(UsageMetricsTestUtils.UsageMetricsTestKeys.APPID)
         .status(ExecutionStatus.SUCCESS)
-        .workflowId(UsageMetricsTestKeys.WORKFLOWID)
+        .workflowId(UsageMetricsTestUtils.UsageMetricsTestKeys.WORKFLOWID)
         .startTs(100L)
         .endTs(200L)
-        .cloudProviderIds(Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2))
-        .deployedCloudProviders(
-            Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2))
+        .cloudProviderIds(Lists.newArrayList(UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER1,
+            UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER2))
+        .deployedCloudProviders(Lists.newArrayList(UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER1,
+            UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER2))
         .environments(Lists.newArrayList(EnvSummary.builder().environmentType(EnvironmentType.PROD).build()))
-        .deployedEnvironments(Lists.newArrayList(
-            EnvSummary.builder().environmentType(EnvironmentType.PROD).uuid(UsageMetricsTestKeys.ENV1).build()))
+        .deployedEnvironments(Lists.newArrayList(EnvSummary.builder()
+                                                     .environmentType(EnvironmentType.PROD)
+                                                     .uuid(UsageMetricsTestUtils.UsageMetricsTestKeys.ENV1)
+                                                     .build()))
         .pipelineExecution(
             Builder.aPipelineExecution()
-                .withPipelineId(UsageMetricsTestKeys.PIPELINEID)
-                .withPipelineStageExecutions(
-                    Arrays.asList(PipelineStageExecution.builder()
-                                      .workflowExecutions(Arrays.asList(
-                                          WorkflowExecution.builder()
-                                              .envId(UsageMetricsTestKeys.ENV1)
-                                              .envType(EnvironmentType.PROD)
-                                              .cloudProviderIds(Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1))
-                                              .serviceIds(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
+                .withPipelineId(UsageMetricsTestUtils.UsageMetricsTestKeys.PIPELINEID)
+                .withPipelineStageExecutions(Arrays.asList(
+                    PipelineStageExecution.builder()
+                        .workflowExecutions(Arrays.asList(
+                            WorkflowExecution.builder()
+                                .envId(UsageMetricsTestUtils.UsageMetricsTestKeys.ENV1)
+                                .envType(EnvironmentType.PROD)
+                                .cloudProviderIds(
+                                    Lists.newArrayList(UsageMetricsTestUtils.UsageMetricsTestKeys.CLOUDPROVIDER1))
+                                .serviceIds(Arrays.asList(UsageMetricsTestUtils.UsageMetricsTestKeys.SERVICE1))
 
-                                              .build()))
-                                      .build()))
+                                .build()))
+                        .build()))
                 .build())
-        .pipelineExecutionId(UsageMetricsTestKeys.PIPELINEEXECUTIONID)
+        .pipelineExecutionId(UsageMetricsTestUtils.UsageMetricsTestKeys.PIPELINEEXECUTIONID)
         .artifacts(Lists.newArrayList(Artifact.Builder.anArtifact().withMetadata(artifactBuildNumber).build()))
-        .serviceIds(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
-        .deployedServices(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
-        .triggeredBy(EmbeddedUser.builder().uuid(UsageMetricsTestKeys.USER1).build())
-        .deploymentTriggerId(UsageMetricsTestKeys.TRIGGER1)
+        .serviceIds(Arrays.asList(UsageMetricsTestUtils.UsageMetricsTestKeys.SERVICE1))
+        .deployedServices(Arrays.asList(UsageMetricsTestUtils.UsageMetricsTestKeys.SERVICE1))
+        .triggeredBy(EmbeddedUser.builder().uuid(UsageMetricsTestUtils.UsageMetricsTestKeys.USER1).build())
+        .deploymentTriggerId(UsageMetricsTestUtils.UsageMetricsTestKeys.TRIGGER1)
         .duration(100L)
         .rollbackDuration(100L)
         .build();
