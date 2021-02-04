@@ -97,6 +97,9 @@ if [[ "" != "$TI_SERVICE_ENDPOINT" ]]; then
   yq write -i $CONFIG_FILE tiServiceConfig.baseUrl "$TI_SERVICE_ENDPOINT"
 fi
 
+if [[ "" != "$API_URL" ]]; then
+  yq write -i $CONFIG_FILE apiUrl "$API_URL"
+fi
 
 if [[ "" != "$PMS_TARGET" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.target $PMS_TARGET
@@ -132,4 +135,8 @@ fi
 
 if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
+if [[ "" != "$API_URL" ]]; then
+  yq write -i $CONFIG_FILE apiUrl "$API_URL"
 fi

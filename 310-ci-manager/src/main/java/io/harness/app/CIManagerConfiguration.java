@@ -59,6 +59,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
+  @JsonProperty("apiUrl") private String apiUrl;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();

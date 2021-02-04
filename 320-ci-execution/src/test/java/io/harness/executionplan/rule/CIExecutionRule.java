@@ -40,6 +40,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -117,6 +118,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+        bind(String.class).annotatedWith(Names.named("ngBaseUrl")).to(String.class);
       }
     });
 

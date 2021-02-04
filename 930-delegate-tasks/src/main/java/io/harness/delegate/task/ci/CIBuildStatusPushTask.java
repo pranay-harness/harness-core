@@ -45,6 +45,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
+  public static final String TARGET_URL = "target_url";
   @Inject private GithubService githubService;
   @Inject private BitbucketService bitbucketService;
   @Inject private GitlabService gitlabService;
@@ -54,6 +55,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
   private static final String STATE = "state";
   private static final String URL = "url";
   private static final String CONTEXT = "context";
+  private static final String DETAILS_URL = "details_url";
 
   private static final String BITBUCKET_KEY = "key";
   private static final String GITHUB_API_URL = "https://api.github.com/";
@@ -128,6 +130,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
       bodyObjectMap.put(DESC, ciBuildStatusPushParameters.getDesc());
       bodyObjectMap.put(CONTEXT, ciBuildStatusPushParameters.getIdentifier());
       bodyObjectMap.put(STATE, ciBuildStatusPushParameters.getState());
+      bodyObjectMap.put(TARGET_URL, ciBuildStatusPushParameters.getDetailsUrl());
 
       return githubService.sendStatus(githubAppConfig, token, null, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
@@ -153,7 +156,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     bodyObjectMap.put(DESC, ciBuildStatusPushParameters.getDesc());
     bodyObjectMap.put(BITBUCKET_KEY, ciBuildStatusPushParameters.getIdentifier());
     bodyObjectMap.put(STATE, ciBuildStatusPushParameters.getState());
-    bodyObjectMap.put(URL, APP_URL); // Retrieve it via vanity URL
+    bodyObjectMap.put(URL, ciBuildStatusPushParameters.getDetailsUrl());
 
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
@@ -172,6 +175,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     bodyObjectMap.put(GitlabServiceImpl.DESC, ciBuildStatusPushParameters.getDesc());
     bodyObjectMap.put(GitlabServiceImpl.CONTEXT, ciBuildStatusPushParameters.getIdentifier());
     bodyObjectMap.put(GitlabServiceImpl.STATE, ciBuildStatusPushParameters.getState());
+    bodyObjectMap.put(GitlabServiceImpl.TARGET_URL, ciBuildStatusPushParameters.getDetailsUrl());
 
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
