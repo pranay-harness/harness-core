@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -60,7 +61,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
@@ -110,19 +110,26 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
-public class EcsStateHelperTest extends WingsBaseTest {
+public class EcsStateHelperTest extends CategoryTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Inject @InjectMocks private EcsStateHelper helper;
+
+  @Before
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -215,7 +222,8 @@ public class EcsStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
-  public void testQueueDelegateTaskForEcsListenerUpdate() {
+  public void testQueueDelegateTaskForEcsListenerUpdate() throws InterruptedException {
+    Thread.sleep(25000);
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
     DelegateService mockService = mock(DelegateService.class);
