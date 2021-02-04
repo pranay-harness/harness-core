@@ -2002,7 +2002,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cf:cf-client-sdk-java:1.0.0-SNAPSHOT",
+        "io.harness.cf:cf-client-sdk-java:1.0.0-20210126.200034-12",
         "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [
