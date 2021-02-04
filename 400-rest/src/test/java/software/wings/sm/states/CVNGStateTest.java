@@ -22,6 +22,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.cvng.state.CVNGVerificationTaskService;
@@ -137,7 +138,12 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_createActivityWithCVNGVerificationTask() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     ExecutionResponse executionResponse = cvngState.execute(executionContext);
     ArgumentCaptor<CVNGVerificationTask> cvngVerificationTaskArgumentCaptor =
         ArgumentCaptor.forClass(CVNGVerificationTask.class);
@@ -170,7 +176,12 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_verifyDeploymentActivityDTOValues() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     ExecutionResponse executionResponse = cvngState.execute(executionContext);
     ArgumentCaptor<DeploymentActivityDTO> captor = ArgumentCaptor.forClass(DeploymentActivityDTO.class);
     verify(cvngService, times(1)).registerActivity(eq(ACCOUNT_ID), captor.capture());
@@ -204,10 +215,15 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_validateServiceAndEnvIdentifierIfRuntimeParams() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     cvngState.setCvngParams(
-        Lists.newArrayList(ParamValue.builder().name("serviceIdentifier").value("<+input>").editable(true).build(),
-            ParamValue.builder().name("envIdentifier").editable(true).value("<+input>").build()));
+        Lists.newArrayList(ParamValue.builder().name("serviceIdentifier").value("<+input>").editable(false).build(),
+            ParamValue.builder().name("envIdentifier").editable(false).value("<+input>").build()));
     ExecutionResponse executionResponse = cvngState.execute(executionContext);
     ArgumentCaptor<DeploymentActivityDTO> captor = ArgumentCaptor.forClass(DeploymentActivityDTO.class);
     verify(cvngService, times(1)).registerActivity(eq(ACCOUNT_ID), captor.capture());
@@ -231,16 +247,30 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_testRenderExpression() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     cvngState.setDeploymentTag("${expression}");
     cvngState.setCvngParams(
-        Lists.newArrayList(ParamValue.builder().name("serviceIdentifier").value("<+input>").editable(true).build(),
-            ParamValue.builder().name("envIdentifier").value("<+input>").editable(true).build(),
+        Lists.newArrayList(ParamValue.builder().name("serviceIdentifier").value("<+input>").editable(false).build(),
+            ParamValue.builder().name("envIdentifier").value("<+input>").editable(false).build(),
             ParamValue.builder().name("runtimeField").value("${expression}").editable(true).build()));
     ExecutionResponse executionResponse = cvngState.execute(executionContext);
     ArgumentCaptor<DeploymentActivityDTO> captor = ArgumentCaptor.forClass(DeploymentActivityDTO.class);
     verify(cvngService, times(1)).registerActivity(eq(ACCOUNT_ID), captor.capture());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(executionResponse.getStateExecutionData())
+        .isEqualTo(CVNGStateExecutionData.builder()
+                       .activityId(activityId)
+                       .projectIdentifier(projectIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .deploymentTag("renderedExpression")
+                       .serviceIdentifier("service")
+                       .envIdentifier("env")
+                       .build());
     DeploymentActivityDTO deploymentActivityDTO = captor.getValue();
     assertThat(deploymentActivityDTO.getServiceIdentifier()).isNull();
     assertThat(deploymentActivityDTO.getEnvironmentIdentifier()).isNull();
@@ -262,7 +292,12 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_parseDataCollectionDelayIfNull() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     cvngState.execute(executionContext);
     ArgumentCaptor<DeploymentActivityDTO> captor = ArgumentCaptor.forClass(DeploymentActivityDTO.class);
     verify(cvngService, times(1)).registerActivity(eq(ACCOUNT_ID), captor.capture());
@@ -275,7 +310,12 @@ public class CVNGStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecute_parseDataCollectionDelay() {
     String activityId = generateUuid();
-    when(cvngService.registerActivity(anyString(), any())).thenReturn(activityId);
+    when(cvngService.registerActivity(anyString(), any()))
+        .thenReturn(CD10RegisterActivityDTO.builder()
+                        .activityId(activityId)
+                        .serviceIdentifier("service")
+                        .envIdentifier("env")
+                        .build());
     cvngState.setDataCollectionDelay("11m");
     cvngState.execute(executionContext);
     ArgumentCaptor<DeploymentActivityDTO> captor = ArgumentCaptor.forClass(DeploymentActivityDTO.class);

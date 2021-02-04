@@ -6,6 +6,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
@@ -37,7 +38,7 @@ public class InternalActivityResource {
   @ExceptionMetered
   @PublicApi
   @ApiOperation(value = "registers CD 1.0 activity (Internal API) ", nickname = "registerInternalActivity")
-  public RestResponse<String> registerActivity(
+  public RestResponse<CD10RegisterActivityDTO> registerActivity(
       @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
     return new RestResponse<>(activityService.registerCD10Activity(accountId, activityDTO));
   }

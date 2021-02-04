@@ -158,7 +158,10 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
         verificationManagerService.deletePerpetualTask(accountId, activitySource.getDataCollectionTaskId());
       }
     }
-    sendKubernetesActivitySourceDeleteEvent((KubernetesActivitySource) activitySource);
+    // TODO: refactor ActivitySource entity and this service.
+    if (activitySource.getType() == ActivitySourceType.KUBERNETES) {
+      sendKubernetesActivitySourceDeleteEvent((KubernetesActivitySource) activitySource);
+    }
     return hPersistence.delete(activitySource);
   }
 

@@ -4,6 +4,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO.VerificationJobDTOKeys;
 import io.harness.cvng.client.CVNGService;
@@ -111,7 +112,8 @@ public class CVNGState extends State {
       if (!VerificationJobDTO.isRuntimeParam(envIdentifier)) {
         activityDTO.setEnvironmentIdentifier(envIdentifier);
       }
-      String activityId = cvngService.registerActivity(context.getAccountId(), activityDTO);
+      CD10RegisterActivityDTO cd10RegisterActivityDTO =
+          cvngService.registerActivity(context.getAccountId(), activityDTO);
       String correlationId = UUID.randomUUID().toString();
 
       CVNGStateExecutionData cvngStateExecutionData =
@@ -121,10 +123,10 @@ public class CVNGState extends State {
               .orgIdentifier(orgIdentifier)
               .deploymentTag(getDeploymentTag(context))
               .serviceIdentifier(serviceIdentifier)
-              .activityId(activityId)
-              .deploymentTag(deploymentTag)
-              .envIdentifier(envIdentifier)
-              .serviceIdentifier(serviceIdentifier)
+              .activityId(cd10RegisterActivityDTO.getActivityId())
+              .deploymentTag(getDeploymentTag(context))
+              .envIdentifier(cd10RegisterActivityDTO.getEnvIdentifier())
+              .serviceIdentifier(cd10RegisterActivityDTO.getServiceIdentifier())
               .orgIdentifier(orgIdentifier)
               .projectIdentifier(projectIdentifier)
               .build();
@@ -132,7 +134,7 @@ public class CVNGState extends State {
       CVNGVerificationTask cvngVerificationTask = CVNGVerificationTask.builder()
                                                       .accountId(context.getAccountId())
                                                       .status(Status.IN_PROGRESS)
-                                                      .activityId(activityId)
+                                                      .activityId(cd10RegisterActivityDTO.getActivityId())
                                                       .startTime(now)
                                                       .correlationId(correlationId)
                                                       .build();
@@ -178,7 +180,7 @@ public class CVNGState extends State {
   private Map<String, String> getRuntimeValues(ExecutionContext context, WorkflowExecution workflowExecution) {
     Map<String, String> runtimeValues = new HashMap<>();
     for (ParamValue param : this.cvngParams) {
-      if (param.isEditable() && !VerificationJobDTO.isRuntimeParam(param.getValue())) {
+      if (param.isEditable()) {
         runtimeValues.put(param.getName(), context.renderExpression(param.getValue()));
       }
     }

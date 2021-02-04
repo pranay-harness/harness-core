@@ -55,7 +55,7 @@ public class DeploymentActivity extends Activity {
     setDeploymentTag(deploymentActivityDTO.getDeploymentTag());
     setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
     setType(ActivityType.DEPLOYMENT);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
