@@ -8,8 +8,22 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 java_library(
+    name = "abstract-module",
+    srcs = glob(["src/abstract/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        ":abstract-module",
+    ],
     resources = [
         "//990-commons-test/src/main/resources:resource",
     ],
