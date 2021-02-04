@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Document(collection = "notification-requests")
+@Document(collection = "notificationRequests")
 @StoreIn("notification")
 public class MongoNotificationRequest extends Queuable {
   byte[] bytes;
