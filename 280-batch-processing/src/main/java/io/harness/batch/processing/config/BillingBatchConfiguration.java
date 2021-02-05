@@ -33,8 +33,6 @@ public class BillingBatchConfiguration {
     return stepBuilderFactory.get("instanceBillingStep").tasklet(instanceBillingDataTasklet()).build();
   }
 
-  // -----
-
   @Bean
   public Tasklet billingDataGeneratedMailTasklet() {
     return new BillingDataGeneratedMailTasklet();
@@ -73,6 +71,22 @@ public class BillingBatchConfiguration {
   @Bean
   public Tasklet instanceBillingAggregationDataTasklet() {
     return new InstanceBillingAggregationDataTasklet();
+  }
+
+  @Bean
+  public Step instanceBillingHourlyAggregationStep() {
+    return stepBuilderFactory.get("instanceBillingHourlyAggregationStep")
+        .tasklet(instanceBillingAggregationDataTasklet())
+        .build();
+  }
+
+  @Bean
+  @Qualifier(value = "instanceBillingHourlyAggregationJob")
+  public Job instanceBillingHourlyAggregationJob(Step instanceBillingHourlyAggregationStep) {
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION.name())
+        .incrementer(new RunIdIncrementer())
+        .start(instanceBillingHourlyAggregationStep)
+        .build();
   }
 
   @Bean

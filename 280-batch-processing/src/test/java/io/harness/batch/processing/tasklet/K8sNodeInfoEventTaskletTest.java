@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -194,16 +193,20 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  @Ignore("Ignored till re-processing of nodeInfo from published messages completes")
   public void shouldCreateEmptyInstanceNodeInfo() throws Exception {
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "n"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, ""));
+
     when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, NODE_UID))
         .thenReturn(InstanceData.builder().build());
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
     PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
         CLUSTER_NAME, CLUSTER_ID, emptyMap(), emptyMap(), START_TIMESTAMP);
-    InstanceInfo instanceInfo = k8sNodeInfoTasklet.process(k8sNodeEventMessage);
+    InstanceInfo instanceInfo = k8sNodeInfoTasklet.processNodeInfoMessage(k8sNodeEventMessage);
     assertThat(instanceInfo.getInstanceId()).isNull();
   }
+
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)

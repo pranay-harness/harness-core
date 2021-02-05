@@ -33,6 +33,7 @@ import migrations.timescaledb.CreateBillingDataHourly;
 import migrations.timescaledb.CreateBudgetAlerts;
 import migrations.timescaledb.CreateKubernetesUtilizationData;
 import migrations.timescaledb.CreateNewInstanceV2Migration;
+import migrations.timescaledb.CreatePreAggHourlyTable;
 import migrations.timescaledb.CreateUtilizationData;
 import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
@@ -87,6 +88,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(37, AddFeedbackToAnomalies.class))
         .add(Pair.of(38, AddStorageSupportK8sUtilTable.class))
         .add(Pair.of(39, AddSlackNotificationSupportAnomalies.class))
+        .add(Pair.of(40, CreatePreAggHourlyTable.class))
         .build();
   }
 }
