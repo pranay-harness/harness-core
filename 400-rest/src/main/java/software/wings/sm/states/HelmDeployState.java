@@ -341,7 +341,9 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
-            .helmCommandFlag(helmCommandFlag);
+            .helmCommandFlag(helmCommandFlag)
+            .mergeCapabilities(
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);

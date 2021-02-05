@@ -27,8 +27,8 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
   private Integer rollbackVersion;
   private long timeoutInMillis;
 
-  public HelmRollbackCommandRequest() {
-    super(HelmCommandType.ROLLBACK);
+  public HelmRollbackCommandRequest(boolean mergeCapabilities) {
+    super(HelmCommandType.ROLLBACK, mergeCapabilities);
   }
 
   @Builder
@@ -38,11 +38,12 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
       String repoName, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, HelmCommandFlag helmCommandFlag,
       K8sDelegateManifestConfig sourceRepoConfig, HelmVersion helmVersion, String ocPath, String workingDir,
-      GitFileConfig gitFileConfig, List<String> variableOverridesYamlFiles, boolean k8SteadyStateCheckEnabled) {
+      GitFileConfig gitFileConfig, List<String> variableOverridesYamlFiles, boolean k8SteadyStateCheckEnabled,
+      boolean mergeCapabilities) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
         executionLogCallback, commandFlags, helmCommandFlag, sourceRepoConfig, helmVersion, ocPath, workingDir,
-        variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled);
+        variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled, mergeCapabilities);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.rollbackVersion = rollbackVersion;

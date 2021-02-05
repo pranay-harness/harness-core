@@ -5,6 +5,7 @@ import static io.harness.k8s.model.HelmVersion.V2;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
@@ -58,15 +59,22 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   @Expression(ALLOW_SECRETS) private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
   private boolean k8SteadyStateCheckEnabled;
+  private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
 
-  public HelmCommandRequest(HelmCommandType helmCommandType) {
+  public HelmCommandRequest(HelmCommandType helmCommandType, boolean mergeCapabilities) {
     this.helmCommandType = helmCommandType;
+    this.mergeCapabilities = mergeCapabilities;
   }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
+    if (mergeCapabilities) {
+      executionCapabilities.add(
+          HelmInstallationCapability.builder().version(helmVersion).criteria("helmcommand").build());
+    } else {
+      executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
+    }
     if (gitConfig != null) {
       executionCapabilities.add(GitConnectionCapability.builder()
                                     .gitConfig(gitConfig)

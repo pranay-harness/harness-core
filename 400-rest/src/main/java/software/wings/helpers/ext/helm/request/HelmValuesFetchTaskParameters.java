@@ -4,6 +4,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
@@ -28,6 +29,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
   private long timeoutInMillis;
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
+  private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;
@@ -45,14 +47,21 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
       }
     } else {
-      capabilities.add(HelmCommandCapability.builder()
-                           .commandRequest(HelmInstallCommandRequest.builder()
-                                               .commandFlags(getHelmCommandFlags())
-                                               .helmCommandFlag(getHelmCommandFlag())
-                                               .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
-                                               .containerServiceParams(getContainerServiceParams())
-                                               .build())
-                           .build());
+      if (mergeCapabilities) {
+        capabilities.add(HelmInstallationCapability.builder()
+                             .version(getHelmChartConfigTaskParams().getHelmVersion())
+                             .criteria("helmcommand")
+                             .build());
+      } else {
+        capabilities.add(HelmCommandCapability.builder()
+                             .commandRequest(HelmInstallCommandRequest.builder()
+                                                 .commandFlags(getHelmCommandFlags())
+                                                 .helmCommandFlag(getHelmCommandFlag())
+                                                 .helmVersion(getHelmChartConfigTaskParams().getHelmVersion())
+                                                 .containerServiceParams(getContainerServiceParams())
+                                                 .build())
+                             .build());
+      }
 
       if (containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
