@@ -191,6 +191,9 @@ public class GitBuildStatusUtility {
     if (status == Status.RUNNING) {
       return GITHUB_PENDING;
     }
+    if (status == Status.QUEUED) {
+      return GITHUB_PENDING;
+    }
 
     return UNSUPPORTED;
   }
@@ -208,6 +211,9 @@ public class GitBuildStatusUtility {
     if (status == Status.RUNNING) {
       return GITLAB_PENDING;
     }
+    if (status == Status.QUEUED) {
+      return GITLAB_PENDING;
+    }
 
     return UNSUPPORTED;
   }
@@ -223,6 +229,9 @@ public class GitBuildStatusUtility {
       return BITBUCKET_SUCCESS;
     }
     if (status == Status.RUNNING) {
+      return BITBUCKET_PENDING;
+    }
+    if (status == Status.QUEUED) {
       return BITBUCKET_PENDING;
     }
 
