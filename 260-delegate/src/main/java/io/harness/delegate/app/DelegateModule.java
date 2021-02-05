@@ -138,6 +138,8 @@ import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.secrets.SecretsDelegateCacheHelperService;
+import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.DelegateDecryptionService;
@@ -682,6 +684,7 @@ public class DelegateModule extends AbstractModule {
     install(NGDelegateModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
+    bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
     bind(DelegatePropertyService.class).to(DelegatePropertyServiceImpl.class);
     bind(DelegatePropertiesServiceProvider.class).to(DelegatePropertiesServiceProviderImpl.class);
     bind(DelegateConfigurationServiceProvider.class).to(DelegateConfigurationServiceProviderImpl.class);

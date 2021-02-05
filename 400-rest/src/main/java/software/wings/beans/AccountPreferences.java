@@ -14,5 +14,5 @@ import lombok.experimental.FieldNameConstants;
 @ToString
 @FieldNameConstants(innerTypeName = "AccountPreferencesKeys")
 public class AccountPreferences {
-  Integer delegateSecretsCacheTTLInSeconds = 3600;
+  Integer delegateSecretsCacheTTLInHours = 1;
 }

@@ -168,8 +168,8 @@ public class DelegateAgentResource {
                         } else if (requestEntry.is(AccountPreferenceQuery.class)) {
                           Account account = accountService.get(accountId);
                           return Any.pack(AccountPreference.newBuilder()
-                                              .setDelegateSecretsCacheTTLInSeconds(
-                                                  account.getAccountPreferences().getDelegateSecretsCacheTTLInSeconds())
+                                              .setDelegateSecretsCacheTTLInHours(
+                                                  account.getAccountPreferences().getDelegateSecretsCacheTTLInHours())
                                               .build());
                         } else {
                           return Any.newBuilder().build();

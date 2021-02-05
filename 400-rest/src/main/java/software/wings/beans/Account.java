@@ -496,6 +496,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private String subdomainUrl;
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
+    private AccountPreferences accountPreferences;
 
     private Builder() {}
 
@@ -628,6 +629,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withAccountPreferences(AccountPreferences accountPreferences) {
+      this.accountPreferences = accountPreferences;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -651,7 +657,8 @@ public class Account extends Base implements PersistentRegularIterable {
           .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
-          .withBackgroundJobsDisabled(backgroundJobsDisabled);
+          .withBackgroundJobsDisabled(backgroundJobsDisabled)
+          .withAccountPreferences(accountPreferences);
     }
 
     public Account build() {
@@ -681,6 +688,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setSubdomainUrl(subdomainUrl);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
+      account.setAccountPreferences(accountPreferences);
       return account;
     }
   }

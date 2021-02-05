@@ -474,18 +474,18 @@ public class AccountResource {
   }
 
   @POST
-  @Path("updateDelegateSecretsCacheTtl")
+  @Path("updateAccountPreference")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> updateDelegateSecretsCacheTTLAccountPreference(
-      @QueryParam("accountId") String accountId, @QueryParam("timeInHours") long timeInHours) {
+  public RestResponse<Boolean> updateAccountPreference(@QueryParam("accountId") String accountId,
+      @QueryParam("preferenceKey") String preferenceKey, @Body @NotNull Object value) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      log.info("Setting DelegateSecretsCacheExpiryTTL Value to {}", timeInHours);
-      // RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable
-      // account"); if (response == null) {
+      log.info("Attempting to set AccountPreference: {} to Value {}", preferenceKey, value);
       RestResponse<Boolean> response =
-          new RestResponse<>(accountService.updateDelegateSecretsCacheTTLAccountPreference(accountId, timeInHours));
-      //}
+          accountPermissionUtils.checkIfHarnessUser("User not allowed to set the cache Value");
+      if (response == null) {
+        response = new RestResponse<>(accountService.updateAccountPreference(accountId, preferenceKey, value));
+      }
       return response;
     }
   }

@@ -147,6 +147,8 @@ import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsAuditServiceImpl;
+import io.harness.secrets.SecretsDelegateCacheHelperService;
+import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.secrets.SecretsFileService;
@@ -1449,6 +1451,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
+    bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
     bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
     bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
     bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);

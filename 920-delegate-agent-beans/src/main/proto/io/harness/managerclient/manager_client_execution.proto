@@ -22,8 +22,8 @@ message HttpsCertRequirement {
   CertRequirement cert_requirement = 1;
 }
 
-message SecretManagerCacheTTLQuery {}
+message AccountPreferenceQuery {}
 
-message SecretManagerCacheTTL {
-  int64 expireCacheTTL = 1;
+message AccountPreference {
+  int64 delegateSecretsCacheTTLInHours = 1;
 }

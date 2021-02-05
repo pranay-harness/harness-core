@@ -1240,4 +1240,27 @@ public class AccountServiceTest extends WingsBaseTest {
     savedAccount = wingsPersistence.get(Account.class, account.getUuid());
     assertThat(savedAccount.getServiceGuardLimit()).isEqualTo(25L);
   }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testCreateUpdateAccountPreference() {
+    Account account = saveAccount(generateUuid());
+    boolean updated =
+        accountService.updateAccountPreference(account.getUuid(), "delegateSecretsCacheTTLInHours", new Integer(2));
+    Account savedAccount = wingsPersistence.get(Account.class, account.getUuid());
+    assertThat(updated).isTrue();
+    assertThat(savedAccount.getAccountPreferences()).isNotNull();
+    assertThat(savedAccount.getAccountPreferences().getDelegateSecretsCacheTTLInHours()).isNotNull();
+    assertThat(savedAccount.getAccountPreferences().getDelegateSecretsCacheTTLInHours()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testShouldNotUpdateAccountPreferenceIfPreferenceKeyDoesntExist() {
+    Account account = saveAccount(generateUuid());
+    boolean updated = accountService.updateAccountPreference(account.getUuid(), "thisKeyDoesntExist", new Integer(2));
+    assertThat(updated).isFalse();
+  }
 }
