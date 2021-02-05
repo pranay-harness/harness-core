@@ -1,5 +1,5 @@
 use clap::Clap;
-use std::fs::{create_dir_all, File, remove_file};
+use std::fs::{create_dir_all, remove_file, File};
 use std::io::{self, BufRead, BufReader, Result, Write};
 use std::path::Path;
 
