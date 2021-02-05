@@ -5,7 +5,7 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 14
+// Next ID: 15
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -14,6 +14,7 @@ message CapabilityParameters {
     HelmInstallationParameters helm_installation_parameters = 10;
     HttpConnectionParameters http_connection_parameters = 6;
     KustomizeParameters kustomize_parameters = 13;
+    PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -92,6 +93,8 @@ message SystemEnvParameters {
 message KustomizeParameters {
   string plugin_root_dir = 1;
 }
+
+message PcfAutoScalarParameters {}
 
 // A testing method for capabilities
 message TestingCapability {}

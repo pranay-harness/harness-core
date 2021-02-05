@@ -13,6 +13,7 @@ public class ProtoCapabilityCheckFactory {
   @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
@@ -36,6 +37,10 @@ public class ProtoCapabilityCheckFactory {
         return helmInstallationCapabilityCheck;
       case HTTP_CONNECTION_PARAMETERS:
         return httpConnectionExecutionCapabilityCheck;
+      case KUSTOMIZE_PARAMETERS:
+        return kustomizeCapabilityCheck;
+      case PCF_AUTO_SCALAR_PARAMETERS:
+        return pcfAutoScalarCapabilityCheck;
       case PROCESS_EXECUTOR_PARAMETERS:
         return processExecutorCapabilityCheck;
       case SFTP_CAPABILITY_PARAMETERS:

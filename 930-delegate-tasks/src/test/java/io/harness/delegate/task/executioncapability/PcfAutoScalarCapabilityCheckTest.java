@@ -1,20 +1,19 @@
-package software.wings.delegatetasks.validation.capabilitycheck;
+package io.harness.delegate.task.executioncapability;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
 
 import com.google.inject.Inject;
 import org.junit.Test;
@@ -29,8 +28,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PcfUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
-public class PcfAutoScalarCapabilityCheckTest extends WingsBaseTest {
+public class PcfAutoScalarCapabilityCheckTest extends CategoryTest {
   @Inject @InjectMocks private PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
 
   @Test

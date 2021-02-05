@@ -105,6 +105,7 @@ import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
@@ -348,6 +349,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(LbDetailsForAlbTrafficShift.class, 19037);
     kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
     kryo.register(LoadBalancerType.class, 19032);
+    kryo.register(PcfAutoScalarCapability.class, 19122);
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ProcessExecutorCapability.class, 19007);
     kryo.register(RemoteMethodReturnValueData.class, 5122);

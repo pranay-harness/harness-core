@@ -4,11 +4,11 @@ import static io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelpe
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 
 import java.util.ArrayList;

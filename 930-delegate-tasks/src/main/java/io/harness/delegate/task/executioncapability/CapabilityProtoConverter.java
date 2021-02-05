@@ -8,6 +8,7 @@ import io.harness.capability.GitInstallationParameters;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.KustomizeParameters;
+import io.harness.capability.PcfAutoScalarParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
@@ -39,6 +40,7 @@ public class CapabilityProtoConverter {
       case GIT_INSTALLATION_PARAMETERS:
       case HELM_INSTALLATION_PARAMETERS:
       case HTTP_CONNECTION_PARAMETERS:
+      case PCF_AUTO_SCALAR_PARAMETERS:
       case KUSTOMIZE_PARAMETERS:
       case PROCESS_EXECUTOR_PARAMETERS:
       case SFTP_CAPABILITY_PARAMETERS:
@@ -83,6 +85,8 @@ public class CapabilityProtoConverter {
             .setKustomizeParameters(
                 KustomizeParameters.newBuilder().setPluginRootDir(kustomizeCapability.getPluginRootDir()))
             .build();
+      case PCF_AUTO_SCALAR:
+        return builder.setPcfAutoScalarParameters(PcfAutoScalarParameters.getDefaultInstance()).build();
       case PROCESS_EXECUTOR:
         ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) executionCapability;
         return builder

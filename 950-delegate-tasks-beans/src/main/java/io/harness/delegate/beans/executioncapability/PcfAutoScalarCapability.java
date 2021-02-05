@@ -1,9 +1,4 @@
-package software.wings.delegatetasks.validation.capabilities;
-
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.executioncapability.CapabilityType;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+package io.harness.delegate.beans.executioncapability;
 
 import java.time.Duration;
 import lombok.Builder;
@@ -11,7 +6,6 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfAutoScalarCapability implements ExecutionCapability {
   private final CapabilityType capabilityType = CapabilityType.PCF_AUTO_SCALAR;
 

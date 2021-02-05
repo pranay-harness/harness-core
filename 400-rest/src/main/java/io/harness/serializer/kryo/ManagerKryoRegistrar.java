@@ -391,7 +391,6 @@ import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.SftpCapability;
@@ -1589,7 +1588,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(WinrmHostValidationCapability.class, 7327);
     kryo.register(PcfCommandTaskParameters.class, 7328);
     kryo.register(PcfConnectivityCapability.class, 7329);
-    kryo.register(PcfAutoScalarCapability.class, 7330);
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
     kryo.register(ScalyrConfig.class, 7334);
