@@ -45,7 +45,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
-  private final YamlSchemaClient yamlSchemaClient;
+  private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
 
   private final PmsSdkInstanceService pmsSdkInstanceService;
 
@@ -116,7 +116,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   private PartialSchemaDTO getCIStage(String projectIdentifier, String orgIdentifier, Scope scope) {
     try {
-      return SafeHttpCall.execute(yamlSchemaClient.get(projectIdentifier, orgIdentifier, scope)).getData();
+      return SafeHttpCall.execute(yamlSchemaClientMapper.get("ci").get(projectIdentifier, orgIdentifier, scope))
+          .getData();
     } catch (Exception e) {
       throw new NotFoundException(
           format("Unable to get ci schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
