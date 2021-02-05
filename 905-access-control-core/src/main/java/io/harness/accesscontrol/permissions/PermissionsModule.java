@@ -1,7 +1,8 @@
 package io.harness.accesscontrol.permissions;
 
 import io.harness.accesscontrol.permissions.database.PermissionDao;
-import io.harness.accesscontrol.permissions.database.PermissionPersistenceModule;
+import io.harness.accesscontrol.permissions.database.PermissionDaoImpl;
+import io.harness.accesscontrol.scopes.ScopeService;
 
 import com.google.inject.AbstractModule;
 
@@ -17,12 +18,12 @@ public class PermissionsModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(PermissionPersistenceModule.getInstance());
     bind(PermissionService.class).to(PermissionServiceImpl.class);
+    bind(PermissionDao.class).to(PermissionDaoImpl.class);
     registerRequiredBindings();
   }
 
   private void registerRequiredBindings() {
-    requireBinding(PermissionDao.class);
+    requireBinding(ScopeService.class);
   }
 }

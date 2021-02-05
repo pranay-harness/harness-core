@@ -1,3 +1,8 @@
 package io.harness.accesscontrol.scopes;
 
-public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
+public interface Scope {
+  String getPathKey();
+  String getDBKey();
+  int getRank();
+  String getIdentifierKey();
+}

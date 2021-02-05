@@ -40,9 +40,10 @@ public class PermissionDaoImpl implements PermissionDao {
   public List<PermissionDTO> list(Scope scope, String resourceType) {
     Collection<Permission> permissions;
     if (isNotEmpty(resourceType)) {
-      permissions = permissionRepository.findAllByScopesContainingAndResourceType(scope, resourceType);
+      permissions = permissionRepository.findAllByScopesContainingAndResourceType(scope.getDBKey(), resourceType);
+    } else {
+      permissions = permissionRepository.findAllByScopesContaining(scope.getDBKey());
     }
-    permissions = permissionRepository.findAllByScopesContaining(scope);
     return permissions.stream().map(PermissionMapper::fromPermission).collect(Collectors.toList());
   }
 

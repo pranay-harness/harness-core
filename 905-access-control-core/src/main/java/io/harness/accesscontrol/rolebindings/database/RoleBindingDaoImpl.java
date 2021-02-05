@@ -16,7 +16,7 @@ public class RoleBindingDaoImpl implements RoleBindingDao {
   }
 
   @Override
-  public String create(io.harness.accesscontrol.rolebindings.RoleBindingDTO roleBindingDTO) {
+  public String create(RoleBindingDTO roleBindingDTO) {
     RoleBinding roleBinding = RoleBindingMapper.fromDTO(roleBindingDTO);
     try {
       return roleBindingRepository.save(roleBinding).getIdentifier();
@@ -28,8 +28,7 @@ public class RoleBindingDaoImpl implements RoleBindingDao {
   }
 
   @Override
-  public Optional<io.harness.accesscontrol.rolebindings.RoleBindingDTO> get(
-      String identifier, String parentIdentifier) {
+  public Optional<RoleBindingDTO> get(String identifier, String parentIdentifier) {
     Optional<RoleBinding> roleBinding =
         roleBindingRepository.findByIdentifierAndParentIdentifier(identifier, parentIdentifier);
     return roleBinding.flatMap(r -> Optional.of(RoleBindingMapper.toDTO(r)));
