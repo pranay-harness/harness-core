@@ -11,20 +11,23 @@
         "key"
       ],
       "properties": {
+        "archiveFormat": {
+          "type": "string"
+        },
         "bucket": {
           "type": "string"
         },
         "connectorRef": {
           "type": "string"
         },
+        "failIfKeyNotFound": {
+          "type": "boolean"
+        },
         "key": {
           "type": "string"
         },
         "resources": {
           "$ref": "#/definitions/ContainerResource"
-        },
-        "target": {
-          "type": "string"
         }
       }
     }

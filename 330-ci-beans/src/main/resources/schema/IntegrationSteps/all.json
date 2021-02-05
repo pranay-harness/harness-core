@@ -358,20 +358,23 @@
             "key"
           ],
           "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
             "bucket": {
               "type": "string"
             },
             "connectorRef": {
               "type": "string"
             },
+            "failIfKeyNotFound": {
+              "type": "boolean"
+            },
             "key": {
               "type": "string"
             },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
-            },
-            "target": {
-              "type": "string"
             }
           }
         }
@@ -391,6 +394,9 @@
             "key"
           ],
           "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
             "bucket": {
               "type": "string"
             },
@@ -400,17 +406,20 @@
             "endpoint": {
               "type": "string"
             },
+            "failIfKeyNotFound": {
+              "type": "boolean"
+            },
             "key": {
               "type": "string"
+            },
+            "pathStyle": {
+              "type": "boolean"
             },
             "region": {
               "type": "string"
             },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
-            },
-            "target": {
-              "type": "string"
             }
           }
         }
@@ -489,6 +498,9 @@
             "sourcePaths"
           ],
           "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
             "bucket": {
               "type": "string"
             },
@@ -497,6 +509,9 @@
             },
             "key": {
               "type": "string"
+            },
+            "override": {
+              "type": "boolean"
             },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
@@ -513,9 +528,6 @@
                   "type": "string"
                 }
               ]
-            },
-            "target": {
-              "type": "string"
             }
           }
         }
@@ -536,6 +548,9 @@
             "sourcePaths"
           ],
           "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
             "bucket": {
               "type": "string"
             },
@@ -547,6 +562,12 @@
             },
             "key": {
               "type": "string"
+            },
+            "override": {
+              "type": "boolean"
+            },
+            "pathStyle": {
+              "type": "boolean"
             },
             "region": {
               "type": "string"
@@ -566,9 +587,6 @@
                   "type": "string"
                 }
               ]
-            },
-            "target": {
-              "type": "string"
             }
           }
         }

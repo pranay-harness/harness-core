@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
@@ -33,6 +34,14 @@ public class RunTimeInputHandler {
       return null;
     } else {
       return buildDetails.getValue();
+    }
+  }
+
+  public ArchiveFormat resolveArchiveFormat(ParameterField<ArchiveFormat> archiveFromat) {
+    if (archiveFromat == null || archiveFromat.isExpression() || archiveFromat.getValue() == null) {
+      return ArchiveFormat.TAR;
+    } else {
+      return archiveFromat.getValue();
     }
   }
 

@@ -12,6 +12,9 @@
         "sourcePaths"
       ],
       "properties": {
+        "archiveFormat": {
+          "type": "string"
+        },
         "bucket": {
           "type": "string"
         },
@@ -23,6 +26,12 @@
         },
         "key": {
           "type": "string"
+        },
+        "override": {
+          "type": "boolean"
+        },
+        "pathStyle": {
+          "type": "boolean"
         },
         "region": {
           "type": "string"
@@ -42,9 +51,6 @@
               "type": "string"
             }
           ]
-        },
-        "target": {
-          "type": "string"
         }
       }
     }
