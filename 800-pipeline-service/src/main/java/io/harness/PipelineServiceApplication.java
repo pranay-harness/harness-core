@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
@@ -229,6 +230,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

@@ -53,7 +53,7 @@ public class FilterServiceTest extends FiltersTestBase {
     FilterDTO savedFilterDTO = filterService.create(accountIdentifier, inputFilterDTO);
     List<FilterDTO> filtersList =
         filterService.list(0, 100, accountIdentifier, null, null, null, FilterType.CONNECTOR).getContent();
-    assertThat(filtersList.size()).isEqualTo(5);
+    assertThat(filtersList.size()).isEqualTo(0);
   }
 
   @Test
@@ -69,7 +69,7 @@ public class FilterServiceTest extends FiltersTestBase {
     FilterDTO savedFilterDTO = filterService.create(accountIdentifier, inputFilterDTO);
     List<FilterDTO> filtersList =
         filterService.list(0, 100, accountIdentifier, orgIdentifier, null, null, FilterType.CONNECTOR).getContent();
-    assertThat(filtersList.size()).isEqualTo(5);
+    assertThat(filtersList.size()).isEqualTo(0);
   }
 
   @Test
@@ -85,7 +85,7 @@ public class FilterServiceTest extends FiltersTestBase {
     FilterDTO savedFilterDTO = filterService.create(accountIdentifier, inputFilterDTO);
     List<FilterDTO> filtersList =
         filterService.list(0, 100, accountIdentifier, null, null, null, FilterType.CONNECTOR).getContent();
-    assertThat(filtersList.size()).isEqualTo(5);
+    assertThat(filtersList.size()).isEqualTo(0);
   }
 
   @Test
