@@ -3,6 +3,8 @@ package software.wings.scheduler.account;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
+import static software.wings.utils.TimeUtils.isWeekend;
+
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -49,6 +51,8 @@ public class AccountBackgroundJobHandler implements Handler<Account> {
 
   @Override
   public void handle(Account account) {
-    accountBackgroundJobService.manageBackgroundJobsForAccount(account.getUuid());
+    if (isWeekend()) {
+      accountBackgroundJobService.manageBackgroundJobsForAccount(account.getUuid());
+    }
   }
 }
