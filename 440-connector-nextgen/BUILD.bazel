@@ -58,7 +58,6 @@ java_library(
 java_library(
     name = "test_deps",
     exports = [
-        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",

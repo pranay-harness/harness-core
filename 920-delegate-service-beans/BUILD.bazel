@@ -28,6 +28,9 @@ shared_dependencies = [
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
+    ],
     resources = [
         "//920-delegate-service-beans/src/main/resources:resource",
     ],
