@@ -18,8 +18,6 @@ import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesAnomalousPatternsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask.DeploymentVerificationTaskInfo;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
@@ -35,6 +33,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesSh
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnomalousPatternsService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -72,7 +71,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
@@ -84,6 +85,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
+  @Inject private TimeSeriesAnomalousPatternsService timeSeriesAnomalousPatternsService;
 
   @Override
   public List<String> scheduleServiceGuardAnalysis(AnalysisInput analysisInput) {
@@ -344,25 +346,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String verificationTaskId) {
-    log.info("Fetching longterm anomalies for config: {}", verificationTaskId);
-    TimeSeriesAnomalousPatterns anomalousPatterns =
-        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
-            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
-            .get();
-    if (anomalousPatterns != null) {
-      return anomalousPatterns.convertToMap();
-    }
-    return Collections.emptyMap();
+    return timeSeriesAnomalousPatternsService.getLongTermAnomalies(verificationTaskId);
   }
 
   @Override
   public Map<String, Map<String, List<Double>>> getShortTermHistory(String verificationTaskId) {
     log.info("Fetching short term history for config: {}", verificationTaskId);
     TimeSeriesShortTermHistory shortTermHistory =
-        hPersistence.createQuery(TimeSeriesShortTermHistory.class)
+        hPersistence.createQuery(TimeSeriesShortTermHistory.class, excludeAuthority)
             .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, verificationTaskId)
             .get();
     if (shortTermHistory != null) {
+      shortTermHistory.deCompressMetricHistories();
       return shortTermHistory.convertToMap();
     }
     return Collections.emptyMap();
@@ -405,7 +400,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .map(timeSeriesRiskSummary -> timeSeriesRiskSummary.getTransactionMetricRiskList())
             .flatMap(List::stream)
             .collect(Collectors.toList());
-    Collections.sort(transactionMetricRisks, Comparator.comparingInt(TransactionMetricRisk::getMetricRisk));
+    Collections.sort(transactionMetricRisks, Comparator.comparing(TransactionMetricRisk::getMetricRisk));
     return transactionMetricRisks.subList(
         Math.max(0, transactionMetricRisks.size() - ANALYSIS_RISK_RESULTS_LIMIT), transactionMetricRisks.size());
   }
@@ -413,7 +408,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
-    TimeSeriesLearningEngineTask task = (TimeSeriesLearningEngineTask) learningEngineTask;
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");
     analysis.setVerificationTaskId(learningEngineTask.getVerificationTaskId());
     Instant endTime = learningEngineTask.getAnalysisEndTime();
@@ -426,7 +420,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
 
     saveShortTermHistory(shortTermHistory);
-    saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
+    timeSeriesAnomalousPatternsService.saveAnomalousPatterns(analysis, learningEngineTask.getVerificationTaskId());
     hPersistence.save(riskSummary);
     hPersistence.save(cumulativeSums);
     log.info("Saving analysis for config: {}", cvConfigId);
@@ -444,29 +438,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
   }
 
-  private void saveAnomalousPatterns(ServiceGuardTimeSeriesAnalysisDTO analysis, String verificationTaskId) {
-    TimeSeriesAnomalousPatterns patternsToSave = buildAnomalies(analysis);
-    // change the filter to verificationTaskId
-    TimeSeriesAnomalousPatterns patternsFromDB =
-        hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
-            .filter(TimeSeriesAnomalousPatternsKeys.verificationTaskId, verificationTaskId)
-            .get();
-
-    if (patternsFromDB != null) {
-      patternsToSave.setUuid(patternsFromDB.getUuid());
-    }
-    hPersistence.save(patternsToSave);
-  }
-
-  private void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory) {
-    TimeSeriesShortTermHistory historyFromDB =
-        hPersistence.createQuery(TimeSeriesShortTermHistory.class)
-            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId())
-            .get();
-    if (historyFromDB != null) {
-      shortTermHistory.setUuid(historyFromDB.getUuid());
-    }
-    hPersistence.save(shortTermHistory);
+  public void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory) {
+    shortTermHistory.compressMetricHistories();
+    Query<TimeSeriesShortTermHistory> query =
+        hPersistence.createQuery(TimeSeriesShortTermHistory.class, excludeAuthority)
+            .filter(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId());
+    UpdateOperations<TimeSeriesShortTermHistory> updateOperations =
+        hPersistence.createUpdateOperations(TimeSeriesShortTermHistory.class)
+            .setOnInsert(TimeSeriesShortTermHistoryKeys.uuid, generateUuid())
+            .setOnInsert(TimeSeriesShortTermHistoryKeys.verificationTaskId, shortTermHistory.getVerificationTaskId())
+            .set(TimeSeriesShortTermHistoryKeys.compressedMetricHistories,
+                shortTermHistory.getCompressedMetricHistories());
+    hPersistence.upsert(query, updateOperations);
   }
 
   @Override
@@ -489,7 +472,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         TransactionMetricRisk metricRisk = TransactionMetricRisk.builder()
                                                .transactionName(txnName)
                                                .metricName(metricName)
-                                               .metricRisk(metricData.getRisk())
+                                               .metricRisk(metricData.getRisk().getValue())
                                                .metricScore(metricData.getScore())
                                                .lastSeenTime(metricData.getLastSeenTime())
                                                .longTermPattern(metricData.isLongTermPattern())
@@ -542,21 +525,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return TimeSeriesShortTermHistory.builder()
         .verificationTaskId(analysisDTO.getVerificationTaskId())
         .transactionMetricHistories(TimeSeriesShortTermHistory.convertFromMap(shortTermHistoryMap))
-        .build();
-  }
-
-  private TimeSeriesAnomalousPatterns buildAnomalies(ServiceGuardTimeSeriesAnalysisDTO analysisDTO) {
-    Map<String, Map<String, List<TimeSeriesAnomalies>>> anomaliesMap = new HashMap<>();
-    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
-      anomaliesMap.put(txnName, new HashMap<>());
-      metricMap.forEach((metricName, txnMetricData) -> {
-        anomaliesMap.get(txnName).put(metricName, txnMetricData.getAnomalousPatterns());
-      });
-    });
-
-    return TimeSeriesAnomalousPatterns.builder()
-        .verificationTaskId(analysisDTO.getVerificationTaskId())
-        .anomalies(TimeSeriesAnomalousPatterns.convertFromMap(anomaliesMap))
         .build();
   }
 

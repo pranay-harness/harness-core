@@ -16,7 +16,6 @@ import lombok.experimental.UtilityClass;
 public class GcrRequestResponseMapper {
   public GcrInternalConfig toGcrInternalConfig(GcrArtifactDelegateRequest request, String basicAuthHeader) {
     return GcrInternalConfig.builder()
-        .gcrUrl(request.getGcpConnectorDTO().getGcrUrl())
         .registryHostname(request.getRegistryHostname())
         .basicAuthHeader(basicAuthHeader)
         .build();

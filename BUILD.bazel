@@ -51,10 +51,11 @@ java_library(
 )
 
 modules = [
+    "//220-graphql-test",
+    "//230-model-test",
     "//960-ng-core-beans",
     "//920-delegate-agent-beans",
     "//960-persistence",
-    "//960-continuous-features",
     "//920-delegate-service-beans",
     "//950-ng-core",
     "//950-ng-project-n-orgs",
@@ -88,6 +89,7 @@ modules = [
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
+    "//400-rest",
     "//950-delegate-tasks-beans",
     "//960-api-services",
     "//960-expression-service",
@@ -96,7 +98,9 @@ modules = [
     "//970-grpc",
     "//970-ng-commons",
     "//980-commons",
+    "//960-continuous-features",
     "//990-commons-test",
+    "//980-java-agent",
     "//955-filters-sdk",
 ]
 

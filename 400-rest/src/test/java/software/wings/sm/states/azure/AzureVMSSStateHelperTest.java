@@ -21,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
@@ -43,7 +44,6 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -90,15 +90,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class AzureVMSSStateHelperTest extends WingsBaseTest {
+public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -110,6 +112,11 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   @Spy @Inject @InjectMocks AzureVMSSStateHelper azureVMSSStateHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = OwnerRule.IVAN)

@@ -87,6 +87,10 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
+  public static final String MAPPING_ERROR_MESSAGE_PREFIX = "Error mapping properties for state: ";
+  public static final String MAPPING_ERROR_MESSAGE_SUFFIX = "[%s] of type: [%s]";
+  public static final String MAPPING_ERROR_MESSAGE = MAPPING_ERROR_MESSAGE_PREFIX + MAPPING_ERROR_MESSAGE_SUFFIX;
+
   @Id private String uuid;
   @FdIndex @NotNull protected String appId;
   @FdIndex private long createdAt;
@@ -346,10 +350,10 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
         try {
           state.parseProperties(node.getProperties());
         } catch (Exception e) {
-          log.error(
-              format("Error mapping properties for state: [%s] of type: [%s]", state.getName(), state.getStateType()),
-              e);
-          log.error("Properties: " + StringUtils.join(node.getProperties()));
+          String errorMessage = format(MAPPING_ERROR_MESSAGE, state.getName(), state.getStateType());
+          log.warn(errorMessage, e);
+          log.warn("Properties: " + StringUtils.join(node.getProperties()));
+          throw new InvalidRequestException(errorMessage, e);
         }
       }
 

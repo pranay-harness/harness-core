@@ -11,13 +11,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 
 import com.google.inject.Inject;
@@ -28,7 +28,7 @@ import org.mockito.InjectMocks;
 
 public class AmazonS3HelmRepoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AmazonS3HelmRepoConfigYamlHandler yamlHandler;
-  @InjectMocks @Inject private WingsPersistence wingsPersistence;
+  @InjectMocks @Inject private HPersistence persistence;
 
   private Class yamlClass = AmazonS3HelmRepoConfig.Yaml.class;
   private static final String AMAZONS3_HELM_CHART_SETTING_NAME = "AmazonS3-Helm-Repo";
@@ -56,7 +56,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends SettingValueConfigYam
                                                            .secretKey("secret".toCharArray())
                                                            .build())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
   }
 
   @Test

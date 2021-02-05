@@ -82,7 +82,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files/SERVICE_NAME/configFile.txt";
   private static final String configFilePathForAllServices =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files/__all_service__/configFile.txt";
-  private static final String resourcePath = "./configfiles/Environment";
+  private static final String resourcePath = "400-rest/src/test/resources/configfiles/Environment";
 
   private static final String UNENCRYPTED_OVERRIDE_YAML = "unEncryptedFileOverride.yaml";
   private static final String UNENCRYPTED_OVERRIDE_YAML_2 = "unEncryptedFileOverride2.yaml";
@@ -435,12 +435,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
 
   private String getYamlFile(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
     assertThat(yamlFile).isNotNull();
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

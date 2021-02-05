@@ -2,6 +2,7 @@ package io.harness.cdng.service.beans;
 
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
+import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.OneOfField;
@@ -12,9 +13,11 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.Wither;
 
 @Data
@@ -25,13 +28,13 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
   @Wither private ServiceUseFromStage useFromStage;
 
   @Wither private ServiceYaml service;
-  private ParameterField<String> serviceRef;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> serviceRef;
   private ServiceDefinition serviceDefinition;
   @Wither private StageOverridesConfig stageOverrides;
   @Wither Map<String, String> tags;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @JsonIgnore
   public ServiceConfig applyUseFromStage(ServiceConfig serviceConfigToUseFrom) {

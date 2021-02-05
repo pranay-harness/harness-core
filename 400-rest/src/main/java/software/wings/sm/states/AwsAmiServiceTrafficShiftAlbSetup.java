@@ -83,6 +83,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Inject private SpotInstStateHelper spotinstStateHelper;
   @Inject private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private AwsStateHelper awsStateHelper;
 
   private static final String COMMAND_NAME = AMI_SETUP_COMMAND_NAME;
 
@@ -208,6 +209,8 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
             renderExpression(context, autoScalingSteadyStateTimeout, DEFAULT_AMI_ASG_TIMEOUT_MIN))
         .useCurrentRunningCount(useCurrentRunningCount)
         .lbDetails(spotinstStateHelper.getRenderedLbDetails(context, lbDetails))
+        .userData(awsStateHelper.getEncodedUserData(
+            awsAmiTrafficShiftAlbData.getApp().getUuid(), awsAmiTrafficShiftAlbData.getServiceId(), context))
         .build();
   }
 

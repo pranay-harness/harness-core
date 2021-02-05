@@ -25,6 +25,6 @@ public class ShellScriptStepParameters implements StepParameters {
   List<NGVariable> environmentVariables;
   List<NGVariable> outputVariables;
   ExecutionTarget executionTarget;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
 }

@@ -5,9 +5,11 @@ import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @Data
+@FieldNameConstants(innerTypeName = "DeploymentActivityDTOKeys")
 @SuperBuilder
 @NoArgsConstructor
 @JsonTypeName("DEPLOYMENT")

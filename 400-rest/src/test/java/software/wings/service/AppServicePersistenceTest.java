@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.rule.Owner;
 
@@ -25,7 +26,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
-import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEvent;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AlertService;
@@ -43,7 +43,7 @@ import org.quartz.SchedulerException;
 
 @SetupScheduler
 public class AppServicePersistenceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject private AlertService alertService;
 
@@ -63,7 +63,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
-    assertThat(wingsPersistence.get(Application.class, appId)).isNull();
+    assertThat(persistence.get(Application.class, appId)).isNull();
 
     // Create some other application. We make this to make sure that deleting items that belong to one
     // application does not affect others.
@@ -76,7 +76,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     appService.save(application);
 
     // Make sure that we can obtain the application after we saved it
-    assertThat(wingsPersistence.get(Application.class, APP_ID)).isNotNull();
+    assertThat(persistence.get(Application.class, APP_ID)).isNotNull();
 
     // Add alert to the dummy and the target application
     alertService.openAlert(ACCOUNT_ID, dummyAppID, AlertType.ApprovalNeeded, ApprovalNeededAlert.builder().build())
@@ -99,7 +99,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
     pruneEventQueueListener.pumpAll();
 
     // Make sure we cannot access the application after it was deleted
-    assertThat(wingsPersistence.get(Application.class, APP_ID)).isNull();
+    assertThat(persistence.get(Application.class, APP_ID)).isNull();
 
     // Make sure that just the alert for the application are deleted
     alerts = alertService.list(aPageRequest().addFilter(AlertKeys.accountId, EQ, ACCOUNT_ID).build());

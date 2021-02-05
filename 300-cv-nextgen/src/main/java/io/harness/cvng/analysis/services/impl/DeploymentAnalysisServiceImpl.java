@@ -1,9 +1,14 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.TrafficSplitPercentage;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
+import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostInfo;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
@@ -14,18 +19,20 @@ import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoB
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
+import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
 import com.google.inject.Inject;
-import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -36,13 +43,14 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
   @Inject private ActivityService activityService;
 
   @Override
-  public Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
-    Optional<Double> recentHighestTimeSeriesRiskScore =
+  public Optional<Risk> getLatestRiskScore(String accountId, String verificationJobInstanceId) {
+    Optional<Risk> recentHighestTimeSeriesRiskScore =
         deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
-    Optional<Double> latestLogRiskScore =
+    Optional<Risk> latestLogRiskScore =
         deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId);
     if (recentHighestTimeSeriesRiskScore.isPresent() && latestLogRiskScore.isPresent()) {
-      return Optional.of(Math.max(recentHighestTimeSeriesRiskScore.get(), latestLogRiskScore.get()));
+      return Optional.of(CVNGObjectUtils.max(
+          recentHighestTimeSeriesRiskScore.get(), latestLogRiskScore.get(), Comparator.naturalOrder()));
     } else if (recentHighestTimeSeriesRiskScore.isPresent()) {
       return recentHighestTimeSeriesRiskScore;
     } else if (latestLogRiskScore.isPresent()) {
@@ -76,123 +84,132 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
   @Override
   public CanaryDeploymentAdditionalInfo getCanaryDeploymentAdditionalInfo(
       String accountId, VerificationJobInstance verificationJobInstance) {
-    Optional<TimeRange> preDeploymentTimeRange =
-        verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
-
-    Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstance.getUuid());
-
-    Set<String> preDeploymentHosts = Collections.emptySet();
-    if (preDeploymentTimeRange.isPresent()) {
-      preDeploymentHosts = getPreDeploymentHosts(verificationTaskIds, preDeploymentTimeRange.get());
-    }
-    // TODO: need to use all latest DeploymentTimeSeriesAnalysis
-    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis =
+    List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
             accountId, verificationJobInstance.getUuid());
-    // TODO: need to use all latest DeploymentLogAnalysis
-    DeploymentLogAnalysis deploymentLogAnalysis =
+    List<DeploymentLogAnalysis> deploymentLogAnalysis =
         deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid());
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo = getDeploymentVerificationHostInfoFromAnalyses(
-        preDeploymentHosts, deploymentTimeSeriesAnalysis, deploymentLogAnalysis);
+    Optional<TimeRange> preDeploymentTimeRange =
+        verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
+    Set<String> oldHosts = new HashSet<>();
+    if (preDeploymentTimeRange.isPresent()) {
+      Set<String> verificationTaskIds =
+          verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstance.getUuid());
+      oldHosts = hostRecordService.get(
+          verificationTaskIds, preDeploymentTimeRange.get().getStartTime(), preDeploymentTimeRange.get().getEndTime());
+    }
+
+    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
+        getDeploymentVerificationHostInfoFromAnalyses(deploymentTimeSeriesAnalysis, deploymentLogAnalysis, oldHosts);
     updateHostInfoWithAnomalousCount(
         canaryDeploymentAdditionalInfo, deploymentTimeSeriesAnalysis, deploymentLogAnalysis);
 
     canaryDeploymentAdditionalInfo.setTrafficSplitPercentage(
         getTrafficSplitPercentage((CanaryVerificationJob) verificationJobInstance.getResolvedJob()));
+    canaryDeploymentAdditionalInfo.setFieldNames();
 
     return canaryDeploymentAdditionalInfo;
   }
 
-  private Set<String> getPreDeploymentHosts(Set<String> verificationTaskIds, TimeRange preDeploymentTimeRange) {
-    Set<String> preDeploymentHosts = new HashSet<>();
-    verificationTaskIds.forEach(verificationTaskId
-        -> preDeploymentHosts.addAll(hostRecordService.get(
-            verificationTaskId, preDeploymentTimeRange.getStartTime(), preDeploymentTimeRange.getEndTime())));
-    return preDeploymentHosts;
-  }
-
-  private CanaryDeploymentAdditionalInfo getDeploymentVerificationHostInfoFromAnalyses(Set<String> preDeploymentHosts,
-      DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis, DeploymentLogAnalysis deploymentLogAnalysis) {
-    Set<HostSummaryInfo> primary = new HashSet<>();
-    Set<HostSummaryInfo> canary = new HashSet<>();
-
-    if (deploymentTimeSeriesAnalysis != null) {
-      deploymentTimeSeriesAnalysis.getHostSummaries().forEach(hostInfo -> {
-        HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder()
-                                              .hostName(hostInfo.getHostName())
-                                              .riskScore(TimeSeriesRisk.getRiskFromScore(hostInfo.getRisk()))
-                                              .build();
-
+  private void populatePrimaryAndCanaryHostInfoForTimeseries(
+      List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList, Map<String, HostSummaryInfo> controlMap,
+      Map<String, HostSummaryInfo> testMap) {
+    for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
+      for (HostInfo hostInfo : deploymentTimeSeriesAnalysis.getHostSummaries()) {
+        // Primary nodes should always be no analysis. (Need to override risk in case it's present in both primary and
+        // canary)
         if (hostInfo.isPrimary()) {
-          primary.add(hostSummaryInfo);
+          HostSummaryInfo hostSummaryInfo =
+              HostSummaryInfo.builder().hostName(hostInfo.getHostName()).risk(Risk.NO_ANALYSIS).build();
+          controlMap.put(hostInfo.getHostName(), hostSummaryInfo);
         }
+
+        // In case multiple analysis for a test node (possible when using multiple providers), use the one with higher
+        // risk
         if (hostInfo.isCanary()) {
-          canary.add(hostSummaryInfo);
+          HostSummaryInfo hostSummaryInfo =
+              HostSummaryInfo.builder().hostName(hostInfo.getHostName()).risk(hostInfo.getRisk()).build();
+          if (!testMap.keySet().contains(hostInfo.getHostName())
+              || testMap.get(hostInfo.getHostName()).getRisk().isLessThanEq(hostSummaryInfo.getRisk())) {
+            testMap.put(hostInfo.getHostName(), hostSummaryInfo);
+          }
         }
-      });
-    }
-    if (deploymentLogAnalysis != null && deploymentLogAnalysis.getHostSummaries() != null) {
-      canary.addAll(deploymentLogAnalysis.getHostSummaries()
-                        .stream()
-                        .map(hostSummary
-                            -> HostSummaryInfo.builder()
-                                   .hostName(hostSummary.getHost())
-                                   .riskScore(TimeSeriesRisk.getRiskFromScore(hostSummary.getResultSummary().getRisk()))
-                                   .build())
-                        .collect(Collectors.toSet()));
-    }
-
-    //    Since Deployment Log Analysis only contains information about canary nodes, we get the list of primary nodes
-    //     from HostRecordService. There might be a case when there is a primary node that is only there for Log
-    //    Analysis and in that case we should add it to the existing ones which we collected from Time Series Analysis
-    preDeploymentHosts.forEach(hostName -> {
-      HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder().hostName(hostName).build();
-      if (!primary.contains(hostSummaryInfo)) {
-        primary.add(hostSummaryInfo);
       }
-    });
-
-    primary.forEach(hostSummaryInfo -> hostSummaryInfo.setRiskScore(null));
-    return CanaryDeploymentAdditionalInfo.builder().primary(primary).canary(canary).build();
+    }
   }
 
-  private CanaryDeploymentAdditionalInfo updateHostInfoWithAnomalousCount(
-      CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo,
-      DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis, DeploymentLogAnalysis deploymentLogAnalysis) {
-    // improvised canary case
-    if (canaryDeploymentAdditionalInfo.getCanary().isEmpty()) {
-      canaryDeploymentAdditionalInfo.setCanary(canaryDeploymentAdditionalInfo.getPrimary());
+  private void populatePrimaryAndCanaryHostInfoForLogs(List<DeploymentLogAnalysis> deploymentLogAnalysisList,
+      Map<String, HostSummaryInfo> controlMap, Map<String, HostSummaryInfo> testMap, Set<String> oldHosts) {
+    for (String host : oldHosts) {
+      HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder().hostName(host).risk(Risk.NO_ANALYSIS).build();
+      controlMap.put(host, hostSummaryInfo);
+    }
+    for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
+      for (HostSummary hostInfo : deploymentLogAnalysis.getHostSummaries()) {
+        // In case multiple analysis for a test node (possible when using multiple providers), use the one with higher
+        // risk
+        HostSummaryInfo hostSummaryInfo =
+            HostSummaryInfo.builder().hostName(hostInfo.getHost()).risk(hostInfo.getResultSummary().getRisk()).build();
+        if (!testMap.keySet().contains(hostInfo.getHost())
+            || testMap.get(hostInfo.getHost()).getRisk().isLessThanEq(hostSummaryInfo.getRisk())) {
+          testMap.put(hostInfo.getHost(), hostSummaryInfo);
+        }
+      }
+    }
+  }
+
+  private CanaryDeploymentAdditionalInfo getDeploymentVerificationHostInfoFromAnalyses(
+      List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList,
+      List<DeploymentLogAnalysis> deploymentLogAnalysisList, Set<String> oldHosts) {
+    Map<String, HostSummaryInfo> controlMap = new HashMap<>();
+    Map<String, HostSummaryInfo> testMap = new HashMap<>();
+
+    if (isNotEmpty(deploymentTimeSeriesAnalysisList)) {
+      populatePrimaryAndCanaryHostInfoForTimeseries(deploymentTimeSeriesAnalysisList, controlMap, testMap);
+    }
+    if (isNotEmpty(deploymentLogAnalysisList)) {
+      populatePrimaryAndCanaryHostInfoForLogs(deploymentLogAnalysisList, controlMap, testMap, oldHosts);
     }
 
+    return CanaryDeploymentAdditionalInfo.builder()
+        .primary(new HashSet<>(controlMap.values()))
+        .canary(new HashSet<>(testMap.values()))
+        .build();
+  }
+
+  private void updateHostInfoWithAnomalousCount(CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo,
+      List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList,
+      List<DeploymentLogAnalysis> deploymentLogAnalysisList) {
     canaryDeploymentAdditionalInfo.getCanary().forEach(hostSummaryInfo -> {
       int anomalousMetricsCount[] = new int[] {0};
       int anomalousLogClustersCount[] = new int[] {0};
-      if (deploymentTimeSeriesAnalysis != null) {
+      for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
         deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-            -> anomalousMetricsCount[0] +=
-            transactionMetricHostData.getHostData()
-                .stream()
-                .filter(hostData
-                    -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName()) && hostData.getRisk() >= 1)
-                .count());
+            -> anomalousMetricsCount[0] += transactionMetricHostData.getHostData()
+                                               .stream()
+                                               .filter(hostData
+                                                   -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
+                                                       && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                                               .count());
       }
-      if (deploymentLogAnalysis != null && deploymentLogAnalysis.getHostSummaries() != null) {
-        deploymentLogAnalysis.getHostSummaries()
-            .stream()
-            .filter(hostSummary -> hostSummary.getHost().equals(hostSummaryInfo.getHostName()))
-            .forEach(hostSummary
-                -> anomalousLogClustersCount[0] += hostSummary.getResultSummary()
-                                                       .getTestClusterSummaries()
-                                                       .stream()
-                                                       .filter(clusterSummary -> clusterSummary.getRisk() >= 1)
-                                                       .count());
+      for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
+        if (deploymentLogAnalysis.getHostSummaries() != null) {
+          deploymentLogAnalysis.getHostSummaries()
+              .stream()
+              .filter(hostSummary -> hostSummary.getHost().equals(hostSummaryInfo.getHostName()))
+              .forEach(hostSummary
+                  -> anomalousLogClustersCount[0] +=
+                  hostSummary.getResultSummary()
+                      .getTestClusterSummaries()
+                      .stream()
+                      .filter(clusterSummary -> clusterSummary.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                      .count());
+        }
       }
       hostSummaryInfo.setAnomalousMetricsCount(anomalousMetricsCount[0]);
       hostSummaryInfo.setAnomalousLogClustersCount(anomalousLogClustersCount[0]);
     });
-    return canaryDeploymentAdditionalInfo;
   }
 
   private TrafficSplitPercentage getTrafficSplitPercentage(CanaryVerificationJob canaryVerificationJob) {

@@ -1,16 +1,19 @@
 package io.harness.connector;
 
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
-import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.task.ConnectorValidationHandler;
 
-import java.util.List;
+import com.google.inject.Singleton;
 
+@Singleton
 // to be removed once everyone adheres to validator
-public class NoOpConnectorValidationHandler extends ConnectorValidationHandler {
+public class NoOpConnectorValidationHandler implements ConnectorValidationHandler {
   @Override
   public ConnectorValidationResult validate(
-      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
-    return null;
+      ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
+    return ConnectorValidationResult.builder()
+        .status(ConnectivityStatus.SUCCESS)
+        .testedAt(System.currentTimeMillis())
+        .build();
   }
 }

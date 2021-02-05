@@ -1,22 +1,21 @@
 package io.harness.testframework.framework;
 
+import static io.harness.delegate.beans.Delegate.DelegateKeys;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 
-import static software.wings.beans.Delegate.DelegateKeys;
-
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Poller;
 
 import software.wings.beans.Account;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateStatus.DelegateInner;
 import software.wings.service.intfc.DelegateService;

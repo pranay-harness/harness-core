@@ -136,5 +136,5 @@ public interface ArtifactStreamServiceBindingService {
 
   void processVariables(List<Variable> variables);
 
-  void deleteByArtifactStream(String artifactStreamId);
+  void deleteByArtifactStream(String artifactStreamId, boolean syncFromGit);
 }

@@ -7,9 +7,11 @@ import io.harness.capability.ChartMuseumParameters;
 import io.harness.capability.GitInstallationParameters;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.capability.HttpConnectionParameters;
+import io.harness.capability.KustomizeParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
+import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
@@ -17,9 +19,11 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
+import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.k8s.model.HelmVersion;
@@ -35,6 +39,7 @@ public class CapabilityProtoConverter {
       case GIT_INSTALLATION_PARAMETERS:
       case HELM_INSTALLATION_PARAMETERS:
       case HTTP_CONNECTION_PARAMETERS:
+      case KUSTOMIZE_PARAMETERS:
       case PROCESS_EXECUTOR_PARAMETERS:
       case SFTP_CAPABILITY_PARAMETERS:
       case SMB_CONNECTION_PARAMETERS:
@@ -72,11 +77,27 @@ public class CapabilityProtoConverter {
             .setHttpConnectionParameters(
                 HttpConnectionParameters.newBuilder().setUrl(httpConnectionExecutionCapability.fetchCapabilityBasis()))
             .build();
+      case KUSTOMIZE:
+        KustomizeCapability kustomizeCapability = (KustomizeCapability) executionCapability;
+        return builder
+            .setKustomizeParameters(
+                KustomizeParameters.newBuilder().setPluginRootDir(kustomizeCapability.getPluginRootDir()))
+            .build();
       case PROCESS_EXECUTOR:
         ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) executionCapability;
         return builder
             .setProcessExecutorParameters(ProcessExecutorParameters.newBuilder().addAllArgs(
                 processExecutorCapability.getProcessExecutorArguments()))
+            .build();
+      case SMTP:
+        SmtpCapability smtpCapability = (SmtpCapability) executionCapability;
+        return builder
+            .setSmtpParameters(SmtpParameters.newBuilder()
+                                   .setUseSsl(smtpCapability.isUseSSL())
+                                   .setStartTls(smtpCapability.isStartTLS())
+                                   .setHost(smtpCapability.getHost())
+                                   .setPort(smtpCapability.getPort())
+                                   .setUsername(smtpCapability.getUsername()))
             .build();
       case SFTP:
         SftpCapability sftpCapability = (SftpCapability) executionCapability;
@@ -86,13 +107,19 @@ public class CapabilityProtoConverter {
       case SOCKET:
         SocketConnectivityExecutionCapability socketConnectivityExecutionCapability =
             (SocketConnectivityExecutionCapability) executionCapability;
-        return builder
-            .setSocketConnectivityParameters(
-                SocketConnectivityParameters.newBuilder()
-                    .setHostName(socketConnectivityExecutionCapability.getHostName())
-                    .setPort(Integer.parseInt(socketConnectivityExecutionCapability.getPort()))
-                    .setUrl(socketConnectivityExecutionCapability.getUrl()))
-            .build();
+        SocketConnectivityParameters.Builder socketConnectivityParametersBuilder =
+            SocketConnectivityParameters.newBuilder();
+        if (socketConnectivityExecutionCapability.getHostName() != null) {
+          socketConnectivityParametersBuilder.setHostName(socketConnectivityExecutionCapability.getHostName());
+        }
+        if (socketConnectivityExecutionCapability.getPort() != null) {
+          socketConnectivityParametersBuilder.setPort(
+              Integer.parseInt(socketConnectivityExecutionCapability.getPort()));
+        }
+        if (socketConnectivityExecutionCapability.getUrl() != null) {
+          socketConnectivityParametersBuilder.setUrl(socketConnectivityExecutionCapability.getUrl());
+        }
+        return builder.setSocketConnectivityParameters(socketConnectivityParametersBuilder).build();
       case SYSTEM_ENV:
         SystemEnvCheckerCapability systemEnvCheckerCapability = (SystemEnvCheckerCapability) executionCapability;
         return builder

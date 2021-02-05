@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -17,7 +18,6 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
@@ -212,11 +212,11 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
      * */
     Instant lastWindowStartTime = endTime.minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE, ChronoUnit.MINUTES);
     for (TimeSeriesMetricDataDTO timeSeriesMetricDataDTO : sortedMetricData) {
-      Optional<TimeSeriesRisk> risk = timeSeriesMetricDataDTO.getMetricDataList()
-                                          .stream()
-                                          .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
-                                          .map(MetricData::getRisk)
-                                          .findFirst();
+      Optional<Risk> risk = timeSeriesMetricDataDTO.getMetricDataList()
+                                .stream()
+                                .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
+                                .map(MetricData::getRisk)
+                                .findFirst();
       risk.ifPresent(timeSeriesRisk
           -> timeSeriesMetricDataDTO.getMetricDataList()
                  .stream()

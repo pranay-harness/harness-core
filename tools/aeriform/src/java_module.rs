@@ -5,12 +5,13 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
+use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info};
 
 #[derive(Debug)]
 pub struct JavaModule {
     pub name: String,
-    pub index: i32,
+    pub deprecated: bool,
+    pub index: f32,
     pub directory: String,
     pub jar: String,
     pub srcs: HashMap<String, JavaClass>,
@@ -18,13 +19,16 @@ pub struct JavaModule {
 }
 
 pub fn modules() -> HashMap<String, JavaModule> {
-    let output = Command::new("bazel")
-        .args(&["query", "//...", "--output", "label_kind"])
-        .output()
-        .expect("not able to run bazel");
+    let mut command = Command::new("bazel");
+    command.args(&["query", "//...", "--output", "label_kind"]);
+    let output = command.output().expect("not able to run bazel");
 
     if !output.status.success() {
-        panic!("Command executed with failing error code");
+        panic!(
+            "Command executed with failing error code \n   {:?}\n   {:?}",
+            command,
+            String::from_utf8(output.stderr)
+        );
     }
 
     let modules = String::from_utf8(output.stdout)
@@ -35,7 +39,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         .map(|line| line.to_string())
         .filter(|target| target.starts_with("java_library rule "))
         .map(|target| target.split_whitespace().last().unwrap().to_string())
-        .filter(|name| name.ends_with(":module") || name.ends_with(":test"))
+        .filter(|name| name.ends_with(":module") || name.ends_with(":tests") || name.ends_with(":supporter-test"))
         .collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
@@ -55,23 +59,42 @@ pub fn modules() -> HashMap<String, JavaModule> {
     result
 }
 
-fn class(path: &String) -> String {
-    let main = "/src/main/java/";
-    let pos = path.find(main);
+fn class_for_prefix(path: &String, prefix: &str) -> Option<String> {
+    let pos = path.find(prefix);
     if pos.is_some() {
-        path.chars()
-            .skip(pos.unwrap() + main.len())
-            .take(path.len() - main.len() - pos.unwrap() - ".java".len())
-            .map(|ch| if ch == '/' { '.' } else { ch })
-            .collect()
+        Some(
+            path.chars()
+                .skip(pos.unwrap() + prefix.len())
+                .take(path.len() - prefix.len() - pos.unwrap() - ".java".len())
+                .map(|ch| if ch == '/' { '.' } else { ch })
+                .collect(),
+        )
     } else {
-        "".to_string()
+        None
     }
+}
+
+fn class(path: &String) -> String {
+    let prefixes = [
+        "/src/main/java/",
+        "/src/test/java/",
+        "/src/generated/java/",
+        "src/supporter-test/java/",
+    ];
+    let cls = prefixes
+        .iter()
+        .map(|&prefix| class_for_prefix(path, prefix))
+        .filter(|cls| cls.is_some())
+        .map(|cls| cls.unwrap())
+        .nth(0);
+
+    cls.expect(&format!("{} did not fit any prefix", path))
 }
 
 fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap<String, JavaClass> {
     let mut split = name.split(":");
     let chunk = split.next().unwrap();
+    let module_type = split.next().unwrap();
     let prefix = &format!("{}:", chunk);
     let directory = &format!("{}/", chunk.strip_prefix("//").unwrap());
 
@@ -91,7 +114,7 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
-            let (target_module, break_dependencies_on) = populate_internal_info(&tuple.1);
+            let (target_module, break_dependencies_on) = populate_internal_info(&tuple.1, module_type);
             let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
@@ -143,6 +166,12 @@ fn is_harness_class(class: &String) -> bool {
     class.starts_with("io.harness.") || class.starts_with("software.wings.")
 }
 
+const GOOGLE_PROTO_BASE_CLASSES: &'static [&'static str] = &[
+    "com.google.protobuf.UnknownFieldSet",
+    "com.google.protobuf.ProtocolMessageEnum",
+    "io.grpc.stub.AbstractStub",
+];
+
 fn populate_dependencies(jar: &String) -> (MultiMap<String, String>, HashSet<String>) {
     let all = jar_dependencies(&jar);
 
@@ -153,10 +182,9 @@ fn populate_dependencies(jar: &String) -> (MultiMap<String, String>, HashSet<Str
             .map(|tuple| (tuple.0.clone(), tuple.1.clone()))
             .collect::<MultiMap<String, String>>(),
         all.iter()
-            .filter(|tuple| {
-                tuple.1.eq("com.google.protobuf.UnknownFieldSet") || tuple.1.eq("io.grpc.stub.AbstractStub")
-            })
+            .filter(|&tuple| GOOGLE_PROTO_BASE_CLASSES.iter().any(|&base| base.eq(&tuple.1)))
             .map(|tuple| tuple.0.clone())
+            .filter(|class| is_harness_class(class))
             .collect::<HashSet<String>>(),
     )
 }
@@ -231,16 +259,34 @@ fn populate_from_bazel(name: &String, modules: &HashSet<String>) -> JavaModule {
 
     JavaModule {
         name: name.clone(),
+        deprecated: is_deprecated(name),
         index: directory
             .chars()
             .take(3)
             .collect::<String>()
-            .parse::<i32>()
-            .expect("the model index was ot resolved"),
+            .parse::<f32>()
+            .expect("the model index was ot resolved")
+            + index_fraction(name),
         directory: directory,
         jar: jar,
         srcs: srcs,
         dependencies: module_dependencies,
+    }
+}
+
+fn is_deprecated(name: &String) -> bool {
+    name.contains("/400-rest:")
+}
+
+fn index_fraction(name: &String) -> f32 {
+    if name.ends_with(":tests") {
+        0.0
+    } else if name.ends_with(":supporter-test") {
+        0.1
+    } else if name.ends_with(":module") {
+        0.2
+    } else {
+        panic!("Unknown module type {}", name);
     }
 }
 
@@ -274,7 +320,8 @@ fn populate_from_external(artifactory: &str, package: &str, name: &str, version:
 
     JavaModule {
         name: name.to_string(),
-        index: 1000,
+        deprecated: false,
+        index: 1000.0,
         directory: "n/a".to_string(),
         jar: jar,
         srcs: srcs,

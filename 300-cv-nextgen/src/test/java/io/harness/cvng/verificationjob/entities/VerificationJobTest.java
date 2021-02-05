@@ -33,9 +33,13 @@ import org.junit.experimental.categories.Category;
 
 public class VerificationJobTest extends CategoryTest {
   private String accountId;
+
+  private String portalUrl;
+
   @Before
   public void setup() {
     this.accountId = generateUuid();
+    portalUrl = "https://app.harness.io/";
   }
 
   @Test
@@ -174,10 +178,11 @@ public class VerificationJobTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category({UnitTests.class})
-  public void testSetVerificationJobUrl() {
+  public void testSetVerificationJobUrl() throws Exception {
     VerificationJob verificationJob = createVerificationJob();
+    FieldUtils.writeField(verificationJob, VerificationJobKeys.portalUrl, portalUrl, true);
     String url = verificationJob.getVerificationJobUrl();
-    assertThat(url).isEqualTo("/verification-job?accountId=" + accountId + "&orgIdentifier="
+    assertThat(url).isEqualTo(portalUrl + "cv/api/verification-job?accountId=" + accountId + "&orgIdentifier="
         + verificationJob.getOrgIdentifier() + "&projectIdentifier=" + verificationJob.getProjectIdentifier()
         + "&identifier=" + verificationJob.getIdentifier());
   }

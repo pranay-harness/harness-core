@@ -15,7 +15,6 @@ public class CvNextGenRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(CVNGKryoRegistrar.class)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .build();

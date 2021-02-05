@@ -1,10 +1,15 @@
 package io.harness.ng.core.activityhistory.entity;
 
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,20 +30,37 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("entityActivity")
 public class NGActivity implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotBlank String accountIdentifier;
+  @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
-  String referredEntityFQN;
+  @FdIndex String referredEntityFQN;
   @NotNull String referredEntityType;
   @NotNull String type;
   String activityStatus;
   @NotNull long activityTime;
   String description;
-  String errorMessage;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
   @UtilityClass
   public static final class ActivityHistoryEntityKeys {
     public static final String referredByEntityType = "referredByEntityType";
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("referredFqn_type_time_referredByType")
+                 .field(ActivityHistoryEntityKeys.referredEntityFQN)
+                 .field(ActivityHistoryEntityKeys.referredEntityType)
+                 .field(ActivityHistoryEntityKeys.activityTime)
+                 .field(ActivityHistoryEntityKeys.referredByEntityType)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("referredFqn_type_referredByType")
+                 .field(ActivityHistoryEntityKeys.referredEntityFQN)
+                 .field(ActivityHistoryEntityKeys.referredEntityType)
+                 .field(ActivityHistoryEntityKeys.referredByEntityType)
+                 .build())
+        .build();
   }
 }

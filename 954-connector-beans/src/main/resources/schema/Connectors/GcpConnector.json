@@ -1,0 +1,16 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "credential": {
+          "$ref": "#/definitions/GcpConnectorCredential"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

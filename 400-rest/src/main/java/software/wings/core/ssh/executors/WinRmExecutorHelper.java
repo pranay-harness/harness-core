@@ -44,10 +44,15 @@ public class WinRmExecutorHelper {
 
     // Replace pipe only if part of a string, else skip
     Pattern patternForPipeWithinAString = Pattern.compile("[a-zA-Z]+\\|");
+    // Replace ampersand only if part of a string, else skip
+    Pattern patternForAmpersandWithinString = Pattern.compile("[a-zA-Z0-9]+&");
     List<String> commandList = new ArrayList<>();
     for (String commandString : listofCommands) {
       if (patternForPipeWithinAString.matcher(commandString).find()) {
         commandString = commandString.replaceAll("\\|", "`\\\"|`\\\"");
+      }
+      if (patternForAmpersandWithinString.matcher(commandString).find()) {
+        commandString = commandString.replaceAll("&", "^&");
       }
       // Append each command with PS Invoke command which is write command to file and also add the PS newline character
       // for correct escaping

@@ -21,6 +21,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -31,7 +32,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.ResourceLookup;
-import software.wings.dl.WingsPersistence;
 import software.wings.resources.HarnessTagResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.EntityNameCache;
@@ -63,7 +63,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks @Spy private HarnessTagServiceImpl harnessTagService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private AccountService accountService;
 
   private String colorTagKey = "color";

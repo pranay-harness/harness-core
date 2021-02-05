@@ -54,11 +54,14 @@ import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
 import io.harness.secrets.SecretService;
 import io.harness.secrets.setupusage.SecretSetupUsage;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 import io.harness.testlib.RealMongo;
 
+import software.wings.EncryptTestUtils;
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -94,6 +97,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -159,6 +163,9 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private EnvironmentService environmentService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private LocalEncryptor localEncryptor;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
+  @Inject private LocalSecretManagerService localSecretManagerService;
+
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ConfigFileAuthHandler configFileAuthHandler;
@@ -206,7 +213,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(kmsEncryptor.encryptSecret(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
+        return EncryptTestUtils.encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
       }
       return localEncryptor.encryptSecret(
           (String) args[0], (String) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
@@ -215,24 +222,26 @@ public class SecretTextTest extends WingsBaseTest {
     when(kmsEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
+        return EncryptTestUtils.decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
       }
       return localEncryptor.fetchSecretValue(
           (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(vaultEncryptor.createSecret(anyString(), anyString(), anyString(), any())).then(invocation -> {
+    when(vaultEncryptor.createSecret(anyString(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      if (args[3] instanceof VaultConfig) {
-        return encrypt((String) args[0], (String) args[1], (String) args[2], (VaultConfig) args[3], null);
+      if (args[2] instanceof VaultConfig) {
+        return EncryptTestUtils.encrypt((String) args[0], ((SecretText) args[1]).getName(),
+            ((SecretText) args[1]).getValue(), (VaultConfig) args[2], null);
       }
       return null;
     });
 
-    when(vaultEncryptor.updateSecret(anyString(), anyString(), anyString(), any(), any())).then(invocation -> {
+    when(vaultEncryptor.updateSecret(anyString(), any(), any(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      if (args[4] instanceof VaultConfig) {
-        return encrypt((String) args[0], (String) args[1], (String) args[2], (VaultConfig) args[4], null);
+      if (args[3] instanceof VaultConfig) {
+        return EncryptTestUtils.encrypt((String) args[0], ((SecretText) args[1]).getName(),
+            ((SecretText) args[1]).getValue(), (VaultConfig) args[3], null);
       }
       return null;
     });
@@ -240,7 +249,7 @@ public class SecretTextTest extends WingsBaseTest {
     when(vaultEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof VaultConfig) {
-        return decrypt((EncryptedRecord) args[1], (VaultConfig) args[2]);
+        return EncryptTestUtils.decrypt((EncryptedRecord) args[1], (VaultConfig) args[2]);
       }
       return null;
     });
@@ -274,13 +283,13 @@ public class SecretTextTest extends WingsBaseTest {
         break;
 
       case KMS:
-        KmsConfig kmsConfig = getKmsConfig();
+        KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
         kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
         encryptedBy = kmsConfig.getName();
         break;
 
       case VAULT:
-        VaultConfig vaultConfig = getVaultConfigWithAuthToken();
+        VaultConfig vaultConfig = secretManagementTestHelper.getVaultConfigWithAuthToken();
         kmsId = vaultService.saveOrUpdateVaultConfig(accountId, vaultConfig, true);
         encryptedBy = vaultConfig.getName();
         break;
@@ -1159,12 +1168,12 @@ public class SecretTextTest extends WingsBaseTest {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToSave.length());
     String secretFileId =
         secretManagementResource
             .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null,
-                JsonUtils.asJson(new HashMap<>()), false, false)
+                JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), false, false)
             .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
@@ -1219,11 +1228,12 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(userEmail);
 
     String newSecretName = generateUuid();
-    File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
+    File fileToUpdate = new File("400-rest/src/test/resources/encryption/file_to_update.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(fileToUpdate.length());
 
     secretManagementResource.updateFile(httpServletRequest, accountId, newSecretName, null,
-        JsonUtils.asJson(new HashMap<>()), encryptedUuid, new FileInputStream(fileToUpdate), false, false);
+        JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), encryptedUuid,
+        new FileInputStream(fileToUpdate), false, false);
 
     query = wingsPersistence.createQuery(EncryptedData.class)
                 .filter(EncryptedDataKeys.type, CONFIG_FILE)
@@ -1255,14 +1265,13 @@ public class SecretTextTest extends WingsBaseTest {
     assertThat(secretChangeLog.getUser().getName()).isEqualTo(userName);
     assertThat(secretChangeLog.getUser().getEmail()).isEqualTo(userEmail);
 
-    File newFileToSave =
-        new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File newFileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     when(httpServletRequest.getContentLengthLong()).thenReturn(newFileToSave.length());
 
     String newSecretFileId =
         secretManagementResource
             .saveFile(httpServletRequest, accountId, kmsId, secretName, new FileInputStream(fileToSave), null,
-                JsonUtils.asJson(new HashMap<>()), false, false)
+                JsonUtils.asJson(AdditionalMetadata.builder().build()), JsonUtils.asJson(new HashMap<>()), false, false)
             .getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
@@ -1282,7 +1291,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File(("400-rest/src/test/resources/encryption/file_to_encrypt.txt"));
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -1380,7 +1389,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)
@@ -1474,7 +1483,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)

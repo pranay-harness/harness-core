@@ -1,5 +1,6 @@
 package io.harness.ng.core.artifacts.resources.gcr;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrRequestDTO;
@@ -44,8 +45,9 @@ public class GcrArtifactResource {
   public ResponseDTO<GcrResponseDTO> getBuildDetails(@NotNull @QueryParam("imagePath") String imagePath,
       @NotNull @QueryParam("registryHostname") String registryHostname,
       @NotNull @QueryParam("connectorRef") String gcrConnectorIdentifier,
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     GcrResponseDTO buildDetails =
@@ -58,8 +60,9 @@ public class GcrArtifactResource {
   @ApiOperation(value = "Gets gcr last successful build", nickname = "getLastSuccessfulBuildForGcr")
   public ResponseDTO<GcrBuildDetailsDTO> getLastSuccessfulBuild(@NotNull @QueryParam("imagePath") String imagePath,
       @NotNull @QueryParam("connectorRef") String gcrConnectorIdentifier,
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier, GcrRequestDTO requestDTO) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, GcrRequestDTO requestDTO) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     GcrBuildDetailsDTO buildDetails =
@@ -73,8 +76,9 @@ public class GcrArtifactResource {
   public ResponseDTO<Boolean> validateArtifactServer(@NotNull @QueryParam("imagePath") String imagePath,
       @NotNull @QueryParam("connectorRef") String gcrConnectorIdentifier,
       @NotNull @QueryParam("registryHostname") String registryHostname,
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     boolean isValidArtifactServer = gcrResourceService.validateArtifactServer(
@@ -88,8 +92,9 @@ public class GcrArtifactResource {
   public ResponseDTO<Boolean> validateArtifactImage(@NotNull @QueryParam("imagePath") String imagePath,
       @NotNull @QueryParam("registryHostname") String registryHostname,
       @NotNull @QueryParam("connectorRef") String gcrConnectorIdentifier,
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     boolean isValidArtifactImage = gcrResourceService.validateArtifactSource(

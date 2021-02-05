@@ -11,6 +11,7 @@ import io.harness.pms.yaml.YamlUtils;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -24,8 +25,11 @@ public class VariableCreatorHelper {
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
         String localName = YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), fieldName);
         YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
+        String variableName =
+            Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
         if (valueNode == null) {
-          throw new InvalidRequestException("Variable added without any value");
+          throw new InvalidRequestException(
+              "Variable with name \"" + variableName + "\" added without any value. Fqn: " + fqn);
         }
         yamlPropertiesMap.put(valueNode.getNode().getCurrJsonNode().textValue(),
             YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());

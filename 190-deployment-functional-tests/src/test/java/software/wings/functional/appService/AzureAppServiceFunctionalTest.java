@@ -79,8 +79,6 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
   public static final String ROLLBACK_BLUE_GREEN_DEPLOYMENT_SERVICE_NAME = "Azure_WebApp_Service_Rollback_Blue_Green";
   public static final String CANARY_DEPLOYMENT_SERVICE_NAME = "Azure_WebApp_Service_Canary";
 
-  private static final long TIMEOUT = 20 * 60 * 1000; // 20 minutes
-
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
@@ -99,7 +97,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     environment = getEnvironment();
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflow() {
@@ -122,7 +120,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     verifyExecution(workflowExecution);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflowRollback() {
@@ -147,7 +145,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getRollbackDuration()).isNotNull();
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppCanaryWorkflow() {

@@ -1,7 +1,7 @@
 package io.harness.functional.secrets;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.testframework.restutils.SecretsRestUtils.addSecret;
 import static io.harness.testframework.restutils.SecretsRestUtils.deleteSecret;
 
@@ -73,7 +73,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecrets() {
     String value = randomAlphanumeric(7);
@@ -95,7 +95,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecretsReferenceWithoutVersion() {
     String secretPath = "DoNotChange-FunctionalTestSecret";
@@ -117,7 +117,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ANKIT, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void testCRUDSecretsReferenceWithVersion() {
     String secretPath = "DoNotChange-FunctionalTestSecret/128cf6016e0449c3ad02007c4881dd9a";

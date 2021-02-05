@@ -18,6 +18,7 @@ import java.util.Collections;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -51,6 +52,8 @@ public class ServiceUseFromStage implements Serializable, Visitable {
   public static class Overrides implements Visitable {
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> name;
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
+
+    @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
     @Override
     public LevelNode getLevelNode() {

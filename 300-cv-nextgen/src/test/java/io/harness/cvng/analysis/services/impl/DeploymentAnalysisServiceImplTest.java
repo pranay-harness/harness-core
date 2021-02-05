@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NEMANJA;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,6 +24,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostData;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostInfo;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
@@ -37,7 +39,6 @@ import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -148,6 +149,8 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
     assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(1);
     List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getPrimary());
     assertThat(primaryHosts.get(0).getHostName()).contains("node1");
@@ -155,11 +158,11 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRiskScore()).isEqualTo(TimeSeriesRisk.MEDIUM_RISK);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.MEDIUM);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRiskScore()).isEqualTo(TimeSeriesRisk.HIGH_RISK);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -184,6 +187,8 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
     assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEmpty();
     assertThat(canaryDeploymentAdditionalInfo.getCanary()).isEmpty();
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -216,14 +221,14 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(1);
-    List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getPrimary());
-    assertThat(primaryHosts.get(0).getHostName()).contains("node1");
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
+    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(0);
     assertThat(canaryDeploymentAdditionalInfo.getCanary()).isNotNull();
     assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(1);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(0).getRiskScore()).isEqualTo(TimeSeriesRisk.HIGH_RISK);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -257,6 +262,8 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
     assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(1);
     List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getPrimary());
     assertThat(primaryHosts.get(0).getHostName()).contains("node1");
@@ -264,11 +271,11 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRiskScore()).isEqualTo(TimeSeriesRisk.MEDIUM_RISK);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.MEDIUM);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRiskScore()).isEqualTo(TimeSeriesRisk.HIGH_RISK);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -298,8 +305,8 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
 
-    HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, true, false);
-    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, false);
+    HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, true, true);
+    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, true);
 
     deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
 
@@ -313,9 +320,69 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
     assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(2);
     assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
     assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
+    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetCanaryDeploymentAdditionalInfo_withImprovisedCanaryAndDuplicateNodes() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(verificationJob);
+    hPersistence.save(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String verificationTaskId2 = verificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+
+    Set<String> preDeploymentHosts = new HashSet<>();
+    preDeploymentHosts.add("node1");
+
+    HostRecordDTO hostRecordDTO = createHostRecordDTO(preDeploymentHosts, verificationTaskId);
+
+    hostRecordService.save(hostRecordDTO);
+
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
+
+    HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, true, true);
+    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, true);
+
+    deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
+
+    DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
+    deploymentLogAnalysis.setHostSummaries(new ArrayList<>());
+
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+    deploymentLogAnalysisService.save(deploymentLogAnalysis);
+
+    deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId2);
+
+    hostInfo1 = createHostInfo("node1", 2, 1.1, true, true);
+    hostInfo2 = createHostInfo("node2", 1, 2.2, true, true);
+
+    deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+
+    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
+        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+
+    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(2);
+    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
+    assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
+    canaryDeploymentAdditionalInfo.getCanary().forEach(
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.HIGH));
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
@@ -348,7 +415,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
 
     HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, true, false);
-    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, false);
+    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, true);
 
     deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
 
@@ -362,12 +429,13 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
 
     assertThat(canaryDeploymentAdditionalInfo).isNotNull();
+    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
     assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(3);
+    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(1);
     // verifies that primary nodes no longer contain riskScore
     canaryDeploymentAdditionalInfo.getPrimary().forEach(
-        hostSummaryInfo -> assertThat(hostSummaryInfo.getRiskScore()).isNull());
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(3);
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
+        hostSummaryInfo -> assertThat(hostSummaryInfo.getRisk()).isEqualTo(Risk.NO_ANALYSIS));
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNotNull();
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage().getPreDeploymentPercentage()).isEqualTo(60);
     assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage().getPostDeploymentPercentage()).isEqualTo(40);
@@ -554,7 +622,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     return DeploymentTimeSeriesAnalysis.builder()
         .accountId(accountId)
         .score(1.0)
-        .risk(1)
+        .risk(Risk.MEDIUM)
         .verificationTaskId(verificationTaskId)
         .transactionMetricSummaries(Arrays.asList(transactionMetricHostData1, transactionMetricHostData2))
         .hostSummaries(Arrays.asList(hostInfo1, hostInfo2))

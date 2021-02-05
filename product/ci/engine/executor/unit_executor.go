@@ -20,6 +20,7 @@ import (
 	"github.com/wings-software/portal/product/ci/engine/status"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	"go.uber.org/zap"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var (
@@ -99,6 +100,9 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.Sta
 	if err != nil {
 		stepStatus = statuspb.StepExecutionStatus_FAILURE
 		errMsg = err.Error()
+		if e, ok := grpcstatus.FromError(err); ok {
+			errMsg = e.Message()
+		}
 	}
 	statusErr := e.updateStepStatus(ctx, step, stepStatus, errMsg, numRetries, stepOutput, accountID, time.Since(start))
 	if statusErr != nil {

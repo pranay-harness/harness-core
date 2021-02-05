@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.rule.Owner;
@@ -174,11 +173,13 @@ public class MergeHelperTest extends CategoryTest {
             + "  stages:\n"
             + "  - stage:\n"
             + "      identifier: \"qaStage\"\n"
+            + "      type: \"Deployment\"\n"
             + "      spec:\n"
             + "        execution:\n"
             + "          steps:\n"
             + "          - step:\n"
             + "              identifier: \"httpStep1\"\n"
+            + "              type: \"Http\"\n"
             + "              spec:\n"
             + "                method: \"pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.\"\n");
     assertThat(errorWrapperDTOPMS.getUuidToErrorResponseMap().size()).isEqualTo(1);
@@ -248,5 +249,26 @@ public class MergeHelperTest extends CategoryTest {
         Resources.toString(Objects.requireNonNull(classLoader.getResource(runtimeInputFile)), StandardCharsets.UTF_8);
     String mergedYaml = mergeInputSetIntoPipeline(yamlWithRuntime, runtimeInput, false);
     assertThat(mergedYaml.replace("\"", "")).isEqualTo(fullYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeOnPipelineWithEmptyListAndObject() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String yamlFile = "empty-object-and-list-with-runtime.yaml";
+    String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(yamlFile)), StandardCharsets.UTF_8);
+    String template = createTemplateFromPipeline(yaml);
+    assertThat(template).isNotNull();
+
+    String runtimeInputFile = "empty-object-and-list-runtime.yaml";
+    String runtimeInput =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(runtimeInputFile)), StandardCharsets.UTF_8);
+    String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, false);
+
+    String fullYamlFile = "empty-object-and-list.yaml";
+    String fullYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(fullYamlFile)), StandardCharsets.UTF_8);
+    assertThat(mergedYaml).isEqualTo(fullYaml);
   }
 }

@@ -5,7 +5,9 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
@@ -17,8 +19,6 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.serializer.JsonUtils;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 

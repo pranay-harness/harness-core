@@ -97,6 +97,10 @@ if [[ "" != "$USER_VERIFICATION_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.userVerificationSecret "$USER_VERIFICATION_SECRET"
 fi
 
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -127,6 +131,10 @@ fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then

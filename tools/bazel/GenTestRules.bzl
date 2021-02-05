@@ -10,6 +10,12 @@ def run_tests(**kwargs):
         native.java_test(
             name = test,
             runtime_deps = ["tests"],
+            size = "large",
+            jvm_flags = [
+                "-Xmx1G",
+                "-XX:+HeapDumpOnOutOfMemoryError",
+                "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
+            ],
             test_class = test,
             testonly = 1,
             visibility = ["//visibility:private"],

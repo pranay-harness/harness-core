@@ -16,6 +16,7 @@ import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -307,10 +308,10 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     Set<String> taskIds = new HashSet<>();
     taskIds.add(verificationTaskId);
     when(verificationTaskService.getVerificationTaskIds(eq(accountId), anyString())).thenReturn(taskIds);
-    Optional<Double> risk = heatMapService.getVerificationRisk(accountId, verificationJobInstanceId);
+    Optional<Risk> risk = heatMapService.getVerificationRisk(accountId, verificationJobInstanceId);
 
     assertThat(risk).isPresent();
-    assertThat(risk.get()).isEqualTo(0.0);
+    assertThat(risk.get()).isEqualTo(Risk.LOW);
   }
 
   private void validateHeatMaps(HealthVerificationHeatMap heatMap, Double riskScore, Instant endTime,

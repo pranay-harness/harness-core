@@ -60,8 +60,6 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private K8SUtils k8SUtils;
 
-  private static final long TIMEOUT = 1200000; // 20 minutes
-
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
   Application application;
@@ -78,7 +76,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     }
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
@@ -86,7 +84,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
@@ -94,7 +92,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")

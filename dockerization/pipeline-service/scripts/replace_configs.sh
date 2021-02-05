@@ -53,6 +53,14 @@ if [[ "" != "$MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE managerAuthority $MANAGER_AUTHORITY
 fi
 
+if [[ "" != "$MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl $MANAGER_BASE_URL
+fi
+
+if [[ "" != "$MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE managerServiceSecret $MANAGER_SERVICE_SECRET
+fi
+
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
 fi
@@ -112,6 +120,10 @@ if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
 fi
 
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -143,4 +155,8 @@ fi
 
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+fi
+
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi

@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
-import io.harness.exception.UnexpectedException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
@@ -18,8 +17,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
-import io.harness.notification.notificationclient.NotificationClient;
-import io.harness.notification.templates.PredefinedTemplate;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
@@ -39,13 +36,14 @@ import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceStepRegistrar;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.timeout.TimeoutEngine;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -75,11 +73,11 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -169,6 +167,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
+    injector.getInstance(TimeoutEngine.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
@@ -177,8 +176,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
-
-    registerNotificationTemplates(injector.getInstance(NotificationClient.class));
+    registerNotificationTemplates(injector);
 
     MaintenanceController.forceMaintenance(false);
   }
@@ -190,8 +188,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
       serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }
 
@@ -292,20 +292,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 
-  private void registerNotificationTemplates(NotificationClient notificationClient) {
-    List<PredefinedTemplate> templates =
-        new ArrayList<>(Arrays.asList(PredefinedTemplate.PIPELINE_PLAIN_SLACK, PredefinedTemplate.PIPELINE_PLAIN_EMAIL,
-            PredefinedTemplate.PIPELINE_PLAIN_PAGERDUTY, PredefinedTemplate.PIPELINE_PLAIN_MSTEAMS,
-            PredefinedTemplate.STAGE_PLAIN_SLACK, PredefinedTemplate.STAGE_PLAIN_EMAIL,
-            PredefinedTemplate.STAGE_PLAIN_PAGERDUTY, PredefinedTemplate.STAGE_PLAIN_MSTEAMS));
-
-    for (PredefinedTemplate template : templates) {
-      try {
-        log.info("Registering {} with NotificationService", template);
-        notificationClient.saveNotificationTemplate(Team.PIPELINE, template, true);
-      } catch (UnexpectedException ex) {
-        log.error("Unable to save {} to NotificationService - skipping register notification templates.", template, ex);
-      }
-    }
+  private void registerNotificationTemplates(Injector injector) {
+    ExecutorService executorService =
+        injector.getInstance(Key.get(ExecutorService.class, Names.named("templateRegistrationExecutorService")));
+    executorService.submit(injector.getInstance(NotificationTemplateRegistrar.class));
   }
 }

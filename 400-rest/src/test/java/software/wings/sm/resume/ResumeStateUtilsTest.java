@@ -18,6 +18,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -53,6 +54,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
   @Inject @InjectMocks private ResumeStateUtils resumeStateUtils;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject KryoSerializer kryoSerializer;
+  @Inject private HPersistence persistence;
 
   @Mock private StateExecutionService stateExecutionService;
 
@@ -206,7 +208,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
   }
 
   private List<SweepingOutputInstance> listPipelineInstances(String pipelineExecutionUuid) {
-    return wingsPersistence.createQuery(SweepingOutputInstance.class)
+    return persistence.createQuery(SweepingOutputInstance.class)
         .filter(SweepingOutputInstanceKeys.appId, appId)
         .filter(SweepingOutputInstanceKeys.pipelineExecutionId, pipelineExecutionUuid)
         .asList();

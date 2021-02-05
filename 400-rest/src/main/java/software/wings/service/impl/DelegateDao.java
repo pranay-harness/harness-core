@@ -1,9 +1,8 @@
 package software.wings.service.impl;
 
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.persistence.HPersistence;
-
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 
 import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;

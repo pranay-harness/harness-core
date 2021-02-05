@@ -3,6 +3,9 @@ package io.harness.perpetualtask;
 import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.Delegate;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
@@ -11,7 +14,6 @@ import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 
-import software.wings.beans.Delegate;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
@@ -37,6 +39,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateObserver {
   private Set<Pair<String, String>> broadcastAggregateSet = new ConcurrentHashSet<>();
 

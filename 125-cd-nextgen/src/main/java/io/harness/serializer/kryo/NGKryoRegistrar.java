@@ -1,7 +1,6 @@
 package io.harness.serializer.kryo;
 
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -18,6 +17,9 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
+import io.harness.cdng.k8s.K8sCanaryOutcome;
+import io.harness.cdng.k8s.K8sCanaryStepInfo;
+import io.harness.cdng.k8s.K8sCanaryStepParameters;
 import io.harness.cdng.k8s.K8sInstanceUnitType;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
@@ -71,7 +73,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(ArtifactStepParameters.class, 8001);
-    kryo.register(DockerArtifactOutcome.class, 8007);
     kryo.register(ServiceStepParameters.class, 8008);
     kryo.register(ArtifactListConfig.class, 8009);
     kryo.register(ServiceConfig.class, 8010);
@@ -139,5 +140,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sInstanceUnitType.class, 12512);
     kryo.register(K8sScaleStepInfo.class, 12513);
     kryo.register(K8sScaleStepParameter.class, 12514);
+    kryo.register(K8sCanaryOutcome.class, 12515);
+    kryo.register(K8sCanaryStepInfo.class, 12516);
+    kryo.register(K8sCanaryStepParameters.class, 12517);
   }
 }

@@ -11,10 +11,12 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -27,7 +29,7 @@ public class InfraUseFromStage implements Serializable, Visitable {
   Overrides overrides;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {
@@ -49,6 +51,8 @@ public class InfraUseFromStage implements Serializable, Visitable {
   public static class Overrides implements Serializable, Visitable {
     EnvironmentYaml environment;
     InfrastructureDef infrastructureDefinition;
+
+    @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
     @Override
     public VisitableChildren getChildrenToWalk() {

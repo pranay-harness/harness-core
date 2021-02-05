@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -17,6 +17,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.Collections;
+import java.util.HashSet;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -39,13 +41,16 @@ public class K8sClusterConfigTest extends WingsBaseTest {
   private void testKubernetesConfigWithDelegate() {
     K8sClusterConfig clusterConfig =
         K8sClusterConfig.builder()
-            .cloudProvider(
-                KubernetesClusterConfig.builder().delegateName("my-delegate").useKubernetesDelegate(true).build())
+            .cloudProvider(KubernetesClusterConfig.builder()
+                               .delegateSelectors(new HashSet<>(Collections.singletonList("delegateSelectors")))
+                               .useKubernetesDelegate(true)
+                               .build())
             .build();
 
     assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
-        .containsExactlyInAnyOrder(
-            SystemEnvCheckerCapability.builder().systemPropertyName("DELEGATE_NAME").comparate("my-delegate").build());
+        .containsExactlyInAnyOrder(SelectorCapability.builder()
+                                       .selectors(new HashSet<>(Collections.singletonList("delegateSelectors")))
+                                       .build());
   }
 
   private void testKubernetesConfig() {

@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +85,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public Secret create(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
+  public Secret create(String accountIdentifier, @Valid SecretDTOV2 dto, boolean draft) {
     Secret secret = dto.toEntity();
     secret.setDraft(draft);
     secret.setAccountIdentifier(accountIdentifier);
@@ -107,7 +108,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   }
 
   @Override
-  public Secret update(String accountIdentifier, SecretDTOV2 dto, boolean draft) {
+  public Secret update(String accountIdentifier, @Valid SecretDTOV2 dto, boolean draft) {
     Optional<Secret> secretOptional =
         get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     if (secretOptional.isPresent()) {
@@ -161,7 +162,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
                                                                         .encryptionDetails(encryptionDetails)
                                                                         .sshKeySpec(secretSpecDTO)
                                                                         .build())
-                                                    .executionTimeout(Duration.ofMinutes(2L))
+                                                    .executionTimeout(Duration.ofSeconds(45))
                                                     .build();
       DelegateResponseData delegateResponseData = this.delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (delegateResponseData instanceof RemoteMethodReturnValueData) {

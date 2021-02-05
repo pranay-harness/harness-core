@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -36,13 +37,14 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
   @Mock KmsService kmsService;
   @Mock GcpSecretsManagerService gcpSecretsManagerService;
   @Inject @InjectMocks SecretManagerConfigService secretManagerConfigService;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
 
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testGetGlobalSecretManager_shouldReturnAwsKms() {
     String accountId = "accountId";
-    KmsConfig kmsConfig = getKmsConfig();
+    KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String configId = wingsPersistence.save(kmsConfig);
     kmsConfig.setUuid(configId);
@@ -62,12 +64,12 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetGlobalSecretManager_shouldReturnGcpKms() {
     String accountId = "accountId";
-    GcpKmsConfig gcpKmsConfig = getGcpKmsConfig();
+    GcpKmsConfig gcpKmsConfig = secretManagementTestHelper.getGcpKmsConfig();
     gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String configId = wingsPersistence.save(gcpKmsConfig);
     gcpKmsConfig.setUuid(configId);
 
-    KmsConfig kmsConfig = getKmsConfig();
+    KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String kmsConfigId = wingsPersistence.save(kmsConfig);
     kmsConfig.setUuid(kmsConfigId);
@@ -88,12 +90,12 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
   public void testGetDefaultGlobalSecretManager() {
     String accountId = "accountId";
 
-    GcpKmsConfig gcpKmsConfig = getGcpKmsConfig();
+    GcpKmsConfig gcpKmsConfig = secretManagementTestHelper.getGcpKmsConfig();
     gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String gcpKmsConfigId = wingsPersistence.save(gcpKmsConfig);
     gcpKmsConfig.setUuid(gcpKmsConfigId);
 
-    KmsConfig kmsConfig = getKmsConfig();
+    KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String kmsConfigId = wingsPersistence.save(kmsConfig);
     kmsConfig.setUuid(kmsConfigId);
@@ -114,7 +116,7 @@ public class SecretManagerConfigServiceTest extends WingsBaseTest {
     account.setLocalEncryptionEnabled(true);
     wingsPersistence.save(account);
 
-    KmsConfig kmsConfig = getKmsConfig();
+    KmsConfig kmsConfig = secretManagementTestHelper.getKmsConfig();
     kmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String kmsConfigId = wingsPersistence.save(kmsConfig);
     kmsConfig.setUuid(kmsConfigId);

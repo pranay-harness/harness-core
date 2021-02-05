@@ -12,10 +12,12 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -25,6 +27,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -64,12 +67,15 @@ import retrofit2.http.Body;
 public class ConnectorResource {
   private static final String INCLUDE_ALL_CONNECTORS_ACCESSIBLE = "includeAllConnectorsAvailableAtScope";
   private final ConnectorService connectorService;
+  private final ConnectorHeartbeatService connectorHeartbeatService;
   private static final String CATEGORY_KEY = "category";
 
   @Inject
   public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService,
-      ProjectService projectService, OrganizationService organizationService) {
+      ProjectService projectService, OrganizationService organizationService,
+      ConnectorHeartbeatService connectorHeartbeatService) {
     this.connectorService = connectorService;
+    this.connectorHeartbeatService = connectorHeartbeatService;
   }
 
   @GET
@@ -236,5 +242,20 @@ public class ConnectorResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Body List<String> connectorsFQN) {
     return ResponseDTO.newResponse(connectorService.listbyFQN(accountIdentifier, connectorsFQN));
+  }
+
+  @GET
+  @Path("{identifier}/validation-params")
+  @ApiOperation(hidden = true, value = "Gets connector validation params")
+  @InternalApi
+  @Produces("application/x-kryo")
+  public ResponseDTO<ConnectorValidationParams> getConnectorValidationParams(
+
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
+    return ResponseDTO.newResponse(connectorHeartbeatService.getConnectorValidationParams(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
 }

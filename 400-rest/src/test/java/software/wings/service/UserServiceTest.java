@@ -82,6 +82,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -118,6 +119,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.beans.utm.UtmInfo;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -250,6 +252,8 @@ public class UserServiceTest extends WingsBaseTest {
    * The Cache.
    */
   @Mock Cache<String, User> cache;
+  @Mock private HarnessCacheManager harnessCacheManager;
+  @Mock private ConfigurationController configurationController;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Inject @InjectMocks private UserService userService;
   @InjectMocks private UserService mockedUserService = mock(UserServiceImpl.class);
@@ -294,6 +298,8 @@ public class UserServiceTest extends WingsBaseTest {
     when(totpAuthHandler.generateOtpUrl(any(), any(), any())).thenReturn(StringUtils.EMPTY);
 
     userQuery = realWingsPersistence.createQuery(User.class);
+    when(configurationController.isPrimary()).thenReturn(true);
+    when(harnessCacheManager.getCache(anyString(), eq(String.class), eq(User.class), any())).thenReturn(cache);
   }
 
   @Test

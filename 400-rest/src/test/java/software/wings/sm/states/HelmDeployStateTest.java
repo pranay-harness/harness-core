@@ -75,6 +75,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -100,7 +101,6 @@ import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.HelmDeployContextElement;
@@ -152,6 +152,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -211,6 +212,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -221,9 +223,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
-public class HelmDeployStateTest extends WingsBaseTest {
+public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";
   private static final String CHART_NAME = "chart-name";
@@ -362,6 +365,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
           .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
                                 .withValue(KubernetesClusterConfig.builder()
                                                .delegateName("delegateName")
+                                               .delegateSelectors(new HashSet<>(singletonList("delegateSelectors")))
                                                .useKubernetesDelegate(true)
                                                .build())
                                 .build())
@@ -370,6 +374,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
   @Before
   public void setup() throws InterruptedException {
+    MockitoAnnotations.initMocks(this);
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("settingsService", settingsService);
     helmDeployState.setHelmReleaseNamePrefix(HELM_RELEASE_NAME_PREFIX);
@@ -586,7 +591,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testEmptyHelmChartSpecWithGit() {
+  public void testEmptyHelmChartSpecWithGit() throws InterruptedException {
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
@@ -759,7 +764,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
@@ -1214,8 +1219,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
-
-    verifyDelegateNameInTags();
   }
 
   @Test
@@ -1284,15 +1287,13 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.HELM_VALUES_FETCH);
-
-    verifyDelegateNameInTags();
   }
 
-  private void verifyDelegateNameInTags() {
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+  private void verifyDelegateSelectorInDelegateTaskParams(DelegateTask delegateTask) {
+    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) delegateTask.getData().getParameters()[0];
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) helmCommandRequest.getContainerServiceParams().getSettingAttribute().getValue();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
   }
 
   @Test
@@ -1745,7 +1746,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);

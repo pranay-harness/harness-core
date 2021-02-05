@@ -61,7 +61,7 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private static final String yamlFilePath = "Setup/Applications/APP_NAME/Pipelines/pipeline.yaml";
-  private static final String resourcePath = "./yaml";
+  private static final String resourcePath = "400-rest/src/test/resources/yaml";
 
   private static final String userGroupName = "USER_GROUP";
   private static final String workflowName = "WORKFLOW_NAME";
@@ -100,12 +100,8 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
 
   private void testCRUD(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
 

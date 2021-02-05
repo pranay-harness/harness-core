@@ -1,8 +1,5 @@
 package io.harness.pms.notification.bean;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
-
 import io.harness.pms.notification.channelDetails.PmsNotificationChannel;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,8 +13,9 @@ import lombok.NoArgsConstructor;
 public class NotificationChannelWrapper {
   String type;
 
+  @JsonTypeInfo(
+      use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
   @JsonProperty("spec")
-  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   PmsNotificationChannel notificationChannel;
 
   @Builder

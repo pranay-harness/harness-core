@@ -7,12 +7,12 @@ import java.util.Set;
 public enum WebhookEvent {
   @JsonProperty("Pull Request") PULL_REQUEST,
   @JsonProperty("Push") PUSH,
-  @JsonProperty("Issue") ISSUE,
+  @JsonProperty("Issue Comment") ISSUE_COMMENT,
   @JsonProperty("Delete") DELETE,
   @JsonProperty("Merge Request") MERGE_REQUEST,
   @JsonProperty("Repository") REPOSITORY;
 
-  public static final Set<WebhookEvent> githubEvents = EnumSet.of(PULL_REQUEST, PUSH);
+  public static final Set<WebhookEvent> githubEvents = EnumSet.of(PULL_REQUEST, PUSH, ISSUE_COMMENT);
   public static final Set<WebhookEvent> gitlabEvents = EnumSet.of(PUSH, MERGE_REQUEST);
   public static final Set<WebhookEvent> bitbucketEvents = EnumSet.of(PULL_REQUEST, PUSH);
 }

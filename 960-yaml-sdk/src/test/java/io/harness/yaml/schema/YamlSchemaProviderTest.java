@@ -118,8 +118,8 @@ public class YamlSchemaProviderTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testGetYamlSchemaWithFieldSetAtSecondLevel() {
-    final JsonNode yamlSchema = yamlSchemaProvider.getYamlSchemaWithArrayFieldUpdatedAtSecondLevel(
-        EntityType.CONNECTORS, null, null, null, "type", ENUM_NODE, "XYZ");
+    JsonNode yamlSchema = yamlSchemaProvider.getYamlSchema(EntityType.CONNECTORS, null, null, null);
+    yamlSchema = yamlSchemaProvider.updateArrayFieldAtSecondLevelInSchema(yamlSchema, "type", ENUM_NODE, "XYZ");
     assertThat(yamlSchemaProvider.getSecondLevelNodeProperties(yamlSchemaProvider.getSecondLevelNode(yamlSchema))
                    .get("type")
                    .get(ENUM_NODE)
@@ -127,6 +127,20 @@ public class YamlSchemaProviderTest extends CategoryTest {
                    .next()
                    .textValue())
         .isEqualTo("XYZ");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testUpsertInObjectFieldAtSecondLevelInSchema() {
+    JsonNode yamlSchema = yamlSchemaProvider.getYamlSchema(EntityType.CONNECTORS, null, null, null);
+    yamlSchema =
+        yamlSchemaProvider.upsertInObjectFieldAtSecondLevelInSchema(yamlSchema, "identifier", CONST_NODE, "id");
+    assertThat(yamlSchemaProvider.getSecondLevelNodeProperties(yamlSchemaProvider.getSecondLevelNode(yamlSchema))
+                   .get("identifier")
+                   .get(CONST_NODE)
+                   .textValue())
+        .isEqualTo("id");
   }
 
   private void initializeSchemaMapAndGetSchema() throws IOException {

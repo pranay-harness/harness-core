@@ -1,8 +1,11 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
+import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
@@ -25,10 +28,13 @@ import io.harness.util.PortFinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CIServiceBuilder {
+  private static final String SEPARATOR = ",";
+
   public static List<ContainerDefinitionInfo> createServicesContainerDefinition(
       StageElementConfig stageElementConfig, PortFinder portFinder, CIExecutionServiceConfig ciExecutionServiceConfig) {
     List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
@@ -77,10 +83,20 @@ public class CIServiceBuilder {
     Map<String, String> envVariables = RunTimeInputHandler.resolveMapParameter(
         "envVariables", "serviceDependency", identifier, service.getEnvVariables(), false);
 
+    if (envVariables == null) {
+      envVariables = new HashMap<>();
+    }
+    if (isNotEmpty(entrypoint)) {
+      envVariables.put(HARNESS_SERVICE_ENTRYPOINT, String.join(SEPARATOR, entrypoint));
+    }
+    if (isNotEmpty(args)) {
+      envVariables.put(HARNESS_SERVICE_ARGS, String.join(SEPARATOR, args));
+    }
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(ServiceContainerUtils.getCommand())
-        .args(ServiceContainerUtils.getArguments(service.getIdentifier(), image, entrypoint, args, port))
+        .args(ServiceContainerUtils.getArguments(service.getIdentifier(), image, port))
         .envVars(envVariables)
         .containerImageDetails(
             ContainerImageDetails.builder().imageDetails(getImageInfo(image)).connectorIdentifier(connectorRef).build())

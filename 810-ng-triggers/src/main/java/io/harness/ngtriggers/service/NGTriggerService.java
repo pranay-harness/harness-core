@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.service;
 
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 
@@ -21,8 +22,8 @@ public interface NGTriggerService {
 
   Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable);
 
-  Page<NGTriggerEntity> listWebhookTriggers(
-      TriggerWebhookEvent triggerWebhookEvent, List<String> repoUrls, boolean isDeleted, boolean enabledOnly);
+  List<NGTriggerEntity> listEnabledTriggersForCurrentProject(
+      String accountId, String orgIdentifier, String projectIdentifier);
 
   List<NGTriggerEntity> findTriggersForCustomWehbook(
       TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled);
@@ -33,4 +34,5 @@ public interface NGTriggerService {
   TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord);
   TriggerWebhookEvent updateTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
   void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord);
+  List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountId, List<String> fqns);
 }

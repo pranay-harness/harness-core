@@ -62,7 +62,7 @@ public class AsyncInformObserverTest extends CategoryTest {
     subject.register(observer);
   }
 
-  @Test(timeout = 1000)
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testResealingAsyncCall() throws InterruptedException {

@@ -73,12 +73,12 @@ public class NGAppStartupTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = VIKAS, intermittent = true)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
-        client.target(String.format("http://localhost:%d/swagger.json", SUPPORT.getLocalPort())).request().get();
+        client.target(String.format("http://localhost:%d/health", SUPPORT.getLocalPort())).request().get();
 
     assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
     response.close();

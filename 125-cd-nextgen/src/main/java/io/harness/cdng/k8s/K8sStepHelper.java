@@ -46,6 +46,7 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -53,7 +54,6 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -64,7 +64,6 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.AuthenticationScheme;
-import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.validation.Validator;
@@ -83,7 +82,6 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -270,16 +268,14 @@ public class K8sStepHelper {
 
   public TaskChainResponse queueK8sTask(K8sStepParameters k8sStepParameters, K8sDeployRequest k8sDeployRequest,
       Ambiance ambiance, InfrastructureOutcome infrastructure) {
-    TaskData taskData =
-        TaskData.builder()
-            .parameters(new Object[] {k8sDeployRequest})
-            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .async(true)
-            .build();
+    TaskData taskData = TaskData.builder()
+                            .parameters(new Object[] {k8sDeployRequest})
+                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
+                            .timeout(getTimeout(k8sStepParameters))
+                            .async(true)
+                            .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2, Collections.emptyList());
+    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -321,22 +317,14 @@ public class K8sStepHelper {
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
-    final TaskData taskData =
-        TaskData.builder()
-            .async(true)
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
-            .parameters(new Object[] {gitFetchRequest})
-            .build();
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .parameters(new Object[] {gitFetchRequest})
+                                  .build();
 
-    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
-
-    List<String> commandUnits =
-        Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
-            K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
-
-    final TaskRequest taskRequest = prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2, commandUnits);
+    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -350,6 +338,13 @@ public class K8sStepHelper {
         .build();
   }
 
+  @Nonnull
+  private List<String> getCommandUnits() {
+    return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
+        K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState,
+        K8sCommandUnitConstants.WrapUp);
+  }
+
   public TaskChainResponse startChainLink(
       K8sStepExecutor k8sStepExecutor, Ambiance ambiance, K8sStepParameters k8sStepParameters) {
     ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
@@ -360,7 +355,6 @@ public class K8sStepHelper {
 
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
     Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());
-    Validator.notEmptyCheck("Timeout cannot be empty", k8sStepParameters.getTimeout().getValue());
 
     K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
     List<ValuesManifestOutcome> aggregatedValuesManifests =
@@ -456,5 +450,13 @@ public class K8sStepHelper {
       // TODO: for local store, add files directly
     }
     return valuesFileContents;
+  }
+
+  public static int getTimeout(K8sStepParameters stepParameters) {
+    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+        ? StepConstants.defaultTimeout
+        : stepParameters.getTimeout().getValue();
+
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
   }
 }

@@ -993,6 +993,14 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
+load("@bazel_tools//tools/build_defs/repo:maven_rules.bzl", "maven_jar")
+
+http_jar(
+    name = "com_github_tomakehurst_wiremock",
+    sha256 = "9f9061fcfb34bc014ad3d026651ce41cc8c4681c0592d0ace1700ef237d96d9b",
+    url = "https://repo1.maven.org/maven2/com/github/tomakehurst/wiremock/1.57/wiremock-1.57-standalone.jar",
+)
+
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
 
@@ -1007,6 +1015,7 @@ maven_install(
         "ch.qos.logback:logback-access:1.2.3",
         "ch.qos.logback:logback-classic:1.2.3",
         "ch.qos.logback:logback-core:1.2.3",
+        "com.lmax:disruptor:jar:3.4.2",
         "net.openhft:compiler:2.3.4",
         maven.artifact(
             group = "com.amazonaws",
@@ -1341,6 +1350,8 @@ maven_install(
         "com.google.cloud:google-cloud-logging:1.93.0",
         "com.google.cloud:google-cloud-pubsub:1.107.0",
         "com.google.cloud:google-cloud-resourcemanager:0.117.2-alpha",
+        "com.google.cloud:google-cloud-secretmanager:1.2.8",
+        "com.google.api.grpc:proto-google-cloud-secretmanager-v1:1.2.8",
         "com.google.cloud:google-cloud-storage:1.52.0",
         "com.google.code.findbugs:annotations:3.0.0",
         "com.google.code.findbugs:jsr305:3.0.2",
@@ -1604,6 +1615,8 @@ maven_install(
         "jaxen:jaxen:1.1.6",
         "joda-time:joda-time:2.10.1",
         "junit:junit:4.12",
+        "org.junit.jupiter:junit-jupiter-engine:5.3.1",
+        "org.testng:testng:7.3.0",
         "me.snowdrop:istio-client-uberjar:1.0.1",
         "me.snowdrop:istio-client:1.0.1",
         "me.snowdrop:istio-common:1.0.1",
@@ -1814,6 +1827,7 @@ maven_install(
         "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1",
         "org.glassfish:javax.el:3.0.0",
         "org.hamcrest:hamcrest-core:1.3",
+        "org.hamcrest:hamcrest-all:1.3",
         "org.hdrhistogram:HdrHistogram:2.1.9",
         "org.hibernate:hibernate-validator:5.4.3.Final",
         "org.jacoco:org.jacoco.agent:0.8.5",
@@ -1835,6 +1849,11 @@ maven_install(
         "org.apache.maven:maven-plugin-api:3.6.3",
         "org.apache.maven.plugin-tools:maven-plugin-annotations:3.4",
         "org.json:json:20160810",
+        "com.spotify:docker-client:8.16.0",
+        "io.rest-assured:rest-assured:3.2.0",
+        "org.jboss.aerogear:aerogear-otp-java:1.0.0",
+        "org.jsoup:jsoup:1.8.3",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "org.jsr107.ri:cache-annotations-ri-common:1.0.0",
         "org.jsr107.ri:cache-annotations-ri-guice:1.0.0",
         "org.jvnet.mimepull:mimepull:1.9.6",
@@ -1955,9 +1974,16 @@ maven_install(
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
         "io.dropwizard:dropwizard-testing:1.3.24",
+        "com.spotify:docker-client:8.16.0",
+        "io.rest-assured:rest-assured:3.2.0",
+        "org.jboss.aerogear:aerogear-otp-java:1.0.0",
+        "org.jsoup:jsoup:1.8.3",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
+        "com.github.heremaps:oksse:0.9.0",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
+        "io.netty:netty-all",
     ],
     maven_install_json = "//:maven_install.json",
     override_targets = {
@@ -1993,7 +2019,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cf:cf-client-sdk-java:1.0.0-SNAPSHOT",
+        "io.harness.cf:cf-client-sdk-java:1.0.0-20210126.200034-12",
         "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [

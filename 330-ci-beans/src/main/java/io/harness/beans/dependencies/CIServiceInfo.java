@@ -50,6 +50,7 @@ public class CIServiceInfo implements DependencySpecType {
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
+  @JsonIgnore
   public CIDependencyType getType() {
     return type;
   }

@@ -28,7 +28,7 @@ public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
           nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));
       engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
     } else {
-      engine.endNodeExecution(nodeExecution.getUuid(), Status.SUCCEEDED);
+      engine.endNodeExecution(nodeExecution.getUuid(), Status.SUCCEEDED, adviserResponse);
     }
   }
 }

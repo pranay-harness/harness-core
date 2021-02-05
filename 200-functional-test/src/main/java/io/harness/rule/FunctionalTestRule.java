@@ -113,6 +113,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -124,6 +125,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
+@Slf4j
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private ClosingFactory closingFactory;
 
@@ -385,6 +387,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

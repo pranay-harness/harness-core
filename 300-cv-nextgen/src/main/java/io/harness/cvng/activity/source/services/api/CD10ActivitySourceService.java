@@ -1,8 +1,8 @@
 package io.harness.cvng.activity.source.services.api;
 
-import io.harness.cvng.beans.activity.ActivitySourceDTO;
-
 public interface CD10ActivitySourceService {
-  ActivitySourceDTO get(String accountId, String projectIdentifier, String appId);
-  ActivitySourceDTO get(String accountId, String projectIdentifier, String appId, String envId, String serviceId);
+  String getNextGenEnvIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String appId, String envId);
+  String getNextGenServiceIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String appId, String serviceId);
 }

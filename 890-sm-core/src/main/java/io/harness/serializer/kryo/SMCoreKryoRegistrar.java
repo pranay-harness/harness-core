@@ -24,6 +24,7 @@ import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
@@ -41,6 +42,7 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedData.class, 5124);
     kryo.register(EncryptedDataParent.class, 7335);
     kryo.register(GcpKmsConfig.class, 7290);
+    kryo.register(GcpSecretsManagerConfig.class, 72100);
     kryo.register(KmsConfig.class, 5183);
     kryo.register(LocalEncryptionConfig.class, 7180);
     kryo.register(SecretChangeLog.class, 5598);

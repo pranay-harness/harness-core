@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -41,9 +42,11 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.InternalApiAuthFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
-import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.annotations.InternalApi;
+import io.harness.security.annotations.PublicApi;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -59,6 +62,7 @@ import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 
 import software.wings.app.CharsetResponseFilter;
+import software.wings.jersey.KryoFeature;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -75,6 +79,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.lang.annotation.Annotation;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -147,7 +152,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
-    registerJerseyProviders(environment);
+    registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
@@ -240,7 +245,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  private void registerJerseyProviders(Environment environment) {
+  private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);
@@ -309,19 +315,37 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      // sample usage
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
-                 && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null)
-          || (resourceInfoAndRequest.getKey().getResourceClass() != null
-              && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null);
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
-      serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
-
-      environment.jersey().register(
-          new UserPrincipalVerificationFilter(predicate, injector.getInstance(NgUserService.class)));
+      registerNextGenAuthFilter(configuration, environment);
+      registerInternalApiAuthFilter(configuration, environment);
+      environment.jersey().register(new UserPrincipalVerificationFilter(
+          getAuthFilterPredicate(PublicApi.class).negate(), injector.getInstance(NgUserService.class)));
     }
+  }
+
+  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
+        (getAuthFilterPredicate(PublicApi.class).negate()).and((getAuthFilterPredicate(InternalApi.class)).negate());
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+  }
+
+  private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
+    environment.jersey().register(
+        new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
+      Class<? extends Annotation> annotation) {
+    return resourceInfoAndRequest
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 }

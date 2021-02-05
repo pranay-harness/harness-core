@@ -27,11 +27,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.File;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,8 +112,8 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertDDCustomMetric() throws Exception {
-    URL yamlPath = getClass().getClassLoader().getResource("./verification/datadogCVConfigCustomYaml.yaml");
-    String yamlString = Resources.toString(yamlPath, Charsets.UTF_8);
+    String yamlString = FileUtils.readFileToString(
+        new File("400-rest/src/test/resources/verification/datadogCVConfigCustomYaml.yaml"), Charsets.UTF_8);
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestDDConfig.yaml")).thenReturn("TestDDConfig");
@@ -140,8 +142,8 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testUpsertDDCustomMetric_invalidMetrics() throws Exception {
-    URL yamlPath = getClass().getClassLoader().getResource("./verification/datadogCVConfigCustomYaml.yaml");
-    String yamlString = Resources.toString(yamlPath, Charsets.UTF_8);
+    String yamlString = FileUtils.readFileToString(
+        new File("400-rest/src/test/resources/verification/datadogCVConfigCustomYaml.yaml"), Charsets.UTF_8);
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestDDC\nonfig.yaml")).thenReturn("TestDDConfig");

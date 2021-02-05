@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class UsageBucketIntegrationTest extends IntegrationTestBase {
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
 
   private boolean indexesEnsured;
 

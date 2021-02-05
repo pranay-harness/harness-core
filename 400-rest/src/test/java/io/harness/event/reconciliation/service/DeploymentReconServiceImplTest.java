@@ -33,6 +33,7 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.event.reconciliation.deployment.DetectionStatus;
 import io.harness.event.reconciliation.deployment.ReconcilationAction;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -40,7 +41,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.sql.Array;
@@ -59,6 +59,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DeploymentReconServiceImplTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Inject @InjectMocks DeploymentReconServiceImpl deploymentReconService;
+  @Inject private HPersistence persistence;
   final Connection mockConnection = mock(Connection.class);
   final Statement mockStatement = mock(Statement.class);
   final ResultSet resultSet1 = mock(ResultSet.class);
@@ -119,7 +120,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
                                                                   .endTs(timeStamp)
                                                                   .createdAt(timeStamp);
 
-    wingsPersistence.save(workflowExecutionBuilder.uuid("DATA0").status(SUCCESS).build());
+    persistence.save(workflowExecutionBuilder.uuid("DATA0").status(SUCCESS).build());
   }
 
   private void activateMissingRecords(long timeStamp) {
@@ -133,21 +134,21 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
                                                                   .endTs(timeStamp)
                                                                   .createdAt(timeStamp);
 
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(SUCCESS).build());
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
-                              .status(ExecutionStatus.ERROR)
-                              .breakdown(countsByStatuses)
-                              .build());
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid())
-                              .status(ExecutionStatus.FAILED)
-                              .breakdown(countsByStatuses)
-                              .build());
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(ExecutionStatus.ABORTED).build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(SUCCESS).build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                         .status(ExecutionStatus.ERROR)
+                         .breakdown(countsByStatuses)
+                         .build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid())
+                         .status(ExecutionStatus.FAILED)
+                         .breakdown(countsByStatuses)
+                         .build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(ExecutionStatus.ABORTED).build());
 
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(RUNNING).build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(RUNNING).build());
 
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(PAUSED).build());
-    wingsPersistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(WAITING).build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(PAUSED).build());
+    persistence.save(workflowExecutionBuilder.uuid(generateUuid()).status(WAITING).build());
   }
 
   public void deactivateMissingRecords(ResultSet resultSet) throws Exception {
@@ -269,8 +270,8 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
                                             .durationEndTs(System.currentTimeMillis() - 1000)
                                             .build();
 
-    wingsPersistence = mock(WingsPersistence.class);
-    on(deploymentReconService).set("wingsPersistence", wingsPersistence);
+    persistence = mock(HPersistence.class);
+    on(deploymentReconService).set("persistence", persistence);
 
     assertThat(deploymentReconService.shouldPerformReconciliation(reconRecord, System.currentTimeMillis() - 1000))
         .isFalse();
@@ -281,13 +282,13 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
                       .build();
 
     final UpdateOperations updateOperations = mock(UpdateOperations.class);
-    when(wingsPersistence.createUpdateOperations(DeploymentReconRecord.class)).thenReturn(updateOperations);
+    when(persistence.createUpdateOperations(DeploymentReconRecord.class)).thenReturn(updateOperations);
     assertThat(deploymentReconService.shouldPerformReconciliation(
                    reconRecord, System.currentTimeMillis() - 2 * DeploymentReconServiceImpl.COOL_DOWN_INTERVAL))
         .isTrue();
 
-    verify(wingsPersistence, times(1)).createUpdateOperations(DeploymentReconRecord.class);
-    verify(wingsPersistence, times(1)).update(reconRecord, updateOperations);
+    verify(persistence, times(1)).createUpdateOperations(DeploymentReconRecord.class);
+    verify(persistence, times(1)).update(reconRecord, updateOperations);
 
     reconRecord = DeploymentReconRecord.builder()
                       .reconciliationStatus(ReconciliationStatus.SUCCESS)

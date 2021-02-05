@@ -7,6 +7,8 @@ import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
@@ -27,6 +29,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class PerpetualTaskRecordDao {
   private final WingsPersistence persistence;
 

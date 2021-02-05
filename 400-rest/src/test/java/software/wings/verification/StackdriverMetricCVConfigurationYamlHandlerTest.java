@@ -20,8 +20,10 @@ import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,8 +37,8 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   private List<StackDriverMetricDefinition> getMetricDefinitions() throws Exception {
-    String paramsForStackDriver = Resources.toString(
-        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
+    String paramsForStackDriver =
+        FileUtils.readFileToString(new File("400-rest/src/test/resources/apm/stackdriverpayload.json"), Charsets.UTF_8);
     StackDriverMetricDefinition definition = StackDriverMetricDefinition.builder()
                                                  .filterJson(paramsForStackDriver)
                                                  .metricName("metricName")

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -22,7 +23,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -57,7 +57,7 @@ import org.mockito.Mock;
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private NewRelicService newRelicService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private EncryptionService encryptionService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private ScmSecret scmSecret;
@@ -83,7 +83,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     initMocks(this);
-    wingsPersistence.save(user);
+    persistence.save(user);
     UserThreadLocal.set(user);
     FieldUtils.writeField(appdynamicsDelegateService, "encryptionService", encryptionService, true);
     when(appdDelegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(appdynamicsDelegateService);
@@ -106,14 +106,14 @@ public class AppdynamicsTest extends WingsBaseTest {
                            .withAccountId(accountId)
                            .withValue(appDynamicsConfig)
                            .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void validateConfig() {
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-validate-test.json")));
+    rule.simulate(SimulationSource.file(Paths.get("400-rest/src/test/resources/hoverfly/appd-validate-test.json")));
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
     newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, Collections.emptyList());
@@ -123,7 +123,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void getAllApplications() {
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-apps-test.json")));
+    rule.simulate(SimulationSource.file(Paths.get("400-rest/src/test/resources/hoverfly/appd-apps-test.json")));
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertThat(applications.isEmpty()).isFalse();
   }
@@ -132,7 +132,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void getTiers() {
-    rule.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/appd-tiers-test.json")));
+    rule.simulate(SimulationSource.file(Paths.get("400-rest/src/test/resources/hoverfly/appd-tiers-test.json")));
     List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
     assertThat(applications.isEmpty()).isFalse();
     Optional<NewRelicApplication> app =

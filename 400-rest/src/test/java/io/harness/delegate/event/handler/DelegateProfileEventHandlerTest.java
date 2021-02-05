@@ -18,12 +18,13 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Delegate;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -42,13 +43,14 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject private DelegateProfileEventHandler delegateProfileEventHandler;
+  @Inject private HPersistence persistence;
 
   private Workflow createWorkflow(String accountId) {
     Workflow workflow = new Workflow();
     workflow.setAccountId(accountId);
     workflow.setName(PROFILE_SCRIPT_EXECUTION_WORKFLOW_NAME);
     workflow.setAppId(generateUuid());
-    wingsPersistence.save(workflow);
+    persistence.save(workflow);
 
     return workflow;
   }
@@ -93,7 +95,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
 
     // Test script is empty
     DelegateProfile delegateProfile = DelegateProfile.builder().accountId(accountId).name("test").build();
-    wingsPersistence.save(delegateProfile);
+    persistence.save(delegateProfile);
 
     delegateProfileEventHandler.onProfileApplied(accountId, "delegateId", delegateProfile.getUuid());
     verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
@@ -108,7 +110,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
 
     DelegateProfile delegateProfile =
         DelegateProfile.builder().accountId(accountId).name("test").startupScript("echo test").build();
-    wingsPersistence.save(delegateProfile);
+    persistence.save(delegateProfile);
 
     delegateProfileEventHandler.onProfileApplied(accountId, "delegateId", delegateProfile.getUuid());
     verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
@@ -125,7 +127,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
 
     DelegateProfile delegateProfile =
         DelegateProfile.builder().accountId(accountId).name("test").startupScript("echo test").build();
-    wingsPersistence.save(delegateProfile);
+    persistence.save(delegateProfile);
 
     delegateProfileEventHandler.onProfileApplied(accountId, delegateId, delegateProfile.getUuid());
 
@@ -208,8 +210,8 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
     Delegate delegate2 =
         Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(updatedProfileId).build();
 
-    wingsPersistence.save(delegate1);
-    wingsPersistence.save(delegate2);
+    persistence.save(delegate1);
+    persistence.save(delegate2);
 
     delegateProfileEventHandler.onProfileUpdated(
         DelegateProfile.builder().accountId(accountId).startupScript("echo test 1").build(),

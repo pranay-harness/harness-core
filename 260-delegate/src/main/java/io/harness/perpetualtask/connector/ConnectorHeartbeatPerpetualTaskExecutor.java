@@ -8,11 +8,12 @@ import static io.harness.network.SafeHttpCall.execute;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.NoOpConnectorValidationHandler;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -20,7 +21,6 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
@@ -47,52 +47,50 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     final ConnectorHeartbeatTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ConnectorHeartbeatTaskParams.class);
     String accountId = taskParams.getAccountIdentifier();
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails(taskParams);
-    final ConnectorDTO connectorDTO = (ConnectorDTO) kryoSerializer.asObject(taskParams.getConnector().toByteArray());
-    ConnectorInfoDTO connectorInfoDTO = connectorDTO.getConnectorInfo();
-    String connectorMessage = String.format(CONNECTOR_STRING, connectorInfoDTO.getIdentifier(), accountId,
-        connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier());
-    log.info("Starting validation task for the connector {}", connectorMessage);
-    ConnectorValidationHandler connectorValidationHandler =
-        connectorTypeToConnectorValidationHandlerMap.get(connectorInfoDTO.getConnectorType().toString());
-    if (connectorValidationHandler == null) {
-      log.info("The connector validation handler is not registered for the connector type "
-          + connectorInfoDTO.getConnectorType());
+    String orgIdentifier = taskParams.getOrgIdentifier().getValue();
+    String projectIdentifier = taskParams.getProjectIdentifier().getValue();
+    String connectorIdentifier = taskParams.getConnectorIdentifier();
+    final ConnectorValidationParams connectorValidationParams =
+        (ConnectorValidationParams) kryoSerializer.asObject(taskParams.getConnectorValidationParams().toByteArray());
+    String connectorMessage =
+        String.format(CONNECTOR_STRING, connectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+
+    ConnectorValidationHandler connectorValidationHandler;
+    if (connectorValidationParams instanceof NoOpConnectorValidationParams) {
+      connectorValidationHandler = new NoOpConnectorValidationHandler();
+    } else {
+      connectorValidationHandler = connectorTypeToConnectorValidationHandlerMap.get(
+          connectorValidationParams.getConnectorType().getDisplayName());
     }
-    ConnectorValidationResult connectorValidationResult = connectorValidationHandler.validate(
-        connectorDTO.getConnectorInfo().getConnectorConfig(), accountId, encryptedDataDetails);
+    if (connectorValidationHandler == null || connectorValidationHandler instanceof NoOpConnectorValidationHandler) {
+      log.info("The connector validation handler is not registered for the connector.");
+      return getPerpetualTaskResponse(null);
+    }
+    ConnectorValidationResult connectorValidationResult =
+        connectorValidationHandler.validate(connectorValidationParams, accountId);
     connectorValidationResult.setTestedAt(System.currentTimeMillis());
     try {
-      execute(delegateAgentManagerClient.publishConnectorHeartbeatResult(
-          taskId.getId(), accountId, createHeartbeatResponse(accountId, connectorInfoDTO, connectorValidationResult)));
+      execute(delegateAgentManagerClient.publishConnectorHeartbeatResult(taskId.getId(), accountId,
+          createHeartbeatResponse(accountId, orgIdentifier, projectIdentifier, connectorIdentifier,
+              connectorValidationParams, connectorValidationResult)));
     } catch (Exception ex) {
       log.error("{} Failed to publish connector heartbeat result for task [{}] for the connector:[{}]", taskId.getId(),
-          CONNECTOR_HEARTBEAT_LOG_PREFIX,
-          String.format(CONNECTOR_STRING, connectorInfoDTO.getIdentifier(), accountId,
-              connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier()),
-          ex);
+          CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorMessage, ex);
     }
     log.info("Completed validation task for {}", connectorMessage);
     return getPerpetualTaskResponse(connectorValidationResult);
   }
 
-  private List<EncryptedDataDetail> getEncryptedDataDetails(ConnectorHeartbeatTaskParams taskParams) {
-    byte[] encryptedDataDetailsByteArray = taskParams.getEncryptionDetails().toByteArray();
-    if (encryptedDataDetailsByteArray.length != 0) {
-      return (List<EncryptedDataDetail>) kryoSerializer.asObject(encryptedDataDetailsByteArray);
-    }
-    return null;
-  }
-
-  private ConnectorHeartbeatDelegateResponse createHeartbeatResponse(
-      String accountId, ConnectorInfoDTO connectorInfoDTO, ConnectorValidationResult validationResult) {
+  private ConnectorHeartbeatDelegateResponse createHeartbeatResponse(String accountId, String orgId, String projectId,
+      String identifier, ConnectorValidationParams connectorValidationParams,
+      ConnectorValidationResult validationResult) {
     return ConnectorHeartbeatDelegateResponse.builder()
         .accountIdentifier(accountId)
-        .orgIdentifier(connectorInfoDTO.getOrgIdentifier())
-        .projectIdentifier(connectorInfoDTO.getProjectIdentifier())
-        .identifier(connectorInfoDTO.getIdentifier())
+        .orgIdentifier(orgId)
+        .projectIdentifier(projectId)
+        .identifier(identifier)
         .connectorValidationResult(validationResult)
-        .name(connectorInfoDTO.getName())
+        .name(connectorValidationParams.getConnectorName())
         .build();
   }
 

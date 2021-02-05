@@ -24,6 +24,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -119,6 +120,8 @@ public class EncryptedData
   @Default private boolean enabled = true;
 
   @NotEmpty private String kmsId;
+
+  @Default private AdditionalMetadata additionalMetadata = AdditionalMetadata.builder().build();
 
   @NotNull private EncryptionType encryptionType;
 
@@ -353,6 +356,11 @@ public class EncryptedData
   @JsonIgnore
   public String getProjectIdentifier() {
     return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getProjectIdentifier).orElse(null);
+  }
+
+  @Override
+  public AdditionalMetadata getAdditionalMetadata() {
+    return additionalMetadata;
   }
 
   @UtilityClass

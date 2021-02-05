@@ -1,5 +1,6 @@
 package io.harness.connector.jacksontests.kubernetescluster;
 
+import static io.harness.connector.jacksontests.ConnectorJacksonTestHelper.readFileAsString;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 
@@ -23,8 +24,6 @@ import io.harness.rule.OwnerRule;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +38,6 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
   String masterUrl = "https://abc.com";
   String connectorIdentifier = "identifier";
   String name = "name";
-  String tag1 = "tag1";
-  String tag2 = "tag2";
   String description = "description";
   String projectIdentifier = "projectIdentifier";
   String orgIdentifier = "orgIdentifier";
@@ -87,15 +84,6 @@ public class KubernetesClusterConfigSerializationDeserializationTest extends Cat
         .connectorType(KUBERNETES_CLUSTER)
         .connectorConfig(kubernetesConnectorDTO)
         .build();
-  }
-
-  public static String readFileAsString(String file) {
-    try {
-      return new String(Files.readAllBytes(Paths.get(file)));
-    } catch (Exception ex) {
-      Assert.fail("Failed reading the json from " + file + " with error " + ex.getMessage());
-      return "";
-    }
   }
 
   @Test

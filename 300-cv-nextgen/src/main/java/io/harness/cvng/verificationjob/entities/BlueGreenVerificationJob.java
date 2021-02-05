@@ -35,7 +35,7 @@ public class BlueGreenVerificationJob extends VerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = new BlueGreenVerificationJobDTO();
-    blueGreenVerificationJobDTO.setSensitivity(getSensitivity().name());
+    blueGreenVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
     blueGreenVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
     populateCommonFields(blueGreenVerificationJobDTO);
     return blueGreenVerificationJobDTO;

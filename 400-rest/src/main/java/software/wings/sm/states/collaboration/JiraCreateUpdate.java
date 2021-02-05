@@ -43,9 +43,9 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -118,7 +118,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Inject @Transient private JiraHelperService jiraHelperService;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
-  @Inject @Transient private DelegateServiceImpl delegateService;
+  @Inject @Transient private DelegateService delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
   @Inject @Transient private SettingsService settingsService;

@@ -1,21 +1,20 @@
 package io.harness.testframework.framework;
 
+import static io.harness.delegate.beans.Delegate.DelegateKeys;
 import static io.harness.mongo.MongoUtils.setUnset;
-
-import static software.wings.beans.Delegate.DelegateKeys;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.resource.Project;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Poller;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.Account;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateService;

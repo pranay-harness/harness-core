@@ -8,9 +8,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @Data
+@FieldNameConstants(innerTypeName = "VerificationJobDTOKeys")
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @SuperBuilder
@@ -34,6 +36,6 @@ public abstract class VerificationJobDTO {
   public abstract VerificationJobType getType();
 
   public static boolean isRuntimeParam(String value) {
-    return isNotEmpty(value) && value.startsWith("${") && value.endsWith("}");
+    return isNotEmpty(value) && value.equals("<+input>");
   }
 }

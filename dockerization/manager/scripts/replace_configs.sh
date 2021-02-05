@@ -732,6 +732,10 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
 fi
@@ -751,4 +755,8 @@ fi
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
+fi
+
+if [[ "" != "$CVNG_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi

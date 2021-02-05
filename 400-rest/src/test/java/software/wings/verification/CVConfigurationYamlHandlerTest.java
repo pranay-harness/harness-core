@@ -10,13 +10,13 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -36,7 +36,7 @@ import org.reflections.Reflections;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Spy private YamlHelper yamlHelper;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private CVConfigurationService cvConfigurationService;
 
   private DatadogCvConfigurationYamlHandler yamlHandler = new DatadogCvConfigurationYamlHandler();
@@ -68,7 +68,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
     cvServiceConfiguration.setName(configName);
     cvServiceConfiguration.setUuid(configId);
 
-    wingsPersistence.save(cvServiceConfiguration);
+    persistence.save(cvServiceConfiguration);
 
     FieldUtils.writeField(yamlHandler, "yamlHelper", yamlHelper, true);
     FieldUtils.writeField(yamlHandler, "cvConfigurationService", cvConfigurationService, true);
@@ -139,7 +139,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
         "Setup/Applications/HarnessSampleApp/Environments/prod/Service Verification/" + configName + ".yaml";
     doReturn(configName).when(yamlHelper).getNameFromYamlFilePath(filePath);
 
-    CVConfiguration originalConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
     ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
@@ -152,7 +152,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
             .build();
     yamlHandler.delete(changeContext);
 
-    CVConfiguration updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
   }
 
@@ -164,7 +164,7 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
         "Setup/Applications/HarnessSampleApp/Environments/prod/Service Verification/" + configName + ".yaml";
     doReturn(configName).when(yamlHelper).getNameFromYamlFilePath(filePath);
 
-    CVConfiguration originalConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
     ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
@@ -177,11 +177,11 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
             .build();
     yamlHandler.delete(changeContext);
 
-    CVConfiguration updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
 
     yamlHandler.delete(changeContext);
-    updatedConfig = wingsPersistence.get(CVConfiguration.class, configId);
+    updatedConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(updatedConfig).isNull();
   }
 }

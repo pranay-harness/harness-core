@@ -224,8 +224,8 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   @BeforeClass
   public static void readMockData() throws IOException {
-    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
-    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+    projects = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_statuses"), JSONArray.class);
   }
 
   @Before
@@ -1525,7 +1525,7 @@ public class ApprovalStateTest extends WingsBaseTest {
                         .environments(Collections.singletonList(EnvSummary.builder().name("env").build()))
                         .build());
 
-    JSONObject customData = new JSONObject(slackApprovalParams);
+    JSONObject customData = new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
     String buttonValue = StringEscapeUtils.escapeJson(customData.toString());
     String displayText = createSlackApprovalMessage(
         slackApprovalParams, ApprovalState.class.getResource("/slack/workflow-approval-message.txt"));
@@ -1537,6 +1537,59 @@ public class ApprovalStateTest extends WingsBaseTest {
         .isEqualTo("suppressTraditionalNotificationOnSlack");
     assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldTrimExcessiveServicesAndArtifactsDetails() {
+    String excessiveInfo =
+        "first,second,third,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo";
+    WorkflowNotificationDetails serviceDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    WorkflowNotificationDetails infraDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo.replace(",", ", ")));
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(APP_ID)
+            .appName(APP_NAME)
+            .routingId(ACCOUNT_ID)
+            .deploymentId(WORKFLOW_EXECUTION_ID)
+            .workflowId(WORKFLOW_ID)
+            .workflowExecutionName(WORKFLOW_NAME)
+            .stateExecutionId(STATE_EXECUTION_ID)
+            .stateExecutionInstanceName(STATE_NAME)
+            .approvalId(APPROVAL_EXECUTION_ID)
+            .pausedStageName(WORKFLOW_NAME)
+            .servicesInvolved(String.format("*Services*: %s", serviceDetails.getName()))
+            .environmentsInvolved(ENV_NAME)
+            .artifactsInvolved(artifacts.toString())
+            .infraDefinitionsInvolved(String.format("*Infrastructure Definitions*: %s", infraDetails.getName()))
+            .confirmation(false)
+            .pipeline(true)
+            .workflowUrl(WORKFLOW_URL)
+            .jwtToken("token")
+            .startTsSecs("mockEpochTimeMillis")
+            .endTsSecs("mockEpochTimeMillis")
+            .startDate("mockEpochTimeMillis")
+            .expiryTsSecs("mockEpochTimeMillis")
+            .endDate("mockEpochTimeMillis")
+            .expiryDate("someMockDate")
+            .verb("paused")
+            .build();
+    String displayText = createSlackApprovalMessage(slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE));
+
+    String trimmedMessage = approvalState.validateMessageLength(displayText, slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE), serviceDetails,
+        artifacts, infraDetails);
+    assertThat(trimmedMessage.length()).isLessThanOrEqualTo(2000);
+    assertThat(trimmedMessage).contains("*Services*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getServicesInvolved());
+    assertThat(trimmedMessage).contains("*Artifacts:* first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getArtifactsInvolved());
+    assertThat(trimmedMessage).contains("*Infrastructure Definitions*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getInfraDefinitionsInvolved());
+  }
+
   private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {
     assertThat(placeholderValues.containsKey("APPROVAL_STEP"));
     assertThat(placeholderValues.containsKey("WORKFLOW"));

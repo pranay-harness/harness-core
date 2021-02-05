@@ -72,6 +72,7 @@ managerAuthority: localhost
 managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
 jwtAuthSecret: "dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq"
 ngManagerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+jwtIdentityServiceSecret: "HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU="
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
@@ -83,8 +84,8 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
-  addonImageTag: v1.28.1-alpha
-  liteEngineImageTag: v1.28.1-alpha
+  addonImageTag: v1.84-alpha
+  liteEngineImageTag: v1.84-alpha
   defaultMemoryLimit: 400
   defaultCPULimit: 400
   defaultInternalImageConnector: account.harnessimage
@@ -102,5 +103,7 @@ pmsSdkGrpcServerConfig:
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+apiUrl: https://localhost:8181/#/
 
 shouldConfigureWithPMS: false

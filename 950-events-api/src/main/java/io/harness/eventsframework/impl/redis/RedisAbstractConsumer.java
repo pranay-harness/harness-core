@@ -41,8 +41,9 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
 
   private void initConsumerGroup(RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
     this.redissonClient = RedisUtils.getClient(redisConfig);
-    this.stream = RedisUtils.getStream(getTopicName(), redissonClient);
-    this.deadLetterQueue = RedisUtils.getDeadLetterStream(getTopicName(), redissonClient);
+    this.stream = RedisUtils.getStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
+    this.deadLetterQueue =
+        RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
     this.maxProcessingTime = maxProcessingTime;
     this.batchSize = batchSize;
     createConsumerGroup();

@@ -8,10 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
-
-import software.wings.beans.Delegate;
 
 import java.io.File;
 import java.io.IOException;

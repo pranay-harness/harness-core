@@ -19,6 +19,7 @@ public class QLCEView {
   String id;
   String name;
   double totalCost;
+  String createdBy;
   Long createdAt;
   Long lastUpdatedAt;
   ViewChartType chartType;

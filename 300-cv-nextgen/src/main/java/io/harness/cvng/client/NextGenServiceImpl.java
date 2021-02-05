@@ -4,22 +4,55 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-import java.util.Map;
+import com.google.inject.Singleton;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Singleton
 public class NextGenServiceImpl implements NextGenService {
-  @Inject NextGenClient nextGenClient;
-  @Inject RequestExecutor requestExecutor;
+  @Inject private NextGenClient nextGenClient;
+  @Inject private RequestExecutor requestExecutor;
+
+  private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, EnvironmentResponseDTO>() {
+            @Override
+            public EnvironmentResponseDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getEnvironment(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                  .getData();
+            }
+          });
+
+  private LoadingCache<EntityKey, ServiceResponseDTO> serviceCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
+            @Override
+            public ServiceResponseDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                  .getData();
+            }
+          });
 
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
@@ -41,42 +74,32 @@ public class NextGenServiceImpl implements NextGenService {
 
   @Override
   public EnvironmentResponseDTO getEnvironment(
-      String environmentIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor
-        .execute(nextGenClient.getEnvironment(environmentIdentifier, accountId, orgIdentifier, projectIdentifier))
-        .getData();
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier) {
+    try {
+      return environmentCache.get(EntityKey.builder()
+                                      .accountId(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .entityIdentifier(environmentIdentifier)
+                                      .build());
+    } catch (ExecutionException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   @Override
   public ServiceResponseDTO getService(
-      String serviceIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor
-        .execute(nextGenClient.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier))
-        .getData();
-  }
-
-  @Override
-  public Map<String, ServiceResponseDTO> listServicesForProject(
-      String accountId, String orgIdentifier, String projectIdentifier, Set<String> serviceIdentifiers) {
-    PageResponse<ServiceResponseDTO> services =
-        requestExecutor
-            .execute(nextGenClient.listServicesForProject(
-                0, serviceIdentifiers.size(), accountId, orgIdentifier, projectIdentifier, serviceIdentifiers))
-            .getData();
-    return services.getContent().stream().collect(
-        Collectors.toMap(ServiceResponseDTO::getIdentifier, Function.identity()));
-  }
-
-  @Override
-  public Map<String, EnvironmentResponseDTO> listEnvironmentsForProject(@NotNull String accountId,
-      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull Set<String> envIdentifiers) {
-    PageResponse<EnvironmentResponseDTO> environments =
-        requestExecutor
-            .execute(nextGenClient.listEnvironmentsForProject(
-                0, envIdentifiers.size(), accountId, orgIdentifier, projectIdentifier, envIdentifiers, null))
-            .getData();
-    return environments.getContent().stream().collect(
-        Collectors.toMap(EnvironmentResponseDTO::getIdentifier, Function.identity()));
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+    try {
+      return serviceCache.get(EntityKey.builder()
+                                  .accountId(accountId)
+                                  .orgIdentifier(orgIdentifier)
+                                  .projectIdentifier(projectIdentifier)
+                                  .entityIdentifier(serviceIdentifier)
+                                  .build());
+    } catch (ExecutionException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   @Override
@@ -94,5 +117,14 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
+  }
+
+  @Value
+  @Builder
+  public static class EntityKey {
+    private String accountId;
+    private String orgIdentifier;
+    private String projectIdentifier;
+    private String entityIdentifier;
   }
 }

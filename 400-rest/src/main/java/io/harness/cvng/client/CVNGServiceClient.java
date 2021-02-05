@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.rest.RestResponse;
 
@@ -16,7 +17,7 @@ import retrofit2.http.Query;
 
 public interface CVNGServiceClient {
   @POST(INTERNAL_ACTIVITY_RESOURCE)
-  Call<RestResponse<String>> registerActivity(
+  Call<RestResponse<CD10RegisterActivityDTO>> registerActivity(
       @Query("accountId") @Valid String accountId, @Body ActivityDTO activityDTO);
   @GET(INTERNAL_ACTIVITY_RESOURCE + "/activity-status")
   Call<RestResponse<ActivityStatusDTO>> getActivityStatus(

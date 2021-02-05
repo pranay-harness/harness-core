@@ -54,9 +54,17 @@ public class FQNUtils {
       JsonNode value = map.get(key);
       FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
       if (value.getNodeType() == JsonNodeType.ARRAY) {
+        if (value.size() == 0) {
+          res.put(currFQN, value);
+          continue;
+        }
         ArrayNode arrayNode = (ArrayNode) value;
         generateFQNMapFromList(arrayNode, currFQN, res);
       } else if (value.getNodeType() == JsonNodeType.OBJECT) {
+        if (value.size() == 0) {
+          res.put(currFQN, value);
+          continue;
+        }
         generateFQNMap(value, currFQN, res);
       } else {
         res.put(currFQN, value);
@@ -66,6 +74,7 @@ public class FQNUtils {
 
   private void generateFQNMapFromList(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     if (list == null || list.get(0) == null) {
+      res.put(baseFQN, list);
       return;
     }
     JsonNode firstNode = list.get(0);
@@ -180,14 +189,15 @@ public class FQNUtils {
       }
     }
     if (!tempMap.isEmpty()) {
-      if (!fieldNames.contains(YAMLFieldNameConstants.IDENTIFIER)) {
-        res.put(topKey, tempMap);
-      } else {
-        Map<String, Object> newTempMap = new LinkedHashMap<>();
+      Map<String, Object> newTempMap = new LinkedHashMap<>();
+      if (fieldNames.contains(YAMLFieldNameConstants.IDENTIFIER)) {
         newTempMap.put(YAMLFieldNameConstants.IDENTIFIER, originalYaml.get(YAMLFieldNameConstants.IDENTIFIER));
-        newTempMap.putAll(tempMap);
-        res.put(topKey, newTempMap);
       }
+      if (originalYaml.has(YAMLFieldNameConstants.TYPE)) {
+        newTempMap.put(YAMLFieldNameConstants.TYPE, originalYaml.get(YAMLFieldNameConstants.TYPE));
+      }
+      newTempMap.putAll(tempMap);
+      res.put(topKey, newTempMap);
     }
   }
 
@@ -294,6 +304,9 @@ public class FQNUtils {
         if (!tempMap.isEmpty()) {
           Map<String, Object> newTempMap = new LinkedHashMap<>();
           newTempMap.put(uuidKey, element.get(uuidKey));
+          if (element.has(YAMLFieldNameConstants.TYPE)) {
+            newTempMap.put(YAMLFieldNameConstants.TYPE, element.get(YAMLFieldNameConstants.TYPE));
+          }
           newTempMap.putAll(tempMap);
           topKeyList.add(newTempMap);
         }

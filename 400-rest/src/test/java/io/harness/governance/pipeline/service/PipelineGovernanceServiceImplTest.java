@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -21,7 +22,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Event;
 import software.wings.beans.LicenseInfo;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 
@@ -36,7 +36,7 @@ import org.mockito.Mock;
 
 public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineGovernanceService pipelineGovernanceService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   @Inject private AccountService accountService;
   @Mock private AuditServiceHelper auditServiceHelper;
 

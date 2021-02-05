@@ -626,7 +626,8 @@ public class AwsAmiHelperServiceDelegateImpl
         .build();
   }
 
-  private AwsAmiServiceSetupRequest createAwsAmiSetupRequest(
+  @VisibleForTesting
+  AwsAmiServiceSetupRequest createAwsAmiSetupRequest(
       AwsAmiServiceTrafficShiftAlbSetupRequest trafficShiftAlbSetupRequest,
       List<LbDetailsForAlbTrafficShift> lbDetailsForAlbTrafficShifts) {
     List<String> targetGroups = lbDetailsForAlbTrafficShifts.stream()
@@ -651,6 +652,7 @@ public class AwsAmiHelperServiceDelegateImpl
         .useCurrentRunningCount(trafficShiftAlbSetupRequest.isUseCurrentRunningCount())
         .infraMappingTargetGroupArns(targetGroups)
         .blueGreen(true)
+        .userData(trafficShiftAlbSetupRequest.getUserData())
         .build();
   }
 

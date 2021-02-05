@@ -1,5 +1,6 @@
 package io.harness.delegate.task.k8s;
 
+import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
@@ -27,9 +28,8 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
             cloudProviderEncryptionDetails, maskingEvaluator));
 
     if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
-      capabilities.addAll(((DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig)
-                              .getKubernetesClusterConfigDTO()
-                              .fetchRequiredExecutionCapabilities(maskingEvaluator));
+      capabilities.addAll(K8sTaskCapabilityHelper.fetchRequiredExecutionCapabilities(
+          ((DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig).getKubernetesClusterConfigDTO(), maskingEvaluator));
     }
     return capabilities;
   }

@@ -4,7 +4,9 @@ import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
+import io.harness.PipelineUtils;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -28,6 +30,7 @@ import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +54,8 @@ public class GitBuildStatusUtility {
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  @Inject @Named("ngBaseUrl") private String ngBaseUrl;
+  @Inject private PipelineUtils pipelineUtils;
 
   public boolean shouldSendStatus(NodeExecution nodeExecution) {
     return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
@@ -66,6 +71,20 @@ public class GitBuildStatusUtility {
     if (buildStatusUpdateParameter != null) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
           getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus());
+
+      /* This check is require because delegate is not honouring the ordering and
+         there are instances where we are overriding final status with prev state status i.e running specially in case
+         time interval is minuscule
+      */
+
+      if (isFinalStatus(nodeExecution.getStatus())) {
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException exception) {
+          // Ignore
+        }
+      }
+
       if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
         DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                       .accountId(accountId)
@@ -97,6 +116,8 @@ public class GitBuildStatusUtility {
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
     CIBuildStatusPushParameters ciBuildPushStatusParameters =
         CIBuildStatusPushParameters.builder()
+            .detailsUrl(getBuildDetailsUrl(
+                ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
             .desc(generateDesc(
                 buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
             .sha(buildStatusUpdateParameter.getSha())
@@ -210,5 +231,9 @@ public class GitBuildStatusUtility {
 
   private ConnectorDetails getGitConnector(NGAccess ngAccess, String connectorRef) {
     return connectorUtils.getConnectorDetails(ngAccess, connectorRef);
+  }
+
+  private String getBuildDetailsUrl(NGAccess ngAccess, String pipelineId, String executionId) {
+    return pipelineUtils.getBuildDetailsUrl(ngAccess, pipelineId, executionId, ngBaseUrl);
   }
 }

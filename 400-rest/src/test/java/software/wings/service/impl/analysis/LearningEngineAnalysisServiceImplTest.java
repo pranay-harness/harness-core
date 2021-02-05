@@ -12,10 +12,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.VerificationService;
@@ -41,7 +41,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
   @Inject private VerificationService learningEngineService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private String cvConfigId;
 
@@ -79,35 +79,35 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
                                                .executionStatus(ExecutionStatus.SUCCESS)
                                                .ml_analysis_type(MLAnalysisType.LOG_ML)
                                                .build();
-    wingsPersistence.save(logMLTask);
+    persistence.save(logMLTask);
     LearningEngineAnalysisTask timeSeriesTask = LearningEngineAnalysisTask.builder()
                                                     .cvConfigId(cvConfigId)
                                                     .analysis_minute(2)
                                                     .executionStatus(ExecutionStatus.FAILED)
                                                     .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                                                     .build();
-    wingsPersistence.save(timeSeriesTask);
+    persistence.save(timeSeriesTask);
     LearningEngineAnalysisTask timeSeriesQueuedTask = LearningEngineAnalysisTask.builder()
                                                           .cvConfigId(cvConfigId)
                                                           .analysis_minute(3)
                                                           .executionStatus(ExecutionStatus.QUEUED)
                                                           .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                                                           .build();
-    wingsPersistence.save(timeSeriesQueuedTask);
+    persistence.save(timeSeriesQueuedTask);
     LearningEngineAnalysisTask feedbackTask = LearningEngineAnalysisTask.builder()
                                                   .cvConfigId(cvConfigId)
                                                   .analysis_minute(4)
                                                   .executionStatus(ExecutionStatus.FAILED)
                                                   .ml_analysis_type(MLAnalysisType.FEEDBACK_ANALYSIS)
                                                   .build();
-    wingsPersistence.save(feedbackTask);
+    persistence.save(feedbackTask);
     LearningEngineAnalysisTask timeSeriesNewConfigTask = LearningEngineAnalysisTask.builder()
                                                              .cvConfigId("config2")
                                                              .analysis_minute(5)
                                                              .executionStatus(ExecutionStatus.FAILED)
                                                              .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                                                              .build();
-    wingsPersistence.save(timeSeriesNewConfigTask);
+    persistence.save(timeSeriesNewConfigTask);
 
     Optional<LearningEngineAnalysisTask> learningEngineAnalysisTask =
         learningEngineService.getLatestTaskForCvConfigIds(Collections.singletonList(cvConfigId));
@@ -133,7 +133,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void testCheckIfAnalysisHasData_Log_WithDataOutsideWindow() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     LogDataRecord logDataRecord = LogDataRecord.builder().cvConfigId(cvConfigId).timeStamp(minute - 20).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.LOG_ML, minute);
     assertThat(hasData).isFalse();
   }
@@ -144,7 +144,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void testCheckIfAnalysisHasData_Log_WithOtherConfigId() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     LogDataRecord logDataRecord = LogDataRecord.builder().cvConfigId("config2").timeStamp(minute - 10).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.LOG_ML, minute);
     assertThat(hasData).isFalse();
   }
@@ -156,7 +156,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     LogDataRecord logDataRecord =
         LogDataRecord.builder().cvConfigId(cvConfigId).clusterLevel(ClusterLevel.H0).timeStamp(minute - 10).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.LOG_ML, minute);
     assertThat(hasData).isFalse();
   }
@@ -168,7 +168,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     LogDataRecord logDataRecord =
         LogDataRecord.builder().cvConfigId(cvConfigId).clusterLevel(ClusterLevel.L2).timeStamp(minute - 10).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.LOG_ML, minute);
     assertThat(hasData).isTrue();
   }
@@ -180,7 +180,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     LogDataRecord logDataRecord =
         LogDataRecord.builder().cvConfigId(cvConfigId).clusterLevel(ClusterLevel.L1).timeStamp(minute - 10).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.LOG_CLUSTER, minute);
     assertThat(hasData).isTrue();
   }
@@ -200,7 +200,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void testCheckIfAnalysisHasData_Metric_WithDataOutsideWindow() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     TimeSeriesDataRecord record = TimeSeriesDataRecord.builder().cvConfigId(cvConfigId).timeStamp(minute - 20).build();
-    wingsPersistence.save(record);
+    persistence.save(record);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.TIME_SERIES, minute);
     assertThat(hasData).isFalse();
   }
@@ -211,7 +211,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void testCheckIfAnalysisHasData_Metric_WithOtherConfigId() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     TimeSeriesDataRecord record = TimeSeriesDataRecord.builder().cvConfigId("config2").timeStamp(minute - 10).build();
-    wingsPersistence.save(record);
+    persistence.save(record);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.TIME_SERIES, minute);
     assertThat(hasData).isFalse();
   }
@@ -223,7 +223,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     TimeSeriesDataRecord record =
         TimeSeriesDataRecord.builder().cvConfigId(cvConfigId).level(ClusterLevel.H0).timeStamp(minute - 10).build();
-    wingsPersistence.save(record);
+    persistence.save(record);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.TIME_SERIES, minute);
     assertThat(hasData).isFalse();
   }
@@ -234,7 +234,7 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   public void testCheckIfAnalysisHasData_Metric_WithData() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     TimeSeriesDataRecord record = TimeSeriesDataRecord.builder().cvConfigId(cvConfigId).timeStamp(minute - 10).build();
-    wingsPersistence.save(record);
+    persistence.save(record);
     boolean hasData = learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.TIME_SERIES, minute);
     assertThat(hasData).isTrue();
   }
@@ -253,10 +253,10 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void test_getVerificationServiceSecretKey_whenEnvVariableNotDefined() {
-    ServiceSecretKey serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
+    ServiceSecretKey serviceSecretKey = persistence.createQuery(ServiceSecretKey.class).get();
     assertThat(serviceSecretKey).isNull();
     verificationServiceSecretManager.initializeServiceSecretKeys();
-    serviceSecretKey = wingsPersistence.createQuery(ServiceSecretKey.class).get();
+    serviceSecretKey = persistence.createQuery(ServiceSecretKey.class).get();
     assertThat(verificationServiceSecretManager.getVerificationServiceSecretKey())
         .isEqualTo(serviceSecretKey.getServiceSecret());
   }

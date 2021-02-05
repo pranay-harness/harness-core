@@ -8,21 +8,11 @@ load("//:macros.bzl", "sources")
 sources()
 
 java_library(
-    name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
-    ]),
-    data = ["//:resource"],
-    resources = [
-        "//400-rest/src/main/resources:resource",
-    ],
+    name = "maven_deps",
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//400-rest/src/main/resources",
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
+    exports = [
+        "@maven//:com_google_guava_guava",
+    ] + [
         "//:lombok",
         "//420-delegate-service:module",
         "//430-cv-nextgen-commons:module",
@@ -38,14 +28,12 @@ java_library(
         "//910-delegate-service-driver:module",
         "//920-delegate-agent-beans:module",
         "//920-delegate-service-beans:module",
-        "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//930-delegate-tasks:module",
         "//930-ng-core-clients:module",
         "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
         "//940-feature-flag:module",
         "//940-notification-client:module",
         "//940-secret-manager-client:module",
-        "//945-connector-beans:module",
         "//950-command-library-common:module",
         "//950-common-entities:module",
         "//950-delegate-tasks-beans:module",
@@ -57,12 +45,12 @@ java_library(
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
         "//950-wait-engine:module",
+        "//954-connector-beans:module",
         "//960-api-services:module",
         "//960-continuous-features:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
-        "//960-recaster:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-ng-commons:module",
@@ -139,6 +127,7 @@ java_library(
         "@maven//:com_github_dikhan_pagerduty_client",
         "@maven//:com_github_dirkraft_dropwizard_file_assets_dropwizard_file_assets",
         "@maven//:com_github_fge_json_schema_core",
+        "@maven//:com_github_heremaps_oksse",
         "@maven//:com_github_mifmif_generex",
         "@maven//:com_github_reinert_jjschema",
         "@maven//:com_github_scribejava_scribejava_apis",
@@ -191,7 +180,6 @@ java_library(
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_errorprone_error_prone_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_http_client_google_http_client_apache_v2",
         "@maven//:com_google_http_client_google_http_client_appengine",
@@ -221,6 +209,7 @@ java_library(
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_jcraft_jsch",
         "@maven//:com_jcraft_jzlib",
+        "@maven//:com_lmax_disruptor",
         "@maven//:com_mashape_unirest_unirest_java",
         "@maven//:com_mchange_c3p0",
         "@maven//:com_mchange_mchange_commons_java",
@@ -693,10 +682,25 @@ java_library(
 )
 
 java_binary(
-    name = "application_deploy",
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/generated/**/*.java",
+    ]),
+    data = ["//:resource"],
     main_class = "software.wings.app.WingsApplication",
+    resources = [
+        "//400-rest/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
     runtime_deps = [
-        ":module",
+        "//400-rest/src/main/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        # keep it up above maven_deps. This comment is intentionally added
+        "@maven//:io_netty_netty_all",
+        "maven_deps",
     ],
 )
 
@@ -733,8 +737,10 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "maven_deps",
         "module",
         "//:lombok",
+        "//980-commons:module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_github_tomakehurst_wiremock",
@@ -764,6 +770,7 @@ java_library(
     resources = [
         "//:resource",
         "//400-rest/src/main/resources:resource",
+        "//400-rest/src/test/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
@@ -780,10 +787,13 @@ java_library(
         ":module",
         ":supporter-test",
         "//:lombok",
+        "//960-api-services:module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_github_tomakehurst_wiremock",
         "@maven//:com_github_tomakehurst_wiremock_standalone",
+        # This comment is intentionally added. Do not remove this comment
+        "@com_github_tomakehurst_wiremock//jar",
         "@maven//:com_google_guava_guava",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
@@ -799,3 +809,15 @@ java_library(
 )
 
 run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":module",
+    ],
+)
+
+pmd()

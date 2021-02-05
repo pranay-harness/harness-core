@@ -28,6 +28,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -46,7 +47,6 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateTaskService;
 
-import software.wings.beans.Delegate;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;

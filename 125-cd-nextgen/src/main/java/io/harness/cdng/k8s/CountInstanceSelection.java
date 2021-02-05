@@ -15,4 +15,9 @@ public class CountInstanceSelection implements InstanceSelectionBase {
   public K8sInstanceUnitType getType() {
     return K8sInstanceUnitType.Count;
   }
+
+  @Override
+  public String getInstances() {
+    return count.getValue();
+  }
 }

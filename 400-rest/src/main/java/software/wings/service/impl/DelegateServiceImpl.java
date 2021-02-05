@@ -79,10 +79,13 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateInitializationDetails;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -167,10 +170,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.CEDelegateStatus.CEDelegateStatusBuilder;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
@@ -305,8 +305,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
-@BreakDependencyOn("software.wings.service.intfc.AccountService")
+@BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
+@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
+@BreakDependencyOn("software.wings.service.intfc.AccountService")
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.

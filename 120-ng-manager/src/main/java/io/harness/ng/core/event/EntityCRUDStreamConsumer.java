@@ -2,7 +2,6 @@ package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTIVITY_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
@@ -38,8 +37,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(ORGANIZATION_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
       @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
       @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
-      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
-      @Named(ACTIVITY_ENTITY) MessageProcessor entityActivityCrudEventMessageProcessor) {
+      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
@@ -48,7 +46,6 @@ public class EntityCRUDStreamConsumer implements Runnable {
 
     processorMap = new HashMap<>();
     processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
-    processorMap.put(ACTIVITY_ENTITY, entityActivityCrudEventMessageProcessor);
   }
 
   @Override

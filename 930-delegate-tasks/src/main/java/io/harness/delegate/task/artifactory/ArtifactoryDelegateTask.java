@@ -1,7 +1,5 @@
 package io.harness.delegate.task.artifactory;
 
-import io.harness.artifactory.ArtifactoryConfigRequest;
-import io.harness.artifactory.ArtifactoryServiceImpl;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -12,6 +10,7 @@ import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskType;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
+import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValidationParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -31,8 +30,9 @@ import org.apache.commons.lang3.NotImplementedException;
 public class ArtifactoryDelegateTask extends AbstractDelegateRunnableTask {
   @Inject SecretDecryptionService decryptionService;
   @Inject ArtifactoryRequestMapper artifactoryRequestMapper;
-  @Inject ArtifactoryServiceImpl artifactoryService;
   @Inject NGErrorHelper ngErrorHelper;
+  @Inject ArtifactoryValidationHandler artifactoryValidationHandler;
+
   public ArtifactoryDelegateTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
       BooleanSupplier preExecute) {
@@ -52,12 +52,10 @@ public class ArtifactoryDelegateTask extends AbstractDelegateRunnableTask {
     final ArtifactoryAuthCredentialsDTO credentials = artifactoryConnectorDTO.getAuth().getCredentials();
     decryptionService.decrypt(credentials, encryptedDataDetails);
     final TaskType taskType = artifactoryTaskParams.getTaskType();
-    final ArtifactoryConfigRequest artifactoryConfigRequest =
-        artifactoryRequestMapper.toArtifactoryRequest(artifactoryConnectorDTO);
     try {
       switch (taskType) {
         case VALIDATE:
-          return validateArtifactoryConfig(artifactoryConfigRequest);
+          return validateArtifactoryConfig(artifactoryConnectorDTO, encryptedDataDetails);
         default:
           throw new InvalidRequestException("No task found for " + taskType.name());
       }
@@ -76,22 +74,16 @@ public class ArtifactoryDelegateTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private DelegateResponseData validateArtifactoryConfig(ArtifactoryConfigRequest artifactoryConfigRequest) {
-    ConnectorValidationResult connectorValidationResult;
-    boolean running = artifactoryService.validateArtifactServer(artifactoryConfigRequest);
-    if (running) {
-      connectorValidationResult = ConnectorValidationResult.builder()
-                                      .status(ConnectivityStatus.SUCCESS)
-                                      .testedAt(System.currentTimeMillis())
-                                      .delegateId(getDelegateId())
-                                      .build();
-    } else {
-      connectorValidationResult = ConnectorValidationResult.builder()
-                                      .status(ConnectivityStatus.FAILURE)
-                                      .testedAt(System.currentTimeMillis())
-                                      .delegateId(getDelegateId())
-                                      .build();
-    }
+  private DelegateResponseData validateArtifactoryConfig(
+      ArtifactoryConnectorDTO artifactoryConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
+    final ArtifactoryValidationParams artifactoryValidationParams =
+        ArtifactoryValidationParams.builder()
+            .encryptedDataDetails(encryptedDataDetails)
+            .artifactoryConnectorDTO(artifactoryConnectorDTO)
+            .build();
+    ConnectorValidationResult connectorValidationResult =
+        artifactoryValidationHandler.validate(artifactoryValidationParams, getAccountId());
+    connectorValidationResult.setDelegateId(getDelegateId());
     return ArtifactoryTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }
 }

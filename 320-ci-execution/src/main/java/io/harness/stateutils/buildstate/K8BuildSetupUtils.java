@@ -3,6 +3,8 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
@@ -11,15 +13,22 @@ import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
+import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
 import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
+import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
+import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
@@ -28,6 +37,8 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.StringUtils.trimLeadingCharacter;
+import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
@@ -46,10 +57,11 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.HostAliasParams;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector.ImageDetailsWithConnectorBuilder;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
@@ -66,6 +78,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -79,6 +92,8 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -163,6 +178,7 @@ public class K8BuildSetupUtils {
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
         .namespace(k8PodDetails.getNamespace())
+        .labels(getBuildLabels(ambiance, k8PodDetails))
         .gitConnector(gitConnector)
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(workDir)
@@ -220,13 +236,17 @@ public class K8BuildSetupUtils {
         stepConnectorDetails = singletonMap(connectorDetails.getIdentifier(), connectorDetails);
       }
     }
-    ImageDetailsWithConnectorBuilder imageDetailsWithConnectorBuilder =
-        ImageDetailsWithConnector.builder().imageDetails(
-            containerDefinitionInfo.getContainerImageDetails().getImageDetails());
+
+    ImageDetails imageDetails = containerDefinitionInfo.getContainerImageDetails().getImageDetails();
+    ConnectorDetails connectorDetails = null;
     if (containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier() != null) {
-      imageDetailsWithConnectorBuilder.imageConnectorDetails(connectorUtils.getConnectorDetails(
-          ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier()));
+      connectorDetails = connectorUtils.getConnectorDetails(
+          ngAccess, containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier());
+      String fullyQualifiedImageName = getImageName(connectorDetails, imageDetails.getName());
+      imageDetails.setName(fullyQualifiedImageName);
     }
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        ImageDetailsWithConnector.builder().imageConnectorDetails(connectorDetails).imageDetails(imageDetails).build();
 
     return CIK8ContainerParams.builder()
         .name(containerDefinitionInfo.getName())
@@ -240,7 +260,7 @@ public class K8BuildSetupUtils {
         .commands(containerDefinitionInfo.getCommands())
         .ports(containerDefinitionInfo.getPorts())
         .args(containerDefinitionInfo.getArgs())
-        .imageDetailsWithConnector(imageDetailsWithConnectorBuilder.build())
+        .imageDetailsWithConnector(imageDetailsWithConnector)
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();
@@ -553,5 +573,70 @@ public class K8BuildSetupUtils {
       throw new IllegalArgumentException("Git connector is not set in CI codebase");
     }
     return connectorUtils.getConnectorDetails(ngAccess, codeBase.getConnectorRef());
+  }
+
+  private Map<String, String> getBuildLabels(Ambiance ambiance, K8PodDetails k8PodDetails) {
+    final String accountID = AmbianceHelper.getAccountId(ambiance);
+    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
+    final String pipelineExecutionID = ambiance.getPlanExecutionId();
+    final int buildNumber = ambiance.getMetadata().getRunSequence();
+    final String stageID = k8PodDetails.getStageID();
+
+    Map<String, String> labels = new HashMap<>();
+    if (isLabelAllowed(accountID)) {
+      labels.put(ACCOUNT_ID_ATTR, accountID);
+    }
+    if (isLabelAllowed(orgID)) {
+      labels.put(ORG_ID_ATTR, orgID);
+    }
+    if (isLabelAllowed(projectID)) {
+      labels.put(PROJECT_ID_ATTR, projectID);
+    }
+    if (isLabelAllowed(pipelineID)) {
+      labels.put(PIPELINE_ID_ATTR, pipelineID);
+    }
+    if (isLabelAllowed(pipelineExecutionID)) {
+      labels.put(PIPELINE_EXECUTION_ID_ATTR, pipelineExecutionID);
+    }
+    if (isLabelAllowed(stageID)) {
+      labels.put(STAGE_ID_ATTR, stageID);
+    }
+    if (isLabelAllowed(String.valueOf(buildNumber))) {
+      labels.put(BUILD_NUMBER_ATTR, String.valueOf(buildNumber));
+    }
+    return labels;
+  }
+
+  private boolean isLabelAllowed(String label) {
+    if (label == null) {
+      return false;
+    }
+
+    return label.matches(LABEL_REGEX);
+  }
+
+  private String getImageName(ConnectorDetails connectorDetails, String imageName) {
+    ConnectorType connectorType = connectorDetails.getConnectorType();
+    if (connectorType == DOCKER) {
+      DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
+      if (dockerConnectorDTO.getAuth().getAuthType() == DockerAuthType.ANONYMOUS) {
+        String dockerRegistryUrl = dockerConnectorDTO.getDockerRegistryUrl();
+        try {
+          String registryHostName = "";
+          URL url = new URL(dockerRegistryUrl);
+          registryHostName = url.getHost();
+          if (url.getPort() != -1) {
+            registryHostName = url.getHost() + ":" + url.getPort();
+          }
+          return trimTrailingCharacter(registryHostName, '/') + '/' + trimLeadingCharacter(imageName, '/');
+        } catch (MalformedURLException e) {
+          throw new CIStageExecutionException(
+              format("Malformed registryUrl in docker connector id: %s", connectorDetails.getIdentifier()));
+        }
+      }
+    }
+    return imageName;
   }
 }

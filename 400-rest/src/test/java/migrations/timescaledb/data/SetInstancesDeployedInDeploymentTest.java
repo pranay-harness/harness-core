@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -40,6 +41,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock ResultSet resultSet;
   @Inject WorkflowService workflowService;
+  @Inject private HPersistence persistence;
   @Spy @Inject @InjectMocks SetInstancesDeployedInDeployment setInstancesDeployedInDeployment;
 
   @Test
@@ -48,7 +50,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   public void testMigrate() throws SQLException {
     String workflowExecutionId = generateUuid();
     WorkflowExecution workflowExecution = createWorkflowExecution(workflowExecutionId);
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
 
     when(timeScaleDBService.isValid()).thenReturn(true);
     Connection connection = mock(Connection.class);

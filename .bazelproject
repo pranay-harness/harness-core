@@ -1,4 +1,10 @@
 directories:
+  120-ng-manager
+  125-cd-nextgen
+  136-git-sync-manager
+  160-model-gen-tool
+  220-graphql-test
+  230-model-test
   260-delegate
   310-ci-manager
   320-ci-execution
@@ -28,6 +34,7 @@ directories:
   884-pms-commons
   890-pms-contracts
   890-sm-core
+  905-access-control-core
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -39,7 +46,6 @@ directories:
   940-feature-flag
   940-notification-client
   940-secret-manager-client
-  945-connector-beans
   950-command-library-common
   950-common-entities
   950-delegate-tasks-beans
@@ -50,6 +56,7 @@ directories:
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
+  954-connector-beans
   955-filters-sdk
   955-setup-usage-sdk
   960-api-services
@@ -65,6 +72,7 @@ directories:
   970-ng-commons
   970-rbac-core
   980-commons
+  980-java-agent
   990-commons-test
   tools/bazel
 
@@ -80,3 +88,4 @@ import_run_configurations:
   run-configurations/Notification Microservice.xml
   run-configurations/Notification Client.xml
   run-configurations/EventsFrameworkTest.xml
+  run-configurations/AccessControlMicroservice.xml

@@ -156,12 +156,12 @@ public class VerificationJobServiceImpl implements VerificationJobService {
       VerificationJobDTO verificationJobDTO = job.getVerificationJobDTO();
       if (!job.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
         EnvironmentResponseDTO environmentResponseDTO = nextGenService.getEnvironment(
-            job.getEnvIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getEnvIdentifier());
         verificationJobDTO.setEnvName(environmentResponseDTO.getName());
       }
       if (!job.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
         ServiceResponseDTO serviceResponseDTO = nextGenService.getService(
-            job.getServiceIdentifier(), accountId, job.getOrgIdentifier(), job.getProjectIdentifier());
+            accountId, job.getOrgIdentifier(), job.getProjectIdentifier(), job.getServiceIdentifier());
         verificationJobDTO.setServiceName(serviceResponseDTO.getName());
       }
       return verificationJobDTO;
@@ -216,7 +216,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
       }
       if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
         EnvironmentResponseDTO environmentResponseDTO =
-            nextGenService.getEnvironment(verificationJob.getEnvIdentifier(), accountId, orgIdentifier, projectId);
+            nextGenService.getEnvironment(accountId, orgIdentifier, projectId, verificationJob.getEnvIdentifier());
 
         if (environmentResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
           verificationJobList.add(verificationJob.getVerificationJobDTO());
@@ -226,7 +226,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
 
       if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
         ServiceResponseDTO serviceResponseDTO =
-            nextGenService.getService(verificationJob.getServiceIdentifier(), accountId, orgIdentifier, projectId);
+            nextGenService.getService(accountId, orgIdentifier, projectId, verificationJob.getServiceIdentifier());
 
         if (serviceResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
           verificationJobList.add(verificationJob.getVerificationJobDTO());

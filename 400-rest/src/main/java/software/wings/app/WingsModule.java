@@ -452,6 +452,7 @@ import software.wings.service.impl.security.AzureSecretsManagerServiceImpl;
 import software.wings.service.impl.security.CyberArkServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.GcpSecretsManagerServiceImpl;
+import software.wings.service.impl.security.GcpSecretsManagerServiceV2Impl;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.LocalSecretManagerServiceImpl;
 import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
@@ -651,6 +652,7 @@ import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -732,7 +734,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
-  private MainConfiguration configuration;
+  private final MainConfiguration configuration;
 
   /**
    * Creates a guice module for portal app.
@@ -847,6 +849,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -856,6 +861,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
                   EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
+                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
         }
       }
     });
@@ -1443,6 +1452,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(CyberArkService.class).to(CyberArkServiceImpl.class);
     bind(GcpSecretsManagerService.class).to(GcpSecretsManagerServiceImpl.class);
+    bind(GcpSecretsManagerServiceV2.class).to(GcpSecretsManagerServiceV2Impl.class);
     bind(AzureSecretsManagerService.class).to(AzureSecretsManagerServiceImpl.class);
     bind(LocalSecretManagerService.class).to(LocalSecretManagerServiceImpl.class);
     bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
@@ -1465,6 +1475,11 @@ public class WingsModule extends AbstractModule implements ServersModule {
     binder()
         .bind(VaultEncryptor.class)
         .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+        .to(ManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_VAULT_ENCRYPTOR.getName()))
         .to(ManagerVaultEncryptor.class);
 
     binder()

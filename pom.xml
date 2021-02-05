@@ -14,8 +14,8 @@
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
         <module>210-command-library-server</module>
-        <module>220-graphql-test</module>
-        <module>230-model-test</module>
+        <!--        <module>220-graphql-test</module>-->
+        <!--        <module>230-model-test</module>-->
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
@@ -27,11 +27,9 @@
         <module>340-ce-nextgen</module>
         <module>350-event-server</module>
         <module>380-cg-graphql</module>
-        <module>400-rest</module>
+        <!--<module>400-rest</module>-->
         <module>830-notification-service</module>
         <module>899-yaml-schema-plugin</module>
-        <!--<module>960-continuous-features</module>-->
-        <module>980-java-agent</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
@@ -629,6 +627,11 @@
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-secretmanager</artifactId>
+                <version>1.2.8</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-storage</artifactId>
                 <version>1.52.0</version>
             </dependency>
@@ -799,6 +802,11 @@
                 <version>2.1.1</version>
             </dependency>
             <dependency>
+                <groupId>com.slack.api</groupId>
+                <artifactId>slack-api-client</artifactId>
+                <version>1.5.3</version>
+            </dependency>
+            <dependency>
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>1.3.17-1</version>
@@ -952,7 +960,7 @@
             <dependency>
                 <groupId>io.harness.cf</groupId>
                 <artifactId>cf-client-sdk-java</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0-20210126.200034-12</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
@@ -1318,6 +1326,11 @@
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
                 <version>13.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>1.4.10</version>
             </dependency>
             <dependency>
                 <groupId>org.jfree</groupId>

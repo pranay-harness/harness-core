@@ -13,6 +13,8 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
+import java.util.HashSet;
 
 @Singleton
 public class CloudProviderSampleDataProvider {
@@ -28,8 +30,9 @@ public class CloudProviderSampleDataProvider {
                            .accountId(accountId)
                            .useKubernetesDelegate(true)
                            .skipValidation(true)
-                           .delegateName(SampleDataProviderConstants
-                                             .K8S_DELEGATE_NAME) // Cluster name should match with the delegate name
+                           .delegateSelectors(new HashSet<>(Collections.singletonList(
+                               SampleDataProviderConstants
+                                   .K8S_DELEGATE_NAME))) // Cluster name should match with the delegate name
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .withSample(true)

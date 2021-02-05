@@ -64,7 +64,7 @@ public class NotificationClientImpl implements NotificationClient {
       URL url = getClass().getClassLoader().getResource(filePath);
       bytes = Resources.toByteArray(url);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Unexpected error while saving notification template", e);
       return null;
     }
     final MultipartBody.Part formData =

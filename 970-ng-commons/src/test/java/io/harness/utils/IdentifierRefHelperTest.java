@@ -10,7 +10,6 @@ import io.harness.CategoryTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import org.junit.Test;

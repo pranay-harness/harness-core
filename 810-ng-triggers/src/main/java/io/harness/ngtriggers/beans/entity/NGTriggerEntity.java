@@ -59,7 +59,10 @@ public class NGTriggerEntity {
             CompoundMongoIndex.builder()
                 .name("type_repoUrl")
                 .field(NGTriggerEntityKeys.type)
-                .field("metadata.webhook.repoURL")
+                .field("metadata.webhook.git.connectorIdentifier")
+                .field(NGTriggerEntityKeys.accountId)
+                .field(NGTriggerEntityKeys.orgIdentifier)
+                .field(NGTriggerEntityKeys.projectIdentifier)
                 .build())
         .build();
   }

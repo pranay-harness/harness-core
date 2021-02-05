@@ -6,7 +6,7 @@ import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -68,10 +68,8 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
       return executionCapabilities;
     } else if (value instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
-      executionCapabilities.add(SystemEnvCheckerCapability.builder()
-                                    .systemPropertyName("DELEGATE_NAME")
-                                    .comparate(((KubernetesClusterConfig) value).getDelegateName())
-                                    .build());
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(((KubernetesClusterConfig) value).getDelegateSelectors()).build());
     } else {
       if ("None".equals(clusterName)) {
         executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(

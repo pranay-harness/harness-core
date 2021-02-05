@@ -7,6 +7,16 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CIExecutionConstants {
+  // Pod labels
+  public static final String ACCOUNT_ID_ATTR = "accountID";
+  public static final String ORG_ID_ATTR = "orgID";
+  public static final String PROJECT_ID_ATTR = "projectID";
+  public static final String PIPELINE_ID_ATTR = "pipelineID";
+  public static final String PIPELINE_EXECUTION_ID_ATTR = "pipelineExecutionID";
+  public static final String STAGE_ID_ATTR = "stageID";
+  public static final String BUILD_NUMBER_ATTR = "buildNumber";
+  public static final String LABEL_REGEX = "^[a-z0-9A-Z][a-z0-9A-Z\\-_.]*[a-z0-9A-Z]$";
+
   // Pipeline constants
   public static final String CI_PIPELINE_CONFIG = "CI_PIPELINE_CONFIG";
 
@@ -65,9 +75,8 @@ public class CIExecutionConstants {
   public static final String SERVICE_ARG_COMMAND = "service";
   public static final String IMAGE_PREFIX = "--image";
   public static final String ID_PREFIX = "--id";
-  public static final String ENTRYPOINT_PREFIX = "--entrypoint";
-  public static final String ARGS_PREFIX = "--args";
   public static final String GRPC_SERVICE_PORT_PREFIX = "--svc_ports";
+
   public static final String DEBUG_PREFIX = "--debug";
 
   public static final String ACCESS_KEY_MINIO_VARIABLE = "ACCESS_KEY_MINIO";
@@ -95,6 +104,9 @@ public class CIExecutionConstants {
   public static final String HARNESS_BUILD_ID_VARIABLE = "HARNESS_BUILD_ID";
   public static final String HARNESS_STAGE_ID_VARIABLE = "HARNESS_STAGE_ID";
   public static final String HARNESS_PIPELINE_ID_VARIABLE = "HARNESS_PIPELINE_ID";
+
+  public static final String HARNESS_SERVICE_ENTRYPOINT = "HARNESS_SERVICE_ENTRYPOINT";
+  public static final String HARNESS_SERVICE_ARGS = "HARNESS_SERVICE_ARGS";
 
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";

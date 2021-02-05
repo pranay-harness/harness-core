@@ -1,5 +1,8 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -9,6 +12,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "TaskDataKeys")
+@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public class TaskData {
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000L;
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000L;

@@ -1,6 +1,6 @@
 package io.harness.ng.core.entitysetupusage.mapper;
 
-import io.harness.datacollection.utils.EmptyPredicate;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.EntityDetail;
@@ -17,7 +17,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @Singleton
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 public class EntitySetupUsageEventDTOMapper {
   EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
 

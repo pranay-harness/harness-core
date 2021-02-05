@@ -1,6 +1,8 @@
 package io.harness.cvng.core.jobs;
 
 import io.harness.beans.IdentifierRef;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProcessor {
   @Inject private CVConfigService cvConfigService;
+  @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -67,6 +70,17 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
       dataCollectionTaskService.resetLiveMonitoringPerpetualTask(cvConfig);
       verificationJobInstanceService.resetVerificationJobPerpetualTasks(cvConfig);
     });
+
+    List<KubernetesActivitySource> kubernetesActivitySourcesWithConnector =
+        kubernetesActivitySourceService.findByConnectorIdentifier(
+            connectorEntityChangeDTO.getAccountIdentifier().getValue(),
+            connectorEntityChangeDTO.getOrgIdentifier().getValue(),
+            connectorEntityChangeDTO.getProjectIdentifier().getValue(),
+            connectorEntityChangeDTO.getIdentifier().getValue(), identifierRef.getScope());
+    for (KubernetesActivitySource kubernetesActivitySource : kubernetesActivitySourcesWithConnector) {
+      kubernetesActivitySourceService.resetLiveMonitoringPerpetualTaskForKubernetesActivitySource(
+          kubernetesActivitySource);
+    }
   }
 
   private boolean validateMessage(Message message) {

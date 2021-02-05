@@ -44,7 +44,7 @@ public class RedissonFactory {
       }
       config.useSentinelServers().setReadMode(ReadMode.valueOf(redisConfig.getReadMode().name()));
     }
-    config.setCodec(new RedissonKryoCodec());
+    config.setCodec(new RedissonKryoCodec(false));
     config.setNettyThreads(redisConfig.getNettyThreads());
     config.setUseScriptCache(redisConfig.isUseScriptCache());
 

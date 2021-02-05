@@ -23,5 +23,6 @@ public interface PMSExecutionService {
   InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId);
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
-      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName);
+      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
+      String searchTerm);
 }

@@ -136,7 +136,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
       // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
       // after the apply command has successfully run
-      k8sRollingBaseHandler.updateDeploymentConfigRevision(k8sDelegateTaskParams, release, client);
+      k8sRollingBaseHandler.updateManagedWorkloadsRevision(k8sDelegateTaskParams, release, client);
 
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);

@@ -1,12 +1,12 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.YamlField;
 
-import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -25,8 +25,10 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
 
   @Override
   public Map<String, YamlField> getDependencies(FilterCreationContext filterCreationContext) {
-    YamlField stagesYamlNode =
-        Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages"));
+    YamlField stagesYamlNode = filterCreationContext.getCurrentField().getNode().getField("stages");
+    if (stagesYamlNode == null) {
+      throw new InvalidRequestException("Pipeline without stages cannot be saved");
+    }
     return StagesFilterJsonCreator.getDependencies(stagesYamlNode);
   }
 

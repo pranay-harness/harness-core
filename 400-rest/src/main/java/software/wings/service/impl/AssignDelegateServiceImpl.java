@@ -13,11 +13,15 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -34,9 +38,6 @@ import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.tasks.Cd1SetupFields;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskType;
@@ -81,6 +82,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.beans.EnvironmentType")
+@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.InfrastructureMapping")
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
+@BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
+@BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds

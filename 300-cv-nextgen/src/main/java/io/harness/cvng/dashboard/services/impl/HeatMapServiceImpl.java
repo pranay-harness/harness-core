@@ -67,28 +67,40 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private Clock clock;
-  @Inject private NextGenService nextGenService;
   @Inject private AnalysisService analysisService;
   @Inject private AlertRuleService alertRuleService;
   @Inject private ExecutorService defaultExecutorService;
   @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVConfig cvConfig, CVMonitoringCategory category,
       Instant timeStamp, double riskScore) {
+    List<Callable<Void>> callables = new ArrayList<>();
     // update for service/env
-    updateRiskScore(
-        category, accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, timeStamp, riskScore);
+    callables.add(() -> {
+      updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
+          timeStamp, riskScore);
+      return null;
+    });
 
     if (cvConfigService.isProductionConfig(cvConfig)) {
       // update for env
-      updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
+      callables.add(() -> {
+        updateRiskScore(
+            category, accountId, orgIdentifier, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
+        return null;
+      });
 
       // update for project
-      updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore);
+      callables.add(() -> {
+        updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore);
+        return null;
+      });
     }
 
+    cvParallelExecutor.executeParallel(callables);
     defaultExecutorService.execute(()
                                        -> alertRuleService.processRiskScore(accountId, orgIdentifier, projectIdentifier,
                                            serviceIdentifier, envIdentifier, category, timeStamp, riskScore));
@@ -275,23 +287,24 @@ public class HeatMapServiceImpl implements HeatMapService {
           RiskSummaryPopoverDTO.EnvSummary.builder()
               .envIdentifier(envServiceRiskDTO.getEnvIdentifier())
               .envName(nextGenService
-                           .getEnvironment(envServiceRiskDTO.getEnvIdentifier(), accountId,
-                               envServiceRiskDTO.getOrgIdentifier(), envServiceRiskDTO.getProjectIdentifier())
+                           .getEnvironment(accountId, envServiceRiskDTO.getOrgIdentifier(),
+                               envServiceRiskDTO.getProjectIdentifier(), envServiceRiskDTO.getEnvIdentifier())
                            .getName())
               .riskScore(envServiceRiskDTO.getRisk());
       envServiceRiskDTO.getServiceRisks().forEach(serviceRisk -> {
         List<RiskSummaryPopoverDTO.AnalysisRisk> analysisRisk =
             analysisService.getTop3AnalysisRisks(accountId, orgIdentifier, projectIdentifier,
                 serviceRisk.getServiceIdentifier(), endTime.minus(Duration.ofMinutes(RISK_TIME_BUFFER_MINS)), endTime);
-        envSummaryBuilder.addServiceSummary(RiskSummaryPopoverDTO.ServiceSummary.builder()
-                                                .risk(serviceRisk.getRisk())
-                                                .serviceIdentifier(serviceRisk.getServiceIdentifier())
-                                                .analysisRisks(analysisRisk)
-                                                .serviceName(nextGenService
-                                                                 .getService(serviceRisk.getServiceIdentifier(),
-                                                                     accountId, orgIdentifier, projectIdentifier)
-                                                                 .getName())
-                                                .build());
+        envSummaryBuilder.addServiceSummary(
+            RiskSummaryPopoverDTO.ServiceSummary.builder()
+                .risk(serviceRisk.getRisk())
+                .serviceIdentifier(serviceRisk.getServiceIdentifier())
+                .analysisRisks(analysisRisk)
+                .serviceName(
+                    nextGenService
+                        .getService(accountId, orgIdentifier, projectIdentifier, serviceRisk.getServiceIdentifier())
+                        .getName())
+                .build());
       });
       riskSummaryPopoverBuilder.addEnvSummary(envSummaryBuilder.build());
     });

@@ -111,6 +111,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private AwsAmiServiceStateHelper mockAwsAmiServiceStateHelper;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private AwsStateHelper awsStateHelper;
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test

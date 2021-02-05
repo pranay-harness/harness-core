@@ -7,10 +7,12 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.CloudProviderType.AWS;
@@ -35,6 +37,7 @@ import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PROVISION_INFRASTRUCTURE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
@@ -53,6 +56,7 @@ import static software.wings.service.impl.workflow.creation.abstractfactories.Ab
 import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 import static software.wings.sm.StateType.AZURE_VMSS_SWITCH_ROUTES_ROLLBACK;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
+import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -109,6 +113,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -145,8 +150,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1539,6 +1546,61 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testCleanupFailureStrategiesInCaseOfInvalidStepNames() {
+    List<String> validSteps = Arrays.asList("validStep1", "validStep2");
+    Set<String> validStepsSet = new HashSet<>(validSteps);
+    List<String> invalidSteps = Arrays.asList("invalidStep1", "invalidStep2");
+    List<String> bothValidAndInvalidSteps = new ArrayList<>();
+    bothValidAndInvalidSteps.addAll(validSteps);
+    bothValidAndInvalidSteps.addAll(invalidSteps);
+
+    // FailureStrategy with no specific steps should not be modified.
+    {
+      FailureStrategy failureStrategy =
+          FailureStrategy.builder().failureTypes(singletonList(FailureType.APPLICATION_ERROR)).build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before).isEqualTo(after);
+    }
+
+    // For a FailureStrategy, if all specific steps are VALID, it should not be modified.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(validSteps)
+                                            .build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before).isEqualTo(after);
+    }
+
+    // For a FailureStrategy, if a subset of specific steps are INVALID, if should be cleaned up to contain only
+    // valid steps.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(new ArrayList<>(bothValidAndInvalidSteps))
+                                            .build();
+      List<FailureStrategy> before = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(before, validStepsSet);
+      assertThat(before.size()).isEqualTo(after.size());
+      assertThat(after.get(0).getSpecificSteps()).isEqualTo(validSteps);
+    }
+    // For a FailureStrategy, if all specific steps are INVALID, it should be removed.
+    {
+      FailureStrategy failureStrategy = FailureStrategy.builder()
+                                            .failureTypes(singletonList(FailureType.APPLICATION_ERROR))
+                                            .specificSteps(invalidSteps)
+                                            .build();
+      List<FailureStrategy> failureStrategies = Arrays.asList(failureStrategy);
+      List<FailureStrategy> after = WorkflowServiceHelper.cleanupFailureStrategies(failureStrategies, validStepsSet);
+      assertThat(after).isEqualTo(Collections.emptyList());
+    }
+  }
+
+  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCleanupStepSkipStrategies() {
@@ -1722,5 +1784,31 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties().size()).isEqualTo(1);
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties())
         .isEqualTo(ImmutableMap.of(InstanceFetchStateKeys.stateTimeoutInMinutes, 1));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testResetNodeSelection() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("specificHosts", Boolean.TRUE);
+    properties.put("hostNames", "my-host");
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase()
+            .phaseSteps(
+                asList(aPhaseStep(INFRASTRUCTURE_NODE)
+                           .addStep(GraphNode.builder().type(DC_NODE_SELECT.name()).properties(properties).build())
+                           .build()))
+            .build();
+
+    workflowServiceHelper.resetNodeSelection(workflowPhase);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().size()).isEqualTo(1);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getType()).isEqualTo(DC_NODE_SELECT.name());
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties()).isNotNull();
+    Map<String, Object> expectedProperties = new HashMap<>();
+    expectedProperties.put("specificHosts", Boolean.FALSE);
+    expectedProperties.put("instanceCount", 1);
+    expectedProperties.put("instanceUnitType", InstanceUnitType.COUNT);
+    assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties()).isEqualTo(expectedProperties);
   }
 }

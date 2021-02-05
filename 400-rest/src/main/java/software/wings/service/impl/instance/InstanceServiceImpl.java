@@ -32,6 +32,7 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.InstanceKey;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
+import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -64,6 +65,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class InstanceServiceImpl implements InstanceService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WingsMongoPersistence wingsMongoPersistence;
   @Inject private AppService appService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private QueuePublisher<InstanceEvent> eventQueue;
@@ -430,8 +432,7 @@ public class InstanceServiceImpl implements InstanceService {
     PageRequest<Instance> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
     pageRequest.addFilter("appId", Operator.EQ, appId);
-    PageResponse<Instance> pageResponse = list(pageRequest);
-    return pageResponse.getResponse();
+    return wingsMongoPersistence.getAllEntities(pageRequest, () -> list(pageRequest));
   }
 
   @Override

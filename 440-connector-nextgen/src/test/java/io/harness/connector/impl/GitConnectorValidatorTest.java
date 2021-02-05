@@ -10,10 +10,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -38,6 +40,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
   @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock SecretManagerClientService secretManagerClientService;
   @Mock NGErrorHelper ngErrorHelper;
+  @Mock EncryptionHelper encryptionHelper;
   @InjectMocks GitConnectorValidator gitConnectorValidator;
 
   @Before
@@ -65,6 +68,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .build();
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
@@ -91,6 +95,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
             .build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
+
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);

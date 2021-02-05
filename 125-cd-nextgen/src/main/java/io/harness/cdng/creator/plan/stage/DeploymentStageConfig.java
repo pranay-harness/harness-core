@@ -1,5 +1,6 @@
 package io.harness.cdng.creator.plan.stage;
 
+import io.harness.EntityType;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
@@ -12,6 +13,7 @@ import io.harness.walktree.beans.VisitableChild;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,6 +22,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -28,12 +31,16 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Deployment")
 @TypeAlias("deploymentStageConfig")
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
+@YamlSchemaRoot(EntityType.DEPLOYMENT_STAGE)
 public class DeploymentStageConfig implements StageInfoConfig, Visitable {
-  String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   ServiceConfig serviceConfig;
   PipelineInfrastructure infrastructure;
   ExecutionElementConfig execution;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
+
+  // For Visitor Framework Impl
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public LevelNode getLevelNode() {

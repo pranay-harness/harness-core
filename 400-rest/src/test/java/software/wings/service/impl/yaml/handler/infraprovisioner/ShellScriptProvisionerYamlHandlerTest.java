@@ -52,7 +52,7 @@ import org.mockito.Mock;
 public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   private static final String NAME = "yamlTest";
   private static final String SCRIPT_BODY = "script";
-  private final String resourcePath = "./yaml";
+  private final String resourcePath = "400-rest/src/test/resources/yaml";
   private final String yamlFilePath = "shellScriptProvisoner.yaml";
 
   @Mock private AppService appService;
@@ -160,12 +160,8 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private void readYamlFile() throws IOException {
-    try {
-      yamlFile = new File(
-          getClass().getClassLoader().getResource(resourcePath + YamlConstants.PATH_DELIMITER + yamlFilePath).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + resourcePath);
-    }
+    yamlFile = new File(resourcePath + YamlConstants.PATH_DELIMITER + yamlFilePath);
+
     assertThat(yamlFile).isNotNull();
     yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
     changeContext = getChangeContext(yamlString, yamlFilePath);

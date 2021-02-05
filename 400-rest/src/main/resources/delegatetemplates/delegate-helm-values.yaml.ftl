@@ -1,4 +1,4 @@
-# This harness-delegate-values.yaml file is compatible with version 1.0.0
+# This harness-delegate-values.yaml file is compatible with version 1.0.2
 # of the harness-delegate helm chart.
 
 # You can download the harness-delegate helm chart at

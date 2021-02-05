@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.services.api;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 
@@ -11,11 +12,11 @@ public interface DeploymentTimeSeriesAnalysisService {
   TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
       boolean anomalousMetricsOnly, String hostName, int pageNumber);
   List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId);
-  Optional<Double> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
+  Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
 
   DeploymentTimeSeriesAnalysis getRecentHighestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId);
 
-  DeploymentTimeSeriesAnalysis getLatestDeploymentTimeSeriesAnalysis(
+  List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId);
 }

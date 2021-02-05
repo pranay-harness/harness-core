@@ -68,13 +68,13 @@ public class HelmValuesFetchTaskParametersTest {
     assertThat(capabilities.size()).isEqualTo(3);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
-        .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP, CapabilityType.SYSTEM_ENV);
+        .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP, CapabilityType.SELECTORS);
 
     helmChartConfigParams.setHelmRepoConfig(null);
     capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(capabilities.size()).isEqualTo(2);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
-        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.SYSTEM_ENV);
+        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.SELECTORS);
   }
 }

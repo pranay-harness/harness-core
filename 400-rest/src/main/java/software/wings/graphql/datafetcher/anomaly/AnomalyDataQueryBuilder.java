@@ -30,20 +30,23 @@ import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.UpdateQuery;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@UtilityClass
 @Slf4j
 public class AnomalyDataQueryBuilder {
-  private void addAccountFilter(SelectQuery selectQuery, String accountId) {
+  private static void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));
   }
 
-  public String formAnomalyFetchQuery(String accountId, QLAnomalyInput input) {
+  public static String formAnomalyFetchQuery(String accountId, QLAnomalyInput input) {
     SelectQuery query = new SelectQuery();
     query.addAllTableColumns(AnomaliesDataTableSchema.table);
     addAccountFilter(query, accountId);
@@ -52,7 +55,7 @@ public class AnomalyDataQueryBuilder {
     return query.toString();
   }
 
-  public String formAnomalyUpdateQuery(String accountId, QLAnomalyInput input) {
+  public static String formAnomalyUpdateQuery(String accountId, QLAnomalyInput input) {
     if (input.getAnomalyId() == null) {
       log.error(
           "Mutation request to update anomaly has anomalyid equal to null, cannot process mutation request id : {}",
@@ -75,8 +78,8 @@ public class AnomalyDataQueryBuilder {
     return query.validate().toString();
   }
 
-  public String overviewQuery(String accountId, List<QLBillingDataFilter> filters) {
-    filters = new ArrayList<QLBillingDataFilter>(filters);
+  public static String overviewQuery(String accountId, List<QLBillingDataFilter> filters) {
+    filters = new ArrayList<>(filters);
 
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
@@ -90,8 +93,8 @@ public class AnomalyDataQueryBuilder {
     return query.toString();
   }
 
-  public String formK8SQuery(String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy) {
-    filters = new ArrayList<QLBillingDataFilter>(filters);
+  public static String formK8SQuery(String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy) {
+    filters = new ArrayList<>(filters);
 
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
@@ -107,7 +110,7 @@ public class AnomalyDataQueryBuilder {
     return query.toString();
   }
 
-  protected List<QLCCMEntityGroupBy> getK8SGroupByEntity(List<QLCCMGroupBy> groupBy) {
+  protected static List<QLCCMEntityGroupBy> getK8SGroupByEntity(List<QLCCMGroupBy> groupBy) {
     return groupBy != null ? groupBy.stream()
                                  .filter(g -> g.getEntityGroupBy() != null)
                                  .map(QLCCMGroupBy::getEntityGroupBy)
@@ -115,14 +118,14 @@ public class AnomalyDataQueryBuilder {
                            : Collections.emptyList();
   }
 
-  private void convertK8SGroupByAndAddToFilter(List<QLCCMGroupBy> groupBy, List<QLBillingDataFilter> filters) {
+  private static void convertK8SGroupByAndAddToFilter(List<QLCCMGroupBy> groupBy, List<QLBillingDataFilter> filters) {
     List<QLCCMEntityGroupBy> entityGroupBy = getK8SGroupByEntity(groupBy);
     for (QLCCMEntityGroupBy singleGroupBy : entityGroupBy) {
       filters.add(convertGroupByToFilter(singleGroupBy));
     }
   }
 
-  private QLBillingDataFilter convertGroupByToFilter(QLCCMEntityGroupBy groupBy) {
+  private static QLBillingDataFilter convertGroupByToFilter(QLCCMEntityGroupBy groupBy) {
     QLBillingDataFilterBuilder filter = QLBillingDataFilter.builder();
     String[] values = new String[] {""};
     switch (groupBy) {
@@ -158,7 +161,7 @@ public class AnomalyDataQueryBuilder {
     return filter.build();
   }
 
-  private void decorateK8SQueryWithFilters(SelectQuery selectQuery, List<QLBillingDataFilter> filters) {
+  private static void decorateK8SQueryWithFilters(SelectQuery selectQuery, List<QLBillingDataFilter> filters) {
     for (QLBillingDataFilter filter : filters) {
       Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
       for (QLBillingDataFilterType type : filterTypes) {
@@ -171,7 +174,8 @@ public class AnomalyDataQueryBuilder {
     }
   }
 
-  private void decorateSimpleFilter(SelectQuery selectQuery, QLBillingDataFilter filter, QLBillingDataFilterType type) {
+  private static void decorateSimpleFilter(
+      SelectQuery selectQuery, QLBillingDataFilter filter, QLBillingDataFilterType type) {
     Filter f = QLBillingDataFilter.getFilter(type, filter);
     if (checkFilter(f)) {
       if (isIdFilter(f)) {
@@ -184,7 +188,7 @@ public class AnomalyDataQueryBuilder {
     }
   }
 
-  private void addSimpleTimeFilter(SelectQuery selectQuery, Filter filter, QLBillingDataFilterType type) {
+  private static void addSimpleTimeFilter(SelectQuery selectQuery, Filter filter, QLBillingDataFilterType type) {
     DbColumn key = getFilterKey(type);
     QLTimeFilter timeFilter = (QLTimeFilter) filter;
     switch (timeFilter.getOperator()) {
@@ -200,7 +204,7 @@ public class AnomalyDataQueryBuilder {
     }
   }
 
-  private void addSimpleIdOperator(SelectQuery selectQuery, Filter filter, QLBillingDataFilterType type) {
+  private static void addSimpleIdOperator(SelectQuery selectQuery, Filter filter, QLBillingDataFilterType type) {
     DbColumn key = getFilterKey(type);
     QLIdOperator operator = (QLIdOperator) filter.getOperator();
     QLIdOperator finalOperator = operator;
@@ -235,19 +239,19 @@ public class AnomalyDataQueryBuilder {
     }
   }
 
-  private boolean isIdFilter(Filter f) {
+  private static boolean isIdFilter(Filter f) {
     return f instanceof QLIdFilter;
   }
 
-  private boolean isTimeFilter(Filter f) {
+  private static boolean isTimeFilter(Filter f) {
     return f instanceof QLTimeFilter;
   }
 
-  private boolean checkFilter(Filter f) {
+  private static boolean checkFilter(Filter f) {
     return f.getOperator() != null && EmptyPredicate.isNotEmpty(f.getValues());
   }
 
-  private DbColumn getFilterKey(QLBillingDataFilterType type) {
+  private static DbColumn getFilterKey(QLBillingDataFilterType type) {
     switch (type) {
       case EndTime:
       case StartTime:
@@ -285,7 +289,8 @@ public class AnomalyDataQueryBuilder {
 
   //----------------- Cloud -------------
 
-  public String formCloudQuery(String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
+  public static String formCloudQuery(
+      String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
     filters = new ArrayList<CloudBillingFilter>(filters);
     SelectQuery query = new SelectQuery();
     addAccountFilter(query, accountId);
@@ -300,7 +305,8 @@ public class AnomalyDataQueryBuilder {
     return query.toString();
   }
 
-  private void convertCloudGroupByAndAddToFilter(List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
+  private static void convertCloudGroupByAndAddToFilter(
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
     List<CloudEntityGroupBy> entityGroupBy = getCloudGroupByEntity(groupBy);
     for (CloudEntityGroupBy singleGroupBy : entityGroupBy) {
       CloudBillingFilter ConvertedGroupBy = convertGroupByToFilter(singleGroupBy);
@@ -317,7 +323,7 @@ public class AnomalyDataQueryBuilder {
                            : Collections.emptyList();
   }
 
-  private CloudBillingFilter convertGroupByToFilter(CloudEntityGroupBy groupBy) {
+  private static CloudBillingFilter convertGroupByToFilter(CloudEntityGroupBy groupBy) {
     CloudBillingFilter filter = new CloudBillingFilter();
     String[] values = new String[] {""};
     switch (groupBy) {
@@ -376,7 +382,7 @@ public class AnomalyDataQueryBuilder {
     return filter;
   }
 
-  private void decorateCloudQueryWithFilters(SelectQuery selectQuery, List<CloudBillingFilter> filters) {
+  private static void decorateCloudQueryWithFilters(SelectQuery selectQuery, List<CloudBillingFilter> filters) {
     AnomaliesFilter cloudFilter;
     for (CloudBillingFilter filter : filters) {
       try {
@@ -386,5 +392,20 @@ public class AnomalyDataQueryBuilder {
         log.error("Not adding filter since it is not valid , Exception :{}", e);
       }
     }
+  }
+
+  public static String getAllAnomaliesQuery(String accountId, Instant fromDate, Instant toDate) {
+    SelectQuery query = new SelectQuery();
+    query.addAllTableColumns(AnomaliesDataTableSchema.table);
+    query.addAliasedColumn(new CustomSql(AnomaliesDataTableSchema.actualCost.getColumnNameSQL() + " - "
+                               + AnomaliesDataTableSchema.expectedCost.getColumnNameSQL()),
+        "difference");
+    query.addCondition(
+        BinaryCondition.lessThanOrEq(AnomaliesDataTableSchema.anomalyTime, toDate.truncatedTo(ChronoUnit.DAYS)));
+    query.addCondition(
+        BinaryCondition.greaterThanOrEq(AnomaliesDataTableSchema.anomalyTime, fromDate.truncatedTo(ChronoUnit.DAYS)));
+    addAccountFilter(query, accountId);
+    query.addCustomOrdering(new CustomSql("difference"), OrderObject.Dir.DESCENDING);
+    return query.validate().toString();
   }
 }

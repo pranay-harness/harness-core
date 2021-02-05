@@ -1052,13 +1052,12 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     wfVariables.put("pipelineInfra", "62pv3U26RnmaLYFiZxjiTg");
     wfVariables.put("service2", "NA2uRPKLTqm9VU3dPENb-g");
 
-    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+    Workflow workflow = JsonUtils.readResourceFile("workflows/k8s_workflow.json", Workflow.class);
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
     Pipeline pipelineWithResolvedVars =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
-    Pipeline pipeline =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+        JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
     List<String> emptyList = null;
 
     when(wingsPersistence.getWithAppId(eq(WorkflowExecution.class), eq(appID), eq(pipelineExecutionId)))
@@ -1069,7 +1068,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(eq(appID), anyString())).thenReturn(workflow);
 
     Map<String, String> expectedWFVars =
-        JsonUtils.readResourceFile("./expected_wf_variables.json", new TypeReference<Map<String, String>>() {});
+        JsonUtils.readResourceFile("expected_wf_variables.json", new TypeReference<Map<String, String>>() {});
     workflowExecutionService.fetchDeploymentMetadataRunningPipeline(
         appID, wfVariables, true, pipelineExecutionId, pipelineStageElementId);
 
@@ -1090,12 +1089,11 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     wfVariables.put("service2", "NA2uRPKLTqm9VU3dPENb-g");
 
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
     Pipeline pipelineWithResolvedVars =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
+        JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_resolved_vars.json", Pipeline.class);
     pipelineWithResolvedVars.setHasBuildWorkflow(true);
-    Pipeline pipeline =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
     // Set pipeline as buildPipeline
     List<String> emptyList = null;
 
@@ -1124,15 +1122,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
 
     ExecutionArgs executionArgs =
-        JsonUtils.readResourceFile("./execution_args/execution_args_continue_pipeline.json", ExecutionArgs.class);
+        JsonUtils.readResourceFile("execution_args/execution_args_continue_pipeline.json", ExecutionArgs.class);
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
     Pipeline pipelineWithVars =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
-    Pipeline pipeline =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
-    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
-    Artifact artifact = JsonUtils.readResourceFile("./artifacts/artifacts.json", Artifact.class);
+        JsonUtils.readResourceFile("pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    Workflow workflow = JsonUtils.readResourceFile("workflows/k8s_workflow.json", Workflow.class);
+    Artifact artifact = JsonUtils.readResourceFile("artifacts/artifacts.json", Artifact.class);
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .uuid("D7fBZxZyQniDAhWTHdnYHQ")
                                                         .appId("nCLN8c84SqWPr44sqg65JQ")
@@ -1169,11 +1166,10 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecutionService.continuePipelineStage(appID, pipelineExecutionId, pipelineStageElementId, executionArgs);
 
     List<Artifact> expectedArtifacts = JsonUtils.readResourceFile(
-        "./artifacts/expected_artifacts_continue_pipeline.json", new TypeReference<List<Artifact>>() {});
+        "artifacts/expected_artifacts_continue_pipeline.json", new TypeReference<List<Artifact>>() {});
 
-    List<ArtifactVariable> expectedArtifactVars =
-        JsonUtils.readResourceFile("./artifacts/expected_artifact_variables_continue_pipeline.json",
-            new TypeReference<List<ArtifactVariable>>() {});
+    List<ArtifactVariable> expectedArtifactVars = JsonUtils.readResourceFile(
+        "artifacts/expected_artifact_variables_continue_pipeline.json", new TypeReference<List<ArtifactVariable>>() {});
 
     verify(updateOperations).set(eq(WorkflowExecutionKeys.startTs), anyLong());
     verify(updateOperations).set(eq(WorkflowExecutionKeys.artifacts), eq(expectedArtifacts));
@@ -1188,9 +1184,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     final String pipelineStageElementId = "KZPqXENuRbKqkuISe07JAQ";
     final String appID = "nCLN8c84SqWPr44sqg65JQ";
 
-    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
-    Pipeline pipeline =
-        JsonUtils.readResourceFile("./pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
+    Workflow workflow = JsonUtils.readResourceFile("workflows/k8s_workflow.json", Workflow.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
     final Map<String, String> pipelineVars = ImmutableMap.<String, String>builder()
                                                  .put("pipelineInfra", "CzcfKUN2Q_eCrlrV66r4ug")
                                                  .put("service1", "NA2uRPKLTqm9VU3dPENb-g")

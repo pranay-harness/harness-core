@@ -10,7 +10,9 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -23,6 +25,9 @@ import org.springframework.data.annotation.TypeAlias;
 public class ArtifactOverrideSets implements Visitable {
   @EntityIdentifier String identifier;
   ArtifactListConfig artifacts;
+
+  // For Visitor Framework Impl
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {

@@ -65,6 +65,18 @@ public class CIManagerServiceModule extends AbstractModule {
         () -> getDelegateCallbackToken(delegateServiceGrpcClient, ciManagerConfiguration));
   }
 
+  // Final url returned from this fn would be: https://pr.harness.io/ci-delegate-upgrade/ng/#
+  @Provides
+  @Singleton
+  @Named("ngBaseUrl")
+  String getNgBaseUrl() {
+    String apiUrl = ciManagerConfiguration.getApiUrl();
+    if (apiUrl.endsWith("/")) {
+      return apiUrl.substring(0, apiUrl.length() - 1);
+    }
+    return apiUrl;
+  }
+
   private DelegateCallbackToken getDelegateCallbackToken(
       DelegateServiceGrpcClient delegateServiceClient, CIManagerConfiguration appConfig) {
     log.info("Generating Delegate callback token");

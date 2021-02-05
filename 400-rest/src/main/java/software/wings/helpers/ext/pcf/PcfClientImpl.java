@@ -6,7 +6,6 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
-import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PASSWORD;
@@ -20,7 +19,6 @@ import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR_CHAR;
 import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PORT_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_HTTP;
 import static io.harness.pcf.model.PcfRouteType.PCF_ROUTE_TYPE_TCP;
 
@@ -43,6 +41,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.network.Http;
+import io.harness.pcf.PcfUtils;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
 
@@ -459,25 +459,6 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @Override
-  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
-    boolean appAutoscalarInstalled;
-    Map<String, String> map = new HashMap();
-    map.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
-    ProcessExecutor processExecutor = createExecutorForAutoscalarPluginCheck(map);
-
-    try {
-      ProcessResult processResult = processExecutor.execute();
-      appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
-    } catch (InterruptedException e) {
-      throw new PivotalClientApiException("check for App Autoscalar plugin failed", e);
-    } catch (Exception e) {
-      throw new PivotalClientApiException("check for AppAutoscalar plugin failed", e);
-    }
-
-    return appAutoscalarInstalled;
-  }
-
-  @Override
   public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     int exitCode = 1;
@@ -611,15 +592,6 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @VisibleForTesting
-  ProcessExecutor createExecutorForAutoscalarPluginCheck(Map<String, String> map) {
-    return new ProcessExecutor()
-        .timeout(1, TimeUnit.MINUTES)
-        .command(BIN_BASH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
-        .readOutput(true)
-        .environment(map);
-  }
-
-  @VisibleForTesting
   String generateChangeAutoscalarStateCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData, boolean enable) {
     String commandName = enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING;
     return new StringBuilder(128)
@@ -647,7 +619,7 @@ public class PcfClientImpl implements PcfClient {
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
         appAutoscalarRequestData.getPcfRequestConfig().getEndpointUrl(), appAutoscalarRequestData.getConfigPathVar());
     // set CUSTOM_PLUGIN_HOME, NEEDED FOR AUTO-SCALAR PLUIN
-    environmentMapForPcfExecutor.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
+    environmentMapForPcfExecutor.put(CF_PLUGIN_HOME, PcfUtils.resolvePcfPluginHome());
     return environmentMapForPcfExecutor;
   }
 
@@ -700,22 +672,6 @@ public class PcfClientImpl implements PcfClient {
         .append(' ')
         .append(appAutoscalarRequestData.getAutoscalarFilePath())
         .toString();
-  }
-
-  @Override
-  public String resolvePcfPluginHome() {
-    // look into java system variable
-    final String sysVarPluginHome = System.getProperty(SYS_VAR_CF_PLUGIN_HOME);
-    if (isNotEmpty(sysVarPluginHome)) {
-      return sysVarPluginHome.trim();
-    }
-    // env variable
-    final String envVarPluginHome = System.getenv(CF_PLUGIN_HOME);
-    if (isNotEmpty(envVarPluginHome)) {
-      return envVarPluginHome.trim();
-    }
-    // default is user home
-    return System.getProperty("user.home");
   }
 
   @Override
@@ -1407,7 +1363,7 @@ public class PcfClientImpl implements PcfClient {
       executionLogCallback.saveExecutionLog("\n# ------------------------------------------ ");
       executionLogCallback.saveExecutionLog(
           "\n# CF_HOME value: " + pcfRunPluginScriptRequestData.getWorkingDirectory());
-      final String pcfPluginHome = resolvePcfPluginHome();
+      final String pcfPluginHome = PcfUtils.resolvePcfPluginHome();
       executionLogCallback.saveExecutionLog("# CF_PLUGIN_HOME value: " + pcfPluginHome);
       boolean loginSuccessful =
           doLogin(pcfRequestConfig, executionLogCallback, pcfRunPluginScriptRequestData.getWorkingDirectory());

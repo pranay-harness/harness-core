@@ -63,20 +63,15 @@ public class Recaster {
     return cc;
   }
 
-  @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, final Class<T> entityClass) {
     if (document == null) {
-      log.warn("Null reference was passed in document");
+      log.info("Null reference was passed in document");
       return null;
     }
 
     if (!document.containsKey(RECAST_CLASS_KEY)) {
       throw new RecasterException(
           format("The document does not contain a %s key. Determining entity type is impossible.", RECAST_CLASS_KEY));
-    }
-
-    if (transformer.hasCustomTransformer(entityClass)) {
-      return (T) transformer.decode(entityClass, document.get(ENCODED_VALUE), null);
     }
 
     T entity;
@@ -93,7 +88,9 @@ public class Recaster {
 
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, T entity) {
-    if (entity instanceof Map) {
+    if (transformer.hasCustomTransformer(entity.getClass())) {
+      entity = (T) transformer.decode(entity.getClass(), document.get(ENCODED_VALUE), null);
+    } else if (entity instanceof Map) {
       populateMap(document, entity);
     } else if (entity instanceof Collection) {
       populateCollection(document, entity);
@@ -175,7 +172,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   public Document toDocument(Object entity, final Map<Object, Document> involvedObjects) {
     if (entity == null) {
-      log.warn("Null reference was passed as object");
+      log.info("Null reference was passed as object");
       return null;
     }
 

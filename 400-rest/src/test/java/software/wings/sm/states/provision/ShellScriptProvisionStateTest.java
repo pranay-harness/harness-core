@@ -213,12 +213,16 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, Activity.class)).when(activityService).save(any(Activity.class));
     doReturn(provisioner).when(infrastructureProvisionerService).getShellScriptProvisioner(APP_ID, PROVISIONER_ID);
     ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     // When OrchestrationWorkflowType is BUILD
     doReturn(OrchestrationWorkflowType.BUILD).when(executionContext).getOrchestrationWorkflowType();
     state.execute(executionContext);
     verify(activityService, times(1)).save(activityCaptor.capture());
     assertCreatedActivity(activityCaptor.getValue(), GLOBAL_ENV_ID, GLOBAL_ENV_ID, ALL);
+
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue().getData().getExpressionFunctorToken()).isNotNull();
 
     // When OrchestrationWorkflowType is other than BUILD
     doReturn(OrchestrationWorkflowType.BASIC).when(executionContext).getOrchestrationWorkflowType();

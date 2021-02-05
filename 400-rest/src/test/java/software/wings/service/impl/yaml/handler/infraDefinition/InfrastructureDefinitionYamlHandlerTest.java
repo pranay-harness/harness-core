@@ -109,7 +109,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
       + "ENV_NAME/Infrastructure Definitions/infra-def.yaml";
-  private final String resourcePath = "./infrastructureDefinitions";
+  private final String resourcePath = "400-rest/src/test/resources/infrastructureDefinitions";
 
   @UtilityClass
   private static class validYamlInfraStructureFiles {
@@ -328,12 +328,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
       CloudProviderType cloudProviderType) throws IOException {
     doReturn(null).when(mockYamlHelper).getInfraDefinitionIdByAppIdYamlPath(anyString(), anyString(), anyString());
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
     ChangeContext<Yaml> changeContext = getChangeContext(yamlString);

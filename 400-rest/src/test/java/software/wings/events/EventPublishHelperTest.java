@@ -35,6 +35,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -45,7 +46,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;

@@ -134,8 +134,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     if (updateResults.getUpdatedCount() == 0) {
       // https://harness.atlassian.net/browse/CVNG-1601
       log.info("Task is not in running state. Skipping the update {}", result);
-      throw new IllegalStateException(
-          "Task is not in running state. Skipping the update. Most likely previous updateStatus call succeeded.");
+      return;
     }
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
@@ -246,6 +245,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     validateIfAlreadyExists(dataCollectionTask);
     save(dataCollectionTask);
   }
+
   private void validateIfAlreadyExists(DataCollectionTask dataCollectionTask) {
     if (hPersistence.createQuery(DataCollectionTask.class)
             .filter(DataCollectionTaskKeys.accountId, dataCollectionTask.getAccountId())
@@ -260,6 +260,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
           "DataCollectionTask with same startTime already exist. This shouldn't be happening. Please check delegate logs");
     }
   }
+
   private void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.

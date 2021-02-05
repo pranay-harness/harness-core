@@ -18,6 +18,7 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -70,6 +71,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Mock private AccountPermissionUtils accountPermissionUtils;
   @Mock private PersistentScheduler persistentScheduler;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HPersistence persistence;
 
   @Mock private Account account;
   @Mock private User user;
@@ -134,14 +136,14 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFindFeatureFlagExportCondition() {
     FeatureFlag globallyEnabledFeatureFlag = createGloballyEnabledFeatureFlag(SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    String globallyEnabledFeatureFlagId = wingsPersistence.save(globallyEnabledFeatureFlag);
+    String globallyEnabledFeatureFlagId = persistence.save(globallyEnabledFeatureFlag);
 
     FeatureFlag obsoleteGloballyEnabledFeatureFlag = createObsoleteGloballyEnabledFeatureFlag();
-    wingsPersistence.save(obsoleteGloballyEnabledFeatureFlag);
+    persistence.save(obsoleteGloballyEnabledFeatureFlag);
 
     FeatureFlag enabledFeatureFlagForAccount =
         createEnabledFeatureFlagForAccount(accountId, SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    String enabledFeatureFlagForAccountId = wingsPersistence.save(enabledFeatureFlagForAccount);
+    String enabledFeatureFlagForAccountId = persistence.save(enabledFeatureFlagForAccount);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
@@ -155,7 +157,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFindFeatureFlagExportForZeroMatchingCondition() {
     FeatureFlag obsoleteGloballyEnabledFeatureFlag = createObsoleteGloballyEnabledFeatureFlag();
-    wingsPersistence.save(obsoleteGloballyEnabledFeatureFlag);
+    persistence.save(obsoleteGloballyEnabledFeatureFlag);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
@@ -170,7 +172,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   public void testFindFeatureFlagExportForSingleMatchingCondition() {
     FeatureFlag enabledFeatureFlagForAccount =
         createEnabledFeatureFlagForAccount(accountId, SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    wingsPersistence.save(enabledFeatureFlagForAccount);
+    persistence.save(enabledFeatureFlagForAccount);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
@@ -200,7 +202,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFeatureFlagImportWhenFeatureIsAlreadyEnabledGlobally() {
     FeatureFlag enabledFeatureFlagForAccount = createGloballyEnabledFeatureFlag(SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    wingsPersistence.save(enabledFeatureFlagForAccount);
+    persistence.save(enabledFeatureFlagForAccount);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
@@ -212,7 +214,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
     assertThat(importStatus.getIdClashes()).isEqualTo(1);
     assertThat(importStatus.getImported()).isEqualTo(0);
 
-    FeatureFlag featureFlagEntity = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+    FeatureFlag featureFlagEntity = persistence.createQuery(FeatureFlag.class, excludeAuthority)
                                         .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name())
                                         .get();
 
@@ -228,15 +230,15 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFeatureFlagImportWhenFeatureIsNotPresentInDB() {
     FeatureFlag enabledFeatureFlagForAccount = createGloballyEnabledFeatureFlag(SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    wingsPersistence.save(enabledFeatureFlagForAccount);
+    persistence.save(enabledFeatureFlagForAccount);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
     List<String> results = wingsMongoExportImport.exportRecords(dbObject, collectionName);
 
     // Now delete the record from the db.
-    wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name()));
+    persistence.delete(persistence.createQuery(FeatureFlag.class, excludeAuthority)
+                           .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name()));
 
     // featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId);
     ImportStatusReport.ImportStatus importStatus =
@@ -244,7 +246,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
     assertThat(importStatus.getIdClashes()).isEqualTo(0);
     assertThat(importStatus.getImported()).isEqualTo(1);
 
-    FeatureFlag featureFlagEntity = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+    FeatureFlag featureFlagEntity = persistence.createQuery(FeatureFlag.class, excludeAuthority)
                                         .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name())
                                         .get();
 
@@ -263,18 +265,18 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   public void testFeatureFlagImportWhenFeatureIsNotEnabledForAccount() {
     FeatureFlag enabledFeatureFlagForAccount =
         createEnabledFeatureFlagForAccount(accountId, SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    wingsPersistence.save(enabledFeatureFlagForAccount);
+    persistence.save(enabledFeatureFlagForAccount);
 
     DBObject dbObject = accountExportImportResource.getFeatureFlagExportFilter(accountId);
     String collectionName = getCollectionName(FeatureFlag.class);
     List<String> results = wingsMongoExportImport.exportRecords(dbObject, collectionName);
 
-    wingsPersistence.delete(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name()));
+    persistence.delete(persistence.createQuery(FeatureFlag.class, excludeAuthority)
+                           .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name()));
 
     FeatureFlag enabledFeatureFlagForDifferentAccount =
         createEnabledFeatureFlagForAccount("testAccount", SEND_SLACK_NOTIFICATION_FROM_DELEGATE);
-    wingsPersistence.save(enabledFeatureFlagForDifferentAccount);
+    persistence.save(enabledFeatureFlagForDifferentAccount);
 
     // featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId);
     ImportStatusReport.ImportStatus importStatus =
@@ -282,7 +284,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
     assertThat(importStatus.getIdClashes()).isEqualTo(0);
     assertThat(importStatus.getImported()).isEqualTo(1);
 
-    FeatureFlag featureFlagEntity = wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
+    FeatureFlag featureFlagEntity = persistence.createQuery(FeatureFlag.class, excludeAuthority)
                                         .filter(FeatureFlagKeys.name, SEND_SLACK_NOTIFICATION_FROM_DELEGATE.name())
                                         .get();
 

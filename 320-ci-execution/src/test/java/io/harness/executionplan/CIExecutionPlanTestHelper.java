@@ -2,9 +2,7 @@ package io.harness.executionplan;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
-import static io.harness.common.CIExecutionConstants.ARGS_PREFIX;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
-import static io.harness.common.CIExecutionConstants.ENTRYPOINT_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
@@ -463,8 +461,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(ContainerImageDetails.builder()
@@ -490,8 +488,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()

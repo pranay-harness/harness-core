@@ -11,6 +11,9 @@ sources()
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//990-commons-test:abstract-module",
+    ],
     resources = [
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",

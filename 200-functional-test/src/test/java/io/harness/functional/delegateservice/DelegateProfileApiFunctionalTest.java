@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.FunctionalTests;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileDetails;
 import io.harness.delegate.beans.ScopingRuleDetails;
@@ -18,7 +19,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
 
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;

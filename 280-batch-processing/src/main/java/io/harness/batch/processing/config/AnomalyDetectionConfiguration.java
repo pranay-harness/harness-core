@@ -3,6 +3,7 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.RemoveDuplicateAnomaliesTasklet;
+import io.harness.batch.processing.anomalydetection.SlackNotificationsTasklet;
 import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsAccountReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsServiceReader;
@@ -37,7 +38,7 @@ public class AnomalyDetectionConfiguration {
   public Job anomalyDetectionDailyJob(JobBuilderFactory jobBuilderFactory, Step statisticalModelClusterStep,
       Step statisticalModelNamespaceStep, Step statisticalModelGcpProjectStep, Step statisticalModelGcpSkuStep,
       Step statisticalModelGcpProductStep, Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep,
-      Step removeDuplicatesStep) {
+      Step removeDuplicatesStep, Step slackNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION.name())
         .incrementer(new RunIdIncrementer())
         .start(statisticalModelClusterStep)
@@ -48,6 +49,7 @@ public class AnomalyDetectionConfiguration {
         .next(statisticalModelAwsAccountStep)
         .next(statisticalModelAwsServiceStep)
         .next(removeDuplicatesStep)
+        .next(slackNotificationStep)
         .build();
   }
 
@@ -127,8 +129,18 @@ public class AnomalyDetectionConfiguration {
   }
 
   @Bean
+  protected Step slackNotificationStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("slackNotificationStep").tasklet(slackNotificationsTasklet()).build();
+  }
+
+  @Bean
   public Tasklet removeDuplicateAnomaliesTasklet() {
     return new RemoveDuplicateAnomaliesTasklet();
+  }
+
+  @Bean
+  public Tasklet slackNotificationsTasklet() {
+    return new SlackNotificationsTasklet();
   }
 
   // ---------------- Item Reader ----------------------

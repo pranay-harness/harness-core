@@ -5,9 +5,9 @@ import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.ALL;
 
 import io.harness.ccm.config.CCMConfig;
+import io.harness.delegate.beans.Delegate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 
-import software.wings.beans.Delegate;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.EnvFilter;
@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.segment.analytics.messages.TrackMessage;
+import java.util.Collections;
+import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,7 +53,7 @@ public class KubernetesClusterHandler implements DelegateObserver {
         KubernetesClusterConfig.builder()
             .accountId(delegate.getAccountId())
             .useKubernetesDelegate(true)
-            .delegateName(delegate.getDelegateName())
+            .delegateSelectors(new HashSet<>(Collections.singletonList(delegate.getDelegateName())))
             .skipValidation(true)
             .ccmConfig(CCMConfig.builder().cloudCostEnabled(true).skipK8sEventCollection(false).build())
             .build();

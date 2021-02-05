@@ -281,11 +281,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
-    List<String> tags = new ArrayList<>();
-    if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
-      tags.addAll(K8sStateHelper.fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
-    }
-
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
     String waitId = generateUuid();
@@ -300,7 +295,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                     .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
                                         infraMapping != null ? infraMapping.getServiceId() : null)
                                     .waitId(waitId)
-                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
@@ -445,7 +439,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     List tags = new ArrayList();
     tags.addAll(awsCommandHelper.getAwsConfigTagsFromK8sConfig(k8sTaskParameters));
-    tags.addAll(K8sStateHelper.fetchTagsFromK8sTaskParams(k8sTaskParameters));
 
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
@@ -766,12 +759,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
 
-    List<String> tags = new ArrayList<>();
-    if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
-      tags.addAll(
-          K8sStateHelper.fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
-    }
-
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     Environment env = K8sStateHelper.fetchEnvFromExecutionContext(context);
@@ -786,7 +773,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                     .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
                                         infraMapping != null ? infraMapping.getServiceId() : null)
                                     .waitId(waitId)
-                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.HELM_VALUES_FETCH.name())

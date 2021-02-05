@@ -12,11 +12,11 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class ArtifactoryDTOToEntity extends ConnectorDTOToEntityMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
+public class ArtifactoryDTOToEntity
+    implements ConnectorDTOToEntityMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
   @Override
   public ArtifactoryConnector toConnectorEntity(ArtifactoryConnectorDTO configDTO) {
-    ArtifactoryAuthType artifactoryAuthType =
-        configDTO.getAuth() != null ? configDTO.getAuth().getAuthType() : ArtifactoryAuthType.NO_AUTH;
+    ArtifactoryAuthType artifactoryAuthType = configDTO.getAuth().getAuthType();
     ArtifactoryConnectorBuilder artifactoryConnectorBuilder =
         ArtifactoryConnector.builder().url(configDTO.getArtifactoryServerUrl()).authType(artifactoryAuthType);
     if (artifactoryAuthType == ArtifactoryAuthType.USER_PASSWORD) {

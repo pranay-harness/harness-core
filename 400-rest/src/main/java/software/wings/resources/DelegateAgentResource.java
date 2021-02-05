@@ -7,9 +7,12 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -37,7 +40,6 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.beans.Delegate;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
@@ -80,6 +82,7 @@ import org.jetbrains.annotations.NotNull;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;

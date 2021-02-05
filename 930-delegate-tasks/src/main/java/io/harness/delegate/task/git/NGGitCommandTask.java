@@ -5,13 +5,10 @@ import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
-import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -22,7 +19,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -134,14 +130,5 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
       }
     }
     return null;
-  }
-
-  public static class GitValidationHandler extends ConnectorValidationHandler {
-    @Inject private GitCommandTaskHandler gitCommandTaskHandler;
-    public ConnectorValidationResult validate(
-        ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
-      final GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connector);
-      return gitCommandTaskHandler.validateGitCredentials(gitConfigDTO, accountIdentifier, encryptionDetailList, null);
-    }
   }
 }

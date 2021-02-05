@@ -1,7 +1,6 @@
 package io.harness.cdng.artifact.steps;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
@@ -22,6 +21,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -68,7 +68,7 @@ public class ArtifactStep {
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
   }
 
   public StepOutcome processDelegateResponse(

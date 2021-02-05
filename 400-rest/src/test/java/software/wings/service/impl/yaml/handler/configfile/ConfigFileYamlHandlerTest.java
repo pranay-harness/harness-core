@@ -65,7 +65,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
       "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files/configFile.txt.yaml";
   private static final String configFilePath =
       "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files/configFile.txt";
-  private static final String resourcePath = "./configfiles/Service";
+  private static final String resourcePath = "400-rest/src/test/resources/configfiles/Service";
   private static final String UNENCRYPTED_CONFIG_FILE_YAML = "unEncryptedConfigFile.yaml";
   private static final String UNENCRYPTED_CONFIG_FILE_YAML_2 = "unEncryptedConfigFile2.yaml";
   private static final String ENCRYPTED_CONFIG_FILE_YAML = "encryptedConfigFile.yaml";
@@ -228,12 +228,9 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
 
   private String getYamlFile(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
     assertThat(yamlFile).isNotNull();
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

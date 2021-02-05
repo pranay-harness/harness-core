@@ -1,5 +1,6 @@
 package io.harness.ng.core.artifacts.resources.docker;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
@@ -15,6 +16,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -41,8 +43,10 @@ public class DockerArtifactResource {
   @Path("getBuildDetails")
   @ApiOperation(value = "Gets docker build details", nickname = "getBuildDetailsForDocker")
   public ResponseDTO<DockerResponseDTO> getBuildDetails(@QueryParam("imagePath") String imagePath,
-      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("connectorRef") String dockerConnectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     DockerResponseDTO buildDetails =
@@ -54,9 +58,10 @@ public class DockerArtifactResource {
   @Path("getLabels")
   @ApiOperation(value = "Gets docker labels", nickname = "getLabelsForDocker")
   public ResponseDTO<DockerResponseDTO> getLabels(@QueryParam("imagePath") String imagePath,
-      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      DockerRequestDTO requestDTO) {
+      @QueryParam("connectorRef") String dockerConnectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, DockerRequestDTO requestDTO) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     DockerResponseDTO buildDetails =
@@ -68,9 +73,10 @@ public class DockerArtifactResource {
   @Path("getLastSuccessfulBuild")
   @ApiOperation(value = "Gets docker last successful build", nickname = "getLastSuccessfulBuildForDocker")
   public ResponseDTO<DockerBuildDetailsDTO> getLastSuccessfulBuild(@QueryParam("imagePath") String imagePath,
-      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
-      DockerRequestDTO requestDTO) {
+      @QueryParam("connectorRef") String dockerConnectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, DockerRequestDTO requestDTO) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     DockerBuildDetailsDTO buildDetails =
@@ -82,8 +88,9 @@ public class DockerArtifactResource {
   @Path("validateArtifactServer")
   @ApiOperation(value = "Validate docker artifact server", nickname = "validateArtifactServerForDocker")
   public ResponseDTO<Boolean> validateArtifactServer(@QueryParam("connectorRef") String dockerConnectorIdentifier,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     boolean isValidArtifactServer =
@@ -95,8 +102,10 @@ public class DockerArtifactResource {
   @Path("validateArtifactSource")
   @ApiOperation(value = "Validate docker image", nickname = "validateArtifactImageForDocker")
   public ResponseDTO<Boolean> validateArtifactImage(@QueryParam("imagePath") String imagePath,
-      @QueryParam("connectorRef") String dockerConnectorIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("connectorRef") String dockerConnectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(dockerConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
     boolean isValidArtifactImage =

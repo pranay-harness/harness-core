@@ -41,6 +41,7 @@ import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
+import io.harness.delegate.k8s.K8sCanaryRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRollbackRequestHandler;
@@ -61,11 +62,13 @@ import io.harness.delegate.service.K8sGlobalConfigServiceImpl;
 import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.BuildSourceTask;
+import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.MicrosoftTeamsSenderDelegateTask;
 import io.harness.delegate.task.PagerDutySenderDelegateTask;
 import io.harness.delegate.task.SlackSenderDelegateTask;
 import io.harness.delegate.task.artifactory.ArtifactoryDelegateTask;
+import io.harness.delegate.task.artifactory.ArtifactoryValidationHandler;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -80,29 +83,31 @@ import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
-import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask.DockerValidationHandler;
+import io.harness.delegate.task.docker.DockerValidationHandler;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTask;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
+import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
-import io.harness.delegate.task.git.NGGitCommandTask.GitValidationHandler;
 import io.harness.delegate.task.gitapi.GitApiTask;
 import io.harness.delegate.task.jira.JiraTaskNG;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
-import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask.KubernetesValidationHandler;
+import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
+import io.harness.delegate.task.nexus.NexusValidationHandler;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
+import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
 import io.harness.delegatetasks.FetchSecretTask;
 import io.harness.delegatetasks.UpsertSecretTask;
+import io.harness.delegatetasks.UpsertSecretTaskValidationHandler;
 import io.harness.delegatetasks.ValidateSecretReferenceTask;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
@@ -114,6 +119,7 @@ import io.harness.encryptors.clients.AzureVaultEncryptor;
 import io.harness.encryptors.clients.CustomSecretsManagerEncryptor;
 import io.harness.encryptors.clients.CyberArkVaultEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.gcp.client.GcpClient;
@@ -384,7 +390,6 @@ import software.wings.service.impl.security.DelegateDecryptionServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.impl.security.SecretDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationImpl;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.stackdriver.StackDriverDelegateServiceImpl;
@@ -438,7 +443,6 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-import software.wings.service.intfc.security.CustomSecretsManagerValidation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
@@ -889,6 +893,7 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK.name())
         .to(K8sRollingRollbackRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.CANARY_DEPLOY.name()).to(K8sCanaryRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
@@ -1232,7 +1237,6 @@ public class DelegateModule extends AbstractModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CustomSecretsManagerValidation.class).to(CustomSecretsManagerValidationImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
 
     binder()
@@ -1249,6 +1253,11 @@ public class DelegateModule extends AbstractModule {
         .bind(VaultEncryptor.class)
         .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
         .to(AzureVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_VAULT_ENCRYPTOR.getName()))
+        .to(GcpSecretsManagerEncryptor.class);
 
     binder()
         .bind(VaultEncryptor.class)
@@ -1301,5 +1310,14 @@ public class DelegateModule extends AbstractModule {
         .to(GitValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DOCKER.getDisplayName())
         .to(DockerValidationHandler.class);
+
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.VAULT.getDisplayName())
+        .to(UpsertSecretTaskValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.GCP_KMS.getDisplayName())
+        .to(EncryptSecretTaskValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.ARTIFACTORY.getDisplayName())
+        .to(ArtifactoryValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.NEXUS.getDisplayName())
+        .to(NexusValidationHandler.class);
   }
 }

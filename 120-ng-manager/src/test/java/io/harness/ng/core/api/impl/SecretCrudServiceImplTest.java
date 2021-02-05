@@ -136,12 +136,13 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     when(secretTextService.update(any(), any(), any())).thenReturn(true);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
-        .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
+        .thenReturn(
+            Secret.builder().identifier("secret").accountIdentifier("account").identifier("identifier").build());
     doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
         .when(secretCrudService)
         .get(any(), any(), any(), any());
 
-    SecretResponseWrapper updatedSecret = secretCrudService.update("account", secretDTOV2);
+    SecretResponseWrapper updatedSecret = secretCrudService.update("account", null, null, "identifier", secretDTOV2);
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
@@ -190,7 +191,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .get(any(), any(), any(), any());
 
     try {
-      secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+      secretCrudService.updateFile("account", null, null, "identifier", secretDTOV2, new StringInputStream("string"));
       fail("Execution should not reach here");
     } catch (InvalidRequestException invalidRequestException) {
       // not required
@@ -217,7 +218,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .get(any(), any(), any(), any());
 
     SecretResponseWrapper updatedFile =
-        secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+        secretCrudService.updateFile("account", null, null, "identifier", secretDTOV2, new StringInputStream("string"));
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {

@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.JOB_NAME;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -72,9 +71,9 @@ public class AccountBackgroundJobServiceImplTest extends WingsBaseTest {
 
     accountBackgroundJobService.manageBackgroundJobsForAccount(ACCOUNT_ID);
 
-    verify(persistentScheduler, times(0)).pauseAllQuartzJobsForAccount(ACCOUNT_ID);
-    verify(perpetualTaskService, times(0)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_1);
-    verify(perpetualTaskService, times(0)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_2);
+    verify(persistentScheduler, times(1)).pauseAllQuartzJobsForAccount(ACCOUNT_ID);
+    verify(perpetualTaskService, times(1)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_1);
+    verify(perpetualTaskService, times(1)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_2);
   }
 
   @Test
@@ -121,12 +120,12 @@ public class AccountBackgroundJobServiceImplTest extends WingsBaseTest {
     PerpetualTaskRecord perpetualTaskRecord1 = PerpetualTaskRecord.builder()
                                                    .accountId(ACCOUNT_ID)
                                                    .uuid(PERPETUAL_TASK_UUID_1)
-                                                   .state(PerpetualTaskState.TASK_ASSIGNED)
+                                                   .state(PerpetualTaskState.TASK_PAUSED)
                                                    .build();
     PerpetualTaskRecord perpetualTaskRecord2 = PerpetualTaskRecord.builder()
                                                    .accountId(ACCOUNT_ID)
                                                    .uuid(PERPETUAL_TASK_UUID_2)
-                                                   .state(PerpetualTaskState.TASK_ASSIGNED)
+                                                   .state(PerpetualTaskState.TASK_PAUSED)
                                                    .build();
     Account account = anAccount()
                           .withCompanyName(HARNESS_NAME)
@@ -143,8 +142,9 @@ public class AccountBackgroundJobServiceImplTest extends WingsBaseTest {
 
     accountBackgroundJobService.manageBackgroundJobsForAccount(ACCOUNT_ID);
 
-    verifyZeroInteractions(persistentScheduler);
-    verifyZeroInteractions(perpetualTaskService);
+    verify(persistentScheduler, times(1)).resumeAllQuartzJobsForAccount(ACCOUNT_ID);
+    verify(perpetualTaskService, times(1)).resumeTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_1);
+    verify(perpetualTaskService, times(1)).resumeTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_2);
   }
 
   @Test
@@ -178,7 +178,8 @@ public class AccountBackgroundJobServiceImplTest extends WingsBaseTest {
 
     accountBackgroundJobService.manageBackgroundJobsForAccount(ACCOUNT_ID);
 
-    verifyZeroInteractions(persistentScheduler);
-    verifyZeroInteractions(perpetualTaskService);
+    verify(persistentScheduler, times(1)).pauseAllQuartzJobsForAccount(ACCOUNT_ID);
+    verify(perpetualTaskService, times(1)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_1);
+    verify(perpetualTaskService, times(1)).pauseTask(ACCOUNT_ID, PERPETUAL_TASK_UUID_2);
   }
 }

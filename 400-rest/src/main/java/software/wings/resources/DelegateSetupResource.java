@@ -15,9 +15,12 @@ import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGAT
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
@@ -30,7 +33,6 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.beans.CEDelegateStatus;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateStatus;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.security.annotations.AuthRule;
@@ -78,6 +80,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateSetupResource {
   private static final String DOWNLOAD_URL = "downloadUrl";
   private static final String ACCOUNT_ID = "?accountId=";

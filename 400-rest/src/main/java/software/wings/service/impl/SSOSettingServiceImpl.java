@@ -11,14 +11,14 @@ import static java.util.stream.Collectors.joining;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.Account;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.Event;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationGroup;

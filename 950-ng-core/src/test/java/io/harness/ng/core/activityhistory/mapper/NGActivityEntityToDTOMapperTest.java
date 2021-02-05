@@ -89,7 +89,6 @@ public class NGActivityEntityToDTOMapperTest extends CategoryTest {
     activityEntity.setReferredEntityType(CONNECTORS.toString());
     activityEntity.setReferredEntityFQN(referredEntityFQN);
     activityEntity.setType(ngActivityType.toString());
-    activityEntity.setErrorMessage(errorMessage);
     activityEntity.setDescription(activityDescription);
     activityEntity.setActivityTime(activityTime);
     activityEntity.setAccountIdentifier(accountIdentifier);
@@ -114,7 +113,6 @@ public class NGActivityEntityToDTOMapperTest extends CategoryTest {
     assertThat(activityHistoryDTO.getType()).isEqualTo(ngActivityType);
     assertThat(activityHistoryDTO.getActivityTime()).isEqualTo(activityTime);
     assertThat(activityHistoryDTO.getDescription()).isEqualTo(activityDescription);
-    assertThat(activityHistoryDTO.getErrorMessage()).isEqualTo(errorMessage);
     assertThat(activityHistoryDTO.getReferredEntity().getEntityRef().getFullyQualifiedName())
         .isEqualTo(referredEntityFQN);
     assertThat(activityHistoryDTO.getReferredEntity().getType()).isEqualTo(CONNECTORS);

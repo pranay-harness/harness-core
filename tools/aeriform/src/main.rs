@@ -1,14 +1,16 @@
-// (Full example with detailed comments in examples/01d_quick_example.rs)
-//
-// This example demonstrates clap's full 'custom derive' style of creating arguments which is the
-// simplest method of use, but sacrifices some flexibility.
-mod analyze;
-mod java_class;
-mod java_module;
-
 use clap::Clap;
 
 use crate::analyze::{analyze, Analyze};
+use crate::execute::{execute, Execute};
+
+mod analyze;
+#[path = "execute/execute.rs"]
+mod execute;
+#[path = "execute/execute_class_move.rs"]
+mod execute_class_move;
+mod java_class;
+mod java_module;
+mod repo;
 
 #[derive(Clap)]
 #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
@@ -22,8 +24,11 @@ struct Opts {
 
 #[derive(Clap)]
 enum SubCommand {
-    #[clap(version = "1.3", author = "George Georgiev <george@harness.io>")]
+    #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
     Analyze(Analyze),
+
+    #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
+    Execute(Execute),
 }
 
 fn main() {
@@ -43,6 +48,9 @@ fn main() {
     match opts.subcmd {
         SubCommand::Analyze(_options) => {
             analyze(_options);
+        }
+        SubCommand::Execute(_options) => {
+            execute(_options);
         }
     }
 

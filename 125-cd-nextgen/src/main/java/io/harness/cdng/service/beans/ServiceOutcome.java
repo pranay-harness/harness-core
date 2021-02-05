@@ -1,7 +1,7 @@
 package io.harness.cdng.service.beans;
 
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.yaml.ParameterField;
 
@@ -30,6 +30,7 @@ public class ServiceOutcome implements Outcome {
   @Singular Map<String, Map<String, Object>> artifacts;
   @Singular Map<String, Map<String, Object>> manifests;
 
+  // When changing the name of this variable, change ImagePullSecretFunctor.
   ArtifactsOutcome artifactsResult;
   @Singular Map<String, ManifestOutcome> manifestResults;
 

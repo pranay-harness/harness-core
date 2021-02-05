@@ -139,6 +139,10 @@ public class SecretsDaoImpl implements SecretsDao {
           EncryptedDataKeys.inheritScopesFromSM, secretUpdateData.getUpdatedSecret().isInheritScopesFromSM());
       updateOperations.set(EncryptedDataKeys.scopedToAccount, secretUpdateData.getUpdatedSecret().isScopedToAccount());
     }
+    if (secretUpdateData.isAdditonalMetadataChanged()) {
+      updateOperations.set(
+          EncryptedDataKeys.additionalMetadata, secretUpdateData.getUpdatedSecret().getAdditionalMetadata());
+    }
     if (updatedEncryptedData != null) {
       updateOperations.set(EncryptedDataKeys.encryptionKey, updatedEncryptedData.getEncryptionKey());
       updateOperations.set(EncryptedDataKeys.encryptedValue, updatedEncryptedData.getEncryptedValue());

@@ -29,9 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/...|| true
-  # 400-rest and 260-delegate modules are excluded.
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -50,6 +49,11 @@ fi
 
 
 BAZEL_MODULES="\
+  //220-graphql-test:supporter-test \
+  //230-model-test:module \
+  //400-rest:module \
+  //400-rest:supporter-test \
+  //400-rest:module_deploy.jar \
   //420-delegate-agent:module \
   //420-delegate-service:module \
   //430-cv-nextgen-commons:module \
@@ -75,6 +79,7 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
+  //905-access-control-core:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -91,7 +96,6 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
   //940-secret-manager-client:module \
-  //945-connector-beans:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -104,6 +108,7 @@ BAZEL_MODULES="\
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
+  //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
   //960-api-services:module \
@@ -122,6 +127,7 @@ BAZEL_MODULES="\
   //970-ng-commons:module \
   //970-rbac-core:module \
   //980-commons:module \
+  //980-java-agent:module \
   //990-commons-test:module \
   //product/ci/engine/proto:all \
   //product/ci/scm/proto:all \
@@ -255,6 +261,7 @@ build_proto_module() {
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 940-notification-client
+build_bazel_application 400-rest
 
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
@@ -278,6 +285,7 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
+build_bazel_module 905-access-control-core
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 915-pms-delegate-service-driver
@@ -288,7 +296,6 @@ build_bazel_module 930-ng-core-clients
 build_bazel_module 940-delegate-beans
 build_bazel_module 940-feature-flag
 build_bazel_module 940-secret-manager-client
-build_bazel_module 945-connector-beans
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
@@ -299,6 +306,7 @@ build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 960-api-services
@@ -314,11 +322,14 @@ build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
+build_bazel_module 980-java-agent
 build_bazel_module 990-commons-test
+build_bazel_module 230-model-test
 
 build_bazel_tests 960-persistence
+build_bazel_tests 400-rest
+build_bazel_tests 220-graphql-test
 
-build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 940-delegate-beans
 build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans

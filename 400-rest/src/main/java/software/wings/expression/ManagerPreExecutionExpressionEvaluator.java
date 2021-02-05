@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
+import io.harness.expression.ImageSecretFunctor;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.SimpleEncryption;
 import io.harness.tasks.Cd1SetupFields;
@@ -83,6 +84,8 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
 
     ngSecretManagerFunctor = ngSecretManagerFunctorBuilder.build();
     addFunctor(NgSecretManagerFunctorInterface.FUNCTOR_NAME, ngSecretManagerFunctor);
+
+    addFunctor(ImageSecretFunctor.FUNCTOR_NAME, new ImageSecretFunctor());
 
     sweepingOutputSecretFunctor =
         SweepingOutputSecretFunctor.builder().mode(mode).simpleEncryption(new SimpleEncryption()).build();

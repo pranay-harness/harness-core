@@ -36,6 +36,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -49,7 +50,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
@@ -126,7 +126,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Host service.
    */
   @Mock HostService hostService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
@@ -153,10 +153,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Ignore("Ignoring as instance without any filter is disabled")
   public void shouldReturnInstances() {
     Application app = anApplication().name("App1").build();
-    wingsPersistence.save(app);
+    persistence.save(app);
     String appId = app.getUuid();
     Environment env = anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
@@ -225,10 +225,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
     Application app = anApplication().name("App1").build();
-    wingsPersistence.save(app);
+    persistence.save(app);
     String appId = app.getUuid();
     Environment env = anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -286,10 +286,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
     Application app = anApplication().name("App1").build();
-    wingsPersistence.save(app);
+    persistence.save(app);
     String appId = app.getUuid();
     Environment env = anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -350,10 +350,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam2() {
     Application app = anApplication().name("App1").build();
-    wingsPersistence.save(app);
+    persistence.save(app);
     String appId = app.getUuid();
     Environment env = anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
                                     .rollback(false)
@@ -431,10 +431,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
-    wingsPersistence.save(env);
+    persistence.save(env);
 
     Service service = Service.builder().name("svc1").build();
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
@@ -513,11 +513,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = Environment.Builder.anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
     Host applicationHost = aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build();
-    wingsPersistence.save(applicationHost);
+    persistence.save(applicationHost);
     Service service = Service.builder().appId(app.getAppId()).uuid(generateUuid()).name("svc1").build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
                                                                       .withEnvId(env.getUuid())
@@ -568,9 +568,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromPartition() {
     Application app = anApplication().name("App1").build();
-    wingsPersistence.save(app);
+    persistence.save(app);
     Environment env = anEnvironment().appId(app.getUuid()).build();
-    wingsPersistence.save(env);
+    persistence.save(env);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);

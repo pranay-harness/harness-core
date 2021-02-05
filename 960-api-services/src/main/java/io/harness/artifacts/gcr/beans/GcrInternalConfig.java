@@ -7,6 +7,5 @@ import lombok.Data;
 @Builder
 public class GcrInternalConfig {
   String registryHostname;
-  String gcrUrl;
   String basicAuthHeader;
 }

@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class CEAwsDTOToEntity extends ConnectorDTOToEntityMapper<CEAwsConnectorDTO, CEAwsConfig> {
+public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Inject AwsClient awsClient;
   @Inject CEAwsSetupConfig ceAwsSetupConfig;
 

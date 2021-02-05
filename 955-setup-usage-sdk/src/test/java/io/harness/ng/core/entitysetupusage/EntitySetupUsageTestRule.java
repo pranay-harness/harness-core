@@ -25,12 +25,14 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class EntitySetupUsageTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
@@ -86,6 +88,6 @@ public class EntitySetupUsageTestRule implements InjectorRuleMixin, MethodRule, 
 
   @Override
   public Statement apply(Statement base, FrameworkMethod method, Object target) {
-    return applyInjector(base, method, target);
+    return applyInjector(log, base, method, target);
   }
 }

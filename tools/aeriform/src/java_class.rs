@@ -5,9 +5,9 @@ use std::collections::HashSet;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
-use std::process::Command;
 
 use crate::java_class;
+use crate::repo::GIT_REPO_ROOT_DIR;
 
 #[derive(Debug)]
 pub struct JavaClass {
@@ -16,6 +16,19 @@ pub struct JavaClass {
     pub dependencies: HashSet<String>,
     pub target_module: Option<String>,
     pub break_dependencies_on: HashSet<String>,
+}
+
+pub trait JavaClassTraits {
+    fn relative_location(&self) -> String;
+}
+
+impl JavaClassTraits for &JavaClass {
+    fn relative_location(&self) -> String {
+        self.location
+            .chars()
+            .skip(self.location.find('/').unwrap() + 1)
+            .collect()
+    }
 }
 
 impl PartialEq for JavaClass {
@@ -33,24 +46,11 @@ impl Hash for JavaClass {
 }
 
 lazy_static! {
-    static ref GIT_REPO_ROOT_DIR: String = String::from_utf8(
-        Command::new("git")
-            .args(&["rev-parse", "--show-toplevel"])
-            .output()
-            .unwrap()
-            .stdout
-    )
-    .unwrap()
-    .trim()
-    .to_string();
+    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
+    pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
-lazy_static! {
-    static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
-    static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
-}
-
-pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<String>) {
+pub fn populate_internal_info(location: &str, module_type: &str) -> (Option<String>, HashSet<String>) {
     let code = fs::read_to_string(&format!("{}/{}", GIT_REPO_ROOT_DIR.as_str(), location)).expect(&format!(
         "failed to read file {}/{}",
         GIT_REPO_ROOT_DIR.as_str(),
@@ -62,7 +62,7 @@ pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<Str
         None
     } else {
         Some(format!(
-            "//{}:module",
+            "//{}:{}",
             captures_target_module
                 .unwrap()
                 .get(1)
@@ -70,7 +70,8 @@ pub fn populate_internal_info(location: &String) -> (Option<String>, HashSet<Str
                 .as_str()
                 .to_string()
                 .to_lowercase()
-                .replace('_', "-")
+                .replace('_', "-"),
+            module_type
         ))
     };
 

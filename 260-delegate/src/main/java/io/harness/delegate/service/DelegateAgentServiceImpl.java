@@ -77,6 +77,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
@@ -84,7 +85,9 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -138,8 +141,6 @@ import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
@@ -246,6 +247,7 @@ import retrofit2.Response;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_AGENT)
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);

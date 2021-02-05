@@ -119,7 +119,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private ManifestSelectionYamlHandler manifestSelectionYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Triggers/trigger.yaml";
-  private final String resourcePath = "./triggers";
+  private final String resourcePath = "400-rest/src/test/resources/triggers";
 
   @UtilityClass
   private static class validTriggerFiles {
@@ -747,12 +747,7 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
       throws IOException {
     doReturn(null).when(mockYamlHelper).getTrigger(anyString(), anyString());
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
     ChangeContext<Trigger.Yaml> changeContext = getChangeContext(yamlString);

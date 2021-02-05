@@ -39,7 +39,11 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateInitializationDetails;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateStringResponseData;
@@ -52,6 +56,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -68,12 +73,8 @@ import io.harness.version.VersionInfoManager;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateBuilder;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
@@ -139,6 +140,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private VersionInfoManager versionInfoManager;
   @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() throws IllegalAccessException {
@@ -174,7 +176,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldExecuteTask() {
     Delegate delegate = createDelegateBuilder().build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     DelegateTask delegateTask = getDelegateTask();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
@@ -189,7 +191,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateSyncService.syncTaskWaitMap));
       DelegateTask task =
-          wingsPersistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
+          persistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
 
       delegateTaskService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
           DelegateTaskResponse.builder()
@@ -241,7 +243,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.setUuid(taskId);
 
     delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
-    assertThat(wingsPersistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isEqualTo(delegateId);
+    assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isEqualTo(delegateId);
   }
 
   @Test
@@ -256,7 +258,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.setUuid(taskId);
 
     delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
-    assertThat(wingsPersistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
+    assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
   }
 
   @Test
@@ -398,7 +400,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     String delegateName = "delegateName";
     Delegate delegate = createDelegateBuilder().build();
     delegate.setDelegateName(delegateName);
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     boolean validationResult = delegateService.validateThatDelegateNameIsUnique(ACCOUNT_ID, delegateName);
     assertThat(validationResult).isFalse();
 
@@ -415,7 +417,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     long lastHeartBeart = DateTime.now().getMillis();
     Delegate delegate =
         createDelegateBuilder().accountId(ACCOUNT_ID).delegateName(DELEGATE_NAME).uuid(generateUuid()).build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     DelegateConnection delegateConnection = DelegateConnection.builder()
                                                 .accountId(ACCOUNT_ID)
@@ -423,7 +425,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                                 .lastHeartbeat(lastHeartBeart)
                                                 .disconnected(false)
                                                 .build();
-    wingsPersistence.save(delegateConnection);
+    persistence.save(delegateConnection);
 
     when(settingsService.validateCEDelegateSetting(any(), any()))
         .thenReturn(CEK8sDelegatePrerequisite.builder().build());
@@ -548,12 +550,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                                 .disconnected(false)
                                                 .build();
 
-    wingsPersistence.save(delegateConnection);
+    persistence.save(delegateConnection);
 
     delegateService.delegateDisconnected(accountId, delegateId, delegateConnectionId);
 
     DelegateConnection retrievedDelegateConnection =
-        wingsPersistence.createQuery(DelegateConnection.class)
+        persistence.createQuery(DelegateConnection.class)
             .filter(DelegateConnectionKeys.uuid, delegateConnection.getUuid())
             .get();
 
@@ -585,17 +587,17 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                              .lastHeartBeat(0)
                              .build();
 
-    wingsPersistence.save(delegate1);
-    wingsPersistence.save(delegate2);
+    persistence.save(delegate1);
+    persistence.save(delegate2);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(1);
 
     delegateService.deleteAllDelegatesExceptOne(ACCOUNT_ID, 1);
 
     Delegate delegateToRetain1 =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
     Delegate delegateToRetain2 =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
 
     assertThat(delegateToRetain1).isNotNull();
     assertThat(delegateToRetain2).isNull();
@@ -621,8 +623,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                              .lastHeartBeat(0)
                              .build();
 
-    wingsPersistence.save(delegate1);
-    wingsPersistence.save(delegate2);
+    persistence.save(delegate1);
+    persistence.save(delegate2);
 
     EmailData emailData =
         EmailData.builder()
@@ -643,9 +645,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.deleteAllDelegatesExceptOne(ACCOUNT_ID, 1);
 
     Delegate delegateToRetain1 =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate1.getUuid()).get();
     Delegate delegateToRetain2 =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate2.getUuid()).get();
 
     assertThat(delegateToRetain1).isNotNull();
     assertThat(delegateToRetain2).isNull();
@@ -665,7 +667,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
     Delegate delegate = createDelegateBuilder().sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
-    String delegateId = wingsPersistence.save(delegate);
+    String delegateId = persistence.save(delegate);
 
     List<String> delegateIds =
         delegateService.obtainDelegateIds(delegate.getAccountId(), delegate.getSessionIdentifier());
@@ -682,7 +684,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     Delegate delegate1 =
         createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
-    String delegateId1 = wingsPersistence.save(delegate1);
+    String delegateId1 = persistence.save(delegate1);
 
     DelegateConnection delegateConnection1 = DelegateConnection.builder()
                                                  .accountId(ACCOUNT_ID)
@@ -692,13 +694,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                                  .lastHeartbeat(System.currentTimeMillis())
                                                  .build();
 
-    wingsPersistence.save(delegateConnection1);
+    persistence.save(delegateConnection1);
 
     delegateIds.add(delegateId1);
 
     Delegate delegate2 =
         createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
-    String delegateId2 = wingsPersistence.save(delegate2);
+    String delegateId2 = persistence.save(delegate2);
 
     DelegateConnection delegateConnection2 = DelegateConnection.builder()
                                                  .accountId(ACCOUNT_ID)
@@ -708,7 +710,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                                  .lastHeartbeat(System.currentTimeMillis())
                                                  .build();
 
-    wingsPersistence.save(delegateConnection2);
+    persistence.save(delegateConnection2);
 
     delegateIds.add(delegateId2);
 
@@ -790,7 +792,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .profileError(true)
                             .build();
 
-    String delegateId = wingsPersistence.save(delegate);
+    String delegateId = persistence.save(delegate);
 
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
@@ -815,7 +817,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .profileExecutedAt(TEST_PROFILE_EXECUTION_TIME)
                             .build();
 
-    String delegateId = wingsPersistence.save(delegate);
+    String delegateId = persistence.save(delegate);
 
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
@@ -841,7 +843,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .delegateProfileId(TEST_DELEGATE_PROFILE_ID)
                             .build();
 
-    String delegateId = wingsPersistence.save(delegate);
+    String delegateId = persistence.save(delegate);
 
     DelegateProfile delegateProfile =
         DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(TEST_DELEGATE_PROFILE_ID).startupScript("").build();
@@ -874,7 +876,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .delegateProfileId(TEST_DELEGATE_PROFILE_ID)
                             .build();
 
-    String delegateId = wingsPersistence.save(delegate);
+    String delegateId = persistence.save(delegate);
 
     DelegateProfile delegateProfile = DelegateProfile.builder()
                                           .accountId(ACCOUNT_ID)
@@ -979,10 +981,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     when(delegateProfileService.get(ACCOUNT_ID, delegateProfileId2)).thenReturn(delegateProfile2);
 
-    delegateIds.add(wingsPersistence.save(delegate1));
-    delegateIds.add(wingsPersistence.save(delegate2));
-    delegateIds.add(wingsPersistence.save(delegate3));
-    delegateIds.add(wingsPersistence.save(delegate4));
+    delegateIds.add(persistence.save(delegate1));
+    delegateIds.add(persistence.save(delegate2));
+    delegateIds.add(persistence.save(delegate3));
+    delegateIds.add(persistence.save(delegate4));
 
     return delegateIds;
   }

@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -39,7 +40,6 @@ import software.wings.beans.ServiceInstance.ServiceInstanceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -67,7 +67,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Inject @InjectMocks private AppService appService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -98,10 +98,10 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
   @Ignore("skipping the integration test")
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = aSettingAttribute().withAccountId(app.getAccountId()).withName("hca").build();
-    wingsPersistence.save(hostConnectionAttr);
+    persistence.save(hostConnectionAttr);
     SettingAttribute computeProviderSetting =
         aSettingAttribute().withAccountId(app.getAccountId()).withName("DC").build();
-    wingsPersistence.save(computeProviderSetting);
+    persistence.save(computeProviderSetting);
 
     String serviceTemplateId = (String) serviceTemplateService
                                    .getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid())
@@ -201,7 +201,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
                                                              .withKey("wingsKey".toCharArray())
                                                              .build())
                                               .build();
-    wingsPersistence.save(hostConnectionAttr);
+    persistence.save(hostConnectionAttr);
 
     SettingAttribute computeProviderSetting =
         aSettingAttribute()
@@ -212,7 +212,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
                            .build())
             .build();
 
-    wingsPersistence.save(computeProviderSetting);
+    persistence.save(computeProviderSetting);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping()
@@ -246,7 +246,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
                            .build())
             .build();
 
-    wingsPersistence.save(hostConnectionAttr);
+    persistence.save(hostConnectionAttr);
     SettingAttribute computeProviderSetting =
         aSettingAttribute()
             .withAppId(app.getUuid())
@@ -256,7 +256,7 @@ public class InfrastructureMappingIntegrationTest extends IntegrationTestBase {
                            .build())
             .build();
 
-    wingsPersistence.save(computeProviderSetting);
+    persistence.save(computeProviderSetting);
 
     // TODO(brett): Create aws autoscaling group and reference in inframapping
     AwsInfrastructureMapping awsInfrastructureMapping =

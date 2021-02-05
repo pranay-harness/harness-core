@@ -50,7 +50,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @Slf4j
 public class DeploymentReconServiceImpl implements DeploymentReconService {
-  @Inject HPersistence wingsPersistence;
+  @Inject HPersistence persistence;
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject private PersistentLocker persistentLocker;
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
@@ -105,7 +105,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
                      .durationStartTs(durationStartTs)
                      .durationEndTs(durationEndTs)
                      .build();
-        String id = wingsPersistence.save(record);
+        String id = persistence.save(record);
         log.info("Inserted new deploymentReconRecord for accountId:[{}],uuid:[{}]", accountId, id);
         record = fetchRecord(id);
 
@@ -170,21 +170,21 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
           }
         }
 
-        UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
+        UpdateOperations updateOperations = persistence.createUpdateOperations(DeploymentReconRecord.class);
         updateOperations.set(DeploymentReconRecordKeys.detectionStatus, detectionStatus);
         updateOperations.set(DeploymentReconRecordKeys.reconciliationStatus, ReconciliationStatus.SUCCESS);
         updateOperations.set(DeploymentReconRecordKeys.reconcilationAction, action);
         updateOperations.set(DeploymentReconRecordKeys.reconEndTs, System.currentTimeMillis());
-        wingsPersistence.update(record, updateOperations);
+        persistence.update(record, updateOperations);
 
       } catch (Exception e) {
         log.error("Exception occurred while running reconciliation for accountID:[{}] in duration:[{}-{}]", accountId,
             new Date(durationStartTs), new Date(durationEndTs), e);
         if (record != null) {
-          UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
+          UpdateOperations updateOperations = persistence.createUpdateOperations(DeploymentReconRecord.class);
           updateOperations.set(DeploymentReconRecordKeys.reconciliationStatus, ReconciliationStatus.FAILED);
           updateOperations.set(DeploymentReconRecordKeys.reconEndTs, System.currentTimeMillis());
-          wingsPersistence.update(record, updateOperations);
+          persistence.update(record, updateOperations);
           return ReconciliationStatus.FAILED;
         }
       }
@@ -196,7 +196,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   private void insertMissingRecords(String accountId, long durationStartTs, long durationEndTs) {
-    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+    Query<WorkflowExecution> query = persistence.createQuery(WorkflowExecution.class, excludeAuthority)
                                          .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                          .filter(WorkflowExecutionKeys.accountId, accountId)
                                          .field(WorkflowExecutionKeys.startTs)
@@ -322,12 +322,12 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   private DeploymentReconRecord fetchRecord(String uuid) {
-    return wingsPersistence.get(DeploymentReconRecord.class, uuid);
+    return persistence.get(DeploymentReconRecord.class, uuid);
   }
 
   protected DeploymentReconRecord getLatestDeploymentReconRecord(@NotNull String accountId) {
     try (HIterator<DeploymentReconRecord> iterator =
-             new HIterator<>(wingsPersistence.createQuery(DeploymentReconRecord.class)
+             new HIterator<>(persistence.createQuery(DeploymentReconRecord.class)
                                  .field(DeploymentReconRecordKeys.accountId)
                                  .equal(accountId)
                                  .order(Sort.descending(DeploymentReconRecordKeys.durationEndTs))
@@ -340,7 +340,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
   }
 
   protected long getWFExecCountFromMongoDB(String accountId, long durationStartTs, long durationEndTs) {
-    long finishedWFExecutionCount = wingsPersistence.createQuery(WorkflowExecution.class)
+    long finishedWFExecutionCount = persistence.createQuery(WorkflowExecution.class)
                                         .field(WorkflowExecutionKeys.accountId)
                                         .equal(accountId)
                                         .field(WorkflowExecutionKeys.startTs)
@@ -355,7 +355,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
                                         .in(ExecutionStatus.finalStatuses())
                                         .count();
 
-    long runningWFExecutionCount = wingsPersistence.createQuery(WorkflowExecution.class)
+    long runningWFExecutionCount = persistence.createQuery(WorkflowExecution.class)
                                        .field(WorkflowExecutionKeys.accountId)
                                        .equal(accountId)
                                        .field(WorkflowExecutionKeys.startTs)
@@ -398,7 +398,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
 
   protected boolean isStatusMismatchedAndUpdated(Map<String, String> tsdbRunningWFs) {
     boolean statusMismatch = false;
-    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
+    Query<WorkflowExecution> query = persistence.createQuery(WorkflowExecution.class, excludeAuthority)
                                          .field(WorkflowExecutionKeys.uuid)
                                          .hasAnyOf(tsdbRunningWFs.keySet())
                                          .project(WorkflowExecutionKeys.serviceExecutionSummaries, false);
@@ -469,10 +469,10 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         log.warn("Found an old record in progress: record: [{}] for accountID:[{}] in duration:[{}-{}]",
             record.getUuid(), record.getAccountId(), new Date(record.getDurationStartTs()),
             new Date(record.getDurationEndTs()));
-        UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(DeploymentReconRecord.class);
+        UpdateOperations updateOperations = persistence.createUpdateOperations(DeploymentReconRecord.class);
         updateOperations.set(DeploymentReconRecordKeys.reconciliationStatus, ReconciliationStatus.FAILED);
         updateOperations.set(DeploymentReconRecordKeys.reconEndTs, System.currentTimeMillis());
-        wingsPersistence.update(record, updateOperations);
+        persistence.update(record, updateOperations);
         return true;
       }
 

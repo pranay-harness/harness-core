@@ -8,6 +8,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
+import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -37,4 +38,6 @@ public interface TimeSeriesAnalysisService {
 
   List<TransactionMetricRisk> getTopTimeSeriesTransactionMetricRisk(
       List<String> verificationTaskIds, Instant startTime, Instant endTime);
+
+  void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory);
 }

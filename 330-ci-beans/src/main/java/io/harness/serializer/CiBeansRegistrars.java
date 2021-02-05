@@ -1,6 +1,5 @@
 package io.harness.serializer;
 
-import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
@@ -20,7 +19,6 @@ public class CiBeansRegistrars {
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .build();
 
@@ -32,7 +30,6 @@ public class CiBeansRegistrars {
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
-          .addAll(FiltersRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
           .build();

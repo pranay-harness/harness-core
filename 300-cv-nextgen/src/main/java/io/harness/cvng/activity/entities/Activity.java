@@ -107,7 +107,7 @@ public abstract class Activity
 
   public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
 
-  public void addCommonFileds(ActivityDTO activityDTO) {
+  protected void addCommonFields(ActivityDTO activityDTO) {
     setAccountId(activityDTO.getAccountIdentifier());
     setProjectIdentifier(activityDTO.getProjectIdentifier());
     setOrgIdentifier(activityDTO.getOrgIdentifier());

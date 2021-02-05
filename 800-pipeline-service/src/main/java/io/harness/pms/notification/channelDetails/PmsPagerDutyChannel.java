@@ -4,27 +4,23 @@ import io.harness.Team;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.channeldetails.PagerDutyChannel;
 
-import com.google.inject.Inject;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import org.assertj.core.util.Lists;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Builder
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName(NotificationChannelType.PAGERDUTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PmsPagerDutyChannel extends PmsNotificationChannel {
-  List<String> integrationKeys;
-
-  @Builder
-  public PmsPagerDutyChannel(List<String> userGroupIds, List<String> integrationKeys) {
-    super(userGroupIds);
-    this.integrationKeys = integrationKeys;
-  }
+  List<String> userGroups;
+  String integrationKey;
 
   @Override
   public NotificationChannel toNotificationChannel(
@@ -33,7 +29,7 @@ public class PmsPagerDutyChannel extends PmsNotificationChannel {
         .accountId(accountId)
         .team(Team.PIPELINE)
         .templateId(templateId)
-        .integrationKeys(integrationKeys)
+        .integrationKeys(Lists.newArrayList(integrationKey))
         .templateData(templateData)
         .build();
   }

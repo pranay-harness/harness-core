@@ -78,6 +78,25 @@ public class RemoveDuplicateAnomaliesTaskletTest extends CategoryTest {
     assertThat(duplicateAnomalyIds).containsExactly("i5", "i6", "i1");
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldNotRemoveIfNotParent() throws Exception {
+    when(anomalyService.list(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS))).thenReturn(getAnomalyList2());
+    tasklet.execute(null, chunkContext);
+    verify(anomalyService).delete(duplicateAnomalyArgumentCaptor.capture(), dateArgumentCaptor.capture());
+    List<String> duplicateAnomalyIds = duplicateAnomalyArgumentCaptor.getAllValues().get(0);
+    assertThat(duplicateAnomalyIds).hasSize(3);
+    assertThat(duplicateAnomalyIds).containsExactly("i5", "i6", "i1");
+  }
+
+  private List<AnomalyEntity> getAnomalyList2() {
+    return Arrays.asList(getClusterAnomaly("i0", "c0", null, null), getClusterAnomaly("i1", "c1", "n1", null),
+        getClusterAnomaly("i2", "c1", "n1", "w1"), getClusterAnomaly("i3", "c2", "n1", "w2"),
+        getGCPAnomaly("i4", "pr1", "pj2", "g1"), getGCPAnomaly("i5", "pr1", "pj2", null),
+        getGCPAnomaly("i6", "pr1", null, null));
+  }
+
   private List<AnomalyEntity> getAnomalyList() {
     return Arrays.asList(getClusterAnomaly("i1", "c1", "n1", null), getClusterAnomaly("i2", "c1", "n1", "w1"),
         getClusterAnomaly("i3", "c2", "n1", "w2"), getGCPAnomaly("i4", "pr1", "pj2", "g1"),

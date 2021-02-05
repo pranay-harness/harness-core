@@ -37,7 +37,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class KubernetesDTOToEntity
-    extends ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
+    implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Override
   public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO) {
     KubernetesCredentialType credentialType = getKubernetesCredentialType(k8ClusterDTO);

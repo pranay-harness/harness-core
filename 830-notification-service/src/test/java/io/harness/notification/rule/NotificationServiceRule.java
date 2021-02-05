@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -43,6 +44,7 @@ import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
+@Slf4j
 public class NotificationServiceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private final ClosingFactory closingFactory;
 
@@ -121,6 +123,6 @@ public class NotificationServiceRule implements MethodRule, InjectorRuleMixin, M
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

@@ -10,13 +10,13 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.event.EventProtoToEntityHelper;
 import io.harness.ng.core.event.MessageListener;
 
-import com.amazonaws.services.eks.model.InvalidRequestException;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -9,7 +9,7 @@ public class LogAnalysisClusterChartDTO {
   private int label;
   String text;
   String hostName;
-  int risk;
+  Risk risk;
   double x;
   double y;
 }

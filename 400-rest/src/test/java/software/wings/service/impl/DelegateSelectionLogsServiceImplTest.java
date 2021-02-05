@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -34,7 +35,6 @@ import io.harness.threading.Concurrent;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Delegate;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;

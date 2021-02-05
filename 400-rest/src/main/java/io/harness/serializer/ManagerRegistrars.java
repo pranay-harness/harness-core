@@ -46,7 +46,6 @@ public class ManagerRegistrars {
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(NotificationSenderRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
-          .addAll(CapabilityRegistrars.kryoRegistrars)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)
@@ -74,7 +73,6 @@ public class ManagerRegistrars {
           .add(OrchestrationStepsMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
-          .addAll(CapabilityRegistrars.morphiaRegistrars)
           .addAll(NotificationSenderRegistrars.morphiaRegistrars)
           .build();
 
@@ -82,7 +80,7 @@ public class ManagerRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(OrchestrationRegistrars.morphiaConverters)
-          .addAll(CapabilityRegistrars.morphiaConverters)
+          .addAll(DelegateTasksBeansRegistrars.morphiaConverters)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

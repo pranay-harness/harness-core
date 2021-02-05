@@ -4,7 +4,6 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
@@ -61,8 +60,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
-            .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))

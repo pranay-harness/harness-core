@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateInstanceStatus.ENABLED;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
@@ -16,7 +17,6 @@ import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
-import static software.wings.beans.DelegateInstanceStatus.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
@@ -54,7 +54,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -64,6 +67,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
@@ -71,9 +75,6 @@ import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateBuilder;
-import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -81,7 +82,6 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
@@ -131,7 +131,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Inject @InjectMocks private AssignDelegateServiceImpl assignDelegateService;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private Clock clock;
 
   private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
@@ -289,7 +289,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Environment env = new Environment();
     env.setName("test environment");
     env.setEnvironmentType(PROD);
-    String envId = wingsPersistence.save(env);
+    String envId = persistence.save(env);
 
     AwsAmiInfrastructureMapping infrastructureMapping = new AwsAmiInfrastructureMapping();
     infrastructureMapping.setAccountId(generateUuid());
@@ -299,7 +299,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     infrastructureMapping.setEnvId(generateUuid());
     infrastructureMapping.setDeploymentType(generateUuid());
     infrastructureMapping.setServiceId("s1");
-    String infraMappingId = wingsPersistence.save(infrastructureMapping);
+    String infraMappingId = persistence.save(infrastructureMapping);
     // End of temporary workaround
 
     List<DelegateProfileScopeTestData> tests =
@@ -518,7 +518,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                             .scopingRules(test.getScopingRules())
                                             .build();
 
-      wingsPersistence.save(delegateProfile);
+      persistence.save(delegateProfile);
 
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(test.getTask().getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, test.getDelegate().getUuid(), test.getTask()))
@@ -836,7 +836,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assignDelegateService.saveConnectionResults(results);
 
-    DelegateConnectionResult saved = wingsPersistence.createQuery(DelegateConnectionResult.class).get();
+    DelegateConnectionResult saved = persistence.createQuery(DelegateConnectionResult.class).get();
     assertThat(saved).isNotNull();
     assertThat(saved.getCriteria()).isEqualTo("criteria");
     assertThat(saved.isValidated()).isTrue();
@@ -846,12 +846,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdateConnectionResults() {
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(false)
-                              .build());
+    persistence.save(DelegateConnectionResult.builder()
+                         .accountId(ACCOUNT_ID)
+                         .delegateId(DELEGATE_ID)
+                         .criteria("criteria")
+                         .validated(false)
+                         .build());
 
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
                                                                .accountId(ACCOUNT_ID)
@@ -862,7 +862,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assignDelegateService.saveConnectionResults(results);
 
-    List<DelegateConnectionResult> saved = wingsPersistence.createQuery(DelegateConnectionResult.class)
+    List<DelegateConnectionResult> saved = persistence.createQuery(DelegateConnectionResult.class)
                                                .filter(DelegateConnectionResultKeys.accountId, ACCOUNT_ID)
                                                .asList();
     assertThat(saved).isNotNull();
@@ -875,12 +875,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldBeWhitelisted() {
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
+    persistence.save(DelegateConnectionResult.builder()
+                         .accountId(ACCOUNT_ID)
+                         .delegateId(DELEGATE_ID)
+                         .criteria("criteria")
+                         .validated(true)
+                         .build());
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
@@ -989,13 +989,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
                             .build();
-    wingsPersistence.save(delegate);
-    wingsPersistence.save(DelegateConnectionResult.builder()
-                              .accountId(ACCOUNT_ID)
-                              .delegateId(DELEGATE_ID)
-                              .criteria("criteria")
-                              .validated(true)
-                              .build());
+    persistence.save(delegate);
+    persistence.save(DelegateConnectionResult.builder()
+                         .accountId(ACCOUNT_ID)
+                         .delegateId(DELEGATE_ID)
+                         .criteria("criteria")
+                         .validated(true)
+                         .build());
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
@@ -1761,7 +1761,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateConnectionResult connectionResult = connectionResultBuilder.build();
     connectionResult.setDelegateId(delegateId);
     connectionResult.setValidated(false);
-    wingsPersistence.save(connectionResult);
+    persistence.save(connectionResult);
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
 
     // test case: connection result present, and validated, but expired
@@ -1911,7 +1911,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateConnectionResultCache.get(ImmutablePair.of(DELEGATE_ID, any()))).thenReturn(trueResult);
 
     Query<DelegateTask> taskQuery =
-        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", ACCOUNT_ID).filter("uuid", "TASK_ID_1");
+        persistence.createQuery(DelegateTask.class).filter("accountId", ACCOUNT_ID).filter("uuid", "TASK_ID_1");
 
     RetryDelegate retryDelegate = RetryDelegate.builder()
                                       .delegateId("DELEGATE_ID_2")

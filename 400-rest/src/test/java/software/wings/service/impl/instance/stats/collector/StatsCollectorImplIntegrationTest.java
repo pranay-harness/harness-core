@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -12,7 +13,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.InstanceStatsSnapshotKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
@@ -47,7 +47,7 @@ import org.mongodb.morphia.Datastore;
  */
 @Slf4j
 public class StatsCollectorImplIntegrationTest extends IntegrationTestBase {
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   @Inject private StatsCollectorImpl statsCollector;
   @Inject private InstanceStatService statService;
 

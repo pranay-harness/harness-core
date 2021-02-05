@@ -1,5 +1,14 @@
 package io.harness.connector;
 
+import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
+import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.NexusValidationParamsProvider;
+import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.ScmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.VaultConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
@@ -36,26 +45,22 @@ import io.harness.connector.mappers.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
-import io.harness.connector.validator.AbstractConnectorValidator;
-import io.harness.connector.validator.AlwaysTrueConnectorValidator;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
 import io.harness.connector.validator.CVConnectorValidator;
+import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
+import io.harness.connector.validator.SecretManagerConnectorValidator;
 import io.harness.connector.validator.scmValidators.BitbucketConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
 import io.harness.connector.validator.scmValidators.GithubConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitlabConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
-import io.harness.delegate.task.git.NGGitCommandTask;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
-import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,70 +71,70 @@ public class ConnectorRegistryFactory {
   static {
     registrar.put(ConnectorType.KUBERNETES_CLUSTER,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, KubernetesConnectionValidator.class,
-            KubernetesTestConnectionDelegateTask.KubernetesValidationHandler.class, KubernetesDTOToEntity.class,
-            KubernetesEntityToDTO.class));
+            K8sConnectorValidationParamsProvider.class, KubernetesDTOToEntity.class, KubernetesEntityToDTO.class));
     registrar.put(ConnectorType.GIT,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitConnectorValidator.class,
-            NGGitCommandTask.GitValidationHandler.class, GitDTOToEntity.class, GitEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class));
     registrar.put(ConnectorType.APP_DYNAMICS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
     registrar.put(ConnectorType.VAULT,
-        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, AlwaysTrueConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, VaultDTOToEntity.class, VaultEntityToDTO.class));
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));
     registrar.put(ConnectorType.GCP_KMS,
-        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, AlwaysTrueConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class));
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            GcpKmsConnectorValidationParamsProvider.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class));
     registrar.put(ConnectorType.LOCAL,
-        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, AlwaysTrueConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, LocalDTOToEntity.class, LocalEntityToDTO.class));
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, LocalDTOToEntity.class, LocalEntityToDTO.class));
     registrar.put(ConnectorType.DOCKER,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, DockerConnectionValidator.class,
-            DockerTestConnectionDelegateTask.DockerValidationHandler.class, DockerDTOToEntity.class,
-            DockerEntityToDTO.class));
+            DockerConnectorValidationParamsProvider.class, DockerDTOToEntity.class, DockerEntityToDTO.class));
     registrar.put(ConnectorType.GCP,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, GcpConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
     registrar.put(ConnectorType.AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, AwsConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
     registrar.put(ConnectorType.CE_AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAwsConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
     registrar.put(ConnectorType.ARTIFACTORY,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, ArtifactoryConnectionValidator.class,
-            NoOpConnectorValidationHandler.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
+            ArtifactoryValidationParamsProvider.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, JiraDTOToEntity.class, JiraEntityToDTO.class));
+            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, NexusDTOToEntity.class, NexusEntityToDTO.class));
+            NexusValidationParamsProvider.class, NexusDTOToEntity.class, NexusEntityToDTO.class));
     registrar.put(ConnectorType.GITHUB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GithubConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, GithubDTOToEntity.class, GithubEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class));
     registrar.put(ConnectorType.GITLAB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitlabConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class));
     registrar.put(ConnectorType.BITBUCKET,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, BitbucketConnectorValidator.class,
-            NoOpConnectorValidationHandler.class, BitbucketDTOToEntity.class, BitbucketEntityToDTO.class));
+            ScmConnectorValidationParamsProvider.class, BitbucketDTOToEntity.class, BitbucketEntityToDTO.class));
   }
 
-  public static Class<? extends AbstractConnectorValidator> getConnectorValidator(ConnectorType connectorType) {
+  public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorValidator();
   }
 
-  public static Class<? extends ConnectorValidationHandler> getConnectorValidationHandler(ConnectorType connectorType) {
-    return registrar.get(connectorType).getConnectorValidationHandler();
+  public static Class<? extends ConnectorValidationParamsProvider> getConnectorValidationParamsProvider(
+      ConnectorType connectorType) {
+    return registrar.get(connectorType).getConnectorValidationParams();
   }
 
   public static ConnectorCategory getConnectorCategory(ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorCategory();
   }
+
   public static Class<? extends ConnectorDTOToEntityMapper<?, ?>> getConnectorDTOToEntityMapper(
       ConnectorType connectorType) {
     return registrar.get(connectorType).getConnectorDTOToEntityMapper();

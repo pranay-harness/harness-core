@@ -30,7 +30,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
 
-public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
+public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
     GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);

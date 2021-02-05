@@ -33,7 +33,7 @@ public interface NGSecretManagerService {
   List<SecretManagerConfig> list(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   Optional<SecretManagerConfig> get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
 
   SecretManagerConfig update(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretManagerConfigUpdateDTO updateDTO);

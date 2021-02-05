@@ -702,6 +702,7 @@ java_library(
     ],
     resources = [
         "//:resource",
+        "//260-delegate/src/test/resources:resource",
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",

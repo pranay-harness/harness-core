@@ -8,12 +8,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.sm.StateExecutionInstance;
@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 
 public class MLServiceUtilsTest extends WingsBaseTest {
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
@@ -35,14 +35,14 @@ public class MLServiceUtilsTest extends WingsBaseTest {
 
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().appId(appId).status(ExecutionStatus.SUCCESS).workflowId(workflowId).build();
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .displayName("context")
                                                         .executionUuid(workflowExecution.getUuid())
                                                         .stateType(StateType.PHASE.toString())
                                                         .status(ExecutionStatus.SUCCESS)
                                                         .build();
-    wingsPersistence.save(stateExecutionInstance);
+    persistence.save(stateExecutionInstance);
     DataDogSetupTestNodeData nodeData =
         DataDogSetupTestNodeData.builder()
             .workflowId(workflowExecution.getWorkflowId())

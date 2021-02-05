@@ -10,7 +10,6 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -360,10 +359,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
                                            .dataCollectionTaskId(dataCollectionTask.getUuid())
                                            .exception("socket timeout")
                                            .build();
-    assertThatThrownBy(() -> dataCollectionTaskService.updateTaskStatus(failure))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            "Task is not in running state. Skipping the update. Most likely previous updateStatus call succeeded.");
     DataCollectionTask updatedTask = hPersistence.get(DataCollectionTask.class, dataCollectionTask.getUuid());
     assertThat(updatedTask.getStatus()).isEqualTo(SUCCESS);
     assertThat(updatedTask.getException()).isNull();

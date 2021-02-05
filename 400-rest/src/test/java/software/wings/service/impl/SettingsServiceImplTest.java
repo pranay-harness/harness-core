@@ -33,6 +33,7 @@ import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -64,6 +65,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,6 +108,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Spy @InjectMocks private SettingsServiceImpl settingsService;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
@@ -147,7 +150,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldValidateCEDelegateSetting() throws IllegalAccessException {
-    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(settingsService, "wingsPersistence", persistence, true);
 
     when(settingValidationService.validateCEK8sDelegateSetting(any()))
         .thenReturn(CEK8sDelegatePrerequisite.builder().build());
@@ -238,7 +241,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void testEnsureHelmConnectorSafeToDelete() throws IllegalAccessException {
-    FieldUtils.writeField(settingsService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(settingsService, "wingsPersistence", persistence, true);
     SettingAttribute helmConnector =
         SettingAttribute.Builder.aSettingAttribute()
             .withAccountId(ACCOUNT_ID)

@@ -1,5 +1,6 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -9,6 +10,8 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.JIRA_CONNECTOR_ID;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -17,32 +20,43 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
 import io.harness.rule.Owner;
+import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.JiraConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,6 +69,8 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Mock private JiraHelperService jiraHelperService;
   @Mock private SettingsService settingsService;
   @Mock private ActivityService activityService;
+  @Mock private DelegateService delegateService;
+  @Mock private SecretManager secretManager;
   @InjectMocks JiraCreateUpdate jiraCreateUpdateState = new JiraCreateUpdate("Jira");
   private static JiraCreateMetaResponse createMetaResponse;
   private static JSONArray projects;
@@ -63,10 +79,10 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @BeforeClass
   public static void setup() throws IOException {
     JSONObject jsonObject =
-        new ObjectMapper().readValue(new File("src/test/resources/mock_create_meta"), JSONObject.class);
+        new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_create_meta"), JSONObject.class);
     createMetaResponse = new JiraCreateMetaResponse(jsonObject);
-    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
-    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+    projects = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_statuses"), JSONArray.class);
   }
 
   @Before
@@ -127,6 +143,12 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     customFieldValueMap.put("start date time", datetime);
     results = jiraCreateUpdateState.validateFields();
     assertThat(results).isNotEmpty();
+
+    JiraCustomFieldValue timeTracking = new JiraCustomFieldValue("timetracking", "1day");
+    customFieldValueMap.put("TimeTracking:OriginalEstimate", timeTracking);
+    results = jiraCreateUpdateState.validateFields();
+    assertThat(results.get("Invalid value format provided for field: TimeTracking:OriginalEstimate"))
+        .isEqualTo("Verify provided value: 1day");
   }
 
   @Test
@@ -528,5 +550,85 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     when(context.renderExpression(fieldValue)).thenReturn(fieldValue);
     String numericValue = jiraCreateUpdateState.parseNumberValue(fieldValue, context, fieldName);
     assertThat(Double.parseDouble(numericValue)).isEqualTo(Double.parseDouble(fieldValue));
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldQueueDelegateTaskAndReturnExecutionResponse() {
+    setUpMocksForEntireExecutionFlow();
+    ExecutionResponse expectedExecutionResponse =
+        ExecutionResponse.builder()
+            .async(true)
+            .correlationIds(Collections.singletonList(ACTIVITY_ID))
+            .delegateTaskId(UUID)
+            .stateExecutionData(JiraExecutionData.builder().activityId(ACTIVITY_ID).build())
+            .build();
+    ExecutionResponse executionResponse = jiraCreateUpdateState.execute(context);
+    assertThat(executionResponse).isEqualTo(expectedExecutionResponse);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponse() {
+    JiraExecutionData jiraExecutionData = JiraExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+    Map<String, ResponseData> response = Collections.singletonMap(ACTIVITY_ID, jiraExecutionData);
+    ExecutionResponse expectedExecutionResponse = ExecutionResponse.builder()
+                                                      .stateExecutionData(jiraExecutionData)
+                                                      .executionStatus(jiraExecutionData.getExecutionStatus())
+                                                      .errorMessage(jiraExecutionData.getErrorMessage())
+                                                      .build();
+    ExecutionResponse executionResponse = jiraCreateUpdateState.handleAsyncResponse(context, response);
+    assertThat(executionResponse).isEqualTo(expectedExecutionResponse);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailExecutionWhenIssueIdIsNotRendered() {
+    setUpMocksForEntireExecutionFlow();
+    jiraCreateUpdateState.setJiraAction(JiraAction.UPDATE_TICKET);
+    jiraCreateUpdateState.setIssueId(StringUtils.EMPTY);
+    when(context.renderExpression(StringUtils.EMPTY)).thenReturn(StringUtils.EMPTY);
+    ExecutionResponse expectedExecutionResponse =
+        ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("No valid issueId after parsing: " + jiraCreateUpdateState.getIssueId())
+            .stateExecutionData(JiraExecutionData.builder().activityId(ACTIVITY_ID).build())
+            .build();
+    ExecutionResponse executionResponse = jiraCreateUpdateState.execute(context);
+    assertThat(executionResponse).isEqualTo(expectedExecutionResponse);
+  }
+
+  private void setUpMocksForEntireExecutionFlow() {
+    jiraCreateUpdateState.setProject("PN");
+    when(context.renderExpression(jiraCreateUpdateState.getProject())).thenReturn("PN");
+    jiraCreateUpdateState.setIssueType("Issue Type");
+    when(context.renderExpression(jiraCreateUpdateState.getIssueType())).thenReturn("Issue Type");
+    jiraCreateUpdateState.setStatus("To Do");
+    when(context.renderExpression(jiraCreateUpdateState.getStatus())).thenReturn("To Do");
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    JiraCustomFieldValue customFieldOptionValue = new JiraCustomFieldValue();
+    customFieldOptionValue.setFieldType("option");
+    customFieldOptionValue.setFieldValue("OptionValue2");
+    customFields.put("customfield_option", customFieldOptionValue);
+    when(context.renderExpression("customfield_option")).thenReturn("customfield_option");
+    when(context.renderExpression("OptionValue2")).thenReturn("OptionValue2");
+    jiraCreateUpdateState.setCustomFields(customFields);
+    jiraCreateUpdateState.setJiraConnectorId(JIRA_CONNECTOR_ID);
+    Application application = Application.Builder.anApplication().accountId(ACCOUNT_ID).name(APP_NAME).build();
+    when(context.fetchRequiredApp()).thenReturn(application);
+    when(context.getApp()).thenReturn(application);
+    when(context.fetchRequiredEnvironment()).thenReturn(Environment.Builder.anEnvironment().build());
+    when(settingsService.getByAccountAndId(ACCOUNT_ID, JIRA_CONNECTOR_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withValue(JiraConfig.builder().password(PASSWORD).build())
+                        .build());
+    when(activityService.save(any())).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
+    when(jiraHelperService.getCreateMetadata(
+             JIRA_CONNECTOR_ID, null, jiraCreateUpdateState.getProject(), ACCOUNT_ID, APP_ID))
+        .thenReturn(createMetaResponse);
+    when(delegateService.queueTask(any())).thenReturn(UUID);
   }
 }

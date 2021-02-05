@@ -18,6 +18,6 @@ public class JiraConnectionTaskParams implements TaskParameters, ExecutionCapabi
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return jiraConnectorDTO.fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return JiraCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, jiraConnectorDTO);
   }
 }

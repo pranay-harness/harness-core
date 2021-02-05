@@ -18,6 +18,7 @@ public class CatalogueHelper {
             .collect(Collectors.groupingBy(ConnectorRegistryFactory::getConnectorCategory));
     return connectorCategoryListMap.entrySet()
         .stream()
+        .sorted(Map.Entry.comparingByKey())
         .map(entry
             -> ConnectorCatalogueItem.builder()
                    .category(entry.getKey())

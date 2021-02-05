@@ -1,5 +1,8 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
@@ -8,8 +11,11 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +45,39 @@ public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, 
   @FdIndex private long lastUpdatedAt;
   @NotEmpty @FdIndex private String verificationTaskId;
   List<TransactionMetricHistory> transactionMetricHistories;
+  private byte[] compressedMetricHistories;
+
+  public byte[] getCompressedMetricHistories() {
+    if (isEmpty(compressedMetricHistories)) {
+      return new byte[0];
+    }
+
+    return compressedMetricHistories;
+  }
+
+  public void compressMetricHistories() {
+    if (isNotEmpty(transactionMetricHistories)) {
+      try {
+        setCompressedMetricHistories(compressString(JsonUtils.asJson(transactionMetricHistories)));
+        setTransactionMetricHistories(null);
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  public void deCompressMetricHistories() {
+    if (isNotEmpty(compressedMetricHistories)) {
+      try {
+        String decompressedMetricHistories = deCompressString(compressedMetricHistories);
+        setTransactionMetricHistories(
+            JsonUtils.asObject(decompressedMetricHistories, new TypeReference<List<TransactionMetricHistory>>() {}));
+        setCompressedMetricHistories(null);
+      } catch (Exception ex) {
+        throw new IllegalStateException(ex);
+      }
+    }
+  }
 
   @Data
   @Builder
