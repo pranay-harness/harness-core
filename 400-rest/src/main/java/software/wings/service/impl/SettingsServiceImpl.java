@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.USE_CREDENTIALS_AUTH_NEXUS_2;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -946,6 +947,11 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    }
+    if (settingAttribute != null && settingAttribute.getValue() instanceof NexusConfig) {
+      NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
+      nexusConfig.setUseCredentialsWithAuth(
+          featureFlagService.isEnabled(USE_CREDENTIALS_AUTH_NEXUS_2, nexusConfig.getAccountId()));
     }
   }
 

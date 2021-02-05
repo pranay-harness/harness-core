@@ -927,16 +927,27 @@ public class NexusTwoServiceImpl {
   @SuppressWarnings({"squid:S3510"})
   public Pair<String, InputStream> downloadArtifactByUrl(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    String credentials = null;
     try {
       if (nexusConfig.hasCredentials()) {
         encryptionService.decrypt(nexusConfig, encryptionDetails, false);
-        Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
-            nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+        log.info("Artifact: {}, ArtifactUrl: {}, Username: {}", artifactName, artifactUrl, nexusConfig.getUsername());
+        if (nexusConfig.isUseCredentialsWithAuth()) {
+          log.info("Using Nexus auth with credentials instead of authenticator");
+          credentials = Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword()));
+        } else {
+          Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
+              nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+        }
       }
+
       URL url = new URL(artifactUrl);
       URLConnection conn = url.openConnection();
+      if (credentials != null) {
+        conn.setRequestProperty("Authorization", credentials);
+      }
       if (conn instanceof HttpsURLConnection) {
-        HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
+        HttpsURLConnection conn1 = (HttpsURLConnection) conn;
         conn1.setHostnameVerifier((hostname, session) -> true);
         conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
         return ImmutablePair.of(artifactName, conn1.getInputStream());
