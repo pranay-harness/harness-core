@@ -169,6 +169,7 @@ public class FilterServiceImpl implements FilterService {
     criteria.and(FilterKeys.accountIdentifier).in(accountId);
     criteria.and(FilterKeys.orgIdentifier).in(orgIdentifier);
     criteria.and(FilterKeys.projectIdentifier).in(projectIdentifier);
+    criteria.and(FilterKeys.filterType).in(type);
     Criteria orOperator = new Criteria().orOperator(Criteria.where(FilterKeys.filterVisibility).is(EVERYONE),
         Criteria.where(FilterKeys.filterVisibility).is(ONLY_CREATOR).and(FilterKeys.userId).is(getUserId()));
     criteria.andOperator(orOperator);
