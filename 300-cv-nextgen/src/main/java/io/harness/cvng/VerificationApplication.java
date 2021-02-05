@@ -32,7 +32,6 @@ import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
-import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
@@ -63,6 +62,8 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
@@ -567,10 +568,11 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerExceptionMappers(JerseyEnvironment jersey) {
-    jersey.register(GenericExceptionMapper.class);
     jersey.register(ConstraintViolationExceptionMapper.class);
     jersey.register(NotFoundExceptionMapper.class);
     jersey.register(BadRequestExceptionMapper.class);
+    jersey.register(WingsExceptionMapperV2.class);
+    jersey.register(GenericExceptionMapperV2.class);
   }
 
   private void runMigrations(Injector injector) {
