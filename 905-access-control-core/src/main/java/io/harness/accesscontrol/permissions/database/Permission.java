@@ -1,7 +1,6 @@
 package io.harness.accesscontrol.permissions.database;
 
 import io.harness.accesscontrol.permissions.PermissionStatus;
-import io.harness.accesscontrol.scopes.Scope;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
@@ -35,7 +34,7 @@ class Permission implements PersistentEntity {
   @NotEmpty String resourceType;
   @NotEmpty String action;
   @NotNull PermissionStatus status;
-  @NotEmpty Set<Scope> scopes;
+  @NotEmpty Set<String> scopes;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.scopes.Scope;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
@@ -26,6 +25,6 @@ public class PermissionDTO {
   @NotEmpty String resourceType;
   @NotEmpty String action;
   @NotNull PermissionStatus status;
-  @NotEmpty Set<Scope> scopes;
+  @NotEmpty Set<String> scopes;
   long version;
 }

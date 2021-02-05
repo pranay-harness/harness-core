@@ -1,7 +1,8 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.permissions.PermissionsModule;
-import io.harness.govern.ProviderModule;
+import io.harness.accesscontrol.roles.RoleModule;
+import io.harness.accesscontrol.scopes.ScopeModule;
 import io.harness.mongo.MongoConfig;
 
 import com.google.inject.AbstractModule;
@@ -25,14 +26,17 @@ public class AccessControlModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new ProviderModule() {
+    install(new AbstractModule() {
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
         return accessControlConfiguration.getMongoConfig();
       }
     });
+    install(AccessControlPersistenceModule.getInstance());
+    install(ScopeModule.getInstance());
     install(PermissionsModule.getInstance());
+    install(RoleModule.getInstance());
     registerRequiredBindings();
   }
 
