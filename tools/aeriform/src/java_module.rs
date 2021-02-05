@@ -5,7 +5,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
 
 #[derive(Debug)]
 pub struct JavaModule {
@@ -31,16 +31,27 @@ pub fn modules() -> HashMap<String, JavaModule> {
         );
     }
 
-    let modules = String::from_utf8(output.stdout)
+    let targets = String::from_utf8(output.stdout)
         .unwrap()
         .lines()
         .into_iter()
         .par_bridge()
         .map(|line| line.to_string())
-        .filter(|target| target.starts_with("java_library rule "))
-        .map(|target| target.split_whitespace().last().unwrap().to_string())
+        .filter(|target| target.starts_with("java_library rule ") || target.starts_with("java_binary rule "))
         .filter(|name| name.ends_with(":module") || name.ends_with(":tests") || name.ends_with(":supporter-test"))
         .collect::<HashSet<String>>();
+
+    let module_rules = targets
+        .iter()
+        .map(|target| {
+            (
+                target.split_whitespace().last().unwrap().to_string(),
+                target.split_whitespace().nth(0).unwrap().to_string(),
+            )
+        })
+        .collect::<HashMap<String, String>>();
+
+    let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
         "https/harness-internal-read%40harness.jfrog.io/artifactory/harness-internal",
@@ -51,7 +62,12 @@ pub fn modules() -> HashMap<String, JavaModule> {
 
     let mut result: HashMap<String, JavaModule> = modules
         .par_iter()
-        .map(|name| (name.clone(), populate_from_bazel(name, &modules)))
+        .map(|name| {
+            (
+                name.clone(),
+                populate_from_bazel(name, module_rules.get(name).unwrap(), &modules),
+            )
+        })
         .collect::<HashMap<String, JavaModule>>();
 
     result.insert("data-collection-dsl".to_string(), data_collection_dsl);
@@ -235,16 +251,25 @@ lazy_static! {
     .to_string();
 }
 
-fn populate_from_bazel(name: &String, modules: &HashSet<String>) -> JavaModule {
+fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) -> JavaModule {
     let mut split = name.split(":");
     let directory = split.next().unwrap().strip_prefix("//").unwrap().to_string();
     let target_name = split.next().unwrap();
-    let jar = format!(
-        "{}/{}/lib{}.jar",
-        BAZEL_BAZEL_GENFILES_DIR.as_str(),
-        directory,
-        target_name
-    );
+    let jar = if rule.eq("java_library") {
+        format!(
+            "{}/{}/lib{}.jar",
+            BAZEL_BAZEL_GENFILES_DIR.as_str(),
+            directory,
+            target_name
+        )
+    } else {
+        format!(
+            "{}/{}/{}.jar",
+            BAZEL_BAZEL_GENFILES_DIR.as_str(),
+            directory,
+            target_name
+        )
+    };
 
     let module_dependencies = populate_module_dependencies(name, modules);
 

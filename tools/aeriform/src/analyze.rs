@@ -5,7 +5,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::java_class::{JavaClass, JavaClassTraits};
-use crate::java_module::{JavaModule, modules};
+use crate::java_module::{modules, JavaModule};
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -123,9 +123,7 @@ pub fn analyze(opts: Analyze) {
 
     results
         .iter()
-        .filter(|&report|
-            filter_report(&opts, report) || indirect_classes.contains(&report.for_class)
-        )
+        .filter(|&report| filter_report(&opts, report) || indirect_classes.contains(&report.for_class))
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
@@ -182,7 +180,7 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
                 kind: Kind::Critical,
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
                 action: Default::default(),
-                for_class:class.name.clone(),
+                for_class: class.name.clone(),
                 indirect_classes: Default::default(),
                 for_modules: modules,
             })
@@ -208,7 +206,7 @@ fn check_for_classes_in_more_than_one_module(
                     kind: Kind::Critical,
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
                     action: Default::default(),
-                    for_class:class.name.clone(),
+                    for_class: class.name.clone(),
                     indirect_classes: Default::default(),
                     for_modules: [module.name.clone(), tracked_module.name.clone()]
                         .iter()
@@ -237,7 +235,7 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
                     module.name, dependent.name
                 ),
                 action: Default::default(),
-                for_class:Default::default(),
+                for_class: Default::default(),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
             });
@@ -262,7 +260,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
                     class.name
                 ),
                 action: Default::default(),
-                for_class:class.name.clone(),
+                for_class: class.name.clone(),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone()].iter().cloned().collect(),
             })
@@ -313,10 +311,7 @@ fn check_for_moves(
                     .iter()
                     .cloned()
                     .collect();
-                let indirect_classes = [dependent_class.name.clone()]
-                    .iter()
-                    .cloned()
-                    .collect();
+                let indirect_classes = [dependent_class.name.clone()].iter().cloned().collect();
                 results.push(if class.break_dependencies_on.contains(src) {
                     Report {
                         kind: Kind::DevAction,
@@ -325,7 +320,7 @@ fn check_for_moves(
                             class.name, dependent_class.name
                         ),
                         action: Default::default(),
-                        for_class:class.name.clone(),
+                        for_class: class.name.clone(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
                     }
@@ -337,7 +332,7 @@ fn check_for_moves(
                             class.name, dependent_class.name, dependent_target_module.name, target_module.name
                         ),
                         action: Default::default(),
-                        for_class:class.name.clone(),
+                        for_class: class.name.clone(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
                     }
@@ -363,7 +358,7 @@ fn check_for_moves(
                         kind: Kind::DevAction,
                         action: Default::default(),
                         message: msg,
-                        for_class:class.name.clone(),
+                        for_class: class.name.clone(),
                         indirect_classes: Default::default(),
                         for_modules: mdls,
                     },
@@ -376,7 +371,7 @@ fn check_for_moves(
                             class.relative_location(),
                             target_module.directory
                         ),
-                        for_class:class.name.clone(),
+                        for_class: class.name.clone(),
                         indirect_classes: Default::default(),
                         for_modules: mdls,
                     },
@@ -393,7 +388,7 @@ fn check_for_moves(
                         not_ready_yet.join(", ")
                     ),
                     action: Default::default(),
-                    for_class:class.name.clone(),
+                    for_class: class.name.clone(),
                     indirect_classes: all_classes,
                     for_modules: mdls,
                 });
@@ -415,7 +410,7 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
                 class.name, module.name
             ),
             action: Default::default(),
-            for_class:class.name.clone(),
+            for_class: class.name.clone(),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });
