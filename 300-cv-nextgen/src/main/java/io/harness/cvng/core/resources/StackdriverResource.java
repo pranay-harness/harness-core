@@ -1,12 +1,14 @@
 package io.harness.cvng.core.resources;
 
-import io.harness.cvng.core.beans.StackdriverSampleDataDTO;
+import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -14,7 +16,10 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -26,6 +31,12 @@ import javax.ws.rs.QueryParam;
 @Path("/stackdriver")
 @Produces("application/json")
 @NextGenManagerAuth
+@ExposeInternalException
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 public class StackdriverResource {
   @Inject private StackdriverService stackdriverService;
 
@@ -34,14 +45,14 @@ public class StackdriverResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all stackdriver dashboards", nickname = "getStackdriverDashboards")
-  public RestResponse<PageResponse<StackdriverDashboardDTO>> getStackdriverDashboards(
+  public ResponseDTO<PageResponse<StackdriverDashboardDTO>> getStackdriverDashboards(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
       @QueryParam("offset") @NotNull int offset, @QueryParam("filter") String filter,
       @QueryParam("tracingId") String tracingId) {
-    return new RestResponse<>(stackdriverService.listDashboards(
+    return ResponseDTO.newResponse(stackdriverService.listDashboards(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, pageSize, offset, filter, tracingId));
   }
 
@@ -50,13 +61,13 @@ public class StackdriverResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get details about one dashboard", nickname = "getStackdriverDashboardDetail")
-  public RestResponse<List<StackdriverDashboardDetail>> getStackdriverDashboardDetail(
+  public ResponseDTO<List<StackdriverDashboardDetail>> getStackdriverDashboardDetail(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("path") @NotNull String path,
       @QueryParam("tracingId") String tracingId) {
-    return new RestResponse<>(stackdriverService.getDashboardDetails(
+    return ResponseDTO.newResponse(stackdriverService.getDashboardDetails(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, path, tracingId));
   }
 
@@ -65,13 +76,13 @@ public class StackdriverResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get sample data for one metric", nickname = "getStackdriverSampleData")
-  public ResponseDTO<StackdriverSampleDataDTO> getStackdriverSampleData(
+  public ResponseDTO<Set<TimeSeriesSampleDTO>> getStackdriverSampleData(
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId,
       @NotNull Object metricDefinitionDTO) {
-    return stackdriverService.getSampleData(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, metricDefinitionDTO, tracingId);
+    return ResponseDTO.newResponse(stackdriverService.getSampleData(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, metricDefinitionDTO, tracingId));
   }
 }

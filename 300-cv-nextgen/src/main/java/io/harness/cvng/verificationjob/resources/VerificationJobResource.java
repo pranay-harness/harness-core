@@ -4,7 +4,9 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.rest.RestResponse;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -13,6 +15,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
@@ -28,6 +32,11 @@ import retrofit2.http.Body;
 @Produces("application/json")
 @ExposeInternalException
 @NextGenManagerAuth
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 public class VerificationJobResource {
   @Inject private VerificationJobService verificationJobService;
 
@@ -35,10 +44,10 @@ public class VerificationJobResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "gets the verification job for an identifier", nickname = "getVerificationJob")
-  public RestResponse<VerificationJobDTO> get(@QueryParam("accountId") @Valid final String accountId,
+  public ResponseDTO<VerificationJobDTO> get(@QueryParam("accountId") @Valid final String accountId,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("identifier") String identifier) {
-    return new RestResponse<>(
+    return ResponseDTO.newResponse(
         verificationJobService.getVerificationJobDTO(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
@@ -66,11 +75,11 @@ public class VerificationJobResource {
   @ExceptionMetered
   @Path("/list")
   @ApiOperation(value = "lists all verification jobs for an identifier", nickname = "listVerificationJobs")
-  public RestResponse<PageResponse<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
+  public ResponseDTO<PageResponse<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
       @QueryParam("filter") String filter) {
-    return new RestResponse<>(
+    return ResponseDTO.newResponse(
         verificationJobService.list(accountId, projectIdentifier, orgIdentifier, offset, pageSize, filter));
   }
 
@@ -80,11 +89,11 @@ public class VerificationJobResource {
   @Path("/default-health-job")
   @ApiOperation(
       value = "gets the default health verification job for a project", nickname = "getDefaultHealthVerificationJob")
-  public RestResponse<VerificationJobDTO>
+  public ResponseDTO<VerificationJobDTO>
   getDefaultHealthVerificationJob(@QueryParam("accountId") @NotNull @Valid final String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier) {
-    return new RestResponse<>(
+    return ResponseDTO.newResponse(
         verificationJobService.getDefaultHealthVerificationJobDTO(accountId, orgIdentifier, projectIdentifier));
   }
 
@@ -94,9 +103,9 @@ public class VerificationJobResource {
   @LearningEngineAuth
   @Path("/job-from-url")
   @ApiOperation(value = "gets the verificationJob from its url", nickname = "getVerificationJobFromUrl")
-  public RestResponse<VerificationJobDTO> getVerificationJobFromUrl(
+  public ResponseDTO<VerificationJobDTO> getVerificationJobFromUrl(
       @QueryParam("accountId") @NotNull @Valid final String accountId,
       @QueryParam("verificationJobUrl") @NotNull String webhookUrl) {
-    return new RestResponse<>(verificationJobService.getDTOByUrl(accountId, webhookUrl));
+    return ResponseDTO.newResponse(verificationJobService.getDTOByUrl(accountId, webhookUrl));
   }
 }
