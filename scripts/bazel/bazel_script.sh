@@ -330,7 +330,6 @@ build_bazel_tests 960-persistence
 build_bazel_tests 400-rest
 build_bazel_tests 220-graphql-test
 
-build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 940-delegate-beans
 build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans

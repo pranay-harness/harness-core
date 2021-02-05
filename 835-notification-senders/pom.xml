@@ -76,11 +76,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>920-delegate-service-beans-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
