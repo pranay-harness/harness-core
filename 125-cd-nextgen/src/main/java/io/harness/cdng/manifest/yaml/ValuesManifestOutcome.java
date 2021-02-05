@@ -14,5 +14,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class ValuesManifestOutcome implements ManifestOutcome {
   String identifier;
   String type = ManifestType.VALUES;
-  StoreConfig storeConfig;
+  StoreConfig store;
 }

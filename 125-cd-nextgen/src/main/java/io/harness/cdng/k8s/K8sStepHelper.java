@@ -296,8 +296,8 @@ public class K8sStepHelper {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
-        GitStore gitStore = (GitStore) valuesManifest.getStoreConfig();
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind())) {
+        GitStore gitStore = (GitStore) valuesManifest.getStore();
         String connectorId = gitStore.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
@@ -414,7 +414,7 @@ public class K8sStepHelper {
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
     return aggregatedValuesManifests.stream().anyMatch(
-        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind()));
+        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind()));
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
@@ -442,7 +442,7 @@ public class K8sStepHelper {
     List<String> valuesFileContents = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : valuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind())) {
         FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
