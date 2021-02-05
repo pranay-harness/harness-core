@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "//980-commons:module",
+    "//940-delegate-beans:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
@@ -32,9 +33,7 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
-        "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
-    ],
+    deps = shared_dependencies,
 )
 
 java_library(
