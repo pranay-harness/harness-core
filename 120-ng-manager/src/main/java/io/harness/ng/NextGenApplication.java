@@ -324,7 +324,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
-        (getAuthFilterPredicate(PublicApi.class).negate()).and((getAuthFilterPredicate(InternalApi.class)).negate());
+        (getAuthenticationExemptedRequestsPredicate().negate())
+            .and((getAuthFilterPredicate(InternalApi.class)).negate());
     Map<String, String> serviceToSecretMapping = new HashMap<>();
     serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
     serviceToSecretMapping.put(
@@ -338,6 +339,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
     environment.jersey().register(
         new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthenticationExemptedRequestsPredicate() {
+    return getAuthFilterPredicate(PublicApi.class)
+        .or(resourceInfoAndRequest
+            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("version")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("swagger.json"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
