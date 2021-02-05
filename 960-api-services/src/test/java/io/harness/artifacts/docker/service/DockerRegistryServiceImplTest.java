@@ -4,6 +4,7 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -131,6 +132,24 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   public void testValidateCredentialIOExceptionForAllgetapiVersionCalls() {
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
     wireMockRule.stubFor(get(urlEqualTo("/v2")).willReturn(aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+    wireMockRule.stubFor(get(urlEqualTo("/v2/"))
+                             .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
+                                 "Bearer realm=\"http://localhost:" + wireMockRule.port()
+                                     + "/service/token\",service=\"harbor-registry\",scope=\"somevalue\"")));
+
+    // http://localhost:9883/service/token?service=harbor-registry&scope=somevalue
+    wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
+                             .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
+    assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(InvalidArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testValidateCredentialNotFoundResponse() {
+    doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
+    wireMockRule.stubFor(get(urlEqualTo("/v2")).willReturn(aResponse().withStatus(404)));
     wireMockRule.stubFor(get(urlEqualTo("/v2/"))
                              .willReturn(aResponse().withStatus(401).withHeader("Www-Authenticate",
                                  "Bearer realm=\"http://localhost:" + wireMockRule.port()
