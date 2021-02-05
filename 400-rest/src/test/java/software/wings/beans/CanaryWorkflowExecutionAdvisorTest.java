@@ -9,14 +9,17 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -278,6 +281,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, phaseStep, state)).isNull();
 
     ExecutionContextImpl context = spy(new ExecutionContextImpl(null));
+    doReturn("renderedExp").when(context).renderExpression(anyString());
 
     // Assertion expression evaluating to false.
     doReturn(false).when(context).evaluateExpression(any());
@@ -439,5 +443,23 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
                    EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement))
         .isEqualTo(failureStrategies.get(0));
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldRenderSkipConditionExpression() {
+    String expr = "${expr.name} == \"someValue\"";
+    String stateId = "stateId";
+    State state = new ShellScriptState(STATE_NAME);
+    state.setId(stateId);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.ENABLE_SERVICE)
+                              .withStepSkipStrategies(Collections.singletonList(new StepSkipStrategy(
+                                  StepSkipStrategy.Scope.SPECIFIC_STEPS, Collections.singletonList(stateId), expr)))
+                              .build();
+    ExecutionContextImpl context = spy(new ExecutionContextImpl(null));
+    CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+
+    verify(context).renderExpression(expr);
   }
 }
