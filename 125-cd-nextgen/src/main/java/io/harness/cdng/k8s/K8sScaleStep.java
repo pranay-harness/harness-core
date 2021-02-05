@@ -45,7 +45,7 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
     K8sManifestOutcome k8sManifestOutcome =
         k8sStepHelper.getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
-    StoreConfig storeConfig = k8sManifestOutcome.getStoreConfig();
+    StoreConfig storeConfig = k8sManifestOutcome.getStore();
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));

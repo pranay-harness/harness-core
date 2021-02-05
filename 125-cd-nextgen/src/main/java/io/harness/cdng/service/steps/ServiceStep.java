@@ -75,7 +75,6 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.groovy.util.Maps;
 
 @Slf4j
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
@@ -179,7 +178,18 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                          .build())
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(YamlTypes.SERVICE_CONFIG)
-                         .outcome(ServiceConfigOutcome.builder().service(serviceOutcome).build())
+                         .outcome(ServiceConfigOutcome.builder()
+                                      .service(serviceOutcome)
+                                      .variables(serviceOutcome.getVariables())
+                                      .artifacts(serviceOutcome.getArtifacts())
+                                      .manifests(serviceOutcome.getManifests())
+                                      .artifactsResult(serviceOutcome.getArtifactsResult())
+                                      .manifestResults(serviceOutcome.getManifestResults())
+                                      .artifactOverrideSets(serviceOutcome.getArtifactOverrideSets())
+                                      .manifestOverrideSets(serviceOutcome.getManifestOverrideSets())
+                                      .variableOverrideSets(serviceOutcome.getVariableOverrideSets())
+                                      .stageOverrides(serviceOutcome.getStageOverrides())
+                                      .build())
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .status(Status.SUCCEEDED)
@@ -358,8 +368,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put(YamlTypes.OUTPUT, RecastOrchestrationUtils.toDocument(artifactOutcome));
-        addValuesToMap(
-            artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
+        Map<String, Object> sidecarsMap = new HashMap<>();
+        sidecarsMap.put(artifactOutcome.getIdentifier(), valueMap);
+        addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, sidecarsMap);
       }
     }
     outcomeBuilder.artifactsResult(artifactsBuilder.build());
@@ -374,8 +385,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
           addValuesToMap(
               artifactsMap, YamlTypes.PRIMARY_ARTIFACT, RecastOrchestrationUtils.toDocument(artifactOutcome));
         } else {
-          addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG,
-              Maps.of(artifactOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(artifactOutcome)));
+          Map<String, Object> sidecarsMap = new HashMap<>();
+          sidecarsMap.put(artifactOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(artifactOutcome));
+          addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, sidecarsMap);
         }
       }
     }

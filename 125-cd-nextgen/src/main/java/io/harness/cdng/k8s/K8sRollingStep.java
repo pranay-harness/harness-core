@@ -48,7 +48,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
 
   public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    StoreConfig storeConfig = k8sManifestOutcome.getStoreConfig();
+    StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);

@@ -49,7 +49,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   @Override
   public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    final StoreConfig storeConfig = k8sManifestOutcome.getStoreConfig();
+    final StoreConfig storeConfig = k8sManifestOutcome.getStore();
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
     final String instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
