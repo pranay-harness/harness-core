@@ -141,8 +141,8 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new YamlSchemaClientModule(configuration.getCiManagerClientConfig(),
-        configuration.getCiManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(
+        YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
