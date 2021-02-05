@@ -12,6 +12,9 @@
         "sourcePaths"
       ],
       "properties": {
+        "archiveFormat": {
+          "type": "string"
+        },
         "bucket": {
           "type": "string"
         },
@@ -20,6 +23,9 @@
         },
         "key": {
           "type": "string"
+        },
+        "override": {
+          "type": "boolean"
         },
         "resources": {
           "$ref": "#/definitions/ContainerResource"
@@ -36,9 +42,6 @@
               "type": "string"
             }
           ]
-        },
-        "target": {
-          "type": "string"
         }
       }
     }

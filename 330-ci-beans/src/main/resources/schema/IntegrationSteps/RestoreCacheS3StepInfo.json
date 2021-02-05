@@ -11,6 +11,9 @@
         "key"
       ],
       "properties": {
+        "archiveFormat": {
+          "type": "string"
+        },
         "bucket": {
           "type": "string"
         },
@@ -20,17 +23,20 @@
         "endpoint": {
           "type": "string"
         },
+        "failIfKeyNotFound": {
+          "type": "boolean"
+        },
         "key": {
           "type": "string"
+        },
+        "pathStyle": {
+          "type": "boolean"
         },
         "region": {
           "type": "string"
         },
         "resources": {
           "$ref": "#/definitions/ContainerResource"
-        },
-        "target": {
-          "type": "string"
         }
       }
     }

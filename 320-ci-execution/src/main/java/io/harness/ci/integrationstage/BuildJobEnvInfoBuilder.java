@@ -56,6 +56,7 @@ import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
@@ -242,6 +243,7 @@ public class BuildJobEnvInfoBuilder {
     }
 
     CIStepInfo ciStepInfo = (CIStepInfo) stepElement.getStepSpecType();
+    long timeout = TimeoutUtils.getTimeoutInSeconds(stepElement.getTimeout(), ciStepInfo.getDefaultTimeout());
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return createRunStepContainerDefinition((RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder,
@@ -257,7 +259,7 @@ public class BuildJobEnvInfoBuilder {
       case UPLOAD_S3:
       case UPLOAD_GCS:
         return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
-            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getType());
+            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getType(), timeout);
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
             stepElement.getIdentifier(), stepElement.getName());
@@ -270,13 +272,14 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepType) {
+      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepType,
+      long timeout) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier));
+    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
 
     return ContainerDefinitionInfo.builder()
         .name(containerName)
