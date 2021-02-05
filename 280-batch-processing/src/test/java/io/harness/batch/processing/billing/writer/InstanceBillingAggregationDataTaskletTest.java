@@ -68,13 +68,19 @@ public class InstanceBillingAggregationDataTaskletTest extends BatchProcessingBa
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testExecute() throws Exception {
-    when(billingDataService.cleanPreAggBillingData(any(), any(), any())).thenReturn(true);
-    when(billingDataService.generatePreAggBillingData(any(), any(), any())).thenReturn(true);
+    when(billingDataService.cleanPreAggBillingData(any(), any(), any(), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(true);
+    when(billingDataService.generatePreAggBillingData(any(), any(), any(), any(), any())).thenReturn(true);
+    when(billingDataService.generatePreAggBillingDataWithId(any(), any(), any(), any(), any())).thenReturn(true);
 
     RepeatStatus repeatStatus = instanceBillingAggregationDataTasklet.execute(null, chunkContext);
 
-    verify(billingDataService, times(1)).cleanPreAggBillingData(eq(ACCOUNT_ID), eq(START_INSTANT), eq(END_INSTANT));
-    verify(billingDataService, times(1)).generatePreAggBillingData(eq(ACCOUNT_ID), eq(START_INSTANT), eq(END_INSTANT));
+    verify(billingDataService, times(1))
+        .cleanPreAggBillingData(
+            eq(ACCOUNT_ID), eq(START_INSTANT), eq(END_INSTANT), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION));
+    verify(billingDataService, times(1))
+        .generatePreAggBillingData(eq(ACCOUNT_ID), eq(START_INSTANT), eq(END_INSTANT),
+            eq(BatchJobType.INSTANCE_BILLING_AGGREGATION), eq(BatchJobType.INSTANCE_BILLING));
 
     assertThat(repeatStatus).isNull();
   }
@@ -83,8 +89,11 @@ public class InstanceBillingAggregationDataTaskletTest extends BatchProcessingBa
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testFailedExecute() throws Exception {
-    when(billingDataService.cleanPreAggBillingData(any(), any(), any())).thenReturn(true);
-    when(billingDataService.generatePreAggBillingData(any(), any(), any())).thenReturn(false);
+    when(billingDataService.cleanPreAggBillingData(any(), any(), any(), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(true);
+    when(billingDataService.generatePreAggBillingData(
+             any(), any(), any(), eq(BatchJobType.INSTANCE_BILLING), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(false);
 
     assertThatThrownBy(() -> instanceBillingAggregationDataTasklet.execute(null, chunkContext))
         .hasMessageContaining(format("BatchJobType:%s failed", BatchJobType.INSTANCE_BILLING_AGGREGATION.name()));
@@ -94,8 +103,11 @@ public class InstanceBillingAggregationDataTaskletTest extends BatchProcessingBa
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testFailedExecuteCleanData() throws Exception {
-    when(billingDataService.cleanPreAggBillingData(any(), any(), any())).thenReturn(false);
-    when(billingDataService.generatePreAggBillingData(any(), any(), any())).thenReturn(true);
+    when(billingDataService.cleanPreAggBillingData(any(), any(), any(), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(false);
+    when(billingDataService.generatePreAggBillingData(
+             any(), any(), any(), eq(BatchJobType.INSTANCE_BILLING), eq(BatchJobType.INSTANCE_BILLING_AGGREGATION)))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> instanceBillingAggregationDataTasklet.execute(null, chunkContext))
         .hasMessageContaining(format("BatchJobType:%s failed", BatchJobType.INSTANCE_BILLING_AGGREGATION.name()));

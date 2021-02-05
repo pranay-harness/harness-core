@@ -139,7 +139,13 @@ public class EventJobScheduler {
       }
 
       try {
-        billingDataService.purgeOldHourlyBillingData();
+        billingDataService.purgeOldHourlyBillingData(BatchJobType.INSTANCE_BILLING_HOURLY);
+      } catch (Exception ex) {
+        log.error("Exception while running purgeOldHourlyBillingData Job", ex);
+      }
+
+      try {
+        billingDataService.purgeOldHourlyBillingData(BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION);
       } catch (Exception ex) {
         log.error("Exception while running purgeOldHourlyBillingData Job", ex);
       }
