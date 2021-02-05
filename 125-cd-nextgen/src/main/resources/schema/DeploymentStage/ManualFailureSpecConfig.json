@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "required": [
+    "onTimeout",
+    "timeout"
+  ],
+  "properties": {
+    "onTimeout": {
+      "$ref": "#/definitions/OnTimeoutConfig"
+    },
+    "timeout": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

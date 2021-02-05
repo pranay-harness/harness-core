@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "required": [
+    "onRetryFailure",
+    "retryCount",
+    "retryInterval"
+  ],
+  "properties": {
+    "onRetryFailure": {
+      "$ref": "#/definitions/OnRetryFailureConfig"
+    },
+    "retryCount": {
+      "type": "integer",
+      "format": "int32"
+    },
+    "retryInterval": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

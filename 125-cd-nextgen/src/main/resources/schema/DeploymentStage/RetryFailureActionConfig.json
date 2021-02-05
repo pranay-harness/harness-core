@@ -1,0 +1,17 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/FailureStrategyActionConfig"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "readOnly": true,
+          "$ref": "#/definitions/RetryFailureSpecConfig"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

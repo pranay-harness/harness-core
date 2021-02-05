@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.Wither;
 
 @Data
@@ -23,6 +24,8 @@ public class ServiceYaml implements Visitable {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
   @Wither Map<String, String> tags;
+
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public LevelNode getLevelNode() {

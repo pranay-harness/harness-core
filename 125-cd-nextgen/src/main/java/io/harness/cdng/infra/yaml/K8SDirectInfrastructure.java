@@ -13,6 +13,7 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
@@ -28,7 +29,7 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public InfraMapping getInfraMapping() {

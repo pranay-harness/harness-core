@@ -8,7 +8,9 @@ import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -20,7 +22,7 @@ public class SidecarArtifactWrapper implements Visitable {
   SidecarArtifact sidecar;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public LevelNode getLevelNode() {

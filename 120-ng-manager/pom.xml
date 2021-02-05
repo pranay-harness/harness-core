@@ -262,6 +262,8 @@
                                 <rootClass>io.harness.ng.core.dto.secrets.SecretRequestWrapper</rootClass>
                                 <rootClass>io.harness.plancreator.pipeline.PipelineConfig</rootClass>
                                 <rootClass>io.harness.delegate.beans.DelegateSetupDetails</rootClass>
+                                <rootClass>io.harness.cdng.pipeline.CDStepInfo</rootClass>
+                                <rootClass>io.harness.cdng.creator.plan.stage.DeploymentStageConfig</rootClass>
                             </rootClasses>
                         </configuration>
                     </execution>
