@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "properties": {
+    "environment": {
+      "$ref": "#/definitions/EnvironmentYaml"
+    },
+    "environmentRef": {
+      "type": "string"
+    },
+    "infrastructureDefinition": {
+      "$ref": "#/definitions/InfrastructureDef"
+    },
+    "useFromStage": {
+      "$ref": "#/definitions/InfraUseFromStage"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "required": [
+            "environment"
+          ]
+        },
+        {
+          "required": [
+            "environmentRef"
+          ]
+        }
+      ]
+    }
+  ]
+}

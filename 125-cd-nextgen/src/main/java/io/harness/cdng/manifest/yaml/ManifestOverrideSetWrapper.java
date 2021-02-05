@@ -1,7 +1,9 @@
 package io.harness.cdng.manifest.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -11,5 +13,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("manifestOverrideSets")
 public class ManifestOverrideSetWrapper {
   ManifestOverrideSets overrideSet;
-  String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
 }

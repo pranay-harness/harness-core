@@ -22,11 +22,13 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -41,7 +43,7 @@ public class K8sCanaryStepInfo extends K8sCanaryStepParameters implements CDStep
   @JsonIgnore private String identifier;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sCanaryStepInfo(InstanceSelectionWrapper instanceSelection, ParameterField<String> timeout,

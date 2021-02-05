@@ -13,6 +13,8 @@ import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
+import io.harness.cdng.yaml.CdYamlSchemaService;
+import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
@@ -51,6 +53,7 @@ public class NGModule extends AbstractModule {
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(GcrResourceService.class).to(GcrResourceServiceImpl.class);
     bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
+    bind(CdYamlSchemaService.class).to(CdYamlSchemaServiceImpl.class);
 
     MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);

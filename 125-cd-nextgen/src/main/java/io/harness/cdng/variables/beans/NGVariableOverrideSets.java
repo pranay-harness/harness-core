@@ -10,8 +10,10 @@ import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 
 @Value
@@ -24,7 +26,7 @@ public class NGVariableOverrideSets implements Visitable {
   List<NGVariable> variables;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public LevelNode getLevelNode() {
