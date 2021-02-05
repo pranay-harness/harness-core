@@ -5,7 +5,7 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 15
+// Next ID: 16
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -15,6 +15,7 @@ message CapabilityParameters {
     HttpConnectionParameters http_connection_parameters = 6;
     KustomizeParameters kustomize_parameters = 13;
     PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
+    PcfConnectivityParameters pcf_connectivity_parameters = 15;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -98,3 +99,7 @@ message PcfAutoScalarParameters {}
 
 // A testing method for capabilities
 message TestingCapability {}
+
+message PcfConnectivityParameters {
+  string endpoint_url = 1;
+}

@@ -1,36 +1,31 @@
-package software.wings.delegatetasks.validation.capabilitycheck;
+package io.harness.delegate.task.executioncapability;
 
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.TMACARI;
-
-import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
-import software.wings.beans.PcfConfig;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
-
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
-public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
-  private final PcfConfig pcfConfig =
-      PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME_DECRYPTED).password(PASSWORD).build();
+public class PcfConnectivityCapabilityCheckTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+  private static final String ENDPOINT_URL = "endpointUrl.ca";
   private final PcfConnectivityCapability pcfConnectivityCapability =
-      PcfConnectivityCapability.builder().endpointUrl(pcfConfig.getEndpointUrl()).build();
+      PcfConnectivityCapability.builder().endpointUrl(ENDPOINT_URL).build();
 
   @Spy private PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
 
@@ -38,12 +33,8 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void shouldPerformCapabilityCheck() {
-    doReturn(true)
-        .when(pcfConnectivityCapabilityCheck)
-        .isEndpointConnectable(eq(pcfConnectivityCapability), eq("https://"));
-    doReturn(false)
-        .when(pcfConnectivityCapabilityCheck)
-        .isEndpointConnectable(eq(pcfConnectivityCapability), eq("http://"));
+    doReturn(true).when(pcfConnectivityCapabilityCheck).isEndpointConnectable(eq(ENDPOINT_URL), eq("https://"));
+    doReturn(false).when(pcfConnectivityCapabilityCheck).isEndpointConnectable(eq(ENDPOINT_URL), eq("http://"));
     CapabilityResponse capabilityResponse =
         pcfConnectivityCapabilityCheck.performCapabilityCheck(pcfConnectivityCapability);
     assertThat(capabilityResponse).isNotNull();
@@ -54,12 +45,8 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void shouldNotPassCapabilityCheck() {
-    doReturn(false)
-        .when(pcfConnectivityCapabilityCheck)
-        .isEndpointConnectable(eq(pcfConnectivityCapability), eq("https://"));
-    doReturn(false)
-        .when(pcfConnectivityCapabilityCheck)
-        .isEndpointConnectable(eq(pcfConnectivityCapability), eq("http://"));
+    doReturn(false).when(pcfConnectivityCapabilityCheck).isEndpointConnectable(eq(ENDPOINT_URL), eq("https://"));
+    doReturn(false).when(pcfConnectivityCapabilityCheck).isEndpointConnectable(eq(ENDPOINT_URL), eq("http://"));
     CapabilityResponse capabilityResponse =
         pcfConnectivityCapabilityCheck.performCapabilityCheck(pcfConnectivityCapability);
     assertThat(capabilityResponse).isNotNull();
@@ -72,15 +59,10 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   public void validatePcfEndPointURL() {
     String pcfUrl = "api.pivotal.io";
     String expectedCapabilityUrl = "Pcf:" + pcfUrl;
-    PcfConfig config = PcfConfig.builder().endpointUrl(pcfUrl).build();
-    PcfConnectivityCapability capabilityCheck =
-        PcfConnectivityCapability.builder().endpointUrl(config.getEndpointUrl()).build();
+    PcfConnectivityCapability capabilityCheck = PcfConnectivityCapability.builder().endpointUrl(pcfUrl).build();
     String actualCapabilityUrl = capabilityCheck.fetchCapabilityBasis();
 
     // CDP-14589
     assertThat(actualCapabilityUrl).isEqualTo(expectedCapabilityUrl);
-
-    // CDP-14738
-    assertThat(pcfConfig.fetchRequiredExecutionCapabilities(null).size()).isEqualTo(0);
   }
 }
