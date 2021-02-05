@@ -5,6 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -13,7 +14,6 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 
 import java.util.Arrays;
 import java.util.List;
