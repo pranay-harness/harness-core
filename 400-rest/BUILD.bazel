@@ -209,6 +209,7 @@ java_library(
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_jcraft_jsch",
         "@maven//:com_jcraft_jzlib",
+        "@maven//:com_lmax_disruptor",
         "@maven//:com_mashape_unirest_unirest_java",
         "@maven//:com_mchange_c3p0",
         "@maven//:com_mchange_mchange_commons_java",
