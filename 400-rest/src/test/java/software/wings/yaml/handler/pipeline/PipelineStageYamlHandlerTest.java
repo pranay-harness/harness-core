@@ -37,7 +37,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;

@@ -10,7 +10,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
 import software.wings.integration.IntegrationTestBase;
-import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceIntegrationTest;
+import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceImpl;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 
 import com.google.inject.Inject;
@@ -38,7 +38,7 @@ public class GCPUsageReportServiceIntegrationTest extends IntegrationTestBase {
       "gcp-operation-id-" + GCPUsageReportServiceIntegrationTest.class.getSimpleName();
 
   private static final String SOME_ENTITLEMENT_NAME =
-      "gcp-entitlement-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
+      "gcp-entitlement-" + GCPMarketPlaceServiceImpl.class.getSimpleName();
 
   @Before
   public void ensureIndices() {

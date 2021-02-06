@@ -12,7 +12,6 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.verification.CVConfigurationServiceImplTest;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationYaml;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;

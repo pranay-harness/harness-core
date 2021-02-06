@@ -21,3 +21,94 @@ def run_tests(**kwargs):
             visibility = ["//visibility:private"],
             **kwargs
         )
+
+def run_package_tests(deps, resources = [], data = []):
+    all_srcs = native.glob(["src/test/**/*.java"])
+
+    directories = {}
+    for src in all_srcs:
+        directory = src[0:src.rfind("/")]
+        srcs = directories.setdefault(directory, [])
+        srcs.append(src)
+
+    for directory in directories.items():
+        junit_package_test(directory[0], directory[1], deps, resources, data)
+
+template = """
+package %s;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+
+@RunWith(Suite.class)
+@Suite.SuiteClasses({ %s })
+public class AllTests%s {
+}
+
+"""
+
+MAX_TESTS = 10
+
+def calculate_index(length, i):
+    if length < MAX_TESTS:
+        return ""
+    return str(i // MAX_TESTS + 1)
+
+def junit_package_test(directory, srcs, deps, resources, data):
+    truncate = len(directory) + 1
+
+    shared_src = []
+    all_tests = {}
+    for src in srcs:
+        if src.endswith("Test.java"):
+            all_tests[src] = src[truncate:].replace(".java", ".class")
+        else:
+            shared_src += [src]
+
+    if len(all_tests) == 0:
+        return
+
+    package = directory.replace("src/test/java/", "").replace("/", ".")
+
+    for i in range(0, len(all_tests), MAX_TESTS):
+        tests = all_tests.items()[i:i + MAX_TESTS]
+
+        index = calculate_index(len(all_tests), i)
+
+        code = template % (package, ", \n                      ".join([x[1] for x in tests]), index)
+
+        test_class = "AllTests" + index
+
+        code_filepath = [directory + "/" + test_class + ".java"]
+
+        if (hash(code_filepath[0]) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
+            continue
+
+        native.genrule(
+            name = package + ".AllTests" + index + "-gen",
+            outs = code_filepath,
+            cmd = """
+cat <<EOF >> $@
+%s
+EOF""" % code,
+        )
+
+        native.java_test(
+            name = package + ".tests" + index,
+            test_class = package + "." + test_class,
+            size = "large",
+
+            # inputs
+            srcs = shared_src + [x[0] for x in tests] + code_filepath,
+            deps = deps,
+            resources = resources,
+            data = data,
+
+            #Additional
+            visibility = ["//visibility:public"],
+            jvm_flags = [
+                "-Xmx3G",
+                "-XX:+HeapDumpOnOutOfMemoryError",
+                "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
+            ],
+        )

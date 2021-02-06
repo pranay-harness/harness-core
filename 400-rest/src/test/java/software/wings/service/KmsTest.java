@@ -113,7 +113,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
-import software.wings.service.impl.UsageRestrictionsServiceImplTest;
+import software.wings.service.impl.UsageRestrictionsServiceImplTestBase;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -1187,7 +1187,7 @@ public class KmsTest extends WingsBaseTest {
         SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).scopedToAccount(true).build();
     String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTestBase.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
 
     User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
@@ -1247,7 +1247,7 @@ public class KmsTest extends WingsBaseTest {
             .build();
     String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTestBase.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
 
     User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();

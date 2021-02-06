@@ -2,11 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.KAMAL;
-import static io.harness.rule.OwnerRule.NANDAN;
-import static io.harness.rule.OwnerRule.PRAVEEN;
-import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.*;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.Account.Builder.anAccount;
@@ -14,12 +10,12 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTestBase.createCustomLogsConfig;
 import static software.wings.sm.StateType.APM_VERIFICATION;
 import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
@@ -37,14 +33,7 @@ import io.harness.serializer.YamlUtils;
 
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
-import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.Account;
-import software.wings.beans.Application;
-import software.wings.beans.DatadogConfig;
-import software.wings.beans.Environment;
-import software.wings.beans.Event;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
+import software.wings.beans.*;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
@@ -53,32 +42,17 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.ContinuousVerificationService;
-import software.wings.service.impl.analysis.FeedbackPriority;
-import software.wings.service.impl.analysis.LogMLAnalysisRecord;
-import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.analysis.TimeSeries;
-import software.wings.service.impl.analysis.TimeSeriesKeyTransactions;
-import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.*;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
-import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
-import software.wings.sm.states.CustomLogVerificationState.Method;
-import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
-import software.wings.sm.states.CustomLogVerificationState.ResponseType;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.StackDriverState;
@@ -99,14 +73,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import io.fabric8.utils.Lists;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -736,34 +703,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     DatadogCVServiceConfiguration configuration = createDatadogCVConfiguration(true, true);
     cvConfigurationService.saveConfiguration(
         configuration.getAccountId(), configuration.getAppId(), StateType.DATA_DOG, configuration);
-  }
-
-  public static CustomLogCVServiceConfiguration createCustomLogsConfig(String accountId) throws Exception {
-    CustomLogCVServiceConfiguration configuration =
-        CustomLogCVServiceConfiguration.builder()
-            .logCollectionInfo(LogCollectionInfo.builder()
-                                   .collectionUrl("testUrl ${start_time} and ${end_time}")
-                                   .method(Method.GET)
-                                   .responseType(ResponseType.JSON)
-                                   .responseMapping(ResponseMapping.builder()
-                                                        .hostJsonPath("hostname")
-                                                        .logMessageJsonPath("message")
-                                                        .timestampJsonPath("@timestamp")
-                                                        .build())
-                                   .build())
-            .build();
-
-    configuration.setAccountId(accountId);
-    configuration.setStateType(StateType.STACK_DRIVER);
-    configuration.setEnvId(generateUuid());
-    configuration.setName("StackDriver");
-    configuration.setConnectorId(generateUuid());
-    configuration.setServiceId(generateUuid());
-    configuration.setStateType(StateType.LOG_VERIFICATION);
-    configuration.setQuery(generateUUID());
-    configuration.setBaselineStartMinute(16);
-    configuration.setBaselineEndMinute(30);
-    return configuration;
   }
 
   @Test

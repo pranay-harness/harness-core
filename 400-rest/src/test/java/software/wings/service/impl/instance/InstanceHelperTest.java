@@ -291,8 +291,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_PDS() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, endsAtTime, "");
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, endsAtTime, "");
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
@@ -341,8 +341,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_AmiInfraMapping() {
     endsAtTime = System.currentTimeMillis();
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
@@ -387,8 +387,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_CodeDeployInfraMapping() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
@@ -433,8 +433,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AMI() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_AMI, endsAtTime, DeploymentType.AMI.name());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.AWS_AMI, endsAtTime, DeploymentType.AMI.name());
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_AMI, WorkflowServiceHelper.DEPLOY_SERVICE);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
@@ -492,8 +492,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceBaseOnType_AZURE_INFRA() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AZURE_INFRA, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.AZURE_INFRA, endsAtTime, DeploymentType.SSH.name());
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AZURE_INFRA, WorkflowServiceHelper.DEPLOY_SERVICE);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
@@ -552,8 +552,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_CodeDeploy() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_AWS_CODEDEPLOY, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
+    phaseExecutionData =
+        instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1, azureInstance2,
+            InfrastructureMappingType.AWS_AWS_CODEDEPLOY, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
 
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_AWS_CODEDEPLOY, WorkflowServiceHelper.DEPLOY_SERVICE);
@@ -609,8 +610,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_ECS() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_ECS, endsAtTime, DeploymentType.ECS.getDisplayName());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(instance1, instance2, azureInstance1,
+        azureInstance2, InfrastructureMappingType.AWS_ECS, endsAtTime, DeploymentType.ECS.getDisplayName());
     phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
         InfrastructureMappingType.AWS_ECS, WorkflowServiceHelper.DEPLOY_CONTAINERS);
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);

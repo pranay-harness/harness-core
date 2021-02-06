@@ -2,8 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.HINGER;
 
-import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -31,6 +29,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class SmbHelperServiceTest extends WingsBaseTest {
+  public static final String ACCOUNT_ID = "ACCOUNT_ID";
+
   @Inject SmbHelperService smbHelperService;
   @Mock SMBClient smbClient;
   @Mock Connection connection;

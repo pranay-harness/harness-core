@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.connectors.configyamlhandlers;
+package software.wings.service.impl.yaml.handler.templatelibrary;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -23,6 +23,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.handler.YamlHandlerTestBase;
+import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import com.google.inject.Inject;
 import java.io.IOException;
