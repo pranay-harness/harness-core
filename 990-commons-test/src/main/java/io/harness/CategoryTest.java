@@ -48,9 +48,9 @@ public class CategoryTest {
   }
 
   @After
-  public void dumpHeatMap() throws IOException {
+  public void dumpHeapMap() throws IOException {
     long heapSize = Runtime.getRuntime().totalMemory();
-    if (heapSize < 1 * 1024 * 1024 * 1024) {
+    if (heapSize < 3L * 1024L * 1024L * 1024L) {
       log.info("The heap size at the end of the test is {}", ByteCountUtils.humanReadableBin(heapSize));
       return;
     }

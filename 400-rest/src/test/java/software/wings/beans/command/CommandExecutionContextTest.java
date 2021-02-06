@@ -28,7 +28,6 @@ import io.harness.rule.OwnerRule;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.beans.command.helpers.SettingAttributeTestHelper;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;

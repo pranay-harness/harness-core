@@ -75,8 +75,8 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.StateMachineTest.StateAsync;
-import software.wings.sm.StateMachineTest.StateSync;
+import software.wings.sm.StateMachineTestBase.StateAsync;
+import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.states.ForkState;
 
 import com.google.inject.Inject;
@@ -259,13 +259,13 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique(), true);
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique(), true);
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
-    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + StaticMap.getUnique());
+    StateSync stateD = new StateSync("stateD" + StaticMap.getUnique());
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -655,14 +655,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -715,14 +715,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());

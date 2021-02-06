@@ -1,4 +1,4 @@
-package software.wings.infra.data;
+package software.wings.infra;
 
 import software.wings.annotation.CustomFieldMapKey;
 import software.wings.annotation.IncludeFieldMap;

@@ -1,12 +1,11 @@
 package io.harness.execution.export.request;
 
-import io.harness.CategoryTest;
 import io.harness.execution.export.request.ExportExecutionsRequest.Status;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class RequestTestUtils extends CategoryTest {
+public class RequestTestUtils {
   public final String ACCOUNT_ID = "aid";
   public final String REQUEST_ID = "rid";
   public final String FILE_ID = "fid";

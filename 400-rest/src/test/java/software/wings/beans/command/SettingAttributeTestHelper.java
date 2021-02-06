@@ -1,4 +1,4 @@
-package software.wings.beans.command.helpers;
+package software.wings.beans.command;
 
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.InstanceUnitType.COUNT;

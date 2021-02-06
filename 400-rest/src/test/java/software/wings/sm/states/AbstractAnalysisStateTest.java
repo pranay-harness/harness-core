@@ -80,7 +80,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   private final String appId = UUID.randomUUID().toString();
   private final String serviceId = UUID.randomUUID().toString();
 
-  public static final String PHASE_PARAM = "PHASE_PARAM";
   @Before
   public void setup() {
     initMocks(this);
