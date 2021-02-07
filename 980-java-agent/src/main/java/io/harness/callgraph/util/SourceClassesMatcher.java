@@ -18,7 +18,9 @@ public class SourceClassesMatcher implements AgentBuilder.RawMatcher {
     if (protectionDomain != null && protectionDomain.getCodeSource() != null
         && protectionDomain.getCodeSource().getLocation() != null) {
       URL location = protectionDomain.getCodeSource().getLocation();
-      return shouldMatch && ("file".equals(location.getProtocol()) && location.getPath().endsWith("/target/classes/"));
+      boolean matcher = "file".equals(location.getProtocol()) && location.getPath().endsWith("/target/classes/");
+
+      return shouldMatch ? matcher : !matcher;
     }
     return !shouldMatch;
   }
