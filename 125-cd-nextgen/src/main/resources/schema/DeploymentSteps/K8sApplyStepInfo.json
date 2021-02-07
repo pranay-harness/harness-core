@@ -6,8 +6,7 @@
     {
       "type": "object",
       "required": [
-        "skipDryRun",
-        "timeout"
+        "skipDryRun"
       ],
       "properties": {
         "filePaths": {
@@ -21,9 +20,6 @@
         },
         "skipSteadyStateCheck": {
           "type": "boolean"
-        },
-        "timeout": {
-          "type": "string"
         }
       }
     }

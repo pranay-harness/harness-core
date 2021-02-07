@@ -563,6 +563,9 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "timeout"
+      ],
       "properties": {
         "description": {
           "type": "string"

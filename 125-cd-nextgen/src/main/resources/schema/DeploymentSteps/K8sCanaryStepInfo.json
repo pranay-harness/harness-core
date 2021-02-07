@@ -13,10 +13,7 @@
           "$ref": "#/definitions/InstanceSelectionWrapper"
         },
         "skipDryRun": {
-          "type": "boolean"
-        },
-        "timeout": {
-          "type": "string"
+          "$ref": "#/definitions/ParameterFieldBoolean"
         }
       }
     }

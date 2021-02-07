@@ -74,7 +74,7 @@ public class HttpStepTest extends CategoryTest {
         Objects.requireNonNull(classLoader.getResource(httpResponseBodyFile)), StandardCharsets.UTF_8);
     HttpStepResponse response =
         HttpStepResponse.builder().httpResponseBody(httpResponseBody).httpResponseCode(200).build();
-    HttpStepParameters stepParameters = HttpStepParameters.builder().build();
+    HttpStepParameters stepParameters = HttpStepParameters.infoBuilder().build();
 
     // no assertion
     boolean assertion = HttpStep.validateAssertions(response, stepParameters);

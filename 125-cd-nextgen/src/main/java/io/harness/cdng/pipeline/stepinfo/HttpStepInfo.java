@@ -5,10 +5,13 @@ import io.harness.cdng.pipeline.steps.HttpStep;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.HttpStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.http.HttpBaseStepInfo;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpStepParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
@@ -33,7 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
-public class HttpStepInfo extends HttpStepParameters implements CDStepInfo, Visitable {
+public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 
@@ -43,8 +46,8 @@ public class HttpStepInfo extends HttpStepParameters implements CDStepInfo, Visi
   @Builder(builderMethodName = "infoBuilder")
   public HttpStepInfo(ParameterField<String> url, ParameterField<String> method, List<HttpHeaderConfig> headers,
       ParameterField<String> requestBody, ParameterField<String> assertion, List<NGVariable> outputVariables,
-      ParameterField<String> timeout, String name, String identifier) {
-    super(url, method, headers, requestBody, assertion, outputVariables, timeout);
+      String name, String identifier) {
+    super(url, method, headers, requestBody, assertion, outputVariables);
     this.name = name;
     this.identifier = identifier;
   }
@@ -74,5 +77,19 @@ public class HttpStepInfo extends HttpStepParameters implements CDStepInfo, Visi
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YamlTypes.HTTP_STEP).build();
+  }
+
+  @Override
+  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+    return HttpStepParameters.infoBuilder()
+        .assertion(getAssertion())
+        .headers(getHeaders())
+        .method(getMethod())
+        .outputVariables(getOutputVariables())
+        .requestBody(getRequestBody())
+        .rollbackInfo(rollbackInfo)
+        .timeout(timeout)
+        .url(getUrl())
+        .build();
   }
 }

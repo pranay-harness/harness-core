@@ -19,8 +19,10 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
@@ -81,12 +83,20 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
-                           .build())
-          .build();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
+                               .build());
+      if (k8sRollingStepParameters.getRollbackInfo() != null) {
+        stepResponseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return stepResponseBuilder.build();
     }
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
 
@@ -109,14 +119,22 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                            .build())
           .build();
     } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(k8sTaskExecutionResponse.getErrorMessage() == null
-                                   ? ""
-                                   : k8sTaskExecutionResponse.getErrorMessage())
-                           .build())
-          .build();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(k8sTaskExecutionResponse.getErrorMessage() == null
+                                       ? ""
+                                       : k8sTaskExecutionResponse.getErrorMessage())
+                               .build());
+      if (k8sRollingStepParameters.getRollbackInfo() != null) {
+        stepResponseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return stepResponseBuilder.build();
     }
   }
 }

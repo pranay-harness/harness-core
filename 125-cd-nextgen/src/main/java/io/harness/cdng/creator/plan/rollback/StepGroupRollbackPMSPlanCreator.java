@@ -44,8 +44,8 @@ public class StepGroupRollbackPMSPlanCreator {
       PlanNode stepGroupRollbackNode =
           PlanNode.builder()
               .uuid(rollbackStepsNode.getNode().getUuid())
-              .name(stepGroup.getNode().getNameOrIdentifier() + "-" + PlanCreationConstants.ROLLBACK_NODE_NAME)
-              .identifier(YAMLFieldNameConstants.ROLLBACK_STEPS)
+              .name(stepGroup.getNode().getNameOrIdentifier() + "(" + PlanCreationConstants.ROLLBACK_NODE_NAME + ")")
+              .identifier(stepGroup.getNode().getIdentifier() + "(" + PlanCreationConstants.ROLLBACK_NODE_NAME + ")")
               .stepType(NGSectionStep.STEP_TYPE)
               .group(StepOutcomeGroup.STEP.name())
               .stepParameters(stepParameters)

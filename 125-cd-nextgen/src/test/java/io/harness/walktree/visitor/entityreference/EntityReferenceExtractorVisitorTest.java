@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -34,6 +35,7 @@ public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testEntityReferenceExtractorVisitor() throws IOException {
     String ACCOUNT = "ACCOUNT";
     String ORG = "ORG";

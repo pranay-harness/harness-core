@@ -8,9 +8,6 @@
       "properties": {
         "skipDryRun": {
           "type": "boolean"
-        },
-        "timeout": {
-          "type": "string"
         }
       }
     }
