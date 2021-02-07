@@ -56,7 +56,7 @@ public class ByteBuddyInstr extends Instr {
         })
         .installOn(instrumentation);
 
-    agent.and(new TestClassesMatcher(true))
+    agent.and(new TestClassesMatcher(false))
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
@@ -87,7 +87,7 @@ public class ByteBuddyInstr extends Instr {
         })
         .installOn(instrumentation);
 
-    agent.and(new SourceClassesMatcher(true))
+    agent.and(new SourceClassesMatcher(false))
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
