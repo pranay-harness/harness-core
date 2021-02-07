@@ -32,8 +32,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...  -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
