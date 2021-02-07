@@ -2,6 +2,9 @@
 
 set -ex
 
+ps auxwwwe
+echo end off ps-report
+
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]
@@ -47,6 +50,8 @@ then
   exit 0
 fi
 
+ps auxwwwe
+echo end off ps-report
 
 BAZEL_MODULES="\
   //220-graphql-test:supporter-test \
@@ -335,3 +340,6 @@ build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
+
+ps auxwwwe
+echo end off ps-report

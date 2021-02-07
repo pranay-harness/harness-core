@@ -47,10 +47,12 @@ public class CategoryTest {
     log.info(sb.toString());
   }
 
+  private static final long MAX_HEAP_SIZE = 2L * 1024L * 1024L * 1024L;
+
   @After
   public void dumpHeapMap() throws IOException {
     long heapSize = Runtime.getRuntime().totalMemory();
-    if (heapSize < 3L * 1024L * 1024L * 1024L) {
+    if (heapSize < MAX_HEAP_SIZE) {
       log.info("The heap size at the end of the test is {}", ByteCountUtils.humanReadableBin(heapSize));
       return;
     }
