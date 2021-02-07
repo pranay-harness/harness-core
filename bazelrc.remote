@@ -2,7 +2,7 @@ import bazelrc.common
 
 # Add properties that are specif for ci build system
 
-startup --output_base=/tmp
+startup --output_base=/tmp --max_idle_secs 5
 build --javabase=@openjdk8u242_darwin_archive_linux//:runtime
 build --host_javabase=@openjdk8u242_darwin_archive_linux//:runtime
 build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
