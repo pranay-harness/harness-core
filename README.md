@@ -345,9 +345,9 @@ https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-proce
 ```lang=bash
 portal/tools/go/go_setup.sh
 ```
-### Install Bazel (3.5.0+)
-4. On mac: `brew install bazel`
-   * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
+### Install Bazelisk
+4. On mac: `brew install bazelisk`
+   * Other platforms: Follow the instrictions [here](https://github.com/bazelbuild/bazelisk)
 
 
 ### IDE
