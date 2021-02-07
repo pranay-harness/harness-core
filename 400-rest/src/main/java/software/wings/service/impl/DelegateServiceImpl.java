@@ -424,7 +424,7 @@ public class DelegateServiceImpl implements DelegateService {
           .expireAfterWrite(5, TimeUnit.MINUTES)
           .build(new CacheLoader<String, String>() {
             @Override
-            public String load(String accountId) {
+            public String load(String accountId) throws IOException {
               return retrieveLogStreamingAccountToken(accountId);
             }
           });
@@ -2892,6 +2892,7 @@ public class DelegateServiceImpl implements DelegateService {
           }
         } catch (ExecutionException e) {
           log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
+          throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is running.", e);
         }
 
         delegateTaskPackageBuilder.logStreamingAbstractions(delegateTask.getLogStreamingAbstractions());
@@ -3937,14 +3938,9 @@ public class DelegateServiceImpl implements DelegateService {
   //------ END: DelegateFeature Specific methods
 
   @VisibleForTesting
-  protected String retrieveLogStreamingAccountToken(String accountId) {
-    try {
-      return SafeHttpCall.executeWithExceptions(logStreamingServiceRestClient.retrieveAccountToken(
-          mainConfiguration.getLogStreamingServiceConfig().getServiceToken(), accountId));
-    } catch (Exception ex) {
-      log.error("Unable to retrieve log streaming authentication token", ex);
-      return null;
-    }
+  protected String retrieveLogStreamingAccountToken(String accountId) throws IOException {
+    return SafeHttpCall.executeWithExceptions(logStreamingServiceRestClient.retrieveAccountToken(
+        mainConfiguration.getLogStreamingServiceConfig().getServiceToken(), accountId));
   }
 
   @VisibleForTesting

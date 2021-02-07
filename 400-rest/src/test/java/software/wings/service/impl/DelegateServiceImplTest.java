@@ -166,8 +166,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     try {
       delegateService.retrieveLogStreamingAccountToken(accountId);
-    } catch (Exception ex) {
-      fail("Unexpected failure while retrieving streaming log token");
+      fail("Should have failed while retrieving log streaming token");
+    } catch (Exception ignored) {
     }
   }
 
