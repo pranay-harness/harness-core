@@ -1,6 +1,7 @@
 package io.harness.steps.common.script;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
@@ -11,20 +12,25 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TypeAlias("shellScriptStepParameters")
-public class ShellScriptStepParameters implements StepParameters {
-  @NotNull ShellType shell;
-  @NotNull ShellScriptSourceWrapper source;
-  List<NGVariable> environmentVariables;
-  List<NGVariable> outputVariables;
-  ExecutionTarget executionTarget;
+public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements StepParameters {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
+  RollbackInfo rollbackInfo;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
+      List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
+      ParameterField<String> timeout, ParameterField<Boolean> onDelegate, RollbackInfo rollbackInfo) {
+    super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
+    this.timeout = timeout;
+    this.rollbackInfo = rollbackInfo;
+  }
 }

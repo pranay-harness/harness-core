@@ -44,7 +44,6 @@
           "type": "object",
           "required": [
             "method",
-            "timeout",
             "url"
           ],
           "properties": {
@@ -69,15 +68,28 @@
             "requestBody": {
               "type": "string"
             },
-            "timeout": {
-              "type": "string"
-            },
             "url": {
               "type": "string"
             }
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InstanceSelectionBase": {
@@ -120,8 +132,7 @@
         {
           "type": "object",
           "required": [
-            "skipDryRun",
-            "timeout"
+            "skipDryRun"
           ],
           "properties": {
             "filePaths": {
@@ -135,9 +146,6 @@
             },
             "skipSteadyStateCheck": {
               "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
             }
           }
         }
@@ -154,9 +162,6 @@
           "properties": {
             "skipDryRun": {
               "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
             }
           }
         }
@@ -178,10 +183,7 @@
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
             "skipDryRun": {
-              "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -198,9 +200,6 @@
           "properties": {
             "skipDryRun": {
               "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
             }
           }
         }
@@ -215,15 +214,11 @@
         {
           "type": "object",
           "required": [
-            "skipDryRun",
-            "timeout"
+            "skipDryRun"
           ],
           "properties": {
             "skipDryRun": {
               "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
             }
           }
         }
@@ -249,9 +244,6 @@
             },
             "skipSteadyStateCheck": {
               "type": "boolean"
-            },
-            "timeout": {
-              "type": "string"
             },
             "workload": {
               "type": "string"
@@ -290,6 +282,75 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "OrchestrationFieldType": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OrchestrationFieldType"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldBoolean": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OrchestrationFieldType"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ShellScriptBaseSource": {
       "type": "object",
       "properties": {
@@ -321,8 +382,7 @@
           "required": [
             "onDelegate",
             "shell",
-            "source",
-            "timeout"
+            "source"
           ],
           "properties": {
             "environmentVariables": {
@@ -355,9 +415,6 @@
             },
             "source": {
               "$ref": "#/definitions/ShellScriptSourceWrapper"
-            },
-            "timeout": {
-              "type": "string"
             }
           }
         }

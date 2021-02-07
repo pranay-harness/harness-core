@@ -93,6 +93,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testRollbackPlan() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/rollbackPipeline.yaml");

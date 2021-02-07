@@ -6,15 +6,11 @@
     {
       "type": "object",
       "required": [
-        "skipDryRun",
-        "timeout"
+        "skipDryRun"
       ],
       "properties": {
         "skipDryRun": {
           "type": "boolean"
-        },
-        "timeout": {
-          "type": "string"
         }
       }
     }

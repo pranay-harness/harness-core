@@ -18,9 +18,6 @@
         "skipSteadyStateCheck": {
           "type": "boolean"
         },
-        "timeout": {
-          "type": "string"
-        },
         "workload": {
           "type": "string"
         }

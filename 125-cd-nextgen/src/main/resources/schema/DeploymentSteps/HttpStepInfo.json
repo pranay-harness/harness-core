@@ -7,7 +7,6 @@
       "type": "object",
       "required": [
         "method",
-        "timeout",
         "url"
       ],
       "properties": {
@@ -30,9 +29,6 @@
           }
         },
         "requestBody": {
-          "type": "string"
-        },
-        "timeout": {
           "type": "string"
         },
         "url": {

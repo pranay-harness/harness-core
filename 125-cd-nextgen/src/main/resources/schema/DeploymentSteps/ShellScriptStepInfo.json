@@ -8,8 +8,7 @@
       "required": [
         "onDelegate",
         "shell",
-        "source",
-        "timeout"
+        "source"
       ],
       "properties": {
         "environmentVariables": {
@@ -42,9 +41,6 @@
         },
         "source": {
           "$ref": "#/definitions/ShellScriptSourceWrapper"
-        },
-        "timeout": {
-          "type": "string"
         }
       }
     }

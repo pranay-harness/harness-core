@@ -16,8 +16,10 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -79,10 +81,18 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
-          .build();
+      StepResponseBuilder responseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(
+                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+      if (k8sApplyStepParameters.getRollbackInfo() != null) {
+        responseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sApplyStepParameters.getRollbackInfo()).build())
+                .build());
+      }
     }
 
     return StepResponse.builder().status(Status.SUCCEEDED).build();
