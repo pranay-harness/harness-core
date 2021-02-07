@@ -8,7 +8,7 @@ import net.bytebuddy.utility.JavaModule;
 
 public class SourceClassesMatcher implements AgentBuilder.RawMatcher {
   boolean shouldMatch = true;
-  public SourceClassesMatcher() {}
+
   public SourceClassesMatcher(boolean shouldMatch) {
     this.shouldMatch = shouldMatch;
   }
