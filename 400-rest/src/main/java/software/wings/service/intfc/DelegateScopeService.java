@@ -1,14 +1,14 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateScope;
 
 import javax.validation.Valid;
 
-/**
- * Created by brett on 8/4/17
- */
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public interface DelegateScopeService {
   /**
    * List page response.

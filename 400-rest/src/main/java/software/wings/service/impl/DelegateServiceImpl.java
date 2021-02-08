@@ -194,7 +194,6 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.expression.NgSecretManagerFunctor;
@@ -348,7 +347,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
@@ -412,7 +411,7 @@ public class DelegateServiceImpl implements DelegateService {
             @Override
             public Optional<Delegate> load(String delegateId) {
               return Optional.ofNullable(
-                  wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
+                  persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
             }
           });
 
@@ -453,7 +452,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
     List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).field(DelegateKeys.accountId).in(accountIds).asList();
+        persistence.createQuery(Delegate.class).field(DelegateKeys.accountId).in(accountIds).asList();
     Map<String, Integer> countOfDelegatesPerAccount =
         accountIds.stream().collect(Collectors.toMap(accountId -> accountId, accountId -> 0));
     delegates.forEach(delegate -> {
@@ -465,7 +464,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
-    return wingsPersistence.query(Delegate.class, pageRequest);
+    return persistence.query(Delegate.class, pageRequest);
   }
 
   @Override
@@ -476,7 +475,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<String> getKubernetesDelegateNames(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class)
+    return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.delegateName)
         .exists()
@@ -491,7 +490,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public CEDelegateStatus validateCEDelegate(String accountId, String delegateName) {
-    Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+    Delegate delegate = persistence.createQuery(Delegate.class)
                             .filter(DelegateKeys.accountId, accountId)
                             .field(DelegateKeys.delegateName)
                             .exists()
@@ -540,7 +539,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Set<String> getAllDelegateSelectors(String accountId) {
-    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
                                         .project(DelegateKeys.accountId, true)
                                         .project(DelegateKeys.tags, true)
@@ -702,7 +701,7 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
 
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
                                    .field(DelegateKeys.status)
                                    .notEqual(DelegateInstanceStatus.DELETED)
@@ -739,7 +738,7 @@ public class DelegateServiceImpl implements DelegateService {
   private List<DelegateScalingGroup> getDelegateScalingGroups(String accountId,
       Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
     List<Delegate> activeDelegates =
-        wingsPersistence.createQuery(Delegate.class)
+        persistence.createQuery(Delegate.class)
             .filter(DelegateKeys.accountId, accountId)
             .field(DelegateKeys.delegateGroupName)
             .exists()
@@ -760,7 +759,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class)
+    return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.status)
         .notEqual(DelegateInstanceStatus.DELETED)
@@ -869,7 +868,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private UpdateOperations<Delegate> getDelegateUpdateOperations(Delegate delegate) {
-    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    UpdateOperations<Delegate> updateOperations = persistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, DelegateKeys.ip, delegate.getIp());
     if (delegate.getStatus() != null) {
       updateOperations.set(DelegateKeys.status, delegate.getStatus());
@@ -893,10 +892,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
     log.info("Updating delegate description", delegateId);
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(DelegateKeys.accountId, accountId)
-                                .filter(DelegateKeys.uuid, delegateId),
-        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.description, newDescription));
+    persistence.update(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, accountId)
+                           .filter(DelegateKeys.uuid, delegateId),
+        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.description, newDescription));
 
     return get(accountId, delegateId, true);
   }
@@ -905,22 +904,21 @@ public class DelegateServiceImpl implements DelegateService {
   public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) {
     DelegateInstanceStatus newDelegateStatus = mapApprovalActionToDelegateStatus(action);
 
-    Delegate currentDelegate = wingsPersistence.createQuery(Delegate.class)
+    Delegate currentDelegate = persistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
                                    .filter(DelegateKeys.uuid, delegateId)
                                    .get();
 
-    Query<Delegate> updateQuery = wingsPersistence.createQuery(Delegate.class)
+    Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
                                       .filter(DelegateKeys.accountId, accountId)
                                       .filter(DelegateKeys.uuid, delegateId)
                                       .filter(DelegateKeys.status, DelegateInstanceStatus.WAITING_FOR_APPROVAL);
 
     UpdateOperations<Delegate> updateOperations =
-        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, newDelegateStatus);
+        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, newDelegateStatus);
 
     log.debug("Updating approval status from {} to {}", currentDelegate.getStatus(), newDelegateStatus);
-    Delegate updatedDelegate =
-        wingsPersistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+    Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, currentDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
@@ -942,10 +940,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate) {
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(DelegateKeys.accountId, delegate.getAccountId())
-                                .filter(DelegateKeys.uuid, delegate.getUuid()),
-        wingsPersistence.createUpdateOperations(Delegate.class)
+    persistence.update(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, delegate.getAccountId())
+                           .filter(DelegateKeys.uuid, delegate.getUuid()),
+        persistence.createUpdateOperations(Delegate.class)
             .set(DelegateKeys.lastHeartBeat, currentTimeMillis())
             .set(DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant())));
     delegateTaskService.touchExecutingTasks(
@@ -969,7 +967,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate updateTags(Delegate delegate) {
-    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    UpdateOperations<Delegate> updateOperations = persistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, DelegateKeys.tags, delegate.getTags());
     log.info("Updating delegate tags : Delegate:{} tags:{}", delegate.getUuid(), delegate.getTags());
 
@@ -990,7 +988,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate updateScopes(Delegate delegate) {
-    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    UpdateOperations<Delegate> updateOperations = persistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, DelegateKeys.includeScopes, delegate.getIncludeScopes());
     setUnset(updateOperations, DelegateKeys.excludeScopes, delegate.getExcludeScopes());
 
@@ -1036,9 +1034,9 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(DelegateKeys.accountId, delegate.getAccountId())
-                                .filter(DelegateKeys.uuid, delegate.getUuid()),
+    persistence.update(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, delegate.getAccountId())
+                           .filter(DelegateKeys.uuid, delegate.getUuid()),
         updateOperations);
     delegateTaskService.touchExecutingTasks(
         delegate.getAccountId(), delegate.getUuid(), delegate.getCurrentlyExecutingDelegateTasks());
@@ -1837,12 +1835,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private long getTotalNumberOfDelegates(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).count();
+    return persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).count();
   }
 
   private Delegate saveDelegate(Delegate delegate) {
     log.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
     log.info("Delegate saved: {}", delegate);
     return delegate;
   }
@@ -1850,7 +1848,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void delete(String accountId, String delegateId) {
     log.info("Deleting delegate: {}", delegateId);
-    Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
+    Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
                                     .project(DelegateKeys.ip, true)
@@ -1873,18 +1871,18 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
-                                .filter(DelegateKeys.accountId, accountId)
-                                .filter(DelegateKeys.uuid, delegateId));
+    persistence.delete(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, accountId)
+                           .filter(DelegateKeys.uuid, delegateId));
   }
 
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
-      wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
-                                  .filter(DelegateKeys.accountId, accountId)
-                                  .field(DelegateKeys.uuid)
-                                  .notIn(delegatesToRetain));
+      persistence.delete(persistence.createQuery(Delegate.class)
+                             .filter(DelegateKeys.accountId, accountId)
+                             .field(DelegateKeys.uuid)
+                             .notIn(delegatesToRetain));
     } else {
       log.info("List of delegates to retain is empty. In order to delete delegates, pass a list of delegate IDs");
     }
@@ -1915,7 +1913,7 @@ public class DelegateServiceImpl implements DelegateService {
           .build();
     }
 
-    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, delegate.getAccountId())
                                         .filter(DelegateKeys.hostName, delegate.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
@@ -1969,7 +1967,7 @@ public class DelegateServiceImpl implements DelegateService {
           .build();
     }
 
-    Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, delegateParams.getAccountId())
                                         .filter(DelegateKeys.hostName, delegateParams.getHostName());
     // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
@@ -2107,7 +2105,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   DelegateSequenceConfig getDelegateSequenceConfig(String accountId, String hostName, Integer seqNum) {
-    Query<DelegateSequenceConfig> delegateSequenceQuery = wingsPersistence.createQuery(DelegateSequenceConfig.class)
+    Query<DelegateSequenceConfig> delegateSequenceQuery = persistence.createQuery(DelegateSequenceConfig.class)
                                                               .filter(DelegateSequenceConfigKeys.accountId, accountId)
                                                               .filter(DelegateSequenceConfigKeys.hostName, hostName);
 
@@ -2188,10 +2186,10 @@ public class DelegateServiceImpl implements DelegateService {
 
     String previousProfileResult = delegate.getProfileResult();
 
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .filter(DelegateKeys.accountId, accountId)
-                                .filter(DelegateKeys.uuid, delegateId),
-        wingsPersistence.createUpdateOperations(Delegate.class)
+    persistence.update(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, accountId)
+                           .filter(DelegateKeys.uuid, delegateId),
+        persistence.createUpdateOperations(Delegate.class)
             .set(DelegateKeys.profileResult, fileId)
             .set(DelegateKeys.profileError, error)
             .set(DelegateKeys.profileExecutedAt, clock.millis()));
@@ -2335,7 +2333,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<String> obtainDelegateIds(String accountId, String sessionIdentifier) {
     try {
-      return wingsPersistence.createQuery(Delegate.class)
+      return persistence.createQuery(Delegate.class)
           .filter(DelegateKeys.accountId, accountId)
           .filter(DelegateKeys.sessionIdentifier, sessionIdentifier)
           .asKeyList()
@@ -2421,7 +2419,7 @@ public class DelegateServiceImpl implements DelegateService {
     // Added temporarily to help identifying tasks whose task setup abstractions need to be fixed
     verifyTaskSetupAbstractions(task);
 
-    wingsPersistence.save(task);
+    persistence.save(task);
   }
 
   @Override
@@ -2457,12 +2455,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private Long fetchTaskCount() {
-    return wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).count();
+    return persistence.createQuery(DelegateTask.class, excludeAuthority).count();
   }
 
   @Override
   public String queueParkedTask(String accountId, String taskId) {
-    DelegateTask task = wingsPersistence.createQuery(DelegateTask.class)
+    DelegateTask task = persistence.createQuery(DelegateTask.class)
                             .filter(DelegateTaskKeys.accountId, accountId)
                             .filter(DelegateTaskKeys.uuid, taskId)
                             .get();
@@ -2624,15 +2622,15 @@ public class DelegateServiceImpl implements DelegateService {
       log.info("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
 
       UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class)
+          persistence.createUpdateOperations(DelegateTask.class)
               .addToSet(DelegateTaskKeys.validationCompleteDelegateIds, delegateId);
-      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+      Query<DelegateTask> updateQuery = persistence.createQuery(DelegateTask.class)
                                             .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                             .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                             .filter(DelegateTaskKeys.status, QUEUED)
                                             .field(DelegateTaskKeys.delegateId)
                                             .doesNotExist();
-      wingsPersistence.update(updateQuery, updateOperations);
+      persistence.update(updateQuery, updateOperations);
 
       long requiredDelegateCapabilites = 0;
       if (delegateTask.getExecutionCapabilities() != null) {
@@ -2790,18 +2788,18 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   void setValidationStarted(String delegateId, DelegateTask delegateTask) {
     log.info("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+    UpdateOperations<DelegateTask> updateOperations = persistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
-    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+    Query<DelegateTask> updateQuery = persistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                           .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
                                           .doesNotExist();
-    wingsPersistence.update(updateQuery, updateOperations);
+    persistence.update(updateQuery, updateOperations);
 
-    wingsPersistence.update(updateQuery.field(DelegateTaskKeys.validationStartedAt).doesNotExist(),
-        wingsPersistence.createUpdateOperations(DelegateTask.class)
+    persistence.update(updateQuery.field(DelegateTaskKeys.validationStartedAt).doesNotExist(),
+        persistence.createUpdateOperations(DelegateTask.class)
             .set(DelegateTaskKeys.validationStartedAt, clock.millis()));
   }
 
@@ -2822,21 +2820,21 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void clearFromValidationCache(DelegateTask delegateTask) {
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+    UpdateOperations<DelegateTask> updateOperations = persistence.createUpdateOperations(DelegateTask.class)
                                                           .unset(DelegateTaskKeys.validatingDelegateIds)
                                                           .unset(DelegateTaskKeys.validationCompleteDelegateIds);
-    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+    Query<DelegateTask> updateQuery = persistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid())
                                           .filter(DelegateTaskKeys.status, QUEUED)
                                           .field(DelegateTaskKeys.delegateId)
                                           .doesNotExist();
-    wingsPersistence.update(updateQuery, updateOperations);
+    persistence.update(updateQuery, updateOperations);
   }
 
   @VisibleForTesting
   DelegateTask getUnassignedDelegateTask(String accountId, String taskId, String delegateId) {
-    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+    DelegateTask delegateTask = persistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, accountId)
                                     .filter(DelegateTaskKeys.uuid, taskId)
                                     .get();
@@ -2936,7 +2934,7 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateTaskPackageBuilder.build();
     } catch (CriticalExpressionEvaluationException exception) {
       log.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
-      Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+      Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
       DelegateTaskResponse response =
@@ -3004,7 +3002,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (CriticalExpressionEvaluationException exception) {
       log.error("Exception in ManagerPreExecutionExpressionEvaluator ", exception);
-      Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
+      Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                           .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                           .filter(DelegateTaskKeys.uuid, delegateTask.getUuid());
       DelegateTaskResponse response =
@@ -3060,7 +3058,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public boolean validateThatDelegateNameIsUnique(String accountId, String delegateName) {
-    Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+    Delegate delegate = persistence.createQuery(Delegate.class)
                             .filter(DelegateKeys.accountId, accountId)
                             .filter(DelegateKeys.delegateName, delegateName)
                             .get();
@@ -3082,7 +3080,7 @@ public class DelegateServiceImpl implements DelegateService {
     clearFromValidationCache(delegateTask);
 
     log.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+    Query<DelegateTask> query = persistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.uuid, taskId)
                                     .filter(DelegateTaskKeys.status, QUEUED)
@@ -3090,12 +3088,11 @@ public class DelegateServiceImpl implements DelegateService {
                                     .doesNotExist()
                                     .project(DelegateTaskKeys.data_parameters, false);
     UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class)
+        persistence.createUpdateOperations(DelegateTask.class)
             .set(DelegateTaskKeys.delegateId, delegateId)
             .set(DelegateTaskKeys.status, STARTED)
             .set(DelegateTaskKeys.expiry, currentTimeMillis() + delegateTask.getData().getTimeout());
-    DelegateTask task =
-        wingsPersistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
+    DelegateTask task = persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnNewOptions);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in
     // case client is retrying the request
     if (task != null) {
@@ -3111,7 +3108,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }
-    task = wingsPersistence.createQuery(DelegateTask.class)
+    task = persistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                .filter(DelegateTaskKeys.uuid, taskId)
                .filter(DelegateTaskKeys.status, STARTED)
@@ -3141,7 +3138,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent) {
-    return wingsPersistence.createQuery(DelegateTask.class)
+    return persistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, taskAbortEvent.getAccountId())
                .filter(DelegateTaskKeys.uuid, taskAbortEvent.getDelegateTaskId())
                .filter(DelegateTaskKeys.delegateId, delegateId)
@@ -3191,12 +3188,11 @@ public class DelegateServiceImpl implements DelegateService {
       }
       log.info("Aborting delegate task");
 
-      wingsPersistence.save(
-          DelegateSyncTaskResponse.builder()
-              .uuid(delegateTaskId)
-              .responseData(kryoSerializer.asDeflatedBytes(
-                  ErrorNotifyResponseData.builder().errorMessage("Delegate task was aborted").build()))
-              .build());
+      persistence.save(DelegateSyncTaskResponse.builder()
+                           .uuid(delegateTaskId)
+                           .responseData(kryoSerializer.asDeflatedBytes(
+                               ErrorNotifyResponseData.builder().errorMessage("Delegate task was aborted").build()))
+                           .build());
 
       return endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
     }
@@ -3205,10 +3201,10 @@ public class DelegateServiceImpl implements DelegateService {
   private DelegateTask endTask(
       String accountId, String delegateTaskId, Query<DelegateTask> delegateTaskQuery, DelegateTask.Status status) {
     UpdateOperations updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status);
+        persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status);
 
     DelegateTask oldTask =
-        wingsPersistence.findAndModify(delegateTaskQuery, updateOperations, HPersistence.returnOldOptions);
+        persistence.findAndModify(delegateTaskQuery, updateOperations, HPersistence.returnOldOptions);
 
     broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
         .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
@@ -3217,7 +3213,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private Query<DelegateTask> getRunningTaskQuery(String accountId, String delegateTaskId) {
-    return wingsPersistence.createQuery(DelegateTask.class)
+    return persistence.createQuery(DelegateTask.class)
         .filter(DelegateTaskKeys.uuid, delegateTaskId)
         .filter(DelegateTaskKeys.accountId, accountId)
         .filter(DelegateTaskKeys.data_async, Boolean.TRUE)
@@ -3242,7 +3238,7 @@ public class DelegateServiceImpl implements DelegateService {
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
     // TODO - add assignment filter here (scopes. selectors, ...)
     Query<DelegateTask> delegateTaskQuery =
-        wingsPersistence.createQuery(DelegateTask.class)
+        persistence.createQuery(DelegateTask.class)
             .filter(DelegateTaskKeys.accountId, accountId)
             .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
             .filter(DelegateTaskKeys.status, QUEUED)
@@ -3264,15 +3260,15 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getAbortedEvents(String accountId, String delegateId) {
-    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
+    Query<DelegateTask> abortedQuery = persistence.createQuery(DelegateTask.class)
                                            .filter(DelegateTaskKeys.accountId, accountId)
                                            .filter(DelegateTaskKeys.status, ABORTED)
                                            .filter(DelegateTaskKeys.data_async, Boolean.TRUE)
                                            .filter(DelegateTaskKeys.delegateId, delegateId);
 
     // Send abort event only once by clearing delegateId
-    wingsPersistence.update(
-        abortedQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).unset(DelegateTaskKeys.delegateId));
+    persistence.update(
+        abortedQuery, persistence.createUpdateOperations(DelegateTask.class).unset(DelegateTaskKeys.delegateId));
 
     return abortedQuery.project(DelegateTaskKeys.accountId, true)
         .asList()
@@ -3292,7 +3288,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId));
+    persistence.delete(persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId));
   }
 
   //------ Start: ECS Delegate Specific Methods
@@ -3316,7 +3312,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId) {
-    return Optional.ofNullable(wingsPersistence.createQuery(DelegateTask.class)
+    return Optional.ofNullable(persistence.createQuery(DelegateTask.class)
                                    .filter(DelegateTaskKeys.accountId, accountId)
                                    .filter(DelegateTaskKeys.uuid, taskId)
                                    .get());
@@ -3381,9 +3377,9 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (config != null && config.getDelegateToken().equals(delegate.getDelegateRandomToken())) {
       Query<DelegateSequenceConfig> sequenceConfigQuery =
-          wingsPersistence.createQuery(DelegateSequenceConfig.class).filter(ID_KEY, config.getUuid());
-      wingsPersistence.update(sequenceConfigQuery,
-          wingsPersistence.createUpdateOperations(DelegateSequenceConfig.class)
+          persistence.createQuery(DelegateSequenceConfig.class).filter(ID_KEY, config.getUuid());
+      persistence.update(sequenceConfigQuery,
+          persistence.createUpdateOperations(DelegateSequenceConfig.class)
               .set(DelegateSequenceConfigKeys.delegateToken, delegate.getDelegateRandomToken()));
     }
   }
@@ -3510,7 +3506,7 @@ public class DelegateServiceImpl implements DelegateService {
   Delegate getDelegateUsingSequenceNum(String accountId, String hostName, String seqNum) {
     Delegate existingDelegate;
     Query<Delegate> delegateQuery =
-        wingsPersistence.createQuery(Delegate.class)
+        persistence.createQuery(Delegate.class)
             .filter(DelegateKeys.accountId, accountId)
             .filter(DelegateSequenceConfigKeys.hostName, getHostNameToBeUsedForECSDelegate(hostName, seqNum));
 
@@ -3536,7 +3532,7 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   Delegate handleECSRegistrationUsingID(Delegate delegate) {
     Query<Delegate> delegateQuery =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate.getUuid());
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegate.getUuid());
 
     Delegate existingDelegate = delegateQuery.project(DelegateKeys.hostName, true)
                                     .project(DelegateKeys.status, true)
@@ -3598,7 +3594,7 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   List<DelegateSequenceConfig> getDelegateSequenceConfigs(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
-        wingsPersistence.createQuery(DelegateSequenceConfig.class)
+        persistence.createQuery(DelegateSequenceConfig.class)
             .filter(DelegateSequenceConfigKeys.accountId, delegate.getAccountId())
             .filter(DelegateSequenceConfigKeys.hostName, delegate.getHostName());
 
@@ -3614,7 +3610,7 @@ public class DelegateServiceImpl implements DelegateService {
   @VisibleForTesting
   DelegateSequenceConfig addNewDelegateSequenceConfigRecord(Delegate delegate) {
     Query<DelegateSequenceConfig> delegateSequenceConfigQuery =
-        wingsPersistence.createQuery(DelegateSequenceConfig.class)
+        persistence.createQuery(DelegateSequenceConfig.class)
             .filter(DelegateSequenceConfig.ACCOUNT_ID_KEY2, delegate.getAccountId())
             .filter(DelegateSequenceConfigKeys.hostName, delegate.getHostName());
 
@@ -3667,9 +3663,9 @@ public class DelegateServiceImpl implements DelegateService {
         }
 
         Query<DelegateSequenceConfig> sequenceConfigQuery =
-            wingsPersistence.createQuery(DelegateSequenceConfig.class).filter("_id", config.getUuid());
-        wingsPersistence.update(sequenceConfigQuery,
-            wingsPersistence.createUpdateOperations(DelegateSequenceConfig.class)
+            persistence.createQuery(DelegateSequenceConfig.class).filter("_id", config.getUuid());
+        persistence.update(sequenceConfigQuery,
+            persistence.createUpdateOperations(DelegateSequenceConfig.class)
                 .set(DelegateSequenceConfigKeys.delegateToken, delegate.getDelegateRandomToken()));
 
         // Update delegate with seqNum and hostName
@@ -3703,7 +3699,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                 .withAppId(GLOBAL_APP_ID)
                                                 .build();
 
-    wingsPersistence.save(sequenceConfig);
+    persistence.save(sequenceConfig);
     log.info("DelegateSequenceConfig saved: {}", sequenceConfig);
 
     return sequenceConfig;
@@ -3768,7 +3764,7 @@ public class DelegateServiceImpl implements DelegateService {
    * All delegates matching {AccId, HostName Prefix, Type = ECS}
    */
   private List<Delegate> getAllDelegatesMatchingGroupName(Delegate delegate) {
-    return wingsPersistence.createQuery(Delegate.class, excludeAuthority)
+    return persistence.createQuery(Delegate.class, excludeAuthority)
         .filter(DelegateKeys.accountId, delegate.getAccountId())
         .filter(DelegateKeys.delegateType, delegate.getDelegateType())
         .filter(DelegateKeys.delegateGroupName, delegate.getDelegateGroupName())
@@ -3904,14 +3900,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void retainOnlySelectedDelegatesAndDeleteRestByUuid(
       String accountId, List<String> delegatesToRetain, long shutdownInterval) throws InterruptedException {
-    Query<Delegate> query = wingsPersistence.createQuery(Delegate.class)
+    Query<Delegate> query = persistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, accountId)
                                 .field(DelegateKeys.uuid)
                                 .notIn(delegatesToRetain);
 
-    UpdateOperations<Delegate> updateOps = wingsPersistence.createUpdateOperations(Delegate.class)
-                                               .set(DelegateKeys.status, DelegateInstanceStatus.DELETED);
-    wingsPersistence.update(query, updateOps);
+    UpdateOperations<Delegate> updateOps =
+        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, DelegateInstanceStatus.DELETED);
+    persistence.update(query, updateOps);
 
     // Waiting for shutdownInterval to ensure shutdown msg reach delegates before removing their entries from DB
     Thread.sleep(shutdownInterval);

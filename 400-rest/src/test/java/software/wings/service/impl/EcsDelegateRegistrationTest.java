@@ -27,12 +27,12 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.DelegateSequenceConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.jre.JreConfig;
 
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class EcsDelegateRegistrationTest extends WingsBaseTest {
   DelegateServiceImpl delegateService;
-  @Mock WingsPersistence wingsPersistence;
+  @Mock HPersistence persistence;
   @Mock Query query;
   @Mock UpdateOperations updateOperations;
   @Mock FeatureFlagService featureFlagService;
@@ -142,15 +142,15 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     verify(delegateService, times(1)).getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
     delegateService.handleEcsDelegateKeepAlivePacket(delegate);
-    verify(wingsPersistence, times(0)).createQuery(any());
-    verify(wingsPersistence, times(0)).update(any(Query.class), any(UpdateOperations.class));
+    verify(persistence, times(0)).createQuery(any());
+    verify(persistence, times(0)).update(any(Query.class), any(UpdateOperations.class));
 
     mockWingsPersistanceForUpdateCall();
 
     delegate.setDelegateRandomToken("aabbcc");
     delegateService.handleEcsDelegateKeepAlivePacket(delegate);
-    verify(wingsPersistence, times(1)).createQuery(any());
-    verify(wingsPersistence, times(1)).update(any(Query.class), any(UpdateOperations.class));
+    verify(persistence, times(1)).createQuery(any());
+    verify(persistence, times(1)).update(any(Query.class), any(UpdateOperations.class));
   }
 
   /**
@@ -443,7 +443,6 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
     mockWingsPersistanceForUpdateCall();
 
     List<DelegateSequenceConfig> existingDelegateSequenceConfigs = getExistingDelegateSequenceConfigs();
-    doAnswer(returnsSecondArg()).when(wingsPersistence).saveAndGet(any(Class.class), any(DelegateSequenceConfig.class));
     doReturn(existingDelegateSequenceConfigs).when(query).asList();
 
     Delegate delegate =
@@ -519,12 +518,12 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   private void mockWingsPersistanceForUpdateCall() {
-    on(delegateService).set("wingsPersistence", wingsPersistence);
-    doReturn(query).when(wingsPersistence).createQuery(any(Class.class));
+    on(delegateService).set("persistence", persistence);
+    doReturn(query).when(persistence).createQuery(any(Class.class));
     doReturn(query).when(query).filter(anyString(), any());
     doReturn(query).when(query).project(anyString(), anyBoolean());
-    doReturn(null).when(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
-    doReturn(updateOperations).when(wingsPersistence).createUpdateOperations(any(Class.class));
+    doReturn(null).when(persistence).update(any(Query.class), any(UpdateOperations.class));
+    doReturn(updateOperations).when(persistence).createUpdateOperations(any(Class.class));
     doReturn(updateOperations).when(updateOperations).set(anyString(), any());
   }
 
