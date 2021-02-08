@@ -54,6 +54,7 @@ ps auxwwwe
 echo end off ps-report
 
 BAZEL_MODULES="\
+  //130-resource-group:module \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
   //400-rest:module \
@@ -269,6 +270,7 @@ build_bazel_application 800-pipeline-service
 build_bazel_application 940-notification-client
 build_bazel_application 400-rest
 
+build_bazel_module 130-resource-group
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
