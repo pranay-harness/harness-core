@@ -1,7 +1,6 @@
 package io.harness.delegate.task.git;
 
 import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -9,14 +8,15 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.git.model.FetchFilesResult;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.DummyLogCallbackImpl;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -49,7 +49,8 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
     log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
-    LogCallback executionLogCallback = getLogCallBack();
+    LogCallback executionLogCallback =
+        new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true);
 
     Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
     List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();
@@ -79,17 +80,10 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
     }
 
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-
     return GitFetchResponse.builder()
         .taskStatus(TaskStatus.SUCCESS)
         .filesFromMultipleRepo(filesFromMultipleRepo)
         .build();
-  }
-
-  private LogCallback getLogCallBack() {
-    // TODO VS/Anshul: update when logcallback is available, use `FetchFiles` as commandUnit Name
-    return new DummyLogCallbackImpl();
   }
 
   private FetchFilesResult fetchFilesFromRepo(

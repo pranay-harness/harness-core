@@ -44,21 +44,21 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
     K8sRollingRollbackDeployRequest k8sRollingRollbackDeployRequest =
         (K8sRollingRollbackDeployRequest) k8sDeployRequest;
     boolean success = init(k8sRollingRollbackDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
     success = rollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
         k8sRollingRollbackDeployRequest.getReleaseNumber(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Rollback));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Rollback, true));
     if (!success) {
       return getFailureResponse();
     }
 
     rollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
         k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true));
     rollbackBaseHandler.postProcess(rollbackHandlerConfig, k8sRollingRollbackDeployRequest.getReleaseName());
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }

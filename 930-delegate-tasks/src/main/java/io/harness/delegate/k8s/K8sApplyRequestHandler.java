@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -69,39 +70,40 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sApplyRequest.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles), timeoutInMillis,
-        k8sApplyRequest.getAccountId());
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList())),
+        timeoutInMillis, k8sApplyRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
-    success = init(k8sApplyRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+    success = init(
+        k8sApplyRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
-    success = k8sApplyBaseHandler.prepare(k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare),
+    success = k8sApplyBaseHandler.prepare(k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true),
         k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig);
     if (!success) {
       return getFailureResponse();
     }
 
     success = k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
     if (!success) {
       return getFailureResponse();
     }
 
     success = k8sApplyBaseHandler.steadyStateCheck(k8sApplyRequest.isSkipSteadyStateCheck(),
         k8sApplyRequest.getK8sInfraDelegateConfig().getNamespace(), k8sDelegateTaskParams, timeoutInMillis,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState), k8sApplyHandlerConfig);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true), k8sApplyHandlerConfig);
     if (!success) {
       return getFailureResponse();
     }
 
     k8sApplyBaseHandler.wrapUp(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp), k8sApplyHandlerConfig.getClient());
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true), k8sApplyHandlerConfig.getClient());
 
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }

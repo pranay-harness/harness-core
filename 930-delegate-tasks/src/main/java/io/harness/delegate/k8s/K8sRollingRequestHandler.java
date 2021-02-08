@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -88,22 +89,23 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success =
-        k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sRollingDeployRequest.getManifestDelegateConfig(),
-            manifestFilesDirectory, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles),
-            steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
+    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+        k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sRollingDeployRequest.getValuesYamlList())),
+        steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sRollingDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
     success = prepareForRolling(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true),
         k8sRollingDeployRequest.isInCanaryWorkflow());
     if (!success) {
       return getFailureResponse();
@@ -113,13 +115,13 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
     if (!success) {
       return getFailureResponse();
     }
 
     if (isEmpty(managedWorkloads)) {
-      k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState)
+      k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true)
           .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
       k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams, managedWorkloads, release, client);
@@ -131,7 +133,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
       success = k8sTaskHelperBase.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
           k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
-          k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState), true);
+          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true), true);
 
       // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
       // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
@@ -147,7 +149,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     }
 
     k8sRollingBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp), client);
+        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true), client);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistoryInConfigMap(

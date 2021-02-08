@@ -15,6 +15,6 @@ public class SshExecutorFactoryNG {
 
   private LogCallback getExecutionLogCallback(
       SshSessionConfig sshSessionConfig, ILogStreamingTaskClient logStreamingTaskClient) {
-    return new NGLogCallback(logStreamingTaskClient, sshSessionConfig.getCommandUnitName());
+    return new NGLogCallback(logStreamingTaskClient, sshSessionConfig.getCommandUnitName(), true);
   }
 }

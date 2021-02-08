@@ -11,11 +11,14 @@ public class NGLogCallback implements LogCallback {
   private ILogStreamingTaskClient iLogStreamingTaskClient;
   private String commandUnitName;
 
-  public NGLogCallback(ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName) {
+  public NGLogCallback(
+      ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName, boolean shouldOpenStream) {
     this.iLogStreamingTaskClient = iLogStreamingTaskClient;
     this.commandUnitName = commandUnitName;
 
-    iLogStreamingTaskClient.openStream(commandUnitName);
+    if (shouldOpenStream) {
+      iLogStreamingTaskClient.openStream(commandUnitName);
+    }
   }
 
   @Override
