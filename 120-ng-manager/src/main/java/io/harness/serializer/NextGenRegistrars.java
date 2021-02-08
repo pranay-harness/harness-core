@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
@@ -19,5 +20,6 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(UserGroupMorphiaRegistrar.class)
+          .addAll(ResourceGroupSerializer.morphiaRegistrars)
           .build();
 }
