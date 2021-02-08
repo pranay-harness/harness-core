@@ -184,12 +184,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
   private void registerQueueListeners(Injector injector, NotificationConfiguration appConfig) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    if (appConfig.getNotificationClientConfiguration()
-            .getNotificationClientBackendConfiguration()
-            .getType()
-            .equalsIgnoreCase("mongo")) {
-      queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
-    }
+    queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
   }
 
   public SwaggerBundleConfiguration getSwaggerConfiguration() {

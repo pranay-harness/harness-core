@@ -35,7 +35,6 @@ public class NotificationConfiguration extends Configuration {
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
-  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
 

@@ -9,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.core.UserClientModule;
-import io.harness.notification.NotificationClientBackendConfiguration;
 import io.harness.notification.NotificationConfiguration;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
@@ -67,14 +66,8 @@ public class NotificationCoreModule extends AbstractModule {
   }
 
   private void bindMessageConsumer() {
-    NotificationClientBackendConfiguration notificationClientBackendConfiguration = getBackendConfig();
-    assert notificationClientBackendConfiguration.getType().equalsIgnoreCase("mongo");
     log.info("Using Mongo as the message broker");
     bind(MessageConsumer.class).to(MongoMessageConsumer.class);
-  }
-
-  private NotificationClientBackendConfiguration getBackendConfig() {
-    return appConfig.getNotificationClientConfiguration().getNotificationClientBackendConfiguration();
   }
 
   @Provides
