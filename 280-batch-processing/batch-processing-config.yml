@@ -45,6 +45,7 @@ billingDataPipelineConfig:
   awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
   clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
+  awsRoleName: harnessContinuousEfficiencyRole
 
 smtp:
   type: SMTP

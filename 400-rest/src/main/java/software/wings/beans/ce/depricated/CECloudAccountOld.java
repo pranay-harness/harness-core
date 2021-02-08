@@ -1,6 +1,5 @@
-package software.wings.beans.ce;
+package software.wings.beans.ce.depricated;
 
-import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
@@ -32,8 +31,7 @@ import org.mongodb.morphia.annotations.Id;
           @Field(CECloudAccountKeys.masterAccountSettingId)
     })
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
-@StoreIn("events")
-public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public class CECloudAccountOld implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String accountArn;
