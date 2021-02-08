@@ -22,6 +22,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -56,11 +57,13 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .releaseName(releaseName)
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)

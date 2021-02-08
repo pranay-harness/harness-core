@@ -23,6 +23,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
@@ -52,11 +53,13 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sRollingDeployRequest k8sRollingDeployRequest =
         K8sRollingDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .inCanaryWorkflow(false)
             .releaseName(releaseName)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
