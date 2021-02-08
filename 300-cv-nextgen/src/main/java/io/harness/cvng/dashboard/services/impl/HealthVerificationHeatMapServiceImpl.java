@@ -42,7 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -81,18 +80,11 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
             .in(taskIds)
             .filter(HealthVerificationHeatMapKeys.aggregationLevel,
                 HealthVerificationHeatMap.AggregationLevel.VERIFICATION_TASK)
-            .order(Sort.ascending(HealthVerificationHeatMapKeys.endTime));
+            .filter(HealthVerificationHeatMapKeys.healthVerificationPeriod, HealthVerificationPeriod.POST_ACTIVITY);
 
-    hPersistence.getDatastore(HealthVerificationHeatMap.class)
-        .createAggregation(HealthVerificationHeatMap.class)
-        .match(heatMapQuery)
-        .project(projection(HealthVerificationHeatMapKeys.riskScore), projection(HealthVerificationHeatMapKeys.endTime),
-            projection("verificationTaskId"), projection("category"))
-        .group(id(grouping(HealthVerificationHeatMapKeys.aggregationId)),
-            grouping(HealthVerificationHeatMapKeys.endTime, accumulator("$last", "endTime")),
-            grouping(HealthVerificationHeatMapKeys.riskScore, accumulator("$last", "riskScore")))
-        .aggregate(HealthVerificationHeatMap.class)
-        .forEachRemaining(healthVerificationHeatMap -> { risks.add(healthVerificationHeatMap.getRiskScore()); });
+    List<HealthVerificationHeatMap> heatMaps = heatMapQuery.asList();
+
+    heatMaps.forEach(heatMap -> risks.add(heatMap.getRiskScore()));
 
     if (isNotEmpty(risks)) {
       double max = Collections.max(risks);

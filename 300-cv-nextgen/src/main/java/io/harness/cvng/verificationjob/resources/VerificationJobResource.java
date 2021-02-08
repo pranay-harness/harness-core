@@ -7,6 +7,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -103,9 +104,9 @@ public class VerificationJobResource {
   @LearningEngineAuth
   @Path("/job-from-url")
   @ApiOperation(value = "gets the verificationJob from its url", nickname = "getVerificationJobFromUrl")
-  public ResponseDTO<VerificationJobDTO> getVerificationJobFromUrl(
+  public RestResponse<VerificationJobDTO> getVerificationJobFromUrl(
       @QueryParam("accountId") @NotNull @Valid final String accountId,
       @QueryParam("verificationJobUrl") @NotNull String webhookUrl) {
-    return ResponseDTO.newResponse(verificationJobService.getDTOByUrl(accountId, webhookUrl));
+    return new RestResponse<>(verificationJobService.getDTOByUrl(accountId, webhookUrl));
   }
 }
