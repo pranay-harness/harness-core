@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.permissions.PermissionsModule;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
 import io.harness.accesscontrol.roles.RoleModule;
 import io.harness.accesscontrol.scopes.ScopeModule;
 import io.harness.mongo.MongoConfig;
@@ -37,6 +38,7 @@ public class AccessControlModule extends AbstractModule {
     install(ScopeModule.getInstance());
     install(PermissionsModule.getInstance());
     install(RoleModule.getInstance());
+    install(RoleAssignmentModule.getInstance());
     registerRequiredBindings();
   }
 

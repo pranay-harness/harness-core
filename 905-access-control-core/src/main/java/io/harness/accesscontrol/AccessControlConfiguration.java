@@ -26,7 +26,7 @@ public class AccessControlConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.accesscontrol";
   public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions";
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
-  public static final String ROLE_BINDINGS_PACKAGE = "io.harness.accesscontrol.rolebindings";
+  public static final String ROLE_BINDINGS_PACKAGE = "io.harness.accesscontrol.roleassignments";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();

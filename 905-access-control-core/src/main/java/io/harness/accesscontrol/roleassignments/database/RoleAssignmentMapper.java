@@ -1,13 +1,13 @@
-package io.harness.accesscontrol.rolebindings.database;
+package io.harness.accesscontrol.roleassignments.database;
 
-import io.harness.accesscontrol.rolebindings.RoleBindingDTO;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentDTO;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-class RoleBindingMapper {
-  public static RoleBinding fromDTO(io.harness.accesscontrol.rolebindings.RoleBindingDTO dto) {
-    return RoleBinding.builder()
+class RoleAssignmentMapper {
+  public static RoleAssignment fromDTO(RoleAssignmentDTO dto) {
+    return RoleAssignment.builder()
         .identifier(dto.getIdentifier())
         .parentIdentifier(dto.getParentIdentifier())
         .resourceGroupIdentifier(dto.getResourceGroupIdentifier())
@@ -20,8 +20,8 @@ class RoleBindingMapper {
         .build();
   }
 
-  public static io.harness.accesscontrol.rolebindings.RoleBindingDTO toDTO(RoleBinding object) {
-    return RoleBindingDTO.builder()
+  public static RoleAssignmentDTO toDTO(RoleAssignment object) {
+    return RoleAssignmentDTO.builder()
         .identifier(object.getIdentifier())
         .parentIdentifier(object.getParentIdentifier())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())

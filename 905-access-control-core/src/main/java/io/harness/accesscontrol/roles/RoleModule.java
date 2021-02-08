@@ -25,6 +25,5 @@ public class RoleModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(ScopeService.class);
-    requireBinding(RoleDao.class);
   }
 }

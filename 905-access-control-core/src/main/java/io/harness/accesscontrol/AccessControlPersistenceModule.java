@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.permissions.database.PermissionPersistenceConfig;
+import io.harness.accesscontrol.roleassignments.database.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.database.RolePersistenceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.springdata.PersistenceModule;
@@ -23,7 +24,8 @@ public class AccessControlPersistenceModule extends PersistenceModule {
 
   @Override
   protected Class<?>[] getConfigClasses() {
-    return new Class[] {PermissionPersistenceConfig.class, RolePersistenceConfig.class};
+    return new Class[] {
+        PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {
