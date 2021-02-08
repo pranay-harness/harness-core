@@ -223,7 +223,6 @@ public class EcsStateHelperTest extends CategoryTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testQueueDelegateTaskForEcsListenerUpdate() throws InterruptedException {
-    Thread.sleep(25000);
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
     DelegateService mockService = mock(DelegateService.class);
