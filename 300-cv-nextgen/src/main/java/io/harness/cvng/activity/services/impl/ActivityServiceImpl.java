@@ -575,8 +575,9 @@ public class ActivityServiceImpl implements ActivityService {
   private void validateJob(VerificationJob verificationJob) {
     List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(verificationJob);
     Preconditions.checkState(isNotEmpty(cvConfigs),
-        "No data sources of type(s) %s defined for environment %s and service %s", verificationJob.getDataSources(),
-        verificationJob.getEnvIdentifier(), verificationJob.getServiceIdentifier());
+        "No monitoring sources with identifiers %s defined for environment %s and service %s",
+        verificationJob.getMonitoringSources(), verificationJob.getEnvIdentifier(),
+        verificationJob.getServiceIdentifier());
   }
 
   private VerificationJobInstance fillOutCommonJobInstanceProperties(
