@@ -173,6 +173,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testRegisterActivity_whenNoCvConfigExists() {
     VerificationJob verificationJob = createVerificationJob();
+    List<String> monitoringSourceIdentifiers = Collections.singletonList("monitoringSourceIdentifier");
+    verificationJob.setMonitoringSources(monitoringSourceIdentifiers);
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
@@ -180,8 +182,9 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
     assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No data sources of type(s) " + verificationJob.getDataSources() + " defined for environment "
-            + verificationJob.getEnvIdentifier() + " and service " + verificationJob.getServiceIdentifier());
+        .hasMessage("No monitoring sources with identifiers " + verificationJob.getMonitoringSources()
+            + " defined for environment " + verificationJob.getEnvIdentifier() + " and service "
+            + verificationJob.getServiceIdentifier());
   }
 
   @Test
