@@ -19,6 +19,7 @@ import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -27,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 @TargetModule(Module._950_EVENTS_API)
+@Slf4j
 public class DeploymentFreezeDeactivationHandlerTest extends WingsBaseTest {
   @Mock DeploymentFreezeUtils deploymentFreezeUtils;
   @Inject @InjectMocks DeploymentFreezeDeactivationHandler deploymentFreezeDeactivationHandler;
@@ -53,7 +55,7 @@ public class DeploymentFreezeDeactivationHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category(UnitTests.class)
   public void shouldHandleActivationEventForMatchingWindows() {
     long currentTime = System.currentTimeMillis();
@@ -65,6 +67,7 @@ public class DeploymentFreezeDeactivationHandlerTest extends WingsBaseTest {
     TimeRangeBasedFreezeConfig window3 = TimeRangeBasedFreezeConfig.builder()
                                              .timeRange(new TimeRange(currentTime - 2000, currentTime, "Asia/Kolkatta"))
                                              .build();
+    log.info("End time of the window while creation: {}", currentTime);
     GovernanceConfig governanceConfig = GovernanceConfig.builder()
                                             .accountId(ACCOUNT_ID)
                                             .timeRangeBasedFreezeConfigs(Arrays.asList(window1, window2, window3))

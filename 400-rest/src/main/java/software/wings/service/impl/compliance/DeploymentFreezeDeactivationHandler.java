@@ -85,6 +85,8 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
                         < DeploymentFreezeUtils.MAXIMUM_ITERATOR_DELAY))
             .collect(Collectors.toList());
 
+    entity.getTimeRangeBasedFreezeConfigs().forEach(
+        freezeWindow -> log.info("Deactivation time for freeze window: {}", freezeWindow.fetchEndTime()));
     if (EmptyPredicate.isEmpty(governanceFreezeConfigs)) {
       log.warn("No deployment freeze windows found within 5 minutes of the current time: " + iteratorTime);
       return;
