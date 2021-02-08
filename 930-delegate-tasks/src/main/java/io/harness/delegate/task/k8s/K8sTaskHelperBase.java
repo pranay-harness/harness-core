@@ -1787,8 +1787,9 @@ public class K8sTaskHelperBase {
     return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
-  public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {
-    return new NGLogCallback(logStreamingTaskClient, commandUnitName);
+  public LogCallback getLogCallback(
+      ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName, boolean shouldOpenStream) {
+    return new NGLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
