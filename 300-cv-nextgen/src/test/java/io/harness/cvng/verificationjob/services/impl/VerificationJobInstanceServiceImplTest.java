@@ -28,7 +28,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO.Deploym
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
@@ -89,6 +89,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -838,13 +839,11 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     assertThat(deploymentVerificationJobInstanceSummary.getProgressPercentage()).isEqualTo(0);
     assertThat(deploymentVerificationJobInstanceSummary.getRisk()).isNull();
     assertThat(deploymentVerificationJobInstanceSummary.getStatus()).isEqualTo(ActivityVerificationStatus.NOT_STARTED);
-    assertThat(deploymentVerificationJobInstanceSummary.getAdditionalInfo())
-        .isEqualTo(CanaryDeploymentAdditionalInfo.builder()
-                       .primary(Collections.emptySet())
-                       .canary(Collections.emptySet())
-                       .primaryInstancesLabel("before")
-                       .canaryInstancesLabel("after")
-                       .build());
+    CanaryAdditionalInfo additionalInfo = new CanaryAdditionalInfo();
+    additionalInfo.setCanary(new HashSet<>());
+    additionalInfo.setPrimary(new HashSet<>());
+    additionalInfo.setPrimaryInstancesLabel("before");
+    additionalInfo.setPrimaryInstancesLabel("after");
   }
 
   @Test
