@@ -566,11 +566,11 @@ public class K8BuildSetupUtils {
     }
 
     if (codeBase == null) {
-      throw new IllegalArgumentException("CI codebase is not set");
+      throw new CIStageExecutionException("CI codebase is mandatory in case git clone is enabled");
     }
 
     if (codeBase.getConnectorRef() == null) {
-      throw new IllegalArgumentException("Git connector is not set in CI codebase");
+      throw new CIStageExecutionException("Git connector is mandatory in case git clone is enabled");
     }
     return connectorUtils.getConnectorDetails(ngAccess, codeBase.getConnectorRef());
   }

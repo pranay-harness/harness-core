@@ -44,6 +44,7 @@ public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementC
       YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
       ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
     } catch (Exception ex) {
+      // Ignore exception because code base is not mandatory in case git clone is false
       log.warn("Failed to retrieve ciCodeBase from pipeline");
     }
 
