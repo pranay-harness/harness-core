@@ -93,6 +93,11 @@ public class YamlSchemaUtils {
     return snippetBasePath + File.separator + entityName + File.separator + snippetIndexFile;
   }
 
+  public String getSnippetIndexPathForEntityType(
+      EntityType entityType, String snippetBasePath, String snippetIndexFile) {
+    return snippetBasePath + File.separator + entityType.getYamlName() + File.separator + snippetIndexFile;
+  }
+
   /**
    * @param clazz The class.
    * @return EntityType of the class.

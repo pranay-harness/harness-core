@@ -251,29 +251,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>software.wings</groupId>
-                <artifactId>899-yaml-schema-plugin</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>compile</phase>
-                        <configuration>
-                            <rootClasses>
-                                <rootClass>io.harness.connector.ConnectorDTO</rootClass>
-                                <rootClass>io.harness.ng.core.dto.secrets.SecretRequestWrapper</rootClass>
-                                <rootClass>io.harness.plancreator.pipeline.PipelineConfig</rootClass>
-                                <rootClass>io.harness.delegate.beans.DelegateSetupDetails</rootClass>
-                                <rootClass>io.harness.cdng.pipeline.CDStepInfo</rootClass>
-                                <rootClass>io.harness.cdng.creator.plan.stage.DeploymentStageConfig</rootClass>
-                            </rootClasses>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 </project>

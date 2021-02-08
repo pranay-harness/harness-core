@@ -28,7 +28,6 @@
         <module>380-cg-graphql</module>
         <!--<module>400-rest</module>-->
         <module>830-notification-service</module>
-        <module>899-yaml-schema-plugin</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

@@ -18,8 +18,11 @@ import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -71,6 +74,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(new ComponentTestsModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Override
       protected void configure() {
@@ -105,6 +109,12 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
       }
     });
 

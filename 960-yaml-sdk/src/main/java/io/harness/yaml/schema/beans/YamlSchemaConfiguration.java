@@ -14,9 +14,12 @@ public class YamlSchemaConfiguration {
   /**
    * The root path where final json schema will be stored.
    */
-  String generatedPathRoot;
+  @Nullable String generatedPathRoot;
   /**
    * Classloader which will be used for generation.
    */
   @Nullable URLClassLoader classLoader;
+
+  @Builder.Default boolean generateFiles = false;
+  @Builder.Default boolean generateOnlyRootFile = true;
 }

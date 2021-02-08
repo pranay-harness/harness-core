@@ -74,6 +74,9 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     data = ["//440-connector-nextgen/src/test/resources:resource"],
+    resources = [
+        "//440-connector-nextgen/src/test/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
