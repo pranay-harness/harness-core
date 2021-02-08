@@ -12,6 +12,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
+import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
@@ -21,6 +22,7 @@ import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.helper.FieldSubTypeComparator;
 import io.harness.yaml.schema.helper.SubtypeClassMapComparator;
 import io.harness.yaml.schema.helper.SupportedPossibleFieldTypesComparator;
@@ -63,7 +65,7 @@ import org.apache.commons.io.FileUtils;
 public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;
-
+  List<YamlSchemaRootClass> rootClasses;
   /**
    * @param yamlSchemaConfiguration Configuration for generation of YamlSchema
    */
@@ -76,8 +78,21 @@ public class YamlSchemaGenerator {
     }
   }
 
+  public Map<EntityType, JsonNode> generateYamlSchema() {
+    Map<EntityType, JsonNode> schema = new HashMap<>();
+    for (YamlSchemaRootClass rootSchemaClass : rootClasses) {
+      final Map<String, JsonNode> stringJsonNodeMap = generateJsonSchemaForRootClass(
+          YamlSchemaConfiguration.builder().build(), swaggerGenerator, rootSchemaClass.getClazz());
+      if (stringJsonNodeMap.size() != 1 || stringJsonNodeMap.get(YamlConstants.SCHEMA_FILE_NAME) == null) {
+        throw new YamlSchemaException("Issue occurred while generation of schema.");
+      }
+      schema.put(rootSchemaClass.getEntityType(), stringJsonNodeMap.get(YamlConstants.SCHEMA_FILE_NAME));
+    }
+    return schema;
+  }
+
   @VisibleForTesting
-  void generateJsonSchemaForRootClass(
+  Map<String, JsonNode> generateJsonSchemaForRootClass(
       YamlSchemaConfiguration yamlSchemaConfiguration, SwaggerGenerator swaggerGenerator, Class<?> rootSchemaClass) {
     log.info("Generating swagger for {}", rootSchemaClass.toString());
     final Map<String, Model> stringModelMap = swaggerGenerator.generateDefinitions(rootSchemaClass);
@@ -92,24 +107,35 @@ public class YamlSchemaGenerator {
     log.info("Generating yaml schema for {}", entityName);
     final String pathForSchemaStorageForEntity =
         getPathToStoreSchema(yamlSchemaConfiguration, rootSchemaClass, entityName);
-    final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(
-        stringModelMap, pathForSchemaStorageForEntity, swaggerDefinitionsMetaInfoMap, entitySwaggerName);
+    final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(stringModelMap, pathForSchemaStorageForEntity,
+        swaggerDefinitionsMetaInfoMap, entitySwaggerName, yamlSchemaConfiguration.isGenerateOnlyRootFile());
+    if (yamlSchemaConfiguration.isGenerateFiles()) {
+      ObjectWriter jsonWriter = getObjectWriter();
+      stringJsonNodeMap.forEach((filePath, content) -> {
+        try {
+          writeContentsToFile(filePath, content, jsonWriter);
+        } catch (IOException e) {
+          throw new InvalidRequestException("Cannot save file", e);
+        }
+      });
+      log.info("Saved files");
+    }
+    return stringJsonNodeMap;
+  }
+
+  @VisibleForTesting
+  public ObjectWriter getObjectWriter() {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
-    ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
-    stringJsonNodeMap.forEach((filePath, content) -> {
-      try {
-        writeContentsToFile(filePath, content, jsonWriter);
-      } catch (IOException e) {
-        throw new InvalidRequestException("Cannot save file", e);
-      }
-    });
-    log.info("Saved files");
+    return mapper.writer(defaultPrettyPrinter);
   }
 
   @VisibleForTesting
   String getPathToStoreSchema(
       YamlSchemaConfiguration yamlSchemaConfiguration, Class<?> rootSchemaClass, String entityName) {
+    if (!yamlSchemaConfiguration.isGenerateFiles()) {
+      return "";
+    }
     List<String> locationList =
         Arrays.asList(Preconditions.checkNotNull(CodeUtils.location(rootSchemaClass)).split("/"));
     String moduleBasePath = "";
@@ -121,7 +147,8 @@ public class YamlSchemaGenerator {
       moduleBasePath = locationList.get(locationList.indexOf("target") - 1) + "/src/main/resources/";
     }
 
-    return moduleBasePath + yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName;
+    return moduleBasePath + yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName
+        + File.separator;
   }
 
   @VisibleForTesting
@@ -138,7 +165,8 @@ public class YamlSchemaGenerator {
    */
   @VisibleForTesting
   Map<String, JsonNode> generateDefinitions(Map<String, Model> definitions, String basePath,
-      Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap, String baseNodeKey) {
+      Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap, String baseNodeKey,
+      boolean generateRootOnly) {
     Map<String, JsonNode> filePathContentMap = new HashMap<>();
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     try {
@@ -152,13 +180,15 @@ public class YamlSchemaGenerator {
         final String name = node.fieldNames().next();
         ObjectNode value = (ObjectNode) node.get(name);
         convertSwaggerToJsonSchema(swaggerDefinitionsMetaInfoMap, mapper, name, value);
-        filePathContentMap.put(basePath + File.separator + name + YamlConstants.JSON_EXTENSION, value);
+        if (!generateRootOnly) {
+          filePathContentMap.put(basePath + name + YamlConstants.JSON_EXTENSION, value);
+        }
         modifiedNode.with(name).setAll(value);
       }
 
       ObjectNode outputNode = mapper.createObjectNode();
       generateCompleteSchema(baseNodeKey, modifiedNode, outputNode);
-      filePathContentMap.put(basePath + File.separator + YamlConstants.SCHEMA_FILE_NAME, outputNode);
+      filePathContentMap.put(basePath + YamlConstants.SCHEMA_FILE_NAME, outputNode);
     } catch (IOException e) {
       log.error("Error in generating Yaml Schema.", e);
     }

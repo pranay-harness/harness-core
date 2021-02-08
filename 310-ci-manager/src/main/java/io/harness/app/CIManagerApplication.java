@@ -60,6 +60,8 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -200,6 +202,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(OrchestrationRegistrars.springConverters)
             .build();
       }
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+      }
     });
 
     modules.add(new ProviderModule() {
@@ -214,7 +221,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
-
+    modules.add(YamlSdkModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
 
     modules.add(new AbstractModule() {

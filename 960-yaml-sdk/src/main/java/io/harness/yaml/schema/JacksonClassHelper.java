@@ -19,6 +19,7 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Singleton;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.lang.reflect.Field;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class JacksonClassHelper {
   /**
    * @param aClass                         Class which will be traversed.
