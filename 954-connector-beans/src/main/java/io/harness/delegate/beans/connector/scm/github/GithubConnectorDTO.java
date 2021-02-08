@@ -44,7 +44,7 @@ public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnect
     if (authentication.getAuthType() == GitAuthType.HTTP) {
       return ((GithubHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
     } else {
-      return ((GithubSshCredentialsDTO) authentication.getCredentials()).getSpec();
+      return (GithubSshCredentialsDTO) authentication.getCredentials();
     }
   }
 }

@@ -44,7 +44,7 @@ public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConn
     if (authentication.getAuthType() == GitAuthType.HTTP) {
       return ((BitbucketHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
     } else {
-      return ((BitbucketSshCredentialsDTO) authentication.getCredentials()).getSpec();
+      return (BitbucketSshCredentialsDTO) authentication.getCredentials();
     }
   }
 }

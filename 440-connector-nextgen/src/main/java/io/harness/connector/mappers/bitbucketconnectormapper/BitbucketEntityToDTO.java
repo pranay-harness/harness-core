@@ -19,7 +19,6 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthentica
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.encryption.SecretRefData;
@@ -50,11 +49,10 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
       case SSH:
         final BitbucketSshAuthentication bitbucketSshAuthentication =
             (BitbucketSshAuthentication) authenticationDetails;
-        final BitbucketSshCredentialsSpecDTO bitbucketSshCredentialsSpecDTO =
-            BitbucketSshCredentialsSpecDTO.builder()
+        bitbucketCredentialsDTO =
+            BitbucketSshCredentialsDTO.builder()
                 .sshKeyRef(SecretRefHelper.createSecretRef(bitbucketSshAuthentication.getSshKeyRef()))
                 .build();
-        bitbucketCredentialsDTO = BitbucketSshCredentialsDTO.builder().spec(bitbucketSshCredentialsSpecDTO).build();
         break;
       case HTTP:
         final BitbucketHttpAuthentication bitbucketHttpAuthentication =

@@ -61,7 +61,6 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
@@ -80,7 +79,6 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
@@ -89,7 +87,6 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
@@ -177,9 +174,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(NexusAuthCredentialsDTO.class, 19502);
     kryo.register(NexusConstants.class, 19503);
     kryo.register(VaultConnectorDTO.class, 19506);
-    kryo.register(GithubSshCredentialsSpecDTO.class, 19508);
-    kryo.register(GitlabSshCredentialsSpecDTO.class, 19509);
-    kryo.register(BitbucketSshCredentialsSpecDTO.class, 19510);
     kryo.register(GithubUsernameTokenDTO.class, 19511);
     kryo.register(GitlabUsernameTokenDTO.class, 19512);
     kryo.register(GitlabAuthenticationDTO.class, 19520);

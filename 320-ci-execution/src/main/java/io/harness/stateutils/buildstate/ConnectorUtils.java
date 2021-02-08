@@ -246,7 +246,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       GitlabSshCredentialsDTO gitlabSshCredentialsDTO =
           (GitlabSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitlabSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitlabSshCredentialsDTO.getSshKeyRef());
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
             + gitConfigDTO.getAuthentication().getAuthType());
@@ -282,7 +282,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       GithubSshCredentialsDTO githubSshCredentialsDTO =
           (GithubSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, githubSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, githubSshCredentialsDTO.getSshKeyRef());
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
             + gitConfigDTO.getAuthentication().getAuthType());
@@ -317,7 +317,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       BitbucketSshCredentialsDTO bitbucketSshCredentialsDTO =
           (BitbucketSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, bitbucketSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, bitbucketSshCredentialsDTO.getSshKeyRef());
       connectorDetailsBuilder.sshKeyDetails(sshKey);
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "

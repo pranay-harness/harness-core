@@ -470,11 +470,11 @@
         {
           "type": "object",
           "required": [
-            "spec"
+            "sshKeyRef"
           ],
           "properties": {
-            "spec": {
-              "$ref": "#/definitions/GitlabSshCredentialsSpec"
+            "sshKeyRef": {
+              "type": "string"
             }
           }
         }
@@ -1339,10 +1339,10 @@
         {
           "type": "object",
           "required": [
-            "sshKeyReference"
+            "sshKeyRef"
           ],
           "properties": {
-            "sshKeyReference": {
+            "sshKeyRef": {
               "type": "string"
             }
           }
@@ -1603,27 +1603,15 @@
         {
           "type": "object",
           "required": [
-            "spec"
+            "sshKeyRef"
           ],
           "properties": {
-            "spec": {
-              "$ref": "#/definitions/GithubSshCredentialsSpec"
+            "sshKeyRef": {
+              "type": "string"
             }
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GithubSshCredentialsSpec": {
-      "type": "object",
-      "required": [
-        "sshKeyRef"
-      ],
-      "properties": {
-        "sshKeyRef": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GithubTokenSpec": {
@@ -1939,27 +1927,15 @@
         {
           "type": "object",
           "required": [
-            "spec"
+            "sshKeyRef"
           ],
           "properties": {
-            "spec": {
-              "$ref": "#/definitions/GitlabSshCredentialsSpec"
+            "sshKeyRef": {
+              "type": "string"
             }
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GitlabSshCredentialsSpec": {
-      "type": "object",
-      "required": [
-        "sshKeyRef"
-      ],
-      "properties": {
-        "sshKeyRef": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GitlabTokenSpec": {
