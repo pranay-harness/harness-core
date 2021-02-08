@@ -1,52 +1,25 @@
 package io.harness.cvng.analysis.beans;
 
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 
 import com.google.common.base.Preconditions;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-public class CanaryDeploymentAdditionalInfo extends AdditionalInfo {
-  Set<HostSummaryInfo> primary;
-  Set<HostSummaryInfo> canary;
-
-  private String primaryInstancesLabel;
-  private String canaryInstancesLabel;
-
-  TrafficSplitPercentage trafficSplitPercentage;
-
+@NoArgsConstructor
+public class CanaryAdditionalInfo extends CanaryBlueGreenAdditionalInfo {
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.CANARY;
   }
 
-  @Data
-  @Builder
-  @EqualsAndHashCode(of = "hostName")
-  public static class HostSummaryInfo {
-    String hostName;
-    Risk risk;
-    long anomalousMetricsCount;
-    long anomalousLogClustersCount;
-  }
-
-  @Value
-  @Builder
-  public static class TrafficSplitPercentage {
-    double preDeploymentPercentage;
-    double postDeploymentPercentage;
-  }
-
   public enum CanaryAnalysisType {
     CLASSIC("primary", "canary"),
-    IMPROVISED("before", "after");
+    IMPROVISED("before", "after"),
+    BLUE_GREEN("blue", "green");
 
     private final String primaryInstancesLabel;
     private final String canaryInstancesLabel;

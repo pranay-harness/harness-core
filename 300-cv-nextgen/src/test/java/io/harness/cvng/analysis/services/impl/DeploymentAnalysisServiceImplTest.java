@@ -12,8 +12,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo.HostSummaryInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
@@ -33,9 +33,11 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.job.BlueGreenVerificationJobDTO;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -104,6 +106,21 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     return canaryVerificationJobDTO;
   }
 
+  private BlueGreenVerificationJobDTO createBlueGreenVerificationJobDTO() {
+    BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = new BlueGreenVerificationJobDTO();
+    blueGreenVerificationJobDTO.setIdentifier(identifier);
+    blueGreenVerificationJobDTO.setJobName("jobName");
+    blueGreenVerificationJobDTO.setDuration("100");
+    blueGreenVerificationJobDTO.setServiceIdentifier(serviceIdentifier);
+    blueGreenVerificationJobDTO.setProjectIdentifier(projectIdentifier);
+    blueGreenVerificationJobDTO.setOrgIdentifier(orgIdentifier);
+    blueGreenVerificationJobDTO.setEnvIdentifier(envIdentifier);
+    blueGreenVerificationJobDTO.setDataSources(Arrays.asList(DataSourceType.APP_DYNAMICS));
+    blueGreenVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
+    blueGreenVerificationJobDTO.setSensitivity(Sensitivity.LOW.name());
+    return blueGreenVerificationJobDTO;
+  }
+
   private TestVerificationJobDTO createTestVerificationJobDTO(String baselineVerificationJobInstanceId) {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     testVerificationJobDTO.setIdentifier(identifier);
@@ -145,18 +162,19 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
     deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(1);
-    List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getPrimary());
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(1);
+    List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getPrimary());
     assertThat(primaryHosts.get(0).getHostName()).contains("node1");
-    assertThat(canaryDeploymentAdditionalInfo.getCanary()).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
-    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
+    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
     assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.MEDIUM);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
@@ -165,7 +183,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -183,15 +201,16 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     hPersistence.save(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEmpty();
-    assertThat(canaryDeploymentAdditionalInfo.getCanary()).isEmpty();
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEmpty();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isEmpty();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -217,21 +236,22 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
 
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(0);
-    assertThat(canaryDeploymentAdditionalInfo.getCanary()).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(1);
-    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(0);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
+    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
     assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -258,18 +278,19 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
 
     deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(1);
-    List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getPrimary());
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("primary");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("canary");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(1);
+    List<HostSummaryInfo> primaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getPrimary());
     assertThat(primaryHosts.get(0).getHostName()).contains("node1");
-    assertThat(canaryDeploymentAdditionalInfo.getCanary()).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
-    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryDeploymentAdditionalInfo.getCanary());
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
+    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
     assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.MEDIUM);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
@@ -278,7 +299,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.HIGH);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -316,16 +337,17 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(2);
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -372,18 +394,135 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(2);
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(2);
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary()).isEqualTo(canaryDeploymentAdditionalInfo.getCanary());
-    canaryDeploymentAdditionalInfo.getCanary().forEach(
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
+    canaryBlueGreenAdditionalInfo.getCanary().forEach(
         node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.HIGH));
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetBlueGreenDeploymentAdditionalInfo_withoutAnalysesAndHostRecords() {
+    verificationJobService.upsert(accountId, createBlueGreenVerificationJobDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(verificationJob);
+    hPersistence.save(verificationJobInstance);
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
+
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.BLUE_GREEN);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("blue");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("green");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEmpty();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isEmpty();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetBlueGreenDeploymentAdditionalInfo_withTimeSeriesAnalysisOnly() {
+    verificationJobService.upsert(accountId, createBlueGreenVerificationJobDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(verificationJob);
+    hPersistence.save(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+
+    Set<String> preDeploymentHosts = new HashSet<>();
+    preDeploymentHosts.add("node1");
+
+    HostRecordDTO hostRecordDTO = createHostRecordDTO(preDeploymentHosts, verificationTaskId);
+    hostRecordService.save(hostRecordDTO);
+
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
+
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.BLUE_GREEN);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("blue");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("green");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(0);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
+    List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
+    assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.HIGH);
+    assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
+    assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetBlueGreenDeploymentAdditionalInfo_withDuplicateNodes() {
+    verificationJobService.upsert(accountId, createBlueGreenVerificationJobDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(verificationJob);
+    hPersistence.save(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String verificationTaskId2 = verificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+
+    DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
+
+    HostInfo hostInfo1 = createHostInfo("node1", 1, 1.1, true, true);
+    HostInfo hostInfo2 = createHostInfo("node2", 2, 2.2, true, true);
+
+    deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
+
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+
+    deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId2);
+
+    hostInfo1 = createHostInfo("node1", 2, 1.1, true, true);
+    hostInfo2 = createHostInfo("node2", 1, 2.2, true, true);
+
+    deploymentTimeSeriesAnalysis.setHostSummaries(Arrays.asList(hostInfo1, hostInfo2));
+    deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
+
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
+
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.BLUE_GREEN);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("blue");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("green");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
+    canaryBlueGreenAdditionalInfo.getCanary().forEach(
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.HIGH));
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
   @Test
@@ -425,20 +564,21 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
 
-    assertThat(canaryDeploymentAdditionalInfo).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
-    assertThat(canaryDeploymentAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
-    assertThat(canaryDeploymentAdditionalInfo.getPrimary().size()).isEqualTo(3);
-    assertThat(canaryDeploymentAdditionalInfo.getCanary().size()).isEqualTo(1);
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary().size()).isEqualTo(3);
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
     // verifies that primary nodes no longer contain riskScore
-    canaryDeploymentAdditionalInfo.getPrimary().forEach(
+    canaryBlueGreenAdditionalInfo.getPrimary().forEach(
         hostSummaryInfo -> assertThat(hostSummaryInfo.getRisk()).isEqualTo(Risk.NO_ANALYSIS));
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage()).isNotNull();
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage().getPreDeploymentPercentage()).isEqualTo(60);
-    assertThat(canaryDeploymentAdditionalInfo.getTrafficSplitPercentage().getPostDeploymentPercentage()).isEqualTo(40);
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage().getPreDeploymentPercentage()).isEqualTo(60);
+    assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage().getPostDeploymentPercentage()).isEqualTo(40);
   }
 
   @Test

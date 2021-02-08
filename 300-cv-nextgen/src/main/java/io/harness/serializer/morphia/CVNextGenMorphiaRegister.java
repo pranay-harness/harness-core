@@ -53,6 +53,7 @@ import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
+import io.harness.cvng.verificationjob.entities.CanaryBlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -129,6 +130,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogAnalysisRecord.class);
     set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
+    set.add(CanaryBlueGreenVerificationJob.class);
     set.add(DeploymentActivity.class);
     set.add(ServiceGuardLogAnalysisTask.class);
     set.add(TimeSeriesLearningEngineTask.class);

@@ -542,7 +542,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   private AdditionalInfo getAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getResolvedJob().getType()) {
       case CANARY:
-        return deploymentAnalysisService.getCanaryDeploymentAdditionalInfo(accountId, verificationJobInstance);
+      case BLUE_GREEN:
+        return deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
       case TEST:
         return deploymentAnalysisService.getLoadTestAdditionalInfo(accountId, verificationJobInstance);
       case HEALTH:
