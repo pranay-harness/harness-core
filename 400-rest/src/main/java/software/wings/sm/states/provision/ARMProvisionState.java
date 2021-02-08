@@ -66,7 +66,7 @@ public class ARMProvisionState extends State {
   @Inject private ActivityService activityService;
 
   public ARMProvisionState(String name) {
-    super(name, StateType.ARM_PROVISION.name());
+    super(name, StateType.ARM_CREATE_RESOURCE.name());
   }
 
   @Override

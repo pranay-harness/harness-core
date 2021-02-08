@@ -178,6 +178,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
@@ -266,6 +267,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
+  @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
@@ -1963,6 +1965,42 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     try {
       return azureVMSSHelperServiceManager.listResourceGroupsNames(
           azureConfig, subscriptionId, encryptionDetails, appId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listSubscriptionLocations(String appId, String computeProviderId, String subscriptionId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listSubscriptionLocations(azureConfig, encryptionDetails, appId, subscriptionId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listAzureCloudProviderLocations(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listAzureCloudProviderLocations(azureConfig, encryptionDetails, appId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listManagementGroupNames(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listManagementGroupNames(azureConfig, encryptionDetails, appId);
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

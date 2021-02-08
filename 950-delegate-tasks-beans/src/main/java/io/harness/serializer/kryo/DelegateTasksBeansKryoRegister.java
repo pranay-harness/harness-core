@@ -180,6 +180,8 @@ import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.delegate.task.azure.arm.request.AzureARMRollbackParameters;
 import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupNamesResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListSubscriptionLocationsResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMRollbackResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
@@ -582,6 +584,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureARMRollbackResponse.class, 543248);
     kryo.register(K8sCanaryDeployRequest.class, 543249);
     kryo.register(K8sCanaryDeployResponse.class, 543250);
+    kryo.register(AzureARMListManagementGroupNamesResponse.class, 543251);
+    kryo.register(AzureARMListSubscriptionLocationsResponse.class, 543252);
+    kryo.register(AzureARMTaskParameters.AzureARMTaskType.class, 543253);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

@@ -6,6 +6,8 @@ import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.utility.AzureResourceUtility;
@@ -13,6 +15,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
+import io.harness.exception.AzureClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -21,6 +24,7 @@ import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public abstract class AbstractAzureARMTaskHandler {
   AzureTaskExecutionResponse executeTask(AzureARMTaskParameters azureARMTaskParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient) {
@@ -29,6 +33,8 @@ public abstract class AbstractAzureARMTaskHandler {
           executeTaskInternal(azureARMTaskParameters, azureConfig, logStreamingTaskClient);
 
       return handleARMTaskResponse(azureARMTaskResponse);
+    } catch (AzureClientException ex) {
+      throw ex;
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       if (azureARMTaskParameters.isSyncTask()) {
