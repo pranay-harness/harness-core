@@ -360,6 +360,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   private boolean isTrueExpression(
       String disableAssertion, ExecutionContext context, ApprovalStateExecutionData executionData) {
+    // rendering expression in order to have it tracked
+    context.renderExpression(disableAssertion);
     if ("true".equals(disableAssertion)) {
       return true;
     }
