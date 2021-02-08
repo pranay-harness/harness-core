@@ -127,6 +127,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
+import io.harness.state.inspection.StateInspectionService;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -407,6 +408,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AuthService authService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
+  @Inject private StateInspectionService stateInspectionService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -717,6 +719,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     .endTs(stateExecutionInstance.getEndTs())
                     .build();
 
+            appendSkipCondition(pipelineStageElement, stageExecution, stateExecutionInstance.getUuid());
+
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof SkipStateExecutionData) {
@@ -809,6 +813,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
       log.warn("Pipeline execution update failed ", cex); // TODO: add retry
+    }
+  }
+
+  @VisibleForTesting
+  void appendSkipCondition(PipelineStageElement pipelineStageElement, PipelineStageExecution stageExecution,
+      String stateExecutionInstanceId) {
+    if (isNotEmpty(pipelineStageElement.getDisableAssertion())) {
+      stageExecution.setDisableAssertionInspection(stateInspectionService.get(stateExecutionInstanceId));
+      stageExecution.setSkipCondition(pipelineStageElement.getDisableAssertion());
     }
   }
 

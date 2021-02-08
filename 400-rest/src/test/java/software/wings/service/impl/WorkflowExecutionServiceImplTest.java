@@ -9,6 +9,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -63,6 +64,7 @@ import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -81,6 +83,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -104,6 +107,8 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.AccessType;
+import io.harness.state.inspection.StateInspection;
+import io.harness.state.inspection.StateInspectionService;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.threading.Poller;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -141,6 +146,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -185,7 +191,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionEventAdvisor;
@@ -238,9 +243,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ResourceConstraintService resourceConstraintService;
+  @Mock private StateInspectionService stateInspectionService;
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private LicenseService licenseService;
-  @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
+  @Inject @InjectMocks private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
@@ -2831,6 +2837,36 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     List<HelmChart> lastDeployedHelmCharts =
         workflowExecutionService.obtainLastGoodDeployedHelmCharts(APP_ID, WORKFLOW_ID);
     assertThat(lastDeployedHelmCharts).containsExactlyInAnyOrder(helmChart1, helmChart3);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldAppendSkipConditionDetails() {
+    String skipCondition = "${context.variable}=='ok'";
+    StateInspection stateInspection = StateInspection.builder().stateExecutionInstanceId(STATE_EXECUTION_ID).build();
+    when(stateInspectionService.get(STATE_EXECUTION_ID)).thenReturn(stateInspection);
+    PipelineStageExecution stageExecution = PipelineStageExecution.builder().build();
+    workflowExecutionService.appendSkipCondition(
+        PipelineStageElement.builder().disableAssertion(skipCondition).build(), stageExecution, STATE_EXECUTION_ID);
+    verify(stateInspectionService).get(STATE_EXECUTION_ID);
+
+    assertThat(stageExecution.getSkipCondition()).isEqualTo(skipCondition);
+    assertThat(stageExecution.getDisableAssertionInspection()).isEqualTo(stateInspection);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendSkipConditionDetails() {
+    String skipCondition = "";
+    PipelineStageExecution stageExecution = PipelineStageExecution.builder().build();
+    workflowExecutionService.appendSkipCondition(
+        PipelineStageElement.builder().disableAssertion(skipCondition).build(), stageExecution, STATE_EXECUTION_ID);
+    verify(stateInspectionService, never()).get(STATE_EXECUTION_ID);
+
+    assertThat(stageExecution.getSkipCondition()).isNull();
+    assertThat(stageExecution.getDisableAssertionInspection()).isNull();
   }
 
   private HelmChart generateHelmChartWithVersion(String version) {
