@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.rolebindings;
+package io.harness.accesscontrol.roleassignments;
 
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.data.validator.EntityIdentifier;
@@ -18,7 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "RoleBinding")
-public class RoleBindingDTO {
+public class RoleAssignmentDTO {
   @ApiModelProperty(required = true) @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) String parentIdentifier;
   @NotEmpty String resourceGroupIdentifier;

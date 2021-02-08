@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.rolebindings.database;
+package io.harness.accesscontrol.roleassignments.database;
 
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.beans.EmbeddedUser;
@@ -25,10 +25,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "RoleBindingKeys")
+@FieldNameConstants(innerTypeName = "RoleAssignmentKeys")
 @Document("rolebindings")
 @TypeAlias("rolebindings")
-public class RoleBinding implements PersistentEntity {
+public class RoleAssignment implements PersistentEntity {
   @Id String id;
   @EntityIdentifier String identifier;
   @NotEmpty String parentIdentifier;
@@ -50,8 +50,8 @@ public class RoleBinding implements PersistentEntity {
         .add(CompoundMongoIndex.builder()
                  .name("uniqueIndex")
                  .unique(true)
-                 .field(RoleBindingKeys.identifier)
-                 .field(RoleBindingKeys.parentIdentifier)
+                 .field(RoleAssignmentKeys.identifier)
+                 .field(RoleAssignmentKeys.parentIdentifier)
                  .build())
         .build();
   }
