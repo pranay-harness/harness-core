@@ -51,7 +51,8 @@ public class AccountBackgroundJobHandler implements Handler<Account> {
 
   @Override
   public void handle(Account account) {
-    if (isWeekend()) {
+    if (isWeekend() || "OcaAmdMxROqZ_gowGyJMRg".equals(account.getUuid())
+        || "y3yfbjQsTjCNQY7VOZGQ3A".equals(account.getUuid())) {
       accountBackgroundJobService.manageBackgroundJobsForAccount(account.getUuid());
     }
   }
