@@ -17,6 +17,7 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
+import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -86,7 +87,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -226,6 +229,7 @@ import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
+import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -288,6 +292,7 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.sm.states.ElementStateExecutionData;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
@@ -351,6 +356,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;
@@ -1168,8 +1174,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     checkPreDeploymentConditions(accountId, appId);
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, pipeline.getEnvIds()), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId,
+            featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
+                ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
+                : pipeline.getEnvIds()),
+        environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
     if (isEmpty(pipeline.getPipelineStages())) {
@@ -1311,8 +1321,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
+        environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
 
@@ -2283,6 +2294,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           getStateExecutionInstanceMap(prevWorkflowExecution);
       Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
           appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
+
+      PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+          new DeploymentCtx(appId,
+              featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
+                  ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, parallelIndexToResume)
+                  : pipeline.getEnvIds()),
+          environmentService, featureFlagService);
+      deploymentFreezeChecker.check(accountId);
+
       WorkflowExecution currWorkflowExecution =
           triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
               prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
@@ -2571,8 +2591,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Doing this check here so that workflow is already fetched from database.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
@@ -3103,11 +3123,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     String workflowId = null;
     RuntimeInputsConfig runtimeInputsConfig = null;
+    String envIdInStage = null;
     for (PipelineStage pipelineStage : pipelineStages) {
       PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
       if (pipelineStageElement.getUuid().equals(pipelineStageElementId)
-          && pipelineStageElement.getProperties().get("workflowId") != null) {
-        workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+          && pipelineStageElement.getProperties().get(EnvStateKeys.workflowId) != null) {
+        if (pipelineStageElement.getProperties().containsKey(EnvStateKeys.envId)) {
+          envIdInStage = (String) pipelineStageElement.getProperties().get(EnvStateKeys.envId);
+        }
+        workflowId = (String) pipelineStageElement.getProperties().get(EnvStateKeys.workflowId);
         runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
         break;
       }
@@ -3138,6 +3162,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (envVarInStage != null && runtimeVarsInStage.contains(envVarInStage.getName())) {
       String envValueInStage = wfVariables.get(envVarInStage.getName());
       authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envValueInStage);
+    }
+
+    if (featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, pipelineExecution.getAccountId())) {
+      if (ExpressionEvaluator.matchesVariablePattern(envIdInStage) && envVarInStage != null) {
+        envIdInStage = wfVariables.get(envVarInStage.getName());
+      }
+      PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+          new DeploymentCtx(
+              appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
+          environmentService, featureFlagService);
+      deploymentFreezeChecker.check(pipelineExecution.getAccountId());
     }
     List<String> extraVars = new ArrayList<>();
     List<String> runtimeKeys =

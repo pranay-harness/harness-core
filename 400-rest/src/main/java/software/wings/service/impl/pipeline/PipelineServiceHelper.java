@@ -6,7 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -17,6 +19,8 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class PipelineServiceHelper {
   private PipelineServiceHelper() {}
 
@@ -106,5 +111,48 @@ public class PipelineServiceHelper {
         }
       }
     }
+  }
+
+  public static List<String> getEnvironmentIdsForParallelIndex(Pipeline pipeline, int parallelIndex) {
+    List<String> envIds = new ArrayList<>();
+    boolean envIdsCollected = false;
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      if (isNotEmpty(pipelineStage.getPipelineStageElements())) {
+        for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+          if (pse.getParallelIndex() == parallelIndex) {
+            String envId = resolveEnvIdForPipelineStage(
+                pse.getProperties(), pse.getWorkflowVariables(), pipeline.getPipelineVariables());
+            if (envId != null && !ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
+              envIds.add(envId);
+            }
+          } else if (pse.getParallelIndex() > parallelIndex) {
+            envIdsCollected = true;
+            break;
+          }
+        }
+        if (envIdsCollected) {
+          break;
+        }
+      }
+    }
+    return envIds;
+  }
+
+  public static String resolveEnvIdForPipelineStage(Map<String, Object> pipelineStageElementProperties,
+      Map<String, String> workflowVariables, List<Variable> pipelineVariables) {
+    String envId = (String) pipelineStageElementProperties.get(EnvStateKeys.envId);
+    if (!ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
+      return envId;
+    }
+    if (pipelineVariables == null) {
+      return null;
+    }
+    String variableValue = envId.substring(2, envId.length() - 1);
+    String workflowVariableName = pipelineVariables.stream()
+                                      .filter(var -> var.getName().equals(variableValue))
+                                      .findFirst()
+                                      .map(Variable::getValue)
+                                      .orElse("");
+    return workflowVariables.get(workflowVariableName);
   }
 }

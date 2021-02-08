@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
@@ -8,6 +10,7 @@ import io.harness.limits.lib.StaticLimit;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+@TargetModule(Module._990_COMMONS_TEST)
 public interface WingsTestConstants {
   String APP_ID = "APP_ID";
 
@@ -386,6 +389,7 @@ public interface WingsTestConstants {
   String UUID = "UUID";
 
   String HELM_CHART_ID = "HELM_CHART_ID";
+  String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";
 
   /**
    * The constant URL.
