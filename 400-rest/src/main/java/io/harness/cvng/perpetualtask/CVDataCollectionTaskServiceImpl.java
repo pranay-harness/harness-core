@@ -12,7 +12,6 @@ import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.govern.Switch;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -38,7 +37,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import io.kubernetes.client.openapi.ApiException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
@@ -113,10 +111,10 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
             .build();
 
     Any perpetualTaskPack = Any.pack(params);
-    List<ExecutionCapability> executionCapabilities = Collections.emptyList();
+    List<ExecutionCapability> executionCapabilities = bundle.fetchRequiredExecutionCapabilities(null);
 
     PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(cvDataCollectionInfo, perpetualTaskPack, executionCapabilities);
+        createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
     return perpetualTaskExecutionBundle;
   }
 
@@ -131,7 +129,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
             .dataCollectionType(bundle.getDataCollectionType())
             .activitySourceDTO(bundle.getActivitySourceDTO())
             .build();
-    List<ExecutionCapability> executionCapabilities = Collections.emptyList();
+    List<ExecutionCapability> executionCapabilities = bundle.fetchRequiredExecutionCapabilities(null);
     K8ActivityCollectionPerpetualTaskParams params =
         K8ActivityCollectionPerpetualTaskParams.newBuilder()
             .setAccountId(accountId)
@@ -140,18 +138,13 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
             .build();
     Any perpetualTaskPack = Any.pack(params);
     PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(k8ActivityDataCollectionInfo, perpetualTaskPack, executionCapabilities);
+        createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
     return perpetualTaskExecutionBundle;
   }
 
   @NotNull
-  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(CVDataCollectionInfo cvDataCollectionInfo,
+  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(
       Any perpetualTaskPack, List<ExecutionCapability> executionCapabilities) {
-    if (cvDataCollectionInfo.getConnectorConfigDTO() instanceof ExecutionCapabilityDemander) {
-      executionCapabilities = ((ExecutionCapabilityDemander) cvDataCollectionInfo.getConnectorConfigDTO())
-                                  .fetchRequiredExecutionCapabilities(null);
-    }
-
     PerpetualTaskExecutionBundle.Builder builder = PerpetualTaskExecutionBundle.newBuilder();
     executionCapabilities.forEach(executionCapability
         -> builder
