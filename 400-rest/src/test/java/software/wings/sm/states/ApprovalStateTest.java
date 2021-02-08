@@ -313,7 +313,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("infra").name("infra").build());
     when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("app").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("nameW/Omrkdwn").build());
     when(workflowNotificationHelper.calculateEnvDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("*Environments:* env").build());
   }
@@ -1485,6 +1485,7 @@ public class ApprovalStateTest extends WingsBaseTest {
         SlackApprovalParams.builder()
             .appId(APP_ID)
             .appName("app")
+            .nonFormattedAppName("nameW/Omrkdwn")
             .routingId(ACCOUNT_ID)
             .deploymentId(PIPELINE_WORKFLOW_EXECUTION_ID)
             .workflowId(WORKFLOW_ID)
@@ -1535,6 +1536,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.APPROVAL_MESSAGE)).isEqualTo(displayText);
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER))
         .isEqualTo("suppressTraditionalNotificationOnSlack");
+    assertThat(customData.get("nonFormattedAppName")).isEqualTo("nameW/Omrkdwn");
     assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
 
