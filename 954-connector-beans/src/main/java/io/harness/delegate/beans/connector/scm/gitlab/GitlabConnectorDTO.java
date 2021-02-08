@@ -44,7 +44,7 @@ public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnect
     if (authentication.getAuthType() == GitAuthType.HTTP) {
       return ((GitlabHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
     } else {
-      return ((GitlabSshCredentialsDTO) authentication.getCredentials()).getSpec();
+      return (GitlabSshCredentialsDTO) authentication.getCredentials();
     }
   }
 }

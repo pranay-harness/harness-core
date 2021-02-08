@@ -18,7 +18,6 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
@@ -125,11 +124,8 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
             .authType(GitAuthType.SSH)
-            .credentials(BitbucketSshCredentialsDTO.builder()
-                             .spec(BitbucketSshCredentialsSpecDTO.builder()
-                                       .sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef))
-                                       .build())
-                             .build())
+            .credentials(
+                BitbucketSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
 
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()

@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(GitConfigConstants.SSH)
 public class GitSSHAuthenticationDTO extends GitAuthenticationDTO {
-  @JsonProperty("sshKeyReference")
+  @JsonProperty("sshKeyRef")
   @ApiModelProperty(dataType = "string")
   @NotNull
   @SecretReference
