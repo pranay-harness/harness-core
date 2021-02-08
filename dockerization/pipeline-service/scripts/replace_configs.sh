@@ -70,11 +70,11 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE ciManagerClientConfig.baseUrl $CI_MANAGER_BASE_URL
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
 
 if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ciManagerServiceSecret $CI_MANAGER_SERVICE_SECRET
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.secret $CI_MANAGER_SERVICE_SECRET
 fi
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
