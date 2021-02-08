@@ -13,6 +13,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -68,12 +69,14 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .controllerUrl("controllerUrl")
                                                           .passwordRef(secretRefData)
                                                           .build();
-    DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder()
-            .params(params)
-            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
-            .dataCollectionType(DataCollectionType.CV)
-            .build();
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .params(params)
+                                               .connectorDTO(ConnectorInfoDTO.builder()
+                                                                 .connectorConfig(appDynamicsConnectorDTO)
+                                                                 .connectorType(ConnectorType.APP_DYNAMICS)
+                                                                 .build())
+                                               .dataCollectionType(DataCollectionType.CV)
+                                               .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
@@ -101,12 +104,14 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .controllerUrl("controllerUrl")
                                                           .passwordRef(secretRefData)
                                                           .build();
-    DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder()
-            .params(params)
-            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
-            .dataCollectionType(DataCollectionType.CV)
-            .build();
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .params(params)
+                                               .connectorDTO(ConnectorInfoDTO.builder()
+                                                                 .connectorConfig(appDynamicsConnectorDTO)
+                                                                 .connectorType(ConnectorType.APP_DYNAMICS)
+                                                                 .build())
+                                               .dataCollectionType(DataCollectionType.CV)
+                                               .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO2 = AppDynamicsConnectorDTO.builder()
@@ -116,12 +121,14 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                            .controllerUrl("controllerUrl2")
                                                            .passwordRef(secretRefData)
                                                            .build();
-    DataCollectionConnectorBundle bundle2 =
-        DataCollectionConnectorBundle.builder()
-            .params(params)
-            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO2).build())
-            .dataCollectionType(DataCollectionType.CV)
-            .build();
+    DataCollectionConnectorBundle bundle2 = DataCollectionConnectorBundle.builder()
+                                                .params(params)
+                                                .connectorDTO(ConnectorInfoDTO.builder()
+                                                                  .connectorConfig(appDynamicsConnectorDTO2)
+                                                                  .connectorType(ConnectorType.APP_DYNAMICS)
+                                                                  .build())
+                                                .dataCollectionType(DataCollectionType.CV)
+                                                .build();
     String duplicateTaskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle2);
     assertThat(taskId).isEqualTo(duplicateTaskId);
   }
@@ -142,12 +149,14 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                                                           .controllerUrl("controllerUrl")
                                                           .passwordRef(secretRefData)
                                                           .build();
-    DataCollectionConnectorBundle bundle =
-        DataCollectionConnectorBundle.builder()
-            .params(params)
-            .connectorDTO(ConnectorInfoDTO.builder().connectorConfig(appDynamicsConnectorDTO).build())
-            .dataCollectionType(DataCollectionType.CV)
-            .build();
+    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
+                                               .params(params)
+                                               .connectorDTO(ConnectorInfoDTO.builder()
+                                                                 .connectorConfig(appDynamicsConnectorDTO)
+                                                                 .connectorType(ConnectorType.APP_DYNAMICS)
+                                                                 .build())
+                                               .dataCollectionType(DataCollectionType.CV)
+                                               .build();
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
     assertThat(taskId).isNotNull();
     dataCollectionTaskService.delete(accountId, "some-other-id");
