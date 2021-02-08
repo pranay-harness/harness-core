@@ -22,6 +22,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
@@ -56,10 +57,12 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
     final String instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
+    final boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     K8sCanaryDeployRequest k8sCanaryDeployRequest =
         K8sCanaryDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .releaseName(releaseName)
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.CANARY_DEPLOY)

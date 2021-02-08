@@ -20,6 +20,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -54,11 +55,15 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
     StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepParameters;
+    boolean skipDryRun =
+        !ParameterField.isNull(k8sApplyStepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
+    boolean skipSteadyStateCheck = !ParameterField.isNull(k8sApplyStepParameters.getSkipSteadyStateCheck())
+        && k8sApplyStepParameters.getSkipSteadyStateCheck().getValue();
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sApplyRequest k8sApplyRequest =
         K8sApplyRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
@@ -69,7 +74,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .accountId(accountId)
             .deprecateFabric8Enabled(true)
             .filePaths(k8sApplyStepParameters.getFilePaths().getValue())
-            .skipSteadyStateCheck(k8sApplyStepParameters.getSkipSteadyStateCheck().getValue())
+            .skipSteadyStateCheck(skipSteadyStateCheck)
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, k8sApplyRequest, ambiance, infrastructure);
