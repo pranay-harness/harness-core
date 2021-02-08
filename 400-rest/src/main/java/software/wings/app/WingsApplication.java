@@ -200,6 +200,8 @@ import software.wings.service.impl.applicationmanifest.ManifestPerpetualTaskMang
 import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskMigrationJob;
 import software.wings.service.impl.artifact.ArtifactStreamSettingAttributePTaskManager;
+import software.wings.service.impl.compliance.DeploymentFreezeActivationHandler;
+import software.wings.service.impl.compliance.DeploymentFreezeDeactivationHandler;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.instance.DeploymentEventListener;
@@ -985,6 +987,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
+    injector.getInstance(DeploymentFreezeActivationHandler.class).registerIterators();
+    injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
     injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();

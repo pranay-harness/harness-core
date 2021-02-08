@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -139,6 +140,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("enable this when we have the infra setup")
   public void shouldGetMemberWorkflowExecutionWithPipeline() {
     Artifact artifact = getArtifact(service, service.getAppId());
     ExecutionArgs executionArgs = prepareExecutionArgs(savedPipeline, Collections.singletonList(artifact));
