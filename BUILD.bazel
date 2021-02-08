@@ -54,6 +54,7 @@ modules = [
     "//130-resource-group",
     "//220-graphql-test",
     "//230-model-test",
+    "//340-ce-nextgen",
     "//960-ng-core-beans",
     "//920-delegate-agent-beans",
     "//960-persistence",
