@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -33,6 +34,7 @@ import io.harness.delegate.task.TaskFailureReason;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
@@ -43,7 +45,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
@@ -57,7 +58,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.mongodb.DuplicateKeyException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -75,7 +75,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -86,7 +85,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
-@BreakDependencyOn("software.wings.dl.WingsPersistence")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 @BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
@@ -103,7 +101,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -597,24 +595,21 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
 
-    // TODO: this needs to be rewritten with upsert
     for (DelegateConnectionResult result : resultsToSave) {
-      Key<DelegateConnectionResult> existingResultKey =
+      Query<DelegateConnectionResult> query =
           persistence.createQuery(DelegateConnectionResult.class)
               .filter(DelegateConnectionResultKeys.accountId, result.getAccountId())
               .filter(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
-              .filter(DelegateConnectionResultKeys.criteria, result.getCriteria())
-              .getKey();
-      if (existingResultKey != null) {
-        persistence.updateField(
-            DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
-      } else {
-        try {
-          persistence.save(result);
-        } catch (DuplicateKeyException e) {
-          log.warn("Result has already been saved.", e);
-        }
-      }
+              .filter(DelegateConnectionResultKeys.criteria, result.getCriteria());
+      UpdateOperations<DelegateConnectionResult> updateOperations =
+          persistence.createUpdateOperations(DelegateConnectionResult.class)
+              .setOnInsert(DelegateConnectionResultKeys.accountId, result.getAccountId())
+              .setOnInsert(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
+              .setOnInsert(DelegateConnectionResultKeys.criteria, result.getCriteria())
+              .setOnInsert(DelegateConnectionResultKeys.duration, result.getDuration())
+              .setOnInsert(DelegateConnectionResultKeys.validUntil, result.getValidUntil())
+              .set(DelegateConnectionResultKeys.validated, result.isValidated());
+      persistence.upsert(query, updateOperations, upsertReturnNewOptions);
     }
   }
 

@@ -1,3 +1,5 @@
+import .bazelproject-config
+
 directories:
   120-ng-manager
   125-cd-nextgen
@@ -78,12 +80,6 @@ directories:
   980-java-agent
   990-commons-test
   tools/bazel
-
-# Automatically includes all relevant targets under the 'directories' above
-derive_targets_from_directories: true
-
-workspace_type: java
-java_language_level: 8
 
 import_run_configurations:
   run-configurations/DelegateApp.xml
