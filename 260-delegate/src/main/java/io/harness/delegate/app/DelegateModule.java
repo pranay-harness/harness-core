@@ -13,12 +13,14 @@ import io.harness.aws.AwsClientImpl;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureContainerRegistryClient;
+import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.impl.AzureAutoScaleSettingsClientImpl;
 import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureContainerRegistryClientImpl;
+import io.harness.azure.impl.AzureManagementClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.azure.impl.AzureWebClientImpl;
@@ -238,7 +240,10 @@ import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWeb
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotShiftTrafficTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSwapTaskHandler;
 import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
+import software.wings.delegatetasks.azure.arm.AzureARMTask;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMDeploymentTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListManagementGroupNamesTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListSubscriptionLocationsTaskHandler;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMRollbackTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
@@ -883,6 +888,7 @@ public class DelegateModule extends AbstractModule {
     bind(ManifestRepositoryService.class).to(HelmRepositoryService.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
     bind(CVNGDataCollectionDelegateService.class).to(CVNGDataCollectionDelegateServiceImpl.class);
+    bind(AzureManagementClient.class).to(AzureManagementClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -938,6 +944,11 @@ public class DelegateModule extends AbstractModule {
         .to(AzureARMDeploymentTaskHandler.class);
     azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.ARM_ROLLBACK.name())
         .to(AzureARMRollbackTaskHandler.class);
+    azureARMTaskTypeToTaskHandlerMap
+        .addBinding(AzureARMTaskParameters.AzureARMTaskType.LIST_SUBSCRIPTION_LOCATIONS.name())
+        .to(AzureARMListSubscriptionLocationsTaskHandler.class);
+    azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP_NAMES.name())
+        .to(AzureARMListManagementGroupNamesTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();
@@ -1024,6 +1035,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_BUILDS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.AZURE_VMSS_COMMAND_TASK).toInstance(AzureVMSSTask.class);
     mapBinder.addBinding(TaskType.AZURE_APP_SERVICE_TASK).toInstance(AzureAppServiceTask.class);
+    mapBinder.addBinding(TaskType.AZURE_ARM_TASK).toInstance(AzureARMTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_CONN_SETTINGS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_USER_SETTINGS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_GROUP_SETTINGS).toInstance(ServiceImplDelegateTask.class);

@@ -181,4 +181,8 @@ public interface AzureConstants {
       Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>[^~!@#$%^&*'\"/?<>,;.]+)['\"]+\\)}$");
   String SECRET_REF_FIELS_NAME = "passwordRef";
   Pattern HTTPS_OR_HTTP_PREFIX_REGEX = Pattern.compile("^(https?)://.*$");
+
+  // Azure REST client settings
+  int REST_CLIENT_CONNECT_TIMEOUT = 5;
+  int REST_CLIENT_READ_TIMEOUT = 10;
 }
