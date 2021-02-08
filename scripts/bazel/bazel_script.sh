@@ -100,6 +100,7 @@ BAZEL_MODULES="\
   //940-feature-flag:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
+  //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //950-command-library-common:module \
   //950-common-entities:module \
@@ -300,6 +301,7 @@ build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-delegate-beans
 build_bazel_module 940-feature-flag
+build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities

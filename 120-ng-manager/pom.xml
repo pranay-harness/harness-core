@@ -62,6 +62,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>130-resource-group</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>136-git-sync-manager</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

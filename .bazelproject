@@ -45,6 +45,7 @@ directories:
   940-delegate-beans
   940-feature-flag
   940-notification-client
+  940-resource-group-beans
   940-secret-manager-client
   950-command-library-common
   950-common-entities

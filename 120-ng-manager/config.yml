@@ -149,3 +149,11 @@ ceAwsSetupConfig:
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
+
+ResoureGroupConfig:
+  ng-manager:
+    baseUrl: http://localhost:7457/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  manager:
+    baseUrl: http://localhost:3457/api/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

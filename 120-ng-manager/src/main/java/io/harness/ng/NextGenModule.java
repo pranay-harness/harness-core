@@ -76,6 +76,7 @@ import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
+import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -258,6 +259,7 @@ public class NextGenModule extends AbstractModule {
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
 
+    install(new ResourceGroupModule(appConfig.getResoureGroupConfig()));
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);
