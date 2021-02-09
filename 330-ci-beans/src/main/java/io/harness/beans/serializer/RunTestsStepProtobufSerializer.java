@@ -21,7 +21,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RunTestsStepInfo runTestsStepInfo = (RunTestsStepInfo) ciStepInfo;
 
-    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout().getValue(), ciStepInfo.getDefaultTimeout());
+    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout(), ciStepInfo.getDefaultTimeout());
 
     if (callbackId == null) {
       throw new CIStageExecutionException("CallbackId can not be null");
