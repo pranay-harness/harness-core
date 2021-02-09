@@ -60,6 +60,7 @@ import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GitOperationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
@@ -1884,11 +1885,10 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", e);
+      String errorMsg = "Failed to download manifest files from git. ";
       executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
-      return false;
+          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new GitOperationException(errorMsg, e);
     }
   }
 
