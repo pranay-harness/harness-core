@@ -41,6 +41,7 @@ import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER_APP_SERVICE;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -191,6 +192,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -1176,9 +1178,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateApplicationManifestNodeForService(
       String accountId, Service service, DirectoryPath servicePath) {
-    DirectoryPath applicationManifestPath = servicePath.clone().add(MANIFEST_FOLDER);
+    DirectoryPath applicationManifestPath = getApplicationManifestDirectoryPath(service, servicePath);
 
-    FolderNode applicationManifestFolder = new FolderNode(accountId, MANIFEST_FOLDER, ApplicationManifest.class,
+    String manifestFolderName = getApplicationManifestFolderName(service);
+
+    FolderNode applicationManifestFolder = new FolderNode(accountId, manifestFolderName, ApplicationManifest.class,
         applicationManifestPath, service.getAppId(), yamlGitSyncService);
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
@@ -1199,6 +1203,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return null;
+  }
+
+  @NotNull
+  private DirectoryPath getApplicationManifestDirectoryPath(Service service, DirectoryPath servicePath) {
+    return isAzureAppServiceDeploymentType(service) ? servicePath.clone().add(MANIFEST_FOLDER_APP_SERVICE)
+                                                    : servicePath.clone().add(MANIFEST_FOLDER);
+  }
+
+  @NotNull
+  private String getApplicationManifestFolderName(Service service) {
+    return isAzureAppServiceDeploymentType(service) ? MANIFEST_FOLDER_APP_SERVICE : MANIFEST_FOLDER;
   }
 
   private ApplicationManifest getApplicationManifestByService(Service service) {

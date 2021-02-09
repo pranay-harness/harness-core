@@ -38,7 +38,21 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected void emitAnyDataForExternalConsumption(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    azureSweepingOutputServiceHelper.saveTrafficShiftInfoToSweepingOutput(context, renderTrafficWeight(context));
+    azureSweepingOutputServiceHelper.saveTrafficShiftInfoToSweepingOutput(context, renderTrafficPercent(context));
+  }
+
+  @Override
+  protected boolean shouldExecute(ExecutionContext context) {
+    double renderTrafficPercent = renderTrafficPercent(context);
+    if (Double.compare(AzureConstants.INVALID_TRAFFIC, renderTrafficPercent) == 0) {
+      return false;
+    }
+    return verifyIfContextElementExist(context);
+  }
+
+  @Override
+  public String skipMessage() {
+    return String.format("Invalid traffic percent - [%s] specified. Skipping traffic shift step", trafficWeightExpr);
   }
 
   @Override
@@ -63,7 +77,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
         .appServiceName(contextElement.getWebApp())
         .deploySlotName(contextElement.getDeploymentSlot())
-        .trafficWeight(String.valueOf(renderTrafficWeight(context)))
+        .trafficWeight(String.valueOf(renderTrafficPercent(context)))
         .appServiceSlotSetupTimeOut(getTimeoutMillis(context))
         .build();
   }
@@ -114,12 +128,12 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .webAppName(contextElement.getWebApp())
         .deploymentSlot(contextElement.getDeploymentSlot())
-        .trafficWeightInPercentage(renderTrafficWeight(context))
+        .trafficWeightInPercentage(renderTrafficPercent(context))
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }
 
-  private float renderTrafficWeight(ExecutionContext context) {
-    return azureVMSSStateHelper.renderFloatExpression(trafficWeightExpr, context, 0);
+  private double renderTrafficPercent(ExecutionContext context) {
+    return azureVMSSStateHelper.renderDoubleExpression(trafficWeightExpr, context, AzureConstants.INVALID_TRAFFIC);
   }
 }

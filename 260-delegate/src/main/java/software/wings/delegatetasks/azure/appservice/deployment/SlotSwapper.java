@@ -1,5 +1,10 @@
 package software.wings.delegatetasks.azure.appservice.deployment;
 
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
+
 import static java.lang.String.format;
 
 import io.harness.azure.client.AzureWebClient;
@@ -31,6 +36,10 @@ public class SlotSwapper implements Runnable {
     slotSwapLogCallback.saveExecutionLog(format(
         "Sending request for swapping source slot: [%s] with target slot: [%s]", sourceSlotName, targetSlotName));
     azureWebClient.swapDeploymentSlotsAsync(webClientContext, sourceSlotName, targetSlotName, callBack);
-    slotSwapLogCallback.saveExecutionLog("Swapping request returned successfully");
+    if (callBack.callFailed()) {
+      slotSwapLogCallback.saveExecutionLog("Swap slot failed", ERROR, FAILURE);
+    } else {
+      slotSwapLogCallback.saveExecutionLog("Swapping request returned successfully", INFO, SUCCESS);
+    }
   }
 }

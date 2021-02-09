@@ -20,12 +20,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.model.AzureAppServiceConfiguration;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -53,6 +55,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
@@ -60,6 +63,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.ManagerExecutionLogCallback;
+import software.wings.sm.states.azure.AzureStateHelper;
 import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement;
@@ -90,6 +94,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Spy @InjectMocks private AzureAppServiceManifestUtils azureAppServiceManifestUtils;
   @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
+  @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotSetup state = new AzureWebAppSlotSetup("Slot Setup state");
 
   private final String ACTIVITY_ID = "activityId";
@@ -179,6 +184,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     doReturn(EncryptedData.builder().uuid("encrypted-data-uuid").build())
         .when(secretManager)
         .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
 
     mockArtifactoryData(artifact, context);
 
@@ -211,6 +217,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+    assertThat(state.skipMessage()).isNotNull();
   }
 
   private void mockArtifactoryData(Artifact artifact, ExecutionContextImpl context) {
@@ -295,6 +302,22 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
+  public void testSlotSetupValidateFields() {
+    AzureWebAppSlotSetup state = new AzureWebAppSlotSetup("Validate fields state");
+    assertThat(state.validateFields().size()).isEqualTo(2);
+
+    state.setDeploymentSlot(DEPLOYMENT_SLOT);
+    state.setAppService(APP_NAME);
+    state.setTargetSlot(DEPLOYMENT_SLOT);
+    assertThat(state.validateFields().size()).isEqualTo(1);
+
+    state.setDeploymentSlot(APP_NAME);
+    assertThat(state.validateFields().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
   public void testSlotSetupExecuteFailure() {
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
@@ -348,6 +371,35 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
+  public void testSlotSetupHandleAsyncResponseSuccessWithEmptyInstance() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
+    doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
+
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
+
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = getStateExecutionData();
+    doReturn(stateExecutionData).when(context).getStateExecutionData();
+    doReturn(azureWebAppInfrastructureMapping)
+        .when(azureVMSSStateHelper)
+        .getAzureWebAppInfrastructureMapping(any(), any());
+
+    doReturn(Collections.emptyList())
+        .when(azureSweepingOutputServiceHelper)
+        .generateAzureAppInstanceElements(any(), any(), any());
+    ExecutionResponse executionResponse =
+        state.handleAsyncResponse(context, getResponseDataMapWithEmptyDeploymentData());
+
+    assertThat(executionResponse).isNotNull();
+    StateExecutionData postExecutionData = executionResponse.getStateExecutionData();
+    assertThat(postExecutionData instanceof AzureAppServiceSlotSetupExecutionData).isTrue();
+    AzureAppServiceSlotSetupExecutionData executionData = (AzureAppServiceSlotSetupExecutionData) postExecutionData;
+    assertThat(executionData.getWebAppUrl()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
   public void testSlotSetupHandleAsyncResponseFailure() {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
@@ -361,6 +413,40 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     verifySetupContextElement(context, contextElementArgumentCaptor);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSlotSetupHandleAsyncResponseFailureDueToNullResponse() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
+    doReturn(FAILED).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
+    doReturn(getStateExecutionData()).when(context).getStateExecutionData();
+
+    ExecutionResponse executionResponse = state.handleAsyncResponse(context, getResponseDataMapWithNullTaskResponse());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+
+    doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
+    assertThatThrownBy(() -> state.handleAsyncResponse(context, getResponseDataMapWithNullTaskResponseSuccess()))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testAzureStateHelper() {
+    AzureConfig azureConfig = AzureConfig.builder()
+                                  .azureEnvironmentType(AzureEnvironmentType.AZURE)
+                                  .clientId("clientId")
+                                  .tenantId("tenantId")
+                                  .build();
+    AzureStateHelper stateHelper = new AzureStateHelper();
+    AzureConfigDTO azureConfigDTO = stateHelper.createAzureConfigDTO(azureConfig);
+    assertThat(azureConfigDTO).isNotNull();
+    assertThat(azureConfigDTO.getAzureEnvironmentType()).isEqualTo(AzureEnvironmentType.AZURE);
+    assertThat(azureConfigDTO.getClientId()).isEqualTo("clientId");
+    assertThat(azureConfigDTO.getTenantId()).isEqualTo("tenantId");
   }
 
   @NotNull
@@ -393,6 +479,35 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
             .build());
   }
 
+  @NotNull
+  private ImmutableMap<String, ResponseData> getResponseDataMapWithEmptyDeploymentData() {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureTaskExecutionResponse.builder()
+            .azureTaskResponse(AzureWebAppSlotSetupResponse.builder()
+                                   .azureAppDeploymentData(Collections.emptyList())
+                                   .preDeploymentData(AzureAppServicePreDeploymentData.builder()
+                                                          .appName(APP_NAME)
+                                                          .appSettingsToAdd(Collections.emptyMap())
+                                                          .connStringsToAdd(Collections.emptyMap())
+                                                          .slotName(DEPLOYMENT_SLOT)
+                                                          .build())
+                                   .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build());
+  }
+
+  @NotNull
+  private ImmutableMap<String, ResponseData> getResponseDataMapWithNullTaskResponse() {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build());
+  }
+
+  @NotNull
+  private ImmutableMap<String, ResponseData> getResponseDataMapWithNullTaskResponseSuccess() {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+  }
+
   private AzureAppServiceSlotSetupExecutionData getStateExecutionData() {
     return AzureAppServiceSlotSetupExecutionData.builder()
         .infrastructureMappingId(INFRA_ID)
@@ -420,6 +535,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(setupContextElement.toString()).isNotNull();
     assertThat(setupContextElement.getElementType()).isEqualTo(AZURE_WEBAPP_SETUP);
     assertThat(setupContextElement.paramMap(context)).isNotEmpty();
+    assertThat(setupContextElement.getType()).isNotNull();
   }
 
   private void verifyContextAndNotifyElements(ExecutionResponse executionResponse) {
@@ -440,5 +556,6 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData instanceof AzureAppServiceSlotSetupExecutionData).isTrue();
     AzureAppServiceSlotSetupExecutionData executionData = (AzureAppServiceSlotSetupExecutionData) stateExecutionData;
     assertThat(executionData.getNewInstanceStatusSummaries().size()).isEqualTo(1);
+    assertThat(executionData.getWebAppUrl()).isEqualTo(HOST_NAME);
   }
 }

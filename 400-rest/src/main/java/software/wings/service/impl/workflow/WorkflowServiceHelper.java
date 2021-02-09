@@ -254,6 +254,7 @@ public class WorkflowServiceHelper {
   public static final String AZURE_VMSS_SWITCH_ROUTES = "Swap Virtual Machine Scale Set Route";
   public static final String AZURE_VMSS_SWITCH_ROUTES_ROLLBACK = "Rollback Virtual Machine Scale Set Route";
   public static final String AZURE_WEBAPP_SLOT_SETUP = "Slot Setup";
+  public static final String AZURE_WEBAPP_SLOT_DEPLOYMENT = "Slot Deployment";
   public static final String AZURE_WEBAPP_SLOT_RESIZE = "Slot Resize";
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
@@ -989,7 +990,7 @@ public class WorkflowServiceHelper {
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                      .name(AZURE_WEBAPP_SLOT_SETUP)
+                                      .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                       .build())
                          .build());
 
@@ -1025,7 +1026,7 @@ public class WorkflowServiceHelper {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                    .name(AZURE_WEBAPP_SLOT_SETUP)
+                                    .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                     .build())
                        .build());
 
