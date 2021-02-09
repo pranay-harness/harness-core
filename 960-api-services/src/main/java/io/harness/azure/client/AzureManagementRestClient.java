@@ -7,6 +7,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 
 public interface AzureManagementRestClient {
-  @GET("providers/Microsoft.Management/managementGroups?api-version=2020-02-01")
+  @GET("providers/Microsoft.Management/managementGroups?api-version=2020-10-01")
   Call<ManagementGroupListResult> listManagementGroups(@Header("Authorization") String bearerAuthHeader);
 }
