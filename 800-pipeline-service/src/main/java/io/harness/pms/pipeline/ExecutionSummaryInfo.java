@@ -16,4 +16,5 @@ public class ExecutionSummaryInfo {
   @Builder.Default
   Map<String, Integer> deployments =
       new HashMap<>(); // no of deployments for each of the last 10 days, most recent first
+  String lastExecutionId;
 }
