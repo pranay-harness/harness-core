@@ -4,9 +4,7 @@ import io.harness.callgraph.instr.tracer.ConstructorTracer;
 import io.harness.callgraph.instr.tracer.MethodTracer;
 import io.harness.callgraph.instr.tracer.TestConstructorTracer;
 import io.harness.callgraph.instr.tracer.TestMethodTracer;
-import io.harness.callgraph.util.SourceClassesMatcher;
 import io.harness.callgraph.util.StringSetMatcherStartsWith;
-import io.harness.callgraph.util.TestClassesMatcher;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Set;
@@ -38,25 +36,10 @@ public class ByteBuddyInstr extends Instr {
     final Advice constructorAdvice = Advice.to(ConstructorTracer.class);
     final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class);
 
-    AgentBuilder.Identified.Narrowable agent = new AgentBuilder.Default()
-                                                   .disableClassFormatChanges()
-                                                   //        .with(new TracerLogger())
-                                                   .type(nameStartsWith(includes));
-
-    // test methods
-    agent.and(new TestClassesMatcher(true))
-        .transform((builder, typeDescription, classLoader, module) -> {
-          builder = builder.visit(
-              new AsmVisitorWrapper.ForDeclaredMethods().method(ElementMatchers.isMethod(), testMethodAdvice));
-
-          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
-              ElementMatchers.isConstructor(), testConstructorAdvice));
-
-          return builder;
-        })
-        .installOn(instrumentation);
-
-    agent.and(new TestClassesMatcher(false))
+    new AgentBuilder.Default()
+        .disableClassFormatChanges()
+        //        .with(new TracerLogger())
+        .type(nameStartsWith(includes))
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
@@ -65,30 +48,6 @@ public class ByteBuddyInstr extends Instr {
                       .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
               testMethodAdvice));
 
-          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
-              testConstructorAdvice));
-          return builder;
-        })
-        .installOn(instrumentation);
-
-    // source methods
-    agent.and(new SourceClassesMatcher(true))
-        .transform((builder, typeDescription, classLoader, module) -> {
-          builder = builder.visit(
-              new AsmVisitorWrapper.ForDeclaredMethods().method(ElementMatchers.isMethod(), methodAdvice));
-
-          builder = builder.visit(
-              new AsmVisitorWrapper.ForDeclaredMethods().method(ElementMatchers.isConstructor(), constructorAdvice));
-          return builder;
-        })
-        .installOn(instrumentation);
-
-    agent.and(new SourceClassesMatcher(false))
-        .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
                   ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
@@ -98,10 +57,18 @@ public class ByteBuddyInstr extends Instr {
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
               ElementMatchers.isConstructor().and(
+                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                      .or(ElementMatchers.isAnnotatedWith(Test.class))
+                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
+              testConstructorAdvice));
+
+          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
+              ElementMatchers.isConstructor().and(
                   ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
                                           .or(ElementMatchers.isAnnotatedWith(Test.class))
                                           .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
               constructorAdvice));
+
           return builder;
         })
         .installOn(instrumentation);

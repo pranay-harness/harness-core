@@ -27,7 +27,7 @@ public class StackNode {
     StringBuffer result = new StringBuffer();
 
     String parameters = this.signature;
-    if (parameters.isEmpty()) {
+    if (parameters == null || parameters.isEmpty()) {
       parameters = "void";
     }
 
