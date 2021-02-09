@@ -249,8 +249,7 @@ public class BuildJobEnvInfoBuilder {
     }
 
     CIStepInfo ciStepInfo = (CIStepInfo) stepElement.getStepSpecType();
-    long timeout =
-        TimeoutUtils.getTimeoutInSeconds(stepElement.getTimeout().getValue(), ciStepInfo.getDefaultTimeout());
+    long timeout = TimeoutUtils.getTimeoutInSeconds(stepElement.getTimeout(), ciStepInfo.getDefaultTimeout());
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return createRunStepContainerDefinition((RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder,

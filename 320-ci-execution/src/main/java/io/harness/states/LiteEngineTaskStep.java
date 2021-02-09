@@ -198,7 +198,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       Ambiance ambiance, StepElementConfig stepElement, String accountId, Map<String, String> taskIds) {
     // TODO replace identifier as key in case two steps can have same identifier
     long timeout = TimeoutUtils.getTimeoutInSeconds(
-        stepElement.getTimeout().getValue(), ((CIStepInfo) stepElement.getStepSpecType()).getDefaultTimeout());
+        stepElement.getTimeout(), ((CIStepInfo) stepElement.getStepSpecType()).getDefaultTimeout());
     String taskId = queueDelegateTask(ambiance, timeout, accountId, ciDelegateTaskExecutor);
     taskIds.put(stepElement.getIdentifier(), taskId);
   }

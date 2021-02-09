@@ -25,7 +25,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
 
-    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout().getValue(), ciStepInfo.getDefaultTimeout());
+    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout(), ciStepInfo.getDefaultTimeout());
     StepContext stepContext =
         StepContext.newBuilder().setNumRetries(pluginStepInfo.getRetry()).setExecutionTimeoutSecs(timeout).build();
     if (port == null) {
