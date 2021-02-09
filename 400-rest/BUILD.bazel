@@ -721,7 +721,11 @@ java_library(
     ] + shared_dependencies,
 )
 
-run_package_tests(
+java_library(
+    name = "tests",
+    srcs = glob(
+        ["src/test/**/*.java"],
+    ),
     data = [
         "//400-rest/src/test/resources:resource",
     ],
@@ -747,6 +751,8 @@ run_package_tests(
         "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
+
+run_package_tests()
 
 checkstyle()
 
