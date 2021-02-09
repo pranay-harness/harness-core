@@ -31,6 +31,8 @@ pub fn modules() -> HashMap<String, JavaModule> {
         );
     }
 
+    let suffixes = [":module", ":tests", ":supporter-test", ":abstract-module"];
+
     let targets = String::from_utf8(output.stdout)
         .unwrap()
         .lines()
@@ -38,7 +40,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         .par_bridge()
         .map(|line| line.to_string())
         .filter(|target| target.starts_with("java_library rule ") || target.starts_with("java_binary rule "))
-        .filter(|name| name.ends_with(":module") || name.ends_with(":tests") || name.ends_with(":supporter-test"))
+        .filter(|name| suffixes.iter().any(|suffix| name.ends_with(suffix)))
         .collect::<HashSet<String>>();
 
     let module_rules = targets
@@ -95,7 +97,8 @@ fn class(path: &String) -> String {
         "/src/main/java/",
         "/src/test/java/",
         "/src/generated/java/",
-        "src/supporter-test/java/",
+        "/src/supporter-test/java/",
+        "/src/abstract/java",
     ];
     let cls = prefixes
         .iter()
@@ -310,6 +313,8 @@ fn index_fraction(name: &String) -> f32 {
         0.1
     } else if name.ends_with(":module") {
         0.2
+    } else if name.ends_with(":abstract-module") {
+        0.3
     } else {
         panic!("Unknown module type {}", name);
     }
