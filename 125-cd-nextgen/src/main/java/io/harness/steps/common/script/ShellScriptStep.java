@@ -1,7 +1,6 @@
 package io.harness.steps.common.script;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -10,6 +9,7 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -139,12 +139,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .workingDirectory(workingDirectory)
             .build();
 
-    TaskData taskData = TaskData.builder()
-                            .async(true)
-                            .taskType(TaskType.SHELL_SCRIPT_TASK_NG.name())
-                            .parameters(new Object[] {taskParameters})
-                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                            .build();
+    TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .taskType(TaskType.SHELL_SCRIPT_TASK_NG.name())
+            .parameters(new Object[] {taskParameters})
+            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
+            .build();
     return StepUtils.prepareTaskRequest(
         ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
   }
