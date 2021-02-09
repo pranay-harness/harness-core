@@ -37,7 +37,8 @@ public class SecretsDelegateCacheHelperServiceImpl implements SecretsDelegateCac
       GetDelegatePropertiesResponse delegatePropertiesResponse =
           delegatePropertiesServiceProvider.getDelegateProperties(delegatePropertiesRequest);
 
-      if (delegatePropertiesResponse != null) {
+      if (delegatePropertiesResponse != null
+          && delegatePropertiesResponse.getResponseEntry(0).is(AccountPreference.class)) {
         AccountPreference secretManagerCacheTTL =
             delegatePropertiesResponse.getResponseEntry(0).unpack(AccountPreference.class);
         if (secretManagerCacheTTL != null) {
@@ -47,15 +48,15 @@ public class SecretsDelegateCacheHelperServiceImpl implements SecretsDelegateCac
           return Duration.ofHours(expireCacheTTLFromAccountPref);
         }
       }
-      log.info("SecretsCacheTTL not set for Account, defaulting to 1 hour");
+      log.info("SecretsCacheTTL not set in account preferences, defaulting to 1 hour");
       return Duration.ofHours(1);
 
     } catch (InvalidProtocolBufferException invalidProtocolBufferException) {
-      log.warn("Unable to fetch secretsCacheExpiryTTL from manager for account {}",
+      log.warn("Unable to fetch secretsCacheExpiryTTL from manager for account {}, defaulting to 1 hour",
           delegateConfigurationServiceProvider.getAccount(), invalidProtocolBufferException);
       return Duration.ofHours(1);
     } catch (Exception exception) {
-      log.warn("Unable to fetch secretsCacheExpiryTTL from manager for account {}",
+      log.warn("Unable to fetch secretsCacheExpiryTTL from manager for account {}, defaulting to 1 hour",
           delegateConfigurationServiceProvider.getAccount(), exception);
       return Duration.ofHours(1);
     }

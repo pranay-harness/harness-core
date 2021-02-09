@@ -167,10 +167,14 @@ public class DelegateAgentResource {
                                   .build());
                         } else if (requestEntry.is(AccountPreferenceQuery.class)) {
                           Account account = accountService.get(accountId);
-                          return Any.pack(AccountPreference.newBuilder()
-                                              .setDelegateSecretsCacheTTLInHours(
-                                                  account.getAccountPreferences().getDelegateSecretsCacheTTLInHours())
-                                              .build());
+                          if (account.getAccountPreferences() != null
+                              && account.getAccountPreferences().getDelegateSecretsCacheTTLInHours() != null) {
+                            return Any.pack(AccountPreference.newBuilder()
+                                                .setDelegateSecretsCacheTTLInHours(
+                                                    account.getAccountPreferences().getDelegateSecretsCacheTTLInHours())
+                                                .build());
+                          }
+                          return Any.newBuilder().build();
                         } else {
                           return Any.newBuilder().build();
                         }
