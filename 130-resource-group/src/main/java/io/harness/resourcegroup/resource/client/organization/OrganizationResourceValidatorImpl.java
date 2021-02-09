@@ -23,6 +23,6 @@ public class OrganizationResourceValidatorImpl implements ResourceValidator {
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     PageResponse<OrganizationResponse> organizations =
         getResponse(organizationManagerClient.listOrganizations(accountIdentifier, resourceIds));
-    return organizations.getContent().size() < resourceIds.size();
+    return organizations.getContent().size() == resourceIds.size();
   }
 }
