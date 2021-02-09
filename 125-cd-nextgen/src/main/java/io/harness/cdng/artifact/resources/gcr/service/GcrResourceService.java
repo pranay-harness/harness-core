@@ -7,7 +7,7 @@ import io.harness.cdng.artifact.resources.gcr.dtos.GcrResponseDTO;
 
 public interface GcrResourceService {
   GcrResponseDTO getBuildDetails(IdentifierRef gcrConnectorRef, String imagePath, String registryHostname,
-      String projectIdentifier, String orgIdentifier);
+      String orgIdentifier, String projectIdentifier);
 
   GcrBuildDetailsDTO getSuccessfulBuild(IdentifierRef dockerConnectorRef, String imagePath,
       GcrRequestDTO dockerRequestDTO, String orgIdentifier, String projectIdentifier);
