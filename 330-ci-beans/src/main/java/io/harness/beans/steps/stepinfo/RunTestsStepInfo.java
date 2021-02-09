@@ -21,10 +21,10 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("TestIntelligence")
-@TypeAlias("testIntelligenceStepInfo")
+@JsonTypeName("RunTests")
+@TypeAlias("runTestsStepInfo")
 @YamlSchemaIgnoreSubtype
-public class TestIntelligenceStepInfo implements CIStepInfo {
+public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 24; // 24 hour;
@@ -51,7 +51,7 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   @Builder
   @ConstructorProperties(
       {"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector", "resources"})
-  public TestIntelligenceStepInfo(String identifier, String name, Integer retry, String goals, String language,
+  public RunTestsStepInfo(String identifier, String name, Integer retry, String goals, String language,
       String buildTool, String image, String connector, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;

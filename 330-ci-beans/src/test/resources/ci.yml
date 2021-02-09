@@ -57,7 +57,7 @@ pipeline:
                             - reports.xml
                 - step:
                     identifier: runUnitTestsIntelligently
-                    type: TestIntelligence
+                    type: RunTests
                     spec:
                       retry: 2
                       goals: echo "Running test"
