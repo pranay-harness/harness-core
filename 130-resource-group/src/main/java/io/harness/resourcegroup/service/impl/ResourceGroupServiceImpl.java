@@ -1,20 +1,35 @@
 package io.harness.resourcegroup.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.utils.PageUtils.getPageRequest;
+
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
+import io.harness.beans.SortOrder;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.repositories.spring.ResourceGroupRepository;
 import io.harness.resourcegroup.model.ResourceGroup;
+import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupResponse;
 import io.harness.resourcegroup.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.resource.validator.ResourceGroupValidatorService;
 import io.harness.resourcegroup.service.ResourceGroupService;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -41,7 +56,31 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     } else {
       log.error("PreValidations failed for resource group {}", resourceGroup);
     }
-    return null;
+    throw new InvalidRequestException("Prevalidation Checks failed for the resource group");
+  }
+
+  @Override
+  public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      PageRequest pageRequest, String searchTerm) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
+    Pageable page = getPageRequest(pageRequest);
+    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ResourceGroupKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ResourceGroupKeys.projectIdentifier)
+                            .is(projectIdentifier);
+    if (Objects.nonNull(stripToNull(searchTerm))) {
+      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
+    }
+    return resourceGroupRepository.findAll(criteria, page).map(ResourceGroupMapper::toResponseWrapper);
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
@@ -78,6 +117,9 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    if (resourceGroup.getHarnessManaged()) {
+      return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
+    }
     Optional<ResourceGroup> resourceGroupOpt =
         resourceGroupRepository.findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
@@ -87,6 +129,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
     savedResourceGroup.setName(resourceGroup.getName());
+    savedResourceGroup.setColor(resourceGroup.getColor());
+    savedResourceGroup.setTags(resourceGroup.getTags());
     savedResourceGroup.setResourceSelectors(resourceGroup.getResourceSelectors());
     savedResourceGroup.setDescription(resourceGroup.getDescription());
     resourceGroup = resourceGroupRepository.save(savedResourceGroup);

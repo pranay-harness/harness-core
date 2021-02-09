@@ -22,6 +22,6 @@ public class SecretManagerResourceValidatorImpl implements ResourceValidator {
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     List<SecretManagerConfigDTO> secretManagers = getResponse(
         secretManagerClient.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier, resourceIds));
-    return secretManagers.size() < resourceIds.size();
+    return secretManagers.size() == resourceIds.size();
   }
 }
