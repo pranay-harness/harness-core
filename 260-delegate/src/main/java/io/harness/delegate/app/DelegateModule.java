@@ -243,7 +243,7 @@ import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWeb
 import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
 import software.wings.delegatetasks.azure.arm.AzureARMTask;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMDeploymentTaskHandler;
-import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListManagementGroupNamesTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListManagementGroupTaskHandler;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListSubscriptionLocationsTaskHandler;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMRollbackTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
@@ -959,8 +959,8 @@ public class DelegateModule extends AbstractModule {
     azureARMTaskTypeToTaskHandlerMap
         .addBinding(AzureARMTaskParameters.AzureARMTaskType.LIST_SUBSCRIPTION_LOCATIONS.name())
         .to(AzureARMListSubscriptionLocationsTaskHandler.class);
-    azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP_NAMES.name())
-        .to(AzureARMListManagementGroupNamesTaskHandler.class);
+    azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP.name())
+        .to(AzureARMListManagementGroupTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();

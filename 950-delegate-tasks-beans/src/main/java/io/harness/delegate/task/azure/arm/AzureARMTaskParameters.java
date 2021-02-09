@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class AzureARMTaskParameters extends AzureTaskParameters {
   private static final Set<AzureARMTaskParameters.AzureARMTaskType> SYNC_TASK_TYPES =
-      newHashSet(AzureARMTaskType.LIST_SUBSCRIPTION_LOCATIONS, AzureARMTaskType.LIST_MNG_GROUP_NAMES);
+      newHashSet(AzureARMTaskType.LIST_SUBSCRIPTION_LOCATIONS, AzureARMTaskType.LIST_MNG_GROUP);
   @NotNull private AzureARMTaskParameters.AzureARMTaskType commandType;
 
   public AzureARMTaskParameters(String appId, String accountId, String activityId, String subscriptionId,
@@ -26,7 +26,7 @@ public class AzureARMTaskParameters extends AzureTaskParameters {
     this.commandType = commandType;
   }
 
-  public enum AzureARMTaskType { ARM_DEPLOYMENT, ARM_ROLLBACK, LIST_SUBSCRIPTION_LOCATIONS, LIST_MNG_GROUP_NAMES }
+  public enum AzureARMTaskType { ARM_DEPLOYMENT, ARM_ROLLBACK, LIST_SUBSCRIPTION_LOCATIONS, LIST_MNG_GROUP }
 
   public boolean isSyncTask() {
     return SYNC_TASK_TYPES.contains(commandType);

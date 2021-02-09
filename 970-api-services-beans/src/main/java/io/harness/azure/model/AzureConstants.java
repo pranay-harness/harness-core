@@ -108,6 +108,10 @@ public interface AzureConstants {
   String UNRECOGNIZED_TASK = "Unrecognized task params while running azure vmss task: [%s]";
   String GALLERY_NAME_NULL_VALIDATION_MSG = "Parameter galleryName is required and cannot be null";
   String GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG = "Parameter imageName is required and cannot be null";
+  String DEPLOYMENT_NAME_BLANK_VALIDATION_MSG = "Parameter deploymentName is required and cannot be null or empty";
+  String LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG = "Location cannot be set at resource group scope";
+  String LOCATION_BLANK_VALIDATION_MSG = "Parameter location cannot be null or empty";
+  String MANAGEMENT_GROUP_ID_BLANK_VALIDATION_MSG = "Parameter groupId cannot be null or empty";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -187,4 +191,7 @@ public interface AzureConstants {
   // Azure REST client settings
   int REST_CLIENT_CONNECT_TIMEOUT = 5;
   int REST_CLIENT_READ_TIMEOUT = 10;
+
+  String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/";
+  String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
 }

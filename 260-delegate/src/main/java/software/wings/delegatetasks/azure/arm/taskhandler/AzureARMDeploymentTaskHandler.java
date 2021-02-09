@@ -2,6 +2,8 @@ package software.wings.delegatetasks.azure.arm.taskhandler;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConfig;
@@ -28,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureARMDeploymentService azureARMDeploymentService;
 
@@ -39,26 +42,24 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
     switch (deploymentScope) {
       case RESOURCE_GROUP:
-        azureARMDeploymentService.deployAtResourceGroupScope(
-            toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-        break;
+        return deployAtResourceGroupScope(azureConfig, logStreamingTaskClient, deploymentParameters);
       case SUBSCRIPTION:
-        azureARMDeploymentService.deployAtSubscriptionScope(
-            toDeploymentSubscriptionContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-        break;
+        return deployAtSubscriptionScope(azureConfig, logStreamingTaskClient, deploymentParameters);
       case MANAGEMENT_GROUP:
-        azureARMDeploymentService.deployAtManagementGroupScope(
-            toDeploymentManagementGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-        break;
+        return deployAtManagementGroupScope(azureConfig, logStreamingTaskClient, deploymentParameters);
       case TENANT:
-        azureARMDeploymentService.deployAtTenantScope(
-            toDeploymentTenantContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-        break;
+        return deployAtTenantScope(azureConfig, logStreamingTaskClient, deploymentParameters);
       default:
         throw new IllegalArgumentException(format("Invalid Azure ARM deployment scope: [%s]", deploymentScope));
     }
+  }
 
-    return AzureARMDeploymentResponse.builder().preDeploymentData(AzureARMPreDeploymentData.builder().build()).build();
+  private AzureARMDeploymentResponse deployAtResourceGroupScope(AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
+    String outputs = azureARMDeploymentService.deployAtResourceGroupScope(
+        toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
+
+    return populateDeploymentResponse(outputs);
   }
 
   private DeploymentResourceGroupContext toDeploymentResourceGroupContext(
@@ -84,6 +85,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
         azureConfig, deploymentParameters.getSubscriptionId(), deploymentParameters.getResourceGroupName());
   }
 
+  private AzureARMDeploymentResponse deployAtSubscriptionScope(AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
+    String outputs = azureARMDeploymentService.deployAtSubscriptionScope(
+        toDeploymentSubscriptionContext(deploymentParameters, azureConfig, logStreamingTaskClient));
+    return populateDeploymentResponse(outputs);
+  }
+
   private DeploymentSubscriptionContext toDeploymentSubscriptionContext(
       AzureARMDeploymentParameters deploymentParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient) {
@@ -98,6 +106,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
         .logStreamingTaskClient(logStreamingTaskClient)
         .steadyStateTimeoutInMin(deploymentParameters.getTimeoutIntervalInMin())
         .build();
+  }
+
+  private AzureARMDeploymentResponse deployAtManagementGroupScope(AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
+    String outputs = azureARMDeploymentService.deployAtManagementGroupScope(
+        toDeploymentManagementGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
+    return populateDeploymentResponse(outputs);
   }
 
   private DeploymentManagementGroupContext toDeploymentManagementGroupContext(
@@ -116,6 +131,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
         .build();
   }
 
+  private AzureARMDeploymentResponse deployAtTenantScope(AzureConfig azureConfig,
+      ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
+    String outputs = azureARMDeploymentService.deployAtTenantScope(
+        toDeploymentTenantContext(deploymentParameters, azureConfig, logStreamingTaskClient));
+    return populateDeploymentResponse(outputs);
+  }
+
   private DeploymentTenantContext toDeploymentTenantContext(AzureARMDeploymentParameters deploymentParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentTenantContext.builder()
@@ -127,6 +149,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
         .parametersJson(deploymentParameters.getParametersJson())
         .logStreamingTaskClient(logStreamingTaskClient)
         .steadyStateTimeoutInMin(deploymentParameters.getTimeoutIntervalInMin())
+        .build();
+  }
+
+  private AzureARMDeploymentResponse populateDeploymentResponse(String outputs) {
+    return AzureARMDeploymentResponse.builder()
+        .outputs(outputs)
+        .preDeploymentData(AzureARMPreDeploymentData.builder().build())
         .build();
   }
 }

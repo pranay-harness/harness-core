@@ -67,7 +67,7 @@ public class AzureARMManagerImpl implements AzureARMManager {
   public List<String> listManagementGroupNames(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AzureARMTaskParameters parameters = new AzureARMTaskParameters();
-    parameters.setCommandType(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP_NAMES);
+    parameters.setCommandType(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP);
 
     AzureTaskResponse azureTaskExecutionResponse = executeTask(parameters, azureConfig, encryptionDetails, appId);
     return ((AzureARMListManagementGroupNamesResponse) azureTaskExecutionResponse).getMngGroupNames();
