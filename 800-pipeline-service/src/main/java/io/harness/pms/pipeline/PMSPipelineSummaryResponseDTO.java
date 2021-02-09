@@ -25,4 +25,5 @@ public class PMSPipelineSummaryResponseDTO {
   long lastUpdatedAt;
   Set<String> modules;
   ExecutionSummaryInfoDTO executionSummaryInfo;
+  Map<String, org.bson.Document> filters;
 }
