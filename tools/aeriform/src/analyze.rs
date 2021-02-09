@@ -19,7 +19,10 @@ pub struct Analyze {
     root_filter: Option<String>,
 
     #[clap(short, long)]
-    auto_actionable_filter: Option<bool>,
+    auto_actionable_filter: bool,
+
+    #[clap(short, long)]
+    auto_actionable_command: bool,
 }
 
 #[derive(Debug, Copy, Clone, EnumIter)]
@@ -127,7 +130,7 @@ pub fn analyze(opts: Analyze) {
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .for_each(|report| {
             println!("{:?}: {}", &report.kind, &report.message);
-            if !report.action.is_empty() {
+            if opts.auto_actionable_command && !report.action.is_empty() {
                 println!("   {}", &report.action);
             }
             total[report.kind as usize] += 1;
@@ -147,7 +150,7 @@ fn filter_report(opts: &Analyze, report: &Report) -> bool {
 }
 
 fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
-    opts.auto_actionable_filter.is_none() || !opts.auto_actionable_filter.unwrap() || !report.action.is_empty()
+    !opts.auto_actionable_filter || !report.action.is_empty()
 }
 
 fn filter_by_root(opts: &Analyze, report: &Report) -> bool {
