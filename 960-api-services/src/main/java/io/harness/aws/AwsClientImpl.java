@@ -189,6 +189,13 @@ public class AwsClientImpl implements AwsClient {
     return Optional.empty();
   }
 
+  protected AmazonIdentityManagement getAwsIAMClient(AWSCredentialsProvider credentialsProvider) {
+    return AmazonIdentityManagementClientBuilder.standard()
+        .withCredentials(credentialsProvider)
+        .withRegion(DEFAULT_REGION)
+        .build();
+  }
+
   protected AWSCostAndUsageReport getAwsCurClient(AWSCredentialsProvider credentialsProvider) {
     return AWSCostAndUsageReportClientBuilder.standard()
         .withRegion(DEFAULT_REGION)
@@ -212,8 +219,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public List<String> listRolePolicyNames(
       AWSCredentialsProvider awsCredentialsProvider, @NotNull final String roleName) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(awsCredentialsProvider);
 
     List<String> policyNames = new ArrayList<>();
 
@@ -237,8 +243,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public List<EvaluationResult> simulatePrincipalPolicy(final AWSCredentialsProvider credentialsProvider,
       @NotNull String policySourceArn, @NotEmpty List<String> actionNames, @Nullable List<String> resourceArns) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(credentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(credentialsProvider);
     final SimulatePrincipalPolicyRequest request =
         new SimulatePrincipalPolicyRequest().withPolicySourceArn(policySourceArn).withActionNames(actionNames);
     if (CollectionUtil.isNotEmpty(resourceArns)) {
@@ -258,8 +263,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public Policy getRolePolicy(
       AWSCredentialsProvider awsCredentialsProvider, @NotNull final String roleName, @NotNull final String policyName) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(awsCredentialsProvider);
     final GetRolePolicyResult result =
         iam.getRolePolicy(new GetRolePolicyRequest().withPolicyName(policyName).withRoleName(roleName));
 
