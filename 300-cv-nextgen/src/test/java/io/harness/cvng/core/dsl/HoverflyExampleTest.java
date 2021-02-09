@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -26,6 +27,7 @@ public class HoverflyExampleTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testQAAPI() throws IOException {
     HOVERFLY_RULE.simulate(
         SimulationSource.file(Paths.get("src/test/resources/hoverfly/qa-api-version-test-file.json")));
@@ -47,6 +49,7 @@ public class HoverflyExampleTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testProdAPI() throws IOException {
     HOVERFLY_RULE.simulate(
         SimulationSource.file(Paths.get("src/test/resources/hoverfly/prod-api-version-test-file.json")));
