@@ -21,6 +21,7 @@ shared_dependencies = [
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
     "//878-pipeline-service-utilities:module",
+    "//882-pms-sdk-core:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
@@ -704,7 +705,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_tomakehurst_wiremock//jar",
-    ] + [
+    ] + shared_dependencies + [
         ":module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
@@ -718,7 +719,7 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
-    ] + shared_dependencies,
+    ],
 )
 
 java_library(

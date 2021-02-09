@@ -21,7 +21,7 @@ pub struct Analyze {
     #[clap(short, long)]
     auto_actionable_filter: bool,
 
-    #[clap(short, long)]
+    #[clap(long)]
     auto_actionable_command: bool,
 }
 
@@ -283,122 +283,148 @@ fn check_for_moves(
 
     let target_module_name = class.target_module.as_ref();
     if target_module_name.is_none() {
-        results
-    } else {
-        let target_module = modules.get(target_module_name.unwrap()).unwrap();
+        return results;
+    }
+    let target_module_option = modules.get(target_module_name.unwrap());
+    if target_module_option.is_none() {
+        results.push(target_module_needed(class));
+        return results;
+    }
 
-        let mut issue = false;
-        let mut all_classes: HashSet<String> = HashSet::new();
-        let mut not_ready_yet = Vec::new();
-        class.dependencies.iter().for_each(|src| {
-            let &dependent_class = classes
-                .get(src)
-                .expect(&format!("The source {} is not find in any module", src));
+    let target_module = target_module_option.unwrap();
 
-            let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
-                "The class {} is not find in the modules",
-                dependent_class.name
-            ));
 
-            let dependent_target_module = if dependent_class.target_module.is_some() {
-                modules.get(dependent_class.target_module.as_ref().unwrap()).unwrap()
-            } else {
-                dependent_real_module
-            };
+    let mut issue = false;
+    let mut all_classes: HashSet<String> = HashSet::new();
+    let mut not_ready_yet = Vec::new();
+    class.dependencies.iter().for_each(|src| {
+        let &dependent_class = classes
+            .get(src)
+            .expect(&format!("The source {} is not find in any module", src));
 
-            if !target_module.name.eq(&dependent_target_module.name)
-                && !target_module.dependencies.contains(&dependent_target_module.name)
-            {
-                issue = true;
-                let mdls = [dependent_target_module.name.clone(), target_module.name.clone()]
-                    .iter()
-                    .cloned()
-                    .collect();
-                let indirect_classes = [dependent_class.name.clone()].iter().cloned().collect();
-                results.push(if class.break_dependencies_on.contains(src) {
-                    Report {
-                        kind: Kind::DevAction,
-                        message: format!(
-                            "{} depends on {} and this dependency has to be broken",
-                            class.name, dependent_class.name
-                        ),
-                        action: Default::default(),
-                        for_class: class.name.clone(),
-                        indirect_classes: indirect_classes,
-                        for_modules: mdls,
-                    }
-                } else {
-                    Report {
-                        kind: Kind::Error,
-                        message: format!(
-                            "{} depends on {} that is in module {} but {} does not depend on it",
-                            class.name, dependent_class.name, dependent_target_module.name, target_module.name
-                        ),
-                        action: Default::default(),
-                        for_class: class.name.clone(),
-                        indirect_classes: indirect_classes,
-                        for_modules: mdls,
-                    }
-                });
+        let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
+            "The class {} is not find in the modules",
+            dependent_class.name
+        ));
+
+        let dependent_target_module = if dependent_class.target_module.is_some() {
+            let dependent_target_module = modules.get(dependent_class.target_module.as_ref().unwrap());
+            if dependent_target_module.is_none() {
+                results.push(target_module_needed(dependent_class));
+                return ();
             }
 
-            if dependent_real_module.index < target_module.index {
-                all_classes.insert(src.clone());
-                not_ready_yet.push(format!("{} to {}", src, target_module.name));
-            }
-        });
+            dependent_target_module.unwrap()
+        } else {
+            dependent_real_module
+        };
 
-        if !issue {
-            let mdls = [target_module.name.clone()].iter().cloned().collect();
-
-            if not_ready_yet.is_empty() {
-                let module = class_modules.get(class);
-
-                let msg = format!("{} is ready to go to {}", class.name, target_module.name);
-
-                results.push(match module {
-                    None => Report {
-                        kind: Kind::DevAction,
-                        action: Default::default(),
-                        message: msg,
-                        for_class: class.name.clone(),
-                        indirect_classes: Default::default(),
-                        for_modules: mdls,
-                    },
-                    Some(&module) => Report {
-                        kind: Kind::AutoAction,
-                        message: msg,
-                        action: format!(
-                            "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
-                            module.directory,
-                            class.relative_location(),
-                            target_module.directory
-                        ),
-                        for_class: class.name.clone(),
-                        indirect_classes: Default::default(),
-                        for_modules: mdls,
-                    },
-                });
-            } else {
-                all_classes.insert(class.name.clone());
-
-                results.push(Report {
-                    kind: Kind::Blocked,
+        if !target_module.name.eq(&dependent_target_module.name)
+            && !target_module.dependencies.contains(&dependent_target_module.name)
+        {
+            issue = true;
+            let mdls = [dependent_target_module.name.clone(), target_module.name.clone()]
+                .iter()
+                .cloned()
+                .collect();
+            let indirect_classes = [dependent_class.name.clone()].iter().cloned().collect();
+            results.push(if class.break_dependencies_on.contains(src) {
+                Report {
+                    kind: Kind::DevAction,
                     message: format!(
-                        "{} does not have untargeted dependencies to go to {}. First move {}",
-                        class.name,
-                        target_module.name,
-                        not_ready_yet.join(", ")
+                        "{} depends on {} and this dependency has to be broken",
+                        class.name, dependent_class.name
                     ),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    indirect_classes: all_classes,
+                    indirect_classes: indirect_classes,
                     for_modules: mdls,
-                });
-            }
+                }
+            } else {
+                Report {
+                    kind: Kind::Error,
+                    message: format!(
+                        "{} depends on {} that is in module {} but {} does not depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    ),
+                    action: Default::default(),
+                    for_class: class.name.clone(),
+                    indirect_classes: indirect_classes,
+                    for_modules: mdls,
+                }
+            });
         }
 
-        results
+        if dependent_real_module.index < target_module.index {
+            all_classes.insert(src.clone());
+            not_ready_yet.push(format!("{} to {}", src, target_module.name));
+        }
+    });
+
+    if !issue {
+        let mdls = [target_module.name.clone()].iter().cloned().collect();
+
+        if not_ready_yet.is_empty() {
+            let module = class_modules.get(class);
+
+            let msg = format!("{} is ready to go to {}", class.name, target_module.name);
+
+            results.push(match module {
+                None => Report {
+                    kind: Kind::DevAction,
+                    action: Default::default(),
+                    message: msg,
+                    for_class: class.name.clone(),
+                    indirect_classes: Default::default(),
+                    for_modules: mdls,
+                },
+                Some(&module) => Report {
+                    kind: Kind::AutoAction,
+                    message: msg,
+                    action: format!(
+                        "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
+                        module.directory,
+                        class.relative_location(),
+                        target_module.directory
+                    ),
+                    for_class: class.name.clone(),
+                    indirect_classes: Default::default(),
+                    for_modules: mdls,
+                },
+            });
+        } else {
+            all_classes.insert(class.name.clone());
+
+            results.push(Report {
+                kind: Kind::Blocked,
+                message: format!(
+                    "{} does not have untargeted dependencies to go to {}. First move {}",
+                    class.name,
+                    target_module.name,
+                    not_ready_yet.join(", ")
+                ),
+                action: Default::default(),
+                for_class: class.name.clone(),
+                indirect_classes: all_classes,
+                for_modules: mdls,
+            });
+        }
+    }
+
+    results
+}
+
+fn target_module_needed(class: &JavaClass) -> Report {
+    Report {
+        kind: Kind::DevAction,
+        message: format!(
+            "Target module {} needs to be created.",
+            class.target_module.as_ref().unwrap()
+        ),
+        action: Default::default(),
+        for_class: class.name.clone(),
+        indirect_classes: Default::default(),
+        for_modules: Default::default(),
     }
 }
 

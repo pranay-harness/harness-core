@@ -9,7 +9,7 @@ sources()
 
 java_library(
     name = "abstract-module",
-    srcs = glob(["src/abstract/**/*.java"]),
+    srcs = glob(["src/abstract/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
