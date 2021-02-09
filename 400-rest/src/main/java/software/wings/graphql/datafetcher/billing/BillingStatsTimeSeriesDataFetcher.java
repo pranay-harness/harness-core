@@ -165,8 +165,6 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuLimitPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuRequestPointMap = new LinkedHashMap<>();
 
-    boolean dataPresent =
-        checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
     boolean addNamespaceToEntityId = groupByEntityList.contains(QLCCMEntityGroupBy.WorkloadName);
@@ -175,6 +173,9 @@ public class BillingStatsTimeSeriesDataFetcher
     boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
     boolean isKeyTypeInstanceId =
         groupByEntityList.contains(QLCCMEntityGroupBy.Node) || groupByEntityList.contains(QLCCMEntityGroupBy.PV);
+
+    boolean dataPresent = checkAndAddPrecedingZeroValuedData(
+        queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap, addClusterIdToEntityId);
 
     if (dataPresent) {
       do {
@@ -434,23 +435,29 @@ public class BillingStatsTimeSeriesDataFetcher
 
   // returns true if data is present
   private boolean checkAndAddPrecedingZeroValuedData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap) throws SQLException {
+      long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, boolean isClusterDrilldown)
+      throws SQLException {
     if (resultSet != null && resultSet.next()) {
       String entityId = "";
       String idWithInfo = "";
-      String additionalInfo = "";
+      String additionalInfo = EMPTY;
       String timeFieldName = BillingDataMetaDataFields.STARTTIME.getFieldName();
       boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case STRING:
             if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                || (isClusterDrilldown && field == BillingDataMetaDataFields.CLUSTERID)
                 || field == BillingDataMetaDataFields.INSTANCENAME) {
-              additionalInfo = resultSet.getString(field.getFieldName());
+              additionalInfo = additionalInfo.equals(EMPTY)
+                  ? resultSet.getString(field.getFieldName())
+                  : additionalInfo + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
               break;
             }
             entityId = resultSet.getString(field.getFieldName());
-            idWithInfo = addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
+            idWithInfo = (addNamespaceToEntityId || isClusterDrilldown) && !additionalInfo.equals(EMPTY)
+                ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId
+                : entityId;
             break;
           case TIMESTAMP:
             timeFieldName = field.getFieldName();
