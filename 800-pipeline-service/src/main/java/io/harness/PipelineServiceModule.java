@@ -50,6 +50,7 @@ import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
@@ -210,7 +211,9 @@ public class PipelineServiceModule extends AbstractModule {
   @Provides
   @Singleton
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-    return ImmutableList.<YamlSchemaRootClass>builder().build();
+    return ImmutableList.<YamlSchemaRootClass>builder()
+        .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
+        .build();
   }
 
   @Provides

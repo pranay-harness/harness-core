@@ -135,8 +135,10 @@ public class YamlSnippetHelper {
           final String snippetIndexPathForEntityType =
               YamlSchemaUtils.getSnippetIndexPathForEntityType(yamlSchemaRootClass.getEntityType(),
                   YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
-          String snippetMetaData = IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8);
+          String snippetMetaData = IOUtils.resourceToString(
+              snippetIndexPathForEntityType, StandardCharsets.UTF_8, yamlSchemaRootClass.getClazz().getClassLoader());
           preComputeTagsAndNameMap(snippetMetaData, yamlSchemaRootClass);
+          log.info("Initialized Yaml Snippets for {}", yamlSchemaRootClass.getEntityType());
         } catch (IOException e) {
           log.info("No Yaml Snippets found for {}", yamlSchemaRootClass.getEntityType());
         }
