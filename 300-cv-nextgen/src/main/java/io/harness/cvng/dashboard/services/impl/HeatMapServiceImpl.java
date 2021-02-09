@@ -117,8 +117,9 @@ public class HeatMapServiceImpl implements HeatMapService {
       Instant heatMapEndTime = heatMapStartTime.plusMillis(heatMapResolution.getResolution().toMillis());
 
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
-                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.accountId, accountId)
                                         .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                         .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                         .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                         .filter(HeatMapKeys.category, category)
@@ -167,8 +168,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     Set<CVMonitoringCategory> cvMonitoringCategories = cvConfigService.getAvailableCategories(
         accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier);
     for (CVMonitoringCategory category : cvMonitoringCategories) {
-      Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(orgIdentifier, projectIdentifier, serviceIdentifier,
-          envIdentifier, category, startTime, endTime, heatMapResolution);
+      Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(accountId, orgIdentifier, projectIdentifier,
+          serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
 
       SortedSet<HeatMapDTO> heatMapDTOS = new TreeSet<>();
       for (long timeStampMs = startTimeBoundary.toEpochMilli(); timeStampMs <= endTimeBoundary.toEpochMilli();
@@ -355,12 +356,13 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant latestAnalysisTime = Instant.MIN;
     for (CVMonitoringCategory category : cvMonitoringCategories) {
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
-                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.accountId, accountId)
                                         .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                         .filter(HeatMapKeys.category, category)
                                         .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
-                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
-                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                         .order(Sort.descending(HeatMapKeys.heatMapBucketEndTime));
       if (endTime != null) {
         heatMapQuery.field(HeatMapKeys.heatMapBucketStartTime).lessThan(endTime);
@@ -395,7 +397,7 @@ public class HeatMapServiceImpl implements HeatMapService {
         .build();
   }
 
-  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String orgIdentifier, String projectIdentifier,
+  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVMonitoringCategory category, Instant startTime, Instant endTime,
       HeatMapResolution heatMapResolution) {
     Instant startTimeBucketBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getBucketSize());
@@ -403,6 +405,7 @@ public class HeatMapServiceImpl implements HeatMapService {
     Map<Instant, HeatMapDTO> heatMapDTOS = new HashMap<>();
     try (HIterator<HeatMap> heatMapRecords =
              new HIterator<>(hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                 .filter(HeatMapKeys.accountId, accountId)
                                  .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
                                  .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                  .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
