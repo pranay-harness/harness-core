@@ -30,7 +30,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
@@ -271,8 +271,8 @@ public class BuildJobEnvInfoBuilder {
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
             stepElement.getIdentifier(), stepElement.getName());
       case TEST_INTELLIGENCE:
-        return createTestIntelligenceStepContainerDefinition((TestIntelligenceStepInfo) ciStepInfo, integrationStage,
-            ciExecutionArgs, portFinder, stepIndex, stepElement.getIdentifier());
+        return createRunTestsStepContainerDefinition((RunTestsStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
+            portFinder, stepIndex, stepElement.getIdentifier());
       default:
         return null;
     }
@@ -341,9 +341,9 @@ public class BuildJobEnvInfoBuilder {
         .build();
   }
 
-  private ContainerDefinitionInfo createTestIntelligenceStepContainerDefinition(
-      TestIntelligenceStepInfo testIntelligenceStepInfo, StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier) {
+  private ContainerDefinitionInfo createRunTestsStepContainerDefinition(RunTestsStepInfo runTestsStepInfo,
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
@@ -359,11 +359,10 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(testIntelligenceStepInfo.getImage()))
-                                   .connectorIdentifier(testIntelligenceStepInfo.getConnector())
+                                   .imageDetails(getImageInfo(runTestsStepInfo.getImage()))
+                                   .connectorIdentifier(runTestsStepInfo.getConnector())
                                    .build())
-        .containerResourceParams(
-            getStepContainerResource(testIntelligenceStepInfo.getResources(), "TestIntelligence", identifier))
+        .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
         .build();
@@ -705,7 +704,7 @@ public class BuildJobEnvInfoBuilder {
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case TEST_INTELLIGENCE:
         return getContainerMemoryLimit(
-            ((TestIntelligenceStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
+            ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
       case ECR:
       case DOCKER:
@@ -769,7 +768,7 @@ public class BuildJobEnvInfoBuilder {
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case TEST_INTELLIGENCE:
         return getContainerCpuLimit(
-            ((TestIntelligenceStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
+            ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
       case ECR:
       case DOCKER:
