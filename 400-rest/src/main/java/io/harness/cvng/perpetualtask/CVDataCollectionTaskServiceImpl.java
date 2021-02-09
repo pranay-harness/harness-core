@@ -7,7 +7,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -35,7 +34,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
-import io.kubernetes.client.openapi.ApiException;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -49,41 +47,29 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public void resetTask(String accountId, String orgIdentifier, String projectIdentifier, String taskId,
       DataCollectionConnectorBundle bundle) {
-    bundle.getParams().put("accountId", accountId);
-    PerpetualTaskExecutionBundle executionBundle;
-    switch (bundle.getDataCollectionType()) {
-      case CV:
-        executionBundle = createCVExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
-        break;
-      case KUBERNETES:
-        executionBundle = createK8ExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
-        break;
-      default:
-        throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
-    }
+    PerpetualTaskExecutionBundle executionBundle =
+        createExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
     perpetualTaskService.resetTask(accountId, taskId, executionBundle);
   }
 
   @Override
   public String create(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
-    bundle.getParams().put("accountId", accountId);
     String taskType;
-    PerpetualTaskExecutionBundle executionBundle;
+    PerpetualTaskExecutionBundle executionBundle =
+        createExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
     switch (bundle.getDataCollectionType()) {
       case CV:
         taskType = PerpetualTaskType.DATA_COLLECTION_TASK;
-        executionBundle = createCVExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
         break;
       case KUBERNETES:
         taskType = PerpetualTaskType.K8_ACTIVITY_COLLECTION_TASK;
-        executionBundle = createK8ExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
         break;
       default:
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
     PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder()
-                                                   .clientId(bundle.getParams().get("dataCollectionWorkerId"))
+                                                   .clientId(bundle.getDataCollectionWorkerId())
                                                    .executionBundle(executionBundle.toByteArray())
                                                    .build();
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
@@ -93,7 +79,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     return perpetualTaskService.createTask(taskType, accountId, clientContext, schedule, false, "");
   }
 
-  private PerpetualTaskExecutionBundle createCVExecutionBundle(
+  private PerpetualTaskExecutionBundle createExecutionBundle(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetailList =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
@@ -102,43 +88,32 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                                     .encryptedDataDetails(encryptedDataDetailList)
                                                     .dataCollectionType(bundle.getDataCollectionType())
                                                     .build();
-    String dataCollectionWorkedId = bundle.getParams().get("dataCollectionWorkerId");
-    DataCollectionPerpetualTaskParams params =
-        DataCollectionPerpetualTaskParams.newBuilder()
-            .setAccountId(accountId)
-            .setDataCollectionInfo(ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo)))
-            .setDataCollectionWorkerId(dataCollectionWorkedId)
-            .build();
-
-    Any perpetualTaskPack = Any.pack(params);
-    List<ExecutionCapability> executionCapabilities = bundle.fetchRequiredExecutionCapabilities(null);
+    Any perpetualTaskPack;
+    switch (bundle.getDataCollectionType()) {
+      case CV:
+        DataCollectionPerpetualTaskParams params =
+            DataCollectionPerpetualTaskParams.newBuilder()
+                .setAccountId(accountId)
+                .setDataCollectionWorkerId(bundle.getDataCollectionWorkerId())
+                .setDataCollectionInfo(ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo)))
+                .build();
+        perpetualTaskPack = Any.pack(params);
+        break;
+      case KUBERNETES:
+        K8ActivityCollectionPerpetualTaskParams k8ActivityCollectionPerpetualTaskParams =
+            K8ActivityCollectionPerpetualTaskParams.newBuilder()
+                .setAccountId(accountId)
+                .setDataCollectionWorkerId(bundle.getDataCollectionWorkerId())
+                .setDataCollectionInfo(ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo)))
+                .build();
+        perpetualTaskPack = Any.pack(k8ActivityCollectionPerpetualTaskParams);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
+    }
 
     PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
-    return perpetualTaskExecutionBundle;
-  }
-
-  private PerpetualTaskExecutionBundle createK8ExecutionBundle(
-      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
-    List<EncryptedDataDetail> encryptedDataDetailList =
-        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
-    K8ActivityDataCollectionInfo k8ActivityDataCollectionInfo =
-        K8ActivityDataCollectionInfo.builder()
-            .connectorConfigDTO(bundle.getConnectorDTO().getConnectorConfig())
-            .encryptedDataDetails(encryptedDataDetailList)
-            .dataCollectionType(bundle.getDataCollectionType())
-            .activitySourceDTO(bundle.getActivitySourceDTO())
-            .build();
-    List<ExecutionCapability> executionCapabilities = bundle.fetchRequiredExecutionCapabilities(null);
-    K8ActivityCollectionPerpetualTaskParams params =
-        K8ActivityCollectionPerpetualTaskParams.newBuilder()
-            .setAccountId(accountId)
-            .setActivitySourceConfigId(bundle.getParams().get("dataCollectionWorkerId"))
-            .setDataCollectionInfo(ByteString.copyFrom(kryoSerializer.asBytes(k8ActivityDataCollectionInfo)))
-            .build();
-    Any perpetualTaskPack = Any.pack(params);
-    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
+        createPerpetualTaskExecutionBundle(perpetualTaskPack, bundle.fetchRequiredExecutionCapabilities(null));
     return perpetualTaskExecutionBundle;
   }
 
@@ -160,8 +135,8 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountId)
-                                       .projectIdentifier(projectIdentifier)
                                        .orgIdentifier(orgIdentifier)
+                                       .projectIdentifier(projectIdentifier)
                                        .build();
     switch (bundle.getDataCollectionType()) {
       case CV:
@@ -204,6 +179,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     return delegateProxyFactory.get(CVNGDataCollectionDelegateService.class, taskContext)
         .getDataCollectionResult(accountId, dataCollectionRequest, encryptedDataDetails);
   }
+
   private SyncTaskContext getSyncTaskContext(String accountId) {
     return SyncTaskContext.builder()
         .accountId(accountId)
@@ -211,8 +187,9 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
         .build();
   }
+
   public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier, String filter,
-      DataCollectionConnectorBundle bundle) throws ApiException {
+      DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext =
@@ -223,7 +200,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
 
   @Override
   public List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
-      String filter, DataCollectionConnectorBundle bundle) throws ApiException {
+      String filter, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext =

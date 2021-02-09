@@ -886,11 +886,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         .resetDataCollectionTask(
             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(perpetualTaskId), captor.capture());
     DataCollectionConnectorBundle dataCollectionConnectorBundle = captor.getValue();
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
-        getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
-    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
-    assertThat(dataCollectionConnectorBundle.getParams()).isEqualTo(params);
+    assertThat(dataCollectionConnectorBundle.getSourceIdentifier())
+        .isEqualTo(getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
+    assertThat(dataCollectionConnectorBundle.getConnectorIdentifier()).isEqualTo(cvConfig.getConnectorIdentifier());
     assertThat(dataCollectionConnectorBundle.getDataCollectionType()).isEqualTo(DataCollectionType.CV);
   }
 
@@ -913,13 +911,12 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         .resetDataCollectionTask(
             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(perpetualTaskId), captor.capture());
     DataCollectionConnectorBundle dataCollectionConnectorBundle = captor.getValue();
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
-        getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
-    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
-    assertThat(dataCollectionConnectorBundle.getParams()).isEqualTo(params);
+    assertThat(dataCollectionConnectorBundle.getSourceIdentifier())
+        .isEqualTo(getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
+    assertThat(dataCollectionConnectorBundle.getConnectorIdentifier()).isEqualTo(cvConfig.getConnectorIdentifier());
     assertThat(dataCollectionConnectorBundle.getDataCollectionType()).isEqualTo(DataCollectionType.CV);
   }
+
   private String getDataCollectionWorkerId(String verificationJobInstanceId, String connectorId) {
     return UUID.nameUUIDFromBytes((verificationJobInstanceId + ":" + connectorId).getBytes(Charsets.UTF_8)).toString();
   }

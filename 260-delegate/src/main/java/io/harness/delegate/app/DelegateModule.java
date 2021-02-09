@@ -35,6 +35,7 @@ import io.harness.cistatus.service.gitlab.GitlabServiceImpl;
 import io.harness.cvng.CVNGDataCollectionDelegateServiceImpl;
 import io.harness.cvng.K8InfoDataServiceImpl;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -567,8 +568,19 @@ public class DelegateModule extends AbstractModule {
             .setNameFormat("verificationDataCollector-%d")
             .setPriority(Thread.MIN_PRIORITY)
             .build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> { verificationDataCollectorExecutor.shutdownNow(); }));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> verificationDataCollectorExecutor.shutdownNow()));
     return verificationDataCollectorExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("cvngParallelExecutor")
+  public ExecutorService cvngParallelExecutor() {
+    ExecutorService cvngParallelExecutor = ThreadPool.create(1, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5,
+        TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
+    return cvngParallelExecutor;
   }
 
   @Provides

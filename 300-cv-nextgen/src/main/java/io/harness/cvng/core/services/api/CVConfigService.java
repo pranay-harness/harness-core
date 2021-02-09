@@ -37,7 +37,7 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
   List<CVConfig> listByMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier);
 
-  void setCollectionTaskId(String cvConfigId, String dataCollectionTaskId);
+  void markFirstTaskCollected(CVConfig cvConfig);
   List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
       String envIdentifier, List<DataSourceType> dataSourceTypes);
   List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);

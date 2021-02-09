@@ -149,7 +149,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public List<String> getVerificationTaskIds(String cvConfigId) {
-    return hPersistence.createQuery(VerificationTask.class)
+    return hPersistence.createQuery(VerificationTask.class, excludeAuthority)
         .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
         .project(VerificationTaskKeys.uuid, true)
         .asList()

@@ -26,9 +26,12 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
+import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
+import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
+import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
@@ -391,12 +394,33 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .semaphore(new Semaphore(5))
             .handler(cvConfigDataCollectionHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(CVConfigKeys.perpetualTaskId).doesNotExist())
+            .filterExpander(query -> query.criteria(CVConfigKeys.firstTaskQueued).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+
+    MonitoringSourcePerpetualTaskHandler monitoringSourcePerpetualTaskHandler =
+        injector.getInstance(MonitoringSourcePerpetualTaskHandler.class);
+    PersistenceIterator monitoringSourceIterator =
+        MongoPersistenceIterator
+            .<MonitoringSourcePerpetualTask, MorphiaFilterExpander<MonitoringSourcePerpetualTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(MonitoringSourcePerpetualTask.class)
+            .fieldName(MonitoringSourcePerpetualTaskKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(monitoringSourcePerpetualTaskHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(MonitoringSourcePerpetualTaskKeys.perpetualTaskId).doesNotExist())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(monitoringSourceIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> monitoringSourceIterator.process(), 0, 30, TimeUnit.SECONDS);
 
     K8ActivityCollectionHandler k8ActivityCollectionHandler = injector.getInstance(K8ActivityCollectionHandler.class);
     PersistenceIterator activityCollectionIterator =

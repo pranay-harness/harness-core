@@ -8,6 +8,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_D
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
+import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -42,9 +43,11 @@ import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -86,6 +89,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   @Mock private Clock clock;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
 
   private String cvConfigId;
   private String accountId;
@@ -373,7 +377,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    cvConfigService.update(getCVConfig());
+    AppDynamicsCVConfig cvConfig = getCVConfig();
+    cvConfigService.update(cvConfig);
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
                                       .filter(DataCollectionTaskKeys.accountId, accountId)
@@ -385,7 +390,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(nextTask.getStatus()).isEqualTo(QUEUED);
     assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime());
     assertThat(nextTask.getEndTime()).isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES));
-    assertThat(nextTask.getDataCollectionWorkerId()).isEqualTo(cvConfigId);
+    assertThat(nextTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
     assertThat(nextTask.getValidAfter())
         .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).plus(DATA_COLLECTION_DELAY));
   }
@@ -399,7 +406,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    cvConfigService.update(getCVConfig());
+    AppDynamicsCVConfig cvConfig = getCVConfig();
+    cvConfigService.update(cvConfig);
     Clock clock = Clock.fixed(this.clock.instant().plus(Duration.ofHours(3)), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
     dataCollectionTaskService.updateTaskStatus(result);
@@ -414,7 +422,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     Instant expectedStartTime = Instant.parse("2020-04-22T11:00:00Z");
     assertThat(nextTask.getStartTime()).isEqualTo(expectedStartTime);
     assertThat(nextTask.getEndTime()).isEqualTo(expectedStartTime.plus(5, ChronoUnit.MINUTES));
-    assertThat(nextTask.getDataCollectionWorkerId()).isEqualTo(cvConfigId);
+    assertThat(nextTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
     assertThat(nextTask.getValidAfter())
         .isEqualTo(expectedStartTime.plus(5, ChronoUnit.MINUTES).plus(DATA_COLLECTION_DELAY));
   }
@@ -559,17 +569,19 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
-    String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
+    dataCollectionTaskService.enqueueFirstTask(cvConfig);
     DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
                                        .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
                                        .get();
     assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
-    assertThat(taskIdFromApi).isEqualTo(taskId);
     assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
     assertThat(savedTask.getVerificationTaskId())
         .isEqualTo(verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId));
+    assertThat(savedTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
   }
 
   @Test
@@ -596,15 +608,17 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 
-    String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
+    dataCollectionTaskService.enqueueFirstTask(cvConfig);
     DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
                                        .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
                                        .get();
     assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(SplunkDataCollectionInfo.class);
-    assertThat(taskIdFromApi).isEqualTo(taskId);
     assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+    assertThat(savedTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
   }
 
   @Test
@@ -629,6 +643,24 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
       assertThat(dataCollectionTasks.get(i).getStatus()).isEqualTo(DataCollectionExecutionStatus.WAITING);
     }
     assertThat(fakeNow).isEqualTo(dataCollectionTasks.get(0).getValidAfter());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetNextTaskDTOs() {
+    hPersistence.save(create());
+    List<DataCollectionTaskDTO> nextTaskDTOs =
+        dataCollectionTaskService.getNextTaskDTOs(accountId, dataCollectionWorkerId);
+    assertThat(nextTaskDTOs.size()).isEqualTo(1);
+    int numOfTasks = 100;
+    List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
+    for (int i = 0; i < numOfTasks; i++) {
+      dataCollectionTasks.add(create());
+    }
+    hPersistence.save(dataCollectionTasks);
+    nextTaskDTOs = dataCollectionTaskService.getNextTaskDTOs(accountId, dataCollectionWorkerId);
+    assertThat(nextTaskDTOs.size()).isEqualTo(CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS);
   }
 
   private AppDynamicsCVConfig getCVConfig() {

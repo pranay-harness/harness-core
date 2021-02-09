@@ -254,11 +254,11 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void setCollectionTaskId(String cvConfigId, String perpetualTaskId) {
+  public void markFirstTaskCollected(CVConfig cvConfig) {
     UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.perpetualTaskId, perpetualTaskId);
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
     Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfigId);
+        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
     hPersistence.update(query, updateOperations);
   }
 
