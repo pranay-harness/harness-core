@@ -3,6 +3,7 @@ package io.harness.ng.core.activityhistory.entity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
@@ -59,6 +60,14 @@ public class NGActivity implements PersistentEntity, NGAccountAccess {
                  .name("referredFqn_type_referredByType")
                  .field(ActivityHistoryEntityKeys.referredEntityFQN)
                  .field(ActivityHistoryEntityKeys.referredEntityType)
+                 .field(ActivityHistoryEntityKeys.referredByEntityType)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("type_referredFqn_referredByType_desSort_Index")
+                 .field(ActivityHistoryEntityKeys.type)
+                 .field(ActivityHistoryEntityKeys.referredEntityFQN)
+                 .field(ActivityHistoryEntityKeys.referredEntityType)
+                 .descSortField(ActivityHistoryEntityKeys.activityTime)
                  .field(ActivityHistoryEntityKeys.referredByEntityType)
                  .build())
         .build();

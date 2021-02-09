@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -22,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DockerConnectorDTO extends ConnectorConfigDTO {
-  @NotNull String dockerRegistryUrl;
+  @NotNull @NotBlank String dockerRegistryUrl;
   @NotNull DockerRegistryProviderType providerType;
   @Valid DockerAuthenticationDTO auth;
 
