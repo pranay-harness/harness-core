@@ -163,9 +163,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
         .isInstanceOf(NullPointerException.class)
         .hasMessage(
             "VerificationTask mapping does not exist for cvConfigId " + cvConfigId + ". Please check cvConfigId");
-    assertThatThrownBy(() -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No verification task mapping exist for verificationJobInstanceId " + verificationJobInstanceId);
+    assertThat(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId)).hasSize(1);
   }
 
   @Test

@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -51,6 +52,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkDSL() throws IOException {
     String filePath = "splunk/splunk-response.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
@@ -72,6 +74,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkHostDSL() throws IOException {
     String filePath = "splunk/splunk-response-host.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
@@ -88,6 +91,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkHostDSLEmptyResponse() throws IOException {
     String filePath = "splunk/splunk-response-host_empty.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
@@ -102,6 +106,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkConnectionValidationValidSettings() {
     String filePath = "splunk/connection-validation-valid.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
@@ -129,6 +134,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkConnectionValidationInValidSettings() {
     String filePath = "splunk/connection-validation-invalid.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
@@ -157,6 +163,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkSavedSearches() throws IOException {
     String filePath = "splunk/saved-searches.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
