@@ -22,7 +22,7 @@ def run_tests(**kwargs):
             **kwargs
         )
 
-def run_package_tests():
+def run_package_tests(deps):
     all_srcs = native.glob(["src/test/**/*.java"])
 
     directories = {}
@@ -32,7 +32,7 @@ def run_package_tests():
         srcs.append(src)
 
     for directory in directories.items():
-        junit_package_test(directory[0], directory[1])
+        junit_package_test(directory[0], directory[1], deps)
 
 template = """
 package %s;
@@ -54,7 +54,7 @@ def calculate_index(length, i):
         return ""
     return str(i // MAX_TESTS + 1)
 
-def junit_package_test(directory, srcs):
+def junit_package_test(directory, srcs, deps):
     truncate = len(directory) + 1
 
     shared_src = []
@@ -96,11 +96,11 @@ EOF""" % code,
         native.java_test(
             name = package + ".tests" + index,
             test_class = package + "." + test_class,
-            deps = [":tests"],
+            deps = [":tests"] + deps,
             size = "large",
 
             # inputs
-            srcs = code_filepath,
+            srcs = code_filepath + [x[0] for x in tests],
 
             #Additional
             visibility = ["//visibility:public"],

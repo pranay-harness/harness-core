@@ -725,7 +725,8 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(
-        ["src/test/**/*.java"],
+        include = ["src/test/**/*.java"],
+        exclude = ["src/test/**/Test*.java"],
     ),
     data = [
         "//400-rest/src/test/resources:resource",
@@ -753,7 +754,7 @@ java_library(
     ],
 )
 
-run_package_tests()
+run_package_tests(shared_dependencies)
 
 checkstyle()
 
