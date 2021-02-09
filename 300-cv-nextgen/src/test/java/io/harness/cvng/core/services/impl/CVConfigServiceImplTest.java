@@ -105,9 +105,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
           .build();
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
-
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-
     FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
@@ -370,16 +368,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void setCollectionTaskId() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    assertThat(cvConfig.getPerpetualTaskId()).isNull();
-    String taskId = generateUuid();
-    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
+    assertThat(cvConfig.getFirstTaskQueued()).isNull();
+    cvConfigService.markFirstTaskCollected(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getPerpetualTaskId()).isEqualTo(taskId);
+    assertThat(updated.getFirstTaskQueued()).isTrue();
   }
 
   @Test

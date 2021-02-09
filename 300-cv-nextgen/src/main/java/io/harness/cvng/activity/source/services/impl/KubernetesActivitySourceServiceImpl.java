@@ -21,8 +21,6 @@ import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
-import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.encryption.Scope;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
@@ -34,9 +32,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -102,14 +98,13 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   public void enqueueDataCollectionTask(KubernetesActivitySource activitySource) {
     log.info("Enqueuing activitySourceId for the first time: {}", activitySource.getUuid());
 
-    Map<String, String> params = new HashMap<>();
-    params.put(CVConfigKeys.connectorIdentifier, activitySource.getConnectorIdentifier());
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, activitySource.getUuid());
-    DataCollectionConnectorBundle dataCollectionConnectorBundle = DataCollectionConnectorBundle.builder()
-                                                                      .dataCollectionType(DataCollectionType.KUBERNETES)
-                                                                      .params(params)
-                                                                      .activitySourceDTO(activitySource.toDTO())
-                                                                      .build();
+    DataCollectionConnectorBundle dataCollectionConnectorBundle =
+        DataCollectionConnectorBundle.builder()
+            .dataCollectionType(DataCollectionType.KUBERNETES)
+            .connectorIdentifier(activitySource.getConnectorIdentifier())
+            .sourceIdentifier(activitySource.getIdentifier())
+            .dataCollectionWorkerId(activitySource.getUuid())
+            .build();
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(activitySource.getAccountId(),
         activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier(), dataCollectionConnectorBundle);
 
@@ -167,15 +162,11 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   @Override
   public void resetLiveMonitoringPerpetualTaskForKubernetesActivitySource(
       KubernetesActivitySource kubernetesActivitySource) {
-    Map<String, String> params = new HashMap<>();
-
-    params.put(KubernetesActivitySourceKeys.connectorIdentifier, kubernetesActivitySource.getConnectorIdentifier());
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, kubernetesActivitySource.getUuid());
     DataCollectionConnectorBundle dataCollectionConnectorBundle =
         DataCollectionConnectorBundle.builder()
             .dataCollectionType(DataCollectionType.KUBERNETES)
-            .params(params)
-            .activitySourceDTO(kubernetesActivitySource.toDTO())
+            .connectorIdentifier(kubernetesActivitySource.getConnectorIdentifier())
+            .sourceIdentifier(kubernetesActivitySource.getIdentifier())
             .build();
 
     verificationManagerService.resetDataCollectionTask(kubernetesActivitySource.getAccountId(),

@@ -31,9 +31,7 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
-import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
@@ -280,13 +278,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
     String dataCollectionWorkerId =
         getDataCollectionWorkerId(verificationJobInstance, cvConfig.getConnectorIdentifier());
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
     verificationManagerService.resetDataCollectionTask(verificationJobInstance.getAccountId(),
         verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
         verificationJobInstance.getConnectorsToPerpetualTaskIdsMap().get(cvConfig.getConnectorIdentifier()),
-        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+        DataCollectionConnectorBundle.builder()
+            .connectorIdentifier(cvConfig.getConnectorIdentifier())
+            .sourceIdentifier(dataCollectionWorkerId)
+            .dataCollectionWorkerId(dataCollectionWorkerId)
+            .dataCollectionType(DataCollectionType.CV)
+            .build());
   }
 
   @Override
@@ -330,13 +330,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     Map<String, String> connectorToPerpetualTaskIdsMap = new HashMap<>();
     connectorIdentifiers.forEach(connectorIdentifier -> {
       String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorIdentifier);
-      Map<String, String> params = new HashMap<>();
-      params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
-      params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
       String perpetualTaskId =
           verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
               verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
-              DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+              DataCollectionConnectorBundle.builder()
+                  .connectorIdentifier(connectorIdentifier)
+                  .sourceIdentifier(dataCollectionWorkerId)
+                  .dataCollectionWorkerId(dataCollectionWorkerId)
+                  .dataCollectionType(DataCollectionType.CV)
+                  .build());
       connectorToPerpetualTaskIdsMap.put(connectorIdentifier, perpetualTaskId);
     });
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);

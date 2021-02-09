@@ -3,6 +3,7 @@ package io.harness.cvng.core.utils;
 import io.harness.exception.UnexpectedException;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +18,9 @@ import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CVParallelExecutor {
-  @Inject @Named("cvParallelExecutor") protected ExecutorService executorService;
+@Singleton
+public class CVNGParallelExecutor {
+  @Inject @Named("cvngParallelExecutor") protected ExecutorService executorService;
 
   public <T> List<T> executeParallel(List<Callable<T>> callables) {
     CompletionService<T> completionService = new ExecutorCompletionService<>(executorService);
@@ -30,7 +32,7 @@ public class CVParallelExecutor {
     List<T> rv = new ArrayList<>();
     for (int i = 0; i < callables.size(); i++) {
       try {
-        Future<T> poll = completionService.poll(1, TimeUnit.MINUTES);
+        Future<T> poll = completionService.poll(3, TimeUnit.MINUTES);
         if (poll != null && poll.isDone()) {
           T result = poll.get();
           rv.add(result);
