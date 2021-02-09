@@ -14,6 +14,8 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
@@ -45,45 +47,59 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
   @Override
   public GitFetchResponse run(TaskParameters parameters) {
-    GitFetchRequest gitFetchRequest = (GitFetchRequest) parameters;
+    try {
+      GitFetchRequest gitFetchRequest = (GitFetchRequest) parameters;
 
-    log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
+      log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
-    LogCallback executionLogCallback =
-        new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true);
+      LogCallback executionLogCallback =
+          new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true);
 
-    Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
-    List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();
+      Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
+      List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();
 
-    for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
-      FetchFilesResult gitFetchFilesResult;
+      for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
+        FetchFilesResult gitFetchFilesResult;
 
-      try {
-        gitFetchFilesResult =
-            fetchFilesFromRepo(gitFetchFilesConfig, executionLogCallback, gitFetchRequest.getAccountId());
-      } catch (Exception ex) {
-        String exceptionMsg = ex.getMessage();
+        try {
+          gitFetchFilesResult =
+              fetchFilesFromRepo(gitFetchFilesConfig, executionLogCallback, gitFetchRequest.getAccountId());
+        } catch (Exception ex) {
+          String exceptionMsg = ex.getMessage();
 
-        // Values.yaml in service spec is optional.
-        if (ex.getCause() instanceof NoSuchFileException && gitFetchFilesConfig.isSucceedIfFileNotFound()) {
-          log.info("file not found. " + exceptionMsg, ex);
-          executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
-          continue;
+          // Values.yaml in service spec is optional.
+          if (ex.getCause() instanceof NoSuchFileException && gitFetchFilesConfig.isSucceedIfFileNotFound()) {
+            log.info("file not found. " + exceptionMsg, ex);
+            executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+            continue;
+          }
+
+          String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
+          log.error(msg, ex);
+          executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
+          return GitFetchResponse.builder().errorMessage(exceptionMsg).taskStatus(TaskStatus.FAILURE).build();
         }
 
-        String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
-        log.error(msg, ex);
-        executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
-        return GitFetchResponse.builder().errorMessage(exceptionMsg).taskStatus(TaskStatus.FAILURE).build();
+        filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
       }
 
-      filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
+      return GitFetchResponse.builder()
+          .taskStatus(TaskStatus.SUCCESS)
+          .filesFromMultipleRepo(filesFromMultipleRepo)
+          .build();
+    } catch (WingsException exception) {
+      log.error("Exception in Git Fetch Files Task", exception);
+      return GitFetchResponse.builder()
+          .errorMessage(ExceptionUtils.getMessage(exception))
+          .taskStatus(TaskStatus.FAILURE)
+          .build();
+    } catch (Exception exception) {
+      log.error("Exception in Git Fetch Files Task", exception);
+      return GitFetchResponse.builder()
+          .errorMessage("Some Error occurred in Git Fetch Files Task")
+          .taskStatus(TaskStatus.FAILURE)
+          .build();
     }
-
-    return GitFetchResponse.builder()
-        .taskStatus(TaskStatus.SUCCESS)
-        .filesFromMultipleRepo(filesFromMultipleRepo)
-        .build();
   }
 
   private FetchFilesResult fetchFilesFromRepo(

@@ -45,6 +45,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TaskFailureException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
@@ -422,7 +423,7 @@ public class K8sStepHelper {
     GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
-      throw new InvalidRequestException(gitFetchResponse.getErrorMessage());
+      throw new TaskFailureException(gitFetchResponse.getErrorMessage());
     }
     Map<String, FetchFilesResult> gitFetchFilesResultMap = gitFetchResponse.getFilesFromMultipleRepo();
 
