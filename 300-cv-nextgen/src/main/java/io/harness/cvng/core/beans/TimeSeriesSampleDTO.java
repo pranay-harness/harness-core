@@ -14,6 +14,12 @@ public class TimeSeriesSampleDTO implements Comparable<TimeSeriesSampleDTO> {
 
   @Override
   public int compareTo(@NotNull TimeSeriesSampleDTO o) {
+    if (!this.txnName.equals(o.getTxnName())) {
+      return this.txnName.compareTo(o.getTxnName());
+    }
+    if (!this.metricName.equals(o.getMetricName())) {
+      return this.metricName.compareTo(o.getMetricName());
+    }
     return this.timestamp.compareTo(o.timestamp);
   }
 }

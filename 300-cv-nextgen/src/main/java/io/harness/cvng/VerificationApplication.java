@@ -241,7 +241,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new NotificationClientPersistenceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
+
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    // initMetrics();
+
     autoCreateCollectionsAndIndexes(injector);
     registerAuthFilters(environment, injector, configuration);
     registerManagedBeans(environment, injector);
@@ -265,6 +268,14 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     log.info("Starting app done");
   }
+
+  //  private void initMetrics() {
+  //    VerificationConstants.LEARNING_ENGINE_TASKS_METRIC_LIST.forEach(
+  //            metricName -> registerGaugeMetric(metricName, null));
+  //    registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);
+  //    registerGaugeMetric(NUM_LOG_RECORDS, null);
+  //    registerGaugeMetric(IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS);
+  //  }
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {
     hPersistence = injector.getInstance(HPersistence.class);
