@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -229,6 +230,25 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
     assertThat(supportedBuildSourceTypes.containsKey(AMI.name())).isTrue();
     assertThat(supportedBuildSourceTypes.containsValue(AMI.name())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForAzureWebApp() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.AZURE_WEBAPP).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(DOCKER.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(DOCKER.name())).isTrue();
+
+    assertThat(supportedBuildSourceTypes.containsKey(ARTIFACTORY.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(ARTIFACTORY.name())).isTrue();
+
+    assertThat(supportedBuildSourceTypes.containsKey(AZURE_ARTIFACTS.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(AZURE_ARTIFACTS.name())).isTrue();
   }
 
   @Test

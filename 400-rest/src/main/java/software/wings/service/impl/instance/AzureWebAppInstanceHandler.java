@@ -11,9 +11,11 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -54,6 +56,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,6 +73,8 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 @Singleton
 public class AzureWebAppInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
+  public static final String WEB_SLOT_NAME_DEPLOYMENT_KEY_PATTERN = "%s_%s";
+
   @Inject private AzureAppServiceManager azureAppServiceManager;
   @Inject private AzureWebAppInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
 
@@ -145,10 +150,16 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     String appId = deploymentSummaries.iterator().next().getAppId();
     String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     AzureWebAppInfrastructureMapping infrastructureMapping = getInfraMapping(appId, infraMappingId);
+    List<AzureWebAppDeploymentKey> azureWebAppDeploymentKeys =
+        deploymentSummaries.stream().map(DeploymentSummary::getAzureWebAppDeploymentKey).collect(Collectors.toList());
+    log.info("Handle new deployment for appId:{}, infraMappingId: {}, azureWebAppDeploymentKeys: {}", appId,
+        infraMappingId, azureWebAppDeploymentKeys);
 
     Multimap<String, Instance> appNameAndSlotNameToInstanceInDbMap = getCurrentInstancesInDb(appId, infraMappingId);
 
     Set<String> allSlotWebAppKeys = getAllSlotWebAppKeys(deploymentSummaries, appNameAndSlotNameToInstanceInDbMap);
+    log.info("Getting keys for new deployment, appNameAndSlotNameToInstanceInDbMapKeys: {},  allSlotWebAppKeys: {}",
+        getSetKeys(appNameAndSlotNameToInstanceInDbMap.keySet()), getSetKeys(allSlotWebAppKeys));
 
     if (isNotEmpty(allSlotWebAppKeys)) {
       allSlotWebAppKeys.forEach(appNameAndSlotName -> {
@@ -201,30 +212,96 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
       return;
     }
 
+    boolean newArtifactDeployedOnAppSlot = isNewArtifactDeployedOnAppSlot(
+        currentInstancesInDb, deploymentSummary, latestSlotWebAppInstances, rollback, instanceSyncFlow);
     Map<String, Instance> latestSlotWebAppInstancesInDb = getInstanceIdToInstanceInDbMap(currentInstancesInDb);
-    deleteOldInstances(latestSlotWebAppInstancesInDb, latestSlotWebAppInstances);
-    Set<String> instanceIdsToBeAdded =
-        difference(latestSlotWebAppInstances.keySet(), latestSlotWebAppInstancesInDb.keySet());
 
-    if (isEmpty(instanceIdsToBeAdded)) {
-      return;
+    String deploymentKey = getDeploymentKey(deploymentSummary);
+    String artifactName = getDeploymentArtifactName(deploymentSummary);
+    String webAppAndSlotName = getWebAppAndSlotName(latestSlotWebAppInstances);
+    log.info(
+        "Syncing instances for deployment, deploymentKey: {}, webAppAndSlotName: {}, artifactName: {}, newArtifactDeployedOnAppSlot: {}, "
+            + "latestSlotWebAppInstancesInDbKeys: {}, latestSlotWebAppInstancesKeys:{} ",
+        deploymentKey, webAppAndSlotName, artifactName, newArtifactDeployedOnAppSlot,
+        getSetKeys(latestSlotWebAppInstancesInDb.keySet()), getSetKeys(latestSlotWebAppInstances.keySet()));
+
+    if (newArtifactDeployedOnAppSlot) {
+      Optional<DeploymentSummary> deploymentSummaryOp =
+          getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb, rollback);
+      if (!deploymentSummaryOp.isPresent()) {
+        log.warn("Couldn't find an instance from a previous deployment for infra mapping: [{}]",
+            infrastructureMapping.getUuid());
+        return;
+      }
+
+      log.info(
+          "New artifact is deployed, hence all old instances are deleted and new ones are added, deploymentKey: {}, webAppAndSlotName: {}",
+          deploymentKey, webAppAndSlotName);
+      deleteOldInstances(latestSlotWebAppInstancesInDb);
+      addNewInstances(infrastructureMapping, deploymentSummaryOp.get(), latestSlotWebAppInstances);
+    } else {
+      log.info("Existing deployment hence only syncing instances, deploymentKey: {}, webAppAndSlotName: {}",
+          deploymentKey, webAppAndSlotName);
+      deleteOldInstances(latestSlotWebAppInstancesInDb, latestSlotWebAppInstances);
+      Set<String> instanceIdsToBeAdded =
+          difference(latestSlotWebAppInstances.keySet(), latestSlotWebAppInstancesInDb.keySet());
+
+      if (isEmpty(instanceIdsToBeAdded)) {
+        return;
+      }
+
+      Optional<DeploymentSummary> deploymentSummaryOp =
+          getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb, rollback);
+      if (!deploymentSummaryOp.isPresent()) {
+        log.warn("Couldn't find an instance from a previous deployment for infra mapping: [{}]",
+            infrastructureMapping.getUuid());
+        return;
+      }
+
+      instanceIdsToBeAdded.forEach(instanceId -> {
+        AzureAppDeploymentData webAppInstance = latestSlotWebAppInstances.get(instanceId);
+        Instance instance = getInstance(infrastructureMapping, deploymentSummaryOp.get(), webAppInstance);
+        instanceService.save(instance);
+        log.info("Web App instance to be added {}", webAppInstance.getInstanceId());
+      });
+    }
+  }
+
+  private String getWebAppAndSlotName(Map<String, AzureAppDeploymentData> latestSlotWebAppInstances) {
+    Optional<AzureAppDeploymentData> azureAppDeploymentData = latestSlotWebAppInstances.values().stream().findFirst();
+    return azureAppDeploymentData.isPresent() ? String.format(WEB_SLOT_NAME_DEPLOYMENT_KEY_PATTERN,
+               azureAppDeploymentData.get().getAppName(), azureAppDeploymentData.get().getDeploySlot())
+                                              : EMPTY;
+  }
+
+  private boolean isNewArtifactDeployedOnAppSlot(Collection<Instance> currentInstancesInDb,
+      DeploymentSummary deploymentSummary, Map<String, AzureAppDeploymentData> latestSlotWebAppInstances,
+      boolean rollback, InstanceSyncFlow instanceSyncFlow) {
+    if (deploymentSummary == null || isBlank(deploymentSummary.getArtifactName()) || rollback
+        || latestSlotWebAppInstances.isEmpty() || InstanceSyncFlow.PERPETUAL_TASK == instanceSyncFlow) {
+      return false;
     }
 
-    Optional<DeploymentSummary> deploymentSummaryOp =
-        getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb, rollback);
-    if (!deploymentSummaryOp.isPresent()) {
-      log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
-          infrastructureMapping.getUuid());
-      return;
+    Optional<Instance> sampleInstancesInDB = currentInstancesInDb.stream().findFirst();
+    if (!sampleInstancesInDB.isPresent()) {
+      return true;
     }
 
-    instanceIdsToBeAdded.forEach(instanceId -> {
-      AzureAppDeploymentData webAppInstance = latestSlotWebAppInstances.get(instanceId);
-      Instance instance = getInstance(infrastructureMapping, deploymentSummaryOp.get(), webAppInstance);
-      instanceService.save(instance);
-    });
+    String lastArtifactName = sampleInstancesInDB.get().getLastArtifactName();
+    return !deploymentSummary.getArtifactName().equals(lastArtifactName);
+  }
 
-    log.info("Instances to be added {}", instanceIdsToBeAdded.size());
+  @NotNull
+  private String getSetKeys(Set<String> set) {
+    return set != null ? Arrays.toString(set.toArray(new String[0])) : EMPTY;
+  }
+
+  private String getDeploymentArtifactName(DeploymentSummary deploymentSummary) {
+    return deploymentSummary != null ? deploymentSummary.getArtifactName() : null;
+  }
+
+  private String getDeploymentKey(DeploymentSummary deploymentSummary) {
+    return deploymentSummary != null ? deploymentSummary.getAzureWebAppDeploymentKey().getKey() : null;
   }
 
   private Map<String, Instance> getInstanceIdToInstanceInDbMap(Collection<Instance> currentInstancesInDb) {
@@ -250,6 +327,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     Sets.SetView<String> webAppsToBeDeleted =
         difference(instancesInDbMap.keySet(), latestDeployedInstancesMap.keySet());
     Set<String> instanceIdsToBeDeleted = new HashSet<>();
+
     webAppsToBeDeleted.forEach(instanceKey -> {
       Instance instance = instancesInDbMap.get(instanceKey);
       if (instance != null) {
@@ -258,8 +336,30 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     });
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
-      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
+    log.info("Instances to be deleted {}", getSetKeys(instanceIdsToBeDeleted));
+  }
+
+  private void deleteOldInstances(Map<String, Instance> instancesInDbMap) {
+    Set<String> instanceIdsToBeDeleted = new HashSet<>();
+    instancesInDbMap.keySet().forEach(instanceKey -> {
+      Instance instance = instancesInDbMap.get(instanceKey);
+      if (instance != null) {
+        instanceIdsToBeDeleted.add(instance.getUuid());
+      }
+    });
+    if (isNotEmpty(instanceIdsToBeDeleted)) {
+      instanceService.delete(instanceIdsToBeDeleted);
+    }
+  }
+
+  private void addNewInstances(AzureWebAppInfrastructureMapping infrastructureMapping,
+      DeploymentSummary deploymentSummary, Map<String, AzureAppDeploymentData> latestSlotWebAppInstances) {
+    latestSlotWebAppInstances.values().forEach(webAppInstance -> {
+      Instance instance = getInstance(infrastructureMapping, deploymentSummary, webAppInstance);
+      instanceService.save(instance);
+    });
+    log.info("Instances to be added {}", getSetKeys(latestSlotWebAppInstances.keySet()));
   }
 
   public Optional<DeploymentSummary> getDeploymentSummary(DeploymentSummary deploymentSummary,
@@ -352,7 +452,13 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
       InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
-    PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionData.getPhaseStepExecutionSummary();
+    if (phaseStepExecutionData != null && phaseStepExecutionData.getStatus() != null
+        && phaseStepExecutionData.getStatus() != ExecutionStatus.SUCCESS) {
+      return Optional.empty();
+    }
+
+    PhaseStepExecutionSummary phaseStepExecutionSummary =
+        phaseStepExecutionData != null ? phaseStepExecutionData.getPhaseStepExecutionSummary() : null;
     if (phaseStepExecutionSummary != null) {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =
           phaseStepExecutionSummary.getStepExecutionSummaryList()
@@ -419,7 +525,8 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     if (isBlank(azureWebAppInstanceInfo.getAppName()) || isBlank(azureWebAppInstanceInfo.getSlotName())) {
       return Optional.empty();
     }
-    return Optional.of(format("%s_%s", azureWebAppInstanceInfo.getAppName(), azureWebAppInstanceInfo.getSlotName()));
+    return Optional.of(format(WEB_SLOT_NAME_DEPLOYMENT_KEY_PATTERN, azureWebAppInstanceInfo.getAppName(),
+        azureWebAppInstanceInfo.getSlotName()));
   }
 
   @NotNull
@@ -427,6 +534,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     if (isBlank(azureAppDeploymentData.getAppName()) || isBlank(azureAppDeploymentData.getDeploySlot())) {
       return Optional.empty();
     }
-    return Optional.of(format("%s_%s", azureAppDeploymentData.getAppName(), azureAppDeploymentData.getDeploySlot()));
+    return Optional.of(format(WEB_SLOT_NAME_DEPLOYMENT_KEY_PATTERN, azureAppDeploymentData.getAppName(),
+        azureAppDeploymentData.getDeploySlot()));
   }
 }

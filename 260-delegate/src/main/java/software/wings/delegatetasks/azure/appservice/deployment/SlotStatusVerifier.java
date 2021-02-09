@@ -36,7 +36,7 @@ public abstract class SlotStatusVerifier {
     DeploymentSlot slot = getDeploymentSlot();
     String currentSlotState = slot.state();
     logCallback.saveExecutionLog(format("Current state for deployment slot is - [%s]", currentSlotState));
-    return currentSlotState.equalsIgnoreCase(getSteadyState());
+    return getSteadyState().equalsIgnoreCase(currentSlotState);
   }
 
   public boolean operationFailed() {
@@ -56,15 +56,15 @@ public abstract class SlotStatusVerifier {
         () -> new InvalidRequestException(format("Unable to find deployment slot with name: %s", slotName)));
   }
 
-  public static SlotStatusVerifier getStatusVerifier(SlotStatusVerifierType verifierType, LogCallback logCallback,
-      String slotName, AzureWebClient azureWebClient, AzureMonitorClient azureMonitorClient,
-      AzureWebClientContext azureWebClientContext, AzureServiceCallBack restCallBack) {
+  public static SlotStatusVerifier getStatusVerifier(String verifierType, LogCallback logCallback, String slotName,
+      AzureWebClient azureWebClient, AzureMonitorClient azureMonitorClient, AzureWebClientContext azureWebClientContext,
+      AzureServiceCallBack restCallBack) {
     switch (verifierType) {
-      case STOP_VERIFIER:
+      case "STOP_VERIFIER":
         return new StopSlotStatusVerifier(logCallback, slotName, azureWebClient, azureWebClientContext, restCallBack);
-      case START_VERIFIER:
+      case "START_VERIFIER":
         return new StartSlotStatusVerifier(logCallback, slotName, azureWebClient, azureWebClientContext, restCallBack);
-      case SWAP_VERIFIER:
+      case "SWAP_VERIFIER":
         return new SwapSlotStatusVerifier(
             logCallback, slotName, azureWebClient, azureMonitorClient, azureWebClientContext, restCallBack);
       default:
