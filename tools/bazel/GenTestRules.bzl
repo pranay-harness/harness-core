@@ -22,7 +22,7 @@ def run_tests(**kwargs):
             **kwargs
         )
 
-def run_package_tests(deps):
+def run_package_tests(deps = [], data = [], resources = []):
     all_srcs = native.glob(["src/test/**/*.java"])
 
     directories = {}
@@ -30,6 +30,17 @@ def run_package_tests(deps):
         directory = src[0:src.rfind("/")]
         srcs = directories.setdefault(directory, [])
         srcs.append(src)
+
+    native.java_library(
+        name = "shared_package_tests",
+        srcs = native.glob(
+            include = ["src/test/**/*.java"],
+            exclude = ["src/test/**/Test.java"],
+        ),
+        data = data,
+        resources = resources,
+        deps = deps,
+    )
 
     for directory in directories.items():
         junit_package_test(directory[0], directory[1], deps)
@@ -96,7 +107,7 @@ EOF""" % code,
         native.java_test(
             name = package + ".tests" + index,
             test_class = package + "." + test_class,
-            deps = [":tests"] + deps,
+            deps = [":shared_package_tests"] + deps,
             size = "large",
 
             # inputs
