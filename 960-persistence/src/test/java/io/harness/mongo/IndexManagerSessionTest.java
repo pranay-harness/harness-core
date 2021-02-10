@@ -186,4 +186,19 @@ public class IndexManagerSessionTest extends PersistenceTestBase {
         .isInstanceOf(IndexManagerInspectException.class)
         .hasMessageContaining("Only one field index can be used");
   }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testUniqueFlagIndexEntity() {
+    Morphia morphia = new Morphia();
+    morphia.map(TestUniqueFlagIndexEntity.class);
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    MappedClass mappedClass = mappedClasses.iterator().next();
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
+    assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
+        .isInstanceOf(Error.class)
+        .hasMessageContaining("have the same keys and values");
+  }
 }
