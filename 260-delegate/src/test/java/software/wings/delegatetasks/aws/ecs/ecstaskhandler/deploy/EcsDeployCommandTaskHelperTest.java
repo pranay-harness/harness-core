@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,10 +41,12 @@ import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.ecs.model.Service;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -225,9 +229,9 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
                                              .withInstanceUnitType(COUNT)
                                              .build())
                            .build();
-    doReturn(singletonList(new Service().withServiceName("foo__1").withDesiredCount(1)))
+    doReturn(Optional.of(new Service().withServiceName("foo__1").withDesiredCount(1)))
         .when(mockAwsClusterService)
-        .getServices(anyString(), any(), anyList(), anyString());
+        .getService(anyString(), any(), anyList(), anyString(), anyString());
     ContainerServiceData instanceData = helper.getNewInstanceData(data, mock(ExecutionLogCallback.class));
     assertThat(instanceData).isNotNull();
     assertThat(instanceData.getDesiredCount()).isEqualTo(2);
@@ -281,5 +285,42 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     assertThat(map.size()).isEqualTo(2);
     assertThat(map.get("foo__1")).isEqualTo(1);
     assertThat(map.get("foo__2")).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetServiceDesiredCount() {
+    EcsResizeParams resizeParams = anEcsResizeParams()
+                                       .withRegion("us-east-1")
+                                       .withPreviousEcsAutoScalarsAlreadyRemoved(false)
+                                       .withPreviousAwsAutoScalarConfigs(singletonList(
+                                           AwsAutoScalarConfig.builder().scalableTargetJson("ScalTJson").build()))
+                                       .withContainerServiceName(SERVICE_NAME)
+                                       .build();
+    ContextData data = ContextData.builder()
+                           .awsConfig(AwsConfig.builder().build())
+                           .resizeParams(resizeParams)
+                           .encryptedDataDetails(new ArrayList<>())
+                           .build();
+
+    doReturn(Optional.of(new Service().withDesiredCount(12)))
+        .when(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    Optional<Integer> serviceDesiredCount = helper.getServiceDesiredCount(data);
+    assertThat(serviceDesiredCount).isEqualTo(Optional.of(12));
+    verify(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    doReturn(Optional.empty())
+        .when(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    serviceDesiredCount = helper.getServiceDesiredCount(data);
+    assertThat(serviceDesiredCount).isEqualTo(Optional.empty());
   }
 }

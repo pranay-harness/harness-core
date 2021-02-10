@@ -466,12 +466,9 @@ public class EcsDeployCommandTaskHelper {
 
   public Optional<Integer> getServiceDesiredCount(ContextData contextData) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
-    Optional<Service> service = awsClusterService
-                                    .getServices(resizeParams.getRegion(), contextData.getSettingAttribute(),
-                                        contextData.getEncryptedDataDetails(), resizeParams.getClusterName())
-                                    .stream()
-                                    .filter(svc -> svc.getServiceName().equals(resizeParams.getContainerServiceName()))
-                                    .findFirst();
+    Optional<Service> service = awsClusterService.getService(resizeParams.getRegion(),
+        contextData.getSettingAttribute(), contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+        resizeParams.getContainerServiceName());
     return service.map(Service::getDesiredCount);
   }
 
