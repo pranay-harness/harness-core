@@ -89,7 +89,7 @@ public final class HelmConstants {
         "${HELM_PATH} template ${RELEASE_NAME} ${CHART_LOCATION} ${COMMAND_FLAGS} -s ${CHART_FILE} --namespace ${NAMESPACE} ${OVERRIDE_VALUES}";
     public static final String HELM_VERSION_COMMAND_TEMPLATE = "${HELM_PATH} version --short ${COMMAND_FLAGS}";
     public static final String HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE =
-        "${HELM_PATH} search repo ${REPO_NAME}/${CHART_NAME} -l --max-col-width 300";
+        "${HELM_PATH} search repo ${REPO_NAME}/${CHART_NAME} -l --devel --max-col-width 300";
 
     private V3Commands() {
       throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
