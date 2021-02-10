@@ -2,6 +2,9 @@ package software.wings.scheduler;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.beans.FeatureName;
+import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -46,6 +49,11 @@ public class InstanceStatsCollectorJob implements Job {
 
   // 10 minutes
   private static final int SYNC_INTERVAL = 10;
+  private static final int DATA_MIGRATION_INTERVAL_IN_HOURS = 24;
+
+  // instance data migration cron
+  private static final long DATA_MIGRATION_CRON_LOCK_EXPIRY_IN_SECONDS = 660; // 60 * 11
+  private static final String DATA_MIGRATION_CRON_LOCK_PREFIX = "INSTANCE_DATA_MIGRATION_CRON:";
 
   @Inject private BackgroundExecutorService executorService;
   @Inject private BackgroundSchedulerLocker persistentLocker;
@@ -53,6 +61,8 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
   @Inject private InstanceStatService instanceStatService;
   @Inject private AccountService accountService;
+  @Inject private IInstanceReconService instanceReconService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId) {
     // Add some randomness in the trigger start time to avoid overloading quartz by firing jobs at the same time.
@@ -108,6 +118,24 @@ public class InstanceStatsCollectorJob implements Job {
           double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
           instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
         });
+      }
+    }
+
+    try (AcquiredLock lock =
+             persistentLocker.getLocker().tryToAcquireLock(Account.class, DATA_MIGRATION_CRON_LOCK_PREFIX + accountId,
+                 Duration.ofSeconds(DATA_MIGRATION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
+      if (lock == null) {
+        log.error("Unable to fetch lock for running instance data migration for account : {}", accountId);
+        return;
+      }
+      // Add flag for lock similar to deployments
+      if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_ENABLE_CRON_INSTANCE_DATA_MIGRATION, accountId)) {
+        log.info("Triggering instance data migration cron for account : {}", accountId);
+        try {
+          instanceReconService.doDataMigration(accountId, DATA_MIGRATION_INTERVAL_IN_HOURS);
+        } catch (Exception exception) {
+          log.error("Failed to do instance data migration for account id : {}", accountId, exception);
+        }
       }
     }
   }

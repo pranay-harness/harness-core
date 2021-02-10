@@ -427,7 +427,12 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
         workflowExecution.getAccountId(), workflowExecution);
     log.info("UPDATING RECORD for accountID:[{}], [{}]", workflowExecution.getAccountId(),
         deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
-    deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+    try {
+      deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+    } catch (Exception ex) {
+      log.error(
+          "Failed to process DeploymentTimeSeriesEvent : [{}]", deploymentTimeSeriesEvent.getTimeSeriesEventInfo(), ex);
+    }
   }
 
   private void addTimeQuery(Query query, long durationStartTs, long durationEndTs) {
