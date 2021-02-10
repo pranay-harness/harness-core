@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	vcsFilesDiffPath = "/step-exec/.harness/vcs/diff.txt"
-	srcFilePath      = "/step-exec/.harness/test-intelligence/callgraph"
-	archivePath      = "/step-exec/.harness/test-intelligence/archive/callgraph.tar"
+	diffPath = "/step-exec/.harness/vcs/diff.txt"
+	srcDir   = "/step-exec/.harness/test-intelligence/callgraph"             //directory where callgraph will be created
+	archPath = "/step-exec/.harness/test-intelligence/archive/callgraph.tar" //directory where tar file of callgraph will be created
 )
 
 // RunTestsStep represents interface to execute a run step
@@ -63,14 +63,14 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 		stepCtx:   r.GetContext(),
 		tempPath:  tempPath,
 		tiSrvEP:   os.Getenv("TI_SERVER_URL"),
-		acctID:    os.Getenv("ACCOUNT_ID"),
+		acctID:    os.Getenv("HARNESS_ACCOUNT_ID"),
 		token:     os.Getenv("AUTH_TOKEN"),
 		so:        so,
 		log:       log,
 	}
 }
 
-// execute tests with provided goals with retries and timeout handling
+// Run execute tests with provided goals with retries and timeout handling
 func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
 		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
@@ -95,14 +95,17 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	e.setRunTestsCommandForExecution(testsToExecute)
+	executionCommand, err := e.getRunTestsCommand(testsToExecute)
+	if err != nil {
+		return nil, int32(1), err
+	}
 
-	return e.execute(ctx)
+	return e.execute(ctx, executionCommand)
 }
 
-func (e *runTestsStep) setRunTestsCommandForExecution(testsToExecute string) error {
+func (e *runTestsStep) getRunTestsCommand(testsToExecute string) (string, error) {
 	e.log.Infow(
-		"Running tests with intelligence:",
+		"running tests with intelligence",
 		"testsToExecute", testsToExecute,
 	)
 
@@ -111,19 +114,18 @@ func (e *runTestsStep) setRunTestsCommandForExecution(testsToExecute string) err
 		// Eg. of goals: "-T 2C -DskipTests"
 		// command will finally be like:
 		// mvn -T 2C -DskipTests -Dtest=TestSquare,TestCirle test
-		e.executionCommand = fmt.Sprintf("mvn test %s -Dtest=%s -am", e.goals, testsToExecute)
+		return fmt.Sprintf("mvn test %s -Dtest=%s -am", e.goals, testsToExecute), nil
 	default:
 		e.log.Errorw(fmt.Sprintf("Only maven build tool is supported. Received build tool is: %s", e.buildTool), "step_id", e.id)
-		return fmt.Errorf("Build tool %s is not suported", e.buildTool)
+		return "", fmt.Errorf("Build tool %s is not suported", e.buildTool)
 	}
-	return nil
 }
 
 func (e *runTestsStep) readVCSDiffFromFile() (string, error) {
-	file, err := os.Open(vcsFilesDiffPath)
+	file, err := os.Open(diffPath)
 
 	if err != nil {
-		e.log.Errorw("VCS diff file not found", "step_id", e.id, zap.Error(err))
+		e.log.Errorw(fmt.Sprintf("could not open %s file", diffPath), "step_id", e.id, zap.Error(err))
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -166,7 +168,7 @@ func (e *runTestsStep) resolveJEXL(ctx context.Context) error {
 	return nil
 }
 
-func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, error) {
+func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*output.StepOutput, int32, error) {
 	st := time.Now()
 
 	addonClient, err := newAddonClient(uint(e.cntrPort), e.log)
@@ -179,9 +181,9 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 
 	// temp solution as mvn is not present by default in image
 	// discuss with Shiv as well if we need this option in the runTests command.
-	e.executionCommand = "source /etc/profile.d/maven.sh; " + e.executionCommand
+	executionCommand = "source /etc/profile.d/maven.sh; " + executionCommand
 	e.log.Infow(
-		fmt.Sprintf("Final command created by test intelligence is: %s", e.executionCommand), "step_id", e.id)
+		fmt.Sprintf("Final command created by test intelligence is: %s", executionCommand), "step_id", e.id)
 
 	c := addonClient.Client()
 	arg := e.getExecuteStepArg()
@@ -197,7 +199,7 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 	err = e.uploadCallGraph()
 
 	if err != nil {
-		return nil, 0, errors.Wrap(err, fmt.Sprintf("Failed while uploading callgraph to the xxxxxxxx %s", vcsFilesDiffPath))
+		return nil, 0, errors.Wrap(err, fmt.Sprintf("Failed while uploading callgraph to the xxxxxxxx %s", diffPath))
 	}
 
 	e.log.Infow("Successfully executed ti step", "elapsed_time_ms", utils.TimeSince(st))
@@ -232,7 +234,7 @@ func (e *runTestsStep) uploadCallGraph() error {
 		return errors.Wrap(err, "Step failed while archiving callgraph")
 	}
 	client := http.NewHTTPClient(e.tiSrvEP, e.acctID, e.token, e.log)
-	err = client.UploadCallGraph(archivePath)
+	err = client.UploadCallGraph(archPath)
 	if err != nil {
 		return errors.Wrap(err, "Step failed while uploading callgraph")
 	}
@@ -243,12 +245,12 @@ func (e *runTestsStep) uploadCallGraph() error {
 func (e *runTestsStep) archiveFiles() error {
 	e.log.Infow(
 		"Archiving callgraphs for uploading",
-		"srcFilePath", srcFilePath,
-		"archivePath", archivePath,
+		"srcDir", srcDir,
+		"archPath", archPath,
 	)
-	err := e.archiver.Archive([]string{srcFilePath}, archivePath)
+	err := e.archiver.Archive([]string{srcDir}, archPath)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Failed to archive files: %s", srcFilePath))
+		return errors.Wrap(err, fmt.Sprintf("Failed to archive files: %s", srcDir))
 	}
 	return nil
 }
