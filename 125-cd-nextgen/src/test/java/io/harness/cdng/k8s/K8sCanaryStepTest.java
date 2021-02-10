@@ -23,7 +23,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTest {
   @Category(UnitTests.class)
   public void testExecuteTask() {
     CountInstanceSelection instanceSelection = new CountInstanceSelection();
-    instanceSelection.setCount(ParameterField.createValueField("10"));
+    instanceSelection.setCount(ParameterField.createValueField(10));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
     stepParameters.setTimeout(ParameterField.createValueField("30m"));
@@ -46,7 +46,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTest {
   @Category(UnitTests.class)
   public void testExecuteTaskNullParameterFields() {
     PercentageInstanceSelection instanceSelection = new PercentageInstanceSelection();
-    instanceSelection.setPercentage(ParameterField.createValueField("90"));
+    instanceSelection.setPercentage(ParameterField.createValueField(90));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
     stepParameters.setTimeout(ParameterField.ofNull());

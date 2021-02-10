@@ -8,5 +8,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 public interface InstanceSelectionBase {
   K8sInstanceUnitType getType();
-  String getInstances();
+  Integer getInstances();
 }

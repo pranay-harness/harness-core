@@ -7,11 +7,12 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
-import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -20,28 +21,26 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 
-public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getName()).build();
+public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getName()).build();
+  public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
-  public static final String K8S_SCALE_COMMAND_NAME = "Scale";
   @Inject private OutcomeService outcomeService;
   @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, K8sScaleStepParameter stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, K8sDeleteStepParameters stepParameters, StepInputPackage inputPackage) {
     ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
@@ -52,24 +51,23 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
-    ParameterField<Integer> instances = K8sInstanceUnitType.Count == stepParameters.getInstanceSelection().getType()
-        ? ((CountInstanceSelection) stepParameters.getInstanceSelection().getSpec()).getCount()
-        : ((PercentageInstanceSelection) stepParameters.getInstanceSelection().getSpec()).getPercentage();
+    boolean isResourceName = DeleteResourcesType.ResourceName == stepParameters.getDeleteResources().getType();
+    boolean isManifestFiles = DeleteResourcesType.ManifestPath == stepParameters.getDeleteResources().getType();
 
-    boolean skipSteadyCheck = stepParameters.getSkipSteadyStateCheck() != null
-        && stepParameters.getSkipSteadyStateCheck().getValue() != null
-        && stepParameters.getSkipSteadyStateCheck().getValue();
+    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    final String accountId = AmbianceHelper.getAccountId(ambiance);
 
-    K8sScaleRequest request =
-        K8sScaleRequest.builder()
-            .commandName(K8S_SCALE_COMMAND_NAME)
-            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-            .instances(instances.getValue())
-            .instanceUnitType(stepParameters.getInstanceSelection().getType().getInstanceUnitType())
-            .workload(stepParameters.getWorkload().getValue())
-            .maxInstances(Optional.empty()) // do we need those for scale?
-            .skipSteadyStateCheck(skipSteadyCheck)
-            .taskType(K8sTaskType.SCALE)
+    K8sDeleteRequest request =
+        K8sDeleteRequest.builder()
+            .accountId(accountId)
+            .releaseName(releaseName)
+            .commandName(K8S_DELETE_COMMAND_NAME)
+            .resources(
+                isResourceName ? stepParameters.getDeleteResources().getSpec().getResources() : StringUtils.EMPTY)
+            .deleteNamespacesForRelease(stepParameters.deleteResources.getSpec().getDeleteNamespace())
+            .filePaths(
+                isManifestFiles ? stepParameters.getDeleteResources().getSpec().getResources() : StringUtils.EMPTY)
+            .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
@@ -81,31 +79,22 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sScaleStepParameter stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, K8sDeleteStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-    // do we need to include the newPods with instance details + summaries
+
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } else {
-      StepResponseBuilder stepResponseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(
-                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
-      if (stepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
-      }
-      return stepResponseBuilder.build();
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
+          .build();
     }
   }
 
   @Override
-  public Class<K8sScaleStepParameter> getStepParametersClass() {
-    return K8sScaleStepParameter.class;
+  public Class<K8sDeleteStepParameters> getStepParametersClass() {
+    return K8sDeleteStepParameters.class;
   }
 }
