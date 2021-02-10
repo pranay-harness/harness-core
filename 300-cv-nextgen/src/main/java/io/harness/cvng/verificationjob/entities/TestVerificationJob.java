@@ -56,7 +56,11 @@ public class TestVerificationJob extends VerificationJob {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
     testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
-    testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    if (baselineVerificationJobInstanceId == null) {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId("LAST");
+    } else {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    }
     return testVerificationJobDTO;
   }
 
@@ -90,7 +94,9 @@ public class TestVerificationJob extends VerificationJob {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) verificationJobDTO;
     this.setSensitivity(testVerificationJobDTO.getSensitivity(),
         VerificationJobDTO.isRuntimeParam(testVerificationJobDTO.getSensitivity()));
-    this.setBaselineVerificationJobInstanceId(testVerificationJobDTO.getBaselineVerificationJobInstanceId());
+    if (!testVerificationJobDTO.getBaselineVerificationJobInstanceId().equals("LAST")) {
+      this.setBaselineVerificationJobInstanceId(testVerificationJobDTO.getBaselineVerificationJobInstanceId());
+    }
   }
 
   @Override
