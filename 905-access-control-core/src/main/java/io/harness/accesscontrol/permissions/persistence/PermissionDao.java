@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface PermissionDao {
-  String create(@Valid Permission permission);
+  Permission create(@Valid Permission permission);
 
   List<Permission> list(@NotNull Scope scope, String resourceType);
 

@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface PermissionService {
-  String create(@Valid Permission permission);
+  Permission create(@Valid Permission permission);
 
   Optional<Permission> get(@NotEmpty String identifier);
 

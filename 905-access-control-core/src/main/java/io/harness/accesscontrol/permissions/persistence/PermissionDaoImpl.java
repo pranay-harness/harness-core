@@ -24,10 +24,10 @@ public class PermissionDaoImpl implements PermissionDao {
   }
 
   @Override
-  public String create(Permission permissionDTO) {
+  public Permission create(Permission permissionDTO) {
     PermissionDBO permissionDBO = PermissionDBOMapper.toDBO(permissionDTO);
     try {
-      return permissionRepository.save(permissionDBO).getIdentifier();
+      return PermissionDBOMapper.fromDBO(permissionRepository.save(permissionDBO));
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
           String.format("A permission with identifier %s is already present", permissionDBO.getIdentifier()));
@@ -36,7 +36,7 @@ public class PermissionDaoImpl implements PermissionDao {
 
   @Override
   public List<Permission> list(Scope scope, String resourceType) {
-    Collection<PermissionDBO> permissionDBOs = permissionRepository.findAllByScopesContaining(scope.getDBKey());
+    Collection<PermissionDBO> permissionDBOs = permissionRepository.findAllByScopesContaining(scope.getPathKey());
     return permissionDBOs.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
   }
 

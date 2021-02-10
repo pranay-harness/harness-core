@@ -6,6 +6,10 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.accesscontrol.permissions.Permission;
+import io.harness.accesscontrol.permissions.PermissionService;
+import io.harness.accesscontrol.permissions.PermissionStatus;
+import io.harness.accesscontrol.scopes.HarnessScope;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -29,6 +33,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
@@ -88,6 +93,21 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+
+    // TODO: Remove once permission management through yaml is present.
+    PermissionService permissionService = injector.getInstance(PermissionService.class);
+    Set<String> scopes = new HashSet<>();
+    scopes.add(HarnessScope.ACCOUNT.getPathKey());
+    scopes.add(HarnessScope.ORGANIZATION.getPathKey());
+    scopes.add(HarnessScope.PROJECT.getPathKey());
+    Permission permission = Permission.builder()
+                                .identifier("core.project.view")
+                                .name("View Project")
+                                .status(PermissionStatus.ACTIVE)
+                                .scopes(scopes)
+                                .build();
+    permissionService.get(permission.getIdentifier()).orElseGet(() -> permissionService.create(permission));
+
     MaintenanceController.forceMaintenance(false);
   }
 

@@ -20,7 +20,7 @@ public class PermissionServiceImpl implements PermissionService {
   }
 
   @Override
-  public String create(Permission permission) {
+  public Permission create(Permission permission) {
     return permissionDao.create(permission);
   }
 

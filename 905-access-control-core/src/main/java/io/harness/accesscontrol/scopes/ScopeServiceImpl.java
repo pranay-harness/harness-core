@@ -32,13 +32,7 @@ public class ScopeServiceImpl implements ScopeService {
     this.scopesByPathKey = scopesByPathKey;
   }
 
-  @Override
-  public Scope getScope(Map<String, String> scopeIdentifiers) {
-    return null;
-  }
-
-  @Override
-  public String getScopeIdentifier(@NotNull Map<String, String> scopeInstancesByIdentifierKey) {
+  private List<Scope> getValidScopes(Map<String, String> scopeInstancesByIdentifierKey) {
     List<String> validIdentifierKeys = scopeInstancesByIdentifierKey.keySet()
                                            .stream()
                                            .filter(key -> isNotEmpty(scopeInstancesByIdentifierKey.get(key)))
@@ -49,15 +43,27 @@ public class ScopeServiceImpl implements ScopeService {
             "Invalid scope. The given identifier is either invalid or not registered with the service", USER);
       }
     });
-    List<String> subPaths = validIdentifierKeys.stream()
-                                .map(scopesByIdentifierKey::get)
-                                .sorted(Comparator.comparingInt(Scope::getRank))
+    return validIdentifierKeys.stream()
+        .map(scopesByIdentifierKey::get)
+        .sorted(Comparator.comparingInt(Scope::getRank))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Scope getScope(Map<String, String> scopeInstancesByIdentifierKey) {
+    List<Scope> validScopes = getValidScopes(scopeInstancesByIdentifierKey);
+    return validScopes.get(validScopes.size() - 1);
+  }
+
+  @Override
+  public String getScopeIdentifier(@NotNull Map<String, String> scopeInstancesByIdentifierKey) {
+    List<String> subPaths = getValidScopes(scopeInstancesByIdentifierKey)
+                                .stream()
                                 .map(scope
                                     -> "/".concat(scope.getPathKey())
                                            .concat("/")
                                            .concat(scopeInstancesByIdentifierKey.get(scope.getIdentifierKey())))
                                 .collect(Collectors.toList());
-
     return String.join("", subPaths);
   }
 

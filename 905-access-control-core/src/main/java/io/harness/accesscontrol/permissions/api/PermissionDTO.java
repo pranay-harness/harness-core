@@ -17,6 +17,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class PermissionDTO {
   @ApiModelProperty(required = true) @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
+  String resourceType;
+  String action;
   @ApiModelProperty(required = true) PermissionStatus status;
   @ApiModelProperty(required = true, allowableValues = "account, org, project") @NotEmpty Set<String> scopes;
 }
