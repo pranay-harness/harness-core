@@ -27,6 +27,7 @@ public class QLWorkflowExecution implements QLExecution {
   private Long endedAt;
   private QLExecutionStatus status;
   private List<QLArtifact> artifacts;
+  private List<QLArtifact> rollbackArtifacts;
   private QLCause cause;
   private String notes;
   private String appId;

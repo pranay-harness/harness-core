@@ -94,6 +94,7 @@ public class WorkflowExecutionController {
     QLCause cause = null;
     List<QLDeploymentTag> tags = new ArrayList<>();
     List<QLArtifact> artifacts = new ArrayList<>();
+    List<QLArtifact> rollbackArtifacts = new ArrayList<>();
 
     if (workflowExecution.getPipelineExecutionId() != null) {
       cause =
@@ -143,6 +144,17 @@ public class WorkflowExecutionController {
                       .collect(Collectors.toList());
     }
 
+    if (isNotEmpty(workflowExecution.getRollbackArtifacts())) {
+      rollbackArtifacts = workflowExecution.getRollbackArtifacts()
+                              .stream()
+                              .map(artifact -> {
+                                QLArtifactBuilder qlArtifactBuilder = QLArtifact.builder();
+                                ArtifactController.populateArtifact(artifact, qlArtifactBuilder);
+                                return qlArtifactBuilder.build();
+                              })
+                              .collect(Collectors.toList());
+    }
+
     builder.id(workflowExecution.getUuid())
         .workflowId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
@@ -153,7 +165,8 @@ public class WorkflowExecutionController {
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
-        .artifacts(artifacts);
+        .artifacts(artifacts)
+        .rollbackArtifacts(rollbackArtifacts);
   }
 
   QLStartExecutionPayload startWorkflowExecution(
