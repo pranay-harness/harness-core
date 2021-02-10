@@ -516,6 +516,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     testVerificationJob.setProjectIdentifier(generateUuid());
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setBaselineVerificationJobInstanceId("LAST");
     testVerificationJob.setDuration("15m");
     return verificationJobService.fromDto(testVerificationJob);
   }

@@ -16,6 +16,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLReference;
+import software.wings.graphql.schema.type.aggregation.QLTimeAggregationType;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.impl.AggregateFunctionLogContext;
@@ -159,9 +160,19 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
       case HOUR:
         unit = "hours";
         break;
+      case WEEK:
+        unit = "week";
+        break;
+      case MONTH:
+        unit = "month";
+        break;
       default:
         log.warn("Unsupported timeAggregationType " + groupByTime.getTimeAggregationType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
+    }
+
+    if (QLTimeAggregationType.MONTH.equals(groupByTime.getTimeAggregationType())) {
+      return new StringBuilder("date_trunc('").append(unit).append("',").append(dbFieldName).append(')').toString();
     }
 
     return new StringBuilder("time_bucket('")

@@ -48,9 +48,11 @@ public interface EventProcessor<T extends EventInfo> {
   String INFRAMAPPINGID = "INFRAMAPPINGID";
   String CLOUDPROVIDERID = "CLOUDPROVIDERID";
   String INSTANCECOUNT = "INSTANCECOUNT";
+  String SANITYSTATUS = "SANITYSTATUS";
   String INSTANCES_DEPLOYED = "INSTANCES_DEPLOYED";
   String INSTANCETYPE = "INSTANCETYPE";
   String TAGS = "TAGS";
+  String REPORTEDAT = "REPORTEDAT";
 
-  void processEvent(T eventInfo);
+  void processEvent(T eventInfo) throws Exception;
 }

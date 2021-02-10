@@ -585,7 +585,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withBaselineVerificationJobInstanceId() {
-    verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
+    verificationJobService.upsert(accountId, createTestVerificationJobDTO("LAST"));
     String baselineVerificationJobInstanceId = verificationJobInstanceService.create(
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJob verificationJob =
@@ -642,7 +642,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withoutBaselineVerificationJobInstanceId() {
-    verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
+    verificationJobService.upsert(accountId, createTestVerificationJobDTO("LAST"));
     String verificationJobInstanceId = verificationJobInstanceService.create(
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJob verificationJob =
@@ -676,7 +676,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetLoadTestAdditionalInfo_withoutActivityForVerificationJobInstanceId() {
-    verificationJobService.upsert(accountId, createTestVerificationJobDTO(null));
+    verificationJobService.upsert(accountId, createTestVerificationJobDTO("LAST"));
     String verificationJobInstanceId = verificationJobInstanceService.create(
         accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
     VerificationJob verificationJob =

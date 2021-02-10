@@ -1150,7 +1150,7 @@ public class EcsSetupCommandTaskHelper {
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\nCleaning versions with no tasks", LogLevel.INFO);
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
-    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
+    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName, serviceNamePrefix)
         .stream()
         .filter(service
             -> EcsConvention.getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix))

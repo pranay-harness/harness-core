@@ -233,6 +233,7 @@ import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
+import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
@@ -241,6 +242,7 @@ import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
+import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -589,6 +591,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureARMListManagementGroupNamesResponse.class, 543251);
     kryo.register(AzureARMListSubscriptionLocationsResponse.class, 543252);
     kryo.register(AzureARMTaskParameters.AzureARMTaskType.class, 543253);
+    kryo.register(K8sSwapServiceSelectorsRequest.class, 543254);
+    kryo.register(K8sDeleteRequest.class, 543255);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

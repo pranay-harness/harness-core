@@ -5,18 +5,18 @@ function replace_text() {
   sed -i "s|$search_string|$replace_string|" $file_path
 }
 
-replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 400-rest/config.yml
-replace_text "disabledCaches: \[\]" "disabledCaches: \["userPermissionCache", "primary_userPermissionCache"\]" 400-rest/config.yml
-replace_text "uri: http://localhost:9200" "uri: ${ELASTICSEARCH_URI}" 400-rest/config.yml
-replace_text "indexSuffix: _default" "indexSuffix: ${ELASTICSEARCH_INDEX_SUFFIX}" 400-rest/config.yml
-replace_text "searchEnabled: false" "searchEnabled: true" 400-rest/config.yml
-replace_text "sentinel: false" "sentinel: true" 400-rest/config.yml
-replace_text "masterName: \"test\"" "masterName: \"${REDIS_MASTER_NAME}\"" 400-rest/config.yml
-replace_text "envNamespace: \"\"" "envNamespace: ${TIMESTAMP}" 400-rest/config.yml
-replace_text "\"redis://redis1:26379\"" "\"${REDIS_SENTINEL1}\"" 400-rest/config.yml
-replace_text "\"redis://redis2:26379\"" "\"${REDIS_SENTINEL2}\"" 400-rest/config.yml
-replace_text "\"redis://redis3:26379\"" "\"${REDIS_SENTINEL3}\"" 400-rest/config.yml
-replace_text "distributedLockImplementation: MONGO" "distributedLockImplementation: REDIS" 400-rest/config.yml
+replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 360-cg-manager/config.yml
+replace_text "disabledCaches: \[\]" "disabledCaches: \["userPermissionCache", "primary_userPermissionCache"\]" 360-cg-manager/config.yml
+replace_text "uri: http://localhost:9200" "uri: ${ELASTICSEARCH_URI}" 360-cg-manager/config.yml
+replace_text "indexSuffix: _default" "indexSuffix: ${ELASTICSEARCH_INDEX_SUFFIX}" 360-cg-manager/config.yml
+replace_text "searchEnabled: false" "searchEnabled: true" 360-cg-manager/config.yml
+replace_text "sentinel: false" "sentinel: true" 360-cg-manager/config.yml
+replace_text "masterName: \"test\"" "masterName: \"${REDIS_MASTER_NAME}\"" 360-cg-manager/config.yml
+replace_text "envNamespace: \"\"" "envNamespace: ${TIMESTAMP}" 360-cg-manager/config.yml
+replace_text "\"redis://redis1:26379\"" "\"${REDIS_SENTINEL1}\"" 360-cg-manager/config.yml
+replace_text "\"redis://redis2:26379\"" "\"${REDIS_SENTINEL2}\"" 360-cg-manager/config.yml
+replace_text "\"redis://redis3:26379\"" "\"${REDIS_SENTINEL3}\"" 360-cg-manager/config.yml
+replace_text "distributedLockImplementation: MONGO" "distributedLockImplementation: REDIS" 360-cg-manager/config.yml
 
 replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 350-event-server/event-service-config.yml
 replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 280-batch-processing/batch-processing-config.yml
@@ -25,7 +25,7 @@ replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 210-co
 replace_text "uri: mongodb://localhost:27017/harnessci" "uri: ${MONGO_URI}_ci" 310-ci-manager/ci-manager-config.yml
 replace_text "uri: mongodb://localhost:27017/harness" "uri: ${MONGO_URI}" 310-ci-manager/ci-manager-config.yml
 
-CONFIG_FILES=(400-rest/config.yml 350-event-server/event-service-config.yml 280-batch-processing/batch-processing-config.yml 210-command-library-server/command-library-server-config.yml 310-ci-manager/ci-manager-config.yml)
+CONFIG_FILES=(360-cg-manager/config.yml 350-event-server/event-service-config.yml 280-batch-processing/batch-processing-config.yml 210-command-library-server/command-library-server-config.yml 310-ci-manager/ci-manager-config.yml)
 
 for config_file in ${CONFIG_FILES[@]}; do
   mongo_uri_count=$(grep -P "^\s*uri: mongodb://.*:27017" $config_file | grep -v localhost:27017 | wc -l | awk '{print $1}')

@@ -1189,7 +1189,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
                  new Service().withServiceName("foo__2").withDesiredCount(2),
                  new Service().withServiceName("foo__3").withDesiredCount(0)))
         .when(awsClusterService)
-        .getServices(anyString(), any(), anyList(), anyString());
+        .getServices(anyString(), any(), anyList(), anyString(), anyString());
     SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());

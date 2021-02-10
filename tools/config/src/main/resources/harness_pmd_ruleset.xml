@@ -54,14 +54,10 @@
     <rule ref="category/java/bestpractices.xml/SystemPrintln"/>
     <rule ref="category/java/codestyle.xml/ExtendsObject"/>
     <rule ref="category/java/codestyle.xml/ForLoopShouldBeWhileLoop"/>
-    <rule ref="category/java/codestyle.xml/ForLoopsMustUseBraces"/>
-    <rule ref="category/java/codestyle.xml/IfElseStmtsMustUseBraces"/>
-    <rule ref="category/java/codestyle.xml/IfStmtsMustUseBraces"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryLocalBeforeReturn"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryModifier"/>
     <rule ref="category/java/codestyle.xml/UnnecessaryReturn"/>
     <rule ref="category/java/codestyle.xml/UselessQualifiedThis"/>
-    <rule ref="category/java/codestyle.xml/WhileLoopsMustUseBraces"/>
     <rule ref="category/java/design.xml/AvoidThrowingNewInstanceOfSameException"/>
     <rule ref="category/java/design.xml/AvoidThrowingNullPointerException"/>
     <rule ref="category/java/design.xml/DoNotExtendJavaLangError"/>
@@ -90,7 +86,7 @@
     <rule ref="category/java/errorprone.xml/EmptySynchronizedBlock"/>
     <rule ref="category/java/errorprone.xml/EmptyTryBlock"/>
     <rule ref="category/java/errorprone.xml/EmptyWhileStmt"/>
-    <rule ref="category/java/errorprone.xml/InvalidSlf4jMessageFormat"/>
+    <rule ref="category/java/errorprone.xml/InvalidLogMessageFormat"/>
     <rule ref="category/java/errorprone.xml/JumbledIncrementer"/>
     <rule ref="category/java/errorprone.xml/MisplacedNullCheck"/>
     <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
@@ -121,7 +117,6 @@
     <rule ref="category/java/performance.xml/SimplifyStartsWith"/>
     <rule ref="category/java/performance.xml/StringInstantiation"/>
     <rule ref="category/java/performance.xml/StringToString"/>
-    <rule ref="category/java/performance.xml/UnnecessaryWrapperObjectCreation"/>
     <rule ref="category/java/performance.xml/UnnecessaryWrapperObjectCreation"/>
     <rule ref="category/java/performance.xml/UseArrayListInsteadOfVector"/>
     <rule ref="category/java/performance.xml/UseArraysAsList"/>

@@ -7,12 +7,14 @@ import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentTimeSeriesEvent;
 
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The instance
  * @author rktummala on 08/04/19
  *
  */
+@Slf4j
 public class DeploymentTimeSeriesEventListener extends QueueListener<DeploymentTimeSeriesEvent> {
   @Inject private DeploymentEventProcessor deploymentEventProcessor;
 
@@ -26,6 +28,11 @@ public class DeploymentTimeSeriesEventListener extends QueueListener<DeploymentT
    */
   @Override
   public void onMessage(DeploymentTimeSeriesEvent deploymentTimeSeriesEvent) {
-    deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+    try {
+      deploymentEventProcessor.processEvent(deploymentTimeSeriesEvent.getTimeSeriesEventInfo());
+    } catch (Exception ex) {
+      log.error("Failed to process DeploymentTimeSeriesEvent : [{}]",
+          deploymentTimeSeriesEvent.getTimeSeriesEventInfo().toString(), ex);
+    }
   }
 }

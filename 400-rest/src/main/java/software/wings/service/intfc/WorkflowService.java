@@ -177,6 +177,10 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   List<String> getResolvedInfraDefinitionIds(Workflow workflow, Map<String, String> workflowVariables);
 
+  String getResolvedServiceIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables);
+
+  String getResolvedInfraDefinitionIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables);
+
   List<InstanceElement> getDeployedNodes(String appId, String workflowId);
 
   String obtainEnvIdWithoutOrchestration(Workflow workflow, Map<String, String> workflowVariables);

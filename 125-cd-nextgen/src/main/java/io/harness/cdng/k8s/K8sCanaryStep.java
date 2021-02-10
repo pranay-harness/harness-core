@@ -55,7 +55,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     final StoreConfig storeConfig = k8sManifestOutcome.getStore();
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
-    final String instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
+    final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     final boolean skipDryRun =
         !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
@@ -67,7 +67,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.CANARY_DEPLOY)
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
-            .instances(Integer.valueOf(instancesValue))
+            .instances(instancesValue)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))

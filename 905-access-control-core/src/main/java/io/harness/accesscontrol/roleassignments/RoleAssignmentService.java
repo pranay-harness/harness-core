@@ -9,12 +9,12 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface RoleAssignmentService {
-  RoleAssignmentDTO create(@Valid RoleAssignmentDTO roleAssignmentDTO);
+  RoleAssignment create(@Valid RoleAssignment roleAssignment);
 
-  PageResponse<RoleAssignmentDTO> getAll(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
-      String principalIdentifier, String roleIdentifier, boolean includeInheritedAssignments);
+  PageResponse<RoleAssignment> getAll(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
+      String principalIdentifier, String roleIdentifier);
 
-  Optional<RoleAssignmentDTO> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
-  RoleAssignmentDTO delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 }

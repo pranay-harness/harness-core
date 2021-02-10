@@ -28,9 +28,9 @@ public enum NGStepType {
   K8S_ROLLING_ROLLBACK("K8s Rolling Rollback", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
       StepSpecTypeConstants.K8S_ROLLING_ROLLBACK),
 
-  @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
+  @JsonProperty(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
   SWAP_SELECTORS("Swap Selectors", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
-      StepSpecTypeConstants.PLACEHOLDER),
+      StepSpecTypeConstants.K8S_BG_SWAP_SERVICES),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   DELETE("Delete", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes", StepSpecTypeConstants.PLACEHOLDER),
   @JsonProperty(StepSpecTypeConstants.K8S_CANARY_DEPLOY)

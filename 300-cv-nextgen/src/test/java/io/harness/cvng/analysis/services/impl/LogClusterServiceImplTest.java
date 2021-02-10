@@ -435,6 +435,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setBaselineVerificationJobInstanceId("LAST");
     testVerificationJob.setDuration("15m");
     return testVerificationJob;
   }

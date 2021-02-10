@@ -140,7 +140,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeId_idx")
                  .field(NodeExecutionKeys.planExecutionId)
-                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.planNodeId)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeIdentifier_idx")

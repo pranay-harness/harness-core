@@ -1,5 +1,8 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
@@ -7,6 +10,7 @@ import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequ
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public interface AwsCloudWatchHelperServiceDelegate {
   // See https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_limits.html
   int MAX_QUERIES_PER_CALL = 500;
