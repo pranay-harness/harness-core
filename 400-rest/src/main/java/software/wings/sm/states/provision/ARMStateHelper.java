@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -8,7 +9,10 @@ import static software.wings.beans.command.AzureARMCommandUnit.ExcuteDeployment;
 import static software.wings.beans.command.AzureARMCommandUnit.FetchFiles;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_ARM_DEPLOYMENT;
 
+import static java.lang.String.format;
+
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
@@ -16,6 +20,7 @@ import io.harness.git.model.GitFile;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.ARMStateExecutionData;
+import software.wings.api.arm.ARMOutputVariables;
 import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.ARMSourceType;
 import software.wings.beans.Activity;
@@ -34,24 +39,33 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 @Slf4j
 @Singleton
 public class ARMStateHelper {
   public static final String AZURE_ARM_COMMAND_UNIT_TYPE = "ARM Deployment";
+  private static final int DEFAULT_TIMEOUT_MIN = 10;
 
   @Inject private SecretManager secretManager;
   @Inject private ActivityService activityService;
   @Inject private SettingsService settingsService;
+  @Inject private SweepingOutputService sweepingOutputService;
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -135,5 +149,47 @@ public class ARMStateHelper {
       throw new InvalidRequestException(String.format("Files for [%s] not found", key));
     }
     return files.get(0).getFileContent();
+  }
+
+  int renderTimeout(String expr, ExecutionContext context) {
+    int retVal = DEFAULT_TIMEOUT_MIN;
+    if (isNotEmpty(expr)) {
+      try {
+        retVal = Integer.parseInt(context.renderExpression(expr));
+      } catch (NumberFormatException e) {
+        log.error(format("Number format Exception while evaluating: [%s]", expr), e);
+      }
+    }
+    return retVal;
+  }
+
+  void saveARMOutputs(String outputs, ExecutionContext context) {
+    if (isEmpty(outputs)) {
+      return;
+    }
+    Map<String, Object> outputMap = new LinkedHashMap<>();
+    try {
+      TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {};
+      Map<String, Object> json = new ObjectMapper().readValue(IOUtils.toInputStream(outputs), typeRef);
+
+      json.forEach((key, object) -> outputMap.put(key, ((Map<String, Object>) object).get("value")));
+    } catch (IOException exception) {
+      log.error("Exceotion while parsing ARM outputs", exception);
+      return;
+    }
+
+    SweepingOutputInstance instance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(ARMOutputVariables.SWEEPING_OUTPUT_NAME).build());
+    ARMOutputVariables armOutputVariables =
+        instance != null ? (ARMOutputVariables) instance.getValue() : new ARMOutputVariables();
+    armOutputVariables.putAll(outputMap);
+
+    if (instance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
+    }
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(ARMOutputVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(armOutputVariables)
+                                   .build());
   }
 }
