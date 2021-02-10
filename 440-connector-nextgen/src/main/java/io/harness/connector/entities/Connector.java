@@ -11,6 +11,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.core.NGAccountAccess;
@@ -53,7 +54,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @FdIndex @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
-  @FdIndex @NotEmpty String fullyQualifiedIdentifier;
+  @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
@@ -85,11 +86,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("unique_fullyQualifiedIdentifier")
-                 .unique(true)
-                 .field(ConnectorKeys.fullyQualifiedIdentifier)
-                 .build())
         .add(CompoundMongoIndex.builder()
                  .name("accountId_orgId_projectId_Index")
                  .fields(Arrays.asList(
