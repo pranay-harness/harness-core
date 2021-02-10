@@ -23,6 +23,7 @@ public class TagHelper {
   @Inject protected HarnessTagService tagService;
   @Inject protected WorkflowExecutionService workflowExecutionService;
 
+  // Returns set of all unique entity ids that match the tags for given entity type
   public Set<String> getEntityIdsFromTags(String accountId, List<QLTagInput> tags, EntityType entityType) {
     if (isNotEmpty(tags)) {
       Set<String> entityIds = new HashSet<>();
