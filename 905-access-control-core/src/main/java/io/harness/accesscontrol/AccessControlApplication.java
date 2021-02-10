@@ -12,14 +12,12 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.threading.ExecutorModule;
-import io.harness.threading.ThreadPool;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -32,7 +30,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +39,7 @@ import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
 public class AccessControlApplication extends Application<AccessControlConfiguration> {
-  private static final String APPLICATION_NAME = "Access Control Microservice";
+  private static final String APPLICATION_NAME = "Access Control Service";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -80,13 +77,11 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   @Override
   public void run(AccessControlConfiguration appConfig, Environment environment) {
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Access Control Application ...");
     MaintenanceController.forceMaintenance(true);
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
-
+    injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);

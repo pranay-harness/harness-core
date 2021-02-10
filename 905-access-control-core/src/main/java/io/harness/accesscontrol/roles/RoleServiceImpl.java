@@ -2,7 +2,7 @@ package io.harness.accesscontrol.roles;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.accesscontrol.roles.database.RoleDao;
+import io.harness.accesscontrol.roles.persistence.RoleDao;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -19,30 +19,31 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
-  public RoleDTO create(RoleDTO roleDTO) {
-    return roleDao.create(roleDTO);
+  public Role create(Role role) {
+    role.setManaged(false);
+    return roleDao.create(role);
   }
 
   @Override
-  public PageResponse<RoleDTO> getAll(PageRequest pageRequest, String parentIdentifier, boolean includeDefault) {
-    if (isEmpty(parentIdentifier) && !includeDefault) {
-      throw new BadRequestException("Either includeDefault should be true, or parentIdentifier should be non-empty");
+  public PageResponse<Role> getAll(PageRequest pageRequest, String parentIdentifier, boolean includeManaged) {
+    if (isEmpty(parentIdentifier) && !includeManaged) {
+      throw new BadRequestException("Either includeManaged should be true, or parentIdentifier should be non-empty");
     }
-    return roleDao.getAll(pageRequest, parentIdentifier, includeDefault);
+    return roleDao.getAll(pageRequest, parentIdentifier, includeManaged);
   }
 
   @Override
-  public Optional<RoleDTO> get(String identifier, String parentIdentifier) {
+  public Optional<Role> get(String identifier, String parentIdentifier) {
     return roleDao.get(identifier, parentIdentifier);
   }
 
   @Override
-  public RoleDTO update(RoleDTO roleDTO) {
+  public Role update(Role role) {
     return null;
   }
 
   @Override
-  public RoleDTO delete(String identifier, String parentIdentifier) {
+  public Optional<Role> delete(String identifier, String parentIdentifier) {
     return roleDao.delete(identifier, parentIdentifier);
   }
 }

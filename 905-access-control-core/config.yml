@@ -37,7 +37,6 @@ logging:
   level: INFO
   loggers:
     org.glassfish.jersey: INFO
-    allbegray.slack: WARN
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
   appenders:
     - type: console
