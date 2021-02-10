@@ -7,6 +7,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.exception.ExceptionUtils;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();

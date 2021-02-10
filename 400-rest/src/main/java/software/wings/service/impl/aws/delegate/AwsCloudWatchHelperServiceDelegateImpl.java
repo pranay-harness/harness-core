@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCloudWatchHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsCloudWatchHelperServiceDelegate {
   @Override

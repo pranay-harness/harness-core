@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.PcfConfig;
 
 import lombok.AllArgsConstructor;
@@ -8,6 +11,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfCommandRequest {
   private String accountId;
   private String appId;
