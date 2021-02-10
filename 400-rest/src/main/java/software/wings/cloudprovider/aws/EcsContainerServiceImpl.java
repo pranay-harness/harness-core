@@ -81,6 +81,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -96,6 +97,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -110,6 +112,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   @Inject private TimeLimiter timeLimiter;
   @Inject private AwsMetadataApiHelper awsMetadataApiHelper;
+
+  private static final Integer ECS_LIST_SERVICES_MAX_RESULTS = 100;
+  private static final Integer ECS_DESCRIBE_SERVICES_MAX_RESULTS = 10;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -1399,7 +1404,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         while (true) {
           List<Service> services = getEcsServicesForCluster(requestData.getRegion(), requestData.getAwsConfig(),
               requestData.getEncryptedDataDetails(), requestData.getCluster(),
-              Arrays.asList(requestData.getServiceName()));
+              Collections.singletonList(requestData.getServiceName()));
 
           printAwsEvent(services.get(0), requestData.getServiceEvents(), requestData.getExecutionLogCallback());
 
@@ -1514,22 +1519,61 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName) {
+    return getFilteredServices(region, cloudProviderSetting, encryptedDataDetails, clusterName, null);
+  }
+
+  @Override
+  public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceNamePrefix) {
+    return getFilteredServices(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix);
+  }
+
+  /**
+   * serviceNamePrefix if null, no filtering will be done else services will be filtered basis
+   * <code>serviceName.startsWith</code>
+   * - using 100 maxResults for List service api
+   * - using 10 services for Describing service api
+   *
+   * Known limitations:
+   * 1. ARN: Not clear yet on ARN format of service so using <code>arn.contains</code> for filtering
+   * 2. No prefix key in ListServicesRequest so not optimised query
+   * 3. Not using additional filtering possible for ListServicesRequest: <code>schedulingStrategy</code>,
+   * <code>launchType</code>
+   */
+  private List<Service> getFilteredServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, @Nullable String serviceNamePrefix) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
-    List<Service> services = new ArrayList<>();
+    List<String> serviceArns = new ArrayList<>();
     ListServicesResult listServicesResult;
-    ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
+    ListServicesRequest listServicesRequest =
+        new ListServicesRequest().withCluster(clusterName).withMaxResults(ECS_LIST_SERVICES_MAX_RESULTS);
+
     do {
       listServicesResult = awsHelperService.listServices(region, awsConfig, encryptedDataDetails, listServicesRequest);
       if (isEmpty(listServicesResult.getServiceArns())) {
         break;
       }
 
-      services.addAll(getEcsServicesForCluster(
-          region, awsConfig, encryptedDataDetails, clusterName, listServicesResult.getServiceArns()));
+      serviceArns.addAll(listServicesResult.getServiceArns()
+                             .stream()
+                             .filter(arn -> isEmpty(serviceNamePrefix) || arn.contains(serviceNamePrefix))
+                             .collect(toList()));
       listServicesRequest.setNextToken(listServicesResult.getNextToken());
-    } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
+    } while (listServicesResult.getNextToken() != null
+        && listServicesResult.getServiceArns().size() == ECS_LIST_SERVICES_MAX_RESULTS);
 
-    return services;
+    List<Service> filteredServices = new ArrayList<>();
+
+    if (!isEmpty(serviceArns)) {
+      List<Service> services =
+          getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, serviceArns);
+      filteredServices =
+          services.stream()
+              .filter(s -> isEmpty(serviceNamePrefix) || s.getServiceName().startsWith(serviceNamePrefix))
+              .collect(toList());
+    }
+
+    return filteredServices;
   }
 
   @Override
@@ -1553,6 +1597,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
 
     return serviceEvents;
+  }
+
+  @Override
+  public Optional<Service> getService(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(settingAttribute, encryptedDataDetails, false);
+    List<Service> services = getEcsServicesForCluster(
+        region, awsConfig, encryptedDataDetails, clusterName, Collections.singletonList(serviceName));
+    return isEmpty(services) ? Optional.empty() : Optional.of(services.get(0));
   }
 
   @Override
@@ -1586,10 +1639,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   private List<Service> getEcsServicesForCluster(String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, List<String> serviceName) {
-    return awsHelperService
-        .describeServices(region, awsConfig, encryptedDataDetails,
-            new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-        .getServices();
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, List<String> serviceNames) {
+    List<List<String>> serviceNameBatches = Lists.partition(serviceNames, ECS_DESCRIBE_SERVICES_MAX_RESULTS);
+
+    List<Service> services = new ArrayList<>();
+    serviceNameBatches.forEach(serviceNameChunk
+        -> services.addAll(
+            awsHelperService
+                .describeServices(region, awsConfig, encryptedDataDetails,
+                    new DescribeServicesRequest().withCluster(clusterName).withServices(serviceNameChunk))
+                .getServices()));
+    return services;
   }
 }
