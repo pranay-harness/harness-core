@@ -25,7 +25,6 @@ public class AccessControlSwaggerListener implements ReaderListener {
   private final Set<String> scopesAllowedValues;
 
   public AccessControlSwaggerListener() {
-    super();
     scopesAllowedValues = Arrays.stream(HarnessScope.values()).map(Scope::getKey).collect(Collectors.toSet());
   }
 
