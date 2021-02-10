@@ -155,6 +155,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -249,6 +250,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -1138,6 +1140,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (envChanged) {
+      List<Pipeline> pipelinesWithWorkflowLinked = pipelineService.listPipelines(
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
+              .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
+              .build());
+
+      updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
+
+      pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+    }
+
     if (isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
@@ -1203,6 +1218,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void updateEnvIdInLinkedPipelines(
+      Workflow workflow, String newEnvId, List<Pipeline> pipelinesWithWorkflowLinked) {
+    if (isEmpty(pipelinesWithWorkflowLinked)) {
+      return;
+    }
+    for (Pipeline pipeline : pipelinesWithWorkflowLinked) {
+      if (isNotEmpty(pipeline.getPipelineStages())) {
+        for (PipelineStage stage : pipeline.getPipelineStages()) {
+          if (workflow.getUuid().equals(
+                  stage.getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.workflowId))) {
+            stage.getPipelineStageElements().get(0).getProperties().put(EnvStateKeys.envId, newEnvId);
+          }
+        }
+      }
+    }
   }
 
   private void populateServices(Workflow workflow) {
