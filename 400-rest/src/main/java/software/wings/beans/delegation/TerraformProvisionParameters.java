@@ -17,7 +17,6 @@ import io.harness.security.encryption.EncryptedRecordData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
 import java.util.List;
 import java.util.Map;
@@ -90,11 +89,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
     List<ExecutionCapability> capabilities =
         CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
-      capabilities.add(GitConnectionCapability.builder()
-                           .gitConfig(sourceRepo)
-                           .settingAttribute(sourceRepo.getSshSettingAttribute())
-                           .encryptedDataDetails(sourceRepoEncryptionDetails)
-                           .build());
+      capabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(sourceRepo));
     }
     if (secretManagerConfig != null) {
       capabilities.addAll(

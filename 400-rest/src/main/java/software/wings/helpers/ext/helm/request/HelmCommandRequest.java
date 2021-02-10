@@ -18,7 +18,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.container.HelmChartSpecification;
-import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
@@ -76,11 +76,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
       executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     }
     if (gitConfig != null) {
-      executionCapabilities.add(GitConnectionCapability.builder()
-                                    .gitConfig(gitConfig)
-                                    .settingAttribute(gitConfig.getSshSettingAttribute())
-                                    .encryptedDataDetails(getEncryptedDataDetails())
-                                    .build());
+      executionCapabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig));
     }
     if (containerServiceParams != null) {
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
