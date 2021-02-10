@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.permissions;
 
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,7 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "Permission")
 public class Permission {
-  @EntityIdentifier String identifier;
+  @NotEmpty String identifier;
   @NGEntityName String name;
   @NotNull PermissionStatus status;
   @NotEmpty Set<String> scopes;
