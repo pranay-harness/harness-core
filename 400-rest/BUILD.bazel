@@ -756,7 +756,7 @@ java_library(
 
 run_package_tests(shared_dependencies)
 
-checkstyle()
+#checkstyle()
 
 sonarqube_test(
     name = "sq_mycomponent",
