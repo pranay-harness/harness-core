@@ -4,7 +4,7 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.RemoveDuplicateAnomaliesTasklet;
 import io.harness.batch.processing.anomalydetection.SlackNotificationsTasklet;
-import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
+import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionProcessor;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsAccountReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsServiceReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpProductReader;
@@ -58,7 +58,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelClusterDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(clusterItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -68,7 +68,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelNamespaceDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(namespaceItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -78,7 +78,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpProjectDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpProjectItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -88,7 +88,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpProductDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpProductItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -98,7 +98,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpSkuDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpSkuItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -108,7 +108,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelAwsAccountDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(awsAccountItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -118,7 +118,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelAwsServiceDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(awsServiceItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -181,8 +181,8 @@ public class AnomalyDetectionConfiguration {
 
   // ---------------- Item Processor ----------------------
   @Bean
-  public ItemProcessor<AnomalyDetectionTimeSeries, Anomaly> statModelProcessor() {
-    return new AnomalyDetectionStatsModelProcessor();
+  public ItemProcessor<AnomalyDetectionTimeSeries, Anomaly> modelProcessor() {
+    return new AnomalyDetectionProcessor();
   }
 
   // ---------------- Item Writer ----------------------

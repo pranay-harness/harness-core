@@ -9,18 +9,16 @@ import io.harness.ccm.anomaly.entities.AnomalyType;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Builder;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.springframework.stereotype.Service;
 
 @Service
-@Builder
 public class StatsModel {
   private static final Double RELATIVITY_THRESHOLD = 1.25;
   private static final Double ABSOLUTE_THRESHOLD = 20.0;
   private static final Double PROBABILITY_THRESHOLD = 0.995;
 
-  public List<Anomaly> detectAnomaly(AnomalyDetectionTimeSeries data) {
+  public Anomaly detectAnomaly(AnomalyDetectionTimeSeries data) {
     List<Double> stats = TimeSeriesUtils.getStats(data);
     Double mean = stats.get(0);
     Double standardDeviation = stats.get(1);
@@ -73,7 +71,7 @@ public class StatsModel {
       currentAnomaly.setAnomaly(isAnomaly);
       anomaliesList.add(currentAnomaly);
     }
-    return anomaliesList;
+    return anomaliesList.get(0);
   }
 
   private static boolean relativityThreshold(Double original, Double expected) {
