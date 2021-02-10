@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@FieldNameConstants(innerTypeName = "PermissionKeys")
+@FieldNameConstants(innerTypeName = "PermissionDBOKeys")
 @Entity(value = "permissions", noClassnameStored = true)
 @Document("permissions")
 @TypeAlias("permissions")

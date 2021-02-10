@@ -12,18 +12,18 @@ public enum HarnessScope implements Scope {
     }
 
     @Override
-    public String getPathKey() {
+    public String getKey() {
       return "account";
     }
 
     @Override
-    public String getDBKey() {
-      return ACCOUNT.name();
+    public String getIdentifierName() {
+      return ACCOUNT_KEY;
     }
 
     @Override
-    public String getIdentifierKey() {
-      return ACCOUNT_KEY;
+    public String toString() {
+      return getKey();
     }
   },
 
@@ -34,18 +34,18 @@ public enum HarnessScope implements Scope {
     }
 
     @Override
-    public String getPathKey() {
+    public String getKey() {
       return "org";
     }
 
     @Override
-    public String getDBKey() {
-      return ORGANIZATION.name();
+    public String getIdentifierName() {
+      return ORG_KEY;
     }
 
     @Override
-    public String getIdentifierKey() {
-      return ORG_KEY;
+    public String toString() {
+      return getKey();
     }
   },
 
@@ -56,18 +56,18 @@ public enum HarnessScope implements Scope {
     }
 
     @Override
-    public String getPathKey() {
+    public String getKey() {
       return "project";
     }
 
     @Override
-    public String getDBKey() {
-      return PROJECT.name();
+    public String getIdentifierName() {
+      return PROJECT_KEY;
     }
 
     @Override
-    public String getIdentifierKey() {
-      return PROJECT_KEY;
+    public String toString() {
+      return getKey();
     }
   }
 }
