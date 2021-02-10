@@ -395,7 +395,6 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
-import software.wings.beans.infrastructure.ARMRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.TerraformConfig;
@@ -1083,7 +1082,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
-    set.add(ARMRollbackConfig.class);
   }
 
   @Override
