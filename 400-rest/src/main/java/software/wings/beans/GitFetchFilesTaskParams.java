@@ -9,7 +9,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.appmanifest.AppManifestKind;
-import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
@@ -42,11 +42,8 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
     if (isNotEmpty(gitFetchFilesConfigMap)) {
       for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-        executionCapabilities.add(GitConnectionCapability.builder()
-                                      .gitConfig(gitFetchFileConfig.getGitConfig())
-                                      .settingAttribute(gitFetchFileConfig.getGitConfig().getSshSettingAttribute())
-                                      .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
-                                      .build());
+        executionCapabilities.addAll(
+            CapabilityHelper.generateExecutionCapabilitiesForGit(gitFetchFileConfig.getGitConfig()));
       }
     }
 

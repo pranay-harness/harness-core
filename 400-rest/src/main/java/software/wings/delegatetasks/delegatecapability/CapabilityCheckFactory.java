@@ -8,6 +8,7 @@ import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
 import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChecker;
+import io.harness.delegate.task.executioncapability.GitInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
@@ -54,6 +55,7 @@ public class CapabilityCheckFactory {
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
   @Inject GitConnectionNGCapabilityChecker gitConnectionNGCapabilityCheck;
+  @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -99,6 +101,8 @@ public class CapabilityCheckFactory {
         return smbConnectionCapabilityCheck;
       case GIT_CONNECTION_NG:
         return gitConnectionNGCapabilityCheck;
+      case GIT_INSTALLATION:
+        return gitInstallationCapabilityCheck;
       default:
         return null;
     }
