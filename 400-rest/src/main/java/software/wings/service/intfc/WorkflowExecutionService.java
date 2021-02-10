@@ -201,6 +201,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
 
+  List<Artifact> obtainLastGoodDeployedArtifacts(WorkflowExecution workflowExecution, List<String> infraMappingList);
+
   List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId);
 
   WorkflowExecution fetchWorkflowExecution(
