@@ -38,14 +38,14 @@ fi
 
 if [ "${RUN_CHECKS}" == "true" ]
 then
-  TARGETS=`bazel ${bazelrc} query //... | grep ":checkstyle$"`
+  TARGETS=`bazel query 'attr(tags, "checkstyle", //...:*)'`
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
 
 if [ "${RUN_PMDS}" == "true" ]
 then
-  TARGETS=`bazel ${bazelrc} query //... | grep ":pmd$"`
+  TARGETS=`bazel query 'attr(tags, "pmd", //...:*)'`
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi

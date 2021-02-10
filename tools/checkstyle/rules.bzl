@@ -1,6 +1,5 @@
 def impl_checkstyle(
         name,
-        tags,
         srcs = [],
         checkstyle_suppressions = "//tools/checkstyle:checkstyle-suppressions.xml",
         checkstyle_xpath_suppressions = "//tools/checkstyle:checkstyle-xpath-suppressions.xml",
@@ -8,7 +7,7 @@ def impl_checkstyle(
     native.genrule(
         name = name,
         srcs = srcs,
-        tags = tags,
+        tags = ["manual", "no-ide", "analysis", "checkstyle"],
         outs = ["checkstyle.xml"],
         visibility = ["//visibility:public"],
         cmd = " ".join([
@@ -33,13 +32,7 @@ def impl_checkstyle(
         ],
     )
 
-def checkstyle(name = "checkstyle", srcs = None, tags = ["manual", "no-ide"]):
+def checkstyle(name = "checkstyle", srcs = None):
     if srcs == None:
         srcs = ["//" + native.package_name() + ":sources"]
-    impl_checkstyle(name = name, srcs = srcs, tags = tags)
-
-def get_checkstyle_targets(modules = []):
-    _targets = []
-    for f in modules:
-        _targets.append(f + ":checkstyle")
-    return _targets
+    impl_checkstyle(name = name, srcs = srcs)

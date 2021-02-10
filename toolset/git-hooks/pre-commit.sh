@@ -16,14 +16,14 @@ else
     . $BASEDIR/toolset/git-hooks/check_conflicts.sh
 fi
 
-CHECKSTYLE_PROPERTY=hook.pre-commit.stylecheck
-if [ "`git config $CHECKSTYLE_PROPERTY`" == "false" ]
+ANALYSIS_PROPERTY=hook.pre-commit.analysis
+if [ "`git config $ANALYSIS_PROPERTY`" == "false" ]
 then
-    echo -e '\033[0;31m' checking style is disabled - to enable: '\033[0;37m'git config --unset $CHECKSTYLE_PROPERTY '\033[0m'
+    echo -e '\033[0;31m' checking analysis is disabled - to enable: '\033[0;37m'git config --unset $ANALYSIS_PROPERTY '\033[0m'
 else
-    echo -e '\033[0;34m' checking style  ... to disable: '\033[0;37m'git config --add $CHECKSTYLE_PROPERTY false '\033[0m'
+    echo -e '\033[0;34m' checking analysis  ... to disable: '\033[0;37m'git config --add $ANALYSIS_PROPERTY false '\033[0m'
 
-    . $BASEDIR/toolset/git-hooks/checkstyle.sh
+    . $BASEDIR/toolset/git-hooks/check_analysis.sh
 fi
 
 CHECKPROTO_PROPERTY=hook.pre-commit.protocheck
