@@ -350,6 +350,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       }
       return validationFailureBuilder.build();
     } catch (Exception ex) {
+      log.info("Encountered Error while validating the connector {}",
+          String.format(CONNECTOR_STRING, connectorInfo.getIdentifier(), accountIdentifier,
+              connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier()),
+          ex);
       return createValidationResultWithGenericError(ex);
     }
     return validationResult;

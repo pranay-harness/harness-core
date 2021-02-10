@@ -44,6 +44,7 @@ import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
 import io.harness.cvng.core.jobs.OrganizationChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
@@ -59,6 +60,7 @@ import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
@@ -79,6 +81,7 @@ import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
+import io.harness.cvng.core.services.impl.MonitoringTaskPerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
@@ -267,6 +270,7 @@ public class CVServiceModule extends AbstractModule {
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
       bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
+      bind(MonitoringTaskPerpetualTaskService.class).to(MonitoringTaskPerpetualTaskServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
@@ -286,11 +290,12 @@ public class CVServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("cvParallelExecutor")
-  public ExecutorService cvParallelExecutor() {
-    ExecutorService cvParallelExecutor = ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("cvParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvParallelExecutor.shutdownNow()));
-    return cvParallelExecutor;
+  @Named("cvngParallelExecutor")
+  public ExecutorService cvngParallelExecutor() {
+    ExecutorService cvngParallelExecutor = ThreadPool.create(4, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5,
+        TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
+    return cvngParallelExecutor;
   }
 }

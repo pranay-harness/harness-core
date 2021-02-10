@@ -545,10 +545,10 @@ public class K8BuildSetupUtils {
       throw new InvalidArgumentsException("Git connector is not valid", WingsException.USER);
     }
     if (gitConnector.getConnectorType() != ConnectorType.GIT && gitConnector.getConnectorType() != ConnectorType.GITHUB
-        && gitConnector.getConnectorType() != ConnectorType.GITLAB) {
+        && gitConnector.getConnectorType() != ConnectorType.GITLAB && gitConnector.getConnectorType() != BITBUCKET) {
       log.error("Git connector ref is not of type git {}", gitConnector);
       throw new InvalidArgumentsException(
-          "Connector type for git connector is not GITHUB OR GITLAB OR GIT ", WingsException.USER);
+          "Connector type for git connector is not GITHUB OR GITLAB OR GIT OR BITBUCKET ", WingsException.USER);
     }
 
     // TODO Validate all

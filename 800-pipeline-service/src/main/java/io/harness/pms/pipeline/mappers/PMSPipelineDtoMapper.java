@@ -59,6 +59,7 @@ public class PMSPipelineDtoMapper {
         .lastUpdatedAt(pipelineEntity.getLastUpdatedAt())
         .createdAt(pipelineEntity.getCreatedAt())
         .modules(pipelineEntity.getFilters().keySet())
+        .filters(pipelineEntity.getFilters())
         .build();
   }
 
@@ -71,6 +72,9 @@ public class PMSPipelineDtoMapper {
                 : null)
         .lastExecutionTs(pipelineEntity.getExecutionSummaryInfo() != null
                 ? pipelineEntity.getExecutionSummaryInfo().getLastExecutionTs()
+                : null)
+        .lastExecutionId(pipelineEntity.getExecutionSummaryInfo() != null
+                ? pipelineEntity.getExecutionSummaryInfo().getLastExecutionId()
                 : null)
         .build();
   }

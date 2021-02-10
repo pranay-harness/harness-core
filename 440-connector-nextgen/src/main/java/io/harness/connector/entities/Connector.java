@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -97,6 +98,13 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
         .add(CompoundMongoIndex.builder()
                  .name("fullyQualifiedIdentifier_deleted_Index")
                  .fields(Arrays.asList(ConnectorKeys.fullyQualifiedIdentifier, ConnectorKeys.deleted))
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_type_status_deletedAt_decreasing_sort_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.type, ConnectorKeys.connectionStatus,
+                     ConnectorKeys.deleted))
+                 .descSortField(ConnectorKeys.createdAt)
                  .build())
         .build();
   }

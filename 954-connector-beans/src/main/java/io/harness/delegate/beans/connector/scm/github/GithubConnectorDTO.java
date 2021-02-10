@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("GithubConnector")
 public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
-  @NotNull String url;
+  @NotBlank @NotNull String url;
   @Valid @NotNull GithubAuthenticationDTO authentication;
   @Valid GithubApiAccessDTO apiAccess;
 

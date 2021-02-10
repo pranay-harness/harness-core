@@ -177,7 +177,9 @@ public class DockerPublicRegistryProcessor {
 
     String domainName = Http.getDomainWithPort(dockerConfig.getDockerRegistryUrl());
     Map<String, String> metadata = new HashMap<>();
-    metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + publicImageTag.getName());
+    metadata.put(ArtifactMetadataKeys.IMAGE,
+        (domainName == null || domainName.endsWith("/") ? domainName : domainName.concat("/")) + imageName + ":"
+            + publicImageTag.getName());
     metadata.put(ArtifactMetadataKeys.TAG, publicImageTag.getName());
     return BuildDetailsInternal.builder()
         .number(publicImageTag.getName())

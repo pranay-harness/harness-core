@@ -3,8 +3,10 @@ package io.harness.cvng.activity.source.resources;
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -41,6 +43,7 @@ import retrofit2.http.Body;
     })
 public class KubernetesActivityResource {
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
+  @Inject private ActivitySourceService activitySourceService;
 
   @POST
   @Timed
@@ -85,5 +88,18 @@ public class KubernetesActivityResource {
       @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return ResponseDTO.newResponse(kubernetesActivitySourceService.getKubernetesWorkloads(
         accountId, orgIdentifier, projectIdentifier, connectorIdentifier, namespace, offset, pageSize, filter));
+  }
+
+  @GET
+  @Path("/source")
+  @Timed
+  @ExceptionMetered
+  @DelegateAuth
+  @ApiOperation(value = "gets kubernetes source for data collection", nickname = "getKubernetesSource")
+  public RestResponse<KubernetesActivitySourceDTO> getKubernetesSource(
+      @QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("dataCollectionWorkerId") @NotNull String dataCollectionWorkerId) {
+    return new RestResponse<>(
+        (KubernetesActivitySourceDTO) activitySourceService.getActivitySource(dataCollectionWorkerId).toDTO());
   }
 }

@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.remote.mapper;
 
+import static io.harness.ng.core.mapper.TagMapper.convertToList;
+import static io.harness.ng.core.mapper.TagMapper.convertToMap;
+
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupResponse;
@@ -18,7 +21,9 @@ public class ResourceGroupMapper {
         .projectIdentifier(resourceGroupDTO.getProjectIdentifier())
         .identifier(resourceGroupDTO.getIdentifier())
         .name(resourceGroupDTO.getName())
-        .system(resourceGroupDTO.getSystem())
+        .color(resourceGroupDTO.getColor())
+        .tags(convertToList(resourceGroupDTO.getTags()))
+        .harnessManaged(resourceGroupDTO.getHarnessManaged())
         .resourceSelectors(resourceGroupDTO.getResourceSelectors())
         .description(resourceGroupDTO.getDescription())
         .build();
@@ -34,7 +39,9 @@ public class ResourceGroupMapper {
         .projectIdentifier(resourceGroup.getProjectIdentifier())
         .identifier(resourceGroup.getIdentifier())
         .name(resourceGroup.getName())
-        .system(resourceGroup.getSystem())
+        .color(resourceGroup.getColor())
+        .tags(convertToMap(resourceGroup.getTags()))
+        .harnessManaged(resourceGroup.getHarnessManaged())
         .resourceSelectors(resourceGroup.getResourceSelectors())
         .description(resourceGroup.getDescription())
         .build();
@@ -47,7 +54,7 @@ public class ResourceGroupMapper {
     return ResourceGroupResponse.builder()
         .createdAt(resourceGroup.getCreatedAt())
         .lastModifiedAt(resourceGroup.getLastModifiedAt())
-        .resourceGroupDTO(toDTO(resourceGroup))
+        .resourceGroup(toDTO(resourceGroup))
         .build();
   }
 }

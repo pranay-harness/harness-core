@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ResourceGroupRequest {
-  @Valid @NotNull @JsonProperty("resourcegroup") private ResourceGroupDTO resourceGroupDTO;
+  @Valid @NotNull @JsonProperty("resourcegroup") private ResourceGroupDTO resourceGroup;
 }

@@ -1,7 +1,5 @@
 package software.wings.utils;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
@@ -10,7 +8,7 @@ import io.harness.limits.lib.StaticLimit;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
-@TargetModule(Module._990_COMMONS_TEST)
+@Deprecated // Do not create generic constant buckets
 public interface WingsTestConstants {
   String APP_ID = "APP_ID";
 

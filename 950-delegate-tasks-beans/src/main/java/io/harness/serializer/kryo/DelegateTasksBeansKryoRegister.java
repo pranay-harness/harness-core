@@ -106,6 +106,7 @@ import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
+import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
@@ -180,6 +181,8 @@ import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.delegate.task.azure.arm.request.AzureARMRollbackParameters;
 import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupNamesResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListSubscriptionLocationsResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMRollbackResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
@@ -350,6 +353,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
     kryo.register(LoadBalancerType.class, 19032);
     kryo.register(PcfAutoScalarCapability.class, 19122);
+    kryo.register(PcfConnectivityCapability.class, 19123);
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ProcessExecutorCapability.class, 19007);
     kryo.register(RemoteMethodReturnValueData.class, 5122);
@@ -582,6 +586,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureARMRollbackResponse.class, 543248);
     kryo.register(K8sCanaryDeployRequest.class, 543249);
     kryo.register(K8sCanaryDeployResponse.class, 543250);
+    kryo.register(AzureARMListManagementGroupNamesResponse.class, 543251);
+    kryo.register(AzureARMListSubscriptionLocationsResponse.class, 543252);
+    kryo.register(AzureARMTaskParameters.AzureARMTaskType.class, 543253);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

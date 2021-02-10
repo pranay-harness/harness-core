@@ -1,6 +1,11 @@
 package io.harness.resourcegroup.remote.resource;
 
+import static io.harness.utils.PageUtils.getNGPageResponse;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -18,6 +23,7 @@ import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -60,11 +66,21 @@ public class HarnessResourceGroupResource {
     return ResponseDTO.newResponse(resourceGroupResponseOpt.get());
   }
 
+  @GET
+  @ApiOperation(value = "Get Resource Group list", nickname = "getResourceGroupList")
+  public ResponseDTO<PageResponse<ResourceGroupResponse>> list(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    return ResponseDTO.newResponse(getNGPageResponse(
+        resourceGroupService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm)));
+  }
+
   @POST
   @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
   public ResponseDTO<ResourceGroupResponse> create(@Valid ResourceGroupRequest resourceGroupRequest) {
-    ResourceGroupResponse resourceGroupResponse =
-        resourceGroupService.create(resourceGroupRequest.getResourceGroupDTO());
+    ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
 
@@ -73,7 +89,7 @@ public class HarnessResourceGroupResource {
   @ApiOperation(value = "Update a resource group", nickname = "updateResourceGroup")
   public ResponseDTO<ResourceGroupResponse> update(@Valid ResourceGroupRequest resourceGroupRequest) {
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.update(resourceGroupRequest.getResourceGroupDTO());
+        resourceGroupService.update(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 

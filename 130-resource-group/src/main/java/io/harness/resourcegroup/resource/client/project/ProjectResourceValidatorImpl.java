@@ -23,6 +23,6 @@ public class ProjectResourceValidatorImpl implements ResourceValidator {
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     PageResponse<ProjectResponse> projects =
         getResponse(projectManagerClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
-    return projects.getContent().size() < resourceIds.size();
+    return projects.getContent().size() == resourceIds.size();
   }
 }

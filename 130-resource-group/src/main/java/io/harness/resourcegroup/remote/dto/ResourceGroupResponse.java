@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ResourceGroupResponse {
-  @NotNull private ResourceGroupDTO resourceGroupDTO;
+  @NotNull private ResourceGroupDTO resourceGroup;
   private Long createdAt;
   private Long lastModifiedAt;
 
   @Builder
-  public ResourceGroupResponse(ResourceGroupDTO resourceGroupDTO, Long createdAt, Long lastModifiedAt) {
-    this.resourceGroupDTO = resourceGroupDTO;
+  public ResourceGroupResponse(ResourceGroupDTO resourceGroup, Long createdAt, Long lastModifiedAt) {
+    this.resourceGroup = resourceGroup;
     this.createdAt = createdAt;
     this.lastModifiedAt = lastModifiedAt;
   }

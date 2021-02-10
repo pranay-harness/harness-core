@@ -3,13 +3,16 @@ package io.harness.resourcegroup.model;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.CreatedBy;
@@ -44,11 +47,13 @@ public class ResourceGroup implements PersistentEntity {
   @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  @NotEmpty String identifier;
-  @NotEmpty String name;
-  String description;
-  @NotNull @Builder.Default Boolean system;
-  @NotEmpty List<ResourceSelector> resourceSelectors;
+  @NotEmpty @Size(max = 128) String identifier;
+  @NotEmpty @Size(max = 128) String name;
+  @Size(max = 1024) String description;
+  @NotEmpty @Size(min = 7, max = 7) String color;
+  @Size(max = 128) @Singular List<NGTag> tags;
+  @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
+  @NotEmpty @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

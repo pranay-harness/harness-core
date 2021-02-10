@@ -27,7 +27,7 @@ message Report {
   repeated string paths = 3;
 }
 
-message TestIntelligenceStep {
+message RunTestsStep {
   string goals = 1;
   string language = 2;   // repo language for running tests. Java | Python | Go etc.
   string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
@@ -68,7 +68,7 @@ message UnitStep {
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
     PluginStep plugin = 9;
-    TestIntelligenceStep testIntelligence = 10;
+    RunTestsStep runTests = 10;
   }
   string callback_token = 7;
   string task_id = 8;

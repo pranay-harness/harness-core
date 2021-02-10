@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.logstreaming;
 
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -13,6 +14,10 @@ public class NGLogCallback implements LogCallback {
 
   public NGLogCallback(
       ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName, boolean shouldOpenStream) {
+    if (iLogStreamingTaskClient == null) {
+      throw new InvalidRequestException(
+          "Log Streaming Client is not present. Ensure that feature flag [LOG_STREAMING_INTEGRATION] is on.");
+    }
     this.iLogStreamingTaskClient = iLogStreamingTaskClient;
     this.commandUnitName = commandUnitName;
 

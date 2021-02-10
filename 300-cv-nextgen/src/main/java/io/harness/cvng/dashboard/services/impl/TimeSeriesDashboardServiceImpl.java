@@ -15,7 +15,7 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.CVParallelExecutor;
+import io.harness.cvng.core.utils.CVNGParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
@@ -45,7 +45,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   @Inject private CVConfigService cvConfigService;
   @Inject private TimeSeriesRecordService timeSeriesRecordService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private ActivityService activityService;
 
   @Override
@@ -152,7 +152,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       return timeSeriesRecords;
     }));
 
-    List<List<TimeSeriesRecord>> timeSeriesThatMatter = cvParallelExecutor.executeParallel(recordsPerId);
+    List<List<TimeSeriesRecord>> timeSeriesThatMatter = cvngParallelExecutor.executeParallel(recordsPerId);
 
     List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
     timeSeriesThatMatter.forEach(timeSeriesRecords::addAll);

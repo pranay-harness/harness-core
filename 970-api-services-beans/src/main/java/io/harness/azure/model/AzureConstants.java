@@ -108,6 +108,10 @@ public interface AzureConstants {
   String UNRECOGNIZED_TASK = "Unrecognized task params while running azure vmss task: [%s]";
   String GALLERY_NAME_NULL_VALIDATION_MSG = "Parameter galleryName is required and cannot be null";
   String GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG = "Parameter imageName is required and cannot be null";
+  String DEPLOYMENT_NAME_BLANK_VALIDATION_MSG = "Parameter deploymentName is required and cannot be null or empty";
+  String LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG = "Location cannot be set at resource group scope";
+  String LOCATION_BLANK_VALIDATION_MSG = "Parameter location cannot be null or empty";
+  String MANAGEMENT_GROUP_ID_BLANK_VALIDATION_MSG = "Parameter groupId cannot be null or empty";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -139,6 +143,7 @@ public interface AzureConstants {
   String DOCKER_IMAGE_AND_TAG_PATH_PATTERN = "%s:%s";
   String WEB_APP_NAME_BLANK_ERROR_MSG = "Parameter webAppName cannot be null or empty";
   String SLOT_NAME_BLANK_ERROR_MSG = "Parameter slotName cannot be null or empty";
+  String TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE = "The swap slot - [%s] must be in running state for swap to start";
   String IMAGE_AND_TAG_BLANK_ERROR_MSG = "Parameter imageAndTag cannot be null or empty";
   String SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG = "Parameter shiftTrafficSlotName cannot be null or empty";
   String TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG =
@@ -181,4 +186,12 @@ public interface AzureConstants {
       Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>[^~!@#$%^&*'\"/?<>,;.]+)['\"]+\\)}$");
   String SECRET_REF_FIELS_NAME = "passwordRef";
   Pattern HTTPS_OR_HTTP_PREFIX_REGEX = Pattern.compile("^(https?)://.*$");
+
+  double INVALID_TRAFFIC = -1;
+  // Azure REST client settings
+  int REST_CLIENT_CONNECT_TIMEOUT = 5;
+  int REST_CLIENT_READ_TIMEOUT = 10;
+
+  String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/";
+  String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
 }

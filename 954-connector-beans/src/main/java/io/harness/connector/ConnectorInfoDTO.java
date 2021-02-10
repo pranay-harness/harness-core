@@ -17,14 +17,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorInfoDTO {
-  @NotNull String name;
-  @NotNull @EntityIdentifier String identifier;
+  @NotNull @NotBlank String name;
+  @NotNull @NotBlank @EntityIdentifier String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifier;

@@ -76,6 +76,7 @@ public abstract class CVConfig
   @NotNull private String projectIdentifier;
   @NotNull private String orgIdentifier;
   @NotNull private CVMonitoringCategory category;
+  private Boolean firstTaskQueued;
   private String perpetualTaskId;
   private String productName;
   @NotNull private String identifier;

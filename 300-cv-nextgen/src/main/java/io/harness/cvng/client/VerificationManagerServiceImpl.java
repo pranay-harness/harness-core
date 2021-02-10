@@ -5,11 +5,9 @@ import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.ws.rs.InternalServerErrorException;
@@ -22,12 +20,14 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   public String createDataCollectionTask(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     // Need to write this to handle retries, exception etc in a proper way.
-    Preconditions.checkState(bundle.getParams().containsKey(CVConfigKeys.connectorIdentifier));
-    Optional<ConnectorInfoDTO> connectorDTO = nextGenService.get(
-        accountId, bundle.getParams().get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
+    Preconditions.checkNotNull(bundle.getConnectorIdentifier());
+    Preconditions.checkNotNull(bundle.getSourceIdentifier());
+    Preconditions.checkNotNull(bundle.getDataCollectionWorkerId());
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException(
-          "Failed to retrieve connector with id: " + bundle.getParams().get(CVConfigKeys.connectorIdentifier));
+          "Failed to retrieve connector with id: " + bundle.getConnectorIdentifier());
     }
 
     bundle.setConnectorDTO(connectorDTO.get());
@@ -41,12 +41,14 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   @Override
   public void resetDataCollectionTask(String accountId, String orgIdentifier, String projectIdentifier,
       String perpetualTaskId, DataCollectionConnectorBundle bundle) {
-    Preconditions.checkState(bundle.getParams().containsKey(CVConfigKeys.connectorIdentifier));
-    Optional<ConnectorInfoDTO> connectorDTO = nextGenService.get(
-        accountId, bundle.getParams().get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
+    Preconditions.checkNotNull(bundle.getConnectorIdentifier());
+    Preconditions.checkNotNull(bundle.getSourceIdentifier());
+    Preconditions.checkNotNull(bundle.getDataCollectionWorkerId());
+    Optional<ConnectorInfoDTO> connectorDTO =
+        nextGenService.get(accountId, bundle.getConnectorIdentifier(), orgIdentifier, projectIdentifier);
     if (!connectorDTO.isPresent()) {
       throw new InternalServerErrorException(
-          "Failed to retrieve connector with id: " + bundle.getParams().get(CVConfigKeys.connectorIdentifier));
+          "Failed to retrieve connector with id: " + bundle.getConnectorIdentifier());
     }
 
     bundle.setConnectorDTO(connectorDTO.get());
@@ -85,11 +87,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
 
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorDTO(connectorDTO.get())
-                                               .params(Collections.emptyMap())
-                                               .dataCollectionType(KUBERNETES)
-                                               .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).dataCollectionType(KUBERNETES).build();
 
     return requestExecutor
         .execute(verificationManagerClient.getKubernetesNamespaces(
@@ -106,11 +105,8 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
       throw new InternalServerErrorException("Failed to retrieve connector with id: " + connectorIdentifier);
     }
 
-    DataCollectionConnectorBundle bundle = DataCollectionConnectorBundle.builder()
-                                               .connectorDTO(connectorDTO.get())
-                                               .params(Collections.emptyMap())
-                                               .dataCollectionType(KUBERNETES)
-                                               .build();
+    DataCollectionConnectorBundle bundle =
+        DataCollectionConnectorBundle.builder().connectorDTO(connectorDTO.get()).dataCollectionType(KUBERNETES).build();
 
     return requestExecutor
         .execute(verificationManagerClient.getKubernetesWorkloads(

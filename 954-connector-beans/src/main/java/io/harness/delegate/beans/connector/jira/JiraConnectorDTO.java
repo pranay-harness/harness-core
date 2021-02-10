@@ -27,7 +27,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("JiraConnector")
 public class JiraConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
-  @NotNull String jiraUrl;
+  @NotNull @NotBlank String jiraUrl;
   @NotBlank String username;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 

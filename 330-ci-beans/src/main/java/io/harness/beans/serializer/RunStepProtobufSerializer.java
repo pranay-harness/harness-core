@@ -59,7 +59,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
       runStepBuilder.addAllEnvVarOutputs(output);
     }
 
-    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout().getValue(), ciStepInfo.getDefaultTimeout());
+    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout(), ciStepInfo.getDefaultTimeout());
     runStepBuilder.setContext(
         StepContext.newBuilder().setNumRetries(runStepInfo.getRetry()).setExecutionTimeoutSecs(timeout).build());
 

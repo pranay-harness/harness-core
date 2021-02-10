@@ -17,7 +17,6 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ContainerInstance;
-import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.DesiredStatus;
@@ -112,7 +111,7 @@ public class AwsECSHelperServiceImplTest extends CategoryTest {
         .when(mockClient)
         .listContainerInstances(any());
     List<ContainerInstance> containerInstances = awsECSHelperService.listContainerInstancesForCluster(
-        AwsCrossAccountAttributes.builder().build(), "us-east-1", "cluster", ContainerInstanceStatus.ACTIVE);
+        AwsCrossAccountAttributes.builder().build(), "us-east-1", "cluster");
     assertThat(containerInstances).hasSize(1).contains(containerInstance);
   }
 

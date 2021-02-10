@@ -91,7 +91,8 @@ public class GcrApiServiceImpl implements GcrApiService {
               .stream()
               .map(tag -> {
                 Map<String, String> metadata = new HashMap();
-                metadata.put(ArtifactMetadataKeys.IMAGE, gcrUrl + "/" + imageName + ":" + tag);
+                metadata.put(ArtifactMetadataKeys.IMAGE,
+                    (gcrUrl.endsWith("/") ? gcrUrl : gcrUrl.concat("/")) + imageName + ":" + tag);
                 metadata.put(ArtifactMetadataKeys.TAG, tag);
                 return BuildDetailsInternal.builder()
                     .uiDisplayName("Tag# " + tag)
