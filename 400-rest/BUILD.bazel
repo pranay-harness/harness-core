@@ -671,14 +671,12 @@ shared_dependencies = [
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob([
         "src/main/**/*.java",
         "src/generated/**/*.java",
     ]),
-    data = ["//:resource"],
-    main_class = "software.wings.app.WingsApplication",
     resources = [
         "//400-rest/src/main/resources:resource",
     ],
@@ -695,9 +693,7 @@ java_library(
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
-    data = ["//:resource"],
     resources = [
-        "//:resource",
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
@@ -745,7 +741,6 @@ run_package_tests(
         "//400-rest/src/test/resources:resource",
     ],
     resources = [
-        "//:resource",
         "//400-rest/src/main/resources:resource",
         "//400-rest/src/test/resources:resource",
     ],

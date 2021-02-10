@@ -58,7 +58,7 @@ public class AllTests%s {
 
 """
 
-MAX_TESTS = 10
+MAX_TESTS = 8
 
 def calculate_index(length, i):
     if length < MAX_TESTS:

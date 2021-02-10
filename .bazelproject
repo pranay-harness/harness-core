@@ -13,6 +13,8 @@ directories:
   320-ci-execution
   330-ci-beans
   340-ce-nextgen
+  360-cg-manager
+  380-cg-graphql
   400-rest
   420-delegate-agent
   420-delegate-service
@@ -79,7 +81,8 @@ directories:
   980-commons
   980-java-agent
   990-commons-test
-  tools/bazel
+  tools
+  scripts
 
 import_run_configurations:
   run-configurations/DelegateApp.xml

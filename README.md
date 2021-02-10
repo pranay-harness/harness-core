@@ -152,7 +152,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
 
-    In portal/400-rest/config.yml set `searchEnabled` to `true`.
+    In portal/360-cg-manager/config.yml set `searchEnabled` to `true`.
 
     Run mongo in replica set:
 
@@ -200,8 +200,8 @@ NOTE: the data from it is used for every git operation github does on you behave
 cd to `portal` directory
 1. Start server by running following commands :
 
-   * `mvn clean install -DskipTests`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar server 400-rest/config.yml > portal.log &`
+   * `bazel build //360-cg-manager:module_deploy.jar`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar .bazel-dirs/bin/360-cg-manager/module_deploy.jar server 360-cg-manager/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
@@ -540,4 +540,4 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
-* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 400-rest module resources folder and restart manager.
+* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.

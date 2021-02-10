@@ -63,7 +63,6 @@ import io.harness.health.HealthService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
-import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
@@ -118,8 +117,6 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
-import io.harness.state.inspection.StateInspectionService;
-import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
@@ -196,7 +193,6 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
-import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.applicationmanifest.ManifestPerpetualTaskManger;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskMigrationJob;
@@ -208,7 +204,6 @@ import software.wings.service.impl.infrastructuredefinition.InfrastructureDefini
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
-import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -221,11 +216,8 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachineExecutor;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
 
@@ -944,24 +936,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     delegateService.getDelegateProfileSubject().register(delegateProfileEventHandler);
     delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
 
-    registerSharedObservers(injector);
-  }
-
-  public static void registerSharedObservers(Injector injector) {
-    final MaintenanceController maintenanceController = injector.getInstance(MaintenanceController.class);
-    maintenanceController.register(new HazelcastListener());
-
-    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
-    StateInspectionServiceImpl stateInspectionService =
-        (StateInspectionServiceImpl) injector.getInstance(Key.get(StateInspectionService.class));
-    StateMachineExecutor stateMachineExecutor = injector.getInstance(Key.get(StateMachineExecutor.class));
-    WorkflowExecutionServiceImpl workflowExecutionService =
-        (WorkflowExecutionServiceImpl) injector.getInstance(Key.get(WorkflowExecutionService.class));
-    WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));
-
-    settingsService.getManipulationSubject().register(workflowService);
-    stateMachineExecutor.getStatusUpdateSubject().register(workflowExecutionService);
-    stateInspectionService.getSubject().register(stateMachineExecutor);
+    ObserversHelper.registerSharedObservers(injector);
   }
 
   public static void registerIterators(Injector injector) {
