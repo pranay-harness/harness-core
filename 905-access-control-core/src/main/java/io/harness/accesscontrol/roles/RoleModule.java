@@ -1,15 +1,18 @@
 package io.harness.accesscontrol.roles;
 
-import io.harness.accesscontrol.roles.database.RoleDao;
-import io.harness.accesscontrol.roles.database.RoleDaoImpl;
+import io.harness.accesscontrol.roles.persistence.RoleDao;
+import io.harness.accesscontrol.roles.persistence.RoleDaoImpl;
 import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 
 public class RoleModule extends AbstractModule {
   private static RoleModule instance;
 
-  public static RoleModule getInstance() {
+  public static synchronized RoleModule getInstance() {
     if (instance == null) {
       instance = new RoleModule();
     }
@@ -18,6 +21,10 @@ public class RoleModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
+    morphiaRegistrars.addBinding().toInstance(RoleMorphiaRegistrar.class);
+
     bind(RoleService.class).to(RoleServiceImpl.class);
     bind(RoleDao.class).to(RoleDaoImpl.class);
     registerRequiredBindings();

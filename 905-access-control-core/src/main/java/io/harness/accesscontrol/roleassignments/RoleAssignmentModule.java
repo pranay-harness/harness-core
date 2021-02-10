@@ -1,15 +1,19 @@
 package io.harness.accesscontrol.roleassignments;
 
-import io.harness.accesscontrol.roleassignments.database.RoleAssignmentDao;
-import io.harness.accesscontrol.roleassignments.database.RoleAssignmentDaoImpl;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDaoImpl;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentMorphiaRegistrar;
 import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 
 public class RoleAssignmentModule extends AbstractModule {
   private static RoleAssignmentModule instance;
 
-  public static RoleAssignmentModule getInstance() {
+  public static synchronized RoleAssignmentModule getInstance() {
     if (instance == null) {
       instance = new RoleAssignmentModule();
     }
@@ -18,6 +22,10 @@ public class RoleAssignmentModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
+    morphiaRegistrars.addBinding().toInstance(RoleAssignmentMorphiaRegistrar.class);
+
     bind(RoleAssignmentService.class).to(RoleAssignmentServiceImpl.class);
     bind(RoleAssignmentDao.class).to(RoleAssignmentDaoImpl.class);
     registerRequiredBindings();

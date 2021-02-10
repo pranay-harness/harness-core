@@ -10,7 +10,7 @@ import com.google.inject.name.Names;
 public class ScopeModule extends AbstractModule {
   private static ScopeModule instance;
 
-  public static ScopeModule getInstance() {
+  public static synchronized ScopeModule getInstance() {
     if (instance == null) {
       instance = new ScopeModule();
     }

@@ -13,7 +13,7 @@ public enum HarnessScope implements Scope {
 
     @Override
     public String getPathKey() {
-      return "accounts";
+      return "account";
     }
 
     @Override
@@ -35,7 +35,7 @@ public enum HarnessScope implements Scope {
 
     @Override
     public String getPathKey() {
-      return "organizations";
+      return "org";
     }
 
     @Override
@@ -57,7 +57,7 @@ public enum HarnessScope implements Scope {
 
     @Override
     public String getPathKey() {
-      return "projects";
+      return "project";
     }
 
     @Override
