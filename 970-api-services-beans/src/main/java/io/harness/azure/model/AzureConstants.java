@@ -112,6 +112,10 @@ public interface AzureConstants {
   String LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG = "Location cannot be set at resource group scope";
   String LOCATION_BLANK_VALIDATION_MSG = "Parameter location cannot be null or empty";
   String MANAGEMENT_GROUP_ID_BLANK_VALIDATION_MSG = "Parameter groupId cannot be null or empty";
+  String DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP = "The deployment - [%s] does not exist in resource group - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION = "The deployment - [%s] does not exist in subscription - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP = "The deployment - [%s] does not exist in management group - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_TENANT = "The deployment - [%s] does not exist in tenant - [%s]";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -171,6 +175,7 @@ public interface AzureConstants {
   String SLOT_SWAP = "Swap Slots";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
+  long ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
   // Azure Docker Registry Type
   String ACR = "ACR";
