@@ -6,7 +6,6 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
 
-use crate::java_class;
 use crate::repo::GIT_REPO_ROOT_DIR;
 
 #[derive(Debug)]
@@ -97,7 +96,7 @@ pub fn external_class(key: &str, dependencies: &MultiMap<String, String>) -> Jav
     JavaClass {
         name: key.to_string(),
         location: "n/a".to_string(),
-        dependencies: java_class::class_dependencies(key, &dependencies),
+        dependencies: class_dependencies(key, &dependencies),
         target_module: Default::default(),
         break_dependencies_on: Default::default(),
     }
