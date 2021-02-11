@@ -1,8 +1,7 @@
 package io.harness.accesscontrol.scopes;
 
 public interface Scope {
-  String getPathKey();
-  String getDBKey();
+  String getKey();
   int getRank();
-  String getIdentifierKey();
+  String getIdentifierName();
 }

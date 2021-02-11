@@ -18,10 +18,8 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
-import io.harness.remote.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -73,11 +71,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    configureObjectMapper(bootstrap.getObjectMapper());
-  }
-
-  public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
   @Override
@@ -97,9 +90,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // TODO: Remove once permission management through yaml is present.
     PermissionService permissionService = injector.getInstance(PermissionService.class);
     Set<String> scopes = new HashSet<>();
-    scopes.add(HarnessScope.ACCOUNT.getPathKey());
-    scopes.add(HarnessScope.ORGANIZATION.getPathKey());
-    scopes.add(HarnessScope.PROJECT.getPathKey());
+    scopes.add(HarnessScope.ACCOUNT.getKey());
+    scopes.add(HarnessScope.ORGANIZATION.getKey());
+    scopes.add(HarnessScope.PROJECT.getKey());
     Permission permission = Permission.builder()
                                 .identifier("core.project.view")
                                 .name("View Project")
@@ -148,7 +141,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   public SwaggerBundleConfiguration getSwaggerConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    Collection<Class<?>> classes = getResourceClasses();
+    classes.add(AccessControlSwaggerListener.class);
+    String resourcePackage = String.join(",", getUniquePackages(classes));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setVersion("1.0");

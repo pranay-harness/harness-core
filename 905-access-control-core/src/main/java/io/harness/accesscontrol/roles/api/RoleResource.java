@@ -65,7 +65,7 @@ public class RoleResource {
       @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("includeManaged") boolean includeManaged) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     PageRequest pageRequest = PageRequest.builder().pageIndex(page).pageSize(size).build();
     PageResponse<Role> pageResponse = roleService.getAll(pageRequest, parentIdentifier, includeManaged);
     return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toDTO));
@@ -78,7 +78,7 @@ public class RoleResource {
       @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     return ResponseDTO.newResponse(
         toDTO(roleService.get(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
@@ -92,7 +92,7 @@ public class RoleResource {
       @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @Body RoleDTO roleDTO) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     return ResponseDTO.newResponse(toDTO(roleService.update(fromDTO(parentIdentifier, roleDTO))));
   }
 
@@ -102,7 +102,7 @@ public class RoleResource {
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @Body RoleDTO roleDTO) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(parentIdentifier, roleDTO))));
   }
 
@@ -113,7 +113,7 @@ public class RoleResource {
       @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     return ResponseDTO.newResponse(
         toDTO(roleService.delete(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
