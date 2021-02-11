@@ -59,6 +59,8 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
@@ -77,6 +79,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -101,9 +104,11 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -170,6 +175,7 @@ import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
@@ -177,6 +183,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.stats.model.TimeRange;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -194,6 +201,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
@@ -202,6 +210,8 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.EnvState;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.HoldingScope;
 import software.wings.utils.ArtifactType;
 
@@ -262,6 +272,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private DeploymentAuthHandler deploymentAuthHandler;
   @Mock private AuthService authService;
+  @Mock private GovernanceConfigService governanceConfigService;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 
@@ -2799,5 +2810,56 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(execution.getServiceIds().get(0)).isEqualTo(service.getUuid());
     assertThat(execution.getInfraDefinitionIds().get(0)).isEqualTo(infraDefinition.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowDeploymentFreezeExceptionWhenResumingFrozenStage() {
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().accountId(account.getUuid()).executionArgs(new ExecutionArgs()).build();
+    Pipeline pipeline =
+        Pipeline.builder()
+            .uuid(PIPELINE_ID)
+            .appId(app.getUuid())
+            .name(PIPELINE_NAME)
+            .pipelineStages(asList(PipelineStage.builder()
+                                       .pipelineStageElements(singletonList(PipelineStageElement.builder()
+                                                                                .type(APPROVAL.name())
+                                                                                .parallelIndex(1)
+                                                                                .name("APPROVAL")
+                                                                                .properties(new HashMap<>())
+                                                                                .build()))
+                                       .build(),
+                PipelineStage.builder()
+                    .pipelineStageElements(
+                        singletonList(PipelineStageElement.builder()
+                                          .type(ENV_STATE.name())
+                                          .parallelIndex(2)
+                                          .name("WORKFLOW1")
+                                          .properties(Collections.singletonMap(EnvStateKeys.envId, ENV_ID))
+                                          .build()))
+                    .build()))
+            .build();
+    when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, account.getUuid())).thenReturn(true);
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(account.getUuid())
+            .timeRangeBasedFreezeConfigs(Collections.singletonList(TimeRangeBasedFreezeConfig.builder()
+                                                                       .name("freeze1")
+                                                                       .uuid(FREEZE_WINDOW_ID)
+                                                                       .timeRange(new TimeRange(0, 1, ""))
+                                                                       .build()))
+            .build();
+    when(governanceConfigService.get(account.getUuid())).thenReturn(governanceConfig);
+    when(governanceConfigService.getFrozenEnvIdsForApp(account.getUuid(), app.getUuid(), governanceConfig))
+        .thenReturn(Collections.singletonMap(FREEZE_WINDOW_ID, Collections.singleton(ENV_ID)));
+    when(pipelineResumeUtils.getPipelineForResume(eq(app.getUuid()), eq(2), eq(workflowExecution), any()))
+        .thenReturn(pipeline);
+    assertThatThrownBy(
+        () -> workflowExecutionService.triggerPipelineResumeExecution(app.getUuid(), 2, workflowExecution))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage(
+            "Deployment Freeze Window [freeze1] is active for the environment. No deployments are allowed to proceed.");
   }
 }

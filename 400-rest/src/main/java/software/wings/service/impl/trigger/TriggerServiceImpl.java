@@ -997,7 +997,8 @@ public class TriggerServiceImpl implements TriggerService {
                 appManifest.getAccountId(), appManifest.getUuid(), manifestSelection.getVersionRegex()));
   }
 
-  private WorkflowExecution triggerDeployment(
+  @VisibleForTesting
+  WorkflowExecution triggerDeployment(
       List<Artifact> artifacts, List<HelmChart> helmCharts, TriggerExecution triggerExecution, Trigger trigger) {
     return triggerDeployment(artifacts, helmCharts, null, triggerExecution, trigger);
   }
