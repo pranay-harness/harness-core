@@ -8,10 +8,11 @@ import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.management.ManagementGroupInfo;
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
-import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupNamesResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupResponse;
 
 import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
 
@@ -33,14 +34,18 @@ public class AzureARMListManagementGroupTaskHandler extends AbstractAzureARMTask
   @Override
   protected AzureARMTaskResponse executeTaskInternal(AzureARMTaskParameters azureARMTaskParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
-    List<ManagementGroupInfo> managementGroupInfos = azureManagementClient.listManagementGroupNames(azureConfig);
-    return AzureARMListManagementGroupNamesResponse.builder()
-        .mngGroupNames(toManagementGroupIds(managementGroupInfos))
-        .build();
+    List<ManagementGroupInfo> managementGroupInfos = azureManagementClient.listManagementGroups(azureConfig);
+    return AzureARMListManagementGroupResponse.builder().mngGroups(getManagementGroups(managementGroupInfos)).build();
   }
 
-  private List<String> toManagementGroupIds(List<ManagementGroupInfo> managementGroupInfos) {
-    return managementGroupInfos.stream().map(group -> fixGroupId(group.getId())).collect(Collectors.toList());
+  private List<ManagementGroupData> getManagementGroups(List<ManagementGroupInfo> managementGroupInfos) {
+    return managementGroupInfos.stream().map(this::toManagementGroupData).collect(Collectors.toList());
+  }
+
+  private ManagementGroupData toManagementGroupData(ManagementGroupInfo group) {
+    String id = fixGroupId(group.getId());
+    String displayName = group.getProperties().getDisplayName();
+    return ManagementGroupData.builder().id(id).name(group.getName()).displayName(displayName).build();
   }
 
   @NotNull

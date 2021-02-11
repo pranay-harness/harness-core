@@ -25,12 +25,12 @@ public interface AzureManagementClient {
   List<String> listLocationsBySubscriptionId(AzureConfig azureConfig, String subscriptionId);
 
   /**
-   * List Management Group names.
+   * List Management Group.
    *
    * @param azureConfig
    * @return
    */
-  List<ManagementGroupInfo> listManagementGroupNames(AzureConfig azureConfig);
+  List<ManagementGroupInfo> listManagementGroups(AzureConfig azureConfig);
 
   /**
    * Export template in JSON format by including comments or parameters with default values or both.

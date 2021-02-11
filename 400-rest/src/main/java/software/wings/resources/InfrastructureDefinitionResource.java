@@ -448,9 +448,9 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
-  public RestResponse<List<String>> getManagementGroupNames(
+  public RestResponse<Map<String, String>> getManagementGroups(
       @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureDefinitionService.listManagementGroupNames(appId, computeProviderId));
+    return new RestResponse<>(infrastructureDefinitionService.listManagementGroups(appId, computeProviderId));
   }
 
   @GET
