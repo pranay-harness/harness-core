@@ -6,10 +6,10 @@ use crate::execute::{execute, Execute};
 mod analyze;
 #[path = "execute/execute.rs"]
 mod execute;
-#[path = "execute/execute_class_move.rs"]
-mod execute_class_move;
 #[path = "execute/execute_apply_target.rs"]
 mod execute_apply_target;
+#[path = "execute/execute_class_move.rs"]
+mod execute_class_move;
 
 mod java_class;
 mod java_module;

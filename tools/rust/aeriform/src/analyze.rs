@@ -293,7 +293,6 @@ fn check_for_moves(
 
     let target_module = target_module_option.unwrap();
 
-
     let mut issue = false;
     let mut all_classes: HashSet<String> = HashSet::new();
     let mut not_ready_yet = Vec::new();

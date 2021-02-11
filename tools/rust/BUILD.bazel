@@ -22,6 +22,15 @@ alias(
 )
 
 alias(
+    name = "glob",
+    actual = "@raze__glob__0_3_0//:glob",
+    tags = [
+        "cargo-raze",
+        "manual",
+    ],
+)
+
+alias(
     name = "lazy_static",
     actual = "@raze__lazy_static__1_4_0//:lazy_static",
     tags = [

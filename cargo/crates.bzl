@@ -143,6 +143,16 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
+        name = "raze__glob__0_3_0",
+        url = "https://crates.io/api/v1/crates/glob/0.3.0/download",
+        type = "tar.gz",
+        sha256 = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574",
+        strip_prefix = "glob-0.3.0",
+        build_file = Label("//cargo/remote:BUILD.glob-0.3.0.bazel"),
+    )
+
+    maybe(
+        http_archive,
         name = "raze__hashbrown__0_9_1",
         url = "https://crates.io/api/v1/crates/hashbrown/0.9.1/download",
         type = "tar.gz",
