@@ -20,7 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public abstract class AbstractK8sStepExecutorTest extends CategoryTest {
+public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
   @Mock protected K8sStepHelper k8sStepHelper;
 
   @Mock protected InfrastructureOutcome infrastructureOutcome;

@@ -7,7 +7,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>120-ng-manager</module>
-        <module>125-cd-nextgen</module>
         <module>130-resource-group</module>
         <module>136-git-sync-manager</module>
         <module>160-model-gen-tool</module>

@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class K8sCanaryStepTest extends AbstractK8sStepExecutorTest {
+public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @InjectMocks private K8sCanaryStep k8sCanaryStep;
 
   @Test

@@ -32,8 +32,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...  -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//120-ng-manager/... -//160-model-gen-tool/... -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//120-ng-manager/... -//160-model-gen-tool/...  -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -54,6 +54,7 @@ ps auxwwwe
 echo end off ps-report
 
 BAZEL_MODULES="\
+  //125-cd-nextgen:module \
   //130-resource-group:module \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
@@ -275,6 +276,7 @@ build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 
+build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
 build_bazel_module 340-ce-nextgen
 build_bazel_module 400-rest

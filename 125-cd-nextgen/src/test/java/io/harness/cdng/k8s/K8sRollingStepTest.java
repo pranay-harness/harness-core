@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class K8sRollingStepTest extends AbstractK8sStepExecutorTest {
+public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @InjectMocks private K8sRollingStep k8sRollingStep;
 
   @Test
