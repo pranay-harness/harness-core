@@ -1986,6 +1986,8 @@ maven_install(
         "software.amazon.awssdk:athena:2.10.18",
         "software.amazon.awssdk:auth:2.10.18",
         "com.google.cloud:google-cloud-bigquerydatatransfer:0.126.0-beta",
+        "org.springframework:spring-test:5.2.9.RELEASE",
+        "org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
