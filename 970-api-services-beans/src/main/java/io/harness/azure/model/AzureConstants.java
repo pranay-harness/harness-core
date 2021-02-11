@@ -197,6 +197,6 @@ public interface AzureConstants {
   int REST_CLIENT_CONNECT_TIMEOUT = 5;
   int REST_CLIENT_READ_TIMEOUT = 10;
 
-  String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/";
+  String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/managementGroups/";
   String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
 }

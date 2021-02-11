@@ -70,7 +70,7 @@ public class AzureManagementClientImpl extends AzureClient implements AzureManag
   }
 
   @Override
-  public List<ManagementGroupInfo> listManagementGroupNames(AzureConfig azureConfig) {
+  public List<ManagementGroupInfo> listManagementGroups(AzureConfig azureConfig) {
     log.debug("Start listing management groups, client id: {}", azureConfig.getClientId());
     Response<ManagementGroupListResult> response;
     try {
