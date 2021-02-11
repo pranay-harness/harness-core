@@ -1,7 +1,11 @@
 use clap::Clap;
+use std::fs::File;
+use std::io;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 
-use crate::execute_class_move::{move_class, MoveClass};
 use crate::execute_apply_target::{apply_target, ApplyTarget};
+use crate::execute_class_move::{move_class, MoveClass};
 
 pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.Module;";
 pub const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
@@ -12,7 +16,7 @@ enum Action {
     MoveClass(MoveClass),
 
     #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
-    ApplyTarget(ApplyTarget)
+    ApplyTarget(ApplyTarget),
 }
 
 /// A sub-command to analyze the project module targets and dependencies
@@ -32,4 +36,12 @@ pub fn execute(opts: Execute) {
             apply_target(action_opts);
         }
     }
+}
+
+pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(BufReader::new(file).lines())
 }
