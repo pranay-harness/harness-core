@@ -752,8 +752,8 @@ public class InfrastructureDefinitionGenerator {
     final SettingAttribute pcfCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.PCF_CONNECTOR);
 
     PcfInfraStructure pcfInfraStructure = PcfInfraStructure.builder()
-                                              .organization("raghvendra.singh@harness.io")
-                                              .space("dev")
+                                              .organization("harness")
+                                              .space("Qa_Verification_workflow_space")
                                               .cloudProviderId(pcfCloudProvider.getUuid())
                                               .build();
 
