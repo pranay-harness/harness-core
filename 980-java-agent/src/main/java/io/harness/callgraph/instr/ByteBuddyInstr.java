@@ -31,10 +31,10 @@ public class ByteBuddyInstr extends Instr {
 
   @Override
   public void instrument(Instrumentation instrumentation) {
-    final Advice methodAdvice = Advice.to(MethodTracer.class);
-    final Advice testMethodAdvice = Advice.to(TestMethodTracer.class);
-    final Advice constructorAdvice = Advice.to(ConstructorTracer.class);
-    final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class);
+    final Advice methodAdvice = Advice.to(MethodTracer.class).withExceptionPrinting();
+    final Advice testMethodAdvice = Advice.to(TestMethodTracer.class).withExceptionPrinting();
+    final Advice constructorAdvice = Advice.to(ConstructorTracer.class).withExceptionPrinting();
+    final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class).withExceptionPrinting();
 
     new AgentBuilder.Default()
         .disableClassFormatChanges()
@@ -48,6 +48,13 @@ public class ByteBuddyInstr extends Instr {
                       .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
               testMethodAdvice));
 
+          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
+              ElementMatchers.isConstructor().and(
+                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                      .or(ElementMatchers.isAnnotatedWith(Test.class))
+                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
+              testConstructorAdvice));
+
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
                   ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
@@ -57,18 +64,10 @@ public class ByteBuddyInstr extends Instr {
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
               ElementMatchers.isConstructor().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
-              testConstructorAdvice));
-
-          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
                   ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
                                           .or(ElementMatchers.isAnnotatedWith(Test.class))
                                           .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
               constructorAdvice));
-
           return builder;
         })
         .installOn(instrumentation);
