@@ -105,6 +105,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     }
 
     if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
+      // Failure strategy should be present.
+      List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
+      if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+        throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+      }
       stepParameters = ((WithRollbackInfo) stepElement.getStepSpecType())
                            .getStepParametersWithRollbackInfo(rollbackInfoBuilder.build(),
                                ParameterField.createValueField(stepElement.getTimeout().getValue().getTimeoutString()));
@@ -300,8 +305,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     rollbackInfoBuilder.nodeTypeToUuid(
         RollbackNodeType.STEP_GROUP.name(), getStepGroupRollbackStepsNodeId(currentField));
-    rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
-        executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
+    if (PlanCreatorUtils.checkIfStageRollbackStepsPresent(executionField)) {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
+          executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
+    } else {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(), null);
+    }
   }
 
   private String getStepGroupRollbackStepsNodeId(YamlField currentField) {
