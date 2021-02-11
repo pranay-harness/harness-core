@@ -3,11 +3,11 @@ use std::fs::{create_dir_all, remove_file, File};
 use std::io::{self, BufRead, BufReader, Result, Write};
 use std::path::Path;
 
+use crate::execute::MODULE_IMPORT;
+use crate::execute::TARGET_MODULE_IMPORT;
+
 use crate::java_class::TARGET_MODULE_PATTERN;
 use crate::repo::GIT_REPO_ROOT_DIR;
-
-const MODULE_IMPORT: &str = "import io.harness.annotations.dev.Module;";
-const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
 
 /// An action to be executed
 #[derive(Clap)]

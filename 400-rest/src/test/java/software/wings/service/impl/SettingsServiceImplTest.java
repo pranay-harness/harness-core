@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ARVIND;
-import static io.harness.rule.OwnerRule.DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 
@@ -155,7 +154,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(settingValidationService.validateCEK8sDelegateSetting(any()))
         .thenReturn(CEK8sDelegatePrerequisite.builder().build());
 
-    CEK8sDelegatePrerequisite response = settingsService.validateCEDelegateSetting(ACCOUNT_ID, DELEGATE);
+    CEK8sDelegatePrerequisite response = settingsService.validateCEDelegateSetting(ACCOUNT_ID, "DELEGATE");
 
     verify(settingValidationService, times(0)).validateCEK8sDelegateSetting(any());
     assertThat(response.getMetricsServer()).isNull();
