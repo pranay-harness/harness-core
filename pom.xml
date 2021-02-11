@@ -19,7 +19,6 @@
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
-        <module>280-batch-processing</module>
         <module>300-cv-nextgen</module>
         <module>310-ci-manager</module>
         <module>320-ci-execution</module>
