@@ -203,7 +203,11 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorValidationResult validate(@NotNull ConnectorDTO connector, String accountIdentifier) {
-    return defaultConnectorService.validate(connector, accountIdentifier);
+    ConnectorValidationResult validationResult = defaultConnectorService.validate(connector, accountIdentifier);
+    ConnectorInfoDTO connectorInfoDTO = connector.getConnectorInfo();
+    updateTheConnectorValidationResultInTheEntity(validationResult, accountIdentifier,
+        connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
+    return validationResult;
   }
 
   @Override
