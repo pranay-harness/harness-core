@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -48,15 +47,6 @@ public interface WhitelistService extends OwnedByAccount {
    * @return
    */
   boolean isValidIPAddress(@NotEmpty String accountId, @NotEmpty String ipAddress);
-
-  /**
-   * Check if feature is enabled and then apply whitelisting
-   * @param accountId
-   * @param ipAddress
-   * @param featureName
-   * @return
-   */
-  boolean checkIfFeatureIsEnabledAndWhitelisting(String accountId, String ipAddress, FeatureName featureName);
 
   Whitelist update(Whitelist whitelist);
 

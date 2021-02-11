@@ -28,7 +28,6 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
-import io.harness.security.annotations.PublicApiWithWhitelist;
 import io.harness.stream.BoundedInputStream;
 import io.harness.yaml.BaseYaml;
 
@@ -997,7 +996,7 @@ public class YamlResource {
   @Consumes(APPLICATION_JSON)
   @Timed
   @ExceptionMetered
-  @PublicApiWithWhitelist
+  @PublicApi
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
       @PathParam("entityToken") String entityToken, String yamlWebHookPayload, @Context HttpHeaders httpHeaders) {
     notNullCheck("webhook token", entityToken);
