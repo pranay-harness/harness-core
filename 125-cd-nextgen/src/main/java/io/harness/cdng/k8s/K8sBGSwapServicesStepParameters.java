@@ -16,15 +16,24 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @TypeAlias("k8sBGSwapServicesStepParameters")
 public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepParameters(
-      ParameterField<String> timeout, ParameterField<Boolean> skipDryRun, RollbackInfo rollbackInfo) {
+  public K8sBGSwapServicesStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
+      RollbackInfo rollbackInfo) {
+    this.name = name;
+    this.identifier = identifier;
     this.timeout = timeout;
-    this.skipDryRun = skipDryRun;
     this.rollbackInfo = rollbackInfo;
+    this.description = description;
+    this.skipCondition = skipCondition;
+    this.skipDryRun = skipDryRun;
   }
 }

@@ -19,14 +19,23 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("k8sApplyStepParameters")
 public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sStepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sApplyStepParameters(ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
+  public K8sApplyStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
       ParameterField<Boolean> skipSteadyStateCheck, ParameterField<List<String>> filePaths, RollbackInfo rollbackInfo) {
     super(skipDryRun, skipSteadyStateCheck, filePaths);
+    this.name = name;
+    this.identifier = identifier;
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
+    this.description = description;
+    this.skipCondition = skipCondition;
   }
 }

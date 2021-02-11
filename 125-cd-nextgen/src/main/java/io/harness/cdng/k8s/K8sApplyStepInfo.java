@@ -6,7 +6,7 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.K8sApplyStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -66,13 +66,17 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo stepParameterInfo) {
     return K8sApplyStepParameters.infoBuilder()
         .filePaths(this.getFilePaths())
         .skipDryRun(this.getSkipDryRun())
         .skipSteadyStateCheck(skipSteadyStateCheck)
-        .rollbackInfo(rollbackInfo)
-        .timeout(timeout)
+        .rollbackInfo(stepParameterInfo.getRollbackInfo())
+        .timeout(stepParameterInfo.getTimeout())
+        .name(stepParameterInfo.getName())
+        .identifier(stepParameterInfo.getIdentifier())
+        .skipCondition(stepParameterInfo.getSkipCondition())
+        .description(stepParameterInfo.getDescription())
         .build();
   }
 }
