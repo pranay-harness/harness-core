@@ -1,5 +1,9 @@
 package io.harness.azure.impl;
 
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_TENANT;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_NAME_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.LOCATION_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG;
@@ -14,7 +18,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.azure.AzureClient;
 import io.harness.azure.client.AzureManagementClient;
+import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
+import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
@@ -24,6 +30,7 @@ import io.harness.exception.AzureClientException;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Singleton;
+import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.resources.Deployment;
 import com.microsoft.azure.management.resources.DeploymentMode;
@@ -33,7 +40,10 @@ import com.microsoft.azure.management.resources.ResourceGroupExportTemplateOptio
 import com.microsoft.azure.management.resources.Subscription;
 import com.microsoft.azure.management.resources.implementation.DeploymentExtendedInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentInner;
+import com.microsoft.azure.management.resources.implementation.DeploymentOperationInner;
+import com.microsoft.azure.management.resources.implementation.DeploymentOperationsInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentValidateResultInner;
+import com.microsoft.azure.management.resources.implementation.DeploymentsInner;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -407,6 +417,128 @@ public class AzureManagementClientImpl extends AzureClient implements AzureManag
         azureConfig.getTenantId(), deploymentMode);
     return azure.deployments().manager().inner().deployments().beginCreateOrUpdateAtTenantScope(
         deploymentName, parameters);
+  }
+
+  @Override
+  public String getARMDeploymentStatus(ARMDeploymentSteadyStateContext context) {
+    Azure azureClient = getAzureClient(context);
+    DeploymentExtendedInner extendedInner = getDeploymentExtenderInner(context, azureClient);
+    return extendedInner.properties().provisioningState();
+  }
+
+  private DeploymentExtendedInner getDeploymentExtenderInner(
+      ARMDeploymentSteadyStateContext context, Azure azureClient) {
+    DeploymentExtendedInner extendedInner;
+    String deploymentName = context.getDeploymentName();
+    DeploymentsInner deploymentsInner = azureClient.deployments().manager().inner().deployments();
+
+    switch (context.getScopeType()) {
+      case RESOURCE_GROUP:
+        String resourceGroup = context.getResourceGroup();
+        if (!deploymentsInner.checkExistence(resourceGroup, deploymentName)) {
+          throw new IllegalArgumentException(
+              String.format(DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP, deploymentName, resourceGroup));
+        }
+
+        extendedInner = deploymentsInner.getByResourceGroup(resourceGroup, deploymentName);
+        break;
+
+      case SUBSCRIPTION:
+        if (!deploymentsInner.checkExistenceAtSubscriptionScope(deploymentName)) {
+          throw new IllegalArgumentException(
+              String.format(DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION, deploymentName, context.getSubscriptionId()));
+        }
+        extendedInner = deploymentsInner.getAtSubscriptionScope(deploymentName);
+        break;
+
+      case MANAGEMENT_GROUP:
+        String managementGroupId = context.getManagementGroupId();
+        if (!deploymentsInner.checkExistenceAtManagementGroupScope(managementGroupId, deploymentName)) {
+          throw new IllegalArgumentException(
+              String.format(DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP, deploymentName, managementGroupId));
+        }
+
+        extendedInner = deploymentsInner.getAtManagementGroupScope(managementGroupId, deploymentName);
+        break;
+
+      case TENANT:
+        if (!deploymentsInner.checkExistenceAtTenantScope(deploymentName)) {
+          throw new IllegalArgumentException(
+              String.format(DEPLOYMENT_DOES_NOT_EXIST_TENANT, deploymentName, context.getTenantId()));
+        }
+        extendedInner = deploymentsInner.getAtTenantScope(deploymentName);
+        break;
+
+      default:
+        throw new IllegalStateException("Unexpected value: " + context.getScopeType());
+    }
+    return extendedInner;
+  }
+
+  private Azure getAzureClient(ARMDeploymentSteadyStateContext context) {
+    ARMScopeType scopeType = context.getScopeType();
+    if (ARMScopeType.RESOURCE_GROUP == scopeType || ARMScopeType.SUBSCRIPTION == scopeType) {
+      return getAzureClient(context.getAzureConfig(), context.getSubscriptionId());
+    }
+    return getAzureClientWithDefaultSubscription(context.getAzureConfig());
+  }
+
+  @Override
+  public PagedList<DeploymentOperationInner> getDeploymentOperations(ARMDeploymentSteadyStateContext context) {
+    PagedList<DeploymentOperationInner> operationInners;
+    String deploymentName = context.getDeploymentName();
+    Azure azureClient = getAzureClient(context);
+    DeploymentOperationsInner deploymentOperationsInner =
+        azureClient.deployments().manager().inner().deploymentOperations();
+
+    switch (context.getScopeType()) {
+      case RESOURCE_GROUP:
+        operationInners = deploymentOperationsInner.listByResourceGroup(context.getResourceGroup(), deploymentName);
+        break;
+
+      case SUBSCRIPTION:
+        operationInners = deploymentOperationsInner.listAtSubscriptionScope(deploymentName);
+        break;
+
+      case MANAGEMENT_GROUP:
+        operationInners =
+            deploymentOperationsInner.listAtManagementGroupScope(context.getManagementGroupId(), deploymentName);
+        break;
+
+      case TENANT:
+        operationInners = deploymentOperationsInner.listAtTenantScope(deploymentName);
+        break;
+
+      default:
+        throw new IllegalStateException("Unexpected value: " + context.getScopeType());
+    }
+    return operationInners;
+  }
+
+  @Override
+  public String getARMDeploymentOutputs(ARMDeploymentSteadyStateContext context) {
+    String deploymentName = context.getDeploymentName();
+    Azure azureClient = getAzureClient(context);
+    DeploymentsInner deployments = azureClient.deployments().manager().inner().deployments();
+    DeploymentExtendedInner extendedInner;
+    switch (context.getScopeType()) {
+      case RESOURCE_GROUP:
+        extendedInner = deployments.getByResourceGroup(context.getResourceGroup(), deploymentName);
+        break;
+      case SUBSCRIPTION:
+        extendedInner = deployments.getAtSubscriptionScope(deploymentName);
+        break;
+      case MANAGEMENT_GROUP:
+        extendedInner = deployments.getAtManagementGroupScope(context.getManagementGroupId(), deploymentName);
+        break;
+      case TENANT:
+        extendedInner = deployments.getAtTenantScope(deploymentName);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected value: " + context.getScopeType());
+    }
+    Object outputs = extendedInner.properties().outputs();
+    return outputs != null ? outputs.toString() : "";
   }
 
   @NotNull

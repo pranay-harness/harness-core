@@ -1,13 +1,16 @@
 package io.harness.azure.client;
 
+import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.management.ManagementGroupInfo;
 
+import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.resources.Deployment;
 import com.microsoft.azure.management.resources.implementation.DeploymentExtendedInner;
+import com.microsoft.azure.management.resources.implementation.DeploymentOperationInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentValidateResultInner;
 import java.util.List;
 
@@ -162,4 +165,10 @@ public interface AzureManagementClient {
    * @return
    */
   DeploymentExtendedInner deployAtTenantScope(AzureConfig azureConfig, AzureARMTemplate template);
+
+  String getARMDeploymentStatus(ARMDeploymentSteadyStateContext context);
+
+  PagedList<DeploymentOperationInner> getDeploymentOperations(ARMDeploymentSteadyStateContext context);
+
+  String getARMDeploymentOutputs(ARMDeploymentSteadyStateContext context);
 }
