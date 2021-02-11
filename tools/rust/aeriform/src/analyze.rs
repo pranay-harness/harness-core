@@ -6,6 +6,7 @@ use strum_macros::EnumIter;
 
 use crate::java_class::{JavaClass, JavaClassTraits};
 use crate::java_module::{modules, JavaModule};
+use multimap::MultiMap;
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -51,20 +52,30 @@ pub fn analyze(opts: Analyze) {
     println!("loading...");
 
     let modules = modules();
-    // println!("{:?}", modules);
+    //println!("{:?}", modules);
 
     let mut class_modules: HashMap<&JavaClass, &JavaModule> = HashMap::new();
 
+    let mut class_dependees: MultiMap<&String, &String> = MultiMap::new();
+
     modules.values().for_each(|module| {
-        module.srcs.iter().for_each(|src| match class_modules.get(src.1) {
-            None => {
-                class_modules.insert(src.1, module);
-            }
-            Some(&current) => {
-                if current.index < module.index {
+        module.srcs.iter().for_each(|src| {
+            // println!("{:?}", src.0);
+            match class_modules.get(src.1) {
+                None => {
                     class_modules.insert(src.1, module);
                 }
+                Some(&current) => {
+                    if current.index < module.index {
+                        class_modules.insert(src.1, module);
+                    }
+                }
             }
+
+            src.1
+                .dependencies
+                .iter()
+                .for_each(|dependee| class_dependees.insert(dependee, src.0))
         });
     });
 
@@ -72,7 +83,6 @@ pub fn analyze(opts: Analyze) {
         .keys()
         .map(|&class| (class.name.clone(), class))
         .collect::<HashMap<String, &JavaClass>>();
-    // println!("{:?}", classes);
 
     if opts.module_filter.is_some() {
         println!("analizing for module {} ...", opts.module_filter.as_ref().unwrap());
@@ -91,7 +101,14 @@ pub fn analyze(opts: Analyze) {
     class_modules.iter().for_each(|tuple| {
         results.extend(check_already_in_target(tuple.0, tuple.1));
         results.extend(check_for_extra_break(tuple.0, tuple.1));
-        results.extend(check_for_moves(tuple.0, &modules, &classes, &class_modules));
+        results.extend(check_for_promotion(
+            tuple.0,
+            tuple.1,
+            &modules,
+            &classes,
+            &class_modules,
+        ));
+        results.extend(check_for_demotion(tuple.0, class_dependees.get_vec(&tuple.0.name), tuple.1, &modules, &classes, &class_modules));
         results.extend(check_for_deprecated_module(tuple.0, tuple.1));
     });
 
@@ -273,8 +290,9 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
     }
 }
 
-fn check_for_moves(
+fn check_for_promotion(
     class: &JavaClass,
+    module: &JavaModule,
     modules: &HashMap<String, JavaModule>,
     classes: &HashMap<String, &JavaClass>,
     class_modules: &HashMap<&JavaClass, &JavaModule>,
@@ -292,6 +310,10 @@ fn check_for_moves(
     }
 
     let target_module = target_module_option.unwrap();
+
+    if module.index > target_module.index {
+        return results;
+    }
 
     let mut issue = false;
     let mut all_classes: HashSet<String> = HashSet::new();
@@ -398,6 +420,154 @@ fn check_for_moves(
                 kind: Kind::Blocked,
                 message: format!(
                     "{} does not have untargeted dependencies to go to {}. First move {}",
+                    class.name,
+                    target_module.name,
+                    not_ready_yet.join(", ")
+                ),
+                action: Default::default(),
+                for_class: class.name.clone(),
+                indirect_classes: all_classes,
+                for_modules: mdls,
+            });
+        }
+    }
+
+    results
+}
+
+fn check_for_demotion(
+    class: &JavaClass,
+    dependees: Option<&Vec<&String>>,
+    module: &JavaModule,
+    modules: &HashMap<String, JavaModule>,
+    classes: &HashMap<String, &JavaClass>,
+    class_modules: &HashMap<&JavaClass, &JavaModule>,
+) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    let target_module_name = class.target_module.as_ref();
+    if target_module_name.is_none() {
+        return results;
+    }
+    let target_module_option = modules.get(target_module_name.unwrap());
+    if target_module_option.is_none() {
+        results.push(target_module_needed(class));
+        return results;
+    }
+
+    let target_module = target_module_option.unwrap();
+
+    if module.index < target_module.index {
+        return results;
+    }
+
+    let mut issue = false;
+    let mut all_classes: HashSet<String> = HashSet::new();
+    let mut not_ready_yet = Vec::new();
+    if dependees.is_some() {
+        dependees.unwrap().iter().for_each(|&dependee| {
+            let &dependee_class = classes
+                .get(dependee)
+                .expect(&format!("The source {} is not find in any module", dependee));
+
+            let &dependee_real_module = class_modules.get(dependee_class).expect(&format!(
+                "The class {} is not find in the modules",
+                dependee_class.name
+            ));
+
+            let dependee_target_module = if dependee_class.target_module.is_some() {
+                let dependee_target_module = modules.get(dependee_class.target_module.as_ref().unwrap());
+                if dependee_target_module.is_none() {
+                    results.push(target_module_needed(dependee_class));
+                    return ();
+                }
+
+                dependee_target_module.unwrap()
+            } else {
+                dependee_real_module
+            };
+
+            if !dependee_target_module.name.eq(&target_module.name)
+                && !dependee_target_module.dependencies.contains(&target_module.name)
+            {
+                issue = true;
+                let mdls = [dependee_target_module.name.clone(), target_module.name.clone()]
+                    .iter()
+                    .cloned()
+                    .collect();
+                let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
+                results.push(if dependee_class.break_dependencies_on.contains(&class.name) {
+                    Report {
+                        kind: Kind::DevAction,
+                        message: format!(
+                            "{} has dependee {} and this dependency has to be broken",
+                            dependee_class.name, class.name
+                        ),
+                        action: Default::default(),
+                        for_class: dependee_class.name.clone(),
+                        indirect_classes: indirect_classes,
+                        for_modules: mdls,
+                    }
+                } else {
+                    Report {
+                        kind: Kind::Error,
+                        message: format!(
+                            "{} has dependee {} that is in module {} but {} is not a dependee of it",
+                            dependee_class.name, class.name, dependee_target_module.name, target_module.name
+                        ),
+                        action: Default::default(),
+                        for_class: class.name.clone(),
+                        indirect_classes: indirect_classes,
+                        for_modules: mdls,
+                    }
+                });
+            }
+
+            if dependee_real_module.index > target_module.index {
+                all_classes.insert(dependee.clone());
+                not_ready_yet.push(format!("{} to {}", dependee, dependee_target_module.name));
+            }
+        });
+    }
+
+    if !issue {
+        let mdls = [target_module.name.clone()].iter().cloned().collect();
+
+        if not_ready_yet.is_empty() {
+            let module = class_modules.get(class);
+
+            let msg = format!("{} is ready to go to {}", class.name, target_module.name);
+
+            results.push(match module {
+                None => Report {
+                    kind: Kind::DevAction,
+                    action: Default::default(),
+                    message: msg,
+                    for_class: class.name.clone(),
+                    indirect_classes: Default::default(),
+                    for_modules: mdls,
+                },
+                Some(&module) => Report {
+                    kind: Kind::AutoAction,
+                    message: msg,
+                    action: format!(
+                        "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
+                        module.directory,
+                        class.relative_location(),
+                        target_module.directory
+                    ),
+                    for_class: class.name.clone(),
+                    indirect_classes: Default::default(),
+                    for_modules: mdls,
+                },
+            });
+        } else {
+            all_classes.insert(class.name.clone());
+
+            results.push(Report {
+                kind: Kind::Blocked,
+                message: format!(
+                    "{} does not have dependees to go to {}. First move {}",
                     class.name,
                     target_module.name,
                     not_ready_yet.join(", ")

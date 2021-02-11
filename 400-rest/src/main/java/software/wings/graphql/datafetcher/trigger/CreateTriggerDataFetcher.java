@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -14,6 +16,7 @@ import software.wings.service.intfc.TriggerService;
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CreateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrUpdateTriggerInput, QLTriggerPayload> {
   @Inject TriggerController triggerController;
   private TriggerService triggerService;

@@ -2,7 +2,9 @@ package software.wings.graphql.schema.mutation.execution.export;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.execution.export.request.ExportExecutionsRequestSummary;
 
 import software.wings.graphql.schema.mutation.QLMutationPayload;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLExportExecutionsPayloadKeys")
 @Scope(ResourceType.APPLICATION)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLExportExecutionsPayload implements QLMutationPayload {
   String clientMutationId;
   String requestId;

@@ -8,6 +8,8 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -35,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataFetcher {
   public static final String FILTERS = "filters";
   private static final String SORT_CRITERIA = "sortCriteria";

@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateUserDataFetcher extends BaseMutatorDataFetcher<QLUpdateUserInput, QLUpdateUserPayload> {
   @Inject private UserService userService;
   @Inject private UserGroupController userGroupController;

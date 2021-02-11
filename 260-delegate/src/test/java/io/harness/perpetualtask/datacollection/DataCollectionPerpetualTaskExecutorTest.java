@@ -22,7 +22,7 @@ import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.core.utils.CVNGParallelExecutor;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;

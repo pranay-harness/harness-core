@@ -15,10 +15,10 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.CVNGParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 

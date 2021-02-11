@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WorkflowDataFetcher extends AbstractObjectDataFetcher<QLWorkflow, QLWorkflowQueryParameters> {
   public static final String WORKFLOW_DOES_NOT_EXIST_MSG = "Workflow does not exist";
   public static final String EMPTY_WORKFLOW_NAME = "Empty Workflow name";

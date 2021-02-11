@@ -7,7 +7,9 @@ import static io.harness.validation.Validator.notBlankCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.ArtifactVariable;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ResumePipelineController {
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject PipelineExecutionController pipelineExecutionController;

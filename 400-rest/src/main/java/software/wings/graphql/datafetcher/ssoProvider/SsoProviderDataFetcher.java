@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.ssoProvider;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -17,6 +19,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SsoProviderDataFetcher extends AbstractObjectDataFetcher<QLSSOProvider, QLSSOProviderQueryParameters> {
   private static final String SSO_PROVIDER_DOES_NOT_EXIST_MSG = "SSO Provider does not exist";
   @Inject private HPersistence persistence;

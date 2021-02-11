@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.mutation.cloudProvider.k8s;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.security.PermissionAttribute;
@@ -13,6 +15,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLUpdateUsernameAndPasswordAuthentication {
   private RequestField<String> userName;
   private RequestField<String> userNameSecretId;

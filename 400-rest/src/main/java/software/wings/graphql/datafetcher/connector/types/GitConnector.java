@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.connector.types;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 
@@ -19,6 +21,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._380_CG_GRAPHQL)
 public class GitConnector extends Connector {
   private SecretManager secretManager;
   private SettingsService settingsService;

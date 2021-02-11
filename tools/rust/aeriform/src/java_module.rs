@@ -219,8 +219,7 @@ fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
     }
 
     let result = String::from_utf8(output.stdout).unwrap();
-
-    //println!("{:?}", result);
+    //println!("jar: {:?}", result);
 
     result
         .lines()
@@ -258,28 +257,22 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
     let mut split = name.split(":");
     let directory = split.next().unwrap().strip_prefix("//").unwrap().to_string();
     let target_name = split.next().unwrap();
-    let jar = if rule.eq("java_library") {
-        format!(
-            "{}/{}/lib{}.jar",
-            BAZEL_BAZEL_GENFILES_DIR.as_str(),
-            directory,
-            target_name
-        )
-    } else {
-        format!(
-            "{}/{}/{}.jar",
-            BAZEL_BAZEL_GENFILES_DIR.as_str(),
-            directory,
-            target_name
-        )
-    };
+    let prefix = if rule.eq("java_library") { "lib" } else { "" };
+
+    let jar = format!(
+        "{}/{}/{}{}.jar",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        directory,
+        prefix,
+        target_name
+    );
 
     let module_dependencies = populate_module_dependencies(name, modules);
 
     let (dependencies, protos) = populate_dependencies(&jar);
 
     let mut srcs = populate_srcs(&name, &dependencies);
-    //println!("{:?}", srcs);
+    // println!("{:?}", srcs);
 
     protos.iter().for_each(|class| {
         srcs.insert(class.to_string(), external_class(class, &dependencies));

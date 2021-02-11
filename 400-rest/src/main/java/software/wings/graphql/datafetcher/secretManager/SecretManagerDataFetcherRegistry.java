@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.secretManager;
 
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptionType;
 
@@ -14,6 +16,7 @@ import java.util.EnumMap;
 import java.util.Optional;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SecretManagerDataFetcherRegistry {
   private final Injector injector;
   private final EnumMap<EncryptionType, SecretManagerDataFetchers> registeredDataFetchers;
