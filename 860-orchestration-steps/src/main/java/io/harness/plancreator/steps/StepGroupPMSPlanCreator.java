@@ -80,6 +80,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
         .identifier(config.getIdentifier())
         .stepType(StepGroupStep.STEP_TYPE)
         .group(StepOutcomeGroup.STEP_GROUP.name())
+        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))

@@ -43,5 +43,4 @@ public class IntegrationStageConfig implements StageInfoConfig {
   private Infrastructure infrastructure;
   private List<DependencyElement> serviceDependencies;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) private ParameterField<Boolean> cloneCodebase;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 }
