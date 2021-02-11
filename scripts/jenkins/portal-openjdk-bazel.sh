@@ -113,7 +113,7 @@ cd ../..
 
 mkdir -p dist/batch-processing ;
 cd dist/batch-processing
-cp ../../280-batch-processing/target/batch-processing-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
 cp ../../280-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
