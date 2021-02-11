@@ -1,20 +1,18 @@
 package io.harness.resourcegroup;
 
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
+import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
+import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.remote.client.ServiceHttpClientConfig;
-import io.harness.resourcegroup.model.ResourceType;
-import io.harness.resourcegroup.resource.client.organization.OrganizationResourceValidatorImpl;
-import io.harness.resourcegroup.resource.client.project.ProjectResourceValidatorImpl;
-import io.harness.resourcegroup.resource.client.secretmanager.SecretManagerResourceValidatorImpl;
-import io.harness.resourcegroup.resource.validator.ResourceGroupValidatorService;
-import io.harness.resourcegroup.resource.validator.ResourceValidator;
-import io.harness.resourcegroup.resource.validator.impl.DynamicResourceGroupValidatorServiceImpl;
-import io.harness.resourcegroup.resource.validator.impl.StaticResourceGroupValidatorServiceImpl;
-import io.harness.resourcegroup.service.ResourceGroupService;
-import io.harness.resourcegroup.service.ResourceTypeService;
-import io.harness.resourcegroup.service.impl.ResourceGroupServiceImpl;
-import io.harness.resourcegroup.service.impl.ResourceTypeServiceImpl;
+import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
+import io.harness.resourcegroup.framework.service.ResourceTypeService;
+import io.harness.resourcegroup.framework.service.impl.DynamicResourceGroupValidatorServiceImpl;
+import io.harness.resourcegroup.framework.service.impl.ResourceGroupServiceImpl;
+import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
+import io.harness.resourcegroup.framework.service.impl.StaticResourceGroupValidatorServiceImpl;
+import io.harness.resourcegroup.resourceclient.api.ResourceValidator;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.AbstractModule;
@@ -22,10 +20,12 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ResourceGroupModule extends AbstractModule {
@@ -38,12 +38,6 @@ public class ResourceGroupModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new ProjectManagementClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
-        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
-    install(new OrganizationManagementClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
-        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceGroupValidatorService.class)
         .annotatedWith(Names.named("StaticResourceValidator"))
@@ -52,16 +46,35 @@ public class ResourceGroupModule extends AbstractModule {
     bind(ResourceGroupValidatorService.class)
         .annotatedWith(Names.named("DynamicResourceValidator"))
         .to(DynamicResourceGroupValidatorServiceImpl.class);
+    installResourceValidators();
+    addResourceValidatorConstraints();
+  }
+
+  private void addResourceValidatorConstraints() {
     requireBinding(SecretManagerClient.class);
+    requireBinding(ProjectManagerClient.class);
+    requireBinding(OrganizationManagerClient.class);
+  }
+
+  private void installResourceValidators() {
+    install(new ProjectManagementClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new OrganizationManagementClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
+        resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
   }
 
   @Named("resourceValidatorMap")
   @Provides
-  public Map<ResourceType, ResourceValidator> getResourceValidatorMap(Injector injector) {
-    Map<ResourceType, ResourceValidator> resourceValidators = new EnumMap<>(ResourceType.class);
-    resourceValidators.put(ResourceType.PROJECT, injector.getInstance(ProjectResourceValidatorImpl.class));
-    resourceValidators.put(ResourceType.ORGANIZATION, injector.getInstance(OrganizationResourceValidatorImpl.class));
-    resourceValidators.put(ResourceType.SECRET_MANAGER, injector.getInstance(SecretManagerResourceValidatorImpl.class));
-    return resourceValidators;
+  public Map<String, ResourceValidator> getResourceValidatorMap(Injector injector) {
+    Reflections reflections = new Reflections("io.harness.resourcegroup.resourceclient");
+    Set<Class<? extends ResourceValidator>> resourceValidators = reflections.getSubTypesOf(ResourceValidator.class);
+    Map<String, ResourceValidator> resourceValidatorMap = new HashMap<>();
+    for (Class<? extends ResourceValidator> clz : resourceValidators) {
+      ResourceValidator resourceValidator = injector.getInstance(clz);
+      resourceValidatorMap.put(resourceValidator.getResourceType(), resourceValidator);
+    }
+    return resourceValidatorMap;
   }
 }

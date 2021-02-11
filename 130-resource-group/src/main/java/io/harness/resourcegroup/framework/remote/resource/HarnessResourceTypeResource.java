@@ -1,13 +1,12 @@
-package io.harness.resourcegroup.remote.resource;
+package io.harness.resourcegroup.framework.remote.resource;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.resourcegroup.model.ResourceType;
+import io.harness.resourcegroup.framework.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.model.Scope;
-import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
-import io.harness.resourcegroup.remote.mapper.ResourceTypeMapper;
-import io.harness.resourcegroup.service.ResourceTypeService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -15,7 +14,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -41,8 +39,11 @@ public class HarnessResourceTypeResource {
 
   @GET
   @ApiOperation(value = "Gets a resource types available at this scope", nickname = "getResourceTypes")
-  public ResponseDTO<ResourceTypeDTO> get(@NotNull @QueryParam("scope") Scope scope) {
-    List<ResourceType> resourceTypes = resourceTypeService.getResourceTypes(scope);
-    return ResponseDTO.newResponse(ResourceTypeMapper.toDTO(resourceTypes));
+  public ResponseDTO<ResourceTypeDTO> get(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        resourceTypeService.getResourceTypes(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier)));
   }
 }

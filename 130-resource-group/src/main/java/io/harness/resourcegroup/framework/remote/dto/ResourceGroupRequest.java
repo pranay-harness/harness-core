@@ -1,4 +1,6 @@
-package io.harness.resourcegroup.remote.dto;
+package io.harness.resourcegroup.framework.remote.dto;
+
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.Valid;

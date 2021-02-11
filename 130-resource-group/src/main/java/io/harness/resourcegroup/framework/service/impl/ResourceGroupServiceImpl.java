@@ -1,8 +1,9 @@
-package io.harness.resourcegroup.service.impl;
+package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.beans.SortOrder;
@@ -10,13 +11,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.repositories.spring.ResourceGroupRepository;
+import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
+import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
+import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupResponse;
-import io.harness.resourcegroup.remote.mapper.ResourceGroupMapper;
-import io.harness.resourcegroup.resource.validator.ResourceGroupValidatorService;
-import io.harness.resourcegroup.service.ResourceGroupService;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -49,10 +50,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+  public io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
+    ResourceGroup resourceGroup =
+        io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.fromDTO(resourceGroupDTO);
     if (validate(resourceGroup)) {
-      return ResourceGroupMapper.toResponseWrapper(resourceGroupRepository.save(resourceGroup));
+      return io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.toResponseWrapper(
+          resourceGroupRepository.save(resourceGroup));
     } else {
       log.error("PreValidations failed for resource group {}", resourceGroup);
     }
@@ -60,8 +63,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      PageRequest pageRequest, String searchTerm) {
+  public Page<io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse> list(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
@@ -80,7 +83,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
           Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key).regex(searchTerm, "i"),
           Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
     }
-    return resourceGroupRepository.findAll(criteria, page).map(ResourceGroupMapper::toResponseWrapper);
+    return resourceGroupRepository.findAll(criteria, page)
+        .map(io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper::toResponseWrapper);
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
@@ -90,16 +94,15 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Optional<ResourceGroupResponse> delete(
-      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<ResourceGroup> resourceGroupOpt =
-        resourceGroupRepository.deleteByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+  public boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Long resourceGroupDeleted =
+        resourceGroupRepository.deleteResourceGroupByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             identifier, accountIdentifier, orgIdentifier, projectIdentifier);
-    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
+    return resourceGroupDeleted > 0;
   }
 
   @Override
-  public Optional<ResourceGroupResponse> find(
+  public Optional<io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse> find(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     accountIdentifier = StringUtils.stripToNull(accountIdentifier);
     orgIdentifier = StringUtils.stripToNull(orgIdentifier);
@@ -111,14 +114,17 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     Optional<ResourceGroup> resourceGroupOpt =
         resourceGroupRepository.findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             identifier, accountIdentifier, orgIdentifier, projectIdentifier);
-    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
+    return Optional.ofNullable(io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.toResponseWrapper(
+        resourceGroupOpt.orElse(null)));
   }
 
   @Override
   public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    if (resourceGroup.getHarnessManaged()) {
-      return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
+    ResourceGroup resourceGroup =
+        io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    if (resourceGroup.getHarnessManaged().equals(TRUE)) {
+      return Optional.ofNullable(
+          io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.toResponseWrapper(resourceGroup));
     }
     Optional<ResourceGroup> resourceGroupOpt =
         resourceGroupRepository.findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
