@@ -3,7 +3,9 @@ package io.harness.yaml.core.variables;
 import io.harness.common.SwaggerConstants;
 import io.harness.encryption.SecretRefData;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.visitor.helpers.variables.SecretVariableVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.yaml.core.LevelNodeQualifierName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName(NGVariableConstants.SECRET_TYPE)
+@SimpleVisitorHelper(helperClass = SecretVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.SecretNGVariable")
 public class SecretNGVariable implements NGVariable {
   String name;
