@@ -58,6 +58,8 @@ BAZEL_MODULES="\
   //220-graphql-test:supporter-test \
   //230-model-test:module \
   //340-ce-nextgen:module \
+  //350-event-xxxxxxxxmodule \
+  //350-event-xxxxxxxxmodule_deploy.jar \
   //360-cg-manager:module \
   //360-cg-manager:module_deploy.jar \
   //400-rest:module \
@@ -270,6 +272,7 @@ build_proto_module() {
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 940-notification-client
+build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 
 build_bazel_module 130-resource-group

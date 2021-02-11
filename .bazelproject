@@ -13,6 +13,7 @@ directories:
   320-ci-execution
   330-ci-beans
   340-ce-nextgen
+  350-event-server
   360-cg-manager
   380-cg-graphql
   400-rest
