@@ -1,4 +1,4 @@
-package io.harness.resourcegroup.remote.resource;
+package io.harness.resourcegroup.framework.remote.resource;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -9,9 +9,9 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
-import io.harness.resourcegroup.remote.dto.ResourceGroupResponse;
-import io.harness.resourcegroup.service.ResourceGroupService;
+import io.harness.resourcegroup.framework.remote.dto.ResourceGroupRequest;
+import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
+import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -79,7 +79,11 @@ public class HarnessResourceGroupResource {
 
   @POST
   @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
-  public ResponseDTO<ResourceGroupResponse> create(@Valid ResourceGroupRequest resourceGroupRequest) {
+  public ResponseDTO<ResourceGroupResponse> create(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid ResourceGroupRequest resourceGroupRequest) {
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
@@ -87,7 +91,12 @@ public class HarnessResourceGroupResource {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a resource group", nickname = "updateResourceGroup")
-  public ResponseDTO<ResourceGroupResponse> update(@Valid ResourceGroupRequest resourceGroupRequest) {
+  public ResponseDTO<ResourceGroupResponse> update(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid ResourceGroupRequest resourceGroupRequest) {
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.update(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -96,13 +105,11 @@ public class HarnessResourceGroupResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Deletes a resource group", nickname = "deleteResourceGroup")
-  public ResponseDTO<ResourceGroupResponse> delete(
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+  public ResponseDTO<Boolean> delete(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
-    return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
+    boolean deleted = resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    return ResponseDTO.newResponse(deleted);
   }
 }

@@ -1,11 +1,11 @@
-package io.harness.resourcegroup.remote.mapper;
+package io.harness.resourcegroup.framework.remote.mapper;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupResponse;
 
 import lombok.experimental.UtilityClass;
 

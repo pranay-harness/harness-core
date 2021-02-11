@@ -1,6 +1,4 @@
-package io.harness.resourcegroup.remote.dto;
-
-import io.harness.resourcegroup.model.ResourceType;
+package io.harness.resourcegroup.framework.remote.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
@@ -16,5 +14,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceTypeDTO {
-  @ApiModelProperty(required = true) @NotEmpty List<ResourceType> resourceTypes;
+  @ApiModelProperty(required = true) @NotEmpty List<String> resourceTypes;
 }

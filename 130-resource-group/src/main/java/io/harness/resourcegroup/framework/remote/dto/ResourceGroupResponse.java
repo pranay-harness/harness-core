@@ -1,4 +1,6 @@
-package io.harness.resourcegroup.remote.dto;
+package io.harness.resourcegroup.framework.remote.dto;
+
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
