@@ -56,8 +56,10 @@ shared_dependencies = [
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java",
-                  "src/generated/**/*.java",]),
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/generated/**/*.java",
+    ]),
     data = ["//:resource"],
     main_class = "io.harness.batch.processing.BatchProcessingApplication",
     resources = [
