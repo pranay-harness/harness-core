@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.audit;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ChangeContentHelper {
   @Inject private SegmentHandler segmentHandler;
   @Inject private AccountService accountService;

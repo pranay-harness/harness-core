@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.anomaly;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.graphql.AnomaliesFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AnomalyDataQueryBuilder {
   private static void addAccountFilter(SelectQuery selectQuery, String accountId) {
     selectQuery.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));

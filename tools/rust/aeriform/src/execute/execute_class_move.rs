@@ -1,10 +1,9 @@
 use clap::Clap;
 use std::fs::{create_dir_all, remove_file, File};
-use std::io::{self, BufRead, BufReader, Result, Write};
+use std::io::{Result, Write};
 use std::path::Path;
 
-use crate::execute::MODULE_IMPORT;
-use crate::execute::TARGET_MODULE_IMPORT;
+use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT};
 
 use crate::java_class::TARGET_MODULE_PATTERN;
 use crate::repo::GIT_REPO_ROOT_DIR;
@@ -20,14 +19,6 @@ pub struct MoveClass {
 
     #[clap(long)]
     to_module: String,
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(BufReader::new(file).lines())
 }
 
 pub fn move_class(opts: MoveClass) {

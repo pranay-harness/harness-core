@@ -1,8 +1,12 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataMetadataFields;
 import software.wings.graphql.schema.type.aggregation.QLDataType;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public enum QLCEFilterType {
   Application(CEExportDataMetadataFields.APPID),
   EndTime(CEExportDataMetadataFields.STARTTIME),

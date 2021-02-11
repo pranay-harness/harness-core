@@ -3,7 +3,9 @@ package software.wings.graphql.datafetcher.outcome;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class OutcomeConnectionDataFetcher
     extends AbstractConnectionDataFetcher<QLOutcomeConnection, QLOutcomesQueryParameters> {
   @Inject private WorkflowExecutionController workflowExecutionController;

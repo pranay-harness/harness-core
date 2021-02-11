@@ -1,4 +1,6 @@
 use clap::Clap;
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
@@ -9,6 +11,10 @@ use crate::execute_class_move::{move_class, MoveClass};
 
 pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.Module;";
 pub const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
+
+lazy_static! {
+    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"^@TargetModule\(Module._.*\)").unwrap();
+}
 
 #[derive(Clap)]
 enum Action {

@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.anomaly;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
@@ -11,6 +14,7 @@ import lombok.experimental.UtilityClass;
 
 @Value
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AnomaliesDataTableSchema {
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE, BOOLEAN }
 

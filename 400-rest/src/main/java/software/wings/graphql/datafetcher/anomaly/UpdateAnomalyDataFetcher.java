@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.anomaly;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
@@ -20,6 +22,7 @@ import java.sql.Statement;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateAnomalyDataFetcher extends BaseMutatorDataFetcher<QLAnomalyInput, QLUpdateAnomalyPayLoad> {
   private TimeScaleDBService dbService;
 
