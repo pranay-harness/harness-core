@@ -82,21 +82,3 @@ exports_files(
     ],
     visibility = ["//visibility:public"],
 )
-
-load("@rules_rust//rust:rust.bzl", "rust_binary")
-
-rust_binary(
-    name = "aeriform",
-    srcs = glob(["src/**/*.rs"]),
-    proc_macro_deps = [
-        ":strum_macros",
-    ],
-    deps = [
-        "rayon",
-        "regex",
-        ":clap",
-        ":lazy_static",
-        ":multimap",
-        ":strum",
-    ],
-)
