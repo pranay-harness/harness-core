@@ -63,6 +63,7 @@ import org.mockito.Mock;
 
 @TargetModule(Module._960_API_SERVICES)
 public class GovernanceConfigServiceImplTest extends WingsBaseTest {
+  public static final int DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
   @Mock FeatureFlagService featureFlagService;
   @Mock EnvironmentService environmentService;
   @Mock AppService appService;
@@ -86,6 +87,35 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
     JsonNode actual = JsonUtils.toJsonNode(savedGovernanceConfig);
     JsonNode expected = JsonUtils.readResourceFile("governance/governance_config_expected.json", JsonNode.class);
     assertThat(actual).hasToString(expected.toString());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDeleteDeploymentFreeze() {
+    GovernanceConfig governanceConfig =
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
+
+    GovernanceConfig savedGovernanceConfig =
+        governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().remove(0);
+    savedGovernanceConfig = governanceConfigService.upsert(governanceConfig.getAccountId(), savedGovernanceConfig);
+    assertThat(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs()).isEmpty();
+    assertThat(savedGovernanceConfig.isDeploymentFreeze()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSwitchMasterFreezeOnAndOffWithNoFreezeWindows() {
+    GovernanceConfig governanceConfig = GovernanceConfig.builder().accountId(ACCOUNT_ID).deploymentFreeze(true).build();
+
+    GovernanceConfig savedGovernanceConfig =
+        governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    savedGovernanceConfig.setDeploymentFreeze(false);
+    savedGovernanceConfig = governanceConfigService.upsert(governanceConfig.getAccountId(), savedGovernanceConfig);
+    assertThat(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs()).isEmpty();
+    assertThat(savedGovernanceConfig.isDeploymentFreeze()).isFalse();
   }
 
   @Test
@@ -595,5 +625,54 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(() -> governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Duplicate name freezer");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldRecalculateNextIterations() {
+    long currentTimeMillis = System.currentTimeMillis();
+    TimeRange range =
+        new TimeRange(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS, "Asia/Kolkatta");
+    TimeRange range2 =
+        new TimeRange(currentTimeMillis - DAY_IN_MILLIS, currentTimeMillis + DAY_IN_MILLIS, "Asia/Kolkatta");
+    TimeRange range3 =
+        new TimeRange(currentTimeMillis + 2 * DAY_IN_MILLIS, currentTimeMillis + 3 * DAY_IN_MILLIS, "Asia/Kolkatta");
+
+    ApplicationFilter appSelection1 = AllAppFilter.builder()
+                                          .blackoutWindowFilterType(BlackoutWindowFilterType.ALL)
+                                          .envSelection(new AllEnvFilter(EnvironmentFilterType.ALL))
+                                          .build();
+
+    ApplicationFilter appSelection3 =
+        CustomAppFilter.builder()
+            .blackoutWindowFilterType(BlackoutWindowFilterType.CUSTOM)
+            .apps(asList(APP_ID))
+            .envSelection(new CustomEnvFilter(EnvironmentFilterType.CUSTOM, asList(ENV_ID, ENV_ID + 2)))
+            .build();
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, null, null, true, asList(appSelection1, appSelection3), null, "uuid");
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig2 =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range2, null, null, true, asList(appSelection3), null, "uuid");
+
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig3 =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range3, null, null, false, asList(appSelection1, appSelection3), null, "uuid");
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(ACCOUNT_ID)
+            .timeRangeBasedFreezeConfigs(asList(timeRangeBasedFreezeConfig, timeRangeBasedFreezeConfig2))
+            .build();
+
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID, APP_ID + 2, APP_ID + 3));
+    governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    assertThat(governanceConfig.getNextCloseIterations())
+        .hasSize(2)
+        .containsExactly(currentTimeMillis + DAY_IN_MILLIS, currentTimeMillis + 2 * DAY_IN_MILLIS);
+    assertThat(governanceConfig.getNextIterations()).hasSize(1).containsExactly(currentTimeMillis + DAY_IN_MILLIS);
   }
 }

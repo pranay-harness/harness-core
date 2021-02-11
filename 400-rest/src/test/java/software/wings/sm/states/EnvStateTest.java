@@ -25,7 +25,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -422,6 +424,33 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
     assertThat(executionResponse.getErrorMessage()).isNotBlank();
+    EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnRejectedResponseForMasterDeploymentFreeze() {
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.triggerOrchestrationExecution(
+             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, Collections.emptyList(), "", true));
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(WorkflowExecution.builder().build());
+
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService)
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    verify(deploymentFreezeUtils, never())
+        .sendPipelineRejectionNotification(eq(ACCOUNT_ID), eq(APP_ID), anyList(), anyMap());
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("Master Deployment Freeze is active. No deployments are allowed.");
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
   }
