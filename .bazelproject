@@ -9,6 +9,7 @@ directories:
   220-graphql-test
   230-model-test
   260-delegate
+  280-batch-processing
   310-ci-manager
   320-ci-execution
   330-ci-beans
