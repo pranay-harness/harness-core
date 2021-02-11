@@ -96,7 +96,7 @@ cd ../..
 
 mkdir -p dist/event-server ;
 cd dist/event-server
-cp ../../350-event-server/target/event-server-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/350-event-server/module_deploy.jar event-server-capsule.jar
 cp ../../350-event-server/key.pem .
 cp ../../350-event-server/cert.pem .
 cp ../../350-event-server/event-service-config.yml .
