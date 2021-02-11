@@ -22,63 +22,68 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class ScopeServiceImpl implements ScopeService {
-  private final Map<String, Scope> scopesByIdentifierKey;
-  private final Map<String, Scope> scopesByPathKey;
+  private final Map<String, Scope> scopesByIdentifierName;
+  private final Map<String, Scope> scopesByKey;
 
   @Inject
-  public ScopeServiceImpl(@Named(SCOPES_BY_IDENTIFIER_KEY) Map<String, Scope> scopesByIdentifierKey,
-      @Named(SCOPES_BY_PATH_KEY) Map<String, Scope> scopesByPathKey) {
-    this.scopesByIdentifierKey = scopesByIdentifierKey;
-    this.scopesByPathKey = scopesByPathKey;
+  public ScopeServiceImpl(@Named(SCOPES_BY_IDENTIFIER_NAME) Map<String, Scope> scopesByIdentifierName,
+      @Named(SCOPES_BY_KEY) Map<String, Scope> scopesByKey) {
+    this.scopesByIdentifierName = scopesByIdentifierName;
+    this.scopesByKey = scopesByKey;
   }
 
-  private List<Scope> getValidScopes(Map<String, String> scopeInstancesByIdentifierKey) {
-    List<String> validIdentifierKeys = scopeInstancesByIdentifierKey.keySet()
+  private List<Scope> getValidScopes(Map<String, String> scopeInstancesByIdentifierName) {
+    List<String> validIdentifierKeys = scopeInstancesByIdentifierName.keySet()
                                            .stream()
-                                           .filter(key -> isNotEmpty(scopeInstancesByIdentifierKey.get(key)))
+                                           .filter(key -> isNotEmpty(scopeInstancesByIdentifierName.get(key)))
                                            .collect(Collectors.toList());
     validIdentifierKeys.forEach(key -> {
-      if (scopesByIdentifierKey.get(key) == null) {
+      if (scopesByIdentifierName.get(key) == null) {
         throw new InvalidArgumentsException(
             "Invalid scope. The given identifier is either invalid or not registered with the service", USER);
       }
     });
     return validIdentifierKeys.stream()
-        .map(scopesByIdentifierKey::get)
+        .map(scopesByIdentifierName::get)
         .sorted(Comparator.comparingInt(Scope::getRank))
         .collect(Collectors.toList());
   }
 
   @Override
-  public Scope getScope(Map<String, String> scopeInstancesByIdentifierKey) {
-    List<Scope> validScopes = getValidScopes(scopeInstancesByIdentifierKey);
+  public Map<String, Scope> getAllScopesByKey() {
+    return scopesByKey;
+  }
+
+  @Override
+  public Scope getLowestScope(Map<String, String> scopeInstancesByIdentifierName) {
+    List<Scope> validScopes = getValidScopes(scopeInstancesByIdentifierName);
     return validScopes.get(validScopes.size() - 1);
   }
 
   @Override
-  public String getScopeIdentifier(@NotNull Map<String, String> scopeInstancesByIdentifierKey) {
-    List<String> subPaths = getValidScopes(scopeInstancesByIdentifierKey)
+  public String getFullyQualifiedPath(@NotNull Map<String, String> scopeInstancesByIdentifierName) {
+    List<String> subPaths = getValidScopes(scopeInstancesByIdentifierName)
                                 .stream()
                                 .map(scope
-                                    -> "/".concat(scope.getPathKey())
+                                    -> "/".concat(scope.getKey())
                                            .concat("/")
-                                           .concat(scopeInstancesByIdentifierKey.get(scope.getIdentifierKey())))
+                                           .concat(scopeInstancesByIdentifierName.get(scope.getIdentifierName())))
                                 .collect(Collectors.toList());
     return String.join("", subPaths);
   }
 
   @Override
   public Map<String, String> getIdentifiers(String scopeIdentifier) {
-    Map<String, String> scopeInstancesByPathKey =
+    Map<String, String> scopeInstancesByKey =
         Arrays.stream(scopeIdentifier.split("/")).collect(IdentifierCollector.collector());
     Map<String, String> scopeInstancesByIdentifierKey = new HashMap<>();
-    scopeInstancesByPathKey.forEach((pathKey, scopeInstance) -> {
-      Scope scope = scopesByPathKey.get(pathKey);
+    scopeInstancesByKey.forEach((pathKey, scopeInstance) -> {
+      Scope scope = scopesByKey.get(pathKey);
       if (scope == null) {
         throw new InvalidArgumentsException(
             "Invalid scope. The given path is either invalid or not registered with the service", USER);
       }
-      scopeInstancesByIdentifierKey.put(scope.getIdentifierKey(), scopeInstance);
+      scopeInstancesByIdentifierKey.put(scope.getIdentifierName(), scopeInstance);
     });
     return scopeInstancesByIdentifierKey;
   }

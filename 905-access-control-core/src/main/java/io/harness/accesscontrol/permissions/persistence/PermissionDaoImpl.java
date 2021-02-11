@@ -6,6 +6,7 @@ import io.harness.exception.DuplicateFieldException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +37,15 @@ public class PermissionDaoImpl implements PermissionDao {
 
   @Override
   public List<Permission> list(Scope scope, String resourceType) {
-    Collection<PermissionDBO> permissionDBOs = permissionRepository.findAllByScopesContaining(scope.getPathKey());
-    return permissionDBOs.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
+    if (scope != null) {
+      Collection<PermissionDBO> permissionDBOs = permissionRepository.findAllByScopesContaining(scope.getKey());
+      return permissionDBOs.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
+    }
+    Iterable<PermissionDBO> permissionDBOs = permissionRepository.findAll();
+    List<Permission> permissions = new ArrayList<>();
+    permissionDBOs.iterator().forEachRemaining(
+        permissionDBO -> permissions.add(PermissionDBOMapper.fromDBO(permissionDBO)));
+    return permissions;
   }
 
   @Override

@@ -64,7 +64,7 @@ public class RoleAssignmentResource {
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("principalIdentifier") String principalIdentifier,
       @QueryParam("roleIdentifier") String roleIdentifier) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     PageRequest pageRequest = PageRequest.builder().pageIndex(page).pageSize(size).build();
     PageResponse<RoleAssignment> pageResponse =
         roleAssignmentService.getAll(pageRequest, parentIdentifier, principalIdentifier, roleIdentifier);
@@ -77,7 +77,7 @@ public class RoleAssignmentResource {
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @Body RoleAssignmentDTO roleAssignmentDTO) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(parentIdentifier, roleAssignmentDTO));
     return ResponseDTO.newResponse(toDTO(createdRoleAssignment));
   }
@@ -89,7 +89,7 @@ public class RoleAssignmentResource {
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
     String parentIdentifier =
-        scopeService.getScopeIdentifier(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     RoleAssignment deletedRoleAssignment =
         roleAssignmentService.delete(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role Assignment not found with the given scope and identifier");

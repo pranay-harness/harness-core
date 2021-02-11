@@ -9,16 +9,20 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
-@ApiModel(value = "Role")
+@FieldNameConstants(innerTypeName = "RoleDTOKeys")
+@ApiModel(value = RoleDTO.MODEL_NAME)
 public class RoleDTO {
+  public static final String MODEL_NAME = "Role";
+
   @ApiModelProperty(required = true) @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
-  @ApiModelProperty(required = true, allowableValues = "account, org, project") @NotEmpty Set<String> scopes;
-  @NotEmpty Set<String> permissions;
+  @ApiModelProperty(required = true) @NotEmpty Set<String> permissions;
+  @NotEmpty Set<String> scopes;
   String description;
   Map<String, String> tags;
 }

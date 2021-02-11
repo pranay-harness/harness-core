@@ -4,12 +4,14 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 public interface ScopeService {
-  String SCOPES_BY_IDENTIFIER_KEY = "scopesByIdentifierKey";
-  String SCOPES_BY_PATH_KEY = "scopesByPathKey";
+  String SCOPES_BY_IDENTIFIER_NAME = "scopesByIdentifierName";
+  String SCOPES_BY_KEY = "scopesByKey";
 
-  Scope getScope(@NotNull Map<String, String> scopeIdentifiers);
+  Map<String, Scope> getAllScopesByKey();
 
-  String getScopeIdentifier(@NotNull Map<String, String> scopeIdentifiers);
+  Scope getLowestScope(@NotNull Map<String, String> scopeIdentifiers);
+
+  String getFullyQualifiedPath(@NotNull Map<String, String> scopeIdentifiers);
 
   Map<String, String> getIdentifiers(String scopeIdentifier);
 }

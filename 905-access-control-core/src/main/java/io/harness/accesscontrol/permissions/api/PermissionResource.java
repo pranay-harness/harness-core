@@ -47,13 +47,21 @@ public class PermissionResource {
   }
 
   @GET
-  @ApiOperation(value = "Get All Permissions", nickname = "getPermissionList")
+  @ApiOperation(value = "Get All Permissions in a Scope", nickname = "getPermissionList")
   public ResponseDTO<List<PermissionResponseDTO>> get(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
       @QueryParam("resourceType") String resourceType) {
-    Scope scope =
-        scopeService.getScope(HarnessScopeUtils.getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+    Scope scope = scopeService.getLowestScope(
+        HarnessScopeUtils.getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
     List<Permission> permissions = permissionService.list(scope, resourceType);
+    return ResponseDTO.newResponse(permissions.stream().map(PermissionDTOMapper::toDTO).collect(Collectors.toList()));
+  }
+
+  @Path("/all")
+  @GET
+  @ApiOperation(value = "Get All Permissions in the System", nickname = "getSystemPermissionList")
+  public ResponseDTO<List<PermissionResponseDTO>> get(@QueryParam("resourceType") String resourceType) {
+    List<Permission> permissions = permissionService.list(null, resourceType);
     return ResponseDTO.newResponse(permissions.stream().map(PermissionDTOMapper::toDTO).collect(Collectors.toList()));
   }
 }

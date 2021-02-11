@@ -9,16 +9,20 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
-@ApiModel(value = "Permission")
+@FieldNameConstants(innerTypeName = "PermissionDTOKeys")
+@ApiModel(value = PermissionDTO.MODEL_NAME)
 public class PermissionDTO {
+  public static final String MODEL_NAME = "Permission";
+
   @ApiModelProperty(required = true) @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
+  @ApiModelProperty(required = true) PermissionStatus status;
+  @ApiModelProperty(required = true) @NotEmpty Set<String> scopes;
   String resourceType;
   String action;
-  @ApiModelProperty(required = true) PermissionStatus status;
-  @ApiModelProperty(required = true, allowableValues = "account, org, project") @NotEmpty Set<String> scopes;
 }
