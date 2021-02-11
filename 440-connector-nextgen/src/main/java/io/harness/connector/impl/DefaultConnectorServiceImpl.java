@@ -133,12 +133,29 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String orgIdentifier = connectorDTO.getConnectorInfo().getOrgIdentifier();
     String projectIdentifier = connectorDTO.getConnectorInfo().getProjectIdentifier();
 
+    if (isNotEmpty(projectIdentifier)) {
+      // its a project level connector
+      if (isEmpty(orgIdentifier)) {
+        throw new InvalidRequestException(
+            String.format("Project %s specified without the org Identifier", projectIdentifier));
+      }
+      checkThatTheProjectExists(orgIdentifier, projectIdentifier, accountIdentifier);
+    } else if (isNotEmpty(orgIdentifier)) {
+      // its a org level connector
+      checkThatTheOrganizationExists(orgIdentifier, accountIdentifier);
+    }
+  }
+
+  private void checkThatTheOrganizationExists(String orgIdentifier, String accountIdentifier) {
     if (isNotEmpty(orgIdentifier)) {
       final Optional<Organization> organization = organizationService.get(accountIdentifier, orgIdentifier);
       if (!organization.isPresent()) {
         throw new NotFoundException(String.format("org [%s] not found.", orgIdentifier));
       }
     }
+  }
+
+  private void checkThatTheProjectExists(String orgIdentifier, String projectIdentifier, String accountIdentifier) {
     if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
       final Optional<Project> project = projectService.get(accountIdentifier, orgIdentifier, projectIdentifier);
       if (!project.isPresent()) {
@@ -150,6 +167,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
+    validateThatAConnectorWithThisNameDoesNotExists(connectorRequestDTO.getConnectorInfo(), accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
@@ -161,10 +179,33 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return connectorMapper.writeDTO(savedConnectorEntity);
   }
 
+  private void validateThatAConnectorWithThisNameDoesNotExists(
+      ConnectorInfoDTO connectorRequestDTO, String accountIdentifier) {
+    Page<Connector> connectors = getConnectorsWithGivenNames(accountIdentifier, connectorRequestDTO.getOrgIdentifier(),
+        connectorRequestDTO.getProjectIdentifier(), connectorRequestDTO.getName());
+    if (connectors != null && connectors.getSize() >= 1) {
+      throw new InvalidRequestException(
+          format("Connector with name [%s] already exists", connectorRequestDTO.getName()));
+    }
+  }
+
+  private Page<Connector> getConnectorsWithGivenNames(
+      Object accountIdentifier, Object orgIdentifier, Object projectIdentifier, Object name) {
+    Criteria criteria = new Criteria()
+                            .and(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ConnectorKeys.name)
+                            .is(name);
+    return connectorRepository.findAll(criteria, Pageable.unpaged());
+  }
+
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
     assurePredefined(connectorRequest, accountIdentifier);
-
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
@@ -184,7 +225,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    Connector updatedConnector = connectorRepository.save(newConnector);
+    Connector updatedConnector = null;
+    try {
+      updatedConnector = connectorRepository.save(newConnector);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
+    }
     return connectorMapper.writeDTO(updatedConnector);
   }
 
@@ -193,6 +239,25 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     validateTheConnectorTypeIsNotChanged(existingConnector.getType(), connectorInfo.getConnectorType(),
         accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
         connectorInfo.getIdentifier());
+    validateThatAConnectorWithThisNameDoesNotExistsDuringUpdate(
+        connectorInfo, accountIdentifier, existingConnector.getId());
+  }
+
+  private void validateThatAConnectorWithThisNameDoesNotExistsDuringUpdate(
+      ConnectorInfoDTO connectorInfo, String accountIdentifier, String id) {
+    Page<Connector> connectors = getConnectorsWithGivenNames(accountIdentifier, connectorInfo.getOrgIdentifier(),
+        connectorInfo.getProjectIdentifier(), connectorInfo.getName());
+    if (connectors.getSize() > 1 || whetherADifferentConnectorExistsWithThisName(id, connectors)) {
+      throw new InvalidRequestException(format("Connector with name [%s] already exists", connectorInfo.getName()));
+    }
+  }
+
+  private boolean whetherADifferentConnectorExistsWithThisName(String id, Page<Connector> connectors) {
+    if (connectors.getSize() == 1) {
+      Connector connector = connectors.getContent().get(0);
+      return !connector.getId().equals(id);
+    }
+    return false;
   }
 
   private void validateTheConnectorTypeIsNotChanged(ConnectorType existingConnectorType,
