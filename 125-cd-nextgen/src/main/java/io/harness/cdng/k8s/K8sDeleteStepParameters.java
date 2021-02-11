@@ -16,14 +16,23 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("k8sDeleteStepParameters")
 public class K8sDeleteStepParameters extends K8sDeleteBaseStepInfo implements K8sStepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sDeleteStepParameters(DeleteResourcesWrapper deleteResources, ParameterField<String> timeout,
+  public K8sDeleteStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, DeleteResourcesWrapper deleteResources, ParameterField<String> timeout,
       ParameterField<Boolean> skipDryRun, RollbackInfo rollbackInfo) {
     super(deleteResources, skipDryRun);
+    this.name = name;
+    this.identifier = identifier;
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
+    this.description = description;
+    this.skipCondition = skipCondition;
   }
 }

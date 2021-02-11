@@ -26,15 +26,24 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("httpStepParameters")
 public class HttpStepParameters extends HttpBaseStepInfo implements StepParameters {
+  String name;
+  String identifier;
+  ParameterField<String> description;
+  ParameterField<String> skipCondition;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public HttpStepParameters(ParameterField<String> url, ParameterField<String> method, List<HttpHeaderConfig> headers,
-      ParameterField<String> requestBody, ParameterField<String> assertion, List<NGVariable> outputVariables,
-      ParameterField<String> timeout, RollbackInfo rollbackInfo) {
+  public HttpStepParameters(String name, String identifier, ParameterField<String> description,
+      ParameterField<String> skipCondition, ParameterField<String> url, ParameterField<String> method,
+      List<HttpHeaderConfig> headers, ParameterField<String> requestBody, ParameterField<String> assertion,
+      List<NGVariable> outputVariables, ParameterField<String> timeout, RollbackInfo rollbackInfo) {
     super(url, method, headers, requestBody, assertion, outputVariables);
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
+    this.name = name;
+    this.identifier = identifier;
+    this.description = description;
+    this.skipCondition = skipCondition;
   }
 }

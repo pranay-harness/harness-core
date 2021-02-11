@@ -6,7 +6,7 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelp
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.common.script.ExecutionTarget;
@@ -71,17 +71,21 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return ShellScriptStepParameters.infoBuilder()
         .environmentVariables(getEnvironmentVariables())
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
         .outputVariables(getOutputVariables())
         .environmentVariables(getEnvironmentVariables())
-        .rollbackInfo(rollbackInfo)
+        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .shellType(getShell())
         .source(getSource())
-        .timeout(timeout)
+        .timeout(baseStepParameterInfo.getTimeout())
+        .name(baseStepParameterInfo.getName())
+        .identifier(baseStepParameterInfo.getIdentifier())
+        .description(baseStepParameterInfo.getDescription())
+        .skipCondition(baseStepParameterInfo.getSkipCondition())
         .build();
   }
 }

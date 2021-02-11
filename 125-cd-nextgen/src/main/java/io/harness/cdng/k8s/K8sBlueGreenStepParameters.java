@@ -16,14 +16,23 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("K8sBlueGreenStepParameters")
 public class K8sBlueGreenStepParameters extends K8sBlueGreenBaseStepInfo implements K8sStepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBlueGreenStepParameters(
-      ParameterField<String> timeout, ParameterField<Boolean> skipDryRun, RollbackInfo rollbackInfo) {
+  public K8sBlueGreenStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
+      RollbackInfo rollbackInfo) {
     super(skipDryRun);
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
+    this.name = name;
+    this.identifier = identifier;
+    this.description = description;
+    this.skipCondition = skipCondition;
   }
 }
