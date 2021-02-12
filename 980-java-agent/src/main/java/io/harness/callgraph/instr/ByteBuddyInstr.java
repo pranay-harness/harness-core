@@ -7,8 +7,6 @@ import io.harness.callgraph.instr.tracer.TestMethodTracer;
 import io.harness.callgraph.util.StringSetMatcherStartsWith;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;

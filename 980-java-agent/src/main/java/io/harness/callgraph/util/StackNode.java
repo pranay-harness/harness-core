@@ -1,5 +1,7 @@
 package io.harness.callgraph.util;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +29,7 @@ public class StackNode {
     StringBuffer result = new StringBuffer();
 
     String parameters = this.signature;
-    if (parameters == null || parameters.isEmpty()) {
+    if (isEmpty(parameters)) {
       parameters = "void";
     }
 
