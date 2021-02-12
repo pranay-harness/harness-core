@@ -94,6 +94,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -692,5 +693,28 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(
         pipeline2.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.envId))
         .isEqualTo(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDoNothingForNoLinkedPipelinesWhenEnvIsChanged() {
+    Workflow oldWorkflow = aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_ID).build();
+    Workflow newWorkflow =
+        aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID_CHANGED).uuid(WORKFLOW_ID).build();
+    when(wingsPersistence.getWithAppId(any(), anyString(), anyString())).thenReturn(oldWorkflow);
+
+    when(pipelineService.listPipelines(any())).thenReturn(aPageResponse().withResponse(null).build());
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(stateMachineQuery);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(workflowQuery);
+    when(workflowQuery.filter(anyString(), any())).thenReturn(workflowQuery);
+    when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
+    when(stateMachineQuery.get()).thenReturn(StateMachine.StateMachineBuilder.aStateMachine().build());
+
+    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
+    workflowService.updateWorkflow(newWorkflow, null, false, false, false);
+    verify(pipelineService, Mockito.never()).savePipelines(any(), eq(true));
   }
 }
