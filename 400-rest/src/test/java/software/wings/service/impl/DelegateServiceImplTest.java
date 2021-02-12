@@ -64,6 +64,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
@@ -128,9 +129,11 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private Account account;
   @Mock private DelegateProfileService delegateProfileService;
+  @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
+
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
@@ -281,10 +284,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateService.add(delegateBuilder.accountId(ACCOUNT_ID).build());
     assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo(delegateId);
 
-    delegateService.add(delegateBuilder.hostName("hostName").build());
+    Delegate delegate = delegateBuilder.hostName("hostName").build();
+    delegateService.add(delegate);
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate);
     assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo("hostName");
 
-    delegateService.add(delegateBuilder.delegateName("delegateName").build());
+    Delegate delegate2 = delegateBuilder.hostName("delegateName").build();
+    delegateService.add(delegate2);
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate2);
     assertThat(delegateService.obtainDelegateName(ACCOUNT_ID, delegateId, true)).isEqualTo("delegateName");
   }
 
@@ -293,7 +300,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAcquireDelegateTaskWhitelistedDelegateAndFFisOFF() {
     Delegate delegate = createDelegateBuilder().build();
-    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
+    doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(false).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
     DelegateTask delegateTask = getDelegateTask();
@@ -320,7 +327,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldStartTaskValidationForWhitelistedDelegateAndFFisOn() {
     Delegate delegate = createDelegateBuilder().build();
-    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
+    doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
     doReturn(getDelegateTask())
@@ -343,7 +350,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldStartTaskValidationNotWhitelistedAndFFisOff() {
     Delegate delegate = createDelegateBuilder().build();
-    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
+    doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
 
     doReturn(getDelegateTask())
@@ -366,7 +373,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotAcquireDelegateTaskIfTaskIsNull() {
     Delegate delegate = createDelegateBuilder().build();
-    doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
+    doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(null).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
     assertThat(spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ")).isNull();
   }
@@ -794,6 +801,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     String delegateId = persistence.save(delegate);
 
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate);
+
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
 
@@ -818,6 +827,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                             .build();
 
     String delegateId = persistence.save(delegate);
+
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate);
 
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
@@ -849,6 +860,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         DelegateProfile.builder().accountId(ACCOUNT_ID).uuid(TEST_DELEGATE_PROFILE_ID).startupScript("").build();
 
     when(delegateProfileService.get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID)).thenReturn(delegateProfile);
+
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate);
 
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
@@ -885,6 +898,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                                           .build();
 
     when(delegateProfileService.get(ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID)).thenReturn(delegateProfile);
+    when(delegateCache.get(ACCOUNT_ID, delegateId, true)).thenReturn(delegate);
 
     DelegateInitializationDetails delegateInitializationDetails =
         delegateService.getDelegateInitializationDetails(ACCOUNT_ID, delegateId);
@@ -981,10 +995,20 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     when(delegateProfileService.get(ACCOUNT_ID, delegateProfileId2)).thenReturn(delegateProfile2);
 
-    delegateIds.add(persistence.save(delegate1));
-    delegateIds.add(persistence.save(delegate2));
-    delegateIds.add(persistence.save(delegate3));
-    delegateIds.add(persistence.save(delegate4));
+    String delegateId_1 = persistence.save(delegate1);
+    String delegateId_2 = persistence.save(delegate2);
+    String delegateId_3 = persistence.save(delegate3);
+    String delegateId_4 = persistence.save(delegate4);
+
+    when(delegateCache.get(ACCOUNT_ID, delegateId_1, true)).thenReturn(delegate1);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_2, true)).thenReturn(delegate2);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_3, true)).thenReturn(delegate3);
+    when(delegateCache.get(ACCOUNT_ID, delegateId_4, true)).thenReturn(delegate4);
+
+    delegateIds.add(delegateId_1);
+    delegateIds.add(delegateId_2);
+    delegateIds.add(delegateId_3);
+    delegateIds.add(delegateId_4);
 
     return delegateIds;
   }
