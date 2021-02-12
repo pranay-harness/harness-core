@@ -41,7 +41,8 @@ comment on column tests.stdout is 'stdout';
 comment on column tests.stderr is 'stderr';
 
 
-SELECT create_distributed_hypertable('tests', 'time');
+-- distributed hypertable is supported only in 2.0. As we are using TSDB 1.7, using create_hypertable for now
+--SELECT create_hypertable('tests', 'time');
 
 CREATE INDEX IF NOT EXISTS tests_idx1 ON tests(account_id, org_id, project_id, pipeline_id, build_id,time DESC);
 
