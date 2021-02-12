@@ -30,6 +30,10 @@ if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     echo "Using Appdynamics java agent"
 fi
 
+if [[ "${DEBUG_MODE}" == "true" ]]; then
+    JAVA_OPTS=$JAVA_OPTS" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5005"
+fi
+
 curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
 JAVA_OPTS=$JAVA_OPTS" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
 

@@ -113,11 +113,12 @@ directories:
   970-rbac-core
   980-commons
   990-commons-test
-  run-configurations
   200-functional-test
-  tools
-  scripts
   cargo
+  dockerization
+  run-configurations
+  scripts
+  tools
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
