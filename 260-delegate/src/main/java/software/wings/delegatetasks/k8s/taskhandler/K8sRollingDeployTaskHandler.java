@@ -27,6 +27,8 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -69,6 +71,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -30,6 +32,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class OpenShiftDelegateService {
   @Inject private OpenShiftClient openShiftClient;
 
