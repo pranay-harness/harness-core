@@ -22,15 +22,12 @@ import net.bytebuddy.matcher.NameMatcher;
  * Instrument the target classes
  */
 public class ByteBuddyInstr extends Instr {
-  Set<String> testAnnotations =
-      new HashSet<>(Arrays.asList("org.junit.Test", "org.junit.jupiter.api.Test", "org.testng.annotations.Test"));
-
   public static <T extends NamedElement> ElementMatcher.Junction<T> nameStartsWith(Set<String> prefix) {
     return new NameMatcher<T>(new StringSetMatcherStartsWith(prefix));
   }
 
-  public ByteBuddyInstr(Set<String> includes) {
-    super(includes);
+  public ByteBuddyInstr(Set<String> includes, Set<String> testAnnotations) {
+    super(includes, testAnnotations);
   }
 
   @Override

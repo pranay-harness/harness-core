@@ -131,4 +131,20 @@ public class ConfigTest {
       assertThat(Config.getInst().instrPackages()[i]).isEqualTo(pkgs[i]);
     }
   }
+
+  @Test
+  @Owner(developers = SHIVAKUMAR)
+  @Category(UnitTests.class)
+  public void testTestAnnotations() throws IOException {
+    String[] annotations = {"io.harness.Test1", "io.harness.Test2", "io.harness.Test3"};
+    for (String annotation : annotations) {
+      ConfigUtils.replace(true, "testAnnotations: " + annotation);
+      assertThat(Config.getInst().testAnnotations()[0]).isEqualTo(annotation);
+    }
+
+    ConfigUtils.replace(true, "testAnnotations: " + annotations[0] + "," + annotations[1] + "," + annotations[2]);
+    for (int i = 0; i < annotations.length; i++) {
+      assertThat(Config.getInst().testAnnotations()[i]).isEqualTo(annotations[i]);
+    }
+  }
 }
