@@ -153,6 +153,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateProfileObserver;
@@ -240,7 +241,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -388,6 +388,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private SettingsService settingsService;
   @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
   @Inject private NGSecretService ngSecretService;
+  @Inject private DelegateCache delegateCache;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -402,18 +403,6 @@ public class DelegateServiceImpl implements DelegateService {
                                                                       return fetchDelegateMetadataFromStorage();
                                                                     }
                                                                   });
-
-  private LoadingCache<String, Optional<Delegate>> delegateCache =
-      CacheBuilder.newBuilder()
-          .maximumSize(MAX_DELEGATE_META_INFO_ENTRIES)
-          .expireAfterWrite(1, TimeUnit.MINUTES)
-          .build(new CacheLoader<String, Optional<Delegate>>() {
-            @Override
-            public Optional<Delegate> load(String delegateId) {
-              return Optional.ofNullable(
-                  persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
-            }
-          });
 
   private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this::fetchTaskCount, 1, TimeUnit.MINUTES);
 
@@ -807,29 +796,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate get(String accountId, String delegateId, boolean forceRefresh) {
-    try {
-      if (forceRefresh) {
-        delegateCache.refresh(delegateId);
-      }
-      Delegate delegate = delegateCache.get(delegateId).orElse(null);
-      if (delegate != null && (delegate.getAccountId() == null || !delegate.getAccountId().equals(accountId))) {
-        // TODO: this is serious, we should not return the delegate if the account is not the expected one
-        //       just to be on the safe side, make sure that all such scenarios are first fixed
-        log.error("Delegate account id mismatch", new Exception(""));
-      }
-      return delegate;
-    } catch (ExecutionException e) {
-      log.error("Execution exception", e);
-    } catch (UncheckedExecutionException e) {
-      log.error("Delegate not found exception", e);
-    }
-    return null;
-  }
-
-  @Override
   public Delegate update(Delegate delegate) {
-    Delegate originalDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
+    Delegate originalDelegate = delegateCache.get(delegate.getAccountId(), delegate.getUuid(), false);
     boolean newProfileApplied = originalDelegate != null
         && compare(originalDelegate.getDelegateProfileId(), delegate.getDelegateProfileId()) != 0;
 
@@ -897,7 +865,7 @@ public class DelegateServiceImpl implements DelegateService {
                            .filter(DelegateKeys.uuid, delegateId),
         persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.description, newDescription));
 
-    return get(accountId, delegateId, true);
+    return delegateCache.get(accountId, delegateId, true);
   }
 
   @Override
@@ -949,11 +917,11 @@ public class DelegateServiceImpl implements DelegateService {
     delegateTaskService.touchExecutingTasks(
         delegate.getAccountId(), delegate.getUuid(), delegate.getCurrentlyExecutingDelegateTasks());
 
-    Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
+    Delegate existingDelegate = delegateCache.get(delegate.getAccountId(), delegate.getUuid(), false);
 
     if (existingDelegate == null) {
       register(delegate);
-      existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), true);
+      existingDelegate = delegateCache.get(delegate.getAccountId(), delegate.getUuid(), true);
     }
 
     if (licenseService.isAccountDeleted(existingDelegate.getAccountId())) {
@@ -1011,7 +979,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private Delegate updateDelegate(Delegate delegate, UpdateOperations<Delegate> updateOperations) {
-    Delegate previousDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
+    Delegate previousDelegate = delegateCache.get(delegate.getAccountId(), delegate.getUuid(), false);
 
     if (previousDelegate != null && isBlank(delegate.getDelegateProfileId())) {
       updateOperations.unset(DelegateKeys.profileResult)
@@ -1043,7 +1011,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
-    return get(delegate.getAccountId(), delegate.getUuid(), true);
+    return delegateCache.get(delegate.getAccountId(), delegate.getUuid(), true);
   }
 
   private String processTemplate(Map<String, String> scriptParams, String template) throws IOException {
@@ -2128,7 +2096,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     log.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
-    Delegate delegate = get(accountId, delegateId, true);
+    Delegate delegate = delegateCache.get(accountId, delegateId, true);
 
     if (delegate == null || DelegateInstanceStatus.ENABLED != delegate.getStatus()) {
       return null;
@@ -2163,7 +2131,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void saveProfileResult(String accountId, String delegateId, boolean error, FileBucket fileBucket,
       InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
-    Delegate delegate = get(accountId, delegateId, true);
+    Delegate delegate = delegateCache.get(accountId, delegateId, true);
     DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
                                               .accountId(accountId)
                                               .hostName(delegate.getHostName())
@@ -2201,7 +2169,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String getProfileResult(String accountId, String delegateId) {
-    Delegate delegate = get(accountId, delegateId, false);
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
 
     String profileResultFileId = delegate.getProfileResult();
 
@@ -2322,7 +2290,7 @@ public class DelegateServiceImpl implements DelegateService {
       return "";
     }
 
-    Delegate delegate = get(accountId, delegateId, forceRefresh);
+    Delegate delegate = delegateCache.get(accountId, delegateId, forceRefresh);
     if (delegate == null) {
       return delegateId;
     }
@@ -2653,7 +2621,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try {
-      Delegate delegate = get(accountId, delegateId, false);
+      Delegate delegate = delegateCache.get(accountId, delegateId, false);
       if (delegate == null || DelegateInstanceStatus.ENABLED != delegate.getStatus()) {
         log.warn("Delegate rejected to acquire task, because it was not found to be in {} status.",
             DelegateInstanceStatus.ENABLED);
@@ -2757,7 +2725,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegates = join(", ",
           validationCompleteDelegateIds.stream()
               .map(delegateId -> {
-                Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
+                Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
                 return delegate == null ? delegateId : delegate.getHostName();
               })
               .collect(toList()));
@@ -2770,7 +2738,7 @@ public class DelegateServiceImpl implements DelegateService {
           validatingDelegateIds.stream()
               .filter(p -> !validationCompleteDelegateIds.contains(p))
               .map(delegateId -> {
-                Delegate delegate = get(delegateTask.getAccountId(), delegateId, false);
+                Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
                 return delegate == null ? delegateId : delegate.getHostName();
               })
               .collect(joining()));
@@ -3132,7 +3100,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public boolean filter(String accountId, String delegateId) {
-    Delegate delegate = get(accountId, delegateId, false);
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
     return delegate != null && StringUtils.equals(delegate.getAccountId(), accountId);
   }
 
@@ -3330,7 +3298,7 @@ public class DelegateServiceImpl implements DelegateService {
         UUID currentUUID = convertFromBase64(heartbeat.getDelegateConnectionId());
         UUID existingUUID = convertFromBase64(existingConnection.getUuid());
         if (existingUUID.timestamp() > currentUUID.timestamp()) {
-          Delegate delegate = get(accountId, delegateId, false);
+          Delegate delegate = delegateCache.get(accountId, delegateId, false);
           boolean sameShellScriptDelegateLocation = DelegateType.SHELL_SCRIPT.equals(delegate.getDelegateType())
               && (isEmpty(heartbeat.getLocation()) || isEmpty(existingConnection.getLocation())
                   || heartbeat.getLocation().equals(existingConnection.getLocation()));
@@ -3941,7 +3909,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   protected DelegateInitializationDetails getDelegateInitializationDetails(String accountId, String delegateId) {
-    Delegate delegate = get(accountId, delegateId, true);
+    Delegate delegate = delegateCache.get(accountId, delegateId, true);
 
     if (delegate.isProfileError()) {
       log.debug("Delegate {} could not be initialized correctly.", delegateId);

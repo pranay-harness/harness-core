@@ -122,6 +122,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.service.intfc.DelegateTaskService;
@@ -245,9 +246,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @InjectMocks @Inject private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateTaskBroadcastHelper delegateTaskBroadcastHelper;
   @InjectMocks @Inject private DelegateService delegateService;
   @InjectMocks @Inject private DelegateTaskService delegateTaskService;
+
   @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private HPersistence persistence;
@@ -340,7 +343,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     persistence.save(delegate);
-    assertThat(delegateService.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
+    assertThat(delegateCache.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
@@ -713,7 +716,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(delegate);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
 
@@ -752,7 +755,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
@@ -790,7 +793,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
@@ -821,7 +824,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegate = delegateService.add(delegate);
     delegateService.register(delegate);
-    Delegate registeredDelegate = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate registeredDelegate = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(registeredDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
   }
 
@@ -867,7 +870,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
@@ -923,7 +926,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
+
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
@@ -1098,7 +1102,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
