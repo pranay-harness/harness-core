@@ -1,7 +1,13 @@
 package io.harness.azure.impl;
 
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_DOES_NOT_EXIST_TENANT;
+
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -12,7 +18,9 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.azure.AzureClient;
 import io.harness.azure.AzureEnvironmentType;
+import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
+import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
@@ -489,6 +497,126 @@ public class AzureManagementClientImplTest extends CategoryTest {
     assertThat(deployment.properties().parameters().toString()).contains("mgName");
     assertThat(deployment.properties().outputs().toString())
         .isEqualTo("{storageAccountName={type=String, value=devarmtemplatessdn}}");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testGetARMDeploymentStatus() {
+    String resourceGroup = "arm-rg";
+    String subscriptionId = "subId";
+    String managementGroup = "managementGroup";
+    String tenantId = "tenantId";
+    String deploymentName = "deploy";
+    ARMDeploymentSteadyStateContext context = ARMDeploymentSteadyStateContext.builder()
+                                                  .resourceGroup(resourceGroup)
+                                                  .scopeType(ARMScopeType.RESOURCE_GROUP)
+                                                  .azureConfig(getAzureConfig())
+                                                  .subscriptionId(subscriptionId)
+                                                  .deploymentName(deploymentName)
+                                                  .build();
+
+    DeploymentsInner mockDeploymentsInner = mockDeploymentsInner();
+    DeploymentExtendedInner deploymentExtendedInner = mockDeploymentExtendedInnerForStatus();
+
+    // resource group scope
+    doReturn(true).when(mockDeploymentsInner).checkExistence(eq(resourceGroup), eq(deploymentName));
+    doReturn(deploymentExtendedInner)
+        .when(mockDeploymentsInner)
+        .getByResourceGroup(eq(resourceGroup), eq(deploymentName));
+    String deploymentStatus = azureManagementClient.getARMDeploymentStatus(context);
+    assertThat(deploymentStatus.equalsIgnoreCase("Succeeded")).isTrue();
+    doReturn(false).when(mockDeploymentsInner).checkExistence(eq(resourceGroup), eq(deploymentName));
+    assertThatThrownBy(() -> azureManagementClient.getARMDeploymentStatus(context))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(String.format(DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP, deploymentName, resourceGroup));
+
+    // subscription scope
+    context.setScopeType(ARMScopeType.SUBSCRIPTION);
+    doReturn(true).when(mockDeploymentsInner).checkExistenceAtSubscriptionScope(eq(deploymentName));
+    doReturn(deploymentExtendedInner).when(mockDeploymentsInner).getAtSubscriptionScope(eq(deploymentName));
+    deploymentStatus = azureManagementClient.getARMDeploymentStatus(context);
+    assertThat(deploymentStatus.equalsIgnoreCase("Succeeded")).isTrue();
+    doReturn(false).when(mockDeploymentsInner).checkExistenceAtSubscriptionScope(eq(deploymentName));
+    assertThatThrownBy(() -> azureManagementClient.getARMDeploymentStatus(context))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(String.format(DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION, deploymentName, subscriptionId));
+
+    // management group scope
+    context.setScopeType(ARMScopeType.MANAGEMENT_GROUP);
+    context.setManagementGroupId(managementGroup);
+    doReturn(true)
+        .when(mockDeploymentsInner)
+        .checkExistenceAtManagementGroupScope(eq(managementGroup), eq(deploymentName));
+    doReturn(deploymentExtendedInner)
+        .when(mockDeploymentsInner)
+        .getAtManagementGroupScope(eq(managementGroup), eq(deploymentName));
+    deploymentStatus = azureManagementClient.getARMDeploymentStatus(context);
+    assertThat(deploymentStatus.equalsIgnoreCase("Succeeded")).isTrue();
+    doReturn(false)
+        .when(mockDeploymentsInner)
+        .checkExistenceAtManagementGroupScope(eq(managementGroup), eq(deploymentName));
+    assertThatThrownBy(() -> azureManagementClient.getARMDeploymentStatus(context))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(
+            String.format(DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP, deploymentName, managementGroup));
+
+    // tenant scope
+    context.setScopeType(ARMScopeType.TENANT);
+    context.setTenantId(tenantId);
+    doReturn(true).when(mockDeploymentsInner).checkExistenceAtTenantScope(eq(deploymentName));
+    doReturn(deploymentExtendedInner).when(mockDeploymentsInner).getAtTenantScope(eq(deploymentName));
+    deploymentStatus = azureManagementClient.getARMDeploymentStatus(context);
+    assertThat(deploymentStatus.equalsIgnoreCase("Succeeded")).isTrue();
+    doReturn(false).when(mockDeploymentsInner).checkExistenceAtTenantScope(eq(deploymentName));
+    assertThatThrownBy(() -> azureManagementClient.getARMDeploymentStatus(context))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(String.format(DEPLOYMENT_DOES_NOT_EXIST_TENANT, deploymentName, tenantId));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testGetARMDeploymentOutputs() {
+    String resourceGroup = "arm-rg";
+    String subscriptionId = "subId";
+    String managementGroup = "managementGroup";
+    String deploymentName = "deploy";
+
+    ARMDeploymentSteadyStateContext context = ARMDeploymentSteadyStateContext.builder()
+                                                  .resourceGroup(resourceGroup)
+                                                  .scopeType(ARMScopeType.RESOURCE_GROUP)
+                                                  .azureConfig(getAzureConfig())
+                                                  .subscriptionId(subscriptionId)
+                                                  .deploymentName(deploymentName)
+                                                  .build();
+
+    DeploymentsInner deploymentsInner = mockDeploymentsInner();
+    DeploymentExtendedInner extendedInner = mockDeploymentExtendedInner("", "");
+
+    doReturn(extendedInner).when(deploymentsInner).getByResourceGroup(eq(resourceGroup), eq(deploymentName));
+    String armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(context);
+    assertThat(armDeploymentOutputs).isNotEmpty();
+
+    doReturn(extendedInner).when(deploymentsInner).getAtSubscriptionScope(eq(deploymentName));
+    armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(context);
+    assertThat(armDeploymentOutputs).isNotEmpty();
+
+    doReturn(extendedInner).when(deploymentsInner).getAtManagementGroupScope(eq(managementGroup), eq(deploymentName));
+    armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(context);
+    assertThat(armDeploymentOutputs).isNotEmpty();
+
+    doReturn(extendedInner).when(deploymentsInner).getAtTenantScope(eq(deploymentName));
+    armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(context);
+    assertThat(armDeploymentOutputs).isNotEmpty();
+  }
+
+  private DeploymentExtendedInner mockDeploymentExtendedInnerForStatus() {
+    DeploymentExtendedInner mockDeploymentExtendedInner = mock(DeploymentExtendedInner.class);
+    DeploymentPropertiesExtended deploymentPropertiesExtended = mock(DeploymentPropertiesExtended.class);
+    doReturn(deploymentPropertiesExtended).when(mockDeploymentExtendedInner).properties();
+    doReturn("Succeeded").when(deploymentPropertiesExtended).provisioningState();
+    return mockDeploymentExtendedInner;
   }
 
   @NotNull
