@@ -7,6 +7,8 @@ import io.harness.callgraph.instr.tracer.TestMethodTracer;
 import io.harness.callgraph.util.StringSetMatcherStartsWith;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -15,12 +17,14 @@ import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.matcher.NameMatcher;
-import org.junit.jupiter.api.Test;
 
 /**
  * Instrument the target classes
  */
 public class ByteBuddyInstr extends Instr {
+  Set<String> testAnnotations =
+      new HashSet<>(Arrays.asList("org.junit.Test", "org.junit.jupiter.api.Test", "org.testng.annotations.Test"));
+
   public static <T extends NamedElement> ElementMatcher.Junction<T> nameStartsWith(Set<String> prefix) {
     return new NameMatcher<T>(new StringSetMatcherStartsWith(prefix));
   }
@@ -43,30 +47,28 @@ public class ByteBuddyInstr extends Instr {
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
+
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName()))),
               testMethodAdvice));
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
+              ElementMatchers.isConstructor().and(ElementMatchers.declaresAnnotation(
+                  annotation -> testAnnotations.contains(annotation.getAnnotationType().getName()))),
               testConstructorAdvice));
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
-              ElementMatchers.isMethod().and(
-                  ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                                          .or(ElementMatchers.isAnnotatedWith(Test.class))
-                                          .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
+              ElementMatchers.isMethod().and(ElementMatchers.not(
+
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName())))),
               methodAdvice));
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
-                  ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                                          .or(ElementMatchers.isAnnotatedWith(Test.class))
-                                          .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
+              ElementMatchers.isConstructor().and(ElementMatchers.not(
+
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName())))),
               constructorAdvice));
           return builder;
         })
