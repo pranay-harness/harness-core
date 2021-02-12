@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -66,17 +67,6 @@ public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;
   List<YamlSchemaRootClass> rootClasses;
-  /**
-   * @param yamlSchemaConfiguration Configuration for generation of YamlSchema
-   */
-  public void generateYamlSchemaFiles(YamlSchemaConfiguration yamlSchemaConfiguration) {
-    final Set<Class<?>> rootSchemaClasses = getClassesForYamlSchemaGeneration(yamlSchemaConfiguration);
-    SwaggerGenerator swaggerGenerator = new io.harness.yaml.schema.SwaggerGenerator();
-
-    for (Class<?> rootSchemaClass : rootSchemaClasses) {
-      generateJsonSchemaForRootClass(yamlSchemaConfiguration, swaggerGenerator, rootSchemaClass);
-    }
-  }
 
   public Map<EntityType, JsonNode> generateYamlSchema() {
     Map<EntityType, JsonNode> schema = new HashMap<>();
@@ -102,7 +92,13 @@ public class YamlSchemaGenerator {
     log.info("Generated metainfo");
 
     final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
-    final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
+    final String entityName =
+        rootClasses.stream()
+            .map(rootClazz
+                -> rootClazz.getClazz().equals(rootSchemaClass) ? rootClazz.getEntityType().getYamlName() : null)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
 
     log.info("Generating yaml schema for {}", entityName);
     final String pathForSchemaStorageForEntity =
@@ -149,11 +145,6 @@ public class YamlSchemaGenerator {
 
     return moduleBasePath + yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName
         + File.separator;
-  }
-
-  @VisibleForTesting
-  Set<Class<?>> getClassesForYamlSchemaGeneration(YamlSchemaConfiguration yamlSchemaConfiguration) {
-    return YamlSchemaUtils.getClasses(yamlSchemaConfiguration.getClassLoader(), YamlSchemaRoot.class);
   }
 
   /**
