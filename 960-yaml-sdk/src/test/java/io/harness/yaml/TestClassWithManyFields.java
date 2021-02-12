@@ -5,9 +5,6 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.map;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.EntityType;
-import io.harness.yaml.schema.YamlSchemaRoot;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -27,7 +24,6 @@ public class TestClassWithManyFields {
     @YamlSchemaTypes(value = {list, map}, defaultType = list) TestRandomClass1 testRandomClass1;
   }
 
-  @YamlSchemaRoot(EntityType.CONNECTORS)
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
