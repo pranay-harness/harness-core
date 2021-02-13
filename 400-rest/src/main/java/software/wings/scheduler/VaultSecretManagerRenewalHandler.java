@@ -18,6 +18,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;
@@ -51,7 +52,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .acceptableNoAlertDelay(ofSeconds(62))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
-            .filterExpander(query -> query.field(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT))
+            .filterExpander(query
+                -> query.field(SecretManagerConfigKeys.encryptionType)
+                .equal(EncryptionType.VAULT)
+                .field(SecretManagerConfigKeys.encryptionType)
+                .equal(EncryptionType.VAULT_SSH))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
@@ -60,7 +65,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Override
   public void handle(SecretManagerConfig secretManagerConfig) {
     log.info("renewing client tokens for {}", secretManagerConfig.getUuid());
-    VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+    BaseVaultConfig vaultConfig = (BaseVaultConfig) secretManagerConfig;
     KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
     try {
       long renewalInterval = vaultConfig.getRenewalInterval();

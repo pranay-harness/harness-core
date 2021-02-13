@@ -28,6 +28,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
@@ -101,6 +102,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean multiArtifact;
   private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
   private String artifactFileName;
+  private SSHVaultConfig sshVaultConfig;
 
   public CommandExecutionContext() {}
 
@@ -151,6 +153,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
     artifactFileName = other.artifactFileName;
     delegateSelectors = other.delegateSelectors;
+    sshVaultConfig = other.sshVaultConfig;
   }
 
   /**
@@ -325,6 +328,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean multiArtifact;
     private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
     private String artifactFileName;
+    private SSHVaultConfig sshVaultConfig;
 
     private Builder() {}
 
@@ -334,6 +338,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
     public Builder accountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public Builder sshVaultConfig(SSHVaultConfig sshVaultConfig) {
+      this.sshVaultConfig = sshVaultConfig;
       return this;
     }
 
@@ -598,7 +607,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .artifactFileName(artifactFileName)
           .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
           .disableWinRMEnvVariables(disableWinRMEnvVariables)
-          .delegateSelectors(delegateSelectors);
+          .delegateSelectors(delegateSelectors)
+          .sshVaultConfig(sshVaultConfig);
     }
 
     public CommandExecutionContext build() {
@@ -647,6 +657,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
+      commandExecutionContext.setSshVaultConfig(sshVaultConfig);
       return commandExecutionContext;
     }
   }

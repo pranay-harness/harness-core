@@ -22,11 +22,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellConnectionCapabilityCheck implements CapabilityCheck {
   @Inject EncryptionService encryptionService;
+  @Inject SecretManagementDelegateService secretManagementDelegateService;
+
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ShellConnectionCapability capability = (ShellConnectionCapability) delegateCapability;
@@ -66,7 +69,7 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       ShellConnectionCapability capability, ShellScriptParameters parameters) {
     try {
       int timeout = (int) ofSeconds(15L).toMillis();
-      SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+      SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
       expectedSshConfig.setSocketConnectTimeout(timeout);
       expectedSshConfig.setSshConnectionTimeout(timeout);
       expectedSshConfig.setSshSessionTimeout(timeout);
