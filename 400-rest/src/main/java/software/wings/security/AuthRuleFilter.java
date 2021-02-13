@@ -27,6 +27,7 @@ import io.harness.security.annotations.PublicApi;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.Event;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.resources.graphql.GraphQLUtils;
@@ -41,6 +42,7 @@ import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.ScimAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -103,6 +105,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
+  @Inject AuditServiceHelper auditServiceHelper;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -265,10 +268,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
         String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
         log.warn(msg);
+        if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled")) {
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
+        }
         throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
       }
     }
-
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
