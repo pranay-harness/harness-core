@@ -4,38 +4,45 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 -- create user roles
 -- harnessti has read/write permission
-DO $$BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_catalog.pg_roles
-    WHERE rolname = 'harnessti'
-  ) THEN
---  get password from vault
-    CREATE USER harnessti WITH PASSWORD '';
-  END IF;
-END$$
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_roles  -- SELECT list can be empty for this
+      WHERE  rolname = 'harnessti') THEN
+      --  get password from vault
+      CREATE ROLE harnessti LOGIN PASSWORD '';
+   END IF;
+END
+$do$;
 
 -- harnesstiread is read-only user
-DO $$BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_catalog.pg_roles
-    WHERE rolname = 'harnesstiread'
-  ) THEN
-  --  get password from vault
-    CREATE USER harnesstiread WITH PASSWORD '';
-  END IF;
-END$$
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_roles  -- SELECT list can be empty for this
+      WHERE  rolname = 'harnesstiread') THEN
+      --  get password from vault
+      CREATE ROLE harnesstiread LOGIN PASSWORD '';
+   END IF;
+END
+$do$;
+
 
 
 -- resource_monitor is read-only user with update privileges
-DO $$BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_catalog.pg_roles
-    WHERE rolname = 'resource_monitor'
-  ) THEN
-  --  get password from vault
-    CREATE USER resource_monitor WITH PASSWORD '';
-  END IF;
-END$$
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_catalog.pg_roles  -- SELECT list can be empty for this
+      WHERE  rolname = 'resource_monitor') THEN
+      --  get password from vault
+      CREATE ROLE resource_monitor LOGIN PASSWORD '';
+   END IF;
+END
+$do$;
 
 
 -- grant usage on schema
