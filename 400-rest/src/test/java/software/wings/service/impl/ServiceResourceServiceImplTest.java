@@ -361,8 +361,18 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHelmVersionWithDefault() {
     shouldGetHelmVersionWhenPresent();
+    shouldGetHelmVersionWhenDeploymentTypeAbsent();
     shouldReturnDefaultForHelmService();
     shouldReturnDefaultForK8sService();
+  }
+
+  private void shouldGetHelmVersionWhenDeploymentTypeAbsent() {
+    Service service = Service.builder().deploymentType(null).build();
+    doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID);
+
+    HelmVersion helmVersion = spyServiceResourceService.getHelmVersionWithDefault(APP_ID, SERVICE_ID);
+
+    assertThat(helmVersion).isEqualTo(V2);
   }
 
   private void shouldReturnDefaultForK8sService() {

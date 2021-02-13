@@ -2807,7 +2807,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   HelmVersion getDefaultHelmVersion(DeploymentType deploymentType) {
     if (deploymentType == null) {
-      return null;
+      return V2;
     }
     switch (deploymentType) {
       case HELM:
