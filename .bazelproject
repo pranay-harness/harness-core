@@ -49,7 +49,7 @@ directories:
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
-  940-delegate-beans
+  955-delegate-beans
   940-feature-flag
   940-notification-client
   940-resource-group-beans

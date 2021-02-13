@@ -8,7 +8,7 @@ load("//:macros.bzl", "sources")
 sources()
 
 shared_dependencies = [
-    "//940-delegate-beans:module",
+    "//955-delegate-beans:module",
     "//876-orchestration-beans:module",
     "//890-pms-contracts:module",
     "//910-delegate-service-driver:module",

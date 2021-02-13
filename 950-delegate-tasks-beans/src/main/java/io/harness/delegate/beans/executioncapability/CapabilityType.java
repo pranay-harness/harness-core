@@ -7,7 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 // But Validation needs to happen at delegate as its part of Handshake between Delegate and manager,
 // in order for delegate to acquire a task.
 // May be changed later
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public enum CapabilityType {
   SOCKET,
   ALWAYS_TRUE,

@@ -12,7 +12,7 @@ shared_dependencies = [
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//930-ng-core-clients:module",
-    "//940-delegate-beans:module",
+    "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",

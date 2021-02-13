@@ -13,7 +13,7 @@ import (
 	pb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	callbackpb "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/callback"
 	delegateSvcpb "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/delegate"
-	delegatepb "github.com/wings-software/portal/940-delegate-beans/src/main/proto/io/harness/delegate"
+	delegatepb "github.com/wings-software/portal/955-delegate-beans/src/main/proto/io/harness/delegate"
 	"github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"

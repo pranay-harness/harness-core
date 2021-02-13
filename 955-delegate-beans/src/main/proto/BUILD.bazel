@@ -1,0 +1,10 @@
+load("@rules_proto_grpc//java:defs.bzl", "java_proto_library")
+
+java_proto_library(
+    name = "955_delegate_beans_java_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
+        "//955-delegate-beans/src/main/proto/io/harness/perpetualtask:955_delegate_beans_proto",
+    ],
+)

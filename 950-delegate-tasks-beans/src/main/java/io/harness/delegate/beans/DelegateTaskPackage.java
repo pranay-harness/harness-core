@@ -19,7 +19,7 @@ import lombok.Value;
 @Value
 @Builder
 @AllArgsConstructor
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class DelegateTaskPackage {
   private String accountId;
   private String delegateTaskId;
