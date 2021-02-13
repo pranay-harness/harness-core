@@ -12,6 +12,7 @@ import io.harness.shell.ScriptType;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 /**
  * Created by anubhaw on 6/2/16.
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
@@ -171,6 +174,16 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     if (context.getCloudProviderSetting() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getCloudProviderSetting().getValue(),
           context.getCloudProviderCredentials(), false);
+    }
+    if (((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).isVaultSSH()) {
+      if (context.getSshVaultConfig() != null) {
+        secretManagementDelegateService.signPublicKey(
+            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(), context.getSshVaultConfig());
+      } else {
+        secretManagementDelegateService.signPublicKey(
+            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(),
+            ((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).getSshVaultConfig());
+      }
     }
   }
 }

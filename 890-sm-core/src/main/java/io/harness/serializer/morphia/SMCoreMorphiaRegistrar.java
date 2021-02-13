@@ -15,6 +15,7 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 
 import java.util.Set;
@@ -34,6 +35,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SecretManagerConfig.class);
     set.add(SecretUsageLog.class);
     set.add(VaultConfig.class);
+    set.add(SSHVaultConfig.class);
     set.add(MigrateSecretTask.class);
   }
 
@@ -48,5 +50,6 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.LocalEncryptionConfig", LocalEncryptionConfig.class);
     w.put("beans.SecretManagerConfig", SecretManagerConfig.class);
     w.put("beans.VaultConfig", VaultConfig.class);
+    w.put("beans.SSHVaultConfig", SSHVaultConfig.class);
   }
 }

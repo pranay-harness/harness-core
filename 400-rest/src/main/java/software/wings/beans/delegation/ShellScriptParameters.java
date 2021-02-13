@@ -26,6 +26,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -48,6 +49,7 @@ import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 @Value
 @Builder
@@ -86,6 +88,10 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final boolean saveExecutionLogs;
   boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   boolean disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean isVaultSSH;
+  private String role;
+  private String publicKey;
+  private SSHVaultConfig sshVaultConfig;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -101,8 +107,11 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
     return resolvedEnvironment;
   }
 
-  public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
+  public SshSessionConfig sshSessionConfig(EncryptionService encryptionService, SecretManagementDelegateService secretManagementDelegateService) throws IOException {
     encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails, false);
+    if (isVaultSSH) {
+      secretManagementDelegateService.signPublicKey(hostConnectionAttributes, sshVaultConfig);
+    }
     SshSessionConfig.Builder sshSessionConfigBuilder = aSshSessionConfig();
     sshSessionConfigBuilder.withAccountId(accountId)
         .withAppId(appId)
@@ -121,7 +130,10 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .withKey(hostConnectionAttributes.getKey())
         .withKeyPassphrase(hostConnectionAttributes.getPassphrase())
         .withSshPassword(hostConnectionAttributes.getSshPassword())
-        .withPassword(hostConnectionAttributes.getKerberosPassword());
+        .withPassword(hostConnectionAttributes.getKerberosPassword())
+        .withVaultSSH(isVaultSSH)
+        .withSignedPublicKey(hostConnectionAttributes.getSignedPublicKey())
+        .withPublicKey(hostConnectionAttributes.getPublicKey());
     return sshSessionConfigBuilder.build();
   }
 

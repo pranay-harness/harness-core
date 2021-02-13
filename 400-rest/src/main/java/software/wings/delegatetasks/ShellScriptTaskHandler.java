@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
@@ -41,6 +42,7 @@ public class ShellScriptTaskHandler {
   @Inject private EncryptionService encryptionService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   public CommandExecutionResult handle(ShellScriptParameters parameters) {
     // Define output variables and secret output variables together
@@ -67,7 +69,7 @@ public class ShellScriptTaskHandler {
     switch (parameters.getConnectionType()) {
       case SSH: {
         try {
-          SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+          SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
           BaseScriptExecutor executor =
               sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
           return CommandExecutionResultMapper.from(
