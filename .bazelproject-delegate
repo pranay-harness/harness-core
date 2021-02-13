@@ -12,7 +12,7 @@ directories:
   920-delegate-agent-beans
   920-delegate-service-beans
   930-delegate-tasks
-  940-delegate-beans
+  955-delegate-beans
   940-feature-flag
   950-delegate-tasks-beans
   960-api-services

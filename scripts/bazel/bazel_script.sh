@@ -101,8 +101,8 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
-  //940-delegate-beans/src/main/proto:all \
-  //940-delegate-beans:module \
+  //955-delegate-beans/src/main/proto:all \
+  //955-delegate-beans:module \
   //940-feature-flag:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
@@ -310,7 +310,7 @@ build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
-build_bazel_module 940-delegate-beans
+build_bazel_module 955-delegate-beans
 build_bazel_module 940-feature-flag
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client

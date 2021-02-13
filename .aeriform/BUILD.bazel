@@ -168,8 +168,6 @@ aeriform("//930-delegate-tasks:tests")
 
 aeriform("//930-ng-core-clients:module")
 
-aeriform("//940-delegate-beans:module")
-
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -215,6 +213,8 @@ aeriform("//950-walktree-visitor:module")
 aeriform("//950-walktree-visitor:tests")
 
 aeriform("//954-connector-beans:module")
+
+aeriform("//955-delegate-beans:module")
 
 aeriform("//955-filters-sdk:module")
 

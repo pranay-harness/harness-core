@@ -10,7 +10,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class SelectorCapability implements ExecutionCapability {
   private Set<String> selectors;
   private String selectorOrigin;
