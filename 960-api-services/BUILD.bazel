@@ -118,7 +118,7 @@ java_library(
     data = [
         "//960-api-services/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "module",

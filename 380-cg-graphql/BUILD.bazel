@@ -51,5 +51,6 @@ java_library(
         "aeriform",
         "manual",
     ],
+    visibility = ["//visibility:public"],
     deps = test_dependencies,
 )

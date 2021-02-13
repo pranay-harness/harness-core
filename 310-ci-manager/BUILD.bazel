@@ -476,7 +476,7 @@ java_binary(
 #    resources = [
 #        "//330-ci-beans/src/test/resources:resource",
 #    ],
-#    visibility = ["//visibility:private"],
+#    visibility = ["//visibility:public"],
 #    deps = [
 #        "maven_deps",
 #        "module",

@@ -39,7 +39,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         "module",
         "//990-commons-test:module",

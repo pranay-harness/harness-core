@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::process::Command;
+use std::fs;
 
 use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
 
@@ -18,7 +19,7 @@ pub struct JavaModule {
     pub dependencies: HashSet<String>,
 }
 
-pub fn modules() -> HashMap<String, JavaModule> {
+pub fn model_names() -> HashMap<String, String> {
     let mut command = Command::new("bazel");
     command.args(&["query", "//...", "--output", "label_kind"]);
     let output = command.output().expect("not able to run bazel");
@@ -43,7 +44,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         .filter(|name| suffixes.iter().any(|suffix| name.ends_with(suffix)))
         .collect::<HashSet<String>>();
 
-    let module_rules = targets
+    targets
         .iter()
         .map(|target| {
             (
@@ -51,7 +52,11 @@ pub fn modules() -> HashMap<String, JavaModule> {
                 target.split_whitespace().nth(0).unwrap().to_string(),
             )
         })
-        .collect::<HashMap<String, String>>();
+        .collect::<HashMap<String, String>>()
+}
+
+pub fn modules() -> HashMap<String, JavaModule> {
+    let module_rules = model_names();
 
     let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
@@ -117,17 +122,15 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
     let prefix = &format!("{}:", chunk);
     let directory = &format!("{}/", chunk.strip_prefix("//").unwrap());
 
-    let output = Command::new("bazel")
-        .args(&["query", &format!("labels(srcs, {})", name)])
-        .output()
-        .expect("not able to run bazel");
+    let filename = &format!(
+        "{}/.aeriform/{}_aeriform_sources.txt",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        name.replace("/", "").replace(":", "!")
+    );
 
-    if !output.status.success() {
-        panic!("Command executed with failing error code");
-    }
+    let sources = fs::read_to_string(filename).expect("");
 
-    String::from_utf8(output.stdout)
-        .unwrap()
+    sources
         .lines()
         .map(|line| line.to_string())
         .map(|line| line.replace(prefix, directory))
@@ -150,17 +153,15 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
 }
 
 fn populate_module_dependencies(name: &str, modules: &HashSet<String>) -> HashSet<String> {
-    let output = Command::new("bazel")
-        .args(&["query", &format!("labels(deps, {})", name)])
-        .output()
-        .expect("not able to run bazel");
+    let filename = &format!(
+        "{}/.aeriform/{}_aeriform_dependencies.txt",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        name.replace("/", "").replace(":", "!")
+    );
 
-    if !output.status.success() {
-        panic!("Command executed with failing error code");
-    }
+    let depedencies = fs::read_to_string(filename).expect("");
 
-    String::from_utf8(output.stdout)
-        .unwrap()
+    depedencies
         .lines()
         .map(|line| line.to_string())
         .filter(|name| modules.contains(name.as_str()))
@@ -191,8 +192,8 @@ const GOOGLE_PROTO_BASE_CLASSES: &'static [&'static str] = &[
     "io.grpc.stub.AbstractStub",
 ];
 
-fn populate_dependencies(jar: &String) -> (MultiMap<String, String>, HashSet<String>) {
-    let all = jar_dependencies(&jar);
+fn populate_dependencies(name: &String) -> (MultiMap<String, String>, HashSet<String>) {
+    let all = target_dependencies(name);
 
     (
         all.iter()
@@ -222,6 +223,24 @@ fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
     //println!("jar: {:?}", result);
 
     result
+        .lines()
+        .map(|line| line.to_string())
+        .filter(|line| line.starts_with("   "))
+        .map(|s| dependency_class(&s))
+        .filter(|tuple| !tuple.0.eq(&tuple.1))
+        .collect()
+}
+
+fn target_dependencies(name: &str) -> Vec<(String, String)> {
+    let filename = &format!(
+        "{}/.aeriform/{}_aeriform_jdeps.txt",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        name.replace("/", "").replace(":", "!")
+    );
+
+    let sources = fs::read_to_string(filename).expect("");
+
+    sources
         .lines()
         .map(|line| line.to_string())
         .filter(|line| line.starts_with("   "))
@@ -269,7 +288,7 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
 
     let module_dependencies = populate_module_dependencies(name, modules);
 
-    let (dependencies, protos) = populate_dependencies(&jar);
+    let (dependencies, protos) = populate_dependencies(name);
 
     let mut srcs = populate_srcs(&name, &dependencies);
     // println!("{:?}", srcs);

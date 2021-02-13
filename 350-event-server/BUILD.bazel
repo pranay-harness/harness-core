@@ -41,7 +41,7 @@ java_binary(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         ":module",
         "//960-persistence:supporter-test",
