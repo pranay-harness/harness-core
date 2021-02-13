@@ -8,11 +8,15 @@ load("//:macros.bzl", "sources")
 sources()
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+] + [
+    "//460-capability:module",
     "//870-orchestration:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
     "//940-feature-flag:module",
     "//950-common-entities:module",
+    "//950-wait-engine:module",
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
@@ -23,7 +27,6 @@ shared_dependencies = [
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_github_reinert_jjschema",
     "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_smoketurner_dropwizard_swagger",
