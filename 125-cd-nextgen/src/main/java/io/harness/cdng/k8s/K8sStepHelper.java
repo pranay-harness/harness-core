@@ -67,7 +67,6 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
-import io.harness.validation.Validator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
@@ -355,7 +354,9 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
-    Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());
+    if (isEmpty(manifestOutcomeMap) || isEmpty(manifestOutcomeMap.keySet())) {
+      throw new InvalidRequestException("Manifests can't be empty");
+    }
 
     K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
     List<ValuesManifestOutcome> aggregatedValuesManifests =
