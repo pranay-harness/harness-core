@@ -7,7 +7,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 sources()
 
-shared_dependencies = [
+shared_dependencies = ["@maven//:com_google_guava_guava"] + [
     "//980-commons:module",
     "//:lombok",
     "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
@@ -19,7 +19,6 @@ shared_dependencies = [
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_squareup_okhttp3_okhttp",

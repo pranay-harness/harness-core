@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//879-pms-sdk:module",
         "//890-pms-contracts:module",
         "//950-timeout-engine:module",
@@ -20,7 +20,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_auto_service_auto_service",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",

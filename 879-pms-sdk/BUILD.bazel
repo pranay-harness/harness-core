@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//882-pms-sdk-core:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
@@ -28,8 +28,6 @@ java_library(
     ]),
     visibility = ["//visibility:public"],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resolution
         "maven_deps",
         "//:lombok",
     ],

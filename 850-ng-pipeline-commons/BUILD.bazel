@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
         "//870-yaml-beans:module",
@@ -29,7 +29,6 @@ java_library(
         "@maven//:com_github_rutledgepaulv_q_builders",
         "@maven//:com_github_rutledgepaulv_rest_query_engine",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_intellij_annotations",
         "@maven//:io_swagger_swagger_annotations",

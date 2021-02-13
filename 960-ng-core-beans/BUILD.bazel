@@ -9,7 +9,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//970-api-services-beans:module",
         "//970-ng-commons:module",
         "@maven//:com_esotericsoftware_kryo",
@@ -17,7 +17,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_smoketurner_dropwizard_swagger",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",

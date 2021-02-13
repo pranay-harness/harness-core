@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
         "//954-connector-beans:module",
@@ -32,7 +32,6 @@ java_library(
         "@maven//:com_google_cloud_google_cloud_secretmanager",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_code_gson_gson",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_google_protobuf_protobuf_java",
         "@maven//:com_microsoft_azure_adal4j",

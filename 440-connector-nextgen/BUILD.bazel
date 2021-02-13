@@ -8,6 +8,8 @@ load("//:macros.bzl", "sources")
 sources()
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+] + [
     "//870-yaml-beans:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
@@ -22,7 +24,6 @@ shared_dependencies = [
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_inject_guice",
     "@maven//:com_squareup_retrofit2_retrofit",
     "@maven//:io_swagger_swagger_annotations",

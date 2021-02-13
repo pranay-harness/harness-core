@@ -7,7 +7,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 sources()
 
-shared_dependencies = [
+shared_dependencies = ["@maven//:com_google_guava_guava"] + [
     "//:lombok",
     "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
@@ -24,7 +24,6 @@ shared_dependencies = [
     "@maven//:com_amazonaws_aws_java_sdk_ecr",
     "@maven//:com_amazonaws_aws_java_sdk_ecs",
     "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_hierynomus_smbj",
@@ -65,7 +64,6 @@ java_library(
         "//950-delegate-tasks-beans:module",
         "//960-api-services:module",
         "//990-commons-test:module",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",

@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//850-execution-plan:module",
         "//850-ng-pipeline-commons:module",
         "//860-orchestration-steps:module",
@@ -117,7 +117,6 @@ java_library(
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_errorprone_error_prone_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_http_client_google_http_client_appengine",
         "@maven//:com_google_http_client_google_http_client_jackson",

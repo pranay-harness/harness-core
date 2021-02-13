@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
@@ -60,6 +61,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.service.intfc.UserService")
+@BreakDependencyOn("software.wings.security.UserThreadLocal")
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
   private UserService userService;

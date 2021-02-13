@@ -13,9 +13,15 @@ def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = 
 def sources(visibility = None):
     if visibility == None:
         visibility = ["//" + native.package_name() + ":__pkg__", "//:__pkg__"]
+
+    # TODO: eliminate this issue with making the checkstyle command safe for many files
+    srcs = native.glob(include = ["src/main/java/**/*.java"])
+    if len(srcs) > 2000:
+        print("Warning: to many files ", len(srcs), "in this module:", native.package_name())
+        srcs = srcs[0:2000]
     native.filegroup(
         name = "sources",
-        srcs = native.glob(["src/main/**/*.java"]),
+        srcs = srcs,
         visibility = visibility,
     )
 

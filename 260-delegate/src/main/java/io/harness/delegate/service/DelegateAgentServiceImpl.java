@@ -1761,7 +1761,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = selectExecutorService(taskData);
 
-        Future<List<DelegateConnectionResult>> future = executorService.submit(delegateValidateTask::validationResults);
+        Future<?> future = executorService.submit(delegateValidateTask::validationResults);
         currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
@@ -1797,20 +1797,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         .map(executionCapability
             -> executionCapability.getCapabilityType().name() + ":" + executionCapability.fetchCapabilityBasis())
         .collect(toList());
-  }
-
-  private void logErrorDetails(TaskData taskData, List<DelegateConnectionResult> alternativeResults, boolean original) {
-    List<String> resultDetails = alternativeResults.stream()
-                                     .map(result -> result.getCriteria() + ":" + result.isValidated())
-                                     .collect(Collectors.toList());
-    log.error(
-        "[DelegateCapability] The original validation {} is different from the alternative for task type {}. Result Details for capability are {} ",
-        original, taskData.getTaskType(), HarnessStringUtils.join("|", resultDetails));
-    if (taskData.getTaskType().equals(TaskType.COMMAND.name())) {
-      CommandExecutionContext commandExecutionContext = (CommandExecutionContext) taskData.getParameters()[1];
-      log.error("[DelegateCapability] CommandExecution context has deployment type {}",
-          commandExecutionContext.getDeploymentType());
-    }
   }
 
   private DelegateValidateTask getDelegateValidateTask(

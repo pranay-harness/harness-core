@@ -10,9 +10,8 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:org_modelmapper_modelmapper",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_projectlombok_lombok",

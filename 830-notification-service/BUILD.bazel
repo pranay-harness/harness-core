@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//835-notification-senders:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
@@ -93,7 +93,6 @@ java_library(
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_errorprone_error_prone_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_http_client_google_http_client_appengine",
         "@maven//:com_google_http_client_google_http_client_jackson",
@@ -360,8 +359,6 @@ java_binary(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
         "@maven//:io_netty_netty_all",
         # keeping guava on top of maven_deps for right version resoulution
         "maven_deps",

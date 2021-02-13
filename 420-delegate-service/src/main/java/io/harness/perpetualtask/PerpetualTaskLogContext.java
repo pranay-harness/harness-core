@@ -4,7 +4,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AutoLogContext;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class PerpetualTaskLogContext extends AutoLogContext {
   public static final String ID = "perpetualTaskId";
 

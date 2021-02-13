@@ -10,13 +10,12 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "//970-ng-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",

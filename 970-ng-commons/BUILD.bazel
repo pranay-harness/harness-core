@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//980-commons:module",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",
@@ -34,7 +34,6 @@ java_library(
         "@maven//:com_google_cloud_google_cloud_logging",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_code_gson_gson",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_inject_extensions_guice_multibindings",
         "@maven//:com_google_inject_guice",

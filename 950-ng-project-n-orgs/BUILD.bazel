@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "@maven//:com_auth0_java_jwt",
@@ -19,7 +19,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_github_reinert_jjschema",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:com_sun_mail_javax_mail",

@@ -395,20 +395,21 @@ fn check_for_promotion(
         if not_ready_yet.is_empty() {
             let module = class_modules.get(class);
 
-            let msg = format!("{} is ready to go to {}", class.name, target_module.name);
-
             results.push(match module {
                 None => Report {
                     kind: Kind::DevAction,
                     action: Default::default(),
-                    message: msg,
+                    message: format!("{} is ready to go to {}", class.name, target_module.name),
                     for_class: class.name.clone(),
                     indirect_classes: Default::default(),
                     for_modules: mdls,
                 },
                 Some(&module) => Report {
                     kind: Kind::AutoAction,
-                    message: msg,
+                    message: format!(
+                        "{} is ready to go from {} to {}",
+                        class.name, module.name, target_module.name
+                    ),
                     action: format!(
                         "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
                         module.directory,

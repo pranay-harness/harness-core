@@ -14,9 +14,8 @@ java_library(
         "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    deps = ["@maven//:com_google_guava_guava"] + [
         "//:lombok",
-        "@maven//:com_google_guava_guava",
     ],
 )
 

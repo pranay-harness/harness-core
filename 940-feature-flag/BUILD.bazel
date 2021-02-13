@@ -13,7 +13,7 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    deps = ["@maven//:com_google_guava_guava"] + [
         "//:lombok",
         "//950-events-api:module",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
@@ -21,7 +21,6 @@ java_library(
         "//960-persistence:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_mongodb_mongo_java_driver",

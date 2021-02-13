@@ -10,7 +10,7 @@ sources()
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
-    exports = [
+    exports = ["@maven//:com_google_guava_guava"] + [
         "//950-events-api:module",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
@@ -18,7 +18,6 @@ java_library(
         "//970-ng-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
