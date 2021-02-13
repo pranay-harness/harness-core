@@ -2,6 +2,7 @@ use clap::Clap;
 
 use crate::analyze::{analyze, Analyze};
 use crate::execute::{execute, Execute};
+use crate::prepare::{prepare, Prepare};
 
 mod analyze;
 #[path = "execute/execute.rs"]
@@ -10,6 +11,7 @@ mod execute;
 mod execute_apply_target;
 #[path = "execute/execute_class_move.rs"]
 mod execute_class_move;
+mod prepare;
 
 mod java_class;
 mod java_module;
@@ -32,6 +34,9 @@ enum SubCommand {
 
     #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
     Execute(Execute),
+
+    #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]
+    Prepare(Prepare),
 }
 
 fn main() {
@@ -54,6 +59,9 @@ fn main() {
         }
         SubCommand::Execute(_options) => {
             execute(_options);
+        }
+        SubCommand::Prepare(_options) => {
+            prepare(_options);
         }
     }
 

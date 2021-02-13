@@ -720,7 +720,7 @@ java_library(
     resources = [
         "//120-ng-manager/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         "module",
         "//960-persistence:supporter-test",

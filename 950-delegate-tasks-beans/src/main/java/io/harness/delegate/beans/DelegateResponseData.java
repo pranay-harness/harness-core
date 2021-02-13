@@ -7,5 +7,5 @@ import io.harness.tasks.ResponseData;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
+@TargetModule(Module._940_DELEGATE_BEANS)
 public interface DelegateResponseData extends ResponseData {}

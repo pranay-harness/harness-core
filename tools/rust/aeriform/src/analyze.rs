@@ -108,7 +108,14 @@ pub fn analyze(opts: Analyze) {
             &classes,
             &class_modules,
         ));
-        results.extend(check_for_demotion(tuple.0, class_dependees.get_vec(&tuple.0.name), tuple.1, &modules, &classes, &class_modules));
+        results.extend(check_for_demotion(
+            tuple.0,
+            class_dependees.get_vec(&tuple.0.name),
+            tuple.1,
+            &modules,
+            &classes,
+            &class_modules,
+        ));
         results.extend(check_for_deprecated_module(tuple.0, tuple.1));
     });
 
@@ -470,10 +477,9 @@ fn check_for_demotion(
                 .get(dependee)
                 .expect(&format!("The source {} is not find in any module", dependee));
 
-            let &dependee_real_module = class_modules.get(dependee_class).expect(&format!(
-                "The class {} is not find in the modules",
-                dependee_class.name
-            ));
+            let &dependee_real_module = class_modules
+                .get(dependee_class)
+                .expect(&format!("The class {} is not find in the modules", dependee_class.name));
 
             let dependee_target_module = if dependee_class.target_module.is_some() {
                 let dependee_target_module = modules.get(dependee_class.target_module.as_ref().unwrap());
@@ -501,7 +507,7 @@ fn check_for_demotion(
                         kind: Kind::DevAction,
                         message: format!(
                             "{} has dependee {} and this dependency has to be broken",
-                            dependee_class.name, class.name
+                            class.name, dependee_class.name
                         ),
                         action: Default::default(),
                         for_class: dependee_class.name.clone(),
@@ -513,7 +519,7 @@ fn check_for_demotion(
                         kind: Kind::Error,
                         message: format!(
                             "{} has dependee {} that is in module {} but {} is not a dependee of it",
-                            dependee_class.name, class.name, dependee_target_module.name, target_module.name
+                            class.name, dependee_class.name, dependee_target_module.name, target_module.name
                         ),
                         action: Default::default(),
                         for_class: class.name.clone(),

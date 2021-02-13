@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "//:lombok",
+    "//940-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
     "//960-api-services:module",
     "//970-api-services-beans:module",
@@ -57,7 +58,7 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//930-delegate-tasks/src/test/resources:resource"],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",

@@ -34,7 +34,7 @@ java_library(
     data = [
         "//136-git-sync-manager/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",
