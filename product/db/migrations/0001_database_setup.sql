@@ -52,13 +52,13 @@ GRANT USAGE ON SCHEMA public TO resource_monitor;
 
 
 -- For multiple tables
-GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO harnessti;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO harnessti;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO harnesstiread;
 GRANT SELECT, UPDATE ON ALL TABLES IN SCHEMA public TO resource_monitor;
 
 -- to grant access to the new table in the future automatically, alter default:
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
-GRANT SELECT, INSERT, UPDATE ON TABLES TO harnessti;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO harnessti;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
 GRANT SELECT ON TABLES TO harnesstiread;
