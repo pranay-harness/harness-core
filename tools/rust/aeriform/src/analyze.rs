@@ -351,7 +351,7 @@ fn check_for_promotion(
             && !target_module.dependencies.contains(&dependent_target_module.name)
         {
             issue = true;
-            let mdls = [dependent_target_module.name.clone(), target_module.name.clone()]
+            let mdls = [module.name.clone(), dependent_target_module.name.clone(), target_module.name.clone()]
                 .iter()
                 .cloned()
                 .collect();
@@ -390,7 +390,7 @@ fn check_for_promotion(
     });
 
     if !issue {
-        let mdls = [target_module.name.clone()].iter().cloned().collect();
+        let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
 
         if not_ready_yet.is_empty() {
             let module = class_modules.get(class);
@@ -497,7 +497,7 @@ fn check_for_demotion(
                 && !dependee_target_module.dependencies.contains(&target_module.name)
             {
                 issue = true;
-                let mdls = [dependee_target_module.name.clone(), target_module.name.clone()]
+                let mdls = [module.name.clone(), dependee_target_module.name.clone(), target_module.name.clone()]
                     .iter()
                     .cloned()
                     .collect();
@@ -537,7 +537,7 @@ fn check_for_demotion(
     }
 
     if !issue {
-        let mdls = [target_module.name.clone()].iter().cloned().collect();
+        let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
 
         if not_ready_yet.is_empty() {
             let module = class_modules.get(class);
