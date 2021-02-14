@@ -2007,7 +2007,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                           .build();
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
-            validationRequest.getExecutionCredential());
+            validationRequest.getExecutionCredential(), null);
   }
 
   @Override

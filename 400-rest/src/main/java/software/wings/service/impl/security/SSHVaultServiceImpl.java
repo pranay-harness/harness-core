@@ -124,7 +124,6 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
         throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
       }
     }
-
     SSHVaultAuthResult sshVaultAuthResult = sshVaultAuthResult(sshVaultConfig);
     if (StringUtils.isBlank(sshVaultAuthResult.getPublicKey())) {
       String message =

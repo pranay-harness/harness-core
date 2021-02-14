@@ -56,7 +56,7 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     Object methodReturnValue = hostValidationTask.run(new Object[] {getTaskParameters()});
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
+    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
 
@@ -64,9 +64,9 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testRunthrowsException() {
-    when(mockHostValidationService.validateHost(any(), any(), any(), any())).thenThrow(new UncheckedException());
+    when(mockHostValidationService.validateHost(any(), any(), any(), any(), any())).thenThrow(new UncheckedException());
     hostValidationTask.run(new Object[] {getTaskParameters()});
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
+    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -75,7 +75,7 @@ public class HostValidationTaskTest extends WingsBaseTest {
   public void testRunWithObjectParameters() {
     Object[] objectParams = {any(), any(), Arrays.asList("host1"), any(), Collections.emptyList(), any()};
     Object methodReturnValue = hostValidationTask.run(objectParams);
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any());
+    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
 
