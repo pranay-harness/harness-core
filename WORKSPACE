@@ -1248,6 +1248,7 @@ maven_install(
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.10",
         "com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.10",
         "com.fasterxml.jackson.module:jackson-module-parameter-names:2.9.10",
+        "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.10",
         "com.fasterxml.uuid:java-uuid-generator:4.0.1",
         "com.fasterxml.woodstox:woodstox-core:5.3.0",
         "com.fasterxml:classmate:1.4.0",
@@ -1988,6 +1989,8 @@ maven_install(
         "com.google.cloud:google-cloud-bigquerydatatransfer:0.126.0-beta",
         "org.springframework:spring-test:5.2.9.RELEASE",
         "org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE",
+        "org.springframework.boot:spring-boot-starter-web:2.1.6.RELEASE",
+        "org.springframework.boot:spring-boot-starter-webflux:2.1.6.RELEASE",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
