@@ -2,8 +2,8 @@ package io.harness.event.timeseries.processor.instanceeventprocessor;
 
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.EventProcessor;
-import io.harness.event.timeseries.processor.instanceeventprocessor.exceptions.InstanceAggregationException;
-import io.harness.exception.WingsException;
+import io.harness.exception.InstanceAggregationException;
+import io.harness.exception.InstanceProcessorException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -35,9 +35,9 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public void processEvent(TimeSeriesBatchEventInfo eventInfo) throws WingsException {
+  public void processEvent(TimeSeriesBatchEventInfo eventInfo) throws InstanceProcessorException {
     if (eventInfo == null) {
-      throw new WingsException("EventInfo cannot be null");
+      throw new InstanceProcessorException("EventInfo cannot be null");
     }
 
     if (timeScaleDBService.isValid()) {
@@ -74,7 +74,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
             String errorLog =
                 String.format("MAX RETRY FAILURE : Failed to save instance data , error : [%s]", e.toString());
             // throw error to the queue listener for retry of the event later on
-            throw new WingsException(errorLog, e);
+            throw new InstanceProcessorException(errorLog, e);
           } else {
             log.error("Failed to save instance data : [{}] , retryCount : [{}] , error : [{}]", eventInfo, retryCount,
                 e.toString(), e);
@@ -84,7 +84,7 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
           String errorLog = String.format(
               "Unchecked Exception : Failed to save instance data : [%s] , error : [%s]", eventInfo, ex.toString());
           // In case of unknown exception, just halt the processing
-          throw new WingsException(errorLog, ex);
+          throw new InstanceProcessorException(errorLog, ex);
         } finally {
           log.info("Total time=[{}]", System.currentTimeMillis() - startTime);
         }

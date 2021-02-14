@@ -1,10 +1,9 @@
 package io.harness.event.timeseries.processor.instanceeventprocessor;
 
 import io.harness.event.timeseries.processor.EventProcessor;
-import io.harness.event.timeseries.processor.instanceeventprocessor.exceptions.InstanceAggregationException;
-import io.harness.event.timeseries.processor.instanceeventprocessor.exceptions.InstanceAggregationExceptionHandler;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instanceaggregator.HourlyAggregator;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instanceaggregator.InstanceAggregator;
+import io.harness.exception.InstanceAggregationException;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.graphql.datafetcher.DataFetcherUtils;
