@@ -65,27 +65,28 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Override
   public void handle(SecretManagerConfig secretManagerConfig) {
     log.info("renewing client tokens for {}", secretManagerConfig.getUuid());
-    BaseVaultConfig vaultConfig = (BaseVaultConfig) secretManagerConfig;
-    KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
+    BaseVaultConfig baseVaultConfig = (BaseVaultConfig) secretManagerConfig;
+    KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(baseVaultConfig);
     try {
-      long renewalInterval = vaultConfig.getRenewalInterval();
+      long renewalInterval = baseVaultConfig.getRenewalInterval();
       if (renewalInterval <= 0 || secretManagerConfig.isTemplatized()) {
-        log.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
+        log.info("Vault {} not configured for renewal.", baseVaultConfig.getUuid());
         return;
       }
-      if (!checkIfEligibleForRenewal(vaultConfig.getRenewedAt(), renewalInterval)) {
-        log.info("Vault config {} renewed at {} not renewing now", vaultConfig.getUuid(), vaultConfig.getRenewedAt());
+      if (!checkIfEligibleForRenewal(baseVaultConfig.getRenewedAt(), renewalInterval)) {
+        log.info("Vault config {} renewed at {} not renewing now", baseVaultConfig.getUuid(),
+            baseVaultConfig.getRenewedAt());
         return;
       }
-      if (vaultConfig.getAccessType() == APP_ROLE) {
-        vaultService.renewAppRoleClientToken(vaultConfig);
+      if (baseVaultConfig.getAccessType() == APP_ROLE) {
+        vaultService.renewAppRoleClientToken(baseVaultConfig);
       } else {
-        vaultService.renewToken(vaultConfig);
+        vaultService.renewToken(baseVaultConfig);
       }
-      alertService.closeAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
+      alertService.closeAlert(baseVaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     } catch (Exception e) {
       log.info("Failed to renew vault token for vault id {}", secretManagerConfig.getUuid(), e);
-      alertService.openAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
+      alertService.openAlert(baseVaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     }
   }
 

@@ -55,10 +55,16 @@ import retrofit2.Response;
 @Singleton
 @Slf4j
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
-
   @Override
   public void signPublicKey(HostConnectionAttributes hostConnectionAttributes, SSHVaultConfig sshVaultConfig) {
     try {
+      if (sshVaultConfig == null) {
+        sshVaultConfig = hostConnectionAttributes.getSshVaultConfig();
+      }
+      if (sshVaultConfig == null) {
+        throw new SecretManagementDelegateException(
+            VAULT_OPERATION_ERROR, "SSH Vault config while fetching signed public key is null", USER);
+      }
       String vaultToken = sshVaultConfig.getAuthToken();
       if (isEmpty(vaultToken)) {
         VaultAppRoleLoginResult loginResult = appRoleLogin(sshVaultConfig);
@@ -97,8 +103,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
     }
   }
-
-
 
   @Override
   public SSHVaultAuthResult validateSSHVault(SSHVaultConfig vaultConfig) {

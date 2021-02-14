@@ -176,14 +176,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
           context.getCloudProviderCredentials(), false);
     }
     if (((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).isVaultSSH()) {
-      if (context.getSshVaultConfig() != null) {
         secretManagementDelegateService.signPublicKey(
             (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(), context.getSshVaultConfig());
-      } else {
-        secretManagementDelegateService.signPublicKey(
-            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(),
-            ((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).getSshVaultConfig());
-      }
     }
   }
 }

@@ -99,6 +99,20 @@ public class SshSessionFactory {
         jsch.addIdentity(keyPath, EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+    } else if (config.isVaultSSH()) {
+      log.info("SSH using Vault SSH secret engine");
+      final char[] copyOfKey = getCopyOfKey(config);
+      log.info("Testing : SSH signed public key {}", config.getSignedPublicKey());
+      log.info("Testing : SSH  private key {}", config.getKey());
+      if (null == config.getKeyPassphrase()) {
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8), null);
+      } else {
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
+      }
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
       if (config.getKey() != null && config.getKey().length > 0) {
         // Copy Key because EncryptionUtils has a side effect of modifying the original array
