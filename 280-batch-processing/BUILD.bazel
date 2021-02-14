@@ -36,7 +36,6 @@ shared_dependencies = [
     "@maven//:org_mongodb_mongo_java_driver",
     "@maven//:org_springframework_batch_spring_batch_core",
     "@maven//:org_springframework_boot_spring_boot_autoconfigure",
-    "@maven//:org_springframework_boot_spring_boot_starter_batch",
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_guice_spring_guice",
     "@maven//:software_amazon_awssdk_athena",
@@ -50,8 +49,7 @@ shared_dependencies = [
     "@maven//:org_apache_commons_commons_email",
     "@maven//:com_segment_analytics_java_analytics",
     "@maven//:org_apache_commons_commons_math3",
-    "@maven//:org_springframework_boot_spring_boot_starter_web",
-    "@maven//:org_springframework_boot_spring_boot_starter_webflux",
+    "@maven//:com_zaxxer_HikariCP_java7",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "//:lombok",
 ]
