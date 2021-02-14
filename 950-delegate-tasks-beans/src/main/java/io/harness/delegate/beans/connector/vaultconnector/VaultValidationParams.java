@@ -4,6 +4,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 
 import java.util.Collections;
@@ -24,6 +25,11 @@ public class VaultValidationParams implements ConnectorValidationParams, Executi
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    if (vaultConnectorDTO != null) {
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              vaultConnectorDTO.getVaultUrl(), maskingEvaluator));
+    }
     return Collections.emptyList();
   }
 }
