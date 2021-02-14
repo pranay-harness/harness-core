@@ -3,9 +3,9 @@ package io.harness.event.timeseries.processor.instanceeventprocessor.instancerec
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventAggregator;
-import io.harness.event.timeseries.processor.instanceeventprocessor.exceptions.InstanceAggregationException;
 import io.harness.event.timeseries.processor.utils.DateUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.InstanceAggregationException;
+import io.harness.exception.InstanceMigrationException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -91,7 +91,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
           String errorLog = String.format(
               "MAX RETRY FAILURE : Failed while fetching data for getting instance data migration interval for account : [%s] , error : [%s]",
               accountId, exception.toString());
-          throw new WingsException(errorLog, exception);
+          throw new InstanceMigrationException(errorLog, exception);
         }
         log.error(
             "Failed while fetching data for getting instance data migration interval for account : [{}] , retry : [{}] , error : [{}]",
@@ -117,7 +117,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
         } catch (Exception exception) {
           String errorLog =
               String.format("Error while disabling instance data migration cron for account id : [%s]", accountId);
-          throw new WingsException(errorLog, exception);
+          throw new InstanceMigrationException(errorLog, exception);
         }
       }
     } catch (Exception exception) {
@@ -137,10 +137,10 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
    * @param intervalEndTimestamp
    * @param batchSize limit on num of records to migrate in single go, used for throttling purpose
    * @param rowLimit limit on num of rows to migrate, used for throttling purpose
-   * @throws WingsException
+   * @throws InstanceMigrationException
    */
   public void aggregateEventsForGivenInterval(String accountId, Long intervalStartTimestamp, Long intervalEndTimestamp,
-      final Integer batchSize, final Integer rowLimit) throws WingsException {
+      final Integer batchSize, final Integer rowLimit) throws InstanceMigrationException {
     // Fetch instance data points in batches and process them
     boolean isAggregationCompleted = false, isRowLimitReached = false;
     int retry = 0, offset = 0, numOfRowsMigrated = 0;
@@ -163,7 +163,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
         } catch (SQLException exception) {
           if (retry >= InstanceReconConstants.MAX_RETRY_COUNT) {
             String errorLog = "MAX RETRY FAILURE : Failed to fetch instance data points within interval";
-            throw new WingsException(errorLog, exception);
+            throw new InstanceMigrationException(errorLog, exception);
           }
           log.error(
               "Failed to fetch instance data points during instance data migration process for account : [{}] from startTimestamp : [{}] to endTimestamp : [{}], retry : [{}]",
@@ -192,7 +192,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
             // processed while others were left incomplete for a given timestamp
             // So as backup, need to make sure in data migration that this timestamp is processed again
             String errorLog = "Stopping instance data migration due to agregation failure";
-            throw new WingsException(errorLog, exception);
+            throw new InstanceMigrationException(errorLog, exception);
           }
         }
 
@@ -204,7 +204,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
           "Unchecked Exception : Failed to do instance data migration process for account : [%s] from startTimestamp : [%d] to endTimestamp : [%d], error : [%s]",
           accountId, intervalStartTimestamp, intervalEndTimestamp, ex.toString());
       // In case of unknown exception, just halt the processing
-      throw new WingsException(errorLog, ex);
+      throw new InstanceMigrationException(errorLog, ex);
     }
 
     if (isRowLimitReached) {
