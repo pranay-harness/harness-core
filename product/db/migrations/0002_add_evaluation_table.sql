@@ -17,7 +17,7 @@ BEGIN
    IF NOT EXISTS (
       SELECT FROM pg_type  -- SELECT list can be empty for this
       WHERE  typname = 'test_type_t') THEN
-      CREATE TYPE test_type_t AS ENUM ('unit','functional','integration','e2e');
+      CREATE TYPE test_type_t AS ENUM ('unit','functional','integration','e2e','unknown');
       COMMENT ON TYPE test_type_t IS 'type of a test';
    END IF;
 END
@@ -29,7 +29,7 @@ BEGIN
    IF NOT EXISTS (
       SELECT FROM pg_type  -- SELECT list can be empty for this
       WHERE  typname = 'selection_criterion_t') THEN
-      CREATE TYPE selection_criterion_t AS ENUM ('source_code_changes','new_test','updated_test','flaky_test','tiignore');
+      CREATE TYPE selection_criterion_t AS ENUM ('source_code_changes','new_test','updated_test','flaky_test','tiignore','unknown');
       COMMENT ON TYPE selection_criterion_t IS 'why was this test selected/not_selected to run?';
    END IF;
 END
@@ -48,21 +48,23 @@ CREATE TABLE IF NOT EXISTS evaluation(
   build_id TEXT NOT NULL,
   stage_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
+  repo TEXT,
+  commit_id TEXT,
 
   -- test execution
   report TEXT NOT NULL,
   suite_name TEXT NOT NULL,
   class_name TEXT,
-  name TEXT NOT NULL,
+  name TEXT,
   duration_ms INT,
   result result_t,
   message TEXT,
   description TEXT,
-  type test_type_t,
+  type test_type_t DEFAULT 'unit',
   stdout TEXT,
   stderr TEXT,
   selected boolean DEFAULT true NOT NULL,
-  criterion selection_criterion_t
+  criterion selection_criterion_t DEFAULT 'source_code_changes'
 );
 
 comment on column evaluation.created_at is 'time when the test was run';
@@ -76,6 +78,8 @@ comment on column evaluation.pipeline_id is 'Pipeline ID';
 comment on column evaluation.build_id is 'The unique Build number across the pipeline';
 comment on column evaluation.stage_id is 'stage ID';
 comment on column evaluation.step_id is 'step ID';
+comment on column evaluation.repo is 'source code repository name/id';
+comment on column evaluation.commit_id is 'commit ID if any';
 
 -- test execution
 comment on column evaluation.report is 'Report type. eg. junit';

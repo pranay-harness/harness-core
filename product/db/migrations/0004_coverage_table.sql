@@ -9,7 +9,7 @@ BEGIN
    IF NOT EXISTS (
       SELECT FROM pg_type  -- SELECT list can be empty for this
       WHERE  typname = 'code_type_t') THEN
-      CREATE TYPE code_type_t AS ENUM ('source','test');
+      CREATE TYPE code_type_t AS ENUM ('source','test','conf','resource','unknown');
       COMMENT ON TYPE code_type_t IS 'type of a source code';
    END IF;
 END
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS coverage(
   suite_name TEXT NOT NULL,
   class_name TEXT,
   name TEXT NOT NULL,
-  type code_type_t,
+  type code_type_t DEFAULT 'source',
   missing_test boolean DEFAULT true NOT NULL
 );
 

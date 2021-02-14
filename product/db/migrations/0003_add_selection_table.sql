@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS selection(
   stage_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
 --  Test execution overview
-  type test_type_t,
+  type test_type_t DEFAULT 'unit',
   test_count integer,
   test_selected integer,
 -- Test selection breakdown
