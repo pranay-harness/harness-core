@@ -93,6 +93,7 @@ public class DelegateApplication {
 
   public static void main(String... args) throws IOException {
     log.info("Loaded class:"+ OpenSSHUserCertRSA.class.getProtectionDomain().getClassLoader().getParent());
+
     try {
       String proxyUser = System.getenv("PROXY_USER");
       if (isNotBlank(proxyUser)) {
