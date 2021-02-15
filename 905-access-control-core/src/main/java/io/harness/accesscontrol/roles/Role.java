@@ -23,9 +23,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode
 public class Role {
   @EntityIdentifier final String identifier;
-  final String parentIdentifier;
+  final String scopeIdentifier;
   @NGEntityName final String name;
-  @NotEmpty final Set<String> scopes;
+  @NotEmpty final Set<String> allowedScopeLevels;
   @NotEmpty final Set<String> permissions;
   @Setter boolean managed;
   final String description;

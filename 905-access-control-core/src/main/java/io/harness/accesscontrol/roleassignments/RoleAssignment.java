@@ -23,7 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode
 public class RoleAssignment {
   @EntityIdentifier final String identifier;
-  @NotEmpty final String parentIdentifier;
+  @NotEmpty final String scopeIdentifier;
   @NotEmpty final String resourceGroupIdentifier;
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;

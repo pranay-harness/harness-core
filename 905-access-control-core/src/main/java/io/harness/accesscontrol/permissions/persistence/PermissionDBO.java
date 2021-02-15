@@ -42,7 +42,7 @@ public class PermissionDBO implements PersistentEntity {
   @FdUniqueIndex final String identifier;
   final String name;
   @NotNull final PermissionStatus status;
-  @NotEmpty final Set<String> scopes;
+  @NotEmpty final Set<String> allowedScopeLevels;
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;

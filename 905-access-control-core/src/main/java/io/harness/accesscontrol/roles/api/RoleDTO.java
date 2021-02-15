@@ -22,7 +22,7 @@ public class RoleDTO {
   @ApiModelProperty(required = true) @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
   @ApiModelProperty(required = true) @NotEmpty Set<String> permissions;
-  @NotEmpty Set<String> scopes;
+  @NotEmpty Set<String> allowedScopeLevels;
   String description;
   Map<String, String> tags;
 }

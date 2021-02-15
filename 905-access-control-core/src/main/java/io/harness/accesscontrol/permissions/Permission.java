@@ -21,5 +21,5 @@ public class Permission {
   @NotEmpty String identifier;
   @NGEntityName String name;
   @NotNull PermissionStatus status;
-  @NotEmpty Set<String> scopes;
+  @NotEmpty Set<String> allowedScopeLevels;
 }
