@@ -260,6 +260,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
                              .hostConnectionCredentials(hostConnectionCredentials)
                              .bastionConnectionCredentials(bastionConnectionCredentials)
                              .sshExecutionCredential((SSHExecutionCredential) executionCredential)
+                             .sshVaultConfig(sshVaultConfig)
                              .build());
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(

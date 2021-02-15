@@ -2013,6 +2013,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         && ((HostConnectionAttributes) hostConnectionSetting.getValue()).isVaultSSH()) {
       sshVaultConfig = sshVaultService.getSSHVaultConfig(hostConnectionSetting.getAccountId(),
           ((HostConnectionAttributes) hostConnectionSetting.getValue()).getSshVaultConfigId());
+      ((HostConnectionAttributes) hostConnectionSetting.getValue()).setSshVaultConfig(sshVaultConfig);
     }
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
