@@ -55,6 +55,14 @@ public class K8sStepParametersCommandUnitsTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testK8sCanaryDeleteParameters() {
+    assertCommandUnitsName(
+        new K8sCanaryDeleteStepParameters(), K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Delete);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testK8RollingRollbackParameters() {
     assertCommandUnitsName(new K8sRollingRollbackStepParameters(), K8sCommandUnitConstants.Init,
         K8sCommandUnitConstants.Rollback, K8sCommandUnitConstants.WaitForSteadyState);
