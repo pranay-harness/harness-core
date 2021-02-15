@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -80,6 +81,7 @@ public class AwsAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServi
                                                 .build()})
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 
