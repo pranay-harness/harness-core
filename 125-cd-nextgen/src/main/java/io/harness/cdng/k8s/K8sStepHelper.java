@@ -26,6 +26,7 @@ import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -52,6 +53,7 @@ import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -96,6 +98,7 @@ public class K8sStepHelper {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
+  @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     switch (infrastructure.getKind()) {
@@ -190,13 +193,12 @@ public class K8sStepHelper {
       GitStore gitStore = (GitStore) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStore.getConnectorRef()), ambiance);
       GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
-
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
-      List<EncryptedDataDetail> encryptedDataDetailList =
-          secretManagerClientService.getEncryptionDetails(basicNGAccessObject, gitConfigDTO.getGitAuth());
-
+      SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+      List<EncryptedDataDetail> encryptedDataDetails =
+          gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
       return K8sManifestDelegateConfig.builder()
-          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetailList))
+          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO))
           .build();
     } else {
       throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
@@ -204,9 +206,11 @@ public class K8sStepHelper {
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStore gitStore,
-      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList) {
+      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
+      SSHKeySpecDTO sshKeySpecDTO) {
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
+        .sshKeySpecDTO(sshKeySpecDTO)
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitStore.getGitFetchType())
         .branch(getParameterFieldValue(gitStore.getBranch()))
@@ -214,6 +218,11 @@ public class K8sStepHelper {
         .paths(getParameterFieldValue(gitStore.getPaths()))
         .connectorName(connectorDTO.getName())
         .build();
+  }
+
+  private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
+    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceHelper.getAccountId(ambiance),
+        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
   }
 
   private List<EncryptedDataDetail> getEncryptionDataDetails(
@@ -299,10 +308,14 @@ public class K8sStepHelper {
         GitStore gitStore = (GitStore) valuesManifest.getStore();
         String connectorId = gitStore.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
+        GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
+        NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+        SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
-            getEncryptedDataDetails((GitConfigDTO) connectorDTO.getConnectorConfig(), ambiance);
+            gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+
         GitStoreDelegateConfig gitStoreDelegateConfig =
-            getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails);
+            getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO);
 
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
                                      .identifier(valuesManifest.getIdentifier())

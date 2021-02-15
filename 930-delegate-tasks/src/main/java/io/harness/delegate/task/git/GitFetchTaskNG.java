@@ -6,6 +6,7 @@ import static io.harness.logging.LogLevel.WARN;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
@@ -21,6 +22,7 @@ import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.inject.Inject;
 import java.nio.file.NoSuchFileException;
@@ -37,6 +39,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
+  @Inject private GitDecryptionHelper gitDecryptionHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -105,8 +108,10 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   private FetchFilesResult fetchFilesFromRepo(
       GitFetchFilesConfig gitFetchFilesConfig, LogCallback executionLogCallback, String accountId) {
     GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
-
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+    gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+    SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+        gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
     secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
@@ -123,7 +128,8 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     }
 
-    FetchFilesResult gitFetchFilesResult = ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, null);
+    FetchFilesResult gitFetchFilesResult =
+        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig);
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 
