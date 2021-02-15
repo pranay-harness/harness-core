@@ -65,7 +65,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
       "INSERT INTO DEPLOYMENT_STAGE (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED, TAGS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   private static final String fetch_account_executions_deployment_in_interval =
-      "SELECT * FROM DEPLOYMENT WHERE ACCOUNTID = ? AND STARTTIME >= ? AND STARTTIME <= ? ORDER BY STARTTIME DESC OFFSET ? LIMIT ?";
+      "SELECT EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION,INSTANCES_DEPLOYED,TAGS FROM DEPLOYMENT WHERE ACCOUNTID = ? AND STARTTIME >= ? AND STARTTIME <= ? ORDER BY STARTTIME DESC OFFSET ? LIMIT ?";
   private static final String fetch_oldest_parent_execution_migration_completed =
       "SELECT * FROM DEPLOYMENT_PARENT WHERE ACCOUNTID = ? ORDER BY STARTTIME LIMIT 1";
   private static final String fetch_oldest_stage_execution_migration_completed =
@@ -370,7 +370,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
     List<Map<String, Object>> eventInfoList = new ArrayList<>();
 
     while (resultSet.next()) {
-      Integer index = 1;
+      int index = 1;
       Map<String, Object> eventInfo = new HashMap<>();
       eventInfo.put(EventProcessor.EXECUTIONID, resultSet.getString(index++));
       eventInfo.put(EventProcessor.STARTTIME, resultSet.getTimestamp(index++).getTime());

@@ -255,6 +255,16 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
       dataPoints.add(TimeSeriesBatchEventInfo.DataPoint.builder().data(dataMap).build());
     }
 
+    if (!dataPoints.isEmpty()) {
+      // Its a new timestamp, so create a new event info object
+      eventInfoList.add(TimeSeriesBatchEventInfo.builder()
+                            .accountId(accountId)
+                            .timestamp(prevReportedAt)
+                            .dataPointList(dataPoints)
+                            .build());
+      dataPoints.clear();
+    }
+
     return eventInfoList;
   }
 
