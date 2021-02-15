@@ -10,10 +10,12 @@ import io.harness.ccm.anomaly.entities.AnomalyType;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class StatsModel {
   public Anomaly detectAnomaly(AnomalyDetectionTimeSeries data) {
     List<Double> stats = TimeSeriesUtils.getStats(data);
@@ -67,6 +69,10 @@ public class StatsModel {
           && currentAnomaly.isAbsoluteThreshold();
       currentAnomaly.setAnomaly(isAnomaly);
       anomaliesList.add(currentAnomaly);
+      log.info(
+          "statistics : predicted : [{}] , actual : [{}] , STD : [{}] , absolute Threshold : [{}] , relative Threshold : [{}] , probabilistic Threshold : [{}] , isAnomaly : [{}] ",
+          mean, currentValue, standardDeviation, currentAnomaly.isAbsoluteThreshold(),
+          currentAnomaly.isRelativeThreshold(), currentAnomaly.isProbabilisticThreshold(), currentAnomaly.isAnomaly());
     }
     return anomaliesList.get(0);
   }

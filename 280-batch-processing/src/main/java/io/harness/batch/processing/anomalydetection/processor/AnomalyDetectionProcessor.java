@@ -1,10 +1,15 @@
 package io.harness.batch.processing.anomalydetection.processor;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
 import io.harness.batch.processing.anomalydetection.models.StatsModel;
 import io.harness.batch.processing.anomalydetection.pythonserviceendpoint.AnomalyDetectionPythonService;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.service.impl.AnomalyDetectionLogContext;
 import io.harness.ccm.anomaly.entities.Anomaly;
+import io.harness.logging.AutoLogContext;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
@@ -34,11 +39,14 @@ public class AnomalyDetectionProcessor
   @Override
   public Anomaly process(AnomalyDetectionTimeSeries timeSeries) throws Exception {
     Anomaly returnAnomaly;
-
-    returnAnomaly = statsModel.detectAnomaly(timeSeries);
-
-    if (returnAnomaly.isAnomaly() && mainConfig.getCePythonServiceConfig().isUseProphet()) {
-      returnAnomaly = pythonService.process(timeSeries);
+    try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
+      AnomalyDetectionHelper.logProcessingTimeSeries("Stats Model");
+      returnAnomaly = statsModel.detectAnomaly(timeSeries);
+      if (mainConfig.getCePythonServiceConfig().isUseProphet() && returnAnomaly.isAnomaly()) {
+        AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
+        returnAnomaly = pythonService.process(timeSeries);
+      }
+      log.info("finally after processing, isAnomaly : [{}]", returnAnomaly.isAnomaly());
     }
 
     return returnAnomaly;

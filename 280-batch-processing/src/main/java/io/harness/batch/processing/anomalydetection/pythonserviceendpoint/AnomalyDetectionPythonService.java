@@ -1,6 +1,7 @@
 package io.harness.batch.processing.anomalydetection.pythonserviceendpoint;
 
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.anomaly.entities.Anomaly;
 
@@ -47,16 +48,22 @@ public class AnomalyDetectionPythonService {
         if (response.isSuccessful()) {
           PythonResponse result = response.body().get(0);
           if (!result.getId().equals(timeSeries.getId())) {
-            throw new AssertionError("result id and given id of time series didn't match");
+            throw new AssertionError(
+                String.format("[%1$s]:result id and given id of time series didn't match", timeSeries.getId()));
           }
           resultAnomaly = PythonMappers.toAnomaly(result, timeSeries);
+          log.info(
+              "statistics : y_hat : [{}] , y_hat_lower : [{}] , y_hat_upper : [{}] ,  actual : [{}] , isAnomaly : [{}] ",
+              result.getYHat(), result.getYHatLower(), result.getYHatUpper(), result.getY(), result.getIsAnomaly());
           break;
         } else {
-          log.error("unsuccessful http request from python server , error code {} ", response.code());
+          count++;
+          AnomalyDetectionHelper.logUnsuccessfulHttpCall(response.code(), response.errorBody().string());
         }
       } catch (Exception e) {
         count++;
-        log.error("could not make a successful http request to python service after count : {} , error {}", count, e);
+        log.error("[{}]:could not make a successful http request to python service after count : {} , error {}",
+            timeSeries.getId(), count, e);
       }
     }
 

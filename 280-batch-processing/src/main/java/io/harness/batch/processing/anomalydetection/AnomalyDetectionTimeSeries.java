@@ -93,6 +93,11 @@ public class AnomalyDetectionTimeSeries extends Anomaly {
     }
   }
 
+  @Override
+  public String getId() {
+    return super.getId() == null ? getHash() : super.getId();
+  }
+
   public String getHash() {
     return AnomalyDetectionHelper.generateHash(
         String.join(",", getTestTimePointsList().get(0).toString(), getClusterId(), getNamespace(), getWorkloadName(),
