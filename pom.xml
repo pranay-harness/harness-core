@@ -7,7 +7,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>120-ng-manager</module>
-        <module>136-git-sync-manager</module>
         <module>160-model-gen-tool</module>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
