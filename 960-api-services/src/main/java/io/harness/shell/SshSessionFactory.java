@@ -72,7 +72,8 @@ public class SshSessionFactory {
    */
   public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
-
+    log.info(
+        "Testing Loaded class:" + com.jcraft.jsch.OpenSSHUserCertRSA.class.getProtectionDomain().getClass().getName());
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
@@ -101,6 +102,7 @@ public class SshSessionFactory {
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else if (config.isVaultSSH()) {
       log.info("SSH using Vault SSH secret engine");
+
       final char[] copyOfKey = getCopyOfKey(config);
       log.info("Testing : SSH signed public key {}", config.getSignedPublicKey());
       log.info("Testing : SSH  private key {}", config.getKey());
