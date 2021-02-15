@@ -76,6 +76,8 @@ BAZEL_MODULES="\
   //800-pipeline-service:module \
   //800-pipeline-service:module_deploy.jar \
   //810-ng-triggers:module \
+  //830-notification-service:module \
+  //830-notification-service:module_deploy.jar \
   //835-notification-senders:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
@@ -274,6 +276,7 @@ build_proto_module() {
 }
 
 build_bazel_application 800-pipeline-service
+build_bazel_application 830-notification-service
 build_bazel_application 905-access-control-core
 build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
