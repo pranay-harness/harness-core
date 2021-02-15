@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -77,6 +78,7 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -1549,5 +1551,104 @@ public class CommandStateTest extends WingsBaseTest {
     verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
         workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void executeWithNestedCommand() {
+    Artifact artifact =
+        anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
+    Command command =
+        aCommand()
+            .addCommandUnits(
+                aCommand()
+                    .withTemplateReference(
+                        TemplateReference.builder().templateUuid("templateUuid").templateVersion(4L).build())
+                    .build())
+            .build();
+
+    setWorkflowStandardParams(artifact, command);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(any(), any()))
+        .thenReturn(
+            Template.builder()
+                .templateObject(SshCommandTemplate.builder()
+                                    .commandUnits(Collections.singletonList(ExecCommandUnit.Builder.anExecCommandUnit()
+                                                                                .withName("some name")
+                                                                                .withCommandPath("some path")
+                                                                                .withScriptType(ScriptType.BASH)
+                                                                                .withCommandString("echo 'Hello World'")
+                                                                                .build()))
+                                    .build())
+                .build());
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
+    when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
+    when(serviceCommandExecutorService.execute(command,
+             aCommandExecutionContext()
+                 .appId(APP_ID)
+                 .backupPath(BACKUP_PATH)
+                 .runtimePath(RUNTIME_PATH)
+                 .stagingPath(STAGING_PATH)
+                 .executionCredential(null)
+                 .activityId(ACTIVITY_ID)
+                 .artifactStreamAttributes(artifactStreamAttributes)
+                 .artifactServerEncryptedDataDetails(new ArrayList<>())
+                 .build()))
+        .thenReturn(SUCCESS);
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
+    commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
+
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).getWithDetails(APP_ID, null);
+    verify(serviceResourceService).getDeploymentType(any(), any(), any());
+
+    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(activityHelperService)
+        .createAndSaveActivity(any(ExecutionContext.class), any(Activity.Type.class), anyString(), anyString(),
+            anyList(), any(Artifact.class));
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
+
+    DelegateTaskBuilder delegateBuilder = getDelegateBuilder(artifact, artifactStreamAttributes, command);
+    DelegateTask delegateTask = delegateBuilder.build();
+
+    delegateService.queueTask(delegateTask);
+
+    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).fetchInfraMappingId();
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(6)).renderExpression(anyString());
+    verify(context, times(1)).getServiceVariables();
+    verify(context, times(1)).getSafeDisplayServiceVariables();
+    verify(context, times(2)).getAppId();
+    verify(context).getStateExecutionData();
+
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(2)).get(anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityHelperService,
+        serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+    verify(templateService).get("templateUuid", "4");
   }
 }
