@@ -216,7 +216,7 @@ cd ../..
 mkdir -p dist/notification-service
 cd dist/notification-service
 
-cp ../../830-notification-service/target/notification-service-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/830-notification-service/module_deploy.jar notification-service-capsule.jar
 cp ../../830-notification-service/config.yml .
 cp ../../830-notification-service/keystore.jks .
 cp ../../830-notification-service/key.pem .
