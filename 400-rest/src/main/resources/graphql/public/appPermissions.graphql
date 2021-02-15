@@ -30,6 +30,7 @@ enum AppPermissionType {
   PIPELINE
   DEPLOYMENT
   PROVISIONER
+  # Beta - Work in Progress
   WEBHOOK_TRIGGER_SECRETS
 }
 
