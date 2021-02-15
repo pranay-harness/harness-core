@@ -2,6 +2,8 @@ package io.harness.cvng.activity.source.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.activity.entities.ActivitySource;
@@ -16,11 +18,15 @@ import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +64,73 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       activitySource.validate();
       return hPersistence.save(activitySource);
     }
+  }
+
+  @Override
+  public String create(String accountId, ActivitySourceDTO activitySourceDTO) {
+    Preconditions.checkNotNull(activitySourceDTO.getOrgIdentifier());
+    Preconditions.checkNotNull(activitySourceDTO.getProjectIdentifier());
+    ActivitySource activitySource;
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        activitySource = KubernetesActivitySource.fromDTO(accountId, activitySourceDTO.getOrgIdentifier(),
+            activitySourceDTO.getProjectIdentifier(), (KubernetesActivitySourceDTO) activitySourceDTO);
+        sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
+        break;
+      case HARNESS_CD10:
+        validateSingleCD10Activity(
+            accountId, activitySourceDTO.getOrgIdentifier(), activitySourceDTO.getProjectIdentifier());
+        activitySource = CD10ActivitySource.fromDTO(accountId, activitySourceDTO.getOrgIdentifier(),
+            activitySourceDTO.getProjectIdentifier(), (CD10ActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    try {
+      activitySource.validate();
+      return hPersistence.save(activitySource);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(
+          String.format(
+              "An Activity Source with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+              activitySource.getIdentifier(), activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier()),
+          USER_SRE, ex);
+    }
+  }
+
+  @Override
+  public String update(String accountId, String identifier, ActivitySourceDTO activitySourceDTO) {
+    ActivitySource activitySource =
+        get(accountId, activitySourceDTO.getOrgIdentifier(), activitySourceDTO.getProjectIdentifier(), identifier);
+    if (activitySource == null) {
+      throw new InvalidRequestException(
+          String.format(
+              "Activity Source with identifier [%s] , orgIdentifier [%s] and projectIdentifier [%s] not found",
+              identifier, activitySourceDTO.getOrgIdentifier(), activitySourceDTO.getProjectIdentifier()),
+          USER);
+    }
+
+    if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
+      verificationManagerService.deletePerpetualTask(
+          activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
+    }
+
+    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
+                                                            .set(ActivitySourceKeys.name, activitySourceDTO.getName())
+                                                            .unset(ActivitySourceKeys.dataCollectionTaskId);
+
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      case HARNESS_CD10:
+        CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    hPersistence.update(activitySource, updateOperations);
+    return identifier;
   }
 
   private void validateSingleCD10Activity(String accountId, String orgIdentifier, String projectIdentifier) {
@@ -205,5 +278,18 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
     for (ActivitySource activitySource : activitySources) {
       getActivitySourceForDeletion(activitySource.getAccountId(), activitySource);
     }
+  }
+
+  private ActivitySource get(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Preconditions.checkNotNull(identifier);
+    return hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+        .filter(ActivitySourceKeys.accountId, accountId)
+        .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+        .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+        .filter(ActivitySourceKeys.identifier, identifier)
+        .get();
   }
 }
