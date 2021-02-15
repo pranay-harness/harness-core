@@ -72,8 +72,7 @@ public class SshSessionFactory {
    */
   public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
-    log.info(
-        "Testing Loaded class:" + com.jcraft.jsch.OpenSSHUserCertRSA.class.getProtectionDomain().getClass().getName());
+
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme() == KERBEROS) {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
