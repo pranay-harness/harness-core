@@ -15,10 +15,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_TIMEOUT_BUFFER_MIN;
-import static software.wings.service.impl.aws.model.AwsConstants.ECS_ALL_PHASE_ROLLBACK_DONE;
-import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
-import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.*;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.sm.states.EcsRunTaskDeploy.GIT_FETCH_FILES_TASK_NAME;
@@ -38,6 +35,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
@@ -52,75 +50,39 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
-import software.wings.api.CommandStateExecutionData;
-import software.wings.api.ContainerRollbackRequestElement;
-import software.wings.api.ContainerServiceData;
-import software.wings.api.ContainerServiceElement;
+import software.wings.api.*;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
-import software.wings.api.DeploymentType;
-import software.wings.api.InstanceElement;
-import software.wings.api.InstanceElementListParam;
-import software.wings.api.PhaseElement;
 import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
 import software.wings.api.instancedetails.InstanceInfoVariables;
-import software.wings.beans.Activity;
+import software.wings.beans.*;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.Application;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.Environment;
-import software.wings.beans.GitFileConfig;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.Log;
-import software.wings.beans.ResizeStrategy;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.*;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
-import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder;
-import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
-import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
-import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
-import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
-import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
+import software.wings.helpers.ext.ecs.request.*;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.aws.model.AwsEcsAllPhaseRollbackData;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.InstanceStatusSummary;
-import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.*;
 import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
 import software.wings.sm.states.EcsSetupContextVariableHolder.EcsSetupContextVariableHolderBuilder;
 import software.wings.utils.EcsConvention;
@@ -130,12 +92,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -160,6 +117,23 @@ public class EcsStateHelper {
     String taskFamily = isNotBlank(ecsSetupStateConfig.getEcsServiceName())
         ? Misc.normalizeExpression(context.renderExpression(ecsSetupStateConfig.getEcsServiceName()))
         : EcsConvention.getTaskFamily(app.getName(), ecsSetupStateConfig.getServiceName(), env.getName());
+
+    List<AwsElbConfig> renderedAwsElbConfigList = null;
+    if (EmptyPredicate.isNotEmpty(ecsSetupStateConfig.getAwsElbConfigs())) {
+      renderedAwsElbConfigList =
+          ecsSetupStateConfig.getAwsElbConfigs()
+              .stream()
+              .map(awsElbConfig -> {
+                AwsElbConfig renderedAwsElbConfig = new AwsElbConfig();
+                renderedAwsElbConfig.setTargetContainerName(
+                    context.renderExpression(awsElbConfig.getTargetContainerName()));
+                renderedAwsElbConfig.setLoadBalancerName(context.renderExpression(awsElbConfig.getLoadBalancerName()));
+                renderedAwsElbConfig.setTargetGroupArn(context.renderExpression(awsElbConfig.getTargetGroupArn()));
+                renderedAwsElbConfig.setTargetPort(context.renderExpression(awsElbConfig.getTargetPort()));
+                return renderedAwsElbConfig;
+              })
+              .collect(toList());
+    }
 
     if (containerTask != null) {
       EcsContainerTask ecsContainerTask = (EcsContainerTask) containerTask;
@@ -189,6 +163,8 @@ public class EcsStateHelper {
         .withLoadBalancerName(context.renderExpression(ecsSetupStateConfig.getLoadBalancerName()))
         .withInfraMappingId(ecsSetupStateConfig.getInfrastructureMapping().getUuid())
         .withRoleArn(context.renderExpression(ecsSetupStateConfig.getRoleArn()))
+        .withAwsElbConfigs(renderedAwsElbConfigList)
+        .withIsMultipleLoadBalancersFeatureFlagActive(ecsSetupStateConfig.isMultipleLoadBalancersFeatureFlagActive())
         .withTargetGroupArn(context.renderExpression(ecsSetupStateConfig.getTargetGroupArn()))
         // Next 3 are to be used by Ecs BG only
         .withBlueGreen(ecsSetupStateConfig.isBlueGreen())
@@ -632,6 +608,9 @@ public class EcsStateHelper {
       containerServiceElement.setEcsRegion(setupExecutionData.getEcsRegion());
       containerServiceElement.setTargetGroupForNewService(setupExecutionData.getTargetGroupForNewService());
       containerServiceElement.setTargetGroupForExistingService(setupExecutionData.getTargetGroupForExistingService());
+      containerServiceElement.setMultipleLoadBalancersFeatureFlagActive(
+          setupExecutionData.isMultipleLoadBalancersFeatureFlagActive());
+      containerServiceElement.setAwsElbConfigs(setupExecutionData.getAwsElbConfigs());
 
       if (((EcsSetupParams) executionData.getContainerSetupParams()).isBlueGreen()) {
         EcsSetupParams ecsSetupParams = (EcsSetupParams) executionData.getContainerSetupParams();
