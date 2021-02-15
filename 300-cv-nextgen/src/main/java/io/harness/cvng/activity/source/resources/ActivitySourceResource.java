@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -50,6 +51,26 @@ public class ActivitySourceResource {
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @Body ActivitySourceDTO activitySourceDTO) {
     return ResponseDTO.newResponse(
         activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, activitySourceDTO));
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("create")
+  @ApiOperation(value = "create an activity source", nickname = "createActivitySource")
+  public ResponseDTO<String> createActivitySource(
+      @QueryParam("accountId") @NotNull String accountId, @Body ActivitySourceDTO activitySourceDTO) {
+    return ResponseDTO.newResponse(activitySourceService.create(accountId, activitySourceDTO));
+  }
+
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}")
+  @ApiOperation(value = "update an activity source by identifier", nickname = "putActivitySource")
+  public ResponseDTO<String> updateActivitySource(@NotNull @PathParam("identifier") String identifier,
+      @QueryParam("accountId") @NotNull String accountId, @Body ActivitySourceDTO activitySourceDTO) {
+    return ResponseDTO.newResponse(activitySourceService.update(accountId, identifier, activitySourceDTO));
   }
 
   @GET
