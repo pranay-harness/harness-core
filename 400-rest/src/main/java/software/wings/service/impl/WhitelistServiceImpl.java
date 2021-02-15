@@ -12,11 +12,13 @@ import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Event.Type;
@@ -53,6 +55,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named(WHITELIST_CACHE) private Cache<String, WhitelistConfig> whitelistConfigCache;
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
 
@@ -113,6 +116,16 @@ public class WhitelistServiceImpl implements WhitelistService {
 
     List<Whitelist> whitelistConfigList = getWhitelistConfig(accountId);
     return isValidIPAddress(ipAddress, whitelistConfigList);
+  }
+
+  @Override
+  public boolean checkIfFeatureIsEnabledAndWhitelisting(String accountId, String ipAddress, FeatureName featureName) {
+    if (featureName != null) {
+      if (!featureFlagService.isEnabled(featureName, accountId)) {
+        return true;
+      }
+    }
+    return isValidIPAddress(accountId, ipAddress);
   }
 
   public List<Whitelist> getWhitelistConfig(String accountId) {

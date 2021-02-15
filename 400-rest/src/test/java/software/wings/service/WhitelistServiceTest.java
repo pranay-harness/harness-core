@@ -15,11 +15,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -60,6 +62,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   private static final String INVALID_IP_ADDRESS = "invalidIp";
 
   @Mock private AccountService accountService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private Account account;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private MainConfiguration mainConfig;
