@@ -1,11 +1,17 @@
 package io.harness.accesscontrol.scopes;
 
-import static io.harness.accesscontrol.scopes.ScopeServiceImpl.SCOPES_BY_IDENTIFIER_NAME;
-import static io.harness.accesscontrol.scopes.ScopeServiceImpl.SCOPES_BY_KEY;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
+
+import io.harness.accesscontrol.scopes.core.ScopeLevel;
+import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.core.ScopeServiceImpl;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Names;
 
 public class ScopeModule extends AbstractModule {
   private static ScopeModule instance;
@@ -21,17 +27,11 @@ public class ScopeModule extends AbstractModule {
   protected void configure() {
     bind(ScopeService.class).to(ScopeServiceImpl.class);
 
-    MapBinder<String, Scope> scopesByIdentifierName =
-        MapBinder.newMapBinder(binder(), String.class, Scope.class, Names.named(SCOPES_BY_IDENTIFIER_NAME));
-    scopesByIdentifierName.addBinding(HarnessScope.ACCOUNT.getIdentifierName()).toInstance(HarnessScope.ACCOUNT);
-    scopesByIdentifierName.addBinding(HarnessScope.ORGANIZATION.getIdentifierName())
-        .toInstance(HarnessScope.ORGANIZATION);
-    scopesByIdentifierName.addBinding(HarnessScope.PROJECT.getIdentifierName()).toInstance(HarnessScope.PROJECT);
+    MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
+    scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
+    scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
+    scopesByKey.addBinding(PROJECT.toString()).toInstance(PROJECT);
 
-    MapBinder<String, Scope> scopesByKey =
-        MapBinder.newMapBinder(binder(), String.class, Scope.class, Names.named(SCOPES_BY_KEY));
-    scopesByKey.addBinding(HarnessScope.ACCOUNT.getIdentifierName()).toInstance(HarnessScope.ACCOUNT);
-    scopesByKey.addBinding(HarnessScope.ORGANIZATION.getIdentifierName()).toInstance(HarnessScope.ORGANIZATION);
-    scopesByKey.addBinding(HarnessScope.PROJECT.getIdentifierName()).toInstance(HarnessScope.PROJECT);
+    bind(ScopeParamsFactory.class).to(HarnessScopeParamsFactory.class);
   }
 }

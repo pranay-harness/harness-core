@@ -1,14 +1,11 @@
 package io.harness.accesscontrol.permissions.api;
 
-import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
-import static io.harness.NGCommonEntityConstants.ORG_KEY;
-import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
-
 import io.harness.accesscontrol.permissions.Permission;
+import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
-import io.harness.accesscontrol.scopes.HarnessScopeUtils;
-import io.harness.accesscontrol.scopes.Scope;
-import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -18,14 +15,16 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/permissions")
 @Path("/permissions")
@@ -48,20 +47,17 @@ public class PermissionResource {
 
   @GET
   @ApiOperation(value = "Get All Permissions in a Scope", nickname = "getPermissionList")
-  public ResponseDTO<List<PermissionResponseDTO>> get(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam("resourceType") String resourceType) {
-    Scope scope = scopeService.getLowestScope(
-        HarnessScopeUtils.getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    List<Permission> permissions = permissionService.list(scope, resourceType);
-    return ResponseDTO.newResponse(permissions.stream().map(PermissionDTOMapper::toDTO).collect(Collectors.toList()));
-  }
-
-  @Path("/all")
-  @GET
-  @ApiOperation(value = "Get All Permissions in the System", nickname = "getSystemPermissionList")
-  public ResponseDTO<List<PermissionResponseDTO>> get(@QueryParam("resourceType") String resourceType) {
-    List<Permission> permissions = permissionService.list(null, resourceType);
+  public ResponseDTO<List<PermissionResponseDTO>> get(
+      @BeanParam HarnessScopeParams scopeParams, @QueryParam("resourceType") String resourceType) {
+    Scope scope = scopeService.buildScopeFromParams(scopeParams);
+    Set<String> scopeFilter = new HashSet<>();
+    scopeFilter.add(scope.getLevel().toString());
+    PermissionFilter query = PermissionFilter.builder()
+                                 .allowedScopeLevelsFilter(scopeFilter)
+                                 .identifierFilter(new HashSet<>())
+                                 .statusFilter(new HashSet<>())
+                                 .build();
+    List<Permission> permissions = permissionService.list(query);
     return ResponseDTO.newResponse(permissions.stream().map(PermissionDTOMapper::toDTO).collect(Collectors.toList()));
   }
 }

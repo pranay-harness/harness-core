@@ -1,18 +1,20 @@
 package io.harness.accesscontrol.permissions.persistence;
 
 import io.harness.accesscontrol.permissions.Permission;
-import io.harness.accesscontrol.scopes.Scope;
+import io.harness.accesscontrol.permissions.PermissionFilter;
+import io.harness.accesscontrol.permissions.persistence.PermissionDBO.PermissionDBOKeys;
+import io.harness.accesscontrol.permissions.persistence.repositories.PermissionRepository;
 import io.harness.exception.DuplicateFieldException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @ValidateOnExecution
@@ -36,16 +38,27 @@ public class PermissionDaoImpl implements PermissionDao {
   }
 
   @Override
-  public List<Permission> list(Scope scope, String resourceType) {
-    if (scope != null) {
-      Collection<PermissionDBO> permissionDBOs = permissionRepository.findAllByScopesContaining(scope.getKey());
-      return permissionDBOs.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
+  public List<Permission> list(PermissionFilter permissionFilter) {
+    if (permissionFilter.isEmpty()) {
+      Iterable<PermissionDBO> permissionDBOIterable = permissionRepository.findAll();
+      List<Permission> permissions = new ArrayList<>();
+      permissionDBOIterable.iterator().forEachRemaining(
+          permissionDBO -> permissions.add(PermissionDBOMapper.fromDBO(permissionDBO)));
+      return permissions;
     }
-    Iterable<PermissionDBO> permissionDBOs = permissionRepository.findAll();
-    List<Permission> permissions = new ArrayList<>();
-    permissionDBOs.iterator().forEachRemaining(
-        permissionDBO -> permissions.add(PermissionDBOMapper.fromDBO(permissionDBO)));
-    return permissions;
+
+    Criteria criteria = new Criteria();
+    if (!permissionFilter.getIdentifierFilter().isEmpty()) {
+      criteria.and(PermissionDBOKeys.identifier).in(permissionFilter.getIdentifierFilter());
+    }
+    if (!permissionFilter.getAllowedScopeLevelsFilter().isEmpty()) {
+      criteria.and(PermissionDBOKeys.allowedScopeLevels).in(permissionFilter.getAllowedScopeLevelsFilter());
+    }
+    if (!permissionFilter.getStatusFilter().isEmpty()) {
+      criteria.and(PermissionDBOKeys.status).in(permissionFilter.getStatusFilter());
+    }
+    List<PermissionDBO> permissionDBOList = permissionRepository.findAll(criteria);
+    return permissionDBOList.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
   }
 
   @Override

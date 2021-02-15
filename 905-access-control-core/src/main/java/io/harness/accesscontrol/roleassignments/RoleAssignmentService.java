@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface RoleAssignmentService {
-  RoleAssignment create(@Valid RoleAssignment roleAssignment);
+  RoleAssignment create(@Valid @NotNull RoleAssignment roleAssignment);
 
   PageResponse<RoleAssignment> getAll(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
       String principalIdentifier, String roleIdentifier);

@@ -4,8 +4,8 @@ import io.harness.accesscontrol.permissions.api.PermissionDTO;
 import io.harness.accesscontrol.permissions.api.PermissionDTO.PermissionDTOKeys;
 import io.harness.accesscontrol.roles.api.RoleDTO;
 import io.harness.accesscontrol.roles.api.RoleDTO.RoleDTOKeys;
-import io.harness.accesscontrol.scopes.HarnessScope;
-import io.harness.accesscontrol.scopes.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeLevel;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
@@ -22,10 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SwaggerDefinition
 public class AccessControlSwaggerListener implements ReaderListener {
-  private final Set<String> scopesAllowedValues;
+  private final Set<String> scopesAllowedLevels;
 
   public AccessControlSwaggerListener() {
-    scopesAllowedValues = Arrays.stream(HarnessScope.values()).map(Scope::getKey).collect(Collectors.toSet());
+    scopesAllowedLevels =
+        Arrays.stream(HarnessScopeLevel.values()).map(ScopeLevel::toString).collect(Collectors.toSet());
   }
 
   @Override
@@ -36,10 +37,13 @@ public class AccessControlSwaggerListener implements ReaderListener {
     ((ArrayProperty) swagger.getDefinitions()
             .get(PermissionDTO.MODEL_NAME)
             .getProperties()
-            .get(PermissionDTOKeys.scopes))
-        .setItems(new StringProperty()._enum(new ArrayList<>(scopesAllowedValues)));
+            .get(PermissionDTOKeys.allowedScopeLevels))
+        .setItems(new StringProperty()._enum(new ArrayList<>(scopesAllowedLevels)));
 
-    ((ArrayProperty) swagger.getDefinitions().get(RoleDTO.MODEL_NAME).getProperties().get(RoleDTOKeys.scopes))
-        .setItems(new StringProperty()._enum(new ArrayList<>(scopesAllowedValues)));
+    ((ArrayProperty) swagger.getDefinitions()
+            .get(RoleDTO.MODEL_NAME)
+            .getProperties()
+            .get(RoleDTOKeys.allowedScopeLevels))
+        .setItems(new StringProperty()._enum(new ArrayList<>(scopesAllowedLevels)));
   }
 }

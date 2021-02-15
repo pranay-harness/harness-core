@@ -1,17 +1,13 @@
 package io.harness.accesscontrol.roleassignments.api;
 
-import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
-import static io.harness.NGCommonEntityConstants.ORG_KEY;
-import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
-import static io.harness.accesscontrol.scopes.HarnessScopeUtils.getIdentifierMap;
 
-import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
-import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -23,9 +19,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -57,41 +53,32 @@ public class RoleAssignmentResource {
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")
-  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("principalIdentifier") String principalIdentifier,
+  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(@BeanParam PageRequest pageRequest,
+      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("principalIdentifier") String principalIdentifier,
       @QueryParam("roleIdentifier") String roleIdentifier) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    PageRequest pageRequest = PageRequest.builder().pageIndex(page).pageSize(size).build();
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     PageResponse<RoleAssignment> pageResponse =
-        roleAssignmentService.getAll(pageRequest, parentIdentifier, principalIdentifier, roleIdentifier);
+        roleAssignmentService.getAll(pageRequest, scopeIdentifier, principalIdentifier, roleIdentifier);
     return ResponseDTO.newResponse(pageResponse.map(RoleAssignmentDTOMapper::toDTO));
   }
 
   @POST
   @ApiOperation(value = "Create Role Assignment", nickname = "createRoleAssignment")
-  public ResponseDTO<RoleAssignmentResponseDTO> create(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @Body RoleAssignmentDTO roleAssignmentDTO) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(parentIdentifier, roleAssignmentDTO));
+  public ResponseDTO<RoleAssignmentResponseDTO> create(
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scopeIdentifier, roleAssignmentDTO));
     return ResponseDTO.newResponse(toDTO(createdRoleAssignment));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete Role Assignment", nickname = "deleteRoleAssignment")
-  public ResponseDTO<RoleAssignmentResponseDTO> delete(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+  public ResponseDTO<RoleAssignmentResponseDTO> delete(
+      @BeanParam HarnessScopeParams harnessScopeParams, @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     RoleAssignment deletedRoleAssignment =
-        roleAssignmentService.delete(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
+        roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role Assignment not found with the given scope and identifier");
         });
     return ResponseDTO.newResponse(toDTO(deletedRoleAssignment));

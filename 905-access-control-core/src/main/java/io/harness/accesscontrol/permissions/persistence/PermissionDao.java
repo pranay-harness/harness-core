@@ -1,17 +1,18 @@
 package io.harness.accesscontrol.permissions.persistence;
 
 import io.harness.accesscontrol.permissions.Permission;
-import io.harness.accesscontrol.scopes.Scope;
+import io.harness.accesscontrol.permissions.PermissionFilter;
 
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface PermissionDao {
-  Permission create(@Valid Permission permission);
+  Permission create(@NotNull @Valid Permission permission);
 
-  List<Permission> list(Scope scope, String resourceType);
+  List<Permission> list(@NotNull @Valid PermissionFilter permissionFilter);
 
   Optional<Permission> get(@NotEmpty String identifier);
 
