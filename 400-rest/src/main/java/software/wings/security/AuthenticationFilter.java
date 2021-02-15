@@ -32,7 +32,6 @@ import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
-import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -338,17 +337,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
-    return requestContext.getMethod().equals(OPTIONS) || publicAPI() || isPublicApiWithWhitelist()
+    return requestContext.getMethod().equals(OPTIONS) || publicAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
-  }
-
-  private boolean isPublicApiWithWhitelist() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
-    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
-        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
   }
 
   protected boolean publicAPI() {

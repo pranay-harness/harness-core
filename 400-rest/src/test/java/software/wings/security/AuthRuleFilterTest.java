@@ -41,7 +41,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
@@ -272,8 +271,6 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
     when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
-    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
-        .thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     if (exception) {
       thrown.expect(AccessDeniedException.class);
