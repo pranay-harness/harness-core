@@ -49,7 +49,6 @@ shared_dependencies = [
     "@maven//:org_apache_commons_commons_email",
     "@maven//:com_segment_analytics_java_analytics",
     "@maven//:org_apache_commons_commons_math3",
-    "@maven//:com_zaxxer_HikariCP_java7",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "//:lombok",
 ]
