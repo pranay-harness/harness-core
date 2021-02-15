@@ -56,7 +56,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.jcraft.jsch.OpenSSHUserCertRSA;
 import com.ning.http.client.AsyncHttpClient;
 import java.io.File;
 import java.io.IOException;
@@ -92,8 +91,6 @@ public class DelegateApplication {
   }
 
   public static void main(String... args) throws IOException {
-    log.info("Loaded class:"+ OpenSSHUserCertRSA.class.getProtectionDomain().getClassLoader().getParent());
-
     try {
       String proxyUser = System.getenv("PROXY_USER");
       if (isNotBlank(proxyUser)) {
