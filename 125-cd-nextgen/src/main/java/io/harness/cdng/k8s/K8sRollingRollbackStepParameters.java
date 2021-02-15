@@ -1,10 +1,15 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Arrays;
+import java.util.List;
+import javax.annotation.Nonnull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,5 +40,13 @@ public class K8sRollingRollbackStepParameters extends K8sRollingRollbackBaseStep
     this.identifier = identifier;
     this.name = name;
     this.description = description;
+  }
+
+  @Nonnull
+  @Override
+  @JsonIgnore
+  public List<String> getCommandUnits() {
+    return Arrays.asList(
+        K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Rollback, K8sCommandUnitConstants.WaitForSteadyState);
   }
 }
