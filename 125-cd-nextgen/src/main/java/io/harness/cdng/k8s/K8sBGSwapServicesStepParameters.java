@@ -1,10 +1,15 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,5 +40,12 @@ public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
     this.description = description;
     this.skipCondition = skipCondition;
     this.skipDryRun = skipDryRun;
+  }
+
+  @Nonnull
+  @Override
+  @JsonIgnore
+  public List<String> getCommandUnits() {
+    return Collections.singletonList(K8sCommandUnitConstants.SwapServiceSelectors);
   }
 }

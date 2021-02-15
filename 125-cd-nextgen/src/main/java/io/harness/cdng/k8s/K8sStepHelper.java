@@ -50,7 +50,6 @@ import io.harness.exception.WingsException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
-import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -80,7 +79,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -275,7 +273,8 @@ public class K8sStepHelper {
                             .async(true)
                             .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -324,7 +323,8 @@ public class K8sStepHelper {
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer, getCommandUnits());
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -336,13 +336,6 @@ public class K8sStepHelper {
         .taskRequest(taskRequest)
         .passThroughData(k8sStepPassThroughData)
         .build();
-  }
-
-  @Nonnull
-  private List<String> getCommandUnits() {
-    return Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
-        K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState,
-        K8sCommandUnitConstants.WrapUp);
   }
 
   public TaskChainResponse startChainLink(
