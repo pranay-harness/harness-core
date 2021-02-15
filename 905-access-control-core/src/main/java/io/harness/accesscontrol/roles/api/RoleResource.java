@@ -1,17 +1,13 @@
 package io.harness.accesscontrol.roles.api;
 
-import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
-import static io.harness.NGCommonEntityConstants.ORG_KEY;
-import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toDTO;
-import static io.harness.accesscontrol.scopes.HarnessScopeUtils.getIdentifierMap;
 
-import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -24,9 +20,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -59,28 +55,21 @@ public class RoleResource {
 
   @GET
   @ApiOperation(value = "Get Roles", nickname = "getRoleList")
-  public ResponseDTO<PageResponse<RoleResponseDTO>> get(
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("includeManaged") boolean includeManaged) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    PageRequest pageRequest = PageRequest.builder().pageIndex(page).pageSize(size).build();
-    PageResponse<Role> pageResponse = roleService.getAll(pageRequest, parentIdentifier, includeManaged);
+  public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
+      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("includeManaged") boolean includeManaged) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    PageResponse<Role> pageResponse = roleService.getAll(pageRequest, scopeIdentifier, includeManaged);
     return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toDTO));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Role", nickname = "getRole")
-  public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+  public ResponseDTO<RoleResponseDTO> get(
+      @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(
-        toDTO(roleService.get(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
+        toDTO(roleService.get(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
         })));
   }
@@ -89,33 +78,26 @@ public class RoleResource {
   @Path("{identifier}")
   @ApiOperation(value = "Update Role", nickname = "updateRole")
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier, @Body RoleDTO roleDTO) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    return ResponseDTO.newResponse(toDTO(roleService.update(fromDTO(parentIdentifier, roleDTO))));
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    return ResponseDTO.newResponse(toDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 
   @POST
   @ApiOperation(value = "Create Role", nickname = "createRole")
-  public ResponseDTO<RoleResponseDTO> create(@NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @Body RoleDTO roleDTO) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
-    return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(parentIdentifier, roleDTO))));
+  public ResponseDTO<RoleResponseDTO> create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(scopeIdentifier, roleDTO))));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete Role", nickname = "deleteRole")
-  public ResponseDTO<RoleResponseDTO> delete(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
-      @NotEmpty @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam(PROJECT_KEY) String projectIdentifier) {
-    String parentIdentifier =
-        scopeService.getFullyQualifiedPath(getIdentifierMap(accountIdentifier, orgIdentifier, projectIdentifier));
+  public ResponseDTO<RoleResponseDTO> delete(
+      @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(
-        toDTO(roleService.delete(identifier, parentIdentifier).<NotFoundException>orElseThrow(() -> {
+        toDTO(roleService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
         })));
   }

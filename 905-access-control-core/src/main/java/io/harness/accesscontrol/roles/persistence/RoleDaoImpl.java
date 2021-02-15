@@ -33,7 +33,7 @@ public class RoleDaoImpl implements RoleDao {
       return fromDBO(roleRepository.save(roleDBO));
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(String.format("A role with identifier %s in this scope %s is already present",
-          roleDBO.getIdentifier(), roleDBO.getParentIdentifier()));
+          roleDBO.getIdentifier(), roleDBO.getScopeIdentifier()));
     }
   }
 
@@ -41,7 +41,7 @@ public class RoleDaoImpl implements RoleDao {
   public PageResponse<Role> getAll(PageRequest pageRequest, String parentIdentifier, boolean includeManaged) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = new Criteria();
-    criteria.orOperator(Criteria.where(RoleKeys.parentIdentifier).is(parentIdentifier),
+    criteria.orOperator(Criteria.where(RoleKeys.scopeIdentifier).is(parentIdentifier),
         Criteria.where(RoleKeys.managed).is(includeManaged));
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
     return PageUtils.getNGPageResponse(rolePages.map(RoleDBOMapper::fromDBO));
@@ -49,7 +49,7 @@ public class RoleDaoImpl implements RoleDao {
 
   @Override
   public Optional<Role> get(String identifier, String parentIdentifier) {
-    Optional<RoleDBO> role = roleRepository.findByIdentifierAndParentIdentifier(identifier, parentIdentifier);
+    Optional<RoleDBO> role = roleRepository.findByIdentifierAndScopeIdentifier(identifier, parentIdentifier);
     return role.flatMap(r -> Optional.of(fromDBO(r)));
   }
 
@@ -60,7 +60,7 @@ public class RoleDaoImpl implements RoleDao {
 
   @Override
   public Optional<Role> delete(String identifier, String parentIdentifier) {
-    return roleRepository.deleteByIdentifierAndParentIdentifier(identifier, parentIdentifier)
+    return roleRepository.deleteByIdentifierAndScopeIdentifier(identifier, parentIdentifier)
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));

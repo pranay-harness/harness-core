@@ -43,7 +43,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class RoleAssignmentDBO implements PersistentEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @EntityIdentifier final String identifier;
-  @NotEmpty final String parentIdentifier;
+  @NotEmpty final String scopeIdentifier;
   @NotEmpty final String resourceGroupIdentifier;
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;
@@ -63,7 +63,7 @@ public class RoleAssignmentDBO implements PersistentEntity {
                  .name("uniqueIndex")
                  .unique(true)
                  .field(RoleAssignmentDBOKeys.identifier)
-                 .field(RoleAssignmentDBOKeys.parentIdentifier)
+                 .field(RoleAssignmentDBOKeys.scopeIdentifier)
                  .build())
         .build();
   }
