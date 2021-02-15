@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,11 @@ public class FilterCreatorMergeService {
     FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters, setupMetadata);
     validateFilterCreationBlobResponse(response);
     pipelineSetupUsageHelper.publishSetupUsageEvent(pipelineEntity, response.getReferredEntitiesList());
-    return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
+    return FilterCreatorMergeServiceResponse.builder()
+        .filters(filters)
+        .stageCount(response.getStageCount())
+        .stageNames(new ArrayList<>(response.getStageNamesList()))
+        .build();
   }
 
   @VisibleForTesting
@@ -108,6 +113,7 @@ public class FilterCreatorMergeService {
       FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.mergeReferredEntities(responseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeStageNames(responseBuilder, currIterResponse);
     }
 
     return responseBuilder.build();

@@ -180,6 +180,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+    pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(
           (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
