@@ -39,13 +39,12 @@ public class AnomalyDetectionProcessor
   @Override
   public Anomaly process(AnomalyDetectionTimeSeries timeSeries) throws Exception {
     Anomaly returnAnomaly;
+    Anomaly returnAnomaly2;
     try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
       AnomalyDetectionHelper.logProcessingTimeSeries("Stats Model");
       returnAnomaly = statsModel.detectAnomaly(timeSeries);
-      if (mainConfig.getCePythonServiceConfig().isUseProphet() && returnAnomaly.isAnomaly()) {
-        AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
-        returnAnomaly = pythonService.process(timeSeries);
-      }
+      AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
+      returnAnomaly2 = pythonService.process(timeSeries);
       log.info("finally after processing, isAnomaly : [{}]", returnAnomaly.isAnomaly());
     }
 

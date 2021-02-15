@@ -68,8 +68,8 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
     }
 
     if (null != instant && BatchJobType.ANOMALY_DETECTION == batchJobType) {
-      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
-      instant = startInstant.isAfter(instant) ? startInstant : instant;
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant;
     }
 
     if (null != instant && BatchJobType.AWS_ECS_CLUSTER_SYNC == batchJobType) {

@@ -28,7 +28,7 @@ public class AnomalyDetectionPythonService {
   public AnomalyDetectionPythonService(BatchMainConfig config) {
     mainConfig = config;
     retrofitClient = new Retrofit.Builder()
-                         .baseUrl(mainConfig.getCePythonServiceConfig().getPythonServiceUrl())
+                         .baseUrl("http://anomaly-detection-svc.harness.svc.cluster.local:8081")
                          .addConverterFactory(GsonConverterFactory.create())
                          .build();
     anomalyDetectionEndpoint = retrofitClient.create(AnomalyDetectionEndPoint.class);
