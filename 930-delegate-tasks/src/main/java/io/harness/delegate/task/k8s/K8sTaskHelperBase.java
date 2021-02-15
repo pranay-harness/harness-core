@@ -51,6 +51,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -1894,8 +1896,9 @@ public class K8sTaskHelperBase {
 
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());
