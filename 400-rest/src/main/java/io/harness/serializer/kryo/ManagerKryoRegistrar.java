@@ -155,6 +155,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
@@ -1741,5 +1742,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CapabilityCheckDetails.class, 8202);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
+
+    kryo.register(AwsElbConfig.class, 8500);
   }
 }
