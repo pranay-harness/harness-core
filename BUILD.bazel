@@ -51,6 +51,7 @@ java_library(
 modules = [
     "//125-cd-nextgen",
     "//130-resource-group",
+    "//136-git-sync-manager",
     "//220-graphql-test",
     "//230-model-test",
     "//340-ce-nextgen",

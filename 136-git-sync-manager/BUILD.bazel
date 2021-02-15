@@ -33,6 +33,7 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//136-git-sync-manager/src/test/resources:resource",
+        "//136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
