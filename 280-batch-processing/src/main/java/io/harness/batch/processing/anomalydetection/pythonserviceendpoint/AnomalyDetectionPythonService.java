@@ -46,6 +46,9 @@ public class AnomalyDetectionPythonService {
         Response<List<PythonResponse>> response = anomalyDetectionEndpoint.prophet(pythonInputList).execute();
         if (response.isSuccessful()) {
           PythonResponse result = response.body().get(0);
+          if (!result.getId().equals(timeSeries.getId())) {
+            throw new AssertionError("result id and given id of time series didn't match");
+          }
           resultAnomaly = PythonMappers.toAnomaly(result, timeSeries);
           break;
         } else {
