@@ -55,6 +55,7 @@ type runTask struct {
 	numRetries        int32
 	tmpFilePath       string
 	reports           []*pb.Report
+	logMetrics        bool
 	log               *zap.SugaredLogger
 	addonLogger       *zap.SugaredLogger
 	procWriter        io.Writer
@@ -64,7 +65,7 @@ type runTask struct {
 
 // NewRunTask creates a run step executor
 func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer,
-	addonLogger *zap.SugaredLogger) RunTask {
+	logMetrics bool, addonLogger *zap.SugaredLogger) RunTask {
 	r := step.GetRun()
 	fs := filesystem.NewOSFileSystem(log)
 
@@ -87,6 +88,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
+		logMetrics:        logMetrics,
 		log:               log,
 		fs:                fs,
 		procWriter:        w,
@@ -95,21 +97,21 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 }
 
 // Executes customer provided run step command with retries and timeout handling
-func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
+func (r *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err error
 	var o map[string]string
-	for i := int32(1); i <= e.numRetries; i++ {
-		if o, err = e.execute(ctx, i); err == nil {
+	for i := int32(1); i <= r.numRetries; i++ {
+		if o, err = r.execute(ctx, i); err == nil {
 			st := time.Now()
-			err = e.collectTestReports(ctx)
+			err = r.collectTestReports(ctx)
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
-				e.log.Errorw("unable to collect test reports", zap.Error(err))
-				return nil, e.numRetries, err
+				r.log.Errorw("unable to collect test reports", zap.Error(err))
+				return nil, r.numRetries, err
 			}
-			if len(e.reports) > 0 {
-				e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+			if len(r.reports) > 0 {
+				r.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
 			}
 			return o, i, nil
 		}
@@ -117,21 +119,21 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect reports, ignore any errors during report collection itself
-		errc := e.collectTestReports(ctx)
+		errc := r.collectTestReports(ctx)
 		if errc != nil {
-			e.log.Errorw("error while collecting test reports", zap.Error(errc))
+			r.log.Errorw("error while collecting test reports", zap.Error(errc))
 		}
-		return nil, e.numRetries, err
+		return nil, r.numRetries, err
 	}
-	return nil, e.numRetries, err
+	return nil, r.numRetries, err
 }
 
 // Fetches map of env variable and value from OutputFile. OutputFile stores all env variable and value
-func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, error) {
+func (r *runTask) fetchOutputVariables(outputFile string) (map[string]string, error) {
 	envVarMap := make(map[string]string)
-	f, err := e.fs.Open(outputFile)
+	f, err := r.fs.Open(outputFile)
 	if err != nil {
-		e.log.Errorw("Failed to open output file", zap.Error(err))
+		r.log.Errorw("Failed to open output file", zap.Error(err))
 		return nil, err
 	}
 	defer f.Close()
@@ -141,7 +143,7 @@ func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 		line := s.Text()
 		sa := strings.Split(line, " ")
 		if len(sa) != 2 {
-			e.log.Warnw(
+			r.log.Warnw(
 				"output variable does not exist",
 				"variable", sa[0],
 			)
@@ -150,47 +152,41 @@ func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 		}
 	}
 	if err := s.Err(); err != nil {
-		e.log.Errorw("Failed to create scanner from output file", zap.Error(err))
+		r.log.Errorw("Failed to create scanner from output file", zap.Error(err))
 		return nil, err
 	}
 	return envVarMap, nil
 }
 
-func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
+func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
 	start := time.Now()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
+	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()
 
-	outputFile := fmt.Sprintf("%s/%s%s", e.tmpFilePath, e.id, outputEnvSuffix)
-	cmdToExecute := e.getScript(outputFile)
+	outputFile := fmt.Sprintf("%s/%s%s", r.tmpFilePath, r.id, outputEnvSuffix)
+	cmdToExecute := r.getScript(outputFile)
 	cmdArgs := []string{"-c", cmdToExecute}
 
-	cmd := e.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(nil)
-	err := cmd.Run()
-	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		logCommandExecErr(e.log, "timeout while executing run step", e.id, cmdToExecute, retryCount, start, ctxErr)
-		return nil, ctxErr
-	}
-
+	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
+		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
+	err := runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.log, r.addonLogger)
 	if err != nil {
-		logCommandExecErr(e.log, "error encountered while executing run step", e.id, cmdToExecute, retryCount, start, err)
 		return nil, err
 	}
 
 	stepOutput := make(map[string]string)
-	if len(e.envVarOutputs) != 0 {
+	if len(r.envVarOutputs) != 0 {
 		var err error
-		outputVars, err := e.fetchOutputVariables(outputFile)
+		outputVars, err := r.fetchOutputVariables(outputFile)
 		if err != nil {
-			logCommandExecErr(e.log, "error encountered while fetching output of run step", e.id, cmdToExecute, retryCount, start, err)
+			logCommandExecErr(r.log, "error encountered while fetching output of run step", r.id, cmdToExecute, retryCount, start, err)
 			return nil, err
 		}
 
 		stepOutput = outputVars
 	}
 
-	e.addonLogger.Infow(
+	r.addonLogger.Infow(
 		"Successfully executed run step",
 		"arguments", cmdToExecute,
 		"output", stepOutput,
@@ -199,16 +195,16 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	return stepOutput, nil
 }
 
-func (e *runTask) getScript(outputVarFile string) string {
+func (r *runTask) getScript(outputVarFile string) string {
 	outputVarCmd := ""
-	for _, o := range e.envVarOutputs {
+	for _, o := range r.envVarOutputs {
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
-	command := fmt.Sprintf("set -e\n %s %s", e.command, outputVarCmd)
+	command := fmt.Sprintf("set -e\n %s %s", r.command, outputVarCmd)
 	logCmd, err := getLoggableCmd(command)
 	if err != nil {
-		e.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
+		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
 		return fmt.Sprintf("echo '---%s'\n%s", command, command)
 	}
 	return logCmd

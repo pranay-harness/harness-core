@@ -7,6 +7,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
+        "//commons/go/lib/metrics:go_default_library",
         "//product/ci/addon/grpc:go_default_library",
         "//product/ci/addon/logs:go_default_library",
         "//product/ci/addon/services:go_default_library",
