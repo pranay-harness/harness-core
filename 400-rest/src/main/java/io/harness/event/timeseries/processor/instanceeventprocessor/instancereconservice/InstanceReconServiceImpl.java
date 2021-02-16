@@ -21,8 +21,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -105,7 +107,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
       // It seems to be redundant aggregation starting from last successful hour aggregation timestamp
       // Its required to make sure all instance events for given timestamp were processed for the given account
       aggregateEventsForGivenInterval(accountId, intervalStartTimestamp, intervalEndTimestamp,
-          getMigrationQueryBatchSize(), getMigrationRowLimit());
+          getMigrationQueryBatchSize(), getMigrationEventsLimit());
       if (isItLastMigrationCycle) {
         // This means that there are no more deployments to be migrated, migration is completed
         log.info("INSTANCE_DATA_MIGRATION_SUCCESS for account : {}", accountId);
@@ -135,20 +137,23 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
    * @param accountId
    * @param intervalStartTimestamp
    * @param intervalEndTimestamp
-   * @param batchSize limit on num of records to migrate in single go, used for throttling purpose
-   * @param rowLimit limit on num of rows to migrate, used for throttling purpose
+   * @param batchSize limit on num of instance stats records to migrate in single go, used for throttling purpose
+   * @param eventsLimit limit on num of events to migrate : a single event corresponds to all instance stats for a given
+   *                    timestamp
    * @throws InstanceMigrationException
    */
   public void aggregateEventsForGivenInterval(String accountId, Long intervalStartTimestamp, Long intervalEndTimestamp,
-      final Integer batchSize, final Integer rowLimit) throws InstanceMigrationException {
+      final Integer batchSize, final Integer eventsLimit) throws InstanceMigrationException {
     // Fetch instance data points in batches and process them
-    boolean isAggregationCompleted = false, isRowLimitReached = false;
-    int retry = 0, offset = 0, numOfRowsMigrated = 0;
+    boolean isAggregationCompleted = false, isEventsLimitReached = false;
+    int retry = 0;
+    int offset = 0;
+    Set<Long> eventsProcessed = new HashSet<>();
     List<TimeSeriesBatchEventInfo> eventInfoList = null;
     long lastEventTimestamp = 0L;
 
     try {
-      while (!isAggregationCompleted && !isRowLimitReached && retry < InstanceReconConstants.MAX_RETRY_COUNT) {
+      while (!isAggregationCompleted && !isEventsLimitReached && retry < InstanceReconConstants.MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement fetchStatement =
                  dbConnection.prepareStatement(InstanceReconConstants.FETCH_INSTANCE_DATA_POINTS_INTERVAL_BATCH_SQL)) {
@@ -181,10 +186,10 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
         for (TimeSeriesBatchEventInfo eventInfo : eventInfoList) {
           try {
             instanceEventAggregator.doHourlyAggregation(eventInfo);
-            numOfRowsMigrated++;
+            eventsProcessed.add(eventInfo.getTimestamp());
             lastEventTimestamp = eventInfo.getTimestamp();
-            if (numOfRowsMigrated >= rowLimit) {
-              isRowLimitReached = true;
+            if (eventsProcessed.size() >= eventsLimit) {
+              isEventsLimitReached = true;
               break;
             }
           } catch (InstanceAggregationException exception) {
@@ -207,9 +212,9 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
       throw new InstanceMigrationException(errorLog, ex);
     }
 
-    if (isRowLimitReached) {
+    if (isEventsLimitReached) {
       log.info(
-          "MIGRATION ROW LIMIT REACHED : Instance data migration completed for account : [{}] from startTimestamp : [{}] to endTimestamp : [{}]",
+          "MIGRATION EVENTS LIMIT REACHED : Instance data migration completed for account : [{}] from startTimestamp : [{}] to endTimestamp : [{}]",
           accountId, lastEventTimestamp, intervalEndTimestamp);
     } else {
       log.info("Instance data migration completed for account : [{}] from startTimestamp : [{}] to endTimestamp : [{}]",
@@ -240,7 +245,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
                               .timestamp(prevReportedAt)
                               .dataPointList(dataPoints)
                               .build());
-        dataPoints.clear();
+        dataPoints = new ArrayList<>();
         prevReportedAt = reportedAt.getTime();
       }
 
@@ -262,16 +267,15 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
                             .timestamp(prevReportedAt)
                             .dataPointList(dataPoints)
                             .build());
-      dataPoints.clear();
     }
 
     return eventInfoList;
   }
 
-  private Integer getMigrationRowLimit() {
-    return timeScaleDBService.getTimeScaleDBConfig().getInstanceStatsMigrationRowLimit() > 0
-        ? timeScaleDBService.getTimeScaleDBConfig().getInstanceStatsMigrationRowLimit()
-        : InstanceReconConstants.DEFAULT_ROW_LIMIT;
+  private Integer getMigrationEventsLimit() {
+    return timeScaleDBService.getTimeScaleDBConfig().getInstanceStatsMigrationEventsLimit() > 0
+        ? timeScaleDBService.getTimeScaleDBConfig().getInstanceStatsMigrationEventsLimit()
+        : InstanceReconConstants.DEFAULT_EVENTS_LIMIT;
   }
 
   private Integer getMigrationQueryBatchSize() {
