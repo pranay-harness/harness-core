@@ -1,5 +1,6 @@
 package io.harness.batch.processing.anomalydetection.models;
 
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
 import io.harness.ccm.anomaly.entities.Anomaly;
@@ -14,10 +15,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StatsModel {
-  private static final Double RELATIVITY_THRESHOLD = 1.25;
-  private static final Double ABSOLUTE_THRESHOLD = 20.0;
-  private static final Double PROBABILITY_THRESHOLD = 0.995;
-
   public Anomaly detectAnomaly(AnomalyDetectionTimeSeries data) {
     List<Double> stats = TimeSeriesUtils.getStats(data);
     Double mean = stats.get(0);
@@ -75,15 +72,15 @@ public class StatsModel {
   }
 
   private static boolean relativityThreshold(Double original, Double expected) {
-    return original > StatsModel.RELATIVITY_THRESHOLD * expected;
+    return original > AnomalyDetectionConstants.STATS_MODEL_RELATIVITY_THRESHOLD * expected;
   }
 
   private static boolean absoluteThreshold(Double original, Double expected) {
-    return original > expected + StatsModel.ABSOLUTE_THRESHOLD;
+    return original > expected + AnomalyDetectionConstants.STATS_MODEL_ABSOLUTE_THRESHOLD;
   }
 
   private static boolean probabilityThreshold(Double original, Double mean, Double standardDeviation) {
     NormalDistribution normal = new NormalDistribution(mean, standardDeviation);
-    return normal.cumulativeProbability(original) > StatsModel.PROBABILITY_THRESHOLD;
+    return normal.cumulativeProbability(original) > AnomalyDetectionConstants.STATS_MODEL_PROBABILITY_THRESHOLD;
   }
 }
