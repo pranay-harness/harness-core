@@ -21,6 +21,7 @@ public interface BudgetService {
   int getBudgetCount(String accountId);
 
   boolean delete(String budgetId, String accountId);
+  void deleteByViewId(String viewId, String accountId);
 
   double getActualCost(Budget budget);
 
