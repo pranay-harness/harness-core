@@ -1,12 +1,11 @@
-package io.harness.app.resources;
+package io.harness.yaml.schema;
 
 import io.harness.NGCommonEntityConstants;
-import io.harness.app.intfc.CIYamlSchemaService;
+import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.yaml.schema.YamlSchemaResource;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 
 import com.google.inject.Inject;
@@ -31,16 +30,15 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-public class CIYamlSchemaResource implements YamlSchemaResource {
-  CIYamlSchemaService ciYamlSchemaService;
+public class CdPartialYamlSchemaResource implements YamlSchemaResource {
+  CdYamlSchemaService cdYamlSchemaService;
 
   @GET
   @ApiOperation(value = "Get Partial Yaml Schema", nickname = "getPartialYamlSchema")
   public ResponseDTO<PartialSchemaDTO> getYamlSchema(
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    PartialSchemaDTO schema =
-        ciYamlSchemaService.getIntegrationStageYamlSchema(orgIdentifier, projectIdentifier, scope);
+    PartialSchemaDTO schema = cdYamlSchemaService.getDeploymentStageYamlSchema(orgIdentifier, projectIdentifier, scope);
     return ResponseDTO.newResponse(schema);
   }
 }

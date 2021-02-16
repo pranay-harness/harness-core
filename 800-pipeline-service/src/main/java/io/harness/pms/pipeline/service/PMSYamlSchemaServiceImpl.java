@@ -1,7 +1,10 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.yaml.schema.beans.SchemaConstants.ANY_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 
 import static java.lang.String.format;
 
@@ -25,10 +28,12 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
-  public static final String STAGE_ELEMENT_CONFIG = StageElementConfig.class.getSimpleName();
+  public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
@@ -63,28 +68,48 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     Set<SubtypeClassMap> subtypeClassMapSet = new HashSet<>();
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
+    Set<String> refs = new HashSet<>();
     for (String instanceName : instanceNames) {
-      if (instanceName.equals("ci")) {
-        PartialSchemaDTO partialSchemaDTO = getCIStage(projectIdentifier, orgIdentifier, scope);
-        subtypeClassMapSet.add(SubtypeClassMap.builder()
-                                   .subTypeDefinitionKey(partialSchemaDTO.getNodeName())
-                                   .subtypeEnum(partialSchemaDTO.getNodeType())
-                                   .build());
-        ObjectNode stageDefinitionsNode =
-            moveRootNodeToDefinitions(partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema());
-        ObjectNode stageElementCopy = stageElementConfig.deepCopy();
-        modifyStageElementConfig(
-            stageElementCopy, subtypeClassMapSet, Arrays.asList("rollbackSteps", "failureStrategies"));
-        stageDefinitionsNode.set(STAGE_ELEMENT_CONFIG, stageElementCopy);
-        JsonNodeUtils.merge(pipelineDefinitions, stageDefinitionsNode);
+      if (instanceName.equals("pmsInternal")) {
+        continue;
       }
+      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
+      subtypeClassMapSet.add(
+          SubtypeClassMap.builder()
+              .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
+              .subtypeEnum(partialSchemaDTO.getNodeType())
+              .build());
+      ObjectNode stageDefinitionsNode = moveRootNodeToDefinitions(
+          partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
+      ObjectNode stageElementCopy = stageElementConfig.deepCopy();
+      modifyStageElementConfig(stageElementCopy, subtypeClassMapSet,
+          instanceName.equals("ci") ? Arrays.asList("rollbackSteps", "failureStrategies") : Collections.emptyList());
+
+      ObjectNode namespaceNode = (ObjectNode) stageDefinitionsNode.get(partialSchemaDTO.getNamespace());
+      namespaceNode.set(STAGE_ELEMENT_CONFIG, stageElementCopy);
+      refs.add(format(DEFINITIONS_NAMESPACE_STRING_PATTERN, partialSchemaDTO.getNamespace(), STAGE_ELEMENT_CONFIG));
+      JsonNodeUtils.merge(pipelineDefinitions, stageDefinitionsNode);
     }
+    ObjectNode stageElementWrapperConfig = (ObjectNode) pipelineDefinitions.get("StageElementWrapperConfig");
+    modifyStageElementWrapperConfig(stageElementWrapperConfig, refs);
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
   }
 
-  private ObjectNode moveRootNodeToDefinitions(String nodeName, ObjectNode nodeSchema) {
+  private void modifyStageElementWrapperConfig(ObjectNode node, Set<String> refs) {
+    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
+    ArrayNode refsArray = mapper.createArrayNode();
+    refs.forEach(s -> refsArray.add(mapper.createObjectNode().put(REF_NODE, s)));
+    ObjectNode stage = mapper.createObjectNode();
+    stage.set(ANY_OF_NODE, refsArray);
+    node.remove("stage");
+    ObjectNode properties = (ObjectNode) node.get(PROPERTIES_NODE);
+    properties.set("stage", stage);
+  }
+
+  private ObjectNode moveRootNodeToDefinitions(String nodeName, ObjectNode nodeSchema, String namespace) {
     ObjectNode definitions = (ObjectNode) nodeSchema.remove(DEFINITIONS_NODE);
-    definitions.set(nodeName, nodeSchema);
+    ObjectNode namespaceNode = (ObjectNode) definitions.get(namespace);
+    namespaceNode.set(nodeName, nodeSchema);
     return definitions;
   }
 
@@ -114,15 +139,19 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
-  private PartialSchemaDTO getCIStage(String projectIdentifier, String orgIdentifier, Scope scope) {
+  private PartialSchemaDTO getStage(String instanceName, String projectIdentifier, String orgIdentifier, Scope scope) {
     try {
-      return SafeHttpCall.execute(yamlSchemaClientMapper.get("ci").get(projectIdentifier, orgIdentifier, scope))
+      return SafeHttpCall.execute(obtainYamlSchemaClient(instanceName).get(projectIdentifier, orgIdentifier, scope))
           .getData();
     } catch (Exception e) {
       throw new NotFoundException(
-          format("Unable to get ci schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
-              projectIdentifier, orgIdentifier, scope),
+          format("Unable to get %s schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
+              instanceName, projectIdentifier, orgIdentifier, scope),
           e);
     }
+  }
+
+  private YamlSchemaClient obtainYamlSchemaClient(String instanceName) {
+    return yamlSchemaClientMapper.get(instanceName);
   }
 }
