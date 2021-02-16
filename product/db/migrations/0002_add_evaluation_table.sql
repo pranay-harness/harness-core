@@ -88,12 +88,12 @@ comment on column evaluation.suite_name is 'suite name';
 comment on column evaluation.class_name is 'class name. Not applicable to all programming languages';
 comment on column evaluation.duration_ms is 'time taken to run the test in millisecond';
 comment on column evaluation.result is 'represents an evaluated result of a test. It could be one of passed/skipped/failed/error';
-comment on column evaluation.message is 'message';
-comment on column evaluation.description is 'description';
+comment on column evaluation.message is 'If there is a failure, it indicates the reason in short format';
+comment on column evaluation.description is 'If there is a failure, it indicates the reason and other details';
 comment on column evaluation.type is 'type of the test. it can be unit/integration/functional/e2e';
-comment on column evaluation.stdout is 'stdout';
-comment on column evaluation.stderr is 'stderr';
-comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of source_code_changes/new_test/updated_test/flaky_test/tiignore';
+comment on column evaluation.stdout is 'stdout of the the test run and it could be relevant for failed tests only';
+comment on column evaluation.stderr is 'stderr of the the test run and it could be relevant for failed tests only';
+comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of full_run/source_code_changes/new_test/updated_test/flaky_test';
 
 
 -- distributed hypertable is supported only in 2.0. As we are using TSDB 1.7, using create_hypertable for now
