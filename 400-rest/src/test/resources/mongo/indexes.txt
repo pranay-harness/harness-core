@@ -329,6 +329,8 @@ gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
+governanceConfig {"name": "nextCloseIterations_1", "background": true} {"nextCloseIterations": 1}
+governanceConfig {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
 harnessApiKeys {"name": "clientType_1", "background": true} {"clientType": 1}
 harnessUserGroups {"name": "appId_1", "background": true} {"appId": 1}
 harnessUserGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
