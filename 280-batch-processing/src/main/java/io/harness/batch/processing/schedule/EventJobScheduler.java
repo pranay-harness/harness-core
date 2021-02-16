@@ -47,7 +47,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Slf4j
 @Configuration
 @EnableScheduling
-@PropertySource(value = "file:./batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
+@PropertySource(
+    value = "file:280-batch-processing/batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
