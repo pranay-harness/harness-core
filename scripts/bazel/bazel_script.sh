@@ -61,6 +61,8 @@ BAZEL_MODULES="\
   //136-git-sync-manager:module \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //250-watcher:module \
+  //250-watcher:module_deploy.jar \
   //340-ce-nextgen:module \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
@@ -285,6 +287,8 @@ build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 build_bazel_application 160-model-gen-tool
+build_bazel_application 250-watcher
+
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
