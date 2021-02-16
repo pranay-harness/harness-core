@@ -145,17 +145,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "IgnoreFailureActionConfig": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/FailureStrategyActionConfig"
-        },
-        {
-          "type": "object"
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "ManualFailureSpecConfig": {
       "type": "object",
       "required": [
@@ -251,9 +240,6 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
-            },
-            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -288,9 +274,6 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
-            },
-            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -317,9 +300,6 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
-            },
-            {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"

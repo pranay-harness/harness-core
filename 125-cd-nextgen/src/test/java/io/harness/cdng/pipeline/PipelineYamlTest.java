@@ -103,7 +103,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     onFailure = stageElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
     RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
     assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
@@ -260,7 +260,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.STAGE_ROLLBACK);
     onFailure = stepElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MARK_AS_SUCCESS);
 
     stepElement = (StepElement) deploymentStage.getExecution().getRollbackSteps().get(0);
