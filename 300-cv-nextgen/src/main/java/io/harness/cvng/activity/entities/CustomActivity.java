@@ -28,4 +28,9 @@ public class CustomActivity extends Activity {
 
   @Override
   public void validateActivityParams() {}
+
+  @Override
+  public boolean deduplicateEvents() {
+    throw new UnsupportedOperationException("Custom events are not yet supported");
+  }
 }
