@@ -15,6 +15,19 @@ BEGIN
 END
 $do$;
 
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_type  -- SELECT list can be empty for this
+      WHERE  typname = 'skip_criterion_t') THEN
+      CREATE TYPE skip_criterion_t AS ENUM ('missing_test','tiignore','unknown');
+      COMMENT ON TYPE skip_criterion_t IS 'why was this source skipped from testing?';
+   END IF;
+END
+$do$;
+
+
 CREATE TABLE IF NOT EXISTS coverage(
   created_at        TIMESTAMPTZ DEFAULT now() NOT NULL,
   last_updated_at   timestamp with time zone DEFAULT now() NOT NULL,
@@ -27,11 +40,12 @@ CREATE TABLE IF NOT EXISTS coverage(
   stage_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
 
+  filename  TEXT,
   suite_name TEXT NOT NULL,
   class_name TEXT,
   name TEXT NOT NULL,
   type code_type_t DEFAULT 'source',
-  missing_test boolean DEFAULT true NOT NULL
+  criterion skip_criterion_t DEFAULT 'missing_test'
 );
 
 
@@ -47,12 +61,12 @@ comment on column coverage.build_id is 'The unique Build number across the pipel
 comment on column coverage.stage_id is 'stage ID';
 comment on column coverage.step_id is 'step ID';
 
-
+comment on column coverage.filename is 'filename';
 comment on column coverage.suite_name is 'suite name';
 comment on column coverage.class_name is 'class name. Not applicable to all programming languages';
 comment on column coverage.name is 'Name of the source/test method';
 comment on column coverage.type is 'type of code. it could be source/test';
-comment on column coverage.missing_test is 'indicates whether a source method doesn''t have any test method coverage';
+comment on column coverage.criterion is 'indicates why a source method was not tested';
 
 
 

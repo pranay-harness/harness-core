@@ -29,7 +29,7 @@ BEGIN
    IF NOT EXISTS (
       SELECT FROM pg_type  -- SELECT list can be empty for this
       WHERE  typname = 'selection_criterion_t') THEN
-      CREATE TYPE selection_criterion_t AS ENUM ('full_run','source_code_changes','new_test','updated_test','flaky_test','tiignore','unknown');
+      CREATE TYPE selection_criterion_t AS ENUM ('full_run','source_code_changes','new_test','updated_test','flaky_test','unknown');
       COMMENT ON TYPE selection_criterion_t IS 'why was this test selected/not_selected to run?';
    END IF;
 END
