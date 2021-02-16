@@ -32,13 +32,14 @@ public class AnomalyAlertsServiceImpl implements AnomalyAlertsService {
   @Autowired @Inject private CESlackWebhookService ceSlackWebhookService;
   @Autowired @Inject private AccountShardService accountShardService;
   @Autowired @Inject private SlackMessageGenerator slackMessageGenerator;
+  @Autowired @Inject private Slack slack;
 
   int MAX_RETRY = 3;
 
-  private Slack slack;
-
   public void sendAnomalyDailyReport(String accountId, Instant date) {
-    slack = Slack.getInstance();
+    if (slack == null) {
+      slack = Slack.getInstance();
+    }
     try {
       checkAndSendDailyReport(accountId, date);
     } catch (Exception e) {

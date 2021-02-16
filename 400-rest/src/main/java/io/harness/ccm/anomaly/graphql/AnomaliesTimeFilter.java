@@ -1,9 +1,9 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 
-import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import com.google.cloud.Timestamp;

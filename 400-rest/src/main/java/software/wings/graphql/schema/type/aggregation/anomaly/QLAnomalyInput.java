@@ -6,6 +6,7 @@ import io.harness.annotations.dev.TargetModule;
 import software.wings.graphql.schema.mutation.QLMutationInput;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,6 +17,6 @@ import lombok.Value;
 public class QLAnomalyInput implements QLMutationInput {
   String clientMutationId;
   String anomalyId;
-  String comment;
+  @JsonProperty("comment") String note;
   QLAnomalyFeedback userFeedback;
 }
