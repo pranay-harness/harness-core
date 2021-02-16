@@ -38,6 +38,7 @@ public class EcsCommandRequest implements ExecutionCapabilityDemander {
     ECS_RUN_TASK_DEPLOY,
     ROUTE53_BG_SERVICE_SETUP,
     ROUTE53_DNS_WEIGHT_UPDATE,
-    SERVICE_DEPLOY
+    SERVICE_DEPLOY,
+    DEPLOY_ROLLBACK_DATA_FETCH
   }
 }

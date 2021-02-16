@@ -21,6 +21,7 @@ import static wiremock.com.google.common.collect.Lists.newArrayList;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -32,6 +33,7 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
@@ -47,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -285,6 +288,15 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     assertThat(map.size()).isEqualTo(2);
     assertThat(map.get("foo__1")).isEqualTo(1);
     assertThat(map.get("foo__2")).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testEmptyEcsDeployRollbackDataFetchResponse() {
+    EcsDeployRollbackDataFetchResponse response = helper.getEmptyEcsDeployRollbackDataFetchResponse();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(response.getOutput()).isEqualTo(StringUtils.EMPTY);
   }
 
   @Test
