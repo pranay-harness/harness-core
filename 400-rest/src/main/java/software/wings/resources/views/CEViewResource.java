@@ -37,16 +37,18 @@ public class CEViewResource {
   private ViewCustomFieldService viewCustomFieldService;
   private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
+  private BudgetService budgetService;
 
   @Inject
   public CEViewResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService,
       ViewCustomFieldService viewCustomFieldService, BigQueryService bigQueryService,
-      CloudBillingHelper cloudBillingHelper) {
+      CloudBillingHelper cloudBillingHelper, BudgetService budgetService) {
     this.ceViewService = ceViewService;
     this.ceReportScheduleService = ceReportScheduleService;
     this.viewCustomFieldService = viewCustomFieldService;
     this.bigQueryService = bigQueryService;
     this.cloudBillingHelper = cloudBillingHelper;
+    this.budgetService = budgetService;
   }
 
   @POST
@@ -91,6 +93,7 @@ public class CEViewResource {
     ceViewService.delete(viewId, accountId);
     ceReportScheduleService.deleteAllByView(viewId, accountId);
     viewCustomFieldService.deleteByViewId(viewId, accountId);
+    budgetService.deleteByViewId(viewId, accountId);
     RestResponse rr = new RestResponse("Successfully deleted the view");
     return prepareResponse(rr, Response.Status.OK);
   }

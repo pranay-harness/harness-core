@@ -179,6 +179,11 @@ public class BudgetServiceImpl implements BudgetService {
     return budgetDao.delete(budgetId, accountId);
   }
 
+  public void deleteByViewId(String viewId, String accountId) {
+    List<Budget> budgets = list(accountId, viewId);
+    budgets.forEach(budget -> delete(budget.getUuid(), accountId));
+  }
+
   @Override
   public double getActualCost(Budget budget) {
     if (budget != null) {
