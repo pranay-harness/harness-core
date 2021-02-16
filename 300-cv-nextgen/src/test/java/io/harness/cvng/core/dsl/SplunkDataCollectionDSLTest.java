@@ -1,5 +1,6 @@
 package io.harness.cvng.core.dsl;
 
+import static io.harness.CvNextGenTestBase.getResourceFilePath;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 
@@ -8,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.cvng.HoverflyTest;
+import io.harness.cvng.HoverflyTestBase;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
@@ -26,6 +27,7 @@ import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.specto.hoverfly.junit.core.SimulationSource;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -36,12 +38,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class SplunkDataCollectionDSLTest extends HoverflyTest {
+public class SplunkDataCollectionDSLTest extends HoverflyTestBase {
   private DataCollectionDSLService dataCollectionDSLService;
   private String code;
 
@@ -55,7 +58,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkDSL() throws IOException {
     String filePath = "splunk/splunk-response.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk.datacollection");
 
@@ -77,7 +80,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkHostDSL() throws IOException {
     String filePath = "splunk/splunk-response-host.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-11-18T08:52:57.079Z"));
@@ -94,7 +97,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkHostDSLEmptyResponse() throws IOException {
     String filePath = "splunk/splunk-response-host_empty.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     code = readDSL("splunk_host_collection.datacollection");
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
@@ -109,7 +112,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkConnectionValidationValidSettings() {
     String filePath = "splunk/connection-validation-valid.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     SplunkConnectorValidationInfo splunkConnectorValidationInfo = SplunkConnectorValidationInfo.builder().build();
@@ -137,7 +140,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkConnectionValidationInValidSettings() {
     String filePath = "splunk/connection-validation-invalid.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     SplunkConnectorValidationInfo splunkConnectorValidationInfo = SplunkConnectorValidationInfo.builder().build();
@@ -166,7 +169,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_splunkSavedSearches() throws IOException {
     String filePath = "splunk/saved-searches.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     SplunkSavedSearchRequest splunkSavedSearchRequest =
@@ -223,7 +226,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
   }
 
   private String readJson(String name) throws IOException {
-    return Resources.toString(
-        AppDynamicsDataCollectionDSLTest.class.getResource("/hoverfly/splunk/" + name), StandardCharsets.UTF_8);
+    return FileUtils.readFileToString(
+        new File(getResourceFilePath("/hoverfly/splunk/" + name)), StandardCharsets.UTF_8);
   }
 }

@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
@@ -57,7 +57,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class LogClusterServiceImplTest extends CvNextGenTest {
+public class LogClusterServiceImplTest extends CvNextGenTestBase {
   private String serviceGuardVerificationTaskId;
   private String cvConfigId;
   @Mock LearningEngineTaskService learningEngineTaskService;

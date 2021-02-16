@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.client.NextGenClient;
 import io.harness.cvng.client.NextGenService;
@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class NextGenServiceImplTest extends CvNextGenTest {
+public class NextGenServiceImplTest extends CvNextGenTestBase {
   @Inject private NextGenService nextGenService;
   @Mock private NextGenClient nextGenClient;
   private String accountId;

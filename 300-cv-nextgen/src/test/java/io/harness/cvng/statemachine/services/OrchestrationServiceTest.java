@@ -10,7 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -42,7 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class OrchestrationServiceTest extends CvNextGenTest {
+public class OrchestrationServiceTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
 
   @Mock AnalysisStateMachineService mockStateMachineService;

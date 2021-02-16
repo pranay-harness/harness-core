@@ -9,6 +9,7 @@ directories:
   220-graphql-test
   230-model-test
   260-delegate
+  300-cv-nextgen
   310-ci-manager
   320-ci-execution
   330-ci-beans
@@ -92,4 +93,5 @@ import_run_configurations:
   run-configurations/Notification Client.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml

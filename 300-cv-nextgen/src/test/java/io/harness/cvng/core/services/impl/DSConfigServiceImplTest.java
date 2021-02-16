@@ -11,7 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
@@ -47,7 +47,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class DSConfigServiceImplTest extends CvNextGenTest {
+public class DSConfigServiceImplTest extends CvNextGenTestBase {
   @Inject DSConfigService dsConfigService;
   @Mock NextGenService nextGenService;
   @Inject AppDynamicsService appDynamicsService;

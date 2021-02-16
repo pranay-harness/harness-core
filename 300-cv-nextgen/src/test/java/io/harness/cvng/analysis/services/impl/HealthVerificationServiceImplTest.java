@@ -9,7 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -43,7 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HealthVerificationServiceImplTest extends CvNextGenTest {
+public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
   @Inject private HealthVerificationService healthVerificationService;
 
   @Mock private VerificationTaskService verificationTaskService;

@@ -1,6 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -10,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.entity.ServiceSecretKey;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -247,17 +245,5 @@ public class LearningEngineAnalysisServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> learningEngineService.checkIfAnalysisHasData(cvConfigId, MLAnalysisType.FEEDBACK_ANALYSIS, minute))
         .isInstanceOf(InvalidArgumentsException.class);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void test_getVerificationServiceSecretKey_whenEnvVariableNotDefined() {
-    ServiceSecretKey serviceSecretKey = persistence.createQuery(ServiceSecretKey.class).get();
-    assertThat(serviceSecretKey).isNull();
-    verificationServiceSecretManager.initializeServiceSecretKeys();
-    serviceSecretKey = persistence.createQuery(ServiceSecretKey.class).get();
-    assertThat(verificationServiceSecretManager.getVerificationServiceSecretKey())
-        .isEqualTo(serviceSecretKey.getServiceSecret());
   }
 }
