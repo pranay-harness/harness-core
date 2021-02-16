@@ -119,6 +119,7 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import java.io.File;
@@ -157,6 +158,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -1526,14 +1528,17 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    V1ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1ConfigMap releaseConfigMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1Secret releaseSecret = kubernetesContainerService.getSecret(kubernetesConfig, releaseName);
 
-    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+    if (!(releaseHistoryPresent(releaseConfigMap) || releaseHistoryPresent(releaseSecret))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
       return emptyList();
     }
 
-    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
+        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
+        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
@@ -1548,13 +1553,34 @@ public class K8sTaskHelperBase {
       }
     }
 
-    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
-                                                          .kind(configMap.getKind())
-                                                          .name(releaseName)
-                                                          .namespace(kubernetesConfig.getNamespace())
-                                                          .build();
-    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    if (releaseConfigMap != null) {
+      KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                            .kind(releaseConfigMap.getKind())
+                                                            .name(releaseName)
+                                                            .namespace(kubernetesConfig.getNamespace())
+                                                            .build();
+      kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    }
+    if (releaseSecret != null) {
+      KubernetesResourceId harnessGeneratedSecretResource = KubernetesResourceId.builder()
+                                                                .kind(releaseSecret.getKind())
+                                                                .name(releaseName)
+                                                                .namespace(kubernetesConfig.getNamespace())
+                                                                .build();
+      kubernetesResourceIdMap.put(
+          generateResourceIdentifier(harnessGeneratedSecretResource), harnessGeneratedSecretResource);
+    }
     return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  private boolean releaseHistoryPresent(V1ConfigMap configMap) {
+    return configMap != null && isNotEmpty(configMap.getData())
+        && isNotBlank(configMap.getData().get(ReleaseHistoryKeyName));
+  }
+
+  private boolean releaseHistoryPresent(V1Secret secret) {
+    return secret != null && isNotEmpty(secret.getData())
+        && ArrayUtils.isNotEmpty(secret.getData().get(ReleaseHistoryKeyName));
   }
 
   public List<FileData> readFilesFromDirectory(
