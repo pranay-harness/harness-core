@@ -32,6 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 public class AnalysisOrchestrator implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
+  private String accountId;
   @FdIndex private String verificationTaskId;
   @Builder.Default private List<AnalysisStateMachine> analysisStateMachineQueue = new ArrayList<>();
   private AnalysisStatus status;

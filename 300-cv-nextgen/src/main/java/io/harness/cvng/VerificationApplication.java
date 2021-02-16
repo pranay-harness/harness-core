@@ -33,6 +33,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.metrics.services.api.MetricService;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
@@ -243,7 +244,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeServiceSecretKeys();
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    // initMetrics();
+    initMetrics(injector);
 
     autoCreateCollectionsAndIndexes(injector);
     registerAuthFilters(environment, injector, configuration);
@@ -269,13 +270,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     log.info("Starting app done");
   }
 
-  //  private void initMetrics() {
-  //    VerificationConstants.LEARNING_ENGINE_TASKS_METRIC_LIST.forEach(
-  //            metricName -> registerGaugeMetric(metricName, null));
-  //    registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);
-  //    registerGaugeMetric(NUM_LOG_RECORDS, null);
-  //    registerGaugeMetric(IGNORED_ERRORS_METRIC_NAME, IGNORED_ERRORS_METRIC_LABELS);
-  //  }
+  private void initMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+  }
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {
     hPersistence = injector.getInstance(HPersistence.class);

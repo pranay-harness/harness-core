@@ -1,0 +1,10 @@
+name: Analysis Statemachine Metrics
+identifier: analysis_state_machine
+metricGroup: verification_configuration
+metrics:
+  - metricName: queueSize
+    metricDefinition: queueSize of the orchestrator
+    unit: count
+  - metricName: timeTaken
+    metricDefinition: timeTaken for the state machine execution
+    unit: ms

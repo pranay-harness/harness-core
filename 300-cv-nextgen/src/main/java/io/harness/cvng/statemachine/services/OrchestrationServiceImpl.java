@@ -4,6 +4,8 @@ import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.services.api.MetricService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -11,6 +13,7 @@ import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrches
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -30,6 +33,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private HPersistence hPersistence;
   @Inject private AnalysisStateMachineService stateMachineService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private MetricService metricService;
 
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
@@ -45,6 +49,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
     UpdateOperations<AnalysisOrchestrator> updateOperations =
         hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
+            .setOnInsert(AnalysisOrchestratorKeys.accountId, "kmpy")
             .setOnInsert(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
             .setOnInsert(AnalysisOrchestratorKeys.status, AnalysisStatus.CREATED)
             .addToSet(AnalysisOrchestratorKeys.analysisStateMachineQueue, Arrays.asList(stateMachine));
@@ -85,6 +90,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       log.info("For verification task ID {}, orchestrator has more than 5 tasks waiting."
               + " Please check if there is a growing backlog.",
           orchestrator.getVerificationTaskId());
+    }
+
+    try (CVNGMetricContext context =
+             new CVNGMetricContext(orchestrator.getAccountId(), orchestrator.getVerificationTaskId())) {
+      metricService.recordMetric("queueSize", orchestrator.getAnalysisStateMachineQueue().size(), context);
     }
 
     AnalysisStateMachine currentlyExecutingStateMachine =

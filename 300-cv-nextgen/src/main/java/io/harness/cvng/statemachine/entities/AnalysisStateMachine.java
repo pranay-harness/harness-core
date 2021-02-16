@@ -44,6 +44,8 @@ public class AnalysisStateMachine implements PersistentEntity, UuidAware, Create
         .build();
   }
 
+  private String accountId;
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

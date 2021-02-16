@@ -997,6 +997,21 @@
                 <version>4.1.51.Final</version>
             </dependency>
             <dependency>
+                <groupId>io.opencensus</groupId>
+                <artifactId>opencensus-api</artifactId>
+                <version>0.28.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opencensus</groupId>
+                <artifactId>opencensus-exporter-stats-stackdriver</artifactId>
+                <version>0.28.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opencensus</groupId>
+                <artifactId>opencensus-impl</artifactId>
+                <version>0.28.0</version>
+            </dependency>
+            <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-core</artifactId>
                 <version>3.3.8.RELEASE</version>
