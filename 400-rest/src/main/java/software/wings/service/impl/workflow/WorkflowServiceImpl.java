@@ -1147,10 +1147,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
               .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
               .build());
-
-      updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
-
-      pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+      if (isNotEmpty(pipelinesWithWorkflowLinked)) {
+        updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
+        pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+      }
     }
 
     if (isEmpty(templateExpressions)) {

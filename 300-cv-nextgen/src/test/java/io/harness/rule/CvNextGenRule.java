@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static io.harness.CvNextGenTestBase.getResourceFilePath;
+
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
@@ -38,7 +40,6 @@ import com.google.inject.Singleton;
 import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
-import io.dropwizard.testing.ResourceHelpers;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.annotation.Annotation;
@@ -137,7 +138,8 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     final YamlConfigurationFactory<VerificationConfiguration> factory =
         new YamlConfigurationFactory<>(VerificationConfiguration.class, validator, objectMapper, "dw");
 
-    final File yaml = new File(ResourceHelpers.resourceFilePath("test-config.yml"));
+    // TODO: once we move completely on bazel, we can get rid of mvn way
+    final File yaml = new File(getResourceFilePath("test-config.yml"));
     return factory.build(yaml);
   }
 

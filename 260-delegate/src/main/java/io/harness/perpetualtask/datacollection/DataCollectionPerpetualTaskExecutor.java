@@ -13,7 +13,7 @@ import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.LogDataCollectionInfo;
-import io.harness.cvng.core.utils.CVNGParallelExecutor;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;

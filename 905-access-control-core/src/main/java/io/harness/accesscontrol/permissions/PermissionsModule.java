@@ -3,7 +3,7 @@ package io.harness.accesscontrol.permissions;
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
 import io.harness.accesscontrol.permissions.persistence.PermissionDaoImpl;
 import io.harness.accesscontrol.permissions.persistence.PermissionMorphiaRegistrar;
-import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;

@@ -1,5 +1,7 @@
 package io.harness.cvng.core.dsl;
 
+import static io.harness.CvNextGenTestBase.getResourceFilePath;
+import static io.harness.CvNextGenTestBase.getSourceResourceFile;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -8,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.HoverflyCVNextGenTest;
+import io.harness.cvng.HoverflyCVNextGenTestBase;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -25,11 +27,11 @@ import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import io.specto.hoverfly.junit.core.SimulationSource;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -40,12 +42,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
+public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   private String accountId;
   private String orgIdentifier;
@@ -67,7 +70,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDyanmicsPerformancePackForServiceGuard() throws IOException {
     String filePath = "appdynamics/performance-service-guard.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
@@ -112,7 +115,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDyanmicsPerformancePackWithHosts() throws IOException {
     String filePath = "appdynamics/performance-verification-task-collect-hosts.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
@@ -158,7 +161,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDyanmicsQualityPackForServiceGuard() throws IOException {
     String filePath = "appdynamics/quality-service-guard.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     //    		 HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
@@ -205,7 +208,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDyanmicsQualityPackWithHosts() throws IOException {
     String filePath = "appdynamics/quality-verification-task-collect-hosts.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     //		HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
@@ -253,7 +256,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDynamicsConnectionValidationValidSettings() {
     String filePath = "appdynamics/connection-validation-valid.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
@@ -286,7 +289,7 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testExecute_appDynamicsConnectionValidationInValidSettings() {
     String filePath = "appdynamics/connection-validation-invalid.json";
-    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
+    HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get(getResourceFilePath("hoverfly/" + filePath))));
     // HOVERFLY_RULE.capture(filePath);
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
@@ -315,12 +318,12 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   }
 
   private String readDSL(String name) throws IOException {
-    return Resources.toString(
-        AppDynamicsCVConfig.class.getResource("/appdynamics/dsl/" + name), StandardCharsets.UTF_8);
+    return FileUtils.readFileToString(
+        new File(getSourceResourceFile(AppDynamicsCVConfig.class, "/appdynamics/dsl/" + name)), StandardCharsets.UTF_8);
   }
 
   private String readJson(String name) throws IOException {
-    return Resources.toString(
-        AppDynamicsDataCollectionDSLTest.class.getResource("/hoverfly/appdynamics/" + name), StandardCharsets.UTF_8);
+    return FileUtils.readFileToString(
+        new File(getResourceFilePath("hoverfly/appdynamics/" + name)), StandardCharsets.UTF_8);
   }
 }

@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.app.GraphQLModule;
 
 import com.google.inject.Inject;
@@ -16,6 +19,7 @@ import org.dataloader.DataLoaderRegistry;
 import org.dataloader.MappedBatchLoader;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DataLoaderRegistryHelper {
   private Map<String, MappedBatchLoader> batchedDataLoaders;
 

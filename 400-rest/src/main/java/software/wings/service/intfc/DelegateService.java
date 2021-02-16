@@ -62,8 +62,6 @@ public interface DelegateService extends OwnedByAccount {
   File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
       String verificationServiceUrl) throws IOException;
 
-  Delegate get(String accountId, String delegateId, boolean forceRefresh);
-
   Delegate update(@Valid Delegate delegate);
 
   Delegate updateTags(@Valid Delegate delegate);

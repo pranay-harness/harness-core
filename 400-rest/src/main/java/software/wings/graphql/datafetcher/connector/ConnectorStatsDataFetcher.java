@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.SettingAttribute;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLConnectorFilter, QLConnectorAggregation, QLNoOpSortCriteria> {
   @Inject ConnectorQueryHelper connectorQueryHelper;

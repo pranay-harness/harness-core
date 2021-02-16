@@ -16,6 +16,8 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
@@ -64,6 +66,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 @NoArgsConstructor
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   private int MAX_RELEASE_VERSIONS_TO_KEEP = 3;
 

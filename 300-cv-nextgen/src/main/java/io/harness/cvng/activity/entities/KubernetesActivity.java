@@ -68,4 +68,9 @@ public class KubernetesActivity extends Activity {
     }
     return rv;
   }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return true;
+  }
 }

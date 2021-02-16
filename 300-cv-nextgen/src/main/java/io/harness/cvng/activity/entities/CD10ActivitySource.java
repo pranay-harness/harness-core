@@ -51,6 +51,8 @@ public class CD10ActivitySource extends ActivitySource {
         .envMappings(envMappings)
         .serviceMappings(serviceMappings)
         .identifier(getIdentifier())
+        .orgIdentifier(getOrgIdentifier())
+        .projectIdentifier(getProjectIdentifier())
         .name(getName())
         .build();
   }

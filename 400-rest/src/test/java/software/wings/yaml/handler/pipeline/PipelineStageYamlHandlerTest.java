@@ -22,6 +22,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.PipelineStage;
+import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
@@ -91,6 +93,24 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
             .envId(ENV_ID)
             .uuid(WORKFLOW_ID)
             .orchestrationWorkflow(aBasicOrchestrationWorkflow().withUserVariables(Collections.EMPTY_LIST).build())
+            .build();
+    when(workflowService.readWorkflowByName(any(), anyString())).thenReturn(workflow);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    testCRUD(PipelineStageYamlFiles.Stage2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testEnvStageYamlWithOneVariableWithEmptyValue() throws IOException {
+    Variable emptyVariable = Variable.VariableBuilder.aVariable().name("var1").type(VariableType.TEXT).build();
+    Workflow workflow =
+        aWorkflow()
+            .name(workflowName)
+            .envId(ENV_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(
+                aBasicOrchestrationWorkflow().withUserVariables(Collections.singletonList(emptyVariable)).build())
             .build();
     when(workflowService.readWorkflowByName(any(), anyString())).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);

@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.SettingAttribute;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {
   @Inject CloudProviderQueryHelper cloudProviderQueryHelper;

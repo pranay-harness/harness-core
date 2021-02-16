@@ -11,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
@@ -934,19 +935,13 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public Template findByFolder(TemplateFolder templateFolder, String templateName, String appId) {
-    List<Template> templates = wingsPersistence.createQuery(Template.class)
-                                   .filter(Template.ACCOUNT_ID_KEY2, templateFolder.getAccountId())
-                                   .filter(Template.APP_ID_KEY, appId)
-                                   .field(FOLDER_PATH_ID_KEY)
-                                   .contains(templateFolder.getUuid())
-                                   .field(NAME_KEY)
-                                   .equal(templateName)
-                                   .filter(Template.GALLERY_ID_KEY, templateFolder.getGalleryId())
-                                   .asList();
-    if (templates.size() == 1) {
-      return templates.get(0);
-    }
-    return null;
+    final Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                              .filter(TemplateKeys.accountId, templateFolder.getAccountId())
+                                              .filter(Template.APP_ID_KEY, appId)
+                                              .filter(FOLDER_ID_KEY, templateFolder.getUuid())
+                                              .filter(NAME_KEY, templateName)
+                                              .filter(Template.GALLERY_ID_KEY, templateFolder.getGalleryId());
+    return templateQuery.get();
   }
 
   @Override
@@ -1044,7 +1039,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .project(Template.ACCOUNT_ID_KEY2, true)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, templateName)
-                            .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
+                            .filter(FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
@@ -1083,7 +1078,7 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = wingsPersistence.createQuery(Template.class)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, templateName)
-                            .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
+                            .filter(FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
@@ -1165,7 +1160,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .project(Template.ACCOUNT_ID_KEY2, true)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, name)
-                            .filter(Template.FOLDER_ID_KEY, folderId)
+                            .filter(FOLDER_ID_KEY, folderId)
                             .filter(Template.GALLERY_ID_KEY, galleryId)
                             .get();
     if (template == null) {

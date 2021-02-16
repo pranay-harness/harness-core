@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetcher, BaseStatsDataFetcher {
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";

@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 
@@ -26,6 +28,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SecretManagersDataFetcher
     extends AbstractConnectionV2DataFetcher<QLSecretManagerFilter, QLNoOpSortCriteria, QLSecretManagerConnection> {
   @Inject protected DataFetcherUtils dataFetcherUtils;

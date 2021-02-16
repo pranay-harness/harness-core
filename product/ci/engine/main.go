@@ -4,14 +4,16 @@ package main
 	CI lite engine executes steps of stage provided as an input.
 */
 import (
+	"os"
+
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
 	"go.uber.org/zap"
-	"os"
 )
 
 const (
@@ -37,6 +39,7 @@ var args struct {
 	Stage *stageSchema `arg:"subcommand:stage"`
 
 	Verbose               bool   `arg:"--verbose" help:"enable verbose logging mode"`
+	LogMetrics            bool   `arg:"--log_metrics" help:"enable metric logging"`
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
 }
@@ -45,6 +48,7 @@ func parseArgs() {
 	// set defaults here
 	args.DeploymentEnvironment = "prod"
 	args.Verbose = false
+	args.LogMetrics = true
 
 	arg.MustParse(&args)
 }
@@ -65,6 +69,10 @@ func main() {
 	}
 	log := remoteLogger.BaseLogger
 	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
+
+	if args.LogMetrics {
+		metrics.Log(int32(os.Getpid()), "engine", log)
+	}
 
 	startServer(remoteLogger)
 

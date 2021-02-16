@@ -71,6 +71,14 @@ public class PlanCreatorUtils {
     return stageFields;
   }
 
+  public boolean checkIfStageRollbackStepsPresent(YamlNode executionNode) {
+    if (executionNode == null) {
+      return false;
+    }
+    YamlField rollbackStepsField = executionNode.getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+    return rollbackStepsField != null && rollbackStepsField.getNode().asArray().size() != 0;
+  }
+
   /**
    * @param executionNode execution element.
    * @return boolean

@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -53,6 +54,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.io.InputStream;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -126,6 +128,13 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
+  public Boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return ngSecretService.validateTheIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
@@ -164,15 +173,21 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, SecretType secretType, String searchTerm, int page, int size) {
-    Criteria criteria = Criteria.where(SecretKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(SecretKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(SecretKeys.projectIdentifier)
-                            .is(projectIdentifier);
-    if (secretType != null) {
-      criteria = criteria.and(SecretKeys.type).is(secretType);
+      String projectIdentifier, List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope,
+      String searchTerm, int page, int size) {
+    Criteria criteria = Criteria.where(SecretKeys.accountIdentifier).is(accountIdentifier);
+    if (!includeSecretsFromEverySubScope) {
+      criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier).and(SecretKeys.projectIdentifier).is(projectIdentifier);
+    } else {
+      if (isNotBlank(orgIdentifier)) {
+        criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier);
+        if (isNotBlank(projectIdentifier)) {
+          criteria.and(SecretKeys.projectIdentifier).is(projectIdentifier);
+        }
+      }
+    }
+    if (isNotEmpty(secretTypes)) {
+      criteria = criteria.and(SecretKeys.type).in(secretTypes);
     }
     if (!StringUtils.isEmpty(searchTerm)) {
       criteria = criteria.orOperator(

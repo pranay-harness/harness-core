@@ -39,7 +39,9 @@ public class NGSectionStep implements ChildExecutable<NGSectionStepParameters> {
     RollbackOutcome failedChildRollbackOutcome = getFailedChildRollbackOutcome(responseDataMap, outcomeService);
     if (failedChildRollbackOutcome != null) {
       String group;
-      if (failedChildRollbackOutcome.getRollbackInfo().getGroup().equals(RollbackNodeType.STEP.name())
+      if (failedChildRollbackOutcome.getRollbackInfo().getGroup() == null) {
+        group = RollbackNodeType.STAGE.name();
+      } else if (failedChildRollbackOutcome.getRollbackInfo().getGroup().equals(RollbackNodeType.STEP.name())
           || failedChildRollbackOutcome.getRollbackInfo().getGroup().equals(RollbackNodeType.DIRECT_STAGE.name())) {
         group = RollbackNodeType.DIRECT_STAGE.name();
       } else {

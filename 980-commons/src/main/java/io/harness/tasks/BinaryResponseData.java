@@ -8,7 +8,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class BinaryResponseData implements ResponseData, ProgressData {
   byte[] data;
 }

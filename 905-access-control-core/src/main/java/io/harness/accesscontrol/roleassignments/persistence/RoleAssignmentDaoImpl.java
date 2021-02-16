@@ -37,7 +37,7 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
           String.format("A role assignment with identifier %s in this scope %s is already present",
-              roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getParentIdentifier()));
+              roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getScopeIdentifier()));
     }
   }
 
@@ -45,7 +45,7 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   public PageResponse<RoleAssignment> getAll(
       PageRequest pageRequest, String parentIdentifier, String principalIdentifier, String roleIdentifier) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
-    Criteria parentCriteria = Criteria.where(RoleAssignmentDBOKeys.parentIdentifier).is(parentIdentifier);
+    Criteria parentCriteria = Criteria.where(RoleAssignmentDBOKeys.scopeIdentifier).is(parentIdentifier);
     Criteria principalCriteria = Criteria.where(RoleAssignmentDBOKeys.principalIdentifier).is(principalIdentifier);
     Criteria roleCriteria = Criteria.where(RoleAssignmentDBOKeys.principalIdentifier).is(roleIdentifier);
     Criteria criteria;
@@ -65,13 +65,13 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   @Override
   public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
     Optional<RoleAssignmentDBO> roleAssignment =
-        roleAssignmentRepository.findByIdentifierAndParentIdentifier(identifier, parentIdentifier);
+        roleAssignmentRepository.findByIdentifierAndScopeIdentifier(identifier, parentIdentifier);
     return roleAssignment.flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
   }
 
   @Override
   public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
-    return roleAssignmentRepository.deleteByIdentifierAndParentIdentifier(identifier, parentIdentifier)
+    return roleAssignmentRepository.deleteByIdentifierAndScopeIdentifier(identifier, parentIdentifier)
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));

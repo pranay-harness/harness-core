@@ -24,7 +24,7 @@ func TestMainWithGrpc(t *testing.T) {
 	}
 
 	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.AddonServer, error) {
+	s := func(uint, bool, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
 	}
 
@@ -56,7 +56,7 @@ func TestMainWithGrpcAndIntegrationService(t *testing.T) {
 	}
 
 	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.AddonServer, error) {
+	s := func(uint, bool, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
 	}
 

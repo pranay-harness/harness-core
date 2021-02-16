@@ -22,6 +22,7 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.selection.log.ProfileScopingRulesMetadata;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Application;
@@ -59,6 +60,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateCache delegateCache;
 
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -372,7 +374,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     List<DelegateSelectionLogParams> delegateSelectionLogParamsList = new ArrayList<>();
 
     for (String delegateId : selectionLog.getDelegateIds()) {
-      Delegate delegate = delegateService.get(selectionLog.getAccountId(), delegateId, false);
+      Delegate delegate = delegateCache.get(selectionLog.getAccountId(), delegateId, false);
       String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
       String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
 

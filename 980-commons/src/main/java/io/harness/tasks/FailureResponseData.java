@@ -10,7 +10,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class FailureResponseData implements ErrorResponseData {
   String errorMessage;
   EnumSet<FailureType> failureTypes;

@@ -4,12 +4,15 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MIN_SAMPLE
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogramV2;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.histogram.Histogram;
 
 import java.time.Instant;
 import lombok.Data;
 
 @Data
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class ContainerState {
   private final String namespace;
   private final String podName;

@@ -36,4 +36,9 @@ public class InfrastructureActivity extends Activity {
   public void validateActivityParams() {
     //
   }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return true;
+  }
 }

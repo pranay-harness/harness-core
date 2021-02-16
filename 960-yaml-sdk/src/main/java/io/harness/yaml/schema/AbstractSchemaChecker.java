@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 
 @Slf4j
@@ -58,10 +59,14 @@ public class AbstractSchemaChecker {
         final String schemaInUT =
             IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
         if (!schemaInUT.equals(s)) {
+          log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
           throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
         }
         log.info("schema check success for {}", schemaRoot.getEntityType());
       } catch (Exception e) {
+        if (e instanceof YamlSchemaException) {
+          throw e;
+        }
         log.info("No schema found for unit testing for {}.", schemaRoot.getEntityType());
       }
     }

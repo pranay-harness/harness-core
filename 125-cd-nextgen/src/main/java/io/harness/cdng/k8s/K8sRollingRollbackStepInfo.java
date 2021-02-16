@@ -6,7 +6,7 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingRollbackStepInfoVisi
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -72,11 +72,15 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackBaseStepInfo i
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return K8sRollingRollbackStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
-        .timeout(timeout)
-        .rollbackInfo(rollbackInfo)
+        .timeout(baseStepParameterInfo.getTimeout())
+        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
+        .name(baseStepParameterInfo.getName())
+        .identifier(baseStepParameterInfo.getIdentifier())
+        .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .description(baseStepParameterInfo.getDescription())
         .build();
   }
 }

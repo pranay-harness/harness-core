@@ -238,6 +238,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -769,21 +770,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       version = commandNameVersionMap.get(commandName);
     }
 
-    Command command = getCommandByNameAndVersion(appId, serviceId, commandName, version).getCommand();
-
-    return command.getCommandUnits()
+    return getCommandByNameAndVersion(appId, serviceId, commandName, version)
+        .getCommand()
+        .getCommandUnits()
         .stream()
-        .flatMap(commandUnit -> {
-          if (COMMAND == commandUnit.getCommandUnitType()) {
-            String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
-                ? ((Command) commandUnit).getReferenceId()
-                : commandUnit.getName();
-            return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
-          } else {
-            return Stream.of(commandUnit);
-          }
-        })
+        .flatMap(commandUnit -> processCommandUnit(appId, serviceId, commandNameVersionMap, commandUnit))
         .collect(toList());
+  }
+
+  @Nullable
+  private Stream<? extends CommandUnit> processCommandUnit(
+      String appId, String serviceId, Map<String, Integer> commandNameVersionMap, CommandUnit commandUnit) {
+    if (COMMAND == commandUnit.getCommandUnitType()) {
+      Command internalCommand = (Command) commandUnit;
+      if (internalCommand.getTemplateReference() != null) {
+        Template template = templateService.get(internalCommand.getTemplateReference().getTemplateUuid(),
+            internalCommand.getTemplateReference().getTemplateVersion().toString());
+        SshCommandTemplate baseTemplate = (SshCommandTemplate) template.getTemplateObject();
+        return baseTemplate.getCommandUnits().stream().flatMap(
+            cm -> processCommandUnit(appId, null, new HashMap<>(), cm));
+      } else {
+        String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
+            ? ((Command) commandUnit).getReferenceId()
+            : commandUnit.getName();
+        return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
+      }
+    } else {
+      return Stream.of(commandUnit);
+    }
   }
 
   @Override
@@ -2807,7 +2821,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   HelmVersion getDefaultHelmVersion(DeploymentType deploymentType) {
     if (deploymentType == null) {
-      return null;
+      return V2;
     }
     switch (deploymentType) {
       case HELM:

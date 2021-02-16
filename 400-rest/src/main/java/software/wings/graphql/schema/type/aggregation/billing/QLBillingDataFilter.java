@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
@@ -16,6 +18,7 @@ import lombok.Value;
 @Value
 @Builder
 @ToString
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter application;
   private QLIdFilter service;

@@ -1,5 +1,6 @@
 package software.wings.service.intfc.azure.manager;
 
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureConfig;
@@ -38,6 +39,6 @@ public interface AzureARMManager {
    * @param appId
    * @return
    */
-  List<String> listManagementGroupNames(
+  List<ManagementGroupData> listManagementGroups(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String appId);
 }

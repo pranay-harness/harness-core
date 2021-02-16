@@ -11,7 +11,10 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationResponseBuilder;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -36,6 +39,13 @@ public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementC
   @Override
   public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
+
+    YamlField variablesField =
+        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
+    }
+
     CIFilterBuilder ciFilterBuilder = CIFilter.builder();
     CodeBase ciCodeBase = null;
     try {

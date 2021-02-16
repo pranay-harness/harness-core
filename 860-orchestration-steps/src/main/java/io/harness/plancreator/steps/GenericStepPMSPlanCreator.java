@@ -37,6 +37,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo.RollbackInfoBuilder;
 import io.harness.pms.sdk.core.steps.io.RollbackStrategy;
@@ -75,6 +76,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
+  private static final String DEFAULT_TIMEOUT = "10m";
   @Inject private KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
@@ -105,9 +107,26 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     }
 
     if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
-      stepParameters = ((WithRollbackInfo) stepElement.getStepSpecType())
-                           .getStepParametersWithRollbackInfo(rollbackInfoBuilder.build(),
-                               ParameterField.createValueField(stepElement.getTimeout().getValue().getTimeoutString()));
+      // Failure strategy should be present.
+      List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
+      if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+        throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+      }
+      String timeout = DEFAULT_TIMEOUT;
+      if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
+        timeout = stepElement.getTimeout().getValue().getTimeoutString();
+      }
+
+      BaseStepParameterInfo baseStepParameterInfo = BaseStepParameterInfo.builder()
+                                                        .timeout(ParameterField.createValueField(timeout))
+                                                        .rollbackInfo(rollbackInfoBuilder.build())
+                                                        .description(stepElement.getDescription())
+                                                        .skipCondition(stepElement.getSkipCondition())
+                                                        .name(stepElement.getName())
+                                                        .description(stepElement.getDescription())
+                                                        .build();
+      stepParameters =
+          ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
     }
     PlanNode stepPlanNode =
         PlanNode.builder()
@@ -300,8 +319,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     rollbackInfoBuilder.nodeTypeToUuid(
         RollbackNodeType.STEP_GROUP.name(), getStepGroupRollbackStepsNodeId(currentField));
-    rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
-        executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
+    if (PlanCreatorUtils.checkIfStageRollbackStepsPresent(executionField)) {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
+          executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
+    } else {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(), null);
+    }
   }
 
   private String getStepGroupRollbackStepsNodeId(YamlField currentField) {

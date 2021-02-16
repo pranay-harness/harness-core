@@ -1,5 +1,7 @@
 package io.harness.resourcegroup.model;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import java.util.Objects;
 
 public enum Scope {
@@ -20,13 +22,13 @@ public enum Scope {
 
   public static Scope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Scope scope = null;
-    if (Objects.nonNull(accountIdentifier)) {
+    if (Objects.nonNull(stripToNull(accountIdentifier))) {
       scope = Scope.ACCOUNT;
     }
-    if (Objects.nonNull(orgIdentifier)) {
+    if (scope == null && Objects.nonNull(stripToNull(orgIdentifier))) {
       scope = Scope.ORGANIZATION;
     }
-    if (Objects.nonNull(projectIdentifier)) {
+    if (scope == null && Objects.nonNull(stripToNull(projectIdentifier))) {
       scope = Scope.PROJECT;
     }
     return scope;

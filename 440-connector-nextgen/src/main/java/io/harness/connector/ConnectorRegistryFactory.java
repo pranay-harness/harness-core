@@ -21,6 +21,8 @@ import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketDTOToEntit
 import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketEntityToDTO;
 import io.harness.connector.mappers.ceawsmapper.CEAwsDTOToEntity;
 import io.harness.connector.mappers.ceawsmapper.CEAwsEntityToDTO;
+import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
+import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
@@ -48,6 +50,7 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
+import io.harness.connector.validator.CEAzureConnectorValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
@@ -120,6 +123,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.BITBUCKET,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, BitbucketConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, BitbucketDTOToEntity.class, BitbucketEntityToDTO.class));
+    registrar.put(ConnectorType.CE_AZURE,
+        new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAzureConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class));
   }
 
   public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {

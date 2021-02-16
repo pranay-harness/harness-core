@@ -4,12 +4,14 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -85,22 +87,25 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
             InstanceSyncTestConstants.ACCOUNT_ID);
 
     assertThat(validationTask)
-        .isEqualTo(DelegateTask.builder()
-                       .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
-                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                       .tags(singletonList("abc"))
-                       .data(TaskData.builder()
-                                 .async(false)
-                                 .taskType(TaskType.AWS_EC2_TASK.name())
-                                 .parameters(new Object[] {AwsEc2ListInstancesRequest.builder()
-                                                               .awsConfig(awsConfig)
-                                                               .encryptionDetails(new ArrayList<>())
-                                                               .region("us-east-1")
-                                                               .filters(new ArrayList<>())
-                                                               .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
-                                 .build())
-                       .build());
+        .isEqualToIgnoringGivenFields(
+            DelegateTask.builder()
+                .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                .tags(singletonList("abc"))
+                .data(TaskData.builder()
+                          .async(false)
+                          .taskType(TaskType.AWS_EC2_TASK.name())
+                          .parameters(new Object[] {AwsEc2ListInstancesRequest.builder()
+                                                        .awsConfig(awsConfig)
+                                                        .encryptionDetails(new ArrayList<>())
+                                                        .region("us-east-1")
+                                                        .filters(new ArrayList<>())
+                                                        .build()})
+                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .build())
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
+    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

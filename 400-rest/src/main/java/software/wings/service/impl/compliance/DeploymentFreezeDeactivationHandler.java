@@ -3,6 +3,7 @@ package software.wings.service.impl.compliance;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -17,10 +18,12 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
+import software.wings.service.intfc.AccountService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -43,6 +46,7 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
   @Inject DeploymentFreezeUtils deploymentFreezeUtils;
   PersistenceIterator<GovernanceConfig> iterator;
   @Inject private MorphiaPersistenceRequiredProvider<GovernanceConfig> persistenceProvider;
+  @Inject private AccountService accountService;
 
   private static ExecutorService executor = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("deployment-freeze-deactivation-handler").build());
@@ -55,11 +59,12 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
             .mode(PersistenceIterator.ProcessMode.LOOP)
             .clazz(GovernanceConfig.class)
             .fieldName(GovernanceConfigKeys.nextCloseIterations)
-            .acceptableNoAlertDelay(ofSeconds(5))
-            .maximumDelayForCheck(ofMinutes(30))
+            .acceptableNoAlertDelay(ofSeconds(60))
+            .maximumDelayForCheck(ofHours(6))
             .executorService(executorService)
             .semaphore(new Semaphore(10))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .persistenceProvider(persistenceProvider)
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .throttleInterval(ofSeconds(45)));

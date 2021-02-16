@@ -157,7 +157,7 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<String> listAzureCloudProviderLocations(String appId, String computeProviderId);
 
-  List<String> listManagementGroupNames(String appId, String computeProviderId);
+  Map<String, String> listManagementGroups(String appId, String computeProviderId);
 
   Map<String, String> listVirtualMachineScaleSets(
       String appId, String deploymentType, String computeProviderId, String subscriptionId, String resourceGroupName);

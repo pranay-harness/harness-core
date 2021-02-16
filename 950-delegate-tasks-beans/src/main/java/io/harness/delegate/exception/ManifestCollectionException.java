@@ -1,8 +1,10 @@
-package io.harness.exception;
+package io.harness.delegate.exception;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 
 import io.harness.eraro.Level;
+import io.harness.exception.WingsException;
+import io.harness.exception.WingsException.ReportTarget;
 
 import java.util.EnumSet;
 

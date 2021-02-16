@@ -38,7 +38,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 
@@ -78,7 +78,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ../../210-command-library-server/target/command-library-app-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 
@@ -96,7 +96,7 @@ cd ../..
 
 mkdir -p dist/event-server ;
 cd dist/event-server
-cp ../../350-event-server/target/event-server-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/350-event-server/module_deploy.jar event-server-capsule.jar
 cp ../../350-event-server/key.pem .
 cp ../../350-event-server/cert.pem .
 cp ../../350-event-server/event-service-config.yml .
@@ -154,7 +154,7 @@ cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.
 
 mkdir -p dist/test
 cd dist/test
-cp ../../160-model-gen-tool/target/model-gen-tool-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar model-gen-tool-capsule.jar
 cp ../../160-model-gen-tool/config-datagen.yml .
 cd ../..
 
@@ -216,7 +216,7 @@ cd ../..
 mkdir -p dist/notification-service
 cd dist/notification-service
 
-cp ../../830-notification-service/target/notification-service-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/830-notification-service/module_deploy.jar notification-service-capsule.jar
 cp ../../830-notification-service/config.yml .
 cp ../../830-notification-service/keystore.jks .
 cp ../../830-notification-service/key.pem .
@@ -259,6 +259,25 @@ mkdir -p dist/eventsapi-monitor
 cd dist/eventsapi-monitor
 
 cp -r ../../950-events-api/src/monitoring/* .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
+mkdir -p dist/accesscontrol-service
+cd dist/accesscontrol-service
+
+cp ${HOME}/.bazel-dirs/bin/905-access-control-core/module_deploy.jar accesscontrol-service-capsule.jar
+cp ../../905-access-control-core/config.yml .
+cp ../../905-access-control-core/keystore.jks .
+cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/accesscontrol-service/scripts/ .
 
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt

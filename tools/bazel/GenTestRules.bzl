@@ -35,7 +35,7 @@ def run_package_tests(deps = [], data = [], resources = []):
         name = "shared_package_tests",
         srcs = native.glob(
             include = ["src/test/**/*.java"],
-            exclude = ["src/test/**/Test.java"],
+            exclude = ["src/test/**/*Test.java"],
         ),
         data = data,
         resources = resources,

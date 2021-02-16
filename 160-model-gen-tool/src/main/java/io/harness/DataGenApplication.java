@@ -101,7 +101,11 @@ public class DataGenApplication extends Application<MainConfiguration> {
     log.info("Starting DataGen Application");
     log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DataGenApplication dataGenApplication = new DataGenApplication();
-    dataGenApplication.run(args);
+    if (args.length == 1) {
+      dataGenApplication.run("server", args[0]);
+    } else {
+      dataGenApplication.run(args);
+    }
   }
 
   @Override

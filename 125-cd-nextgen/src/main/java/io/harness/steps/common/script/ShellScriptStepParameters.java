@@ -22,15 +22,24 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("shellScriptStepParameters")
 public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements StepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
+  public ShellScriptStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, ShellType shellType, ShellScriptSourceWrapper source,
       List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
       ParameterField<String> timeout, ParameterField<Boolean> onDelegate, RollbackInfo rollbackInfo) {
     super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
+    this.name = name;
+    this.identifier = identifier;
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
+    this.description = description;
+    this.skipCondition = skipCondition;
   }
 }

@@ -19,20 +19,8 @@ java_library(
     ],
 )
 
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
 java_binary(
-    name = "accesscontrol",
+    name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.accesscontrol.AccessControlApplication",

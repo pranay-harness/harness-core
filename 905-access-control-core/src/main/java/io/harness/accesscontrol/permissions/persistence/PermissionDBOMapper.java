@@ -11,7 +11,7 @@ class PermissionDBOMapper {
         .identifier(object.getIdentifier())
         .name(object.getName())
         .status(object.getStatus())
-        .scopes(object.getScopes())
+        .allowedScopeLevels(object.getAllowedScopeLevels())
         .build();
   }
 
@@ -20,7 +20,7 @@ class PermissionDBOMapper {
         .identifier(object.getIdentifier())
         .name(object.getName())
         .status(object.getStatus())
-        .scopes(object.getScopes())
+        .allowedScopeLevels(object.getAllowedScopeLevels())
         .build();
   }
 }

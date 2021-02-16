@@ -5,19 +5,24 @@ import static io.harness.rule.OwnerRule.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
+import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.LogCallback;
+import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -32,6 +37,7 @@ import com.microsoft.azure.management.resources.ErrorResponse;
 import com.microsoft.azure.management.resources.implementation.DeploymentExtendedInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentValidateResultInner;
 import lombok.NonNull;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,8 +51,18 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
   public static final String KEY = "KEY";
 
   @Mock private AzureManagementClient azureManagementClient;
-
+  @Mock private ARMDeploymentSteadyStateChecker deploymentSteadyStateChecker;
+  @Mock private LogStreamingTaskClient mockLogStreamingTaskClient;
+  @Mock private LogCallback mockLogCallback;
   @Spy @InjectMocks AzureARMDeploymentService azureARMDeploymentService;
+
+  @Before
+  public void setup() {
+    doReturn(mockLogCallback).when(mockLogStreamingTaskClient).obtainLogCallback(anyString());
+    doNothing().when(mockLogCallback).saveExecutionLog(anyString(), any(), any());
+    doNothing().when(mockLogCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(mockLogCallback).saveExecutionLog(anyString());
+  }
 
   @Test
   @Owner(developers = IVAN)
@@ -89,6 +105,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                  .mode(mode)
                                                  .templateJson(basicTemplateJson)
                                                  .parametersJson(basicParametersJson)
+                                                 .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                  .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -100,7 +117,9 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
     doReturn(mockDeployment)
         .when(azureManagementClient)
         .deployAtResourceGroupScope(any(AzureClientContext.class), any(AzureARMTemplate.class));
-    doReturn("{propertyName={type=String, value=propertyValue}}").when(mockDeployment).outputs();
+    doReturn("{propertyName={type=String, value=propertyValue}}")
+        .when(azureManagementClient)
+        .getARMDeploymentOutputs(any(ARMDeploymentSteadyStateContext.class));
 
     String outputs = azureARMDeploymentService.deployAtResourceGroupScope(context);
 
@@ -153,6 +172,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                 .mode(mode)
                                                 .templateJson(basicTemplateJson)
                                                 .parametersJson(basicParametersJson)
+                                                .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                 .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -166,7 +186,9 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .when(azureManagementClient)
         .deployAtSubscriptionScope(any(AzureConfig.class), eq(subscriptionId), any(AzureARMTemplate.class));
     doReturn(properties).when(mockDeploymentExtendedInner).properties();
-    doReturn("{propertyName={type=String, value=propertyValue}}").when(properties).outputs();
+    doReturn("{propertyName={type=String, value=propertyValue}}")
+        .when(azureManagementClient)
+        .getARMDeploymentOutputs(any(ARMDeploymentSteadyStateContext.class));
 
     String outputs = azureARMDeploymentService.deployAtSubscriptionScope(context);
 
@@ -219,6 +241,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                    .mode(mode)
                                                    .templateJson(basicTemplateJson)
                                                    .parametersJson(basicParametersJson)
+                                                   .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                    .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -232,7 +255,9 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .when(azureManagementClient)
         .deployAtManagementGroupScope(any(AzureConfig.class), eq(groupId), any(AzureARMTemplate.class));
     doReturn(properties).when(mockDeploymentExtendedInner).properties();
-    doReturn("{propertyName={type=String, value=propertyValue}}").when(properties).outputs();
+    doReturn("{propertyName={type=String, value=propertyValue}}")
+        .when(azureManagementClient)
+        .getARMDeploymentOutputs(any(ARMDeploymentSteadyStateContext.class));
 
     String outputs = azureARMDeploymentService.deployAtManagementGroupScope(context);
 
@@ -280,6 +305,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                           .mode(mode)
                                           .templateJson(basicTemplateJson)
                                           .parametersJson(basicParametersJson)
+                                          .logStreamingTaskClient(mockLogStreamingTaskClient)
                                           .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -293,7 +319,9 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .when(azureManagementClient)
         .deployAtTenantScope(any(AzureConfig.class), any(AzureARMTemplate.class));
     doReturn(properties).when(mockDeploymentExtendedInner).properties();
-    doReturn("{propertyName={type=String, value=propertyValue}}").when(properties).outputs();
+    doReturn("{propertyName={type=String, value=propertyValue}}")
+        .when(azureManagementClient)
+        .getARMDeploymentOutputs(any(ARMDeploymentSteadyStateContext.class));
 
     String outputs = azureARMDeploymentService.deployAtTenantScope(context);
 

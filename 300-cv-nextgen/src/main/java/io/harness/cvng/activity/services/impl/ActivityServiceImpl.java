@@ -569,7 +569,12 @@ public class ActivityServiceImpl implements ActivityService {
 
       jobInstancesToCreate.add(verificationJobInstance);
     });
-    return verificationJobInstanceService.create(jobInstancesToCreate);
+    Preconditions.checkState(!jobInstancesToCreate.isEmpty(), "Should have at least one VerificationJobInstance");
+    if (activity.deduplicateEvents()) {
+      return verificationJobInstanceService.dedupCreate(jobInstancesToCreate);
+    } else {
+      return verificationJobInstanceService.create(jobInstancesToCreate);
+    }
   }
 
   private void validateJob(VerificationJob verificationJob) {
