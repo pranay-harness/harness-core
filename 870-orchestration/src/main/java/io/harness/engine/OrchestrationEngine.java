@@ -159,6 +159,7 @@ public class OrchestrationEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .progressDataMap(new LinkedHashMap<>())
+            .unitProgresses(new ArrayList<>())
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
@@ -305,6 +306,7 @@ public class OrchestrationEngine {
       setUnset(ops, NodeExecutionKeys.skipInfo, stepResponse.getSkipInfo());
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
+      setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
     });
     concludeNodeExecution(updatedNodeExecution, stepResponse.getStatus());
   }

@@ -1,5 +1,6 @@
 package io.harness.engine.progress;
 
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -25,21 +26,26 @@ public class EngineProgressCallback implements ProgressCallback {
 
   @Override
   public void notify(String correlationId, ProgressData progressData) {
-    // TODO (prashant) : Do some thing better here right now to maintain backward compatibility.
-    ProgressData data = null;
-    if (progressData instanceof BinaryResponseData) {
-      data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
-    } else {
-      data = progressData;
-    }
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    ProgressData data = null;
+    if (progressData instanceof UnitProgressData) {
+      nodeExecutionService.update(nodeExecutionId,
+          ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) progressData).getUnitProgresses()));
+    } else {
+      // TODO (prashant) : For backward compatibility remove with more clarity
 
-    Map<String, List<ProgressData>> progressDataMap = nodeExecution.getProgressDataMap();
-    List<ProgressData> progressDataList = progressDataMap.getOrDefault(correlationId, new LinkedList<>());
-    progressDataList.add(data);
+      if (progressData instanceof BinaryResponseData) {
+        data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
+      } else {
+        data = progressData;
+      }
+      Map<String, List<ProgressData>> progressDataMap = nodeExecution.getProgressDataMap();
+      List<ProgressData> progressDataList = progressDataMap.getOrDefault(correlationId, new LinkedList<>());
+      progressDataList.add(data);
 
-    progressDataMap.putIfAbsent(correlationId, progressDataList);
+      progressDataMap.putIfAbsent(correlationId, progressDataList);
 
-    nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.progressDataMap, progressDataMap));
+      nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.progressDataMap, progressDataMap));
+    }
   }
 }

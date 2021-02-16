@@ -36,6 +36,7 @@ public class GraphVertexConverter {
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .progressDataMap(nodeExecution.getProgressDataMap())
+        .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }
 
@@ -61,6 +62,7 @@ public class GraphVertexConverter {
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(PmsOutcomeMapper.convertOutcomesToDocumentList(outcomes))
         .progressDataMap(nodeExecution.getProgressDataMap())
+        .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }
 }
