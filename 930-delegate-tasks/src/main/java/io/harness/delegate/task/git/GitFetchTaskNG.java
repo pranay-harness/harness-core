@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -52,8 +53,9 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
       log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
+      CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
       LogCallback executionLogCallback =
-          new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true);
+          new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true, commandUnitsProgress);
 
       Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
       List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();

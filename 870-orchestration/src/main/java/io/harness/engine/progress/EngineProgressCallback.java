@@ -9,6 +9,8 @@ import io.harness.tasks.ProgressData;
 import io.harness.waiter.ProgressCallback;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +37,13 @@ public class EngineProgressCallback implements ProgressCallback {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     Map<String, List<ProgressData>> progressDataMap = nodeExecution.getProgressDataMap();
-    List<ProgressData> progressDataList = progressDataMap.getOrDefault(correlationId, new LinkedList<>());
-    progressDataList.add(data);
+    if (progressDataMap == null) {
+      progressDataMap = new LinkedHashMap<>();
+    }
+    progressDataMap.put(correlationId, Collections.singletonList(data));
 
-    progressDataMap.putIfAbsent(correlationId, progressDataList);
-
-    nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.progressDataMap, progressDataMap));
+    Map<String, List<ProgressData>> finalProgressDataMap = progressDataMap;
+    nodeExecutionService.update(
+        nodeExecutionId, ops -> { ops.set(NodeExecutionKeys.progressDataMap, finalProgressDataMap); });
   }
 }

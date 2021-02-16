@@ -92,7 +92,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .createKubernetesConfig(k8sInfraDelegateConfig);
     doReturn(logCallback)
         .when(k8sTaskHelperBase)
-        .getLogCallback(eq(iLogStreamingTaskClient), anyString(), anyBoolean());
+        .getLogCallback(eq(iLogStreamingTaskClient), anyString(), anyBoolean(), null);
     doReturn(true)
         .when(k8sTaskHelperBase)
         .fetchManifestFilesAndWriteToDirectory(
@@ -166,7 +166,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void invalidTypeOfTaskParams() {
     assertThatExceptionOfType(InvalidArgumentsException.class)
-        .isThrownBy(() -> k8sCanaryRequestHandler.executeTaskInternal(null, null, null))
+        .isThrownBy(() -> k8sCanaryRequestHandler.executeTaskInternal(null, null, null, null))
         .withMessageContaining("INVALID_ARGUMENT");
   }
 

@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -9,6 +10,7 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,14 +18,18 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class K8sRequestHandler {
   public K8sDeployResponse executeTask(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams,
       ILogStreamingTaskClient logStreamingTaskClient) {
+    CommandUnitsProgress commandUnitsProgress =
+        CommandUnitsProgress.builder().commandUnitProgressMap(new LinkedHashMap<>()).build();
     K8sDeployResponse result;
     try {
-      result = executeTaskInternal(k8sDeployRequest, k8SDelegateTaskParams, logStreamingTaskClient);
+      result = executeTaskInternal(k8sDeployRequest, k8SDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
+      result.setCommandUnitsProgress(commandUnitsProgress);
     } catch (IOException ex) {
       logError(k8sDeployRequest, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .errorMessage("Could not complete k8s task due to IO exception")
+                   .commandUnitsProgress(commandUnitsProgress)
                    .build();
     } catch (TimeoutException ex) {
       logError(k8sDeployRequest, ex);
@@ -55,7 +61,7 @@ public abstract class K8sRequestHandler {
   }
 
   protected abstract K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception;
+                                                           K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception;
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {
     log.error("Exception in processing K8s task [{}]",
