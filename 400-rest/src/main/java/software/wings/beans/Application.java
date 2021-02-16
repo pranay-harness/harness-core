@@ -7,6 +7,8 @@ import static java.util.Arrays.asList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.changestreamsframework.ChangeDataCapture;
+import io.harness.changestreamsframework.ChangeDataCaptureSink;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
@@ -48,6 +50,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
 @NgUniqueIndex(name = "yaml", fields = { @Field(ApplicationKeys.accountId)
                                          , @Field(ApplicationKeys.name) })
+@ChangeDataCapture(table = "ApplicationTruthTable", sink = {ChangeDataCaptureSink.TIMESCALE},
+    fields = {ApplicationKeys.appId, ApplicationKeys.name})
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   public static final String LOG_KEY_FOR_ID = LogKeyUtils.calculateLogKeyForId(Application.class);

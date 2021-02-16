@@ -1,4 +1,4 @@
-package io.harness.changestreamsframework;
+package io.harness;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;

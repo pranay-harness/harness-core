@@ -2,7 +2,6 @@ package io.harness;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.changestreamsframework.ChangeDataCaptureSyncService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
