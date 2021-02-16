@@ -19,7 +19,6 @@ shared_dependencies = [
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
-    "//280-batch-processing/src/generated/avro:280_batch_processing_avro",
     "@maven//:com_google_cloud_google_cloud_bigquerydatatransfer",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_openpojo_openpojo",
@@ -79,9 +78,18 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_springframework_boot_spring_boot_starter_test",
 ]
 
+filegroup(
+    name = "resource",
+    srcs = ["batch-processing-config.yml"],
+)
+
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    data = [
+        "resource",
+        "//:resource",
+    ],
     resources = [
         "//280-batch-processing/src/main/resources:resource",
     ],
