@@ -748,7 +748,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Lists.newArrayList(generateUuid()));
+    when(verificationJobInstanceService.dedupCreate(anyList())).thenReturn(Lists.newArrayList(generateUuid()));
     instant = Instant.now();
     activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
     activityService.register(accountId, generateUuid(), getInfrastructureActivity(verificationJob));
