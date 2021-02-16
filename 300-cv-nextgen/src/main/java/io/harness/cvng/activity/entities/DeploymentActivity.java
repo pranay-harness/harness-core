@@ -89,6 +89,11 @@ public class DeploymentActivity extends Activity {
     });
   }
 
+  @Override
+  public boolean deduplicateEvents() {
+    return false;
+  }
+
   @JsonIgnore
   public Duration getDataCollectionDelay() {
     if (dataCollectionDelayMs == null) {

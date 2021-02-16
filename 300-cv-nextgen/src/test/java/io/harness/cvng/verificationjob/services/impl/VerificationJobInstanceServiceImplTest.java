@@ -923,7 +923,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testCreate_whenHealthJob() {
+  public void testDedupCreate_withHealthJob() {
     Instant now = Instant.now();
     int numOfJobInstances = 10;
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
@@ -950,7 +950,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
               .build());
     }
 
-    List<String> jobIds = verificationJobInstanceService.create(verificationJobInstances);
+    List<String> jobIds = verificationJobInstanceService.dedupCreate(verificationJobInstances);
     assertThat(jobIds.size()).isEqualTo(2);
     verificationJobInstances = hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority).asList();
     Collections.sort(
