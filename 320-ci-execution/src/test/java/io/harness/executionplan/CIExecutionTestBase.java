@@ -9,7 +9,7 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class CIExecutionTest extends CategoryTest implements MockableTestMixin {
+public abstract class CIExecutionTestBase extends CategoryTest implements MockableTestMixin {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public CIExecutionRule executionRule = new CIExecutionRule(lifecycleRule.getClosingFactory());

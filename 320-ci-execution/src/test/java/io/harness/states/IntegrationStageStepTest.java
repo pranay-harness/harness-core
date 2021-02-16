@@ -12,7 +12,7 @@ import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class IntegrationStageStepTest extends CIExecutionTest {
+public class IntegrationStageStepTest extends CIExecutionTestBase {
   @Inject private IntegrationStageStep integrationStageStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   private IntegrationStage integrationStage;
