@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.mutation.userGroup.input;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
@@ -16,6 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLCreateUserGroupInputKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLCreateUserGroupInput implements QLMutationInput {
   String name;
   String description;

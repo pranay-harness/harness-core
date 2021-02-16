@@ -12,7 +12,9 @@ import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionC
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
@@ -67,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ExecutionController {
   @Inject ArtifactService artifactService;
   @Inject ArtifactStreamService artifactStreamService;

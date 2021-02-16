@@ -2,7 +2,9 @@ package software.wings.graphql.schema.type.connector;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -15,6 +17,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLArtifactoryConnector implements QLConnector {
   private String id;
   private String name;

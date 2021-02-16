@@ -60,6 +60,7 @@ public class PMSPipelineDtoMapper {
         .createdAt(pipelineEntity.getCreatedAt())
         .modules(pipelineEntity.getFilters().keySet())
         .filters(pipelineEntity.getFilters())
+        .stageNames(pipelineEntity.getStageNames())
         .build();
   }
 

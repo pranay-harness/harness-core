@@ -4,6 +4,7 @@ import static io.harness.git.model.GitRepositoryType.YAML;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -120,7 +121,7 @@ public class NGGitServiceImpl implements NGGitService {
   @Override
   public FetchFilesResult fetchFilesByPath(
       GitStoreDelegateConfig gitStoreDelegateConfig, String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     FetchFilesByPathRequest fetchFilesByPathRequest = FetchFilesByPathRequest.builder()
                                                           .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                           .filePaths(gitStoreDelegateConfig.getPaths())
@@ -138,7 +139,7 @@ public class NGGitServiceImpl implements NGGitService {
   @Override
   public void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory,
       String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     DownloadFilesRequest downloadFilesRequest = DownloadFilesRequest.builder()
                                                     .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                     .filePaths(gitStoreDelegateConfig.getPaths())

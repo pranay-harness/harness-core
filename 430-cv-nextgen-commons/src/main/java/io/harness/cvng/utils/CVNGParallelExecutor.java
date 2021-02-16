@@ -1,4 +1,4 @@
-package io.harness.cvng.core.utils;
+package io.harness.cvng.utils;
 
 import io.harness.exception.UnexpectedException;
 

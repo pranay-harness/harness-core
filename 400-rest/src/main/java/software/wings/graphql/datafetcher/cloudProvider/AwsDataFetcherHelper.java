@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 
@@ -23,6 +25,7 @@ import com.google.inject.Singleton;
 import org.apache.commons.lang3.ObjectUtils;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AwsDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 

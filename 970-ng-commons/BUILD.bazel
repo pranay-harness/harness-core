@@ -115,7 +115,7 @@ java_library(
     resources = [
         "//970-ng-commons/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",

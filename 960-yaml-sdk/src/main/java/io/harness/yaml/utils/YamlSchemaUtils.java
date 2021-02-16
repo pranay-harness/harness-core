@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.EntityType;
 import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
-import io.harness.yaml.schema.YamlSchemaRoot;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 
@@ -82,29 +81,9 @@ public class YamlSchemaUtils {
     return isEmpty(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
   }
 
-  /**
-   * @param clazz     Class
-   * @param snippetBasePath the base path inside which schema index is stored.
-   * @param snippetIndexFile the index file name.
-   * @return The path which contains the complete schema for entityType.
-   */
-  public String getSnippetIndexPathForEntityType(Class<?> clazz, String snippetBasePath, String snippetIndexFile) {
-    String entityName = getEntityName(clazz);
-    return snippetBasePath + File.separator + entityName + File.separator + snippetIndexFile;
-  }
-
   public String getSnippetIndexPathForEntityType(
       EntityType entityType, String snippetBasePath, String snippetIndexFile) {
     return snippetBasePath + File.separator + entityType.getYamlName() + File.separator + snippetIndexFile;
-  }
-
-  /**
-   * @param clazz The class.
-   * @return EntityType of the class.
-   */
-  public String getEntityName(Class<?> clazz) {
-    YamlSchemaRoot declaredAnnotation = clazz.getDeclaredAnnotation(YamlSchemaRoot.class);
-    return declaredAnnotation.value().getYamlName();
   }
 
   /**

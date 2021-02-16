@@ -2,7 +2,9 @@ package software.wings.graphql.schema.mutation.execution.input;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.security.PermissionAttribute;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLTriggerExecutionInputKeys")
 @Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLStartExecutionInput implements QLMutationInput {
   String clientMutationId;
   String applicationId;

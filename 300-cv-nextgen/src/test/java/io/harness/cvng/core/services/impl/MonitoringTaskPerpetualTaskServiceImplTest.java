@@ -13,7 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class MonitoringTaskPerpetualTaskServiceImplTest extends CvNextGenTest {
+public class MonitoringTaskPerpetualTaskServiceImplTest extends CvNextGenTestBase {
   @Mock private VerificationManagerService verificationManagerService;
   @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
   @Inject private HPersistence hPersistence;

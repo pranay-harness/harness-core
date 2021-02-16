@@ -5,7 +5,7 @@ use regex::Regex;
 use std::fs::{copy, metadata, remove_file, File};
 use std::io::{Result, Write};
 
-use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT};
+use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 
 /// An action to be executed
 #[derive(Clap)]
@@ -41,7 +41,7 @@ pub fn apply_target(opts: ApplyTarget) {
 
 lazy_static! {
     pub static ref IMPORT_STATEMENT_PATTERN: Regex = Regex::new(r"^import .*;$").unwrap();
-    pub static ref CLASS_STATEMENT_PATTERN: Regex = Regex::new(r"^public (abstract )?(class|interface) ").unwrap();
+    pub static ref CLASS_STATEMENT_PATTERN: Regex = Regex::new(r"^public (abstract )?(class|interface|enum) ").unwrap();
 }
 
 fn apply_target_to_class(class_file: &str, target_module: &str) -> Result<()> {
@@ -53,6 +53,7 @@ fn apply_target_to_class(class_file: &str, target_module: &str) -> Result<()> {
 
     let mut imported = false;
     let mut class = false;
+    let mut already_have_target = false;
 
     for line in lines {
         let l = line?;
@@ -74,14 +75,25 @@ fn apply_target_to_class(class_file: &str, target_module: &str) -> Result<()> {
             class = true;
         }
 
+        if TARGET_MODULE_PATTERN.is_match(&l) {
+            already_have_target = true;
+        }
+
         writeln!(target, "{}", &l)?;
     }
 
     target.flush()?;
 
-    if class {
-        copy(&target_file, &class_file)?;
+    if already_have_target {
+        println!("Already targeting {}", class_file);
+    } else {
+        if class {
+            copy(&target_file, &class_file)?;
+        } else {
+            println!("Failed to target {}", class_file);
+        }
     }
+
     remove_file(&target_file)?;
 
     Ok(())

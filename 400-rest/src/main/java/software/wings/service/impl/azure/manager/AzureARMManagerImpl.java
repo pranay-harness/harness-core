@@ -15,10 +15,11 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
-import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupNamesResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMListSubscriptionLocationsResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -64,13 +65,13 @@ public class AzureARMManagerImpl implements AzureARMManager {
   }
 
   @Override
-  public List<String> listManagementGroupNames(
+  public List<ManagementGroupData> listManagementGroups(
       AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AzureARMTaskParameters parameters = new AzureARMTaskParameters();
     parameters.setCommandType(AzureARMTaskParameters.AzureARMTaskType.LIST_MNG_GROUP);
 
     AzureTaskResponse azureTaskExecutionResponse = executeTask(parameters, azureConfig, encryptionDetails, appId);
-    return ((AzureARMListManagementGroupNamesResponse) azureTaskExecutionResponse).getMngGroupNames();
+    return ((AzureARMListManagementGroupResponse) azureTaskExecutionResponse).getMngGroups();
   }
 
   private AzureTaskResponse executeTask(AzureARMTaskParameters parameters, AzureConfig azureConfig,

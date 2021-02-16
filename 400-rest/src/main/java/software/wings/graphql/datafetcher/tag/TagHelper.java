@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.tag;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.EntityType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.service.intfc.HarnessTagService;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class TagHelper {
   @Inject protected HarnessTagService tagService;
   @Inject protected WorkflowExecutionService workflowExecutionService;

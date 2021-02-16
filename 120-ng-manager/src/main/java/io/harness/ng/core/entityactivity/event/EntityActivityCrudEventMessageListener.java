@@ -1,8 +1,12 @@
 package io.harness.ng.core.entityactivity.event;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.entityactivity.EntityActivityEventHandler;
@@ -50,7 +54,7 @@ public class EntityActivityCrudEventMessageListener implements MessageListener {
     String messageId = message.getId();
     log.info("Processing the activity crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    try {
+    try (AutoLogContext ignore1 = new NgEventLogContext(messageId, OVERRIDE_ERROR)) {
       if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
         switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
           case EventsFrameworkMetadataConstants.CREATE_ACTION:

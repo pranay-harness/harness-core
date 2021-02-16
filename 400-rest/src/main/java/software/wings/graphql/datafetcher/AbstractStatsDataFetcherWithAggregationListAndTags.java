@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.function.Function.identity;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 
 import software.wings.beans.EntityType;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, LA
                                                                              extends LabelAggregation, EA>
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S> {

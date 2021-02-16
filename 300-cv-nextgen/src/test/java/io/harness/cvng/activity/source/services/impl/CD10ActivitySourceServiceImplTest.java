@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -23,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CD10ActivitySourceServiceImplTest extends CvNextGenTest {
+public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;

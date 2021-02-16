@@ -40,7 +40,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-public class CIPipelineServiceImplTest extends CIManagerTest {
+public class CIPipelineServiceImplTest extends CIManagerTestBase {
   @Mock private NgPipelineRepository ngPipelineRepository;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject NGPipelineServiceImpl ngPipelineService;

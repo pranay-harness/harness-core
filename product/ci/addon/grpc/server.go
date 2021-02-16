@@ -26,12 +26,13 @@ type addonServer struct {
 	port       uint
 	listener   net.Listener
 	grpcServer *grpc.Server
+	logMetrics bool
 	log        *zap.SugaredLogger
 	stopCh     chan bool
 }
 
 //NewAddonServer constructs a new AddonServer
-func NewAddonServer(port uint, log *zap.SugaredLogger) (AddonServer, error) {
+func NewAddonServer(port uint, logMetrics bool, log *zap.SugaredLogger) (AddonServer, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
@@ -39,9 +40,10 @@ func NewAddonServer(port uint, log *zap.SugaredLogger) (AddonServer, error) {
 
 	stopCh := make(chan bool, 1)
 	server := addonServer{
-		port:   port,
-		log:    log,
-		stopCh: stopCh,
+		port:       port,
+		logMetrics: logMetrics,
+		log:        log,
+		stopCh:     stopCh,
 	}
 	server.grpcServer = grpc.NewServer()
 	server.listener = listener
@@ -50,7 +52,7 @@ func NewAddonServer(port uint, log *zap.SugaredLogger) (AddonServer, error) {
 
 //Start signals the GRPC server to begin serving on the configured port
 func (s *addonServer) Start() error {
-	pb.RegisterAddonServer(s.grpcServer, NewAddonHandler(s.stopCh, s.log))
+	pb.RegisterAddonServer(s.grpcServer, NewAddonHandler(s.stopCh, s.logMetrics, s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
 		s.log.Errorw("error starting gRPC server", "error_msg", zap.Error(err))

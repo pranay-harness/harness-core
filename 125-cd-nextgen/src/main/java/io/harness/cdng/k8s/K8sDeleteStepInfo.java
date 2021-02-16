@@ -5,7 +5,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -76,12 +76,16 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo stepParameterInfo) {
     return K8sDeleteStepParameters.infoBuilder()
         .deleteResources(this.getDeleteResources())
         .skipDryRun(this.getSkipDryRun())
-        .rollbackInfo(rollbackInfo)
-        .timeout(timeout)
+        .rollbackInfo(stepParameterInfo.getRollbackInfo())
+        .timeout(stepParameterInfo.getSkipCondition())
+        .name(stepParameterInfo.getName())
+        .description(stepParameterInfo.getDescription())
+        .identifier(stepParameterInfo.getIdentifier())
+        .skipCondition(stepParameterInfo.getSkipCondition())
         .build();
   }
 }

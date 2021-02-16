@@ -19,7 +19,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.DataGenerator;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
@@ -102,7 +102,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
+public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationJobInstanceServiceImpl verificationJobInstanceService;
   @Inject private CVConfigService cvConfigService;
@@ -923,7 +923,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testCreate_whenHealthJob() {
+  public void testDedupCreate_withHealthJob() {
     Instant now = Instant.now();
     int numOfJobInstances = 10;
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
@@ -950,7 +950,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
               .build());
     }
 
-    List<String> jobIds = verificationJobInstanceService.create(verificationJobInstances);
+    List<String> jobIds = verificationJobInstanceService.dedupCreate(verificationJobInstances);
     assertThat(jobIds.size()).isEqualTo(2);
     verificationJobInstances = hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority).asList();
     Collections.sort(

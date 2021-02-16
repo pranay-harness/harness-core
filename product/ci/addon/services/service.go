@@ -9,6 +9,7 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/images"
+	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/remote"
 	"go.uber.org/zap"
@@ -30,25 +31,30 @@ type IntegrationSvc interface {
 }
 
 type integrationSvc struct {
-	id         string
-	image      string
-	entrypoint []string
-	args       []string
-	log        *zap.SugaredLogger
-	procWriter io.Writer
-	cmdFactory exec.CommandFactory
+	id          string
+	image       string
+	entrypoint  []string
+	args        []string
+	logMetrics  bool
+	log         *zap.SugaredLogger
+	addonLogger *zap.SugaredLogger
+	procWriter  io.Writer
+	cmdFactory  exec.CommandFactory
 }
 
 // NewIntegrationSvc creates a integration service executor
-func NewIntegrationSvc(svcID, image string, entrypoint, args []string, log *zap.SugaredLogger, w io.Writer) IntegrationSvc {
+func NewIntegrationSvc(svcID, image string, entrypoint, args []string, log *zap.SugaredLogger,
+	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) IntegrationSvc {
 	return &integrationSvc{
-		id:         svcID,
-		image:      image,
-		entrypoint: entrypoint,
-		args:       args,
-		cmdFactory: exec.OsCommand(),
-		log:        log,
-		procWriter: w,
+		id:          svcID,
+		image:       image,
+		entrypoint:  entrypoint,
+		args:        args,
+		cmdFactory:  exec.OsCommand(),
+		logMetrics:  logMetrics,
+		log:         log,
+		addonLogger: addonLogger,
+		procWriter:  w,
 	}
 }
 
@@ -70,9 +76,8 @@ func (s *integrationSvc) Run() error {
 
 	cmd := s.cmdFactory.Command(commands[0], commands[1:]...).
 		WithStdout(s.procWriter).WithStderr(s.procWriter).WithEnvVarsMap(nil)
-	err = cmd.Run()
+	err = runCmd(cmd, s.id, commands, start, s.logMetrics, s.log, s.addonLogger)
 	if err != nil {
-		logErr(s.log, "error encountered while executing integration service", s.id, commands, start, err)
 		return err
 	}
 
@@ -121,4 +126,42 @@ func logErr(log *zap.SugaredLogger, errMsg, svcID string, cmds []string, startTi
 		"elapsed_time_ms", utils.TimeSince(startTime),
 		zap.Error(err),
 	)
+}
+
+func runCmd(cmd exec.Command, svcID string, commands []string, startTime time.Time,
+	logMetrics bool, log *zap.SugaredLogger, metricLog *zap.SugaredLogger) error {
+	err := cmd.Start()
+	if err != nil {
+		log.Errorw(
+			"error encountered while executing service",
+			"commands", commands,
+			"service_id", svcID,
+			"elapsed_time_ms", utils.TimeSince(startTime),
+			zap.Error(err))
+		return err
+	}
+
+	if logMetrics {
+		pid := cmd.Pid()
+		metrics.Log(int32(pid), svcID, metricLog)
+	}
+
+	err = cmd.Wait()
+	if rusage, e := cmd.ProcessState().SysUsageUnit(); e == nil {
+		metricLog.Infow(
+			"max RSS memory used by service",
+			"service_id", svcID,
+			"max_rss_memory_kb", rusage.Maxrss)
+	}
+
+	if err != nil {
+		log.Errorw(
+			"error encountered while executing service",
+			"commands", commands,
+			"service_id", svcID,
+			"elapsed_time_ms", utils.TimeSince(startTime),
+			zap.Error(err))
+		return err
+	}
+	return nil
 }

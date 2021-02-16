@@ -15,7 +15,7 @@ public class RoleAssignmentDTOMapper {
                             .resourceGroupIdentifier(object.getResourceGroupIdentifier())
                             .roleIdentifier(object.getRoleIdentifier())
                             .build())
-        .parentIdentifier(object.getParentIdentifier())
+        .scope(object.getScopeIdentifier())
         .disabled(object.isDisabled())
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
@@ -23,10 +23,10 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignment fromDTO(String parentIdentifier, RoleAssignmentDTO object) {
+  public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
     return RoleAssignment.builder()
         .identifier(object.getIdentifier())
-        .parentIdentifier(parentIdentifier)
+        .scopeIdentifier(scopeIdentifier)
         .principalIdentifier(object.getPrincipalIdentifier())
         .principalType(object.getPrincipalType())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())

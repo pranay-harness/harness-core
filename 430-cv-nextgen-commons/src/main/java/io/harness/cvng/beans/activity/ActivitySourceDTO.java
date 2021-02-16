@@ -20,6 +20,8 @@ public abstract class ActivitySourceDTO {
   long lastUpdatedAt;
   @NotNull String identifier;
   @NotNull String name;
+  String orgIdentifier;
+  String projectIdentifier;
 
   public abstract ActivitySourceType getType();
 }

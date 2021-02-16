@@ -958,6 +958,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         while (notAllDesiredTasksRunning(requestData)) {
           sleep(ofSeconds(10));
         }
+
         return true;
       }, timeoutDuration, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
@@ -974,7 +975,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData) {
     try {
       waitForTasksToBeInRunningState(requestData);
-    } catch (TimeoutException e) {
+    } catch (TimeoutException | InvalidRequestException e) {
       throw e;
     } catch (WingsException e) {
       if (e.getCode() == INIT_TIMEOUT) {

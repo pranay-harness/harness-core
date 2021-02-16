@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 @Builder
 public class DynamicResourceSelector implements ResourceSelector {
-  @NotNull ResourceType resourceType;
+  @NotNull String resourceType;
 }

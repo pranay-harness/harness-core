@@ -155,6 +155,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
@@ -417,6 +418,7 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
@@ -425,6 +427,7 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateRespon
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
@@ -767,6 +770,7 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.CVNGState.CVNGStateExecutionData;
 import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.EcsRunTaskDataBag;
@@ -1706,6 +1710,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformOutputVariables.class, 8063);
     kryo.register(EcsRunTaskStateExecutionData.class, 8084);
     kryo.register(EcsRunTaskDataBag.class, 8085);
+    kryo.register(EcsDeployRollbackDataFetchRequest.class, 8086);
+    kryo.register(EcsDeployRollbackDataFetchResponse.class, 8087);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
@@ -1741,5 +1747,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CapabilityCheckDetails.class, 8202);
 
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
+
+    kryo.register(AwsElbConfig.class, 8500);
+    kryo.register(CVNGStateExecutionData.class, 8501);
   }
 }

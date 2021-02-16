@@ -13,6 +13,8 @@ import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRI
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
@@ -53,6 +55,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SSHCredentialController {
   @Inject SettingsService settingsService;
   @Inject SecretManager secretManager;

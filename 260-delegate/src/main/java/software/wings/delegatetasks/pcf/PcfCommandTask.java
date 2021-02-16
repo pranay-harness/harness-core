@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.pcf;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfCommandTask extends AbstractDelegateRunnableTask {
   @Inject PcfDelegateTaskHelper pcfDelegateTaskHelper;
 

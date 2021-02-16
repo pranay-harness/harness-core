@@ -154,4 +154,6 @@ public abstract class Activity
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
+
+  public abstract boolean deduplicateEvents();
 }

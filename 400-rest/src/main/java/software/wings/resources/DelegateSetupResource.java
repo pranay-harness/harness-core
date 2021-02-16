@@ -31,6 +31,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
@@ -95,17 +96,20 @@ public class DelegateSetupResource {
   private static final String TAR_GZ = ".tar.gz";
 
   private final DelegateService delegateService;
+  private final DelegateCache delegateCache;
   private final DelegateScopeService delegateScopeService;
   private final DownloadTokenService downloadTokenService;
   private final SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
   public DelegateSetupResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper) {
+      DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper,
+      DelegateCache delegateCache) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.subdomainUrlHelper = subdomainUrlHelper;
+    this.delegateCache = delegateCache;
   }
 
   @GET
@@ -226,7 +230,7 @@ public class DelegateSetupResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      Delegate delegate = delegateCache.get(accountId, delegateId, true);
       if (delegateScopes == null) {
         delegate.setIncludeScopes(null);
         delegate.setExcludeScopes(null);
@@ -286,7 +290,7 @@ public class DelegateSetupResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      Delegate delegate = delegateCache.get(accountId, delegateId, true);
       delegate.setTags(delegateTags.getTags());
       return new RestResponse<>(delegateService.updateTags(delegate));
     }
@@ -352,7 +356,7 @@ public class DelegateSetupResource {
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.get(accountId, delegateId, true));
+      return new RestResponse<>(delegateCache.get(accountId, delegateId, true));
     }
   }
 
@@ -400,7 +404,7 @@ public class DelegateSetupResource {
       delegate.setAccountId(accountId);
       delegate.setUuid(delegateId);
 
-      Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
+      Delegate existingDelegate = delegateCache.get(accountId, delegateId, true);
       if (existingDelegate != null) {
         delegate.setDelegateType(existingDelegate.getDelegateType());
         delegate.setDelegateGroupName(existingDelegate.getDelegateGroupName());

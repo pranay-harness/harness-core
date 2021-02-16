@@ -49,7 +49,10 @@ java_library(
 )
 
 modules = [
+    "//125-cd-nextgen",
     "//130-resource-group",
+    "//160-model-gen-tool",
+    "//136-git-sync-manager",
     "//220-graphql-test",
     "//230-model-test",
     "//340-ce-nextgen",
@@ -63,11 +66,13 @@ modules = [
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
+    "//830-notification-service",
     "//850-execution-plan",
     "//850-ng-pipeline-commons",
     "//860-orchestration-steps",
     "//860-orchestration-visualization",
     "//870-orchestration",
+    "//870-yaml-beans",
     "//870-yaml-beans",
     "//876-orchestration-beans",
     "//878-pipeline-service-utilities",

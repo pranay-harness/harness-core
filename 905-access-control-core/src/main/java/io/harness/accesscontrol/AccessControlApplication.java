@@ -9,7 +9,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.permissions.PermissionStatus;
-import io.harness.accesscontrol.scopes.HarnessScope;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -90,14 +90,14 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // TODO: Remove once permission management through yaml is present.
     PermissionService permissionService = injector.getInstance(PermissionService.class);
     Set<String> scopes = new HashSet<>();
-    scopes.add(HarnessScope.ACCOUNT.getKey());
-    scopes.add(HarnessScope.ORGANIZATION.getKey());
-    scopes.add(HarnessScope.PROJECT.getKey());
+    scopes.add(HarnessScopeLevel.ACCOUNT.toString());
+    scopes.add(HarnessScopeLevel.ORGANIZATION.toString());
+    scopes.add(HarnessScopeLevel.PROJECT.toString());
     Permission permission = Permission.builder()
                                 .identifier("core.project.view")
                                 .name("View Project")
                                 .status(PermissionStatus.ACTIVE)
-                                .scopes(scopes)
+                                .allowedScopeLevels(scopes)
                                 .build();
     permissionService.get(permission.getIdentifier()).orElseGet(() -> permissionService.create(permission));
 

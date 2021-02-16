@@ -20,13 +20,16 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static com.amazonaws.regions.Regions.US_EAST_1;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -35,6 +38,10 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
@@ -42,9 +49,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.service.impl.AwsHelperService;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
@@ -76,6 +83,7 @@ import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,6 +104,7 @@ import org.mockito.Mock;
  */
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
+  @Mock private TimeLimiter timeLimiter;
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
@@ -150,9 +159,6 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                 .withAvailabilityZones(asList("AZ1", "AZ2"))
                 .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"),
             null);
-    verify(awsHelperService)
-        .describeAutoScalingGroups(awsConfig, Collections.emptyList(), US_EAST_1.getName(),
-            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME)));
   }
 
   @Test
@@ -248,6 +254,38 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertThat(ret).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
+    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
+    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+
+    doThrow(new TimeoutException(null, "timeout", null))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(TimeoutException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+
+    doThrow(new InvalidRequestException("timeout"))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+
+    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+
+    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
   }
 
   @Test

@@ -9,9 +9,9 @@ class RoleDBOMapper {
   public static RoleDBO toDBO(Role object) {
     return RoleDBO.builder()
         .identifier(object.getIdentifier())
-        .parentIdentifier(object.getParentIdentifier())
+        .scopeIdentifier(object.getScopeIdentifier())
         .name(object.getName())
-        .scopes(object.getScopes())
+        .allowedScopeLevels(object.getAllowedScopeLevels())
         .permissions(object.getPermissions())
         .managed(object.isManaged())
         .description(object.getDescription())
@@ -24,9 +24,9 @@ class RoleDBOMapper {
   public static Role fromDBO(RoleDBO roleDBO) {
     return Role.builder()
         .identifier(roleDBO.getIdentifier())
-        .parentIdentifier(roleDBO.getParentIdentifier())
+        .scopeIdentifier(roleDBO.getScopeIdentifier())
         .name(roleDBO.getName())
-        .scopes(roleDBO.getScopes())
+        .allowedScopeLevels(roleDBO.getAllowedScopeLevels())
         .permissions(roleDBO.getPermissions())
         .managed(roleDBO.isManaged())
         .description(roleDBO.getDescription())

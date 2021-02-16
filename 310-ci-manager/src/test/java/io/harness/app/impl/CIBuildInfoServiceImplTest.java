@@ -37,7 +37,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-public class CIBuildInfoServiceImplTest extends CIManagerTest {
+public class CIBuildInfoServiceImplTest extends CIManagerTestBase {
   @Mock private CIBuildInfoRepository ciBuildInfoRepository;
   @Mock private BuildDtoMapper buildDtoMapper;
   @Mock private NGPipelineService ngPipelineService;

@@ -17,7 +17,7 @@ import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
@@ -82,7 +82,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Sort;
 
-public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
+public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
   private String accountId;
   private String connectorIdentifier;
   private String groupId;
@@ -777,7 +777,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
   }
 
   private List<TimeSeriesRecord> getTimeSeriesRecords() throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("timeseries/timeseriesRecords.json").getFile());
+    File file = new File(getResourceFilePath("timeseries/timeseriesRecords.json"));
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();

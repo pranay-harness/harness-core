@@ -10,7 +10,7 @@ import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpStepParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
@@ -37,8 +37,8 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
 public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String identifier;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
@@ -80,16 +80,20 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return HttpStepParameters.infoBuilder()
         .assertion(getAssertion())
         .headers(getHeaders())
         .method(getMethod())
         .outputVariables(getOutputVariables())
         .requestBody(getRequestBody())
-        .rollbackInfo(rollbackInfo)
-        .timeout(timeout)
+        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
+        .timeout(baseStepParameterInfo.getTimeout())
         .url(getUrl())
+        .name(baseStepParameterInfo.getName())
+        .identifier(baseStepParameterInfo.getIdentifier())
+        .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .description(baseStepParameterInfo.getSkipCondition())
         .build();
   }
 }

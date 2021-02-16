@@ -85,8 +85,8 @@ managerClientConfig:
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
   addonImageTag: v1.84-alpha
-  liteEngineImageTag: v1.84-alpha
-  defaultMemoryLimit: 400
+  liteEngineImageTag: v1.84.1-alpha
+  defaultMemoryLimit: 500
   defaultCPULimit: 400
   defaultInternalImageConnector: account.harnessimage
   pvcDefaultStorageSize: 25600

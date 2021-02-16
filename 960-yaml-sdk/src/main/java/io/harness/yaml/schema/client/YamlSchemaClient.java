@@ -10,7 +10,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface YamlSchemaClient {
-  @GET("yaml-schema")
+  @GET("partial-yaml-schema")
   Call<ResponseDTO<PartialSchemaDTO>> get(@Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope);
 }

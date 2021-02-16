@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.application.batch;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.application.ApplicationController;
 import software.wings.graphql.schema.type.QLApplication;
@@ -24,6 +27,7 @@ import org.dataloader.MappedBatchLoader;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ApplicationBatchDataLoader implements MappedBatchLoader<String, QLApplication> {
   final AppService appService;
 

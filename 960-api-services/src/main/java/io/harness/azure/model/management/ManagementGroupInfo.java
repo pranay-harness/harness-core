@@ -9,4 +9,5 @@ public class ManagementGroupInfo {
   private String id;
   private String name;
   private String type;
+  private ManagementGroupInfoProperty properties;
 }

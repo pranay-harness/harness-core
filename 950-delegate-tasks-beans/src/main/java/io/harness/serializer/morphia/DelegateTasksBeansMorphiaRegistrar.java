@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -38,6 +39,8 @@ import io.harness.ng.core.models.Secret;
 
 import java.util.Set;
 
+@BreakDependencyOn("io.harness.capability.CapabilityRequirement")
+@BreakDependencyOn("io.harness.capability.CapabilitySubjectPermission")
 public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {

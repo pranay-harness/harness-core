@@ -64,6 +64,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
@@ -1996,11 +1997,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public List<String> listManagementGroupNames(String appId, String computeProviderId) {
+  public Map<String, String> listManagementGroups(String appId, String computeProviderId) {
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
     try {
-      return azureARMManager.listManagementGroupNames(azureConfig, encryptionDetails, appId);
+      List<ManagementGroupData> managementGroups =
+          azureARMManager.listManagementGroups(azureConfig, encryptionDetails, appId);
+      return managementGroups.stream().collect(
+          Collectors.toMap(ManagementGroupData::getId, ManagementGroupData::getDisplayName));
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

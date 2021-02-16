@@ -25,6 +25,7 @@ public interface YamlTypes {
   String K8S_CANARY_DEPLOY = StepSpecTypeConstants.K8S_CANARY_DEPLOY;
   String K8S_BG_SWAP_SERVICES = StepSpecTypeConstants.K8S_BG_SWAP_SERVICES;
   String K8S_DELETE = StepSpecTypeConstants.K8S_DELETE;
+  String K8S_CANARY_DELETE = StepSpecTypeConstants.K8S_CANARY_DELETE;
 
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";

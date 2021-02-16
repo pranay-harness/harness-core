@@ -2,6 +2,9 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import io.kubernetes.client.custom.Quantity;
 import java.math.BigDecimal;
 import lombok.experimental.UtilityClass;
@@ -10,6 +13,7 @@ import lombok.experimental.UtilityClass;
  * Standardize units of cpu & memory resources.
  */
 @UtilityClass
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8sResourceStandardizer {
   private static final BigDecimal SCALE_TO_NANO = BigDecimal.valueOf(1_000_000_000);
 

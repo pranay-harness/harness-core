@@ -5,9 +5,8 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 
@@ -60,7 +59,14 @@ public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(RollbackInfo rollbackInfo, ParameterField<String> timeout) {
-    return K8sBGSwapServicesStepParameters.infoBuilder().timeout(timeout).rollbackInfo(rollbackInfo).build();
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo stepParameterInfo) {
+    return K8sBGSwapServicesStepParameters.infoBuilder()
+        .timeout(stepParameterInfo.getTimeout())
+        .rollbackInfo(stepParameterInfo.getRollbackInfo())
+        .name(stepParameterInfo.getName())
+        .identifier(stepParameterInfo.getIdentifier())
+        .description(stepParameterInfo.getDescription())
+        .skipCondition(stepParameterInfo.getSkipCondition())
+        .build();
   }
 }

@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface NGSecretServiceV2 {
+  boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
   Optional<Secret> get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

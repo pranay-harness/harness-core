@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.jenkins;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 
 import com.google.common.base.MoreObjects;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
 
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class BuildDetails {
   @UtilityClass
   public static final class BuildDetailsMetadataKeys {

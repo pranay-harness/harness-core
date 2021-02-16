@@ -2,7 +2,7 @@ package io.harness.event.timeseries.processor;
 
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.utils.DateUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.DeploymentMigrationException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -65,7 +65,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
       "INSERT INTO DEPLOYMENT_STAGE (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED, TAGS) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   private static final String fetch_account_executions_deployment_in_interval =
-      "SELECT * FROM DEPLOYMENT WHERE ACCOUNTID = ? AND STARTTIME >= ? AND STARTTIME <= ? ORDER BY STARTTIME DESC OFFSET ? LIMIT ?";
+      "SELECT EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION,INSTANCES_DEPLOYED,TAGS FROM DEPLOYMENT WHERE ACCOUNTID = ? AND STARTTIME >= ? AND STARTTIME <= ? ORDER BY STARTTIME DESC OFFSET ? LIMIT ?";
   private static final String fetch_oldest_parent_execution_migration_completed =
       "SELECT * FROM DEPLOYMENT_PARENT WHERE ACCOUNTID = ? ORDER BY STARTTIME LIMIT 1";
   private static final String fetch_oldest_stage_execution_migration_completed =
@@ -190,7 +190,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           String errorLog = String.format(
               "MAX RETRY FAILURE : Failed to do deployment data migration process for account : [%s] , error : [%s]",
               accountId, exception.toString());
-          throw new WingsException(errorLog, exception);
+          throw new DeploymentMigrationException(errorLog, exception);
         }
         log.error("Failed to do deployment data migration process for account : [{}] , retry : [{}] , error : [{}]",
             accountId, retry, exception.toString(), exception);
@@ -214,7 +214,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
         } catch (Exception exception) {
           String errorLog =
               String.format("Error while disabling deployment data migration cron for account id : [%s]", accountId);
-          throw new WingsException(errorLog, exception);
+          throw new DeploymentMigrationException(errorLog, exception);
         }
       }
     } catch (Exception exception) {
@@ -248,7 +248,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
         } catch (SQLException exception) {
           if (retry >= MAX_RETRY_COUNT) {
             String errorLog = "MAX RETRY FAILURE : Failed to fetch deployments within interval";
-            throw new WingsException(errorLog, exception);
+            throw new DeploymentMigrationException(errorLog, exception);
           }
           log.error(
               "Failed to fetch deployments within interval for deployment data migration process for account : [{}] from startTimestamp : [{}] to endTimestamp : [{}] , retry : [{}]",
@@ -269,7 +269,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
               } catch (SQLException ex) {
                 // Consecutive error means either possibly persistent DB issue or issue with this entry
                 String errorLog = "Stopping Deployment data migration process due to consecutive migration failures";
-                throw new WingsException(errorLog, ex);
+                throw new DeploymentMigrationException(errorLog, ex);
               }
             }
             numOfRowsMigrated++;
@@ -295,7 +295,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           "Failed to do deployment data migration process for account : [%s] from startTimestamp : [%d] to endTimestamp : [%d] , error : [%s]",
           accountId, intervalStartTimestamp, intervalEndTimestamp, ex.toString());
       // In case of unknown exception, just halt the processing
-      throw new WingsException(errorLog, ex);
+      throw new DeploymentMigrationException(errorLog, ex);
     }
 
     if (isRowLimitReached) {
@@ -370,7 +370,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
     List<Map<String, Object>> eventInfoList = new ArrayList<>();
 
     while (resultSet.next()) {
-      Integer index = 1;
+      int index = 1;
       Map<String, Object> eventInfo = new HashMap<>();
       eventInfo.put(EventProcessor.EXECUTIONID, resultSet.getString(index++));
       eventInfo.put(EventProcessor.STARTTIME, resultSet.getTimestamp(index++).getTime());

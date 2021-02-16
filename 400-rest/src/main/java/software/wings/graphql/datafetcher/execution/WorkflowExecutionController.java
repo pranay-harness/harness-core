@@ -8,7 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -78,6 +80,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WorkflowExecutionController {
   @Inject private HPersistence persistence;
   @Inject AuthHandler authHandler;

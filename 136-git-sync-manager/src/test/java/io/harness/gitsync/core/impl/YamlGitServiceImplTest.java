@@ -45,6 +45,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 
 import com.google.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -61,7 +63,8 @@ import org.mockito.Spy;
 
 public class YamlGitServiceImplTest extends CategoryTest {
   public static final String ACCOUNTID = "ACCOUNTID";
-  static final String GH_PUSH_REQ_FILE = "software/wings/service/impl/webhook/github_push_request.json";
+  static final String GH_PUSH_REQ_FILE =
+      "136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook/github_push_request.json";
 
   @Inject YamlGitConfigRepository yamlGitConfigRepository;
   @Inject YamlGitFolderConfigRepository yamlGitFolderConfigRepository;
@@ -183,8 +186,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
   }
 
   private String obtainPayload(String filePath) throws IOException {
-    return IOUtils.toString(
-        Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath), StandardCharsets.UTF_8);
+    return IOUtils.toString(new FileInputStream(new File(filePath)));
   }
 
   @Test

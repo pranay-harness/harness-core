@@ -45,7 +45,7 @@ impl Hash for JavaClass {
 }
 
 lazy_static! {
-    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
+    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"@TargetModule\((Module.)?_([0-9A-Z_]+)\)").unwrap();
     pub static ref BREAK_DEPENDENCY_ON_PATTERN: Regex = Regex::new(r#"@BreakDependencyOn\("([^"]+)"\)"#).unwrap();
 }
 
@@ -64,7 +64,7 @@ pub fn populate_internal_info(location: &str, module_type: &str) -> (Option<Stri
             "//{}:{}",
             captures_target_module
                 .unwrap()
-                .get(1)
+                .get(2)
                 .unwrap()
                 .as_str()
                 .to_string()

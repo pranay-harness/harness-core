@@ -3723,4 +3723,23 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getUuid))
         .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldRejectTriggerForMasterFreeze() {
+    triggerService.save(scheduledConditionTrigger);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), any(), eq(scheduledConditionTrigger)))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, Collections.emptyList(), null, true));
+
+    TriggerServiceImpl triggerServiceImpl = (TriggerServiceImpl) triggerService;
+    assertThatThrownBy(()
+                           -> triggerServiceImpl.triggerDeployment(
+                               Collections.emptyList(), Collections.emptyList(), null, scheduledConditionTrigger))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage("Master Deployment Freeze is active. No deployments are allowed.");
+    verify(deploymentFreezeUtils, never()).sendTriggerRejectedNotification(eq(ACCOUNT_ID), eq(APP_ID), any(), anyMap());
+  }
 }

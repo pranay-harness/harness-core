@@ -53,7 +53,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
     addStaticAlias("artifact", "service.artifacts.primary.output");
     addStaticAlias("serviceVariables", "service.variables.output");
-    addStaticAlias("env", "infrastructure.environment");
+    addStaticAlias("env", "infrastructureSection.environment");
     addGroupAlias(YAMLFieldNameConstants.STAGE, StepOutcomeGroup.STAGE.name());
     addGroupAlias(YAMLFieldNameConstants.STEP, StepOutcomeGroup.STEP.name());
   }
