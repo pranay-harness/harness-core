@@ -50,6 +50,9 @@ shared_dependencies = [
     "@maven//:org_apache_commons_commons_email",
     "@maven//:com_segment_analytics_java_analytics",
     "@maven//:org_apache_commons_commons_math3",
+    "@maven//:ch_qos_logback_logback_access",
+    "@maven//:ch_qos_logback_logback_classic",
+    "@maven//:ch_qos_logback_logback_core",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "//:lombok",
 ]
