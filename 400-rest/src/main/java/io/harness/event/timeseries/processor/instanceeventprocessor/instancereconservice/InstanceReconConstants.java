@@ -2,7 +2,7 @@ package io.harness.event.timeseries.processor.instanceeventprocessor.instancerec
 
 public class InstanceReconConstants {
   public static final Integer DEFAULT_QUERY_BATCH_SIZE = 100;
-  public static final Integer DEFAULT_ROW_LIMIT = 1000;
+  public static final Integer DEFAULT_EVENTS_LIMIT = 10;
   public static final Integer MAX_RETRY_COUNT = 5;
 
   public static final String FETCH_INSTANCE_DATA_POINTS_INTERVAL_BATCH_SQL =
