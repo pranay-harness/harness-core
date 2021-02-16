@@ -482,7 +482,6 @@ java_library(
     deps = test_deps + [
         "maven_deps",
         "module",
-        "test_deps",
         "//:lombok",
     ],
 )
