@@ -113,7 +113,7 @@ java_library(
         "//300-cv-nextgen/src/main/resources:resource",
         "//300-cv-nextgen/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",
