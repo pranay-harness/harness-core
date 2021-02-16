@@ -92,3 +92,4 @@ import_run_configurations:
   run-configurations/Notification Client.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/DataGen_App.xml
