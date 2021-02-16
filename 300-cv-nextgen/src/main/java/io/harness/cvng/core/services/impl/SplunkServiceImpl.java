@@ -1,13 +1,18 @@
 package io.harness.cvng.core.services.impl;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
+import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
@@ -20,6 +25,7 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
+  @Inject private OnboardingService onboardingService;
 
   @Override
   public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorIdentifier, String orgIdentifier,
@@ -56,5 +62,30 @@ public class SplunkServiceImpl implements SplunkService {
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     throw new UnsupportedOperationException("Not Implemented yet");
+  }
+
+  @Override
+  public String checkConnectivity(
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
+    String response = "Success";
+    DataCollectionRequest request =
+        SplunkSavedSearchRequest.builder().type(DataCollectionRequestType.SPLUNK_SAVED_SEARCHES).build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+    try {
+      onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    } catch (Exception e) {
+      response = "Cannot connect to Splunk connector with connector identifier:" + connectorIdentifier
+          + " orgIdentifier:" + orgIdentifier + " projectIdentifier:" + projectIdentifier
+          + " errorMsg:" + e.getMessage();
+    }
+    return response;
   }
 }

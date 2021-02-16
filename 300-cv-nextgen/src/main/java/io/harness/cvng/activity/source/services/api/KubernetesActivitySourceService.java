@@ -2,13 +2,14 @@ package io.harness.cvng.activity.source.services.api;
 
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.core.services.api.DataSourceService;
 import io.harness.encryption.Scope;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
 import javax.annotation.Nullable;
 
-public interface KubernetesActivitySourceService {
+public interface KubernetesActivitySourceService extends DataSourceService {
   boolean saveKubernetesActivities(String accountId, String activitySourceId, List<KubernetesActivityDTO> activities);
   void enqueueDataCollectionTask(KubernetesActivitySource activitySource);
   boolean doesAActivitySourceExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);

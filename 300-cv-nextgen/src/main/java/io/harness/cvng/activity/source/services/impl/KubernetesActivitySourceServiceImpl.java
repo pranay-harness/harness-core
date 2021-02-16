@@ -195,4 +195,33 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
     }
     return query.asList();
   }
+
+  @Override
+  public String checkConnectivity(
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
+    String filter = "";
+    String response = "Success";
+    List<String> kubernetesNamespaces = null;
+    try {
+      kubernetesNamespaces = verificationManagerService.getKubernetesNamespaces(
+          accountId, orgIdentifier, projectIdentifier, connectorIdentifier, filter);
+    } catch (Exception e) {
+      response = "Cannot get Namespaces for Kubernetes connector with connector identifier:" + connectorIdentifier
+          + " orgIdentifier:" + orgIdentifier + " projectIdentifier:" + projectIdentifier
+          + " errorMsg:" + e.getMessage();
+    }
+    if (!kubernetesNamespaces.isEmpty()) {
+      List<String> kubernetesWorkloads;
+      try {
+        kubernetesWorkloads = verificationManagerService.getKubernetesWorkloads(
+            accountId, orgIdentifier, projectIdentifier, connectorIdentifier, kubernetesNamespaces.get(0), filter);
+      } catch (Exception e) {
+        response = "Cannot get workload for Kubernetes connector with connector identifier:" + connectorIdentifier
+            + " orgIdentifier:" + orgIdentifier + " projectIdentifier:" + projectIdentifier
+            + " namespace:" + kubernetesNamespaces.get(0) + " errorMsg:" + e.getMessage();
+      }
+    }
+    // still need to figure out on how to get kubernetes events;
+    return response;
+  }
 }

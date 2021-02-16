@@ -141,6 +141,31 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public String checkConnectivity(
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
+    String response = "Success";
+    DataCollectionRequest request =
+        AppDynamicsFetchAppRequest.builder().type(DataCollectionRequestType.APPDYNAMICS_FETCH_APPS).build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .build();
+    try {
+      onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    } catch (Exception e) {
+      response = "Cannot connect to AppDynamics connector with connector identifier:" + connectorIdentifier
+          + " orgIdentifier:" + orgIdentifier + " projectIdentifier:" + projectIdentifier
+          + " errorMsg:" + e.getMessage();
+    }
+    return response;
+  }
+
+  @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     Preconditions.checkState(

@@ -9,7 +9,7 @@ import io.harness.ng.beans.PageResponse;
 import java.util.List;
 import java.util.Set;
 
-public interface AppDynamicsService extends MonitoringSourceImportStatusCreator {
+public interface AppDynamicsService extends MonitoringSourceImportStatusCreator, DataSourceService {
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, String appName, String tierName, String requestGuid,
       List<MetricPack> metricPacks);

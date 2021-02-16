@@ -138,6 +138,31 @@ public class StackdriverServiceImpl implements StackdriverService {
   }
 
   @Override
+  public String checkConnectivity(
+      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
+    String response = "Success";
+    DataCollectionRequest request =
+        StackdriverDashboardRequest.builder().type(DataCollectionRequestType.STACKDRIVER_DASHBOARD_LIST).build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+    try {
+      onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    } catch (Exception e) {
+      response = "Cannot connect to StackDriver connector with connector identifier:" + connectorIdentifier
+          + " orgIdentifier:" + orgIdentifier + " projectIdentifier:" + projectIdentifier
+          + " errorMsg:" + e.getMessage();
+    }
+    return response;
+  }
+
+  @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     return StackdriverImportStatus.builder().build();
