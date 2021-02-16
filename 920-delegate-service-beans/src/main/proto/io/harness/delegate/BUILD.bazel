@@ -7,6 +7,7 @@ proto_library(
     srcs = [
         "delegate_service.proto",
         "progress.proto",
+        "unit_progress.proto",
         "task.proto",
     ],
     visibility = ["//visibility:public"],
