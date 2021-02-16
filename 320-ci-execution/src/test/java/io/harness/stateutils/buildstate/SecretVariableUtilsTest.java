@@ -16,7 +16,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -40,7 +40,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SecretVariableUtilsTest extends CIExecutionTest {
+public class SecretVariableUtilsTest extends CIExecutionTestBase {
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private SecretManagerClientService secretManagerClientService;
   @InjectMocks SecretUtils secretUtils;
