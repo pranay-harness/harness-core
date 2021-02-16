@@ -14,7 +14,10 @@ import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationResponseBuilder;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
@@ -40,6 +43,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
   @Override
   public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
+
+    YamlField variablesField =
+        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
+    }
 
     CdFilterBuilder cdFilter = CdFilter.builder();
     DeploymentStageConfig deploymentStageConfig = (DeploymentStageConfig) yamlField.getStageType();
