@@ -356,7 +356,7 @@ public class CustomDashboardResource {
       log.info("doReconInstanceOnAccount : {} {} {}", accountId, intervalStartTimeMs, intervalEndTimeMs);
       try {
         instanceReconService.aggregateEventsForGivenInterval(accountId, intervalStartTimeMs, intervalEndTimeMs,
-            InstanceReconConstants.DEFAULT_QUERY_BATCH_SIZE, InstanceReconConstants.DEFAULT_ROW_LIMIT);
+            InstanceReconConstants.DEFAULT_QUERY_BATCH_SIZE, InstanceReconConstants.DEFAULT_EVENTS_LIMIT);
       } catch (Exception ex) {
         log.error("Instance Recon Failure", ex);
         return Builder.aRestResponse()

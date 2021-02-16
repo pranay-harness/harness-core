@@ -770,6 +770,7 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.CVNGState.CVNGStateExecutionData;
 import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.EcsRunTaskDataBag;
@@ -1748,5 +1749,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 
     kryo.register(AwsElbConfig.class, 8500);
+    kryo.register(CVNGStateExecutionData.class, 8501);
   }
 }

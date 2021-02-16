@@ -3,7 +3,7 @@ package io.harness.batch.processing.anomalydetection.helpers;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
-import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
+import io.harness.ccm.anomaly.entities.TimeGranularity;
 
 import java.util.Arrays;
 import java.util.Collections;

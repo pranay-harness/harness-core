@@ -1,7 +1,8 @@
-package software.wings.graphql.datafetcher.anomaly;
+package io.harness.ccm.anomaly.service;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesFilter;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -34,6 +35,7 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -70,8 +72,8 @@ public class AnomalyDataQueryBuilder {
     query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.accountId, accountId));
     query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.id, input.getAnomalyId()));
 
-    if (input.getComment() != null) {
-      query.addSetClause(AnomaliesDataTableSchema.note, input.getComment());
+    if (input.getNote() != null) {
+      query.addSetClause(AnomaliesDataTableSchema.note, input.getNote());
     }
 
     if (input.getUserFeedback() != null) {
@@ -157,6 +159,8 @@ public class AnomalyDataQueryBuilder {
       case CloudProvider:
       case Node:
       case Pod:
+      case PV:
+        break;
       default:
         log.error("Groupby clause not supported in AnomalyDataQueryBuilder");
         throw new InvalidArgumentsException("Entity-Groupby clause not supported");
@@ -165,9 +169,16 @@ public class AnomalyDataQueryBuilder {
   }
 
   private static void decorateK8SQueryWithFilters(SelectQuery selectQuery, List<QLBillingDataFilter> filters) {
+    List<QLBillingDataFilterType> listTypes = Arrays.asList(QLBillingDataFilterType.LabelSearch,
+        QLBillingDataFilterType.TagSearch, QLBillingDataFilterType.Tag, QLBillingDataFilterType.Label,
+        QLBillingDataFilterType.EnvironmentType, QLBillingDataFilterType.AlertTime, QLBillingDataFilterType.View);
+
     for (QLBillingDataFilter filter : filters) {
       Set<QLBillingDataFilterType> filterTypes = QLBillingDataFilter.getFilterTypes(filter);
       for (QLBillingDataFilterType type : filterTypes) {
+        if (listTypes.contains(type)) {
+          continue;
+        }
         if (type.getMetaDataFields().getFilterKind() == QLFilterKind.SIMPLE) {
           decorateSimpleFilter(selectQuery, filter, type);
         } else {

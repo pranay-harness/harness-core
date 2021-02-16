@@ -230,7 +230,7 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
   instanceDataRetentionDays: 210
-  instanceStatsMigrationRowLimit: 1000
+  instanceStatsMigrationEventsLimit: 10
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100

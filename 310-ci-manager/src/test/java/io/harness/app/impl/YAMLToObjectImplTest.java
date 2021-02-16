@@ -21,7 +21,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class YAMLToObjectImplTest extends CIManagerTest {
+public class YAMLToObjectImplTest extends CIManagerTestBase {
   @Spy private YAMLToObjectImpl yamlToObject;
 
   void init() {

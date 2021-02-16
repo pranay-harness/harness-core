@@ -10,4 +10,5 @@ public class PartialSchemaDTO {
   JsonNode schema;
   String nodeType;
   String nodeName;
+  String namespace;
 }

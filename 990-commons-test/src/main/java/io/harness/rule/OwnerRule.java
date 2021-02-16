@@ -86,6 +86,7 @@ public class OwnerRule implements TestRule {
   public static final String GEORGE = "george";
   public static final String GUNA = "guna.chandrasekaran";
   public static final String HANTANG = "hannah.tang";
+  public static final String HARI = "srihari.chidella";
   public static final String HARSH = "harsh.jain";
   public static final String HITESH = "hitesh.aringa";
   public static final String IGOR = "igor.gere";
@@ -200,6 +201,7 @@ public class OwnerRule implements TestRule {
           .put(GEORGE, defaultUserInfo(GEORGE).slack("U88CA877V").team(DEL).build())
           .put(GUNA, defaultUserInfo(GUNA).slack("UD45NV41W").team(DEL).build())
           .put(HANTANG, defaultUserInfo(HANTANG).slack("UK8AQJSCS").team(CE).build())
+          .put(HARI, defaultUserInfo(HARI).slack("U01KKD4NSUQ").team(DX).build())
           .put(HARSH, defaultUserInfo(HARSH).slack("UJ1CDM3FY").team(CDC).build())
           .put(HITESH, defaultUserInfo(HITESH).slack("UK41C9QJH").team(CE).build())
           .put(IGOR, defaultUserInfo(IGOR).slack("U0104P0SC03").team(DX).build())
