@@ -19,6 +19,7 @@ shared_dependencies = [
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
+    "//280-batch-processing/src/generated/avro:280_batch_processing_avro",
     "@maven//:com_google_cloud_google_cloud_bigquerydatatransfer",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_openpojo_openpojo",
@@ -69,18 +70,23 @@ java_binary(
     deps = shared_dependencies,
 )
 
+test_dependencies = shared_dependencies + [
+    ":module",
+    "//400-rest:supporter-test",
+    "//960-persistence:supporter-test",
+    "//990-commons-test:module",
+    "@maven//:org_powermock_powermock_api_mockito",
+    "@maven//:org_springframework_boot_spring_boot_starter_test",
+]
+
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
-    deps = shared_dependencies + [
-        ":module",
-        "//400-rest:supporter-test",
-        "//960-persistence:supporter-test",
-        "//990-commons-test:module",
-        "@maven//:org_powermock_powermock_api_mockito",
-        "@maven//:org_springframework_boot_spring_boot_starter_test",
+    resources = [
+        "//280-batch-processing/src/main/resources:resource",
     ],
+    visibility = ["//visibility:private"],
+    deps = test_dependencies,
 )
 
 run_tests()

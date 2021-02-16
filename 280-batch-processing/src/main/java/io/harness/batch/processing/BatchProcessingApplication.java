@@ -15,11 +15,11 @@ import org.springframework.context.annotation.FilterType;
 
 @SpringBootApplication
 @ComponentScan(excludeFilters =
-        {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-                        classes = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
-                                EmbeddedMongoAutoConfiguration.class, HazelcastAutoConfiguration.class})
-        })
+    {
+      @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+          classes = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
+              EmbeddedMongoAutoConfiguration.class, HazelcastAutoConfiguration.class})
+    })
 @EnableBatchProcessing(modular = true)
 @Slf4j
 public class BatchProcessingApplication {
