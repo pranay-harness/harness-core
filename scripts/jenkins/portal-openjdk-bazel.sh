@@ -38,7 +38,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 

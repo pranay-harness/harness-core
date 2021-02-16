@@ -1588,6 +1588,7 @@ maven_install(
         "io.prometheus:simpleclient_dropwizard:0.5.0",
         "io.reactivex.rxjava2:rxjava:2.2.19",
         "io.reactivex:rxjava:1.3.8",
+        "io.specto:hoverfly-java:0.13.1",
         "io.sundr:builder-annotations:0.21.0",
         "io.sundr:resourcecify-annotations:0.21.0",
         "io.sundr:sundr-codegen:0.21.0",

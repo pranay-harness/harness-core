@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
@@ -48,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
+public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;

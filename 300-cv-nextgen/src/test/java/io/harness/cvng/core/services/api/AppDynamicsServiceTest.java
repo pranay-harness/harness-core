@@ -9,7 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionRequest;
@@ -42,7 +42,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class AppDynamicsServiceTest extends CvNextGenTest {
+public class AppDynamicsServiceTest extends CvNextGenTestBase {
   @Inject AppDynamicsService appDynamicsService;
   @Inject OnboardingService onboardingService;
   @Mock VerificationManagerClient verificationManagerClient;

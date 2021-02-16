@@ -17,7 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
@@ -47,7 +47,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class VerificationJobServiceImplTest extends CvNextGenTest {
+public class VerificationJobServiceImplTest extends CvNextGenTestBase {
   @Mock private NextGenService nextGenService;
   @Mock private CVEventService cvEventService;
   @Inject private HPersistence hPersistence;
