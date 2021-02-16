@@ -724,7 +724,7 @@ java_library(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = shared_dependencies +
-           test_dependenciesz + [
+           test_dependencies + [
         ":module",
     ],
 )
