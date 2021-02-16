@@ -1,7 +1,5 @@
 package io.harness.callgraph.util;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,25 +20,6 @@ public class StackNode {
     this.methodName = methodName;
     this.signature = signature;
     this.testMethod = testMethod;
-  }
-
-  // formatting for GraphDB CSV
-  public String toGraphDBCSV() {
-    StringBuffer result = new StringBuffer();
-
-    String parameters = this.signature;
-    if (isEmpty(parameters)) {
-      parameters = "void";
-    }
-
-    String codeType = this.isTestMethod() ? "Test" : "Source";
-    result.append(codeType);
-    result.append("|").append(this.packageName);
-    result.append("|").append(this.className);
-    result.append("|").append(this.methodName);
-    result.append("|").append(parameters);
-
-    return result.toString();
   }
 
   public String getPackageName(String type) {
