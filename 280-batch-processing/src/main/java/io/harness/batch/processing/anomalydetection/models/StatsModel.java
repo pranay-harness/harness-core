@@ -2,14 +2,13 @@ package io.harness.batch.processing.anomalydetection.models;
 
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
-import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
-import io.harness.batch.processing.anomalydetection.types.AnomalyType;
+import io.harness.ccm.anomaly.entities.Anomaly;
+import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
+import io.harness.ccm.anomaly.entities.AnomalyType;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.Builder;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.springframework.stereotype.Service;
@@ -37,12 +36,11 @@ public class StatsModel {
       }
 
       Anomaly currentAnomaly = Anomaly.builder()
-                                   .id(UUID.randomUUID().toString())
+                                   .id(data.getHash())
                                    .accountId(data.getAccountId())
                                    .actualCost(currentValue)
                                    .expectedCost(mean)
                                    .timeGranularity(data.getTimeGranularity())
-                                   .entityType(data.getEntityType())
                                    .clusterId(data.getClusterId())
                                    .clusterName(data.getClusterName())
                                    .workloadType(data.getWorkloadType())
@@ -58,7 +56,7 @@ public class StatsModel {
                                    .awsInstanceType(data.getAwsInstanceType())
                                    .awsService(data.getAwsService())
                                    .awsUsageType(data.getAwsUsageType())
-                                   .time(current)
+                                   .anomalyTime(current)
                                    .relativeThreshold(relativityThreshold(currentValue, mean))
                                    .absoluteThreshold(absoluteThreshold(currentValue, mean))
                                    .probabilisticThreshold(probabilityThreshold)

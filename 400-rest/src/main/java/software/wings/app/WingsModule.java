@@ -16,6 +16,8 @@ import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -1273,6 +1275,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
+
+    bind(AnomalyService.class).to(AnomalyServiceImpl.class);
+
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);

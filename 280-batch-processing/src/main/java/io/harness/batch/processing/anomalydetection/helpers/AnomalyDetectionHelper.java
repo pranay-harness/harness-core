@@ -1,13 +1,19 @@
 package io.harness.batch.processing.anomalydetection.helpers;
 
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
-import io.harness.batch.processing.anomalydetection.types.EntityType;
+import io.harness.ccm.anomaly.entities.EntityType;
 
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AnomalyDetectionHelper {
   private AnomalyDetectionHelper() {}
+
+  public static String generateHash(String originalString) {
+    return Hashing.sha256().hashString(originalString, StandardCharsets.UTF_8).toString();
+  }
 
   public static void logInvalidTimeSeries(AnomalyDetectionTimeSeries timeSeries) {
     if (timeSeries == null) {
