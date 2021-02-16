@@ -33,11 +33,17 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
 
   @Override
   public Map<String, YamlField> getDependencies(FilterCreationContext filterCreationContext) {
-    YamlField stagesYamlNode = filterCreationContext.getCurrentField().getNode().getField("stages");
-    if (stagesYamlNode == null) {
+    YamlField stagesYamlField =
+        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.STAGES);
+    if (stagesYamlField == null) {
       throw new InvalidRequestException("Pipeline without stages cannot be saved");
     }
-    return StagesFilterJsonCreator.getDependencies(stagesYamlNode);
+    YamlField variablesField =
+        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
+    }
+    return StagesFilterJsonCreator.getDependencies(stagesYamlField);
   }
 
   public List<String> getStageNames(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
