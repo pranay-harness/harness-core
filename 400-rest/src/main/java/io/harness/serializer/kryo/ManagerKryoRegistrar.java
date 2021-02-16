@@ -418,6 +418,7 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
@@ -426,6 +427,7 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateRespon
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
@@ -1707,6 +1709,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformOutputVariables.class, 8063);
     kryo.register(EcsRunTaskStateExecutionData.class, 8084);
     kryo.register(EcsRunTaskDataBag.class, 8085);
+    kryo.register(EcsDeployRollbackDataFetchRequest.class, 8086);
+    kryo.register(EcsDeployRollbackDataFetchResponse.class, 8087);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
