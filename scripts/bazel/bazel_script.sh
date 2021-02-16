@@ -59,6 +59,8 @@ BAZEL_MODULES="\
   //160-model-gen-tool:module \
   //160-model-gen-tool:module_deploy.jar \
   //136-git-sync-manager:module \
+  //210-command-library-xxxxxxxxmodule \
+  //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
   //340-ce-nextgen:module \
@@ -285,6 +287,8 @@ build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 build_bazel_application 160-model-gen-tool
+build_bazel_application 210-command-library-server
+
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
