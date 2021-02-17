@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 
 @SpringBootApplication(
-        exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
-                EmbeddedMongoAutoConfiguration.class, HazelcastAutoConfiguration.class})
+    exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
+        EmbeddedMongoAutoConfiguration.class, HazelcastAutoConfiguration.class})
 @EnableBatchProcessing(modular = true)
 @Slf4j
 public class BatchProcessingApplication {
