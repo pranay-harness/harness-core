@@ -6,5 +6,5 @@ resources()
 
 filegroup(
     name = "resource",
-    srcs = glob(["**"], exclude = ['logback.xml']),
+    srcs = glob(["**/*"]),
 )
