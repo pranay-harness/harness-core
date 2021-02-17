@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.InstanceUnitType.COUNT;
@@ -15,6 +16,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
@@ -41,6 +43,8 @@ import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.ecs.model.NetworkMode;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -291,6 +295,46 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testRegisterRunTaskDefinitionWithRegisterTaskDefinitionRequest() {
+    doReturn(null).when(mockAwsClusterService).createTask(any(), any(), any(), any());
+    ExecutionLogCallback mockExecutionLogCallback = mock(ExecutionLogCallback.class);
+
+    ArgumentCaptor<RegisterTaskDefinitionRequest> registerTaskDefinitionRequestArgumentCaptor =
+        ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
+
+    // with empty executionRoleArn and FARGATE launchType
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = new RegisterTaskDefinitionRequest();
+    registerTaskDefinitionRequest.withExecutionRoleArn("");
+    String launchType = "FARGATE";
+    helper.registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        null, registerTaskDefinitionRequest, launchType, null, null, mockExecutionLogCallback);
+    verify(helper).registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        any(), registerTaskDefinitionRequestArgumentCaptor.capture(), any(), any(), any(), any());
+
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequestArgumentCaptorValue =
+        registerTaskDefinitionRequestArgumentCaptor.getValue();
+    assertThat(registerTaskDefinitionRequestArgumentCaptorValue.getExecutionRoleArn()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getNetworkMode()).isEqualTo(NetworkMode.Awsvpc.toString());
+    assertThat(registerTaskDefinitionRequest.getRequiresCompatibilities()).contains("FARGATE");
+
+    // with non empty executionRoleArn and non FARGATE launchType
+    registerTaskDefinitionRequest.withExecutionRoleArn("executionRoleArn");
+    registerTaskDefinitionRequest.withCpu("cpu");
+    registerTaskDefinitionRequest.withMemory("memory");
+    helper.registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        null, registerTaskDefinitionRequest, null, null, null, mockExecutionLogCallback);
+    verify(helper, times(2))
+        .registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+            any(), registerTaskDefinitionRequestArgumentCaptor.capture(), any(), any(), any(), any());
+
+    registerTaskDefinitionRequestArgumentCaptorValue = registerTaskDefinitionRequestArgumentCaptor.getValue();
+    assertThat(registerTaskDefinitionRequestArgumentCaptorValue.getExecutionRoleArn()).isEqualTo("executionRoleArn");
+    assertThat(registerTaskDefinitionRequest.getCpu()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getMemory()).isEqualTo(null);
+  }
+
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testEmptyEcsDeployRollbackDataFetchResponse() {

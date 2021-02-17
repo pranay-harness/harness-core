@@ -31,6 +31,7 @@ import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 
 import com.amazonaws.services.ecs.model.DesiredStatus;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RunTaskRequest;
 import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Task;
@@ -79,65 +80,14 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
       ecsRunTaskDeployResponse.setPreviousRunTaskArns(new ArrayList<>());
       ecsRunTaskDeployResponse.setNewRunTaskArns(new ArrayList<>());
 
-      ecsRunTaskDeployRequest.getListTaskDefinitionJson().forEach(ecsRunTaskDef -> {
-        TaskDefinition runTaskDefinition = ecsDeployCommandTaskHelper.createRunTaskDefinition(
-            ecsRunTaskDef, ecsRunTaskDeployRequest.getRunTaskFamilyName());
+      if (ecsRunTaskDeployRequest.isEcsRegisterTaskDefinitionTagsEnabled()) {
+        executeTaskDefinitionsParseAsRegisterTaskDefinitionRequest(ecsRunTaskDeployRequest, encryptedDataDetails,
+            executionLogCallback, cloudProviderSetting, ecsRunTaskDeployResponse);
+      } else {
+        executeTaskDefinitions(ecsRunTaskDeployRequest, encryptedDataDetails, executionLogCallback,
+            cloudProviderSetting, ecsRunTaskDeployResponse);
+      }
 
-        List<Task> listPreExistingTasks =
-            ecsDeployCommandTaskHelper.getExistingTasks(ecsRunTaskDeployRequest.getAwsConfig(),
-                ecsRunTaskDeployRequest.getCluster(), ecsRunTaskDeployRequest.getRegion(),
-                runTaskDefinition.getFamily(), encryptedDataDetails, executionLogCallback);
-        int numOldTasDefsToDeregister = listPreExistingTasks.size() - 4 > 0 ? listPreExistingTasks.size() - 4 : 0;
-        List<String> taskDefArnsToDeregister =
-            listPreExistingTasks.stream()
-                .sorted((a, b) -> { return a.getVersion() - b.getVersion() > 0 ? 1 : -1; })
-                .limit(numOldTasDefsToDeregister)
-                .map(t -> t.getTaskDefinitionArn())
-                .collect(Collectors.toList());
-        ecsDeployCommandTaskHelper.deregisterTaskDefinitions(ecsRunTaskDeployRequest.getAwsConfig(),
-            ecsRunTaskDeployRequest.getRegion(), taskDefArnsToDeregister, encryptedDataDetails, executionLogCallback);
-
-        List<String> listPreExistingTaskDefinitionArn =
-            listPreExistingTasks.stream().map(t -> t.getTaskDefinitionArn()).collect(Collectors.toList());
-        List<String> listPreExistingTaskArns =
-            listPreExistingTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList());
-        ecsRunTaskDeployResponse.getPreviousRegisteredRunTaskDefinitions().addAll(listPreExistingTaskDefinitionArn);
-        ecsRunTaskDeployResponse.getPreviousRunTaskArns().addAll(listPreExistingTaskArns);
-
-        TaskDefinition registeredRunTaskDefinition = ecsDeployCommandTaskHelper.registerRunTaskDefinition(
-            cloudProviderSetting, runTaskDefinition, ecsRunTaskDeployRequest.getLaunchType(),
-            ecsRunTaskDeployRequest.getRegion(), encryptedDataDetails, executionLogCallback);
-        executionLogCallback.saveExecutionLog(format("Task with family name %s is registered => %s",
-            registeredRunTaskDefinition.getFamily(), registeredRunTaskDefinition.getTaskDefinitionArn()));
-        RunTaskRequest runTaskRequest =
-            ecsDeployCommandTaskHelper.createAwsRunTaskRequest(registeredRunTaskDefinition, ecsRunTaskDeployRequest);
-
-        executionLogCallback.saveExecutionLog(format("Triggering ECS run task %s in cluster %s",
-                                                  runTaskRequest.getTaskDefinition(), runTaskRequest.getCluster()),
-            LogLevel.INFO);
-        RunTaskResult runTaskResult = ecsDeployCommandTaskHelper.triggerRunTask(
-            ecsRunTaskDeployRequest.getRegion(), cloudProviderSetting, encryptedDataDetails, runTaskRequest);
-        if (!EmptyPredicate.isEmpty(runTaskResult.getFailures())) {
-          ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-        }
-
-        executionLogCallback.saveExecutionLog(
-            format("%d Tasks were triggered sucessfully and %d failures were recieved.",
-                runTaskResult.getTasks().size(), runTaskResult.getFailures().size()));
-        runTaskResult.getTasks().forEach(
-            t -> executionLogCallback.saveExecutionLog(format("Task => %s succeeded", t.getTaskArn())));
-        runTaskResult.getFailures().forEach(f -> {
-          executionLogCallback.saveExecutionLog(
-              format("%s failed with reason => %s \nDetails: %s", f.getArn(), f.getReason(), f.getDetail()),
-              LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-        });
-        List<Task> triggeredTasks = runTaskResult.getTasks();
-
-        ecsRunTaskDeployResponse.getNewRegisteredRunTaskDefinitions().add(
-            registeredRunTaskDefinition.getTaskDefinitionArn());
-        ecsRunTaskDeployResponse.getNewRunTaskArns().addAll(
-            triggeredTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList()));
-      });
       if (CommandExecutionStatus.FAILURE.equals(ecsRunTaskDeployResponse.getCommandExecutionStatus())) {
         executionLogCallback.saveExecutionLog(
             "Stopping further triggers of run tasks because some tasks failed to trigger.", LogLevel.ERROR,
@@ -169,6 +119,135 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
         .commandExecutionStatus(ecsRunTaskDeployResponse.getCommandExecutionStatus())
         .ecsCommandResponse(ecsRunTaskDeployResponse)
         .build();
+  }
+
+  private void executeTaskDefinitionsParseAsRegisterTaskDefinitionRequest(
+      EcsRunTaskDeployRequest ecsRunTaskDeployRequest, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, SettingAttribute cloudProviderSetting,
+      EcsRunTaskDeployResponse ecsRunTaskDeployResponse) {
+    ecsRunTaskDeployRequest.getListTaskDefinitionJson().forEach(ecsRunTaskDef -> {
+      RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+          ecsDeployCommandTaskHelper.createRunTaskRegisterTaskDefinitionRequest(
+              ecsRunTaskDef, ecsRunTaskDeployRequest.getRunTaskFamilyName());
+
+      List<Task> listPreExistingTasks =
+          ecsDeployCommandTaskHelper.getExistingTasks(ecsRunTaskDeployRequest.getAwsConfig(),
+              ecsRunTaskDeployRequest.getCluster(), ecsRunTaskDeployRequest.getRegion(),
+              registerTaskDefinitionRequest.getFamily(), encryptedDataDetails, executionLogCallback);
+      int numOldTasDefsToDeregister = listPreExistingTasks.size() - 4 > 0 ? listPreExistingTasks.size() - 4 : 0;
+      List<String> taskDefArnsToDeregister =
+          listPreExistingTasks.stream()
+              .sorted((a, b) -> { return a.getVersion() - b.getVersion() > 0 ? 1 : -1; })
+              .limit(numOldTasDefsToDeregister)
+              .map(t -> t.getTaskDefinitionArn())
+              .collect(Collectors.toList());
+      ecsDeployCommandTaskHelper.deregisterTaskDefinitions(ecsRunTaskDeployRequest.getAwsConfig(),
+          ecsRunTaskDeployRequest.getRegion(), taskDefArnsToDeregister, encryptedDataDetails, executionLogCallback);
+
+      List<String> listPreExistingTaskDefinitionArn =
+          listPreExistingTasks.stream().map(t -> t.getTaskDefinitionArn()).collect(Collectors.toList());
+      List<String> listPreExistingTaskArns =
+          listPreExistingTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList());
+      ecsRunTaskDeployResponse.getPreviousRegisteredRunTaskDefinitions().addAll(listPreExistingTaskDefinitionArn);
+      ecsRunTaskDeployResponse.getPreviousRunTaskArns().addAll(listPreExistingTaskArns);
+
+      TaskDefinition registeredRunTaskDefinition =
+          ecsDeployCommandTaskHelper.registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(cloudProviderSetting,
+              registerTaskDefinitionRequest, ecsRunTaskDeployRequest.getLaunchType(),
+              ecsRunTaskDeployRequest.getRegion(), encryptedDataDetails, executionLogCallback);
+      executionLogCallback.saveExecutionLog(format("Task with family name %s is registered => %s",
+          registeredRunTaskDefinition.getFamily(), registeredRunTaskDefinition.getTaskDefinitionArn()));
+      RunTaskRequest runTaskRequest =
+          ecsDeployCommandTaskHelper.createAwsRunTaskRequest(registeredRunTaskDefinition, ecsRunTaskDeployRequest);
+
+      executionLogCallback.saveExecutionLog(format("Triggering ECS run task %s in cluster %s",
+                                                runTaskRequest.getTaskDefinition(), runTaskRequest.getCluster()),
+          LogLevel.INFO);
+      RunTaskResult runTaskResult = ecsDeployCommandTaskHelper.triggerRunTask(
+          ecsRunTaskDeployRequest.getRegion(), cloudProviderSetting, encryptedDataDetails, runTaskRequest);
+      if (!EmptyPredicate.isEmpty(runTaskResult.getFailures())) {
+        ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      }
+
+      executionLogCallback.saveExecutionLog(format("%d Tasks were triggered sucessfully and %d failures were recieved.",
+          runTaskResult.getTasks().size(), runTaskResult.getFailures().size()));
+      runTaskResult.getTasks().forEach(
+          t -> executionLogCallback.saveExecutionLog(format("Task => %s succeeded", t.getTaskArn())));
+      runTaskResult.getFailures().forEach(f -> {
+        executionLogCallback.saveExecutionLog(
+            format("%s failed with reason => %s \nDetails: %s", f.getArn(), f.getReason(), f.getDetail()),
+            LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      });
+      List<Task> triggeredTasks = runTaskResult.getTasks();
+
+      ecsRunTaskDeployResponse.getNewRegisteredRunTaskDefinitions().add(
+          registeredRunTaskDefinition.getTaskDefinitionArn());
+      ecsRunTaskDeployResponse.getNewRunTaskArns().addAll(
+          triggeredTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList()));
+    });
+  }
+
+  private void executeTaskDefinitions(EcsRunTaskDeployRequest ecsRunTaskDeployRequest,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      SettingAttribute cloudProviderSetting, EcsRunTaskDeployResponse ecsRunTaskDeployResponse) {
+    ecsRunTaskDeployRequest.getListTaskDefinitionJson().forEach(ecsRunTaskDef -> {
+      TaskDefinition runTaskDefinition = ecsDeployCommandTaskHelper.createRunTaskDefinition(
+          ecsRunTaskDef, ecsRunTaskDeployRequest.getRunTaskFamilyName());
+
+      List<Task> listPreExistingTasks =
+          ecsDeployCommandTaskHelper.getExistingTasks(ecsRunTaskDeployRequest.getAwsConfig(),
+              ecsRunTaskDeployRequest.getCluster(), ecsRunTaskDeployRequest.getRegion(), runTaskDefinition.getFamily(),
+              encryptedDataDetails, executionLogCallback);
+      int numOldTasDefsToDeregister = listPreExistingTasks.size() - 4 > 0 ? listPreExistingTasks.size() - 4 : 0;
+      List<String> taskDefArnsToDeregister =
+          listPreExistingTasks.stream()
+              .sorted((a, b) -> { return a.getVersion() - b.getVersion() > 0 ? 1 : -1; })
+              .limit(numOldTasDefsToDeregister)
+              .map(t -> t.getTaskDefinitionArn())
+              .collect(Collectors.toList());
+      ecsDeployCommandTaskHelper.deregisterTaskDefinitions(ecsRunTaskDeployRequest.getAwsConfig(),
+          ecsRunTaskDeployRequest.getRegion(), taskDefArnsToDeregister, encryptedDataDetails, executionLogCallback);
+
+      List<String> listPreExistingTaskDefinitionArn =
+          listPreExistingTasks.stream().map(t -> t.getTaskDefinitionArn()).collect(Collectors.toList());
+      List<String> listPreExistingTaskArns =
+          listPreExistingTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList());
+      ecsRunTaskDeployResponse.getPreviousRegisteredRunTaskDefinitions().addAll(listPreExistingTaskDefinitionArn);
+      ecsRunTaskDeployResponse.getPreviousRunTaskArns().addAll(listPreExistingTaskArns);
+
+      TaskDefinition registeredRunTaskDefinition = ecsDeployCommandTaskHelper.registerRunTaskDefinition(
+          cloudProviderSetting, runTaskDefinition, ecsRunTaskDeployRequest.getLaunchType(),
+          ecsRunTaskDeployRequest.getRegion(), encryptedDataDetails, executionLogCallback);
+      executionLogCallback.saveExecutionLog(format("Task with family name %s is registered => %s",
+          registeredRunTaskDefinition.getFamily(), registeredRunTaskDefinition.getTaskDefinitionArn()));
+      RunTaskRequest runTaskRequest =
+          ecsDeployCommandTaskHelper.createAwsRunTaskRequest(registeredRunTaskDefinition, ecsRunTaskDeployRequest);
+
+      executionLogCallback.saveExecutionLog(format("Triggering ECS run task %s in cluster %s",
+                                                runTaskRequest.getTaskDefinition(), runTaskRequest.getCluster()),
+          LogLevel.INFO);
+      RunTaskResult runTaskResult = ecsDeployCommandTaskHelper.triggerRunTask(
+          ecsRunTaskDeployRequest.getRegion(), cloudProviderSetting, encryptedDataDetails, runTaskRequest);
+      if (!EmptyPredicate.isEmpty(runTaskResult.getFailures())) {
+        ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      }
+
+      executionLogCallback.saveExecutionLog(format("%d Tasks were triggered sucessfully and %d failures were recieved.",
+          runTaskResult.getTasks().size(), runTaskResult.getFailures().size()));
+      runTaskResult.getTasks().forEach(
+          t -> executionLogCallback.saveExecutionLog(format("Task => %s succeeded", t.getTaskArn())));
+      runTaskResult.getFailures().forEach(f -> {
+        executionLogCallback.saveExecutionLog(
+            format("%s failed with reason => %s \nDetails: %s", f.getArn(), f.getReason(), f.getDetail()),
+            LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      });
+      List<Task> triggeredTasks = runTaskResult.getTasks();
+
+      ecsRunTaskDeployResponse.getNewRegisteredRunTaskDefinitions().add(
+          registeredRunTaskDefinition.getTaskDefinitionArn());
+      ecsRunTaskDeployResponse.getNewRunTaskArns().addAll(
+          triggeredTasks.stream().map(t -> t.getTaskArn()).collect(Collectors.toList()));
+    });
   }
 
   private void waitAndDoSteadyStateCheck(List<String> triggeredRunTaskArns, Long timeout,
