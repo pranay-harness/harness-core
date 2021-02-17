@@ -126,6 +126,24 @@ then
 fi
 cd ../..
 
+MODULE_NAME="340-ce-nextgen";
+FOLDER_NAME="ce-nextgen";
+mkdir -p dist/${FOLDER_NAME} ;
+cd dist/${FOLDER_NAME}
+cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
+cp ../../${MODULE_NAME}/keystore.jks .
+cp ../../${MODULE_NAME}/config.yml .
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
+cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 mkdir -p dist/delegate
 cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
