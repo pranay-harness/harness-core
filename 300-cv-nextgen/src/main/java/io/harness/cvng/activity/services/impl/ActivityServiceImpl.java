@@ -20,7 +20,6 @@ import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
-import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
@@ -42,7 +41,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
-import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 
@@ -101,6 +99,7 @@ public class ActivityServiceImpl implements ActivityService {
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     return register(accountId, activityDTO);
   }
+
   private String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
@@ -403,29 +402,25 @@ public class ActivityServiceImpl implements ActivityService {
         }
 
         activityDashboardDTOList.add(ActivityDashboardDTO.builder()
-                                         .activityType(getActivityType(activity))
+                                         .activityType(activity.getType())
                                          .activityId(activity.getUuid())
                                          .activityName(activity.getActivityName())
                                          .environmentIdentifier(activity.getEnvironmentIdentifier())
                                          .serviceIdentifier(activity.getServiceIdentifier())
                                          .activityStartTime(activity.getActivityStartTime().toEpochMilli())
                                          .activityVerificationSummary(summary)
-                                         .verificationStatus(summary == null ? ActivityVerificationStatus.NOT_STARTED
-                                                                             : summary.getAggregatedStatus())
+                                         .verificationStatus(getVerificationStatus(activity, summary))
                                          .build());
       });
     }
     return activityDashboardDTOList;
   }
 
-  private ActivityType getActivityType(Activity activity) {
-    switch (activity.getType()) {
-      case KUBERNETES:
-        KubernetesActivity kubernetesActivity = (KubernetesActivity) activity;
-        return kubernetesActivity.getKubernetesActivityType();
-      default:
-        return activity.getType();
+  private ActivityVerificationStatus getVerificationStatus(Activity activity, ActivityVerificationSummary summary) {
+    if (isEmpty(activity.getVerificationJobInstanceIds())) {
+      return ActivityVerificationStatus.IGNORED;
     }
+    return summary == null ? ActivityVerificationStatus.NOT_STARTED : summary.getAggregatedStatus();
   }
 
   @Override
@@ -616,18 +611,5 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
-  }
-
-  @Override
-  public ResponseDTO<List<String>> getActivityDetails(
-      String accountId, String orgIdentifier, String projectIdentifier, String activityId) {
-    Activity activity = hPersistence.createQuery(Activity.class, excludeAuthority)
-                            .filter(ActivityKeys.accountId, accountId)
-                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
-                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
-                            .filter("_id", activityId)
-                            .get();
-    Preconditions.checkNotNull(activity, "No activity found with id %s", activityId);
-    return ResponseDTO.newResponse(activity.getActivityDetails());
   }
 }

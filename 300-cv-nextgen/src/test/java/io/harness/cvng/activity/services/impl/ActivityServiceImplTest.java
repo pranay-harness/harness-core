@@ -4,6 +4,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDE
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.JOB_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -71,20 +72,12 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
-import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -800,19 +793,24 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(verificationJobService.getVerificationJob(
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    instant = Instant.now();
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
-    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
 
     ActivityVerificationSummary summary = createActivitySummary(Instant.now());
     when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
+    when(verificationJobInstanceService.create(anyList())).thenAnswer(invocationOnMock -> {
+      List<VerificationJobInstance> verificationJobInstances =
+          (List<VerificationJobInstance>) invocationOnMock.getArguments()[0];
+      return hPersistence.save(verificationJobInstances);
+    });
 
+    instant = Instant.now();
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
     List<ActivityDashboardDTO> dashboardDTOList =
         activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
 
     assertThat(dashboardDTOList.size()).isEqualTo(2);
-    List<Activity> activity = hPersistence.createQuery(Activity.class)
+    List<Activity> activity = hPersistence.createQuery(Activity.class, excludeAuthority)
                                   .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                   .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                   .asList();
@@ -1003,27 +1001,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetActivityDetails() throws IOException {
-    File file = new File(getResourceFilePath("activity/kubernetesActivity.json"));
-    final Gson gson = new Gson();
-    String activityId;
-    KubernetesActivity kubernetesActivity;
-    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-      Type type = new TypeToken<KubernetesActivity>() {}.getType();
-      kubernetesActivity = gson.fromJson(br, type);
-      kubernetesActivity.setAccountId(accountId);
-      kubernetesActivity.setOrgIdentifier(orgIdentifier);
-      kubernetesActivity.setProjectIdentifier(projectIdentifier);
-      activityId = hPersistence.save(kubernetesActivity);
-    }
-    ResponseDTO<List<String>> activityDetails =
-        activityService.getActivityDetails(accountId, orgIdentifier, projectIdentifier, activityId);
-    assertThat(activityDetails.getData()).isNotEmpty();
-    assertThat(activityDetails.getData().size()).isEqualTo(kubernetesActivity.getActivities().size());
-  }
-
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpdateActivityStatus_passed() {
