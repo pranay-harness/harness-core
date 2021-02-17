@@ -16,7 +16,6 @@ import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
-import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.git.UsernamePasswordAuthRequest;
