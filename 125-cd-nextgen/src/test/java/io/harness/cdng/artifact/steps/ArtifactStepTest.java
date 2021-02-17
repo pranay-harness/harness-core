@@ -72,10 +72,11 @@ public class ArtifactStepTest extends CDNGTestBase {
   public void testObtainingArtifactTaskForDocker() {
     Ambiance ambiance =
         Ambiance.newBuilder()
-            .putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID", "expressionFunctorToken", "1234",
-                "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
+            .putAllSetupAbstractions(ImmutableMap.of(
+                "accountId", "ACCOUNT_ID", "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
             .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build(),
                 Level.newBuilder().setRuntimeId("node2").build(), Level.newBuilder().setRuntimeId("node3").build()))
+            .setExpressionFunctorToken(1234)
             .build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))
