@@ -105,6 +105,8 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getCallbackIdsList()).contains(barrierGroupId);
+    assertThat(stepResponse.getLogKeysList()).isEmpty();
+    assertThat(stepResponse.getUnitsList()).isEmpty();
 
     verify(barrierService).findByPlanNodeId(planNodeId);
     verify(barrierService).update(barrier);
