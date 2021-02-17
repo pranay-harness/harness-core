@@ -67,6 +67,7 @@ BAZEL_MODULES="\
   //260-delegate:module_deploy.jar \
   //250-watcher:module \
   //250-watcher:module_deploy.jar \
+  //300-cv-nextgen:module_deploy.jar \
   //340-ce-nextgen:module \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
@@ -294,6 +295,7 @@ build_bazel_application 160-model-gen-tool
 build_bazel_application 260-delegate
 build_bazel_application 250-watcher
 build_bazel_application 210-command-library-server
+build_bazel_application 300-cv-nextgen
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group

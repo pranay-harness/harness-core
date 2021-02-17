@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesActivityDetail;
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesActivityDetailsDTOBuilder;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
@@ -56,15 +59,16 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       Preconditions.checkNotNull(activity.getEnvironmentIdentifier(), "environment identifier can not be null");
       Preconditions.checkNotNull(activity.getServiceIdentifier(), "service identifier can not be null");
       Instant bucketStartTime = Instant.ofEpochMilli(Timestamp.minuteBoundary(activity.getActivityStartTime()));
-      Query<Activity> query =
-          hPersistence.createQuery(Activity.class, excludeAuthority)
-              .disableValidation()
-              .filter(ActivityKeys.accountId, accountId)
-              .filter(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
-              .filter(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
-              .filter(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
-              .filter(KubernetesActivityKeys.eventType, activity.getEventType())
-              .filter(KubernetesActivityKeys.bucketStartTime, bucketStartTime);
+      Query<Activity> query = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                  .disableValidation()
+                                  .filter(ActivityKeys.accountId, accountId)
+                                  .filter(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
+                                  .filter(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
+                                  .filter(ActivityKeys.activitySourceId, activitySourceId)
+                                  .filter(KubernetesActivityKeys.namespace, activity.getNamespace())
+                                  .filter(KubernetesActivityKeys.workloadName, activity.getWorkloadName())
+                                  .filter(KubernetesActivityKeys.kind, activity.getKind())
+                                  .filter(KubernetesActivityKeys.bucketStartTime, bucketStartTime);
 
       Activity savedActivity = hPersistence.upsert(query,
           hPersistence.createUpdateOperations(Activity.class)
@@ -72,6 +76,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
               .setOnInsert("className", KubernetesActivity.class.getName())
               .setOnInsert(ActivityKeys.accountId, accountId)
               .setOnInsert(ActivityKeys.uuid, generateUuid())
+              .setOnInsert(ActivityKeys.activitySourceId, activitySourceId)
               .setOnInsert(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
               .setOnInsert(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
               .setOnInsert(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
@@ -79,9 +84,10 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
               .setOnInsert(ActivityKeys.activityStartTime, bucketStartTime)
               .setOnInsert(ActivityKeys.type, ActivityType.KUBERNETES)
               .setOnInsert(ActivityKeys.validUntil, KubernetesActivity.builder().build().getValidUntil())
-              .setOnInsert(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
+              .setOnInsert(KubernetesActivityKeys.namespace, activity.getNamespace())
+              .setOnInsert(KubernetesActivityKeys.kind, activity.getKind())
+              .setOnInsert(KubernetesActivityKeys.workloadName, activity.getWorkloadName())
               .setOnInsert(ActivityKeys.analysisStatus, ActivityVerificationStatus.NOT_STARTED)
-              .setOnInsert(KubernetesActivityKeys.eventType, activity.getEventType())
               .setOnInsert(KubernetesActivityKeys.bucketStartTime, bucketStartTime)
               .addToSet(KubernetesActivityKeys.activities, activity),
           new FindAndModifyOptions().upsert(true));
@@ -194,5 +200,41 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       query = query.filter(ActivitySourceKeys.projectIdentifier, projectIdentifier);
     }
     return query.asList();
+  }
+
+  @Override
+  public KubernetesActivityDetailsDTO getEventDetails(
+      String accountId, String orgIdentifier, String projectIdentifier, String activityId) {
+    Activity activity = hPersistence.createQuery(Activity.class, excludeAuthority)
+                            .filter(ActivityKeys.accountId, accountId)
+                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                            .filter(ActivityKeys.uuid, activityId)
+                            .get();
+
+    Preconditions.checkNotNull(activity, "No activity found with id %s", activityId);
+    Preconditions.checkState(ActivityType.KUBERNETES.equals(activity.getType()),
+        "activity with id %s is not a kubernetes activity", activityId);
+
+    KubernetesActivitySource activitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(activity.getActivitySourceId());
+    KubernetesActivity kubernetesActivity = (KubernetesActivity) activity;
+    KubernetesActivityDetailsDTOBuilder kubernetesActivityDetailsDTOBuilder =
+        KubernetesActivityDetailsDTO.builder()
+            .namespace(kubernetesActivity.getNamespace())
+            .kind(kubernetesActivity.getKind())
+            .workload(kubernetesActivity.getWorkloadName())
+            .sourceName(activitySource.getName())
+            .connectorIdentifier(activitySource.getConnectorIdentifier());
+
+    kubernetesActivity.getActivities().forEach(kubernetesActivityDTO
+        -> kubernetesActivityDetailsDTOBuilder.detail(KubernetesActivityDetail.builder()
+                                                          .timeStamp(kubernetesActivityDTO.getActivityStartTime())
+                                                          .eventType(kubernetesActivityDTO.getEventType())
+                                                          .reason(kubernetesActivityDTO.getReason())
+                                                          .message(kubernetesActivityDTO.getMessage())
+                                                          .eventJson(kubernetesActivityDTO.getEventJson())
+                                                          .build()));
+    return kubernetesActivityDetailsDTOBuilder.build();
   }
 }

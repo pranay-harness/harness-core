@@ -184,7 +184,11 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   }
 
   private DeletedCVConfig createDeletedCVConfig(CVConfig cvConfig) {
-    return DeletedCVConfig.builder().accountId(cvConfig.getAccountId()).cvConfig(cvConfig).build();
+    return DeletedCVConfig.builder()
+        .accountId(cvConfig.getAccountId())
+        .cvConfig(cvConfig)
+        .perpetualTaskId(cvConfig.getPerpetualTaskId())
+        .build();
   }
 
   private void fillCommon(CVConfig cvConfig) {
@@ -199,5 +203,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
+    cvConfig.setPerpetualTaskId(generateUuid());
   }
 }
