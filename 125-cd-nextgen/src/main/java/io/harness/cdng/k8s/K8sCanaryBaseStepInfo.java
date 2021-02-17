@@ -1,7 +1,9 @@
 package io.harness.cdng.k8s;
 
+import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,5 +16,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("K8sCanaryBaseStepInfo")
 public class K8sCanaryBaseStepInfo {
   @NotNull InstanceSelectionWrapper instanceSelection;
-  ParameterField<Boolean> skipDryRun;
+  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
 }
