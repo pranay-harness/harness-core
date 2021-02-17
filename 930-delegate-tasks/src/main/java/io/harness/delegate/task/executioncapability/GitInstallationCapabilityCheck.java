@@ -17,7 +17,7 @@ import org.zeroturnaround.exec.ProcessResult;
 @Slf4j
 public class GitInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   private static final String GIT_HELP_COMMAND = "git --help";
-  private static final int GIT_COMMAND_TIMEOUT_MINUTES = 2;
+  private static final int GIT_COMMAND_TIMEOUT_MILLIS = 1000;
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
@@ -41,7 +41,7 @@ public class GitInstallationCapabilityCheck implements CapabilityCheck, ProtoCap
     boolean gitInstalled = false;
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .command("/bin/sh", "-c", GIT_HELP_COMMAND)
-                                          .timeout(GIT_COMMAND_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+                                          .timeout(GIT_COMMAND_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
     try {
       ProcessResult processResult = processExecutor.execute();
       if (processResult.getExitValue() == 0) {
