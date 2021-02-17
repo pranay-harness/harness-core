@@ -50,8 +50,8 @@ public class PipelineSetupStep implements ChildExecutable<PipelineSetupStepParam
   @NotNull
   private VariablesSweepingOutput getVariablesOutput(Ambiance ambiance, PipelineSetupStepParameters stepParameters) {
     VariablesSweepingOutput variablesSweepingOutput = new VariablesSweepingOutput();
-    variablesSweepingOutput.putAll(NGVariablesUtils.getMapOfVariables(stepParameters.getOriginalVariables(),
-        Integer.parseInt(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken"))));
+    variablesSweepingOutput.putAll(NGVariablesUtils.getMapOfVariables(
+        stepParameters.getOriginalVariables(), ambiance.getExpressionFunctorToken()));
     return variablesSweepingOutput;
   }
 
