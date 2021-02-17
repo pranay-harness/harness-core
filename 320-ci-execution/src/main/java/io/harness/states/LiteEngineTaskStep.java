@@ -1,9 +1,6 @@
 package io.harness.states;
 
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
+import com.google.inject.Inject;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
@@ -42,18 +39,19 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.TimeoutUtils;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.LogHelper;
 
-import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 /**
  * This state will setup the build environment, clone the git repository for running CI job.
