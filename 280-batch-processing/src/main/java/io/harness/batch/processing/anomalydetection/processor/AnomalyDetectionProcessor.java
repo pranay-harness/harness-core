@@ -43,8 +43,10 @@ public class AnomalyDetectionProcessor
     try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
       AnomalyDetectionHelper.logProcessingTimeSeries("Stats Model");
       returnAnomaly = statsModel.detectAnomaly(timeSeries);
-      AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
-      returnAnomaly2 = pythonService.process(timeSeries);
+      if (returnAnomaly.isAnomaly()) {
+        AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
+        returnAnomaly2 = pythonService.process(timeSeries);
+      }
       log.info("finally after processing, isAnomaly : [{}]", returnAnomaly.isAnomaly());
     }
 
