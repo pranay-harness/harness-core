@@ -1,9 +1,11 @@
 package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
@@ -41,6 +43,8 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS));
+    StepLogKeyDetails stepLogKeyDetails = (StepLogKeyDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS));
     String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
     log.info("Waiting on response for task id {} and step Id {}", stepTaskDetails.getTaskIds().get(stepIdentifier),
         stepIdentifier);

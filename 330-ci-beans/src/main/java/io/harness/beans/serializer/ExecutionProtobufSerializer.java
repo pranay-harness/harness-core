@@ -62,7 +62,8 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
                 .filter(executionWrapperInParallel
                     -> executionWrapperInParallel.getStep() != null && !executionWrapperInParallel.getStep().isNull())
                 .map(executionWrapperInParallel -> getStepElementConfig(executionWrapperInParallel))
-                .map(stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds))
+                .map(
+                    stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds, stepLogKeys))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
