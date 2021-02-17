@@ -196,6 +196,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
+import javax.ws.rs.core.MediaType;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -1861,8 +1862,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .description("desc")
                                             .build();
 
-    File gzipFile = delegateService.generateKubernetesYaml(
-        ACCOUNT_ID, setupDetails, "https://localhost:9090", "https://localhost:7070");
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
 
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);

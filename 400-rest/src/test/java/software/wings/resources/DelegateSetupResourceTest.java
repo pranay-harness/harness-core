@@ -334,7 +334,8 @@ public class DelegateSetupResourceTest {
                                             .delegateConfigurationId("delConfigId")
                                             .build();
 
-    when(delegateService.generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString()))
+    when(delegateService.generateKubernetesYaml(
+             eq(accountId), eq(setupDetails), anyString(), anyString(), any(MediaType.class)))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/generate-kubernetes-yaml?accountId=" + accountId)
@@ -342,7 +343,7 @@ public class DelegateSetupResourceTest {
                                 .post(entity(setupDetails, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString());
+        .generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString(), any(MediaType.class));
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
