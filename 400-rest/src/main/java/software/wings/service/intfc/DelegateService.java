@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
+import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
@@ -60,7 +61,7 @@ public interface DelegateService extends OwnedByAccount {
   DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails);
 
   File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
-      String verificationServiceUrl) throws IOException;
+      String verificationServiceUrl, MediaType fileFormat) throws IOException;
 
   Delegate update(@Valid Delegate delegate);
 

@@ -43,11 +43,11 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -259,7 +259,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -284,6 +283,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
+import javax.ws.rs.core.MediaType;
 import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -600,7 +600,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
-      String verificationServiceUrl) throws IOException {
+      String verificationServiceUrl, MediaType fileFormat) throws IOException {
     validateSetupDetails(delegateSetupDetails);
     if (isBlank(delegateSetupDetails.getSessionIdentifier())) {
       throw new InvalidRequestException("Session identifier must be provided.", USER);
@@ -652,6 +652,11 @@ public class DelegateServiceImpl implements DelegateService {
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + "-ng.yaml.ftl");
       yaml = new File(yaml.getAbsolutePath());
+
+      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
+        return yaml;
+      }
+
       TarArchiveEntry yamlTarArchiveEntry =
           new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
       out.putArchiveEntry(yamlTarArchiveEntry);
@@ -3834,7 +3839,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<DelegateSizeDetails> fetchAvailableSizes() {
     try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("delegatesizes/sizes.json")) {
-      String fileContent = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+      String fileContent = IOUtils.toString(inputStream, UTF_8);
       AvailableDelegateSizes availableDelegateSizes = JsonUtils.asObject(fileContent, AvailableDelegateSizes.class);
 
       return availableDelegateSizes.getAvailableSizes();
