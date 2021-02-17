@@ -1,6 +1,6 @@
 Portal Project Dev environment setup instructions
 ==================================================
-## On MacOS
+## On MacOS 
 
 ### Prerequisities
 1. Install Homebrew:
