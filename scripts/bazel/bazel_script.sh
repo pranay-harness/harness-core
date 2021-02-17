@@ -71,6 +71,7 @@ BAZEL_MODULES="\
   //320-ci-execution:module \
   //330-ci-beans:module \
   //340-ce-nextgen:module \
+  //340-ce-nextgen:module_deploy.jar \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
   //360-cg-manager:module \
@@ -294,6 +295,7 @@ build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
 build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
+build_bazel_application 340-ce-nextgen
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 build_bazel_application 120-ng-manager

@@ -104,3 +104,4 @@ import_run_configurations:
   run-configurations/DataGen_App.xml
   run-configurations/CIManagerApplication.xml
   run-configurations/GitSyncTestApp.xml
+  run-configurations/CENextGenApp.xml
