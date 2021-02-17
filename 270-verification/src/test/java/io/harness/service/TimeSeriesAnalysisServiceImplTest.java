@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -96,7 +96,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
-public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
+public class TimeSeriesAnalysisServiceImplTest extends VerificationBase {
   private String cvConfigId;
   private String serviceId;
   private String accountId;

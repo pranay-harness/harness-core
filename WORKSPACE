@@ -1981,6 +1981,7 @@ maven_install(
         "org.jsoup:jsoup:1.8.3",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "com.github.heremaps:oksse:0.9.0",
+        "io.prometheus:simpleclient_servlet:0.3.0"
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
