@@ -21,10 +21,12 @@ import io.harness.tasks.ResponseData;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElement;
@@ -56,6 +58,7 @@ public abstract class AbstractAzureAppServiceState extends State {
   @Inject protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Inject protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Inject protected transient AzureAppServiceManifestUtils azureAppServiceManifestUtils;
+  @Inject protected transient ServiceTemplateHelper serviceTemplateHelper;
   @Inject protected ActivityService activityService;
 
   public AbstractAzureAppServiceState(String name, StateType stateType) {
@@ -72,7 +75,7 @@ public abstract class AbstractAzureAppServiceState extends State {
   protected Integer getTimeout(ExecutionContext context) {
     int timeOut = AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
     SweepingOutput setupElementFromSweepingOutput =
-        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
+        azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (setupElementFromSweepingOutput != null) {
       AzureAppServiceSlotSetupContextElement setupContextElement =
           (AzureAppServiceSlotSetupContextElement) setupElementFromSweepingOutput;
@@ -112,6 +115,10 @@ public abstract class AbstractAzureAppServiceState extends State {
     StateExecutionData stateExecutionData = buildPreStateExecutionData(activity, context, azureAppServiceStateData);
     Application application = azureAppServiceStateData.getApplication();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    AzureWebAppInfrastructureMapping infrastructureMapping = azureAppServiceStateData.getInfrastructureMapping();
+    String serviceTemplateId =
+        infrastructureMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
+
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(application.getAccountId())
@@ -131,6 +138,7 @@ public abstract class AbstractAzureAppServiceState extends State {
                 azureAppServiceStateData.getInfrastructureMapping().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, azureAppServiceStateData.getInfrastructureMapping().getServiceId())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .build();
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
                                                       .stateExecutionData(stateExecutionData)
@@ -191,13 +199,9 @@ public abstract class AbstractAzureAppServiceState extends State {
     log.info(String.format("Nothing to save for external consumption - [%s]", getName()));
   }
 
-  protected boolean shouldExecute(ExecutionContext context) {
-    return verifyIfContextElementExist(context);
-  }
-
   protected boolean verifyIfContextElementExist(ExecutionContext context) {
     SweepingOutput setupElementFromSweepingOutput =
-        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
+        azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (!(setupElementFromSweepingOutput instanceof AzureAppServiceSlotSetupContextElement)) {
       if (isRollback()) {
         return false;
@@ -208,9 +212,11 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   protected AzureAppServiceSlotSetupContextElement readContextElement(ExecutionContext context) {
-    return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
+    return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(
         context, SWEEPING_OUTPUT_APP_SERVICE);
   }
+
+  protected abstract boolean shouldExecute(ExecutionContext context);
 
   protected abstract AzureTaskExecutionRequest buildTaskExecutionRequest(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity);

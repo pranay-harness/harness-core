@@ -1,12 +1,24 @@
 package software.wings.service.impl.deployment.checks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.FeatureName;
 import io.harness.data.validator.ConditionsValidator;
 import io.harness.data.validator.ConditionsValidator.Condition;
+import io.harness.eraro.Level;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
+import io.harness.governance.BlackoutWindowFilterType;
+import io.harness.governance.CustomAppFilter;
+import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.GovernanceFreezeConfig;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
@@ -17,7 +29,12 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.extern.slf4j.Slf4j;
@@ -25,16 +42,19 @@ import org.apache.commons.collections4.CollectionUtils;
 
 @Slf4j
 @ParametersAreNonnullByDefault
+@TargetModule(Module._960_API_SERVICES)
 public class DeploymentFreezeChecker implements PreDeploymentChecker {
   private GovernanceConfigService governanceConfigService;
   private DeploymentCtx deploymentCtx;
   private EnvironmentService environmentService;
+  private FeatureFlagService featureFlagService;
 
   public DeploymentFreezeChecker(GovernanceConfigService governanceConfigService, DeploymentCtx deploymentCtx,
-      EnvironmentService environmentService) {
+      EnvironmentService environmentService, FeatureFlagService featureFlagService) {
     this.governanceConfigService = governanceConfigService;
     this.deploymentCtx = deploymentCtx;
     this.environmentService = environmentService;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -45,8 +65,16 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
     }
 
     if (governanceConfig.isDeploymentFreeze()) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Deployment Freeze is active. No deployments are allowed.");
+      throw new DeploymentFreezeException(
+          DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId, Collections.emptyList(), "", true);
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
+      if (isEmpty(deploymentCtx.getEnvIds())) {
+        checkIfAppFrozen(governanceConfig, accountId);
+      }
+      checkIfEnvFrozen(accountId, governanceConfig);
+      return;
     }
 
     if (matches(deploymentCtx, governanceConfig)) {
@@ -55,6 +83,77 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Deployment Freeze window is active. No deployments are allowed.");
     }
+  }
+
+  // Checks if the app is completely frozen then sends notification to all windows that freeze the app
+  private void checkIfAppFrozen(GovernanceConfig governanceConfig, String accountId) {
+    if (isEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      return;
+    }
+    List<GovernanceFreezeConfig> blockingWindows =
+        governanceConfig.getTimeRangeBasedFreezeConfigs()
+            .stream()
+            .filter(freezeWindow -> freezeWindow.checkIfActive() && containsApplication(freezeWindow))
+            .collect(Collectors.toList());
+    if (isNotEmpty(blockingWindows)) {
+      throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
+          blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
+          blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
+          false);
+    }
+  }
+
+  // To check if a freeze window freezes that particular application completely
+  private boolean containsApplication(TimeRangeBasedFreezeConfig freezeWindow) {
+    if (isEmpty(freezeWindow.getAppSelections())) {
+      return false;
+    }
+    return freezeWindow.getAppSelections()
+        .stream()
+        .filter(appSelection -> appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.ALL)
+        .anyMatch(appSelection
+            -> appSelection.getFilterType() == BlackoutWindowFilterType.ALL
+                || ((CustomAppFilter) appSelection).getApps().contains(deploymentCtx.getAppId()));
+  }
+
+  void checkIfEnvFrozen(String accountId, GovernanceConfig governanceConfig) {
+    Map<String, Set<String>> frozenEnvsByWindow =
+        governanceConfigService.getFrozenEnvIdsForApp(accountId, deploymentCtx.getAppId(), governanceConfig);
+    if (isNotEmpty(deploymentCtx.getEnvIds()) && isNotEmpty(frozenEnvsByWindow)) {
+      // In case of pipeline with multiple envIds, we just check for the first stage environment(s). If any of the
+      // successive environments are frozen, pipeline is rejected at that stage
+      Set<String> allBlockedEnvs =
+          frozenEnvsByWindow.values().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+      if (!allBlockedEnvs.containsAll(deploymentCtx.getEnvIds())) {
+        return;
+      }
+      // Windows which blocks any of the environment in check
+      List<GovernanceFreezeConfig> blockingWindows =
+          frozenEnvsByWindow.entrySet()
+              .stream()
+              .filter(entry -> deploymentCtx.getEnvIds().stream().anyMatch(envId -> entry.getValue().contains(envId)))
+              .map(entry -> getFreezeWindow(entry.getKey(), governanceConfig))
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
+
+      if (isNotEmpty(blockingWindows)) {
+        throw new DeploymentFreezeException(DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, USER, accountId,
+            blockingWindows.stream().map(GovernanceFreezeConfig::getUuid).collect(Collectors.toList()),
+            blockingWindows.stream().map(GovernanceFreezeConfig::getName).collect(Collectors.joining(", ", "[", "]")),
+            false);
+      }
+    }
+  }
+
+  private GovernanceFreezeConfig getFreezeWindow(String freezeId, GovernanceConfig governanceConfig) {
+    if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      return governanceConfig.getTimeRangeBasedFreezeConfigs()
+          .stream()
+          .filter(freeze -> freezeId.equals(freeze.getUuid()))
+          .findAny()
+          .orElse(null);
+    }
+    return null;
   }
 
   public boolean matches(DeploymentCtx deploymentCtx, GovernanceConfig freezeConfig) {

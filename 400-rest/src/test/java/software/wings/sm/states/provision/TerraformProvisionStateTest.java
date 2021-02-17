@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -1192,5 +1193,38 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(source.getGitFileConfig().getFilePathList())
         .containsExactlyInAnyOrder(expectedList.get(0), expectedList.get(1));
     assertThat(source.getEncryptedDataDetails()).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExecuteInternalForSecretMangerConfig() {
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    doReturn(Environment.Builder.anEnvironment().build()).when(executionContext).getEnv();
+    state.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .sourceRepoBranch("sourceRepoBranch")
+                                                         .kmsId("kmsId")
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(ACCOUNT_ID).when(executionContext).getAccountId();
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+
+    state.setRunPlanOnly(true);
+    ExecutionResponse executionResponse = state.execute(executionContext);
+    verify(secretManagerConfigService, times(0)).getSecretManager(anyString(), anyString(), anyBoolean());
+    assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
+        .isEqualTo("uuid");
+
+    state.setRunPlanOnly(true);
+    state.setExportPlanToApplyStep(true);
+    ExecutionResponse executionResponse1 = state.execute(executionContext);
+    verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
+    assertThat(((ScriptStateExecutionData) executionResponse1.getStateExecutionData()).getActivityId())
+        .isEqualTo("uuid");
   }
 }

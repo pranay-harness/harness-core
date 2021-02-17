@@ -53,7 +53,6 @@ public class VerificationTestRule extends WingsRule {
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-
     modules.add(TestMongoModule.getInstance());
     modules.add(new VerificationServiceModule((VerificationServiceConfiguration) configuration));
     modules.add(new VerificationTestModule());

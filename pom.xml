@@ -6,29 +6,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>120-ng-manager</module>
-        <module>125-cd-nextgen</module>
-        <module>136-git-sync-manager</module>
-        <module>160-model-gen-tool</module>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
-        <module>210-command-library-server</module>
-        <!--        <module>220-graphql-test</module>-->
-        <!--        <module>230-model-test</module>-->
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
         <module>280-batch-processing</module>
-        <module>300-cv-nextgen</module>
-        <module>310-ci-manager</module>
-        <module>320-ci-execution</module>
-        <module>330-ci-beans</module>
-        <module>340-ce-nextgen</module>
-        <module>350-event-server</module>
-        <module>380-cg-graphql</module>
-        <!--<module>400-rest</module>-->
-        <module>830-notification-service</module>
-        <module>899-yaml-schema-plugin</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

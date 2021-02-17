@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -195,6 +196,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testCreateCDInputSet() {
     doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
     doReturn(inputSetEntity).when(inputSetEntityService).create(any());
@@ -226,6 +228,7 @@ public class InputSetResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testUpdateCDInputSet() {
     doReturn(mergeInputSetResponse).when(inputSetEntityValidationHelper).validateInputSetEntity(any());
     doReturn(inputSetEntity).when(inputSetEntityService).update(any());

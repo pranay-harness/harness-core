@@ -47,6 +47,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.VerificationBaseTest;
+import io.harness.alert.AlertData;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EnvironmentType;
@@ -198,6 +199,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DataStoreService dataStoreService;
+  @Inject Map<AlertType, Class<? extends AlertData>> alertTypeClassMap;
 
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private CVTaskService cvTaskService;
@@ -317,6 +319,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(alertService, "wingsPersistence", wingsPersistence, true);
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
     writeField(alertService, "injector", injector, true);
+    writeField(alertService, "alertTypeClassMap", alertTypeClassMap, true);
     writeField(managerVerificationService, "alertService", alertService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
     when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyString(), anyLong())).thenReturn(activityLogger);

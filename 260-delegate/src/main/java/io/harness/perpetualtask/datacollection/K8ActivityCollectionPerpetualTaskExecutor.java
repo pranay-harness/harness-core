@@ -6,8 +6,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.CVNGRequestExecutor;
+import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -28,6 +28,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate.WatcherGroup;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
+import io.harness.verificationclient.CVNextGenServiceClient;
 
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -58,6 +59,8 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private ApiClientFactory apiClientFactory;
   @Inject private KubernetesActivitiesStoreService kubernetesActivitiesStoreService;
+  @Inject private CVNGRequestExecutor cvngRequestExecutor;
+  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -65,12 +68,11 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       K8ActivityCollectionPerpetualTaskParams taskParams =
           AnyUtils.unpack(params.getCustomizedParams(), K8ActivityCollectionPerpetualTaskParams.class);
-      String activitySourceConfigId = taskParams.getActivitySourceConfigId();
-      log.info("Executing for !! activitySourceId: {}", activitySourceConfigId);
+      log.info("Executing for !! activitySourceId: {}", taskParams.getDataCollectionWorkerId());
       watchMap.computeIfAbsent(taskId.getId(), id -> {
-        K8ActivityDataCollectionInfo dataCollectionInfo =
-            (K8ActivityDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
-        log.info("DataCollectionInfo {} ", dataCollectionInfo);
+        CVDataCollectionInfo dataCollectionInfo =
+            (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
+        log.info("for {} DataCollectionInfo {} ", taskParams.getDataCollectionWorkerId(), dataCollectionInfo);
         KubernetesClusterConfigDTO kubernetesClusterConfig =
             (KubernetesClusterConfigDTO) dataCollectionInfo.getConnectorConfigDTO();
         KubernetesAuthCredentialDTO kubernetesCredentialAuth =
@@ -80,7 +82,8 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
         secretDecryptionService.decrypt(kubernetesCredentialAuth, dataCollectionInfo.getEncryptedDataDetails());
         SharedInformerFactory factory = new SharedInformerFactory();
         KubernetesActivitySourceDTO activitySourceDTO =
-            (KubernetesActivitySourceDTO) dataCollectionInfo.getActivitySourceDTO();
+            getActivitySourceDTO(taskParams.getAccountId(), taskParams.getDataCollectionWorkerId());
+        log.info("for {} got the activity source as {}", taskParams.getDataCollectionWorkerId(), activitySourceDTO);
         KubernetesConfig kubernetesConfig =
             k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
         ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig).setVerifyingSsl(false);
@@ -104,13 +107,16 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
                 if (workLoadName.contains(activitySourceConfig.getWorkloadName())) {
                   kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
                       KubernetesActivityDTO.builder()
+                          .namespace(namespace)
+                          .workloadName(activitySourceConfig.getWorkloadName())
+                          .kind(v1Event.getInvolvedObject().getKind())
+                          .reason(v1Event.getReason())
                           .message(v1Event.getMessage())
-                          .eventDetails(v1Event.toString())
-                          .activitySourceConfigId(activitySourceConfigId)
+                          .eventJson(v1Event.toString())
+                          .activitySourceConfigId(activitySourceDTO.getUuid())
                           .name(v1Event.getInvolvedObject().getUid())
                           .activityStartTime(v1Event.getFirstTimestamp().getMillis())
                           .activityEndTime(v1Event.getLastTimestamp().getMillis())
-                          .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
                           .eventType(KubernetesEventType.valueOf(v1Event.getType()))
                           .serviceIdentifier(activitySourceConfig.getServiceIdentifier())
                           .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
@@ -154,5 +160,11 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
       watchMap.remove(watchId);
       return true;
     }
+  }
+
+  private KubernetesActivitySourceDTO getActivitySourceDTO(String accountId, String dataCollectionWorkerId) {
+    return cvngRequestExecutor
+        .executeWithRetry(cvNextGenServiceClient.getKubernetesActivitySourceDTO(accountId, dataCollectionWorkerId))
+        .getResource();
   }
 }

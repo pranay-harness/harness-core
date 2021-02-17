@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -26,6 +28,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsEcrHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcrHelperServiceDelegate {
   @VisibleForTesting

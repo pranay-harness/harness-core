@@ -22,7 +22,7 @@ def run_tests(**kwargs):
             **kwargs
         )
 
-def run_package_tests(deps, resources = [], data = []):
+def run_package_tests(deps = [], data = [], resources = []):
     all_srcs = native.glob(["src/test/**/*.java"])
 
     directories = {}
@@ -31,8 +31,19 @@ def run_package_tests(deps, resources = [], data = []):
         srcs = directories.setdefault(directory, [])
         srcs.append(src)
 
+    native.java_library(
+        name = "shared_package_tests",
+        srcs = native.glob(
+            include = ["src/test/**/*.java"],
+            exclude = ["src/test/**/*Test.java"],
+        ),
+        data = data,
+        resources = resources,
+        deps = deps,
+    )
+
     for directory in directories.items():
-        junit_package_test(directory[0], directory[1], deps, resources, data)
+        junit_package_test(directory[0], directory[1], deps)
 
 template = """
 package %s;
@@ -47,14 +58,14 @@ public class AllTests%s {
 
 """
 
-MAX_TESTS = 10
+MAX_TESTS = 8
 
 def calculate_index(length, i):
     if length < MAX_TESTS:
         return ""
     return str(i // MAX_TESTS + 1)
 
-def junit_package_test(directory, srcs, deps, resources, data):
+def junit_package_test(directory, srcs, deps):
     truncate = len(directory) + 1
 
     shared_src = []
@@ -96,13 +107,11 @@ EOF""" % code,
         native.java_test(
             name = package + ".tests" + index,
             test_class = package + "." + test_class,
+            deps = [":shared_package_tests"] + deps,
             size = "large",
 
             # inputs
-            srcs = shared_src + [x[0] for x in tests] + code_filepath,
-            deps = deps,
-            resources = resources,
-            data = data,
+            srcs = code_filepath + [x[0] for x in tests],
 
             #Additional
             visibility = ["//visibility:public"],

@@ -29,7 +29,7 @@ public class BitbucketToGitMapper {
     } else if (authType == GitAuthType.SSH) {
       final BitbucketSshCredentialsDTO sshCredentials =
           (BitbucketSshCredentialsDTO) bitbucketConnectorDTO.getAuthentication().getCredentials();
-      final SecretRefData sshKeyRef = sshCredentials.getSpec().getSshKeyRef();
+      final SecretRefData sshKeyRef = sshCredentials.getSshKeyRef();
       return GitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);

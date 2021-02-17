@@ -17,7 +17,7 @@ import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PluginSettingUtilsTest extends CIExecutionTest {
+public class PluginSettingUtilsTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)

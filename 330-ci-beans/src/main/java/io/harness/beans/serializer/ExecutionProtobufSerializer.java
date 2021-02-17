@@ -36,7 +36,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
   @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
-  @Inject private TestIntelligenceStepProtobufSerializer testIntelligenceStepProtobufSerializer;
+  @Inject private RunTestsStepProtobufSerializer runTestsStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
   public Execution convertExecutionElement(ExecutionElementConfig executionElement,
@@ -145,7 +145,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
           return pluginCompatibleStepSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case TEST_INTELLIGENCE:
-          return testIntelligenceStepProtobufSerializer.serializeStep(
+          return runTestsStepProtobufSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case CLEANUP:
         case TEST:

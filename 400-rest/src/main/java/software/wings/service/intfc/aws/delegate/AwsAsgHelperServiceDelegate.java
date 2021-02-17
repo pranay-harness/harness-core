@@ -1,5 +1,7 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -17,6 +19,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import java.util.List;
 import java.util.Map;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public interface AwsAsgHelperServiceDelegate {
   List<String> listAutoScalingGroupNames(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);

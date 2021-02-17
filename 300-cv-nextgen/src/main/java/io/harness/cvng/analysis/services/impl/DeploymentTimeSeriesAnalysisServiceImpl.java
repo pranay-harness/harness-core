@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
@@ -172,7 +173,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId) {
-    return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
+    return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class, excludeAuthority)
         .filter(DeploymentTimeSeriesAnalysisKeys.verificationTaskId, verificationTaskId)
         .asList();
   }

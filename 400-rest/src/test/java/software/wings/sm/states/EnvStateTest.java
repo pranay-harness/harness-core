@@ -1,19 +1,23 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.alert.AlertType.DEPLOYMENT_FREEZE_EVENT;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -21,6 +25,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -28,13 +35,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
@@ -52,7 +65,10 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.NotificationMessageResolver;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -65,6 +81,9 @@ import software.wings.sm.WorkflowStandardParams;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
@@ -73,6 +92,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._860_ORCHESTRATION_STEPS)
 public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ExecutionContextImpl context;
@@ -83,6 +103,8 @@ public class EnvStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private NotificationMessageResolver notificationMessageResolver;
+  @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
 
   private static final WorkflowElement workflowElement =
       WorkflowElement.builder()
@@ -373,5 +395,63 @@ public class EnvStateTest extends WingsBaseTest {
     envState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
     assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow not completed within 36m");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnRejectedResponseAndSendNotificationOnDeploymentFreeze() {
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    List<String> deploymentFreezeIds = Collections.singletonList(FREEZE_WINDOW_ID);
+    when(workflowExecutionService.triggerOrchestrationExecution(
+             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, deploymentFreezeIds, "", false));
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(WorkflowExecution.builder().build());
+    Map<String, String> emptyMap = new HashMap<>();
+    when(notificationMessageResolver.getPlaceholderValues(eq(context), eq(""), eq(0), anyLong(), eq(""), eq("rejected"),
+             eq(""), eq(REJECTED), eq(DEPLOYMENT_FREEZE_EVENT)))
+        .thenReturn(emptyMap);
+
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService)
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    verify(deploymentFreezeUtils, times(1))
+        .sendPipelineRejectionNotification(ACCOUNT_ID, APP_ID, deploymentFreezeIds, emptyMap);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+    assertThat(executionResponse.getErrorMessage()).isNotBlank();
+    EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnRejectedResponseForMasterDeploymentFreeze() {
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.triggerOrchestrationExecution(
+             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, Collections.emptyList(), "", true));
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(WorkflowExecution.builder().build());
+
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService)
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    verify(deploymentFreezeUtils, never())
+        .sendPipelineRejectionNotification(eq(ACCOUNT_ID), eq(APP_ID), anyList(), anyMap());
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("Master Deployment Freeze is active. No deployments are allowed.");
+    EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
   }
 }

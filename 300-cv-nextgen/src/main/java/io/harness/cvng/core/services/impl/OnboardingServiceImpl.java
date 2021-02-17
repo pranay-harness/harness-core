@@ -25,7 +25,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     String response =
         verificationManagerService.getDataCollectionResponse(accountId, onboardingRequestDTO.getOrgIdentifier(),
             onboardingRequestDTO.getProjectIdentifier(), onboardingRequestDTO.getDataCollectionRequest());
-    log.info(response);
+    log.debug(response);
     return OnboardingResponseDTO.builder()
         .accountId(accountId)
         .connectorIdentifier(onboardingRequestDTO.getConnectorIdentifier())

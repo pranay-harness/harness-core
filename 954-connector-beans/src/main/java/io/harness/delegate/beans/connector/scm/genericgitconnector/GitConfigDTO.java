@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector {
   @NotNull @JsonProperty("type") GitAuthType gitAuthType;
   @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   String branchName;
 
   @JsonProperty("spec")

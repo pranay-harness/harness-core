@@ -18,6 +18,6 @@ public class ShellExecutorFactoryNG {
 
   private LogCallback getExecutionLogCallback(
       ShellExecutorConfig shellExecutorConfig, ILogStreamingTaskClient logStreamingTaskClient) {
-    return new NGLogCallback(logStreamingTaskClient, shellExecutorConfig.getCommandUnitName());
+    return new NGLogCallback(logStreamingTaskClient, shellExecutorConfig.getCommandUnitName(), true);
   }
 }

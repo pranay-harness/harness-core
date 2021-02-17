@@ -12,9 +12,9 @@ import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectio
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpSkuReader;
 import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionClusterTimescaleReader;
 import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionNamespaceTimescaleReader;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
 import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeScaleWriter;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.ccm.anomaly.entities.Anomaly;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;

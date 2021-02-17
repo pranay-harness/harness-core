@@ -5,7 +5,6 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
@@ -24,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractAzureAppServiceTaskHandler {
-  AzureTaskExecutionResponse executeTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+  public AzureTaskExecutionResponse executeTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     try {
       AzureAppServiceTaskResponse azureAppServiceTaskResponse =
@@ -46,10 +45,9 @@ public abstract class AbstractAzureAppServiceTaskHandler {
       AzureWebAppSlotSetupResponse azureWebAppSlotSetupResponse =
           (AzureWebAppSlotSetupResponse) azureAppServiceTaskResponse;
       String errorMsg = azureWebAppSlotSetupResponse.getErrorMsg();
-      return isNoneBlank(errorMsg) ? failureAppServiceTaskResponse(azureAppServiceTaskResponse, errorMsg)
-                                   : successAppServiceTaskResponse(azureAppServiceTaskResponse);
+      return errorMsg != null ? failureAppServiceTaskResponse(azureAppServiceTaskResponse, errorMsg)
+                              : successAppServiceTaskResponse(azureAppServiceTaskResponse);
     }
-
     return successAppServiceTaskResponse(azureAppServiceTaskResponse);
   }
 
@@ -88,9 +86,6 @@ public abstract class AbstractAzureAppServiceTaskHandler {
 
   protected void markDeploymentStatusAsSuccess(
       AzureAppServiceTaskParameters azureAppServiceTaskParameters, ILogStreamingTaskClient logStreamingTaskClient) {
-    if (azureAppServiceTaskParameters.isSyncTask()) {
-      return;
-    }
     LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.DEPLOYMENT_STATUS);
     logCallback.saveExecutionLog(String.format("The following task - [%s] completed successfully",
                                      azureAppServiceTaskParameters.getCommandType().name()),

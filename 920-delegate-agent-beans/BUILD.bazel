@@ -9,7 +9,7 @@ sources()
 
 shared_dependencies = [
     "//980-commons:module",
-    "//940-delegate-beans:module",
+    "//955-delegate-beans:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
@@ -39,7 +39,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         "module",
         "//990-commons-test:module",

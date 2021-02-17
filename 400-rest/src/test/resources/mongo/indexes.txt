@@ -52,10 +52,6 @@ applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
-armRollbackConfig {"name": "accountId_1", "background": true} {"accountId": 1}
-armRollbackConfig {"name": "appId_1", "background": true} {"appId": 1}
-armRollbackConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
-armRollbackConfig {"name": "entityId_1", "background": true} {"entityId": 1}
 artifactStream {"name": "appId_1", "background": true} {"appId": 1}
 artifactStream {"name": "artifactStream_cleanup", "background": true} {"artifactStreamType": 1, "nextCleanupIteration": 1}
 artifactStream {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -134,11 +130,10 @@ configFiles {"name": "appId_1", "background": true} {"appId": 1}
 configFiles {"name": "app_template_entityId", "background": true} {"appId": 1, "templateId": 1, "entityId": 1}
 configFiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 configFiles {"name": "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1", "unique": true} {"entityId": 1, "templateId": 1, "relativeFilePath": 1, "configOverrideType": 1, "instances": 1, "configOverrideExpression": 1}
-connectors {"name": "accountId_orgId_projectId_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
-connectors {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
-connectors {"name": "fullyQualifiedIdentifier_1", "background": true} {"fullyQualifiedIdentifier": 1}
+connectors {"name": "accountId_orgId_projectId_name_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1}
+connectors {"name": "accountId_orgId_projectId_type_status_deletedAt_decreasing_sort_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "type": 1, "connectivityDetails.status": 1, "deleted": 1, "createdAt": -1}
+connectors {"name": "fullyQualifiedIdentifier_1", "unique": true} {"fullyQualifiedIdentifier": 1}
 connectors {"name": "fullyQualifiedIdentifier_deleted_Index", "background": true} {"fullyQualifiedIdentifier": 1, "deleted": 1}
-connectors {"name": "unique_fullyQualifiedIdentifier", "unique": true} {"fullyQualifiedIdentifier": 1}
 containerDeploymentInfo {"name": "appId_1", "background": true} {"appId": 1}
 containerDeploymentInfo {"name": "containerSvcNameNoRevision_1", "background": true} {"containerSvcNameNoRevision": 1}
 containerDeploymentInfo {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -242,6 +237,7 @@ entityActivity {"name": "accountIdentifier_1", "background": true} {"accountIden
 entityActivity {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
 entityActivity {"name": "referredFqn_type_referredByType", "background": true} {"referredEntityFQN": 1, "referredEntityType": 1, "referredByEntityType": 1}
 entityActivity {"name": "referredFqn_type_time_referredByType", "background": true} {"referredEntityFQN": 1, "referredEntityType": 1, "activityTime": 1, "referredByEntityType": 1}
+entityActivity {"name": "type_referredFqn_referredByType_desSort_Index", "background": true} {"type": 1, "referredEntityFQN": 1, "referredEntityType": 1, "referredByEntityType": 1, "activityTime": -1}
 entityAuditRecords {"name": "entityRecordIndex_1", "background": true} {"auditHeaderId": 1, "createdAt": -1}
 entityAuditRecords {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 entityVersions {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -333,6 +329,8 @@ gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
+governanceConfig {"name": "nextCloseIterations_1", "background": true} {"nextCloseIterations": 1}
+governanceConfig {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
 harnessApiKeys {"name": "clientType_1", "background": true} {"clientType": 1}
 harnessUserGroups {"name": "appId_1", "background": true} {"appId": 1}
 harnessUserGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -515,7 +513,7 @@ nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"am
 nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_parentId_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1}
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
-nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1}
+nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "node.uuid": 1}
 nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
 nodeExecutions {"name": "planExecutionId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "status": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}
@@ -584,6 +582,7 @@ resourceConstraintInstances {"name": "iterationIndex", "background": true} {"sta
 resourceConstraintInstances {"name": "uniqueUnitOrder", "unique": true} {"resourceConstraintId": 1, "resourceUnit": 1, "order": 1}
 resourceConstraintInstances {"name": "usageIndex", "background": true} {"resourceConstraintId": 1, "order": 1}
 resourceConstraintInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+resourceGroup {"name": "uniqueResourceGroupPrimaryKey", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 resourceLookup {"name": "createdAt_1", "background": true} {"createdAt": 1}
 resourceLookup {"name": "resourceIdResourceLookupIndex", "background": true} {"accountId": 1, "resourceId": 1}
 resourceLookup {"name": "resourceId_1", "background": true} {"resourceId": 1}

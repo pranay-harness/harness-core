@@ -2,6 +2,9 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.SERVICE_DEPLOY;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.EcsResizeParams;
 
@@ -11,6 +14,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class EcsServiceDeployRequest extends EcsCommandRequest {
   private EcsResizeParams ecsResizeParams;
 

@@ -1,5 +1,7 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -17,6 +19,7 @@ import lombok.Value;
 @Value
 @Builder
 @AllArgsConstructor
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class DelegateTaskPackage {
   private String accountId;
   private String delegateTaskId;

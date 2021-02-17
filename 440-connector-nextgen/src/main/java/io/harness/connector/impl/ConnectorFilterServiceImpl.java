@@ -24,22 +24,26 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.service.FilterService;
-import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.mapper.TagMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   FilterService filterService;
 
@@ -48,11 +52,12 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
 
   @Override
   public Criteria createCriteriaFromConnectorListQueryParams(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String filterIdentifier, String searchTerm, FilterPropertiesDTO filterProperties,
+      String projectIdentifier, String filterIdentifier, String encodedSearchTerm, FilterPropertiesDTO filterProperties,
       Boolean includeAllConnectorsAccessibleAtScope) {
     if (isNotBlank(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
+    String searchTerm = getDecodedSearchTerm(encodedSearchTerm);
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     if (includeAllConnectorsAccessibleAtScope != null && includeAllConnectorsAccessibleAtScope) {
@@ -75,6 +80,18 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
+  }
+
+  private String getDecodedSearchTerm(String encodedSearchTerm) {
+    String decodedString = null;
+    if (isNotBlank(encodedSearchTerm)) {
+      try {
+        decodedString = java.net.URLDecoder.decode(encodedSearchTerm, StandardCharsets.UTF_8.name());
+      } catch (UnsupportedEncodingException e) {
+        log.info("Encountered exception while decoding {}", encodedSearchTerm);
+      }
+    }
+    return decodedString;
   }
 
   private void applySearchFilter(Criteria criteria, String searchTerm) {
@@ -213,17 +230,26 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
 
   private Criteria getSearchTermFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
+      Criteria tagCriteria = createCriteriaForSearchingTag(searchTerm);
       Criteria searchCriteria = new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.tags + "." + NGTagKeys.key)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.tags + "." + NGTagKeys.value)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+          where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          tagCriteria);
       return searchCriteria;
     }
     return null;
+  }
+
+  private Criteria createCriteriaForSearchingTag(String searchTerm) {
+    String keyToBeSearched = searchTerm;
+    String valueToBeSearched = "";
+    if (searchTerm.contains(":")) {
+      String[] split = searchTerm.split(":");
+      keyToBeSearched = split[0];
+      valueToBeSearched = split.length >= 2 ? split[1] : "";
+    }
+    return where(ConnectorKeys.tags).is(NGTag.builder().key(keyToBeSearched).value(valueToBeSearched).build());
   }
 
   public Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier,

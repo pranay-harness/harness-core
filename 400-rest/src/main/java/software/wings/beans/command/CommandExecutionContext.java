@@ -10,9 +10,13 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -23,8 +27,8 @@ import io.harness.shell.CommandExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
@@ -33,8 +37,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
-import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -50,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private String accountId;
   private String envId;
@@ -227,37 +230,26 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
         return capabilities;
       case WINRM:
-        capabilities.add(WinrmHostValidationCapability.builder()
-                             .validationInfo(BasicValidationInfo.builder()
-                                                 .accountId(accountId)
-                                                 .appId(appId)
-                                                 .activityId(activityId)
-                                                 .executeOnDelegate(executeOnDelegate)
-                                                 .publicDns(host == null ? null : host.getPublicDns())
-                                                 .build())
-                             .winRmConnectionAttributes(winrmConnectionAttributes)
-                             .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
-                             .build());
+        if (host != null) {
+          capabilities.add(WinrmHostValidationCapability.builder()
+                               .hostname(host.getPublicDns())
+                               .port(winrmConnectionAttributes.getPort())
+                               .useSSL(winrmConnectionAttributes.isUseSSL())
+                               .domain(winrmConnectionAttributes.getDomain())
+                               .build());
+        }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
         }
         return capabilities;
       case SSH:
-        capabilities.add(SSHHostValidationCapability.builder()
-                             .validationInfo(BasicValidationInfo.builder()
-                                                 .accountId(accountId)
-                                                 .appId(appId)
-                                                 .activityId(activityId)
-                                                 .executeOnDelegate(executeOnDelegate)
-                                                 .publicDns(host == null ? null : host.getPublicDns())
-                                                 .build())
-                             .hostConnectionAttributes(hostConnectionAttributes)
-                             .bastionConnectionAttributes(bastionConnectionAttributes)
-                             .hostConnectionCredentials(hostConnectionCredentials)
-                             .bastionConnectionCredentials(bastionConnectionCredentials)
-                             .sshExecutionCredential((SSHExecutionCredential) executionCredential)
-                             .build());
+        if (!executeOnDelegate) {
+          capabilities.add(SSHHostValidationCapability.builder()
+                               .host(host == null ? null : host.getPublicDns())
+                               .port(((HostConnectionAttributes) hostConnectionAttributes.getValue()).getSshPort())
+                               .build());
+        }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());

@@ -1,7 +1,6 @@
 package io.harness.steps.common.script;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -10,6 +9,7 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -36,6 +36,7 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -138,12 +139,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .workingDirectory(workingDirectory)
             .build();
 
-    TaskData taskData = TaskData.builder()
-                            .async(true)
-                            .taskType(TaskType.SHELL_SCRIPT_TASK_NG.name())
-                            .parameters(new Object[] {taskParameters})
-                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                            .build();
+    TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .taskType(TaskType.SHELL_SCRIPT_TASK_NG.name())
+            .parameters(new Object[] {taskParameters})
+            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
+            .build();
     return StepUtils.prepareTaskRequest(
         ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
   }
@@ -201,6 +203,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
           break;
         case FAILURE:
           stepResponseBuilder.status(Status.FAILED);
+          if (stepParameters.getRollbackInfo() != null) {
+            stepResponseBuilder.stepOutcome(
+                StepResponse.StepOutcome.builder()
+                    .name("RollbackOutcome")
+                    .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                    .build());
+          }
           break;
         case RUNNING:
           stepResponseBuilder.status(Status.RUNNING);
@@ -237,6 +246,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
       stepResponseBuilder.status(Status.FAILED);
       stepResponseBuilder.failureInfo(
           FailureInfo.newBuilder().setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage()).build());
+      if (stepParameters.getRollbackInfo() != null) {
+        stepResponseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                .build());
+      }
       return stepResponseBuilder.build();
     } else {
       log.error(

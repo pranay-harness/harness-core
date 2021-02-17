@@ -247,6 +247,7 @@ import retrofit2.Response;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_AGENT)
+@BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;

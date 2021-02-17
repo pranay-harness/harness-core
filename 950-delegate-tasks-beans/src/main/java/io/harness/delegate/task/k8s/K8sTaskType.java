@@ -10,5 +10,6 @@ public enum K8sTaskType {
   DELETE,
   TRAFFIC_SPLIT,
   APPLY,
-  VERSION
+  VERSION,
+  SWAP_SERVICE_SELECTORS
 }

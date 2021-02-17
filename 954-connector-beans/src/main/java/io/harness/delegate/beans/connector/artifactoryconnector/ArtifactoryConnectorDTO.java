@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -20,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("ArtifactoryConnector")
 public class ArtifactoryConnectorDTO extends ConnectorConfigDTO {
-  @NotNull String artifactoryServerUrl;
+  @NotNull @NotBlank String artifactoryServerUrl;
   @Valid ArtifactoryAuthenticationDTO auth;
 
   @Override

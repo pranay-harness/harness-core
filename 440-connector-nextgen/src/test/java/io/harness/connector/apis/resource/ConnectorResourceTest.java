@@ -162,14 +162,6 @@ public class ConnectorResourceTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void validateTest() {
-    ResponseDTO<ConnectorValidationResult> result = connectorResource.validate(connectorRequest, accountIdentifier);
-    Mockito.verify(connectorService, times(1)).validate(eq(connectorRequest), eq(accountIdentifier));
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.DEEPAK)
-  @Category(UnitTests.class)
   public void testConnectionResourceTest() {
     ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");

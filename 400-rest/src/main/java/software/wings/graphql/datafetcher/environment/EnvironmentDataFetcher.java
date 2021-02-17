@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher.environment;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class EnvironmentDataFetcher extends AbstractObjectDataFetcher<QLEnvironment, QLEnvironmentQueryParameters> {
   public static final String ENV_DOES_NOT_EXISTS_MSG = "Environment does not exist";
 

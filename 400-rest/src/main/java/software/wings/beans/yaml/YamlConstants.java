@@ -21,6 +21,7 @@ public interface YamlConstants {
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
   String MANIFEST_FOLDER = "Manifests";
+  String MANIFEST_FOLDER_APP_SERVICE = "App Service Settings";
   String MANIFEST_FILE_FOLDER = "Files";
   String MANIFEST_FILE = "MANIFEST_FILE";
   String APPLICATIONS_MANIFEST = "ApplicationManifest";

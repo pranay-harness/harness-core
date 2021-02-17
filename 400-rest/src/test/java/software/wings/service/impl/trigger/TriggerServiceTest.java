@@ -57,6 +57,7 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.setPipelineStages;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
@@ -66,12 +67,14 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
+import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -97,12 +100,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -110,6 +118,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
@@ -154,6 +163,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -197,6 +207,7 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
+@TargetModule(Module._960_API_SERVICES)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
@@ -226,6 +237,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private TriggerExecutionService triggerExecutionService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private HelmChartService helmChartService;
+  @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
 
   @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
   @Inject @InjectMocks private TriggerService triggerService;
@@ -3604,6 +3616,66 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
+  public void shouldSendTriggerPipelineRejectedNotificationForDeploymentFreeze() {
+    Trigger trigger = buildWebhookCondTrigger();
+    triggerService.save(trigger);
+
+    List<String> deploymentFreezeIds = asList(FREEZE_WINDOW_ID, FREEZE_WINDOW_ID + 2);
+    Map<String, String> serviceManifestMapping = new HashMap<>();
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), any(), eq(trigger)))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, deploymentFreezeIds, "FREEZE_NAMES", false));
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().name(APP_NAME).build());
+    when(pipelineService.getPipeline(APP_ID, PIPELINE_ID)).thenReturn(Pipeline.builder().name(PIPELINE_NAME).build());
+
+    assertThatThrownBy(() -> triggerService.triggerExecutionByWebHook(trigger, serviceManifestMapping, null))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage(
+            "Deployment Freeze Windows FREEZE_NAMES are active for the environment. No deployments are allowed to proceed.");
+    ArgumentCaptor<Map> placeholderCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(deploymentFreezeUtils, times(1))
+        .sendTriggerRejectedNotification(
+            eq(ACCOUNT_ID), eq(APP_ID), eq(deploymentFreezeIds), placeholderCaptor.capture());
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.TRIGGER_NAME, TRIGGER_NAME);
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.APP_NAME, APP_NAME);
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.WORKFLOW_NAME, PIPELINE_NAME);
+    assertThat(placeholderCaptor.getValue())
+        .containsEntry(TriggerServiceHelper.TRIGGER_URL, "PORTAL_URL/#/account/ACCOUNT_ID/app/APP_ID/triggers");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSendTriggerWorkflowRejectedNotificationForDeploymentFreeze() {
+    Trigger trigger = buildWorkflowWebhookTrigger();
+    triggerService.save(trigger);
+
+    List<String> deploymentFreezeIds = asList(FREEZE_WINDOW_ID, FREEZE_WINDOW_ID + 2);
+    Map<String, String> serviceManifestMapping = new HashMap<>();
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), any(), eq(trigger)))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, deploymentFreezeIds, "FREEZE_NAMES", false));
+    when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().name(APP_NAME).build());
+    when(workflowService.getWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(buildWorkflow());
+
+    assertThatThrownBy(() -> triggerService.triggerExecutionByWebHook(trigger, serviceManifestMapping, null))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage(
+            "Deployment Freeze Windows FREEZE_NAMES are active for the environment. No deployments are allowed to proceed.");
+    ArgumentCaptor<Map> placeholderCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(deploymentFreezeUtils, times(1))
+        .sendTriggerRejectedNotification(
+            eq(ACCOUNT_ID), eq(APP_ID), eq(deploymentFreezeIds), placeholderCaptor.capture());
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.TRIGGER_NAME, TRIGGER_NAME);
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.APP_NAME, APP_NAME);
+    assertThat(placeholderCaptor.getValue()).containsEntry(TriggerServiceHelper.WORKFLOW_NAME, WORKFLOW_NAME);
+    assertThat(placeholderCaptor.getValue())
+        .containsEntry(TriggerServiceHelper.TRIGGER_URL, "PORTAL_URL/#/account/ACCOUNT_ID/app/APP_ID/triggers");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
   public void shouldPopulateManifestForOnNewArtifactTriggerWithLastCollectedFilter() {
     Trigger trigger = buildArtifactTrigger();
     ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
@@ -3650,5 +3722,24 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
     assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getUuid))
         .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldRejectTriggerForMasterFreeze() {
+    triggerService.save(scheduledConditionTrigger);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), any(), eq(scheduledConditionTrigger)))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, Collections.emptyList(), null, true));
+
+    TriggerServiceImpl triggerServiceImpl = (TriggerServiceImpl) triggerService;
+    assertThatThrownBy(()
+                           -> triggerServiceImpl.triggerDeployment(
+                               Collections.emptyList(), Collections.emptyList(), null, scheduledConditionTrigger))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage("Master Deployment Freeze is active. No deployments are allowed.");
+    verify(deploymentFreezeUtils, never()).sendTriggerRejectedNotification(eq(ACCOUNT_ID), eq(APP_ID), any(), anyMap());
   }
 }

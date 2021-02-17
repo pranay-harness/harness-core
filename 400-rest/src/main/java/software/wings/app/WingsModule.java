@@ -16,6 +16,8 @@ import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -87,6 +89,8 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
+import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
+import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.InstanceReconServiceImpl;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
@@ -160,6 +164,8 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.impl.DelegateCacheImpl;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -169,6 +175,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
+import software.wings.alerts.AlertModule;
 import software.wings.backgroundjobs.AccountBackgroundJobService;
 import software.wings.backgroundjobs.AccountBackgroundJobServiceImpl;
 import software.wings.beans.AwsConfig;
@@ -402,6 +409,7 @@ import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
+import software.wings.service.impl.azure.manager.AzureARMManagerImpl;
 import software.wings.service.impl.azure.manager.AzureAppServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
@@ -612,6 +620,7 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
@@ -838,6 +847,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
+    install(AlertModule.getInstance());
+
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -989,6 +1000,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AzureResourceService.class).to(AzureResourceServiceImpl.class);
     bind(AzureMachineImageBuildService.class).to(AzureMachineImageBuildServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
+    bind(DelegateCache.class).to(DelegateCacheImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(WebHookService.class).to(WebHookServiceImpl.class);
@@ -1028,6 +1040,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
     bind(AzureVMSSHelperServiceManager.class).to(AzureVMSSHelperServiceManagerImpl.class);
     bind(AzureAppServiceManager.class).to(AzureAppServiceManagerImpl.class);
+    bind(AzureARMManager.class).to(AzureARMManagerImpl.class);
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
     bind(DelegateProfileManagerService.class).to(DelegateProfileManagerServiceImpl.class);
     bind(AwsCFHelperServiceManager.class).to(AwsCFHelperServiceManagerImpl.class);
@@ -1265,6 +1278,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
+
+    bind(AnomalyService.class).to(AnomalyServiceImpl.class);
+
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
@@ -1306,6 +1322,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
+    bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
   }
 
   private void bindFeatures() {

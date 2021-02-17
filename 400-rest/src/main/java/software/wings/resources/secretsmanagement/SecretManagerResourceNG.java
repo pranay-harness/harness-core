@@ -1,6 +1,7 @@
 package software.wings.resources.secretsmanagement;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
@@ -68,9 +69,10 @@ public class SecretManagerResourceNG {
   public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers) {
     List<SecretManagerConfig> secretManagerConfigs =
-        ngSecretManagerService.list(accountIdentifier, orgIdentifier, projectIdentifier);
+        ngSecretManagerService.list(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
     List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
     secretManagerConfigs.forEach(secretManagerConfig -> dtoList.add(secretManagerConfig.toDTO(true)));
     return new RestResponse<>(dtoList);

@@ -21,7 +21,4 @@ public class ARMStateExecutionData extends StateExecutionData implements Delegat
   private TaskType taskType;
   private String activityId;
   private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
-
-  private String inlineTemplateForRollback;
-  private String inlineVariablesForRollback;
 }

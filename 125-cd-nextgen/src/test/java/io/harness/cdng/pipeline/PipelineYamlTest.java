@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -61,6 +62,7 @@ public class PipelineYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testPipelineWithRuntimeInputYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/pipelineWithRuntimeInput.yml");
@@ -101,7 +103,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     onFailure = stageElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
     RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
     assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
@@ -228,12 +230,6 @@ public class PipelineYamlTest extends CategoryTest {
     ParallelStepElement parallelStepElement = (ParallelStepElement) steps.get(0);
     StepElement stepElement = (StepElement) parallelStepElement.getSections().get(0);
     K8sRollingStepInfo k8sStepInfo = (K8sRollingStepInfo) stepElement.getStepSpecType();
-    assertThat(k8sStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
-    assertThat(k8sStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(k8sStepInfo.getTimeout().getExpressionValue()).isEqualTo("<+input>");
-    assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
-    assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getValidatorType())
-        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
     assertThat(k8sStepInfo.getSkipDryRun()).isInstanceOf(ParameterField.class);
     assertThat(k8sStepInfo.getSkipDryRun().isExpression()).isTrue();
     assertThat(k8sStepInfo.getSkipDryRun().getExpressionValue()).isEqualTo("<+input>");
@@ -264,17 +260,11 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.STAGE_ROLLBACK);
     onFailure = stepElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MARK_AS_SUCCESS);
 
     stepElement = (StepElement) deploymentStage.getExecution().getRollbackSteps().get(0);
     K8sRollingRollbackStepInfo rollbackStepInfo = (K8sRollingRollbackStepInfo) stepElement.getStepSpecType();
-    assertThat(rollbackStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
-    assertThat(rollbackStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(rollbackStepInfo.getTimeout().getExpressionValue()).isEqualTo("<+input>");
-    assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
-    assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getValidatorType())
-        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
 
     // Second stage
     stageWrapper = ngPipeline.getStages().get(1);

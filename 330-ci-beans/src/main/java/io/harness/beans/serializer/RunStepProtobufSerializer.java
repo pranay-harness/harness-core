@@ -54,7 +54,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     }
 
     List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "Run", runStepInfo.getIdentifier(), runStepInfo.getOutputVariables(), false);
+        "OutputVariables", "Run", step.getIdentifier(), runStepInfo.getOutputVariables(), false);
     if (isNotEmpty(output)) {
       runStepBuilder.addAllEnvVarOutputs(output);
     }

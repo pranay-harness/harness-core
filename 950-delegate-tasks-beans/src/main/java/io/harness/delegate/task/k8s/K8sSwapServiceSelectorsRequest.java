@@ -10,7 +10,6 @@ public class K8sSwapServiceSelectorsRequest implements K8sDeployRequest {
   K8sTaskType taskType;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
   ManifestDelegateConfig manifestDelegateConfig;
-  boolean deprecateFabric8Enabled;
   Integer timeoutIntervalInMin;
   String accountId;
   String service1;

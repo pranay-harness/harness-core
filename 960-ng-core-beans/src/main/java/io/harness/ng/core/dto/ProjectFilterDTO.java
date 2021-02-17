@@ -2,6 +2,7 @@ package io.harness.ng.core.dto;
 
 import io.harness.ModuleType;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -15,4 +16,5 @@ public class ProjectFilterDTO {
   String orgIdentifier;
   Boolean hasModule;
   ModuleType moduleType;
+  List<String> identifiers;
 }

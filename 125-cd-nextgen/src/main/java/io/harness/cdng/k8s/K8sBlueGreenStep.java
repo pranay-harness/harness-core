@@ -18,8 +18,12 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -54,11 +58,13 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sBGDeployRequest k8sBGDeployRequest =
         K8sBGDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .releaseName(releaseName)
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
@@ -78,10 +84,20 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
-          .build();
+      StepResponseBuilder responseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
+      if (k8sBlueGreenStepParameters.getRollbackInfo() != null) {
+        responseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sBlueGreenStepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return responseBuilder.build();
     }
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
@@ -101,6 +117,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME)
                          .outcome(k8sBlueGreenOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

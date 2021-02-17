@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.expressions.HttpExpressionEvaluator;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -25,6 +26,7 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -72,13 +74,14 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       httpTaskParametersNgBuilder.body(stepParameters.getRequestBody().getValue());
     }
 
-    final TaskData taskData = TaskData.builder()
-                                  .async(true)
-                                  .timeout(TaskData.DEFAULT_ASYNC_CALL_TIMEOUT)
-                                  .taskType(NGTaskType.HTTP_TASK_NG.name())
-                                  .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
-                                  .build();
-    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
+    final TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
+            .taskType(NGTaskType.HTTP_TASK_NG.name())
+            .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
+            .build();
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
   @Override
@@ -89,13 +92,18 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
       responseBuilder.status(Status.FAILED);
-      responseBuilder
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                           .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                               errorNotifyResponseData.getFailureTypes()))
-                           .build())
-          .build();
+      responseBuilder.failureInfo(FailureInfo.newBuilder()
+                                      .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                                      .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                                          errorNotifyResponseData.getFailureTypes()))
+                                      .build());
+      if (stepParameters.getRollbackInfo() != null) {
+        responseBuilder.stepOutcome(
+            StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                .build());
+      }
     } else {
       HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
 
@@ -117,6 +125,13 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       // Just Place holder for now till we have assertions
       if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
         responseBuilder.status(Status.FAILED);
+        if (stepParameters.getRollbackInfo() != null) {
+          responseBuilder.stepOutcome(
+              StepOutcome.builder()
+                  .name("RollbackOutcome")
+                  .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                  .build());
+        }
         if (!assertionSuccessful) {
           responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
         }

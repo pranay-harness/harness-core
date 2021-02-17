@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -12,6 +14,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsEcsRequest extends AwsRequest implements TaskParameters {
   public enum AwsEcsRequestType { LIST_CLUSTERS, LIST_CLUSTER_SERVICES }
 

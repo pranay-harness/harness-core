@@ -14,6 +14,8 @@ shared_dependencies = [
     "//420-delegate-service:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
+    "//470-alert:module",
+    "//480-alert-beans:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
@@ -21,13 +23,14 @@ shared_dependencies = [
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
     "//878-pipeline-service-utilities:module",
+    "//882-pms-sdk-core:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
-    "//940-delegate-beans:module",
+    "//955-delegate-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
@@ -669,14 +672,12 @@ shared_dependencies = [
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob([
         "src/main/**/*.java",
         "src/generated/**/*.java",
     ]),
-    data = ["//:resource"],
-    main_class = "software.wings.app.WingsApplication",
     resources = [
         "//400-rest/src/main/resources:resource",
     ],
@@ -693,9 +694,7 @@ java_library(
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
-    data = ["//:resource"],
     resources = [
-        "//:resource",
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
@@ -704,7 +703,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_tomakehurst_wiremock//jar",
-    ] + [
+    ] + shared_dependencies + [
         ":module",
         "//990-commons-test:module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
@@ -718,37 +717,49 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
-    ] + shared_dependencies,
+    ],
 )
+
+test_dependencies = shared_dependencies + [
+    ":module",
+    ":supporter-test",
+    "//990-commons-test:module",
+    "@maven//:com_bertramlabs_plugins_hcl4j",
+    "@maven//:com_icegreen_greenmail",
+    "@maven//:com_openpojo_openpojo",
+    "@maven//:io_github_benas_random_beans",
+    "@maven//:junit_junit",
+    "@maven//:org_assertj_assertj_core",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+    "@maven//:org_mockito_mockito_core",
+    "@maven//:org_powermock_powermock_module_junit4",
+    "@maven//:pl_pragmatists_JUnitParams",
+]
 
 run_package_tests(
     data = [
         "//400-rest/src/test/resources:resource",
     ],
     resources = [
-        "//:resource",
         "//400-rest/src/main/resources:resource",
         "//400-rest/src/test/resources:resource",
     ],
-    deps = shared_dependencies + [
-        ":module",
-        ":supporter-test",
-        "//990-commons-test:module",
-        "@maven//:com_bertramlabs_plugins_hcl4j",
-        "@maven//:com_icegreen_greenmail",
-        "@maven//:com_openpojo_openpojo",
-        "@maven//:io_github_benas_random_beans",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
-        "@maven//:org_mockito_mockito_core",
-        "@maven//:org_powermock_powermock_module_junit4",
-        "@maven//:pl_pragmatists_JUnitParams",
-    ],
+    deps = test_dependencies,
 )
 
-checkstyle()
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = test_dependencies,
+)
+
+#checkstyle()
 
 sonarqube_test(
     name = "sq_mycomponent",

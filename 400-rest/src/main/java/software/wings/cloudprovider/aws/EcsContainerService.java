@@ -20,6 +20,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by anubhaw on 12/28/16.
@@ -78,6 +79,9 @@ public interface EcsContainerService {
   List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName);
 
+  List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceNamePrefix);
+
   TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn);
 
@@ -98,4 +102,7 @@ public interface EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName);
 
   List<ServiceEvent> getEventsFromService(Service service);
+
+  Optional<Service> getService(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName);
 }

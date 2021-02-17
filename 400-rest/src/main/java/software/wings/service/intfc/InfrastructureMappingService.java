@@ -173,6 +173,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds);
 
+  String getInfraMappingsByServiceAndInfraDefinitionIds(String appId, String serviceId, String infraDefinitionId);
+
   List<String> listOrganizationsForPcf(String appId, String computeProviderId);
 
   List<String> listSpacesForPcf(String appId, String computeProviderId, String organization);

@@ -147,6 +147,7 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
     TemplateLibraryYaml yaml = changeContext.getYaml();
     template.setDescription(yaml.getDescription());
     template.setVariables(templateVariableYamlToVariable(yaml.getVariables()));
+    template.setSyncFromGit(true);
     setBaseTemplate(template, changeContext, changeSetContext);
     return templateService.update(template);
   }
@@ -165,6 +166,7 @@ public abstract class TemplateLibraryYamlHandler<Y extends TemplateLibraryYaml> 
                             .folderId(templateFolder.getUuid())
                             .variables(templateVariableYamlToVariable(yaml.getVariables()))
                             .build();
+    template.setSyncFromGit(true);
     setBaseTemplate(template, changeContext, changeSetContext);
     return template;
   }

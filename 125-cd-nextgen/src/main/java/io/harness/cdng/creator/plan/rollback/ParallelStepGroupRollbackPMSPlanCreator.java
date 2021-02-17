@@ -8,6 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -17,15 +18,11 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
-import com.google.common.base.Preconditions;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 public class ParallelStepGroupRollbackPMSPlanCreator {
   public static PlanCreationResponse createParallelStepGroupRollbackPlan(YamlField parallelStepGroup) {
-    List<YamlField> stepGroupFields = getStepGroupInParallelSectionHavingRollback(parallelStepGroup);
+    List<YamlField> stepGroupFields = PlanCreatorUtils.getStepGroupInParallelSectionHavingRollback(parallelStepGroup);
     if (EmptyPredicate.isEmpty(stepGroupFields)) {
       return PlanCreationResponse.builder().build();
     }
@@ -55,14 +52,16 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
     PlanNode parallelStepGroupsRollbackNode =
         PlanNode.builder()
             .uuid(parallelStepGroup.getNode().getUuid() + "_rollback")
-            .name("Parallel Step Groups Rollback")
-            .identifier(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER)
+            .name("Parallel StepGroups Rollback")
+            .identifier(PlanCreatorConstants.PARALLEL_STEP_GROUPS_ROLLBACK_NODE_IDENTIFIER
+                + parallelStepGroup.getNode().getUuid() + "_rollback")
             .stepType(RollbackOptionalChildrenStep.STEP_TYPE)
             .stepParameters(rollbackOptionalChildrenParametersBuilder.build())
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
                     .build())
+            .skipExpressionChain(true)
             .build();
 
     PlanCreationResponse finalResponse =
@@ -70,18 +69,5 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
             .build();
     finalResponse.merge(stepGroupResponses);
     return finalResponse;
-  }
-
-  private static List<YamlField> getStepGroupInParallelSectionHavingRollback(YamlField parallelStepGroup) {
-    List<YamlNode> yamlNodes =
-        Optional.of(Preconditions.checkNotNull(parallelStepGroup).getNode().asArray()).orElse(Collections.emptyList());
-    List<YamlField> stepGroupFields = new LinkedList<>();
-    yamlNodes.forEach(yamlNode -> {
-      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
-      if (stepGroupField != null && stepGroupField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
-        stepGroupFields.add(stepGroupField);
-      }
-    });
-    return stepGroupFields;
   }
 }

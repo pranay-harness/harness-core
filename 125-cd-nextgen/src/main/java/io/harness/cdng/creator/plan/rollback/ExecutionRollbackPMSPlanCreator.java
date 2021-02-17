@@ -1,6 +1,6 @@
 package io.harness.cdng.creator.plan.rollback;
 
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -23,6 +23,9 @@ import java.util.Optional;
 
 public class ExecutionRollbackPMSPlanCreator {
   public static PlanCreationResponse createExecutionRollbackPlanNode(YamlField rollbackStepsField) {
+    if (rollbackStepsField == null || rollbackStepsField.getNode().asArray().size() == 0) {
+      return PlanCreationResponse.builder().build();
+    }
     List<YamlField> stepsArrayFields = getStepYamlFields(rollbackStepsField);
     if (stepsArrayFields.isEmpty()) {
       return PlanCreationResponse.builder().build();
@@ -42,8 +45,8 @@ public class ExecutionRollbackPMSPlanCreator {
     PlanNode executionRollbackNode =
         PlanNode.builder()
             .uuid(rollbackStepsField.getNode().getUuid() + "_executionrollback")
-            .name("Execution Rollback")
-            .identifier(PlanCreatorConstants.EXECUTION_ROLLBACK_NODE_IDENTIFIER)
+            .name(PlanCreationConstants.ROLLBACK_NODE_NAME)
+            .identifier(PlanCreationConstants.ROLLBACK_NODE_NAME)
             .stepType(NGSectionStep.STEP_TYPE)
             .stepParameters(stepParameters)
             .facilitatorObtainment(

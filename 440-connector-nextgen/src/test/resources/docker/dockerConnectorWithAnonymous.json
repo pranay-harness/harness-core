@@ -14,8 +14,7 @@
       "dockerRegistryUrl": "https://index.docker.io/v2/",
       "providerType": "DockerHub",
       "auth": {
-        "type": "Anonymous",
-        "spec": null
+        "type": "Anonymous"
       }
     }
   }

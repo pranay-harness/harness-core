@@ -32,20 +32,20 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//136-git-sync-manager/... -//125-cd-nextgen/... -//120-ng-manager/... -//160-model-gen-tool/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
 then
-  TARGETS=`bazel ${bazelrc} query //... | grep ":checkstyle$"`
+  TARGETS=`bazel query 'attr(tags, "checkstyle", //...:*)'`
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
 
 if [ "${RUN_PMDS}" == "true" ]
 then
-  TARGETS=`bazel ${bazelrc} query //... | grep ":pmd$"`
+  TARGETS=`bazel query 'attr(tags, "pmd", //...:*)'`
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
@@ -54,11 +54,31 @@ ps auxwwwe
 echo end off ps-report
 
 BAZEL_MODULES="\
+  //120-ng-manager:module \
+  //120-ng-manager:module_deploy.jar \
+  //125-cd-nextgen:module \
+  //130-resource-group:module \
+  //160-model-gen-tool:module \
+  //160-model-gen-tool:module_deploy.jar \
+  //136-git-sync-manager:module \
+  //210-command-library-xxxxxxxxmodule \
+  //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //300-cv-nextgen:module_deploy.jar \
+  //310-ci-manager:module \
+  //310-ci-manager:module_deploy.jar \
+  //320-ci-execution:module \
+  //330-ci-beans:module \
+  //340-ce-nextgen:module \
+  //340-ce-nextgen:module_deploy.jar \
+  //350-event-xxxxxxxxmodule \
+  //350-event-xxxxxxxxmodule_deploy.jar \
+  //360-cg-manager:module \
+  //360-cg-manager:module_deploy.jar \
+  //380-cg-graphql:module \
   //400-rest:module \
   //400-rest:supporter-test \
-  //400-rest:module_deploy.jar \
   //420-delegate-agent:module \
   //420-delegate-service:module \
   //430-cv-nextgen-commons:module \
@@ -69,6 +89,8 @@ BAZEL_MODULES="\
   //800-pipeline-service:module \
   //800-pipeline-service:module_deploy.jar \
   //810-ng-triggers:module \
+  //830-notification-service:module \
+  //830-notification-service:module_deploy.jar \
   //835-notification-senders:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
@@ -84,7 +106,11 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
+  //900-access-control-service:module \
+  //900-access-control-service:module_deploy.jar \
+  //903-decision-module:module \
   //905-access-control-core:module \
+  //909-access-control-sdk:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -95,11 +121,12 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
-  //940-delegate-beans/src/main/proto:all \
-  //940-delegate-beans:module \
+  //955-delegate-beans/src/main/proto:all \
+  //955-delegate-beans:module \
   //940-feature-flag:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
+  //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //950-command-library-common:module \
   //950-common-entities:module \
@@ -265,9 +292,26 @@ build_proto_module() {
 }
 
 build_bazel_application 800-pipeline-service
+build_bazel_application 830-notification-service
+build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
-build_bazel_application 400-rest
+build_bazel_application 340-ce-nextgen
+build_bazel_application 350-event-server
+build_bazel_application 360-cg-manager
+build_bazel_application 120-ng-manager
+build_bazel_application 160-model-gen-tool
+build_bazel_application 210-command-library-server
+build_bazel_application 300-cv-nextgen
+build_bazel_application 310-ci-manager
 
+build_bazel_module 125-cd-nextgen
+build_bazel_module 130-resource-group
+build_bazel_module 136-git-sync-manager
+build_bazel_module 320-ci-execution
+build_bazel_module 330-ci-beans
+build_bazel_module 340-ce-nextgen
+build_bazel_module 380-cg-graphql
+build_bazel_module 400-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
@@ -290,7 +334,6 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
-build_bazel_module 905-access-control-core
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 915-pms-delegate-service-driver
@@ -298,8 +341,9 @@ build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
-build_bazel_module 940-delegate-beans
+build_bazel_module 955-delegate-beans
 build_bazel_module 940-feature-flag
+build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities

@@ -12,6 +12,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ErrorCode;
@@ -53,6 +55,7 @@ import org.mockito.Mock;
  *
  * @author rktummala
  */
+@TargetModule(Module._960_API_SERVICES)
 public class GovernanceConfigServiceTest extends IntegrationTestBase {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
@@ -111,10 +114,11 @@ public class GovernanceConfigServiceTest extends IntegrationTestBase {
 
     TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
     WeeklyRange weeklyRange = new WeeklyRange(null, "Tuesday", "7:00 PM", "Monday", "5:00 AM", "Asia/Kolkata");
-    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(true,
-        Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), range, null, null, false, null, null);
+    TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+        new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+            range, null, null, false, null, null, "uuid");
     WeeklyFreezeConfig weeklyFreezeConfig = new WeeklyFreezeConfig(true, Collections.emptyList(),
-        Collections.singletonList(EnvironmentType.PROD), weeklyRange, null, null, false, null, null);
+        Collections.singletonList(EnvironmentType.PROD), weeklyRange, null, null, false, null, null, "uuid");
 
     inputConfig = GovernanceConfig.builder()
                       .accountId(accountId)

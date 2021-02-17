@@ -76,6 +76,7 @@ import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
+import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -83,6 +84,8 @@ import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -204,6 +207,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(YamlSdkModule.getInstance());
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -234,6 +238,11 @@ public class NextGenModule extends AbstractModule {
             .addAll(ManagerRegistrars.springConverters)
             .build();
       }
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
+      }
     });
     install(new AbstractModule() {
       @Override
@@ -258,6 +267,7 @@ public class NextGenModule extends AbstractModule {
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
 
+    install(new ResourceGroupModule(appConfig.getResoureGroupConfig()));
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);

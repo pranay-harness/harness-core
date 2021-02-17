@@ -151,7 +151,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     stageFailureStrategies =
         Collections.singletonList(FailureStrategyConfig.builder()
                                       .onFailure(OnFailureConfig.builder()
-                                                     .errors(Collections.singletonList(NGFailureType.OTHER_ERRORS))
+                                                     .errors(Collections.singletonList(NGFailureType.ANY_OTHER_ERRORS))
                                                      .action(AbortFailureActionConfig.builder().build())
                                                      .build())
                                       .build());

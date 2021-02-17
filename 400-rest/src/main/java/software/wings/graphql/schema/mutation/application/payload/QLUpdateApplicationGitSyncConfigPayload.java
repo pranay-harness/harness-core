@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.mutation.application.payload;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.mutation.QLMutationPayload;
 import software.wings.graphql.schema.type.QLGitSyncConfig;
 import software.wings.security.PermissionAttribute;
@@ -11,6 +14,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLUpdateApplicationGitSyncConfigPayload implements QLMutationPayload {
   private String clientMutationId;
   private QLGitSyncConfig gitSyncConfig;

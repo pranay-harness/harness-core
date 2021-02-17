@@ -11,7 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
@@ -51,7 +51,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class LogDashboardServiceImplTest extends CvNextGenTest {
+public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   private String projectIdentifier;
   private String orgIdentifier;
   private String serviceIdentifier;

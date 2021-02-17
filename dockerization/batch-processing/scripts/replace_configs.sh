@@ -95,6 +95,11 @@ if [[ "" != "$CLUSTER_DATA_GCS_BACKUP_BUCKET" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.clusterDataGcsBackupBucketName "$CLUSTER_DATA_GCS_BACKUP_BUCKET"
 fi
 
+if [[ "" != "$AWS_ROLE_NAME" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.awsRoleName "$AWS_ROLE_NAME"
+fi
+
+
 if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
 fi

@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -14,11 +15,13 @@ import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapa
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
+import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -38,6 +41,8 @@ import io.harness.ng.core.models.Secret;
 
 import java.util.Set;
 
+@BreakDependencyOn("io.harness.capability.CapabilityRequirement")
+@BreakDependencyOn("io.harness.capability.CapabilitySubjectPermission")
 public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -66,7 +71,9 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.beans.executioncapability.SmtpCapability", SmtpCapability.class);
     h.put("delegate.beans.executioncapability.SocketConnectivityExecutionCapability",
         SocketConnectivityExecutionCapability.class);
+    h.put("delegate.beans.executioncapability.SSHHostValidationCapability", SSHHostValidationCapability.class);
     h.put("delegate.beans.executioncapability.SystemEnvCheckerCapability", SystemEnvCheckerCapability.class);
+    h.put("delegate.beans.executioncapability.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
     h.put("delegate.beans.executioncapability.SelectorCapability", SelectorCapability.class);
     h.put("delegate.command.CommandExecutionResult", CommandExecutionResult.class);
     h.put("delegate.task.spotinst.request.SpotInstDeployTaskParameters", SpotInstDeployTaskParameters.class);

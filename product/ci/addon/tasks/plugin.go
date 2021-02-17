@@ -44,6 +44,7 @@ type pluginTask struct {
 	numRetries        int32
 	image             string
 	prevStepOutputs   map[string]*pb.StepOutput
+	logMetrics        bool
 	log               *zap.SugaredLogger
 	addonLogger       *zap.SugaredLogger
 	procWriter        io.Writer
@@ -52,7 +53,7 @@ type pluginTask struct {
 
 // NewPluginTask creates a plugin step executor
 func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
-	log *zap.SugaredLogger, w io.Writer, addonLogger *zap.SugaredLogger) PluginTask {
+	log *zap.SugaredLogger, w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) PluginTask {
 	r := step.GetPlugin()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -71,6 +72,7 @@ func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
 		numRetries:        numRetries,
 		prevStepOutputs:   prevStepOutputs,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
+		logMetrics:        logMetrics,
 		log:               log,
 		procWriter:        w,
 		addonLogger:       addonLogger,
@@ -78,18 +80,18 @@ func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
 }
 
 // Executes customer provided plugin with retries and timeout handling
-func (e *pluginTask) Run(ctx context.Context) (int32, error) {
+func (t *pluginTask) Run(ctx context.Context) (int32, error) {
 	var err error
-	for i := int32(1); i <= e.numRetries; i++ {
-		if err = e.execute(ctx, i); err == nil {
+	for i := int32(1); i <= t.numRetries; i++ {
+		if err = t.execute(ctx, i); err == nil {
 			return i, nil
 		}
 	}
-	return e.numRetries, err
+	return t.numRetries, err
 }
 
 // resolveEnvJEXL resolves JEXL expressions present in plugin settings environment variables
-func (e *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, error) {
+func (t *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, error) {
 	envVarMap := getEnvVars()
 
 	var exprsToResolve []string
@@ -103,7 +105,7 @@ func (e *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, err
 		return envVarMap, nil
 	}
 
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, exprsToResolve, e.prevStepOutputs, e.log)
+	resolvedExprs, err := evaluateJEXL(ctx, t.id, exprsToResolve, t.prevStepOutputs, t.log)
 	if err != nil {
 		return nil, err
 	}
@@ -119,43 +121,37 @@ func (e *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, err
 	return resolvedEnvVarMap, nil
 }
 
-func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
+func (t *pluginTask) execute(ctx context.Context, retryCount int32) error {
 	start := time.Now()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
+	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(t.timeoutSecs))
 	defer cancel()
 
-	commands, err := e.getEntrypoint(ctx)
+	commands, err := t.getEntrypoint(ctx)
 	if err != nil {
-		logPluginErr(e.log, "failed to find entrypoint for plugin", e.id, commands, retryCount, start, err)
+		logPluginErr(t.log, "failed to find entrypoint for plugin", t.id, commands, retryCount, start, err)
 		return err
 	}
 
 	if len(commands) == 0 {
 		err := fmt.Errorf("plugin entrypoint is empty")
-		logPluginErr(e.log, "entrypoint fetched from remote for plugin is empty", e.id, commands, retryCount, start, err)
+		logPluginErr(t.log, "entrypoint fetched from remote for plugin is empty", t.id, commands, retryCount, start, err)
 		return err
 	}
 
-	envVarsMap, err := e.resolveEnvJEXL(ctx)
+	envVarsMap, err := t.resolveEnvJEXL(ctx)
 	if err != nil {
-		logPluginErr(e.log, "failed to evaluate JEXL expression for settings", e.id, commands, retryCount, start, err)
+		logPluginErr(t.log, "failed to evaluate JEXL expression for settings", t.id, commands, retryCount, start, err)
 		return err
 	}
 
-	cmd := e.cmdContextFactory.CmdContextWithSleep(ctx, pluginCmdExitWaitTime, commands[0], commands[1:]...).
-		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(envVarsMap)
-	err = cmd.Run()
-	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		logPluginErr(e.log, "timeout while executing plugin step", e.id, commands, retryCount, start, ctxErr)
-		return ctxErr
-	}
-
+	cmd := t.cmdContextFactory.CmdContextWithSleep(ctx, pluginCmdExitWaitTime, commands[0], commands[1:]...).
+		WithStdout(t.procWriter).WithStderr(t.procWriter).WithEnvVarsMap(envVarsMap)
+	err = runCmd(ctx, cmd, t.id, commands, retryCount, start, t.logMetrics, t.log, t.addonLogger)
 	if err != nil {
-		logPluginErr(e.log, "error encountered while executing plugin step", e.id, commands, retryCount, start, err)
 		return err
 	}
 
-	e.addonLogger.Infow(
+	t.addonLogger.Infow(
 		"Successfully executed plugin",
 		"arguments", commands,
 		"elapsed_time_ms", utils.TimeSince(start),
@@ -163,12 +159,12 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 	return nil
 }
 
-func (e *pluginTask) getEntrypoint(ctx context.Context) ([]string, error) {
+func (t *pluginTask) getEntrypoint(ctx context.Context) ([]string, error) {
 	imageSecret, _ := os.LookupEnv(imageSecretEnv)
-	return e.combinedEntrypoint(getImgMetadata(ctx, e.id, e.image, imageSecret, e.log))
+	return t.combinedEntrypoint(getImgMetadata(ctx, t.id, t.image, imageSecret, t.log))
 }
 
-func (e *pluginTask) combinedEntrypoint(ep, cmds []string, err error) ([]string, error) {
+func (t *pluginTask) combinedEntrypoint(ep, cmds []string, err error) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}

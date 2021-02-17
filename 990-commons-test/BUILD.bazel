@@ -9,7 +9,7 @@ sources()
 
 java_library(
     name = "abstract-module",
-    srcs = glob(["src/abstract/**/*.java"]),
+    srcs = glob(["src/abstract/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
@@ -46,7 +46,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",

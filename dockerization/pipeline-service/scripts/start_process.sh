@@ -5,11 +5,11 @@ if [[ -v "{hostname}" ]]; then
 fi
 
 if [[ -z "$JVM_MIN_MEMORY" ]]; then
-   export MIN_MEMORY=2096m
+   export MIN_MEMORY=4096m
 fi
 
 if [[ -z "$JVM_MAX_MEMORY" ]]; then
-   export MAX_MEMORY=2096m
+   export MAX_MEMORY=4096m
 fi
 
 if [[ -z "$COMMAND" ]]; then

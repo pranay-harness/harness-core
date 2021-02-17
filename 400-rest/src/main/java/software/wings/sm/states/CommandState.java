@@ -1305,6 +1305,15 @@ public class CommandState extends State {
       command.setTemplateVariables(referredCommand.getTemplateVariables());
     }
 
+    if (command.getTemplateReference() != null) {
+      Template template = templateService.get(command.getTemplateReference().getTemplateUuid(),
+          command.getTemplateReference().getTemplateVersion().toString());
+      if (template != null) {
+        SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
+        command.setCommandUnits(sshCommandTemplate.getCommandUnits());
+      }
+    }
+
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND == commandUnit.getCommandUnitType()) {
         expandCommand(serviceInstance, (Command) commandUnit, serviceId, envId);

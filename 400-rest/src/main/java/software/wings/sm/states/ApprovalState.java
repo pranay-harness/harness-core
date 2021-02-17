@@ -360,6 +360,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   private boolean isTrueExpression(
       String disableAssertion, ExecutionContext context, ApprovalStateExecutionData executionData) {
+    // rendering expression in order to have it tracked
+    context.renderExpression(disableAssertion);
     if ("true".equals(disableAssertion)) {
       return true;
     }
@@ -802,9 +804,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     StringBuilder artifacts = new StringBuilder();
     StringBuilder infrastructureDefinitions = new StringBuilder();
     WorkflowNotificationDetails infraDetails = null;
-    String appDetails =
-        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp())
-            .getMessage();
+
+    WorkflowNotificationDetails applicationDetails =
+        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp());
+    String appDetails = applicationDetails.getMessage();
+    String appName = applicationDetails.getName();
 
     int tokenValidDuration = getTimeoutMillis();
 
@@ -877,6 +881,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         SlackApprovalParams.builder()
             .appId(context.getAppId())
             .appName(appDetails)
+            .nonFormattedAppName(appName)
             .routingId(accountId)
             .deploymentId(context.getWorkflowExecutionId())
             .workflowId(context.getWorkflowId())

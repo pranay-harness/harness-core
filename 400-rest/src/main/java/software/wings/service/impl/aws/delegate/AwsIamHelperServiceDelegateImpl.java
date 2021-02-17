@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsIamHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsIamHelperServiceDelegate {
   @VisibleForTesting

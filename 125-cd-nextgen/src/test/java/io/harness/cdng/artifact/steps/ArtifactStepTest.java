@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
@@ -51,7 +51,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public class ArtifactStepTest extends CDNGBaseTest {
+public class ArtifactStepTest extends CDNGTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactStepHelper artifactStepHelper;
@@ -72,10 +72,11 @@ public class ArtifactStepTest extends CDNGBaseTest {
   public void testObtainingArtifactTaskForDocker() {
     Ambiance ambiance =
         Ambiance.newBuilder()
-            .putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID", "expressionFunctorToken", "1234",
-                "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
+            .putAllSetupAbstractions(ImmutableMap.of(
+                "accountId", "ACCOUNT_ID", "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
             .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build(),
                 Level.newBuilder().setRuntimeId("node2").build(), Level.newBuilder().setRuntimeId("node3").build()))
+            .setExpressionFunctorToken(1234)
             .build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))

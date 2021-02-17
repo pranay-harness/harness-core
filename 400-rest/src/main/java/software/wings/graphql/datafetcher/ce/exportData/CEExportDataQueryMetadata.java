@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CEExportDataQueryMetadata {
   private static final CEExportDataTableSchema schema = new CEExportDataTableSchema();
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }

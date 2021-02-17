@@ -16,6 +16,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_DEPLOYMENT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP;
@@ -226,7 +227,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                    .name(AZURE_WEBAPP_SLOT_SETUP)
+                                    .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                     .properties(properties)
                                     .build())
                        .build());

@@ -16,6 +16,8 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -53,6 +55,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @NoArgsConstructor
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,

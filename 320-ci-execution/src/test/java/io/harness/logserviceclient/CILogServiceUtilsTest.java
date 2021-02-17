@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.exception.GeneralException;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class CILogServiceUtilsTest extends CIExecutionTest {
+public class CILogServiceUtilsTest extends CIExecutionTestBase {
   @Mock private CILogServiceClient logServiceClient;
 
   @Test

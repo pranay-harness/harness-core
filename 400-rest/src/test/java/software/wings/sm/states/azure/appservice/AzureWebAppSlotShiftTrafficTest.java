@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -39,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContextImpl;
@@ -67,10 +69,12 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected ActivityService activityService;
   @Mock AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotShiftTraffic state = new AzureWebAppSlotShiftTraffic("Slot Traffic shift state");
 
   private final String ACTIVITY_ID = "activityId";
   private final String trafficWeight = "10";
+
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
@@ -79,6 +83,24 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     state.setTrafficWeightExpr(trafficWeight);
     ExecutionResponse result = state.execute(mockContext);
     assertSuccessExecution(result);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSlotTrafficShiftExecuteSkip() {
+    ExecutionContextImpl mockContext = initializeMockSetup(true, true);
+    state.setTrafficWeightExpr("junk");
+    doReturn(AzureConstants.INVALID_TRAFFIC)
+        .when(azureVMSSStateHelper)
+        .renderDoubleExpression(eq("junk"), eq(mockContext), eq(AzureConstants.INVALID_TRAFFIC));
+
+    ExecutionResponse result = state.execute(mockContext);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(result.getErrorMessage())
+        .contains("Invalid traffic percent - [junk] specified. Skipping traffic shift step");
   }
 
   @Test
@@ -173,7 +195,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
+          .getInfoFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
 
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
@@ -181,12 +203,13 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     doReturn(Integer.valueOf(trafficWeight))
         .when(azureVMSSStateHelper)
         .renderExpressionOrGetDefault(anyString(), eq(mockContext), anyInt());
-    doReturn(Float.valueOf(trafficWeight))
+    doReturn(Double.valueOf(trafficWeight))
         .when(azureVMSSStateHelper)
-        .renderFloatExpression(anyString(), eq(mockContext), anyInt());
+        .renderDoubleExpression(anyString(), eq(mockContext), anyInt());
     doReturn(20)
         .when(azureVMSSStateHelper)
         .getStateTimeOutFromContext(eq(mockContext), eq(ContextElementType.AZURE_WEBAPP_SETUP));
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();

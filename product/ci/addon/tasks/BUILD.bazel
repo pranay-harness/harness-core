@@ -3,6 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
+        "common.go",
         "plugin.go",
         "run.go",
     ],
@@ -13,6 +14,7 @@ go_library(
         "//commons/go/lib/expressions:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/images:go_default_library",
+        "//commons/go/lib/metrics:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/addon/remote:go_default_library",
         "//product/ci/addon/testreports:go_default_library",

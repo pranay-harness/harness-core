@@ -167,9 +167,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         : serviceStepParameters.getService();
     serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
 
-    ServiceOutcome serviceOutcome =
-        createServiceOutcome(ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
-            Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance)));
+    ServiceOutcome serviceOutcome = createServiceOutcome(
+        ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken());
     return StepResponse.builder()
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.SERVICE)
@@ -198,7 +197,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   @VisibleForTesting
   ServiceOutcome createServiceOutcome(Ambiance ambiance, ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes,
-      int expressionFunctorToken) throws IOException {
+      long expressionFunctorToken) throws IOException {
     ServiceEntity serviceEntity = getServiceEntity(serviceConfig, ambiance);
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
@@ -234,7 +233,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   }
 
   private void handlePublishingStageOverrides(ServiceOutcomeBuilder outcomeBuilder, ManifestsOutcome manifestsOutcome,
-      ServiceConfig serviceConfig, int expressionFunctorToken) {
+      ServiceConfig serviceConfig, long expressionFunctorToken) {
     if (serviceConfig.getStageOverrides() == null) {
       return;
     }
@@ -280,7 +279,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   }
 
   private void handleVariablesOutcome(
-      ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, int expressionFunctorToken) {
+      ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, long expressionFunctorToken) {
     List<NGVariable> originalVariables = serviceConfig.getServiceDefinition().getServiceSpec().getVariables();
     Map<String, Object> mapOfVariables = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(originalVariables)) {

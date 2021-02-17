@@ -103,7 +103,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldInvokePushMessageWithoutKeySuffix() {
-    LogLine logLine = mock(LogLine.class);
+    LogLine logLine = LogLine.builder().level(LogLevel.INFO).message("msg").build();
 
     completeLogStreamingTaskClient.writeLogLine(logLine, null);
 
@@ -120,7 +120,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldInvokePushMessageWithKeySuffix() {
-    LogLine logLine = mock(LogLine.class);
+    LogLine logLine = LogLine.builder().level(LogLevel.INFO).message("msg").build();
 
     completeLogStreamingTaskClient.writeLogLine(logLine, "keySuffix");
 
@@ -138,8 +138,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldReturnOutputStreamInstance() {
-    try (
-        OutputStream outputStream = completeLogStreamingTaskClient.obtainLogOutputStream(LogLevel.ERROR, "keySuffix")) {
+    try (OutputStream outputStream = completeLogStreamingTaskClient.obtainLogOutputStream(LogLevel.INFO, "keySuffix")) {
       assertThat(outputStream).isInstanceOf(LogOutputStream.class);
 
       String logMessage = "test message";
@@ -154,7 +153,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
       List<LogLine> logLines = (List<LogLine>) captor.getValue();
       assertThat(logLines).hasSize(1);
       assertThat(logLines.get(0).getMessage()).isEqualTo(logMessage);
-      assertThat(logLines.get(0).getLevel()).isEqualTo(LogLevel.ERROR);
+      assertThat(logLines.get(0).getLevel()).isEqualTo(LogLevel.INFO);
     } catch (IOException e) {
       fail("Unexpected failure during test execution");
     }

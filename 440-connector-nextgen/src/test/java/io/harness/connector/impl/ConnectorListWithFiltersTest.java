@@ -114,6 +114,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     for (String orgId : orgs) {
       connectorInfoDTO.setOrgIdentifier(orgId);
       connectorInfoDTO.setProjectIdentifier(null);
+      connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
@@ -144,12 +145,13 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String projId : projIds) {
       connectorInfoDTO.setProjectIdentifier(projId);
+      connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
 
   private void createAccountLevelConnectors() {
-    ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
+    ConnectorInfoDTO connectorInfoDTO = getConnector(name + System.currentTimeMillis(), identifier, description);
     connectorInfoDTO.setOrgIdentifier(null);
     connectorInfoDTO.setProjectIdentifier(null);
     connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
@@ -172,7 +174,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testListWithNamesFilter() {
-    createConnectorsWithNames(Arrays.asList("docker", "docker connector", "qa connector", "docker"));
+    createConnectorsWithNames(Arrays.asList("docker", "docker connector", "qa connector", "a docker connector"));
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().connectorNames(Arrays.asList("docker", "docker connector")).build();
     Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
@@ -182,7 +184,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     List<String> connectorNames = connectorDTOS.stream()
                                       .map(connectorResponseDTO -> connectorResponseDTO.getConnector().getName())
                                       .collect(Collectors.toList());
-    assertThat(connectorNames.containsAll(Arrays.asList("docker", "docker", "docker connector"))).isTrue();
+    assertThat(connectorNames.containsAll(Arrays.asList("docker", "docker connector", "a docker connector"))).isTrue();
   }
 
   private void createConnectorsWithNames(List<String> namesList) {
@@ -216,6 +218,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String identifier : identifiers) {
       connectorInfoDTO.setIdentifier(identifier);
+      connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
@@ -242,6 +245,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String description : descriptions) {
       connectorInfoDTO.setDescription(description);
+      connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
@@ -365,6 +369,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   private void createConnectorsWithStatus(int numberOfConnectors, ConnectivityStatus status) {
     for (int i = 0; i < numberOfConnectors; i++) {
       KubernetesClusterConfig connector = getConnectorEntity();
+      connector.setName(name + System.currentTimeMillis());
       connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
       connectorRepository.save(connector);
     }
@@ -414,6 +419,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                            .projectIdentifier(projectIdentifier)
                            .connectorType(type)
                            .connectorConfig(connectorConfig)
+                           .name(name + System.currentTimeMillis())
                            .build())
         .build();
   }

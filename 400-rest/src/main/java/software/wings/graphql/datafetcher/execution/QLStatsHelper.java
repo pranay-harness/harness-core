@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -18,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLStatsHelper {
   @Inject WingsPersistence wingsPersistence;
 

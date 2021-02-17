@@ -4,40 +4,56 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.beans.ARMSourceType.GIT;
+import static software.wings.beans.TaskType.AZURE_ARM_TASK;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
-import static software.wings.beans.command.AzureARMCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.azure.model.ARMScopeType;
+import io.harness.azure.model.AzureConstants;
+import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
+import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
+import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.ARMStateExecutionData.ARMStateExecutionDataBuilder;
+import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.Activity;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
+import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
@@ -49,24 +65,27 @@ public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";
 
-  @Getter @Setter private String provisionerId;
-  @Getter @Setter private String cloudProviderId;
-  @Getter @Setter private String timeoutExpression;
+  @Getter @Setter protected String provisionerId;
+  @Getter @Setter protected String cloudProviderId;
+  @Getter @Setter protected String timeoutExpression;
+  @Getter @Setter private AzureDeploymentMode deploymentMode = AzureDeploymentMode.INCREMENTAL;
 
   @Getter @Setter private String locationExpression;
-  @Getter @Setter private String subscriptionExpression;
-  @Getter @Setter private String resourceGroupExpression;
+  @Getter @Setter protected String subscriptionExpression;
+  @Getter @Setter protected String resourceGroupExpression;
   @Getter @Setter private String managementGroupExpression;
 
   @Getter @Setter private String inlineVariablesExpression;
   @Getter @Setter private GitFileConfig variablesGitFileConfig;
 
-  @Inject private ARMStateHelper helper;
-  @Inject private DelegateService delegateService;
+  @Inject protected ARMStateHelper helper;
+  @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
+  @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
+  @Inject protected AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   public ARMProvisionState(String name) {
-    super(name, StateType.ARM_PROVISION.name());
+    super(name, StateType.ARM_CREATE_RESOURCE.name());
   }
 
   @Override
@@ -80,7 +99,7 @@ public class ARMProvisionState extends State {
     }
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
     ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
     boolean executeGitTask = helper.executeGitTask(provisioner, variablesGitFileConfig);
     Activity activity = helper.createActivity(context, executeGitTask, getStateType());
@@ -107,7 +126,7 @@ public class ARMProvisionState extends State {
                                              .activityId(activity.getUuid())
                                              .accountId(context.getAccountId())
                                              .appId(context.getAppId())
-                                             .executionLogName(FetchFiles)
+                                             .executionLogName(AzureConstants.FETCH_FILES)
                                              .isFinalState(true)
                                              .appManifestKind(K8S_MANIFEST)
                                              .gitFetchFilesConfigMap(filesConfigMap)
@@ -151,7 +170,6 @@ public class ARMProvisionState extends State {
       templateBody = helper.extractJsonFromGitResponse(stateExecutionData, TEMPLATE_KEY);
     } else {
       templateBody = provisioner.getTemplateBody();
-      builder.inlineTemplateForRollback(templateBody);
     }
 
     String variablesBody = null;
@@ -159,10 +177,63 @@ public class ARMProvisionState extends State {
       variablesBody = helper.extractJsonFromGitResponse(stateExecutionData, VARIABLES_KEY);
     } else {
       variablesBody = inlineVariablesExpression;
-      builder.inlineVariablesForRollback(variablesBody);
     }
 
-    throw new InvalidRequestException("Implement me to send ARM delegate task");
+    AzureARMDeploymentParameters taskParams =
+        AzureARMDeploymentParameters.builder()
+            .appId(context.getAppId())
+            .accountId(context.getAccountId())
+            .activityId(activityId)
+            .deploymentScope(provisioner.getScopeType())
+            .deploymentMode(deploymentMode(provisioner.getScopeType()))
+            .managementGroupId(context.renderExpression(managementGroupExpression))
+            .subscriptionId(context.renderExpression(subscriptionExpression))
+            .resourceGroupName(context.renderExpression(resourceGroupExpression))
+            .deploymentDataLocation(context.renderExpression(locationExpression))
+            .templateJson(context.renderExpression(templateBody))
+            .parametersJson(context.renderExpression(variablesBody))
+            .commandName(ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE)
+            .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
+            .build();
+
+    AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
+    List<EncryptedDataDetail> azureEncryptionDetails =
+        azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);
+    AzureConfigDTO azureConfigDTO = azureVMSSStateHelper.createAzureConfigDTO(azureConfig);
+
+    AzureTaskExecutionRequest delegateRequest = AzureTaskExecutionRequest.builder()
+                                                    .azureConfigDTO(azureConfigDTO)
+                                                    .azureConfigEncryptionDetails(azureEncryptionDetails)
+                                                    .azureTaskParameters(taskParams)
+                                                    .build();
+
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(context.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(AZURE_ARM_TASK.name())
+                      .parameters(new Object[] {delegateRequest})
+                      .timeout(TimeUnit.MINUTES.toMillis(helper.renderTimeout(timeoutExpression, context)))
+                      .build())
+            .build();
+    delegateService.queueTask(delegateTask);
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(singletonList(delegateTask.getUuid()))
+        .stateExecutionData(builder.build())
+        .build();
+  }
+
+  private AzureDeploymentMode deploymentMode(ARMScopeType scopeType) {
+    if (ARMScopeType.RESOURCE_GROUP == scopeType) {
+      return deploymentMode;
+    }
+    return AzureDeploymentMode.INCREMENTAL;
   }
 
   @Override
@@ -208,9 +279,43 @@ public class ARMProvisionState extends State {
 
   private ExecutionResponse handleAsyncInternalARMTask(
       ExecutionContext context, Map<String, ResponseData> response, ARMStateExecutionData stateExecutionData) {
-    // Save ARM outputs for use in Wf if success
-    // Save ARM config if success
-    throw new InvalidRequestException("Not implemented yet!!");
+    AzureTaskExecutionResponse executionResponse = (AzureTaskExecutionResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+    activityService.updateStatus(stateExecutionData.getActivityId(), context.getAppId(), executionStatus);
+
+    if (!isRollback()) {
+      savePreDeploymentData(context, executionResponse);
+    }
+    if (ExecutionStatus.FAILED == executionStatus) {
+      return ExecutionResponse.builder()
+          .errorMessage(executionResponse.getErrorMessage())
+          .executionStatus(executionStatus)
+          .build();
+    }
+    saveARMOutputs(context, executionResponse);
+    return ExecutionResponse.builder().stateExecutionData(stateExecutionData).executionStatus(executionStatus).build();
+  }
+
+  private void savePreDeploymentData(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    AzureARMDeploymentResponse azureTaskResponse =
+        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+    AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
+    ARMPreExistingTemplate armPreExistingTemplate =
+        ARMPreExistingTemplate.builder().preDeploymentData(preDeploymentData).build();
+
+    String prefix = String.format(
+        "%s-%s-%s", provisionerId, preDeploymentData.getSubscriptionId(), preDeploymentData.getResourceGroup());
+    if (!azureSweepingOutputServiceHelper.dataExist(context, prefix)) {
+      azureSweepingOutputServiceHelper.saveToSweepingOutPut(armPreExistingTemplate, prefix, context);
+    }
+  }
+
+  private void saveARMOutputs(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    AzureARMDeploymentResponse azureTaskResponse =
+        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+    helper.saveARMOutputs(azureTaskResponse.getOutputs(), context);
   }
 
   @Override

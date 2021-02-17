@@ -262,11 +262,11 @@ public class AzureVMSSStateHelper {
     return retVal;
   }
 
-  public float renderFloatExpression(String expr, ExecutionContext context, float defaultValue) {
-    float retVal = defaultValue;
+  public double renderDoubleExpression(String expr, ExecutionContext context, double defaultValue) {
+    double retVal = defaultValue;
     if (isNotEmpty(expr)) {
       try {
-        retVal = Float.parseFloat(context.renderExpression(expr));
+        retVal = Double.parseDouble(context.renderExpression(expr));
       } catch (NumberFormatException e) {
         log.error(format("Number format Exception while evaluating: [%s]", expr), e);
         retVal = defaultValue;

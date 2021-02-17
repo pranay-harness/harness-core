@@ -1,8 +1,11 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -28,6 +31,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -67,6 +71,7 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     AzureWebAppInstanceSyncPerpetualTaskClient.PerpetualTaskData perpetualTaskData =
         getPerpetualTaskData(clientContext);
+    Map<String, String> clientParams = clientContext.getClientParams();
 
     AzureWebAppListWebAppInstancesParameters listDeploymentDataParameters =
         AzureWebAppListWebAppInstancesParameters.builder()
@@ -90,7 +95,11 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
                   .async(false)
                   .taskType(TaskType.AZURE_APP_SERVICE_TASK.name())
                   .parameters(new Object[] {request})
+                  .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, clientParams.get(HARNESS_APPLICATION_ID))
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

@@ -273,6 +273,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private ApiKeyInfo triggeringApiKeyInfo;
 
   private List<Artifact> artifacts;
+  private List<Artifact> rollbackArtifacts;
   private List<HelmChart> helmCharts;
 
   private Set<String> keywords;

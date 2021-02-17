@@ -32,6 +32,8 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.collect.ImmutableList;
@@ -66,7 +68,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
-
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -102,6 +104,12 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(CiExecutionRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
       }
     });
 

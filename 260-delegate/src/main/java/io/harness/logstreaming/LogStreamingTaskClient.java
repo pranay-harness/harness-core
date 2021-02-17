@@ -1,6 +1,11 @@
 package io.harness.logstreaming;
 
+import static software.wings.beans.LogColor.Red;
+import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogHelper.doneColoring;
+import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -75,6 +80,7 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
         baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
 
     logStreamingSanitizer.sanitizeLogMessage(logLine);
+    colorLog(logLine);
 
     try {
       SafeHttpCall.executeWithExceptions(
@@ -82,6 +88,17 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
     } catch (Exception ex) {
       log.error("Unable to push message to log stream for account {} and key {}", accountId, logKey, ex);
     }
+  }
+
+  private void colorLog(LogLine logLine) {
+    String message = logLine.getMessage();
+    if (logLine.getLevel() == LogLevel.ERROR) {
+      message = color(message, Red, Bold);
+    } else if (logLine.getLevel() == LogLevel.WARN) {
+      message = color(message, Yellow, Bold);
+    }
+    message = doneColoring(message);
+    logLine.setMessage(message);
   }
 
   @Override

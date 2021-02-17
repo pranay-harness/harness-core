@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -21,6 +23,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class HelmRollbackCommandRequest extends HelmCommandRequest {
   private Integer newReleaseVersion;
   private Integer prevReleaseVersion;
