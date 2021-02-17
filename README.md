@@ -542,3 +542,4 @@ We are already using logback framework in our application, so it is simple to en
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
 * Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.
 
+
