@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class DelegateComponentTest extends DelegateTest {
+public class DelegateComponentTest extends DelegateTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

@@ -10,7 +10,12 @@ sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
-] + [
+] +[
+     "@delegate//:com_squareup_okhttp3_logging_interceptor",
+     "@delegate//:com_squareup_okhttp3_okhttp",
+     "@delegate//:com_squareup_okhttp3_okhttp_urlconnection",
+
+ ] + [
     "//400-rest:module",
     "//420-delegate-agent:module",
     "//420-delegate-service:module",
@@ -255,9 +260,6 @@ shared_dependencies = [
     "@maven//:com_segment_backo_backo",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_splunk_splunk",
-    "@maven//:com_squareup_okhttp3_logging_interceptor",
-    "@maven//:com_squareup_okhttp3_okhttp",
-    "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
     "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
     "@maven//:com_squareup_retrofit2_converter_gson",
