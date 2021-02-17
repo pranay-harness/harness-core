@@ -10,8 +10,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -21,13 +19,10 @@ import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
-import software.wings.beans.GitConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.settings.SettingValue;
 
 import com.google.inject.Singleton;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,7 +32,6 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jgit.transport.URIish;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Singleton
@@ -221,34 +215,5 @@ public class CapabilityHelper {
 
     return generateExecutionCapabilitiesForProcessExecutor(
         TERRAFORM, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForGit(GitConfig gitConfig) {
-    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    if (gitConfig != null) {
-      if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
-        executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(gitConfig.getRepoUrl()).build());
-      } else {
-        HostConnectionAttributes hostConnectionAttributes =
-            (HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue();
-        executionCapabilities.add(SocketConnectivityExecutionCapability.builder()
-                                      .port(hostConnectionAttributes.getSshPort().toString())
-                                      .hostName(getHostname(gitConfig.getRepoUrl()))
-                                      .scheme("ssh")
-                                      .url(gitConfig.getRepoUrl())
-                                      .build());
-      }
-    }
-    return executionCapabilities;
-  }
-
-  private static String getHostname(String repoUrl) {
-    try {
-      final URIish urIish = new URIish(repoUrl);
-      return urIish.getHost();
-    } catch (URISyntaxException e) {
-      log.error("Failed to construct uri for {} repo", repoUrl, e);
-      return repoUrl;
-    }
   }
 }
