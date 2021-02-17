@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,7 +48,7 @@ public class RoleDBO implements PersistentEntity {
   final String scopeIdentifier;
   @NGEntityName final String name;
   @NotEmpty final Set<String> allowedScopeLevels;
-  @NotEmpty final Set<String> permissions;
+  @NotNull final Set<String> permissions;
   final boolean managed;
   final String description;
   final Map<String, String> tags;

@@ -5,6 +5,7 @@ import io.harness.data.validator.NGEntityName;
 
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,10 +27,11 @@ public class Role {
   final String scopeIdentifier;
   @NGEntityName final String name;
   @NotEmpty final Set<String> allowedScopeLevels;
-  @NotEmpty final Set<String> permissions;
-  @Setter boolean managed;
+  @NotNull final Set<String> permissions;
+  final boolean managed;
   final String description;
   final Map<String, String> tags;
-  final Long createdAt;
-  final Long lastModifiedAt;
+  @Setter Long createdAt;
+  @Setter Long lastModifiedAt;
+  @Setter Long version;
 }
