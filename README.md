@@ -543,5 +543,3 @@ We are already using logback framework in our application, so it is simple to en
 * Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.
 dad
 jnk
-
-
