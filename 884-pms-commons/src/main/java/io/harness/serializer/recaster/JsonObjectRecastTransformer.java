@@ -1,30 +1,24 @@
 package io.harness.serializer.recaster;
 
-import static java.lang.String.format;
-
 import io.harness.beans.CastedField;
-import io.harness.exceptions.RecasterException;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.transformers.RecastTransformer;
 import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 
 public class JsonObjectRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   @Override
   public Object decode(Class<?> targetClass, Object fromObject, CastedField castedField) {
-    try {
-      return YamlUtils.read((String) fromObject, targetClass);
-    } catch (IOException e) {
-      throw new RecasterException(format("Cannot decode JsonObject %s", fromObject));
-    }
+    return new ObjectMapper().valueToTree(fromObject);
   }
 
   @Override
   public Object encode(Object value, CastedField castedField) {
-    return YamlUtils.write(value);
+    return new ObjectMapper().convertValue(value, new TypeReference<Map<String, Object>>() {});
   }
 
   @Override

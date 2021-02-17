@@ -16,6 +16,10 @@ aeriform("//136-git-sync-manager:tests")
 
 aeriform("//160-model-gen-tool:module")
 
+aeriform("//210-command-library-xxxxxxxxmodule")
+
+aeriform("//210-command-library-xxxxxxxxtests")
+
 aeriform("//220-graphql-test:supporter-test")
 
 aeriform("//220-graphql-test:tests")
@@ -26,9 +30,17 @@ aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
 
+aeriform("//300-cv-nextgen:module")
+
+aeriform("//300-cv-nextgen:tests")
+
 aeriform("//310-ci-manager:module")
 
+aeriform("//310-ci-manager:tests")
+
 aeriform("//320-ci-execution:module")
+
+aeriform("//320-ci-execution:tests")
 
 aeriform("//330-ci-beans:module")
 
@@ -93,6 +105,8 @@ aeriform("//810-ng-triggers:module")
 aeriform("//810-ng-triggers:tests")
 
 aeriform("//830-notification-service:module")
+
+aeriform("//830-notification-service:tests")
 
 aeriform("//835-notification-senders:module")
 

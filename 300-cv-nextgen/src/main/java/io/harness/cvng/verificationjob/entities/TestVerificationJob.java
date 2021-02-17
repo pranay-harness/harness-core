@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
@@ -115,5 +116,18 @@ public class TestVerificationJob extends VerificationJob {
                                               .orElse(null);
     }
     return this;
+  }
+
+  public static class TestVerificationUpdatableEntity
+      extends VerificationJobUpdatableEntity<TestVerificationJob, TestVerificationJobDTO> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<TestVerificationJob> updateOperations, TestVerificationJobDTO dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(TestVerificationJobKeys.sensitivity,
+          getRunTimeParameter(dto.getSensitivity(), VerificationJobDTO.isRuntimeParam(dto.getEnvIdentifier())));
+      updateOperations.set(
+          TestVerificationJobKeys.baselineVerificationJobInstanceId, dto.getBaselineVerificationJobInstanceId());
+    }
   }
 }

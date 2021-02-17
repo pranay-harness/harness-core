@@ -38,7 +38,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 
@@ -78,7 +78,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ../../210-command-library-server/target/command-library-app-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 
@@ -134,7 +134,8 @@ jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWO
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
-cp 250-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
+cd dist/watcher
+cp ${HOME}/.bazel-dirs/bin/250-watcher/module_deploy.jar watcher-capsule.jar
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/watcher/watcher-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 

@@ -125,6 +125,7 @@ import com.google.common.io.Resources;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1Secret;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -259,10 +260,10 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         releaseName, KubernetesConfig.builder().build(), executionLogCallback);
     assertThat(kubernetesResourceIds).isEmpty();
 
-    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
+    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList("1");
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.setReleases(
-        Arrays.asList(Release.builder().status(Status.Succeeded).resources(kubernetesResourceIdList).build()));
+        asList(Release.builder().status(Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
     data.put(ReleaseHistoryKeyName, releaseHistoryString);
@@ -280,7 +281,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                                                      .toString())
                                           .collect(Collectors.toSet());
 
-    assertThat(resourceIdentifiers.containsAll(Arrays.asList("default/Namespace/n1", "default/Deployment/d1",
+    assertThat(resourceIdentifiers.containsAll(asList("default/Namespace/n1", "default/Deployment/d1",
                    "default/ConfigMap/c1", "default/ConfigMap/releaseName", "default/Service/s1")))
         .isTrue();
   }
@@ -298,6 +299,127 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testFetchAllResourcesForReleaseWhenMissingSecretAndConfigMap() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+
+    doReturn(null).when(mockKubernetesContainerService).getConfigMap(config, "releaseName");
+    doReturn(null).when(mockKubernetesContainerService).getSecret(config, "releaseName");
+    List<KubernetesResourceId> kubernetesResourceIds =
+        k8sTaskHelperBase.fetchAllResourcesForRelease("releaseName", config, logCallback);
+    assertThat(kubernetesResourceIds).isEmpty();
+  }
+
+  // Fetch release history from secret first
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void fetchAllResourcesSecretConfigMapPreference() throws IOException {
+    String releaseName = "releaseName";
+
+    final V1Secret secret = new V1Secret();
+    secret.setKind("secret");
+    secret.setData(new HashMap<>());
+
+    final V1ConfigMap configMap = new V1ConfigMap();
+    configMap.setKind("configMap");
+    configMap.setData(new HashMap<>());
+
+    doReturn(secret).when(mockKubernetesContainerService).getSecret(any(), eq(releaseName));
+    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), eq(releaseName));
+
+    ReleaseHistory releaseHistorySecret = ReleaseHistory.createNew();
+    releaseHistorySecret.setReleases(asList(
+        Release.builder().status(Status.Succeeded).resources(getKubernetesResourceIdList("-from-secret")).build()));
+
+    String releaseHistoryString = releaseHistorySecret.getAsYaml();
+    secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
+
+    ReleaseHistory releaseHistoryConfigMap = ReleaseHistory.createNew();
+    releaseHistoryConfigMap.setReleases(
+        asList(Release.builder().status(Status.Succeeded).resources(getKubernetesResourceIdList("-from-cm")).build()));
+
+    configMap.getData().put(ReleaseHistoryKeyName, releaseHistoryConfigMap.getAsYaml());
+
+    final List<KubernetesResourceId> kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);
+
+    assertThat(kubernetesResourceIds.size()).isEqualTo(6);
+    Set<String> resourceIdentifiers = kubernetesResourceIds.stream()
+                                          .map(resourceId
+                                              -> new StringBuilder(resourceId.getNamespace())
+                                                     .append('/')
+                                                     .append(resourceId.getKind())
+                                                     .append('/')
+                                                     .append(resourceId.getName())
+                                                     .toString())
+                                          .collect(Collectors.toSet());
+
+    assertThat(resourceIdentifiers)
+        .containsExactlyInAnyOrder("default/Namespace/n-from-secret", "default/Deployment/d-from-secret",
+            "default/ConfigMap/c-from-secret", "default/secret/releaseName", "default/Service/s-from-secret",
+            "default/configMap/releaseName");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testFetchAllResourcesForReleaseWithSecret() throws Exception {
+    String releaseName = "releaseName";
+
+    ExecutionLogCallback executionLogCallback = logCallback;
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString());
+
+    V1Secret secret = new V1Secret();
+    secret.setKind("secret");
+
+    secret.setData(new HashMap<>());
+    doReturn(secret).when(mockKubernetesContainerService).getSecret(any(), eq(releaseName));
+    doReturn(null).when(mockKubernetesContainerService).getConfigMap(any(), eq(releaseName));
+
+    // Empty release history
+    List<KubernetesResourceId> kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        releaseName, KubernetesConfig.builder().build(), executionLogCallback);
+    assertThat(kubernetesResourceIds).isEmpty();
+
+    secret.getData().put(ReleaseHistoryKeyName, null);
+    kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        releaseName, KubernetesConfig.builder().build(), executionLogCallback);
+    assertThat(kubernetesResourceIds).isEmpty();
+
+    secret.getData().put(ReleaseHistoryKeyName, "".getBytes());
+    kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        releaseName, KubernetesConfig.builder().build(), executionLogCallback);
+    assertThat(kubernetesResourceIds).isEmpty();
+
+    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList("1");
+    ReleaseHistory releaseHistory = ReleaseHistory.createNew();
+    releaseHistory.setReleases(
+        asList(Release.builder().status(Status.Succeeded).resources(kubernetesResourceIdList).build()));
+
+    String releaseHistoryString = releaseHistory.getAsYaml();
+    secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
+    kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
+        releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);
+
+    assertThat(kubernetesResourceIds.size()).isEqualTo(5);
+    Set<String> resourceIdentifiers = kubernetesResourceIds.stream()
+                                          .map(resourceId
+                                              -> new StringBuilder(resourceId.getNamespace())
+                                                     .append('/')
+                                                     .append(resourceId.getKind())
+                                                     .append('/')
+                                                     .append(resourceId.getName())
+                                                     .toString())
+                                          .collect(Collectors.toSet());
+
+    assertThat(resourceIdentifiers)
+        .containsExactlyInAnyOrder("default/Namespace/n1", "default/Deployment/d1", "default/ConfigMap/c1",
+            "default/secret/releaseName", "default/Service/s1");
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetResourceIdsForDeletion() throws Exception {
@@ -310,10 +432,10 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     V1ConfigMap configMap = new V1ConfigMap();
     configMap.setKind(ConfigMap.name());
     doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyString());
-    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
+    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList("1");
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.setReleases(
-        Arrays.asList(Release.builder().status(Status.Succeeded).resources(kubernetesResourceIdList).build()));
+        asList(Release.builder().status(Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
     Map<String, String> data = new HashMap<>();
@@ -330,7 +452,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testArrangeResourceIdsInDeletionOrder() throws Exception {
-    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
+    List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList("1");
     kubernetesResourceIdList.add(
         KubernetesResourceId.builder().kind(Secret.name()).name("sc1").namespace("default").build());
     kubernetesResourceIdList.add(
@@ -345,16 +467,16 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     assertThat(kubernetesResourceIdList.get(5).getKind()).isEqualTo(Namespace.name());
   }
 
-  private List<KubernetesResourceId> getKubernetesResourceIdList() {
+  private List<KubernetesResourceId> getKubernetesResourceIdList(String suffix) {
     List<KubernetesResourceId> kubernetesResourceIds = new ArrayList<>();
     kubernetesResourceIds.add(
-        KubernetesResourceId.builder().kind(Namespace.name()).name("n1").namespace("default").build());
+        KubernetesResourceId.builder().kind(Namespace.name()).name("n" + suffix).namespace("default").build());
     kubernetesResourceIds.add(
-        KubernetesResourceId.builder().kind(Deployment.name()).name("d1").namespace("default").build());
+        KubernetesResourceId.builder().kind(Deployment.name()).name("d" + suffix).namespace("default").build());
     kubernetesResourceIds.add(
-        KubernetesResourceId.builder().kind(ConfigMap.name()).name("c1").namespace("default").build());
+        KubernetesResourceId.builder().kind(ConfigMap.name()).name("c" + suffix).namespace("default").build());
     kubernetesResourceIds.add(
-        KubernetesResourceId.builder().kind(Service.name()).name("s1").namespace("default").build());
+        KubernetesResourceId.builder().kind(Service.name()).name("s" + suffix).namespace("default").build());
     return kubernetesResourceIds;
   }
 
@@ -728,23 +850,6 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .isEqualTo("kubectl --kubeconfig=config-path scale Deployment/nginx --namespace=default --replicas=5");
   }
 
-  //  @Test
-  //  @Owner(developers = YOGESH)
-  //  @Category(UnitTests.class)
-  //  public void delete() throws Exception {
-  //    final ReleaseHistory releaseHistory = ReleaseHistory.createNew();
-  //    releaseHistory.getReleases().add(K8sTestHelper.buildRelease(Status.Succeeded, 0));
-  //    doReturn(K8sTestHelper.buildProcessResult(0)).when(spyHelper).k8sTaskHelperBase.runK8sExecutable(any(), any(),
-  //    any()); spyHelper.delete(Kubectl.client("kubectl", "kubeconfig"), K8sDelegateTaskParams.builder().build(),
-  //        asList(configMap().getResourceId()), logCallback);
-  //    ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
-  //    verify(spyHelper, times(1)).k8sTaskHelperBase.runK8sExecutable(any(), any(), captor.capture());
-  //    final List<DeleteCommand> deleteCommands = captor.getAllValues();
-  //    assertThat(deleteCommands).hasSize(1);
-  //    assertThat(deleteCommands.get(0).command()).isEqualTo("kubectl --kubeconfig=kubeconfig delete
-  //    ConfigMap/configMap");
-  //  }
-
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
@@ -903,10 +1008,10 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   private List<FileData> prepareSomeCorrectManifestFiles() throws IOException {
-    return Arrays.asList(FileData.builder()
-                             .fileContent(K8sTestHelper.readFileContent(deploymentYaml, resourcePath))
-                             .fileName(deploymentYaml)
-                             .build(),
+    return asList(FileData.builder()
+                      .fileContent(K8sTestHelper.readFileContent(deploymentYaml, resourcePath))
+                      .fileName(deploymentYaml)
+                      .build(),
         FileData.builder()
             .fileName(deploymentConfigYaml)
             .fileContent(K8sTestHelper.readFileContent(deploymentConfigYaml, resourcePath))
@@ -922,7 +1027,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   private List<FileData> prepareSomeInCorrectManifestFiles() throws IOException {
-    return Arrays.asList(FileData.builder().fileContent("some-random-content").fileName("manifest.yaml").build(),
+    return asList(FileData.builder().fileContent("some-random-content").fileName("manifest.yaml").build(),
         FileData.builder().fileContent("not-a-manifest-file").fileName("a.txt").build());
   }
 

@@ -7,7 +7,7 @@ import io.specto.hoverfly.junit.rule.HoverflyRule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.ClassRule;
 @Slf4j
-public class HoverflyTest extends CategoryTest {
+public class HoverflyTestBase extends CategoryTest {
   //  TODO: We need make capture and simulation switching easier.
   // TODO: trying out if assigning a fixed port fixes the CI issues. We need a common rule for all tests.
 

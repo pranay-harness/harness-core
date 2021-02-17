@@ -16,7 +16,7 @@ option go_package = "240_capability";
 // - consistent (they are either allowed, or not)
 // - self proving (validation through use)
 
-// Next ID: 16
+// Next ID: 17
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -34,6 +34,7 @@ message CapabilityParameters {
     SocketConnectivityParameters socket_connectivity_parameters = 8;
     SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
+    WinrmHostValidationParameters winrm_host_validation_parameters = 16;
   }
 }
 
@@ -112,9 +113,17 @@ message KustomizeParameters {
 
 message PcfAutoScalarParameters {}
 
+message PcfConnectivityParameters {
+  string endpoint_url = 1;
+}
+
 // A testing method for capabilities
 message TestingCapability {}
 
-message PcfConnectivityParameters {
-  string endpoint_url = 1;
+// Testing WinRM Host reachable or not
+message WinrmHostValidationParameters {
+  string hostname = 4;
+  int32 port = 2;
+  bool use_ssl = 3;
+  string domain = 1;
 }

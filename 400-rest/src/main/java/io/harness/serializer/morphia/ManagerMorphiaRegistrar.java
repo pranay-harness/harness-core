@@ -475,7 +475,6 @@ import software.wings.delegatetasks.validation.capabilities.GitConnectionCapabil
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -1367,7 +1366,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("delegatetasks.validation.capabilities.HelmCommandCapability", HelmCommandCapability.class);
     w.put("delegatetasks.validation.capabilities.GitConnectionCapability", GitConnectionCapability.class);
     w.put("delegatetasks.validation.capabilities.SSHHostValidationCapability", SSHHostValidationCapability.class);
-    w.put("delegatetasks.validation.capabilities.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);
     w.put("helpers.ext.cloudformation.CloudFormationCompletionFlag", CloudFormationCompletionFlag.class);
     w.put("helpers.ext.ecs.request.EcsBGListenerUpdateRequest", EcsBGListenerUpdateRequest.class);

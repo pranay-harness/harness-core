@@ -17,7 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.Team;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.alert.beans.AlertRuleDTO;
@@ -55,7 +55,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class AlertRuleServiceImplTest extends CvNextGenTest {
+public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private AlertRuleService alertRuleService;
 

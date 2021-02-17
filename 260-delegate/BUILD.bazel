@@ -10,12 +10,11 @@ sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
-] +[
-     "@delegate//:com_squareup_okhttp3_logging_interceptor",
-     "@delegate//:com_squareup_okhttp3_okhttp",
-     "@delegate//:com_squareup_okhttp3_okhttp_urlconnection",
-
- ] + [
+] + [
+    "@delegate//:com_squareup_okhttp3_logging_interceptor",
+    "@delegate//:com_squareup_okhttp3_okhttp",
+    "@delegate//:com_squareup_okhttp3_okhttp_urlconnection",
+] + [
     "//400-rest:module",
     "//420-delegate-agent:module",
     "//420-delegate-service:module",

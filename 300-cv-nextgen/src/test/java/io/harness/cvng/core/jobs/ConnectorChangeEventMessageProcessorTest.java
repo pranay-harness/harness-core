@@ -12,7 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -56,7 +56,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
+public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private ConnectorChangeEventMessageProcessor connectorChangeEventMessageProcessor;
   @Inject private CVConfigService cvConfigService;
   @Mock private DataCollectionTaskService dataCollectionTaskService;

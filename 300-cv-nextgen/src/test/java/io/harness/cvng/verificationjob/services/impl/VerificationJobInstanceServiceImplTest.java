@@ -19,7 +19,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.DataGenerator;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
@@ -102,7 +102,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
+public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationJobInstanceServiceImpl verificationJobInstanceService;
   @Inject private CVConfigService cvConfigService;
