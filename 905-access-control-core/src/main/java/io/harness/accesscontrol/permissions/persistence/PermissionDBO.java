@@ -1,7 +1,9 @@
 package io.harness.accesscontrol.permissions.persistence;
 
 import io.harness.accesscontrol.permissions.PermissionStatus;
+import io.harness.accesscontrol.permissions.validator.PermissionIdentifier;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 
@@ -39,8 +41,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("permissions")
 public class PermissionDBO implements PersistentEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
-  @FdUniqueIndex final String identifier;
-  final String name;
+  @FdUniqueIndex @PermissionIdentifier final String identifier;
+  @NGEntityName final String name;
   @NotNull final PermissionStatus status;
   @NotEmpty final Set<String> allowedScopeLevels;
 

@@ -16,7 +16,7 @@ public interface PermissionDao {
 
   Optional<Permission> get(@NotEmpty String identifier);
 
-  String update(@Valid Permission permission);
+  Permission update(@Valid Permission permission);
 
   void delete(@NotEmpty String identifier);
 }

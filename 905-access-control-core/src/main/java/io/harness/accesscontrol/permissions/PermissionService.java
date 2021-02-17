@@ -13,7 +13,7 @@ public interface PermissionService {
 
   List<Permission> list(@NotNull @Valid PermissionFilter permissionFilter);
 
-  String update(@Valid Permission permission);
+  Permission update(@Valid Permission permission);
 
   void delete(@NotEmpty String identifier);
 }
