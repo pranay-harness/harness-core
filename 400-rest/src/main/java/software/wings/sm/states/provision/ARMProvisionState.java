@@ -75,8 +75,8 @@ public class ARMProvisionState extends State {
   @Getter @Setter protected String resourceGroupExpression;
   @Getter @Setter private String managementGroupExpression;
 
-  @Getter @Setter private String inlineVariablesExpression;
-  @Getter @Setter private GitFileConfig variablesGitFileConfig;
+  @Getter @Setter private String inlineParametersExpression;
+  @Getter @Setter private GitFileConfig parametersGitFileConfig;
 
   @Inject protected ARMStateHelper helper;
   @Inject protected DelegateService delegateService;
@@ -101,7 +101,7 @@ public class ARMProvisionState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
-    boolean executeGitTask = helper.executeGitTask(provisioner, variablesGitFileConfig);
+    boolean executeGitTask = helper.executeGitTask(provisioner, parametersGitFileConfig);
     Activity activity = helper.createActivity(context, executeGitTask, getStateType());
 
     if (executeGitTask) {
@@ -119,8 +119,8 @@ public class ARMProvisionState extends State {
     if (GIT == provisioner.getSourceType()) {
       filesConfigMap.put(TEMPLATE_KEY, helper.createGitFetchFilesConfig(provisioner.getGitFileConfig(), context));
     }
-    if (variablesGitFileConfig != null) {
-      filesConfigMap.put(VARIABLES_KEY, helper.createGitFetchFilesConfig(variablesGitFileConfig, context));
+    if (parametersGitFileConfig != null) {
+      filesConfigMap.put(VARIABLES_KEY, helper.createGitFetchFilesConfig(parametersGitFileConfig, context));
     }
     GitFetchFilesTaskParams taskParams = GitFetchFilesTaskParams.builder()
                                              .activityId(activity.getUuid())
@@ -165,18 +165,18 @@ public class ARMProvisionState extends State {
     if (stateExecutionData != null) {
       builder.fetchFilesResult(stateExecutionData.getFetchFilesResult());
     }
-    String templateBody = null;
+    String templateBody;
     if (GIT == provisioner.getSourceType()) {
       templateBody = helper.extractJsonFromGitResponse(stateExecutionData, TEMPLATE_KEY);
     } else {
       templateBody = provisioner.getTemplateBody();
     }
 
-    String variablesBody = null;
-    if (variablesGitFileConfig != null) {
-      variablesBody = helper.extractJsonFromGitResponse(stateExecutionData, VARIABLES_KEY);
+    String parametersBody;
+    if (parametersGitFileConfig != null) {
+      parametersBody = helper.extractJsonFromGitResponse(stateExecutionData, VARIABLES_KEY);
     } else {
-      variablesBody = inlineVariablesExpression;
+      parametersBody = inlineParametersExpression;
     }
 
     AzureARMDeploymentParameters taskParams =
@@ -191,7 +191,7 @@ public class ARMProvisionState extends State {
             .resourceGroupName(context.renderExpression(resourceGroupExpression))
             .deploymentDataLocation(context.renderExpression(locationExpression))
             .templateJson(context.renderExpression(templateBody))
-            .parametersJson(context.renderExpression(variablesBody))
+            .parametersJson(context.renderExpression(parametersBody))
             .commandName(ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE)
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
             .build();
