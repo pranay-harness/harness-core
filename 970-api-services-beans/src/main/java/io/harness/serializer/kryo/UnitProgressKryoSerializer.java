@@ -1,8 +1,8 @@
 package io.harness.serializer.kryo;
 
-import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.logging.UnitProgress;
 
-public class UnitProgressKryoSerializer extends ProtobufKryoSerializer<Ambiance> {
+public class UnitProgressKryoSerializer extends ProtobufKryoSerializer<UnitProgress> {
   private static UnitProgressKryoSerializer instance;
 
   private UnitProgressKryoSerializer() {}
