@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.winrm;
 
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SSL_HANDSHAKE_FAILED;

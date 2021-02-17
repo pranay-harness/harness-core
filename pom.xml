@@ -9,7 +9,6 @@
         <module>120-ng-manager</module>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
-        <module>210-command-library-server</module>
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>

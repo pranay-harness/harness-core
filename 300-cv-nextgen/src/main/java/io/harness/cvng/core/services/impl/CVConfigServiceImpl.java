@@ -453,6 +453,18 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .field(CVConfigKeys.identifier)
+        .notEqual(identifier)
+        .asList();
+  }
+
+  @Override
   public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory) {
     List<CVConfig> cvConfigs = getConfigsOfProductionEnvironments(
