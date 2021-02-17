@@ -19,6 +19,8 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
 
@@ -68,6 +70,7 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
     bind(CEAwsSetupConfig.class).toInstance(this.ceAwsSetupConfig);
+    bind(SecretRefService.class).to(SecretRefServiceImpl.class);
 
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);

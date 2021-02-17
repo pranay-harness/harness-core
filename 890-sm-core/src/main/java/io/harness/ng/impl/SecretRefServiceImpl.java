@@ -2,6 +2,7 @@ package io.harness.ng.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.IdentifierRef;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
@@ -9,6 +10,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.service.SecretRefService;
+import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,8 +26,13 @@ public class SecretRefServiceImpl implements SecretRefService {
   }
 
   private void validateTheSecretInput(SecretRefData secretRefData, NGAccess ngAccess) {
-    validateTheScopeOfTheSecret(secretRefData, ngAccess);
-    validateTheSecretIsPresent(secretRefData, ngAccess);
+    if (secretRefData == null) {
+      return;
+    }
+    IdentifierRef secretIdentifiers = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
+        ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+    validateTheScopeOfTheSecret(secretRefData, secretIdentifiers);
+    validateTheSecretIsPresent(secretRefData, secretIdentifiers);
   }
 
   private void validateTheScopeOfTheSecret(SecretRefData secretRefData, NGAccess ngAccess) {
