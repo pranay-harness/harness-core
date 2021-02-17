@@ -98,6 +98,7 @@ import_run_configurations:
   run-configurations/Notification Client.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/NextGen_Manager.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml

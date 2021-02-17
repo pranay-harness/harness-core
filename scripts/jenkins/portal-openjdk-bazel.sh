@@ -174,7 +174,8 @@ cd ../..
 
 mkdir -p dist/ng-manager
 cd dist/ng-manager
-cp ../../120-ng-manager/target/ng-manager-capsule.jar .
+
+cp ${HOME}/.bazel-dirs/bin/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
 cp ../../120-ng-manager/config.yml .
 cp ../../keystore.jks .
 cp ../../120-ng-manager/key.pem .
