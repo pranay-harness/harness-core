@@ -265,7 +265,7 @@ public class BuildJobEnvInfoBuilder {
       case UPLOAD_S3:
       case UPLOAD_GCS:
         return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
-            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getType(), timeout);
+            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName(), stepElement.getType(), timeout);
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
             stepElement.getIdentifier(), stepElement.getName());
@@ -278,8 +278,8 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepType,
-      long timeout) {
+      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepName,
+      String stepType, long timeout) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
@@ -301,7 +301,7 @@ public class BuildJobEnvInfoBuilder {
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepIdentifier(identifier)
-        .stepName(stepInfo.getName())
+        .stepName(stepName)
         .build();
   }
 
