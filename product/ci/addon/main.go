@@ -13,6 +13,7 @@ import (
 	"github.com/wings-software/portal/product/ci/addon/grpc"
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	"github.com/wings-software/portal/product/ci/addon/services"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"go.uber.org/zap"
 )
@@ -26,6 +27,7 @@ var (
 	addonServer         = grpc.NewAddonServer
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newIntegrationSvc   = services.NewIntegrationSvc
+	getLogKey           = external.GetLogKey
 )
 
 // schema for running functional test service
@@ -62,15 +64,11 @@ func init() {
 func main() {
 	parseArgs()
 
-	// Addon logs not part of a step go to addon_stage_logs-<port>
+	// Addon logs not part of a step go to addon:<port>
 	logState := addonlogs.LogState()
 	pendingLogs := logState.PendingLogs()
-	key := fmt.Sprintf("addon_stage_logs-%d", args.Port)
-	remoteLogger, err := newGrpcRemoteLogger(key)
-	if err != nil {
-		// Could not create a logger
-		panic(err)
-	}
+
+	remoteLogger := getRemoteLogger(fmt.Sprintf("addon:%d", args.Port))
 	pendingLogs <- remoteLogger
 	log := remoteLogger.BaseLogger
 
@@ -79,16 +77,12 @@ func main() {
 	}
 
 	var serviceLogger *logs.RemoteLogger
-
 	// Start integration test service in a separate goroutine
 	if args.Service != nil {
 		svc := args.Service
 
 		// create logger for service logs
-		serviceLogger, err = newGrpcRemoteLogger(svc.ID)
-		if err != nil {
-			panic(err) // Could not create a logger
-		}
+		serviceLogger = getRemoteLogger(fmt.Sprintf("service:%s", svc.ID))
 		pendingLogs <- serviceLogger
 
 		go func() {
@@ -111,4 +105,18 @@ func main() {
 		addonlogs.LogState().ClosePendingLogs()
 		os.Exit(1) // Exit addon with exit code 1
 	}
+}
+
+func getRemoteLogger(keyID string) *logs.RemoteLogger {
+	key, err := getLogKey(keyID)
+	if err != nil {
+		panic(err)
+	}
+	remoteLogger, err := newGrpcRemoteLogger(key)
+	if err != nil {
+		// Could not create a logger
+		panic(err)
+	}
+
+	return remoteLogger
 }

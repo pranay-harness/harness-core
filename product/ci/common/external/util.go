@@ -24,6 +24,7 @@ const (
 	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
 	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
 	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
+	logPrefixEnv  = "HARNESS_LOG_PREFIX"
 	secretList    = "HARNESS_SECRETS_LIST"
 	dSourceBranch = "DRONE_SOURCE_BRANCH"
 	dRemoteUrl    = "DRONE_REMOTE_URL"
@@ -64,11 +65,8 @@ func GetSecrets() []logs.Secret {
 	return res
 }
 
-func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
-	key, err := GetLogKey(stepID)
-	if err != nil {
-		return nil, err
-	}
+// GetHTTPRemoteLogger returns a remote HTTP logger for a key.
+func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	client, err := GetRemoteHTTPClient()
 	if err != nil {
 		return nil, err
@@ -85,7 +83,7 @@ func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	return rl, nil
 }
 
-// GetRemoteHttpClient returns a new HTTP client to talk to log service using information available in env.
+// GetRemoteHTTPClient returns a new HTTP client to talk to log service using information available in env.
 func GetRemoteHTTPClient() (client.Client, error) {
 	l, ok := os.LookupEnv(logSvcEp)
 	if !ok {
@@ -102,34 +100,14 @@ func GetRemoteHTTPClient() (client.Client, error) {
 	return client.NewHTTPClient(l, account, token, false), nil
 }
 
-// GetLogKey returns a stringified key for log service using various identifiers
-func GetLogKey(stepID string) (string, error) {
-	account, err := GetAccountId()
-	if err != nil {
-		return "", err
+// GetLogKey returns a key for log service
+func GetLogKey(id string) (string, error) {
+	logPrefix, ok := os.LookupEnv(logPrefixEnv)
+	if !ok {
+		return "", fmt.Errorf("log prefix variable not set %s", logPrefixEnv)
 	}
-	org, err := GetOrgId()
-	if err != nil {
-		return "", err
-	}
-	project, err := GetProjectId()
-	if err != nil {
-		return "", err
-	}
-	pipeline, err := GetPipelineId()
-	if err != nil {
-		return "", err
-	}
-	build, err := GetBuildId()
-	if err != nil {
-		return "", err
-	}
-	stage, err := GetStageId()
-	if err != nil {
-		return "", err
-	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", account, org, project, pipeline, build, stage, stepID)
-	return key, nil
+
+	return fmt.Sprintf("%s/%s", logPrefix, id), nil
 }
 
 // GetTiHTTPClient returns a client to talk to the TI service
