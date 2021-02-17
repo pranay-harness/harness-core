@@ -9,7 +9,8 @@ import "google/protobuf/any.proto";
 message UnitProgress {
   string unitName = 1;
   UnitStatus status = 2;
-  map<string, google.protobuf.Any> metadata = 3;
+  int64 startTime = 3;
+  int64 endTime = 4;
 }
 
 enum UnitStatus {
