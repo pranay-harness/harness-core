@@ -62,9 +62,9 @@ func Test_ParseFileNames(t *testing.T) {
 		Lang:  LangType_UNKNOWN,
 	}
 
-	nodes, _ := ParseFileNames(&files)
+	nodes, _ := ParseFileNames(files)
 
 	nodesExpected := []Node{node1, node2, unknown, unknown}
 
-	assert.Equal(t, nodesExpected, *nodes, "extracted nodes don't match")
+	assert.Equal(t, nodesExpected, nodes, "extracted nodes don't match")
 }
