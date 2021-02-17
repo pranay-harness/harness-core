@@ -5,6 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
+import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
@@ -86,7 +87,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     success = prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true));
     if (!success) {
       return getFailureResponse();
     }
@@ -238,10 +239,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       k8sCanaryDeployResponseBuilder.canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
     }
 
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sCanaryDeployResponseBuilder.build())
-        .build();
+    return getGenericFailureResponse(k8sCanaryDeployResponseBuilder.build());
   }
 
   @VisibleForTesting

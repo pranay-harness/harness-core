@@ -39,10 +39,6 @@ public class K8sDeleteBaseHandler {
     return k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIds);
   }
 
-  public K8sDeployResponse getFailureResponse() {
-    return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-  }
-
   public K8sDeployResponse getSuccessResponse() {
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }

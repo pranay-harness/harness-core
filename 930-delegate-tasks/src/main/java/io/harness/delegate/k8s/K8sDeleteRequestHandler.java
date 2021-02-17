@@ -98,12 +98,12 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
             manifestFilesDirectory, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true),
             steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
-      return k8sDeleteBaseHandler.getFailureResponse();
+      return getGenericFailureResponse(null);
     }
     success = initUsingFilePaths(
         k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
-      return k8sDeleteBaseHandler.getFailureResponse();
+      return getGenericFailureResponse(null);
     }
     k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     return k8sDeleteBaseHandler.getSuccessResponse();
@@ -161,7 +161,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     boolean success = init(
         k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
-      return k8sDeleteBaseHandler.getFailureResponse();
+      return getGenericFailureResponse(null);
     }
     if (isEmpty(resourceIdsToDelete)) {
       return k8sDeleteBaseHandler.getSuccessResponse();

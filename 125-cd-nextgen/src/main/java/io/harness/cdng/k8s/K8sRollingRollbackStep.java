@@ -10,6 +10,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -68,7 +69,11 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } else {
-      return StepResponse.builder().status(Status.FAILED).build();
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(
+              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
+          .build();
     }
   }
 }

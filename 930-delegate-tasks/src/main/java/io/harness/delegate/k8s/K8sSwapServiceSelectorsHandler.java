@@ -40,13 +40,9 @@ public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
         k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(), logCallback);
 
     if (!success) {
-      return getResponse(CommandExecutionStatus.FAILURE);
+      return getGenericFailureResponse(null);
     }
 
-    return getResponse(CommandExecutionStatus.SUCCESS);
-  }
-
-  private K8sDeployResponse getResponse(CommandExecutionStatus executionStatus) {
-    return K8sDeployResponse.builder().commandExecutionStatus(executionStatus).build();
+    return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
 }

@@ -87,8 +87,9 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
-              .failureInfo(
-                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
       if (k8sBlueGreenStepParameters.getRollbackInfo() != null) {
         responseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

@@ -42,6 +42,7 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
@@ -466,5 +467,9 @@ public class K8sStepHelper {
         : stepParameters.getTimeout().getValue();
 
     return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
+  }
+
+  public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {
+    return k8sDeployResponse.getErrorMessage() == null ? "" : k8sDeployResponse.getErrorMessage();
   }
 }

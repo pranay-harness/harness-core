@@ -1,8 +1,11 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sNGTaskResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -56,6 +59,14 @@ public abstract class K8sRequestHandler {
 
   protected abstract K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
       K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception;
+
+  protected K8sDeployResponse getGenericFailureResponse(K8sNGTaskResponse taskResponse) {
+    return K8sDeployResponse.builder()
+        .commandExecutionStatus(FAILURE)
+        .k8sNGTaskResponse(taskResponse)
+        .errorMessage("Failed to complete K8s task. Please check logs.")
+        .build();
+  }
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {
     log.error("Exception in processing K8s task [{}]",
