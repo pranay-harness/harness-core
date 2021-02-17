@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
@@ -36,7 +36,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DeploymentLogAnalysisResourceTest extends CvNextGenTest {
+public class DeploymentLogAnalysisResourceTest extends CvNextGenTestBase {
   @Inject private Injector injector;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;

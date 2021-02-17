@@ -64,7 +64,6 @@ numberOfRemindersBeforeAccountDeletion: 3
 
 jobsFrequencyConfig:
   accountLicenseCheckJobFrequencyInMinutes: 60
-  accountBackgroundJobFrequencyInMinutes: 720
   accountDeletionJobFrequencyInMinutes: 300
 
 ceSetUpConfig:
@@ -230,7 +229,7 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
   instanceDataRetentionDays: 210
-  instanceStatsMigrationRowLimit: 1000
+  instanceStatsMigrationEventsLimit: 10
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100

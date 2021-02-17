@@ -11,7 +11,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.iterator.PersistentCronIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
@@ -52,7 +54,9 @@ public class GovernanceConfig
   private EmbeddedUser lastUpdatedBy;
   private List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs;
   private List<WeeklyFreezeConfig> weeklyFreezeConfigs;
+  @FdIndex
   private List<Long> nextIterations; // List of activation times for all freeze windows used by activation handler
+  @FdIndex
   private List<Long>
       nextCloseIterations; // List of deactivation time for all freeze windows used by deactivation handler
 

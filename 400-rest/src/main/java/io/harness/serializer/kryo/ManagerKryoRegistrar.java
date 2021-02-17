@@ -393,9 +393,7 @@ import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlVali
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
@@ -418,6 +416,7 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
@@ -426,6 +425,7 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateRespon
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
@@ -768,6 +768,7 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.CVNGState.CVNGStateExecutionData;
 import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.EcsRunTaskDataBag;
@@ -1584,8 +1585,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(KustomizeConfig.class, 7323);
     kryo.register(BasicValidationInfo.class, 7325);
     kryo.register(SSHHostValidationCapability.class, 7326);
-    kryo.register(SftpCapability.class, 7351);
-    kryo.register(WinrmHostValidationCapability.class, 7327);
     kryo.register(PcfCommandTaskParameters.class, 7328);
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
@@ -1707,6 +1706,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformOutputVariables.class, 8063);
     kryo.register(EcsRunTaskStateExecutionData.class, 8084);
     kryo.register(EcsRunTaskDataBag.class, 8085);
+    kryo.register(EcsDeployRollbackDataFetchRequest.class, 8086);
+    kryo.register(EcsDeployRollbackDataFetchResponse.class, 8087);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
@@ -1744,5 +1745,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptEnvironmentVariables.class, 8120);
 
     kryo.register(AwsElbConfig.class, 8500);
+    kryo.register(CVNGStateExecutionData.class, 8501);
   }
 }

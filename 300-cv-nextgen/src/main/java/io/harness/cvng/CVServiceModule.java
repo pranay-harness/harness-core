@@ -35,6 +35,7 @@ import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsServiceImpl;
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -106,6 +107,11 @@ import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob.BlueGreenVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob.CanaryVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob.HealthVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob.TestVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobUpdatableEntity;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
@@ -198,6 +204,18 @@ public class CVServiceModule extends AbstractModule {
       bind(SplunkService.class).to(SplunkServiceImpl.class);
       bind(CVConfigService.class).to(CVConfigServiceImpl.class);
       bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.HEALTH.name()))
+          .to(HealthVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.TEST.name()))
+          .to(TestVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.BLUE_GREEN.name()))
+          .to(BlueGreenVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
+          .to(CanaryVerificationUpdatableEntity.class);
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsCVConfigTransformer.class);

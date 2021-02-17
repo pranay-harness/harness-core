@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.client.NextGenService;
@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class CVSetupServiceImplTest extends CvNextGenTest {
+public class CVSetupServiceImplTest extends CvNextGenTestBase {
   @Inject private CVSetupService cvSetupService;
   @Mock private CVConfigService cvConfigService;
   @Mock private KubernetesActivitySourceService kubernetesActivitySourceService;

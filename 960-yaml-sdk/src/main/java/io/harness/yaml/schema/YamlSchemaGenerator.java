@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
@@ -406,6 +407,37 @@ public class YamlSchemaGenerator {
       final Iterator<JsonNode> elements = node.elements();
       while (elements.hasNext()) {
         removeUnwantedNodes(elements.next(), unwantedNode);
+      }
+    }
+  }
+
+  public void modifyRefsNamespace(JsonNode objectNode, String namespace) {
+    if (objectNode.isArray()) {
+      final Iterator<JsonNode> elements = objectNode.elements();
+      while (elements.hasNext()) {
+        final JsonNode node = elements.next();
+        if (node.isArray()) {
+          ArrayNode arrayNode = (ArrayNode) node;
+          final Iterator<JsonNode> nodeIterator = arrayNode.elements();
+          while (nodeIterator.hasNext()) {
+            JsonNode nextNode = nodeIterator.next();
+            modifyRefsNamespace(nextNode, namespace);
+          }
+        } else if (node.isObject()) {
+          modifyRefsNamespace(node, namespace);
+        }
+      }
+    } else if (objectNode.isObject()) {
+      ObjectNode node = (ObjectNode) objectNode;
+      JsonNode jsonNode = node.remove(REF_NODE);
+      if (jsonNode != null && jsonNode.isTextual()) {
+        String refValue = jsonNode.textValue();
+        refValue = refValue.substring(refValue.lastIndexOf('/') + 1);
+        node.put(REF_NODE, String.format(DEFINITIONS_NAMESPACE_STRING_PATTERN, namespace, refValue));
+      }
+      final Iterator<JsonNode> elements = node.elements();
+      while (elements.hasNext()) {
+        modifyRefsNamespace(elements.next(), namespace);
       }
     }
   }

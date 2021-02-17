@@ -176,8 +176,6 @@ public class AnomalyDetectionBigQueryServiceImpl {
     currentTimeSeries.setAccountId(timeSeriesMetaData.getAccountId());
     List<CloudBillingGroupBy> groupByList = timeSeriesMetaData.getCloudQueryMetaData().getGroupByList();
 
-    currentTimeSeries.setEntityType(timeSeriesMetaData.getEntityType());
-
     for (CloudBillingGroupBy groupBy : groupByList) {
       CloudEntityGroupBy type = groupBy.getEntityGroupBy();
       if (type != null) {

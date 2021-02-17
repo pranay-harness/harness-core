@@ -24,7 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
@@ -98,7 +98,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -106,7 +105,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ActivityServiceImplTest extends CvNextGenTest {
+public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
   @Inject private VerificationJobService realVerificationJobService;
@@ -1007,7 +1006,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetActivityDetails() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("activity/kubernetesActivity.json").getFile());
+    File file = new File(getResourceFilePath("activity/kubernetesActivity.json"));
     final Gson gson = new Gson();
     String activityId;
     KubernetesActivity kubernetesActivity;
@@ -1122,7 +1121,6 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     return activityDTO;
   }
 
-  @NotNull
   private DeploymentActivityDTO getDeploymentActivityDTO(List<VerificationJobRuntimeDetails> verificationJobDetails,
       Instant verificationStartTime, String deploymentTag, String envIdentifier, String serviceIdentifier) {
     DeploymentActivityDTO activityDTO = DeploymentActivityDTO.builder()

@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "CanaryVerificationJobKeys")
@@ -35,5 +36,17 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
     canaryVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;
+  }
+
+  public static class CanaryVerificationUpdatableEntity<T extends CanaryVerificationJob, D
+                                                            extends CanaryVerificationJobDTO>
+      extends VerificationJobUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(CanaryVerificationJob.DeploymentVerificationJobKeys.sensitivity, dto.getSensitivity())
+          .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
+              dto.getTrafficSplitPercentage());
+    }
   }
 }

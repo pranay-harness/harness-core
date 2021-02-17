@@ -208,7 +208,6 @@ public class NotificationApplication extends Application<NotificationConfigurati
   private void registerAuthFilters(
       NotificationConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      // sample usage
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NotificationMicroserviceAuth.class)
               != null

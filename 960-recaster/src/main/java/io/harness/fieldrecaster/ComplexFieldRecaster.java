@@ -57,7 +57,7 @@ public class ComplexFieldRecaster implements FieldRecaster {
     }
 
     if (recaster.getTransformer().hasCustomTransformer(cf.getType())) {
-      recaster.getTransformer().toDocument(entity, cf, document);
+      document.put(cf.getNameToStore(), obtainEncodedValue(recaster, cf, fieldValue));
       return;
     }
 
@@ -65,5 +65,11 @@ public class ComplexFieldRecaster implements FieldRecaster {
     if (doc != null && !doc.keySet().isEmpty()) {
       document.put(name, doc);
     }
+  }
+
+  private Document obtainEncodedValue(Recaster recaster, CastedField cf, Object fieldValue) {
+    return new Document()
+        .append(Recaster.RECAST_CLASS_KEY, cf.getType().getName())
+        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue));
   }
 }

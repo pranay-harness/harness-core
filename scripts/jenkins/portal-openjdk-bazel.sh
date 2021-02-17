@@ -38,7 +38,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 
@@ -78,7 +78,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ../../210-command-library-server/target/command-library-app-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 
@@ -154,7 +154,7 @@ cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.
 
 mkdir -p dist/test
 cd dist/test
-cp ../../160-model-gen-tool/target/model-gen-tool-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar model-gen-tool-capsule.jar
 cp ../../160-model-gen-tool/config-datagen.yml .
 cd ../..
 

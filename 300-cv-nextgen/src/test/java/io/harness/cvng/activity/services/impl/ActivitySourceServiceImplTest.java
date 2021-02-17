@@ -16,7 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
@@ -72,7 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
 
-public class ActivitySourceServiceImplTest extends CvNextGenTest {
+public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private ActivitySourceService activitySourceService;

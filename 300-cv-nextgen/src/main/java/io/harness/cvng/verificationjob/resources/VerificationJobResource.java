@@ -22,8 +22,10 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
@@ -59,6 +61,25 @@ public class VerificationJobResource {
   public void upsert(
       @QueryParam("accountId") @Valid final String accountId, @Body VerificationJobDTO verificationJobDTO) {
     verificationJobService.upsert(accountId, verificationJobDTO);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "create a verification job", nickname = "createVerificationJob")
+  public void create(
+      @QueryParam("accountId") @Valid final String accountId, @Body VerificationJobDTO verificationJobDTO) {
+    verificationJobService.create(accountId, verificationJobDTO);
+  }
+
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}")
+  @ApiOperation(value = "update a verification job", nickname = "updateVerificationJob")
+  public void update(@NotNull @PathParam("identifier") String identifier,
+      @QueryParam("accountId") @Valid final String accountId, @Body VerificationJobDTO verificationJobDTO) {
+    verificationJobService.update(accountId, identifier, verificationJobDTO);
   }
 
   @DELETE

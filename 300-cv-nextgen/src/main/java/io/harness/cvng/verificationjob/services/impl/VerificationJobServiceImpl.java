@@ -4,12 +4,15 @@ import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
 import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
 import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -17,7 +20,10 @@ import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobUpdatableEntity;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -26,7 +32,11 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DuplicateKeyException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,12 +45,14 @@ import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
   @Inject private NextGenService nextGenService;
   @Inject private CVEventService cvEventService;
+  @Inject private Injector injector;
 
   @Override
   @Nullable
@@ -69,6 +81,51 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     // TODO: Keeping it simple for now. find a better way to save if more fields are added to verification Job. This can
     // potentially override them.
     save(verificationJob);
+  }
+
+  @Override
+  public void create(String accountId, VerificationJobDTO verificationJobDTO) {
+    VerificationJob verificationJob = fromDto(verificationJobDTO);
+    verificationJob.setAccountId(accountId);
+    try {
+      verificationJob.validate();
+      hPersistence.save(verificationJob);
+      sendScopedCreateEvent(verificationJob);
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(
+          String.format(
+              "A Verification Job  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+              verificationJob.getIdentifier(), verificationJob.getOrgIdentifier(),
+              verificationJob.getProjectIdentifier()),
+          USER_SRE, ex);
+    }
+  }
+
+  @Override
+  public void update(String accountId, String identifier, VerificationJobDTO verificationJobDTO) {
+    VerificationJob verificationJob = fromDto(verificationJobDTO);
+    verificationJob.setAccountId(accountId);
+    verificationJob.validate();
+    VerificationJob stored = getVerificationJob(
+        accountId, verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier(), identifier);
+    if (stored == null) {
+      throw new InvalidRequestException(
+          String.format(
+              "Verification Job with identifier [%s] and orgIdentifier [%s] and projectIdentifier [%s] not found",
+              identifier, verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()),
+          USER);
+    }
+
+    UpdateOperations<VerificationJob> updateOperations = hPersistence.createUpdateOperations(VerificationJob.class);
+
+    UpdatableEntity<VerificationJob, VerificationJobDTO> updatableEntity = injector.getInstance(
+        Key.get(VerificationJobUpdatableEntity.class, Names.named(verificationJobDTO.getType().name())));
+    updatableEntity.setUpdateOperations(updateOperations, verificationJobDTO);
+
+    VerificationJob temp = getVerificationJob(
+        accountId, verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), identifier);
+    hPersistence.update(temp, updateOperations);
+    sendScopedCreateEvent(verificationJob);
   }
 
   @Override

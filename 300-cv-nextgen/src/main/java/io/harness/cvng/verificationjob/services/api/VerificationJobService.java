@@ -14,6 +14,8 @@ public interface VerificationJobService {
   VerificationJob getVerificationJob(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   void upsert(String accountId, VerificationJobDTO verificationJobDTO);
+  void create(String accountId, VerificationJobDTO verificationJobDTO);
+  void update(String accountId, String identifier, VerificationJobDTO verificationJobDTO);
   void save(VerificationJob verificationJob);
   void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   PageResponse<VerificationJobDTO> list(

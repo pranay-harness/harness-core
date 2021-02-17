@@ -40,7 +40,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -72,7 +72,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 @Slf4j
-public class K8BuildSetupUtilsTest extends CIExecutionTest {
+public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Inject private SecretUtils secretUtils;

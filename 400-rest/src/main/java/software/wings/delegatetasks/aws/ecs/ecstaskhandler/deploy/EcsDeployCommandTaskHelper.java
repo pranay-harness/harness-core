@@ -29,6 +29,7 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.AwsHelperService;
@@ -650,5 +651,12 @@ public class EcsDeployCommandTaskHelper {
     ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     ecsServiceDeployResponse.setOutput(StringUtils.EMPTY);
     return ecsServiceDeployResponse;
+  }
+
+  public EcsDeployRollbackDataFetchResponse getEmptyEcsDeployRollbackDataFetchResponse() {
+    EcsDeployRollbackDataFetchResponse response = EcsDeployRollbackDataFetchResponse.builder().build();
+    response.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    response.setOutput(StringUtils.EMPTY);
+    return response;
   }
 }
