@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
+import io.kubernetes.client.openapi.ApiException;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -207,5 +208,16 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
+  }
+
+  @Override
+  public List<String> getEvents(String accountId, String orgIdentifier, String projectIdentifier, String filter,
+      DataCollectionConnectorBundle bundle) throws ApiException {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
+        .getEvents(bundle, encryptedDataDetails, filter);
   }
 }

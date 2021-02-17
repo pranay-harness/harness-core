@@ -158,6 +158,14 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   }
 
   @Override
+  public PageResponse<String> getKubernetesEvents(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, int offset, int pageSize, String filter) {
+    List<String> kubernetesEvents = verificationManagerService.getKubernetesEvents(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, filter);
+    return PageUtils.offsetAndLimit(kubernetesEvents, offset, pageSize);
+  }
+
+  @Override
   public PageResponse<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String namespace, int offset, int pageSize, String filter) {
     List<String> kubernetesWorkloads = verificationManagerService.getKubernetesWorkloads(
