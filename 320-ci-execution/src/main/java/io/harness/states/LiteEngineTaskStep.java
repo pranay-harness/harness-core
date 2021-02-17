@@ -1,6 +1,7 @@
 package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.dependencies.ServiceDependency;
@@ -8,6 +9,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.TaskData;
@@ -20,6 +22,7 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -40,9 +43,14 @@ import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
+import software.wings.beans.LogHelper;
+
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -72,9 +80,11 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   public TaskRequest obtainTask(
       Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {
     Map<String, String> taskIds = addCallBackIds(stepParameters, ambiance);
+    String logPrefix = getLogPrefix(ambiance);
+    Map<String, String> stepLogKeys = getStepLogKeys(stepParameters, ambiance, logPrefix);
 
     CIBuildSetupTaskParams buildSetupTaskParams =
-        buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance, taskIds);
+        buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance, taskIds, logPrefix, stepLogKeys);
     log.info("Created params for build task: {}", buildSetupTaskParams);
 
     final TaskData taskData = TaskData.builder()
@@ -215,5 +225,52 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
         (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());
 
     return executor.queueTask(ambiance.getSetupAbstractionsMap(), task);
+  }
+
+  private Map<String, String> getStepLogKeys(
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance, String logPrefix) {
+    Map<String, String> logKeyByStepId = new HashMap<>();
+    liteEngineTaskStepInfo.getExecutionElementConfig().getSteps().forEach(
+        executionWrapper -> addLogKey(executionWrapper, logPrefix, logKeyByStepId));
+
+    Map<String, List<String>> logKeys = new HashMap<>();
+    logKeyByStepId.forEach((stepId, logKey) -> logKeys.put(stepId, Collections.singletonList(logKey)));
+    executionSweepingOutputResolver.consume(
+        ambiance, LOG_KEYS, StepLogKeyDetails.builder().logKeys(logKeys).build(), StepOutcomeGroup.STAGE.name());
+    return logKeyByStepId;
+  }
+
+  private void addLogKey(
+      ExecutionWrapperConfig executionWrapper, String logPrefix, Map<String, String> logKeyByStepId) {
+    if (executionWrapper != null) {
+      if (!executionWrapper.getStep().isNull()) {
+        StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
+
+        logKeyByStepId.put(stepElementConfig.getIdentifier(), getStepLogKey(stepElementConfig, logPrefix));
+      } else if (!executionWrapper.getParallel().isNull()) {
+        ParallelStepElementConfig parallelStepElementConfig =
+            IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
+        parallelStepElementConfig.getSections().forEach(section -> addLogKey(section, logPrefix, logKeyByStepId));
+      } else {
+        throw new InvalidRequestException("Only Parallel or StepElement is supported");
+      }
+    }
+  }
+  private String getStepLogKey(StepElementConfig stepElement, String logPrefix) {
+    return String.format("%s/stepId:%s", logPrefix, stepElement.getIdentifier());
+  }
+
+  private String getLogPrefix(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
+    logAbstractions.put("accountId", AmbianceHelper.getAccountId(ambiance));
+    logAbstractions.put("orgId", AmbianceHelper.getOrgIdentifier(ambiance));
+    logAbstractions.put("projectId", AmbianceHelper.getProjectIdentifier(ambiance));
+    logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
+    ambiance.getLevelsList()
+        .stream()
+        .filter(level -> level.getGroup().equals("stage"))
+        .findFirst()
+        .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    return LogHelper.generateLogBaseKey(logAbstractions);
   }
 }

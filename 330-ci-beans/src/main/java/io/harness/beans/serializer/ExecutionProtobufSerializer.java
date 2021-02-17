@@ -40,7 +40,8 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
   public Execution convertExecutionElement(ExecutionElementConfig executionElement,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds) {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, String logPrefix,
+      Map<String, String> stepLogKeys) {
     List<Step> protoSteps = new LinkedList<>();
     if (isEmpty(executionElement.getSteps())) {
       return Execution.newBuilder().build();
