@@ -1,4 +1,4 @@
-package io.harness.resourcegroup.framework.remote.dto;
+package io.harness.resourcegroupclient;
 
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 

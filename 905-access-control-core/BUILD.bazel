@@ -11,6 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//909-access-control-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "@maven//:com_google_inject_guice",
@@ -19,16 +20,12 @@ java_library(
     ],
 )
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    data = ["//:resource"],
-    main_class = "io.harness.accesscontrol.AccessControlApplication",
-    resources = [],
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    resources = [
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "@maven//:com_google_guava_guava",
         # keeping guava on top of maven_deps for right version resoulution

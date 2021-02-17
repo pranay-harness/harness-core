@@ -1,8 +1,8 @@
 package io.harness.resourcegroup.framework.service;
 
 import io.harness.ng.beans.PageRequest;
-import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import java.util.Optional;
 import org.springframework.data.domain.Page;

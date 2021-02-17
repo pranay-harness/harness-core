@@ -4,6 +4,7 @@ import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmen
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.toDBO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
@@ -13,7 +14,9 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -67,6 +70,14 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
     Optional<RoleAssignmentDBO> roleAssignment =
         roleAssignmentRepository.findByIdentifierAndScopeIdentifier(identifier, parentIdentifier);
     return roleAssignment.flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
+  }
+
+  @Override
+  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
+    return roleAssignmentRepository.findByPrincipalIdentifierAndPrincipalType(principal, principalType)
+        .stream()
+        .map(RoleAssignmentDBOMapper::fromDBO)
+        .collect(Collectors.toList());
   }
 
   @Override

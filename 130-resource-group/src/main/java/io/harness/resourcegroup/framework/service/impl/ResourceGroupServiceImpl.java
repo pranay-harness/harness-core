@@ -11,13 +11,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.repositories.spring.ResourceGroupRepository;
-import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -50,7 +50,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
+  public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup =
         io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper.fromDTO(resourceGroupDTO);
     if (validate(resourceGroup)) {
@@ -63,8 +63,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Page<io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse> list(String accountIdentifier,
-      String orgIdentifier, String projectIdentifier, PageRequest pageRequest, String searchTerm) {
+  public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
@@ -102,7 +102,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Optional<io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse> find(
+  public Optional<ResourceGroupResponse> find(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     accountIdentifier = StringUtils.stripToNull(accountIdentifier);
     orgIdentifier = StringUtils.stripToNull(orgIdentifier);

@@ -1,10 +1,12 @@
 package io.harness.accesscontrol.roleassignments;
 
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -33,6 +35,11 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   @Override
   public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
     return roleAssignmentDao.get(identifier, parentIdentifier);
+  }
+
+  @Override
+  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
+    return roleAssignmentDao.get(principal, principalType);
   }
 
   @Override
