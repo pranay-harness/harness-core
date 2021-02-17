@@ -1,10 +1,14 @@
 package io.harness.accesscontrol.permissions.persistence;
 
+import static io.harness.accesscontrol.permissions.persistence.PermissionDBOMapper.fromDBO;
+import static io.harness.accesscontrol.permissions.persistence.PermissionDBOMapper.toDBO;
+
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.persistence.PermissionDBO.PermissionDBOKeys;
 import io.harness.accesscontrol.permissions.persistence.repositories.PermissionRepository;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,9 +32,9 @@ public class PermissionDaoImpl implements PermissionDao {
 
   @Override
   public Permission create(Permission permissionDTO) {
-    PermissionDBO permissionDBO = PermissionDBOMapper.toDBO(permissionDTO);
+    PermissionDBO permissionDBO = toDBO(permissionDTO);
     try {
-      return PermissionDBOMapper.fromDBO(permissionRepository.save(permissionDBO));
+      return fromDBO(permissionRepository.save(permissionDBO));
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
           String.format("A permission with identifier %s is already present", permissionDBO.getIdentifier()));
@@ -42,8 +46,7 @@ public class PermissionDaoImpl implements PermissionDao {
     if (permissionFilter.isEmpty()) {
       Iterable<PermissionDBO> permissionDBOIterable = permissionRepository.findAll();
       List<Permission> permissions = new ArrayList<>();
-      permissionDBOIterable.iterator().forEachRemaining(
-          permissionDBO -> permissions.add(PermissionDBOMapper.fromDBO(permissionDBO)));
+      permissionDBOIterable.iterator().forEachRemaining(permissionDBO -> permissions.add(fromDBO(permissionDBO)));
       return permissions;
     }
 
@@ -64,12 +67,20 @@ public class PermissionDaoImpl implements PermissionDao {
   @Override
   public Optional<Permission> get(String identifier) {
     Optional<PermissionDBO> permission = permissionRepository.findByIdentifier(identifier);
-    return permission.flatMap(p -> Optional.of(PermissionDBOMapper.fromDBO(p)));
+    return permission.flatMap(p -> Optional.of(fromDBO(p)));
   }
 
   @Override
-  public String update(Permission permission) {
-    return null;
+  public Permission update(Permission permissionUpdate) {
+    Optional<PermissionDBO> permissionDBOOptional =
+        permissionRepository.findByIdentifier(permissionUpdate.getIdentifier());
+    if (!permissionDBOOptional.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Could not find the permission %s", permissionUpdate.getIdentifier()));
+    }
+    PermissionDBO permissionUpdateDBO = toDBO(permissionUpdate);
+    permissionUpdateDBO.setId(permissionDBOOptional.get().getId());
+    return fromDBO(permissionRepository.save(permissionUpdateDBO));
   }
 
   @Override

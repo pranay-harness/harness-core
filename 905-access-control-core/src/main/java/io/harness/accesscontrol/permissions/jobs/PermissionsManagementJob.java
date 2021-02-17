@@ -43,6 +43,9 @@ public class PermissionsManagementJob {
   }
 
   public void run() {
+    Set<Permission> addedOrUpdatedPermissions =
+        Sets.difference(latestPermissions.getPermissions(), currentPermissions.getPermissions());
+
     Set<String> latestIdentifiers =
         latestPermissions.getPermissions().stream().map(Permission::getIdentifier).collect(Collectors.toSet());
     Set<String> currentIdentifiers =
@@ -51,11 +54,15 @@ public class PermissionsManagementJob {
     Set<String> addedIdentifiers = Sets.difference(latestIdentifiers, currentIdentifiers);
     Set<String> removedIdentifiers = Sets.difference(currentIdentifiers, latestIdentifiers);
 
-    Set<Permission> addedPermissions = latestPermissions.getPermissions()
-                                           .stream()
+    Set<Permission> addedPermissions = addedOrUpdatedPermissions.stream()
                                            .filter(p -> addedIdentifiers.contains(p.getIdentifier()))
                                            .collect(Collectors.toSet());
 
+    Set<Permission> updatedPermissions = addedOrUpdatedPermissions.stream()
+                                             .filter(p -> !addedIdentifiers.contains(p.getIdentifier()))
+                                             .collect(Collectors.toSet());
+
     addedPermissions.forEach(permissionService::create);
+    updatedPermissions.forEach(permissionService::update);
   }
 }
