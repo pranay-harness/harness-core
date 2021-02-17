@@ -63,6 +63,8 @@ BAZEL_MODULES="\
   //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //270-verification:module \
+  //270-verification:module_deploy.jar \
   //300-cv-nextgen:module_deploy.jar \
   //310-ci-manager:module \
   //310-ci-manager:module_deploy.jar \
@@ -298,6 +300,7 @@ build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
 build_bazel_application 300-cv-nextgen
 build_bazel_application 310-ci-manager
+build_bazel_application 270-verification
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
