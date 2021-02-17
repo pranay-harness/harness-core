@@ -7,6 +7,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 
@@ -26,6 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
+  ParameterField<Boolean> skipDryRun;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
@@ -59,6 +61,7 @@ public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
         .skipCondition(baseStepParameterInfo.getSkipCondition())
         .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
+        .skipDryRun(skipDryRun)
         .build();
   }
 
