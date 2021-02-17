@@ -80,7 +80,11 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
   private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
-    new CommandLibraryServerApplication().run(args);
+    if (args.length == 1) {
+      new CommandLibraryServerApplication().run("server", args[0]);
+    } else {
+      new CommandLibraryServerApplication().run(args);
+    }
   }
 
   @Override

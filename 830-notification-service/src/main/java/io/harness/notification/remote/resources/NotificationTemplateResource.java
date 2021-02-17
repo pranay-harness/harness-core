@@ -8,6 +8,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.remote.dto.TemplateDTO;
 import io.harness.notification.service.api.NotificationTemplateService;
@@ -46,6 +47,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NotificationMicroserviceAuth
 public class NotificationTemplateResource {
   private final NotificationTemplateService templateService;
   private static final long MAX_FILE_SIZE = 5 * 1024 * 1024L;

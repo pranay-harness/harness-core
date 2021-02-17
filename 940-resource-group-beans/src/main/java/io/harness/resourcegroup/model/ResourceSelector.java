@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, visible = true, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = StaticResourceSelector.class, name = "StaticResourceSelector")
   , @JsonSubTypes.Type(value = DynamicResourceSelector.class, name = "DynamicResourceSelector")

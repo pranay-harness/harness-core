@@ -398,8 +398,8 @@ public class PlanExecutionResource {
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan,
-        new HashMap<>(ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness",
-            "projectIdentifier", "pipeline", "expressionFunctorToken", "12345")),
+        new HashMap<>(ImmutableMap.of(
+            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
         ExecutionMetadata.newBuilder()
             .setExecutionUuid(generateUuid())
             .setRunSequence(0)

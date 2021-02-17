@@ -3,7 +3,14 @@ package io.harness.batch.processing.anomalydetection;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.TimeGranularity;
 
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
+import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
+
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class AnomalyDataStub {
   public static String accountId = "ACCOUNT_ID";
@@ -65,5 +72,24 @@ public class AnomalyDataStub {
         .awsAccount("AWS_ACCOUNT")
         .timeGranularity(TimeGranularity.DAILY)
         .build();
+  }
+
+  public static QLBillingDataFilter getBeforeTimeFilter() {
+    return QLBillingDataFilter.builder()
+        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(anomalyTime.toEpochMilli()).build())
+        .build();
+  }
+
+  public static QLBillingDataFilter getAfterTimeFilter() {
+    return QLBillingDataFilter.builder()
+        .startTime(QLTimeFilter.builder()
+                       .operator(QLTimeOperator.AFTER)
+                       .value(anomalyTime.minus(15, ChronoUnit.DAYS).toEpochMilli())
+                       .build())
+        .build();
+  }
+
+  public static QLCCMGroupBy getClusterGroupBy() {
+    return QLCCMGroupBy.builder().entityGroupBy(QLCCMEntityGroupBy.Cluster).build();
   }
 }

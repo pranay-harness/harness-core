@@ -1,3 +1,5 @@
 package software.wings.graphql.schema.type.aggregation.pipeline;
 
-public enum QLPipelineEntityAggregation { Application }
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+@TargetModule(Module._380_CG_GRAPHQL) public enum QLPipelineEntityAggregation { Application }

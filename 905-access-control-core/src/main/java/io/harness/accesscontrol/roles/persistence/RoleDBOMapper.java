@@ -9,30 +9,32 @@ class RoleDBOMapper {
   public static RoleDBO toDBO(Role object) {
     return RoleDBO.builder()
         .identifier(object.getIdentifier())
-        .parentIdentifier(object.getParentIdentifier())
+        .scopeIdentifier(object.getScopeIdentifier())
         .name(object.getName())
-        .scopes(object.getScopes())
+        .allowedScopeLevels(object.getAllowedScopeLevels())
         .permissions(object.getPermissions())
         .managed(object.isManaged())
         .description(object.getDescription())
         .tags(object.getTags())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
+        .version(object.getVersion())
         .build();
   }
 
   public static Role fromDBO(RoleDBO roleDBO) {
     return Role.builder()
         .identifier(roleDBO.getIdentifier())
-        .parentIdentifier(roleDBO.getParentIdentifier())
+        .scopeIdentifier(roleDBO.getScopeIdentifier())
         .name(roleDBO.getName())
-        .scopes(roleDBO.getScopes())
+        .allowedScopeLevels(roleDBO.getAllowedScopeLevels())
         .permissions(roleDBO.getPermissions())
         .managed(roleDBO.isManaged())
         .description(roleDBO.getDescription())
         .tags(roleDBO.getTags())
         .createdAt(roleDBO.getCreatedAt())
         .lastModifiedAt(roleDBO.getLastModifiedAt())
+        .version(roleDBO.getVersion())
         .build();
   }
 }

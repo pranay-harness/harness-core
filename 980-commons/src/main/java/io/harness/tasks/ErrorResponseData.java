@@ -6,7 +6,7 @@ import io.harness.exception.FailureType;
 
 import java.util.EnumSet;
 
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public interface ErrorResponseData extends ResponseData {
   String getErrorMessage();
   EnumSet<FailureType> getFailureTypes();

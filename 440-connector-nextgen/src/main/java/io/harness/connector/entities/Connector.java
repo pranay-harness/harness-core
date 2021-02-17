@@ -10,7 +10,6 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -51,7 +50,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
-  @FdIndex @Trimmed @NotEmpty String accountIdentifier;
+  @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
   @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
@@ -87,9 +86,9 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_Index")
-                 .fields(Arrays.asList(
-                     ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier, ConnectorKeys.projectIdentifier))
+                 .name("accountId_orgId_projectId_name_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.name))
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("fullyQualifiedIdentifier_deleted_Index")

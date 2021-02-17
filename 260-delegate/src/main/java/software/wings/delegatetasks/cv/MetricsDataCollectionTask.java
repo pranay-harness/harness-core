@@ -2,6 +2,8 @@ package software.wings.delegatetasks.cv;
 
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -28,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> extends AbstractDataCollectionTask<T> {
   private MetricsDataCollector<T> metricsDataCollector;
   @Inject private MetricDataStoreService metricStoreService;

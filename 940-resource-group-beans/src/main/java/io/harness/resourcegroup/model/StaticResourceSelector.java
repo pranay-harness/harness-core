@@ -8,5 +8,5 @@ import lombok.Data;
 @Builder
 public class StaticResourceSelector implements ResourceSelector {
   @NotNull String identifier;
-  @NotNull ResourceType resourceType;
+  @NotNull String resourceType;
 }

@@ -6,6 +6,8 @@ import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
@@ -48,6 +50,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class NodeAndPodDetailsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
         QLCCMGroupBy, QLBillingSortCriteria> {

@@ -180,6 +180,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+    pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(
           (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
@@ -251,6 +252,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   private void populateFilter(Criteria criteria, @NotNull PipelineFilterPropertiesDto piplineFilter) {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getName())) {
       criteria.and(PipelineEntityKeys.name).is(piplineFilter.getName());
+    }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getDescription())) {
+      criteria.and(PipelineEntityKeys.description).is(piplineFilter.getDescription());
     }
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
       criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());

@@ -72,3 +72,12 @@ type TestSuite struct {
 	PassedTests  int    `json:"passed_tests"`
 	FailPct      int    `json:"fail_pct"`
 }
+
+// Test Intelligence specific structs
+
+// Test contains information about a unit test
+type Test struct {
+	Pkg    string
+	Class  string
+	Method string
+}

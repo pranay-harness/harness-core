@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
@@ -21,7 +21,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class StackdriverDataCollectionInfoMapperTest extends CvNextGenTest {
+public class StackdriverDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Inject private StackdriverDataCollectionInfoMapper mapper;
 
   @Test

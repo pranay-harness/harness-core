@@ -17,6 +17,7 @@ public class CdFilter implements PipelineFilter {
   @Singular Set<String> deploymentTypes;
   @Singular Set<String> environmentNames;
   @Singular Set<String> serviceNames;
+  @Singular Set<String> infrastructureTypes;
 
   public void addDeploymentTypes(Set<String> deploymentTypes) {
     if (this.deploymentTypes == null) {
@@ -28,6 +29,14 @@ public class CdFilter implements PipelineFilter {
     this.deploymentTypes.addAll(deploymentTypes);
   }
 
+  public void addInfrastructureTypes(Set<String> infrastructureTypes) {
+    if (this.infrastructureTypes == null) {
+      this.infrastructureTypes = new HashSet<>();
+    } else if (!(this.infrastructureTypes instanceof HashSet)) {
+      this.infrastructureTypes = new HashSet<>(this.infrastructureTypes);
+    }
+    this.infrastructureTypes.addAll(infrastructureTypes);
+  }
   public void addServiceNames(Set<String> serviceNames) {
     if (this.serviceNames == null) {
       this.serviceNames = new HashSet<>();

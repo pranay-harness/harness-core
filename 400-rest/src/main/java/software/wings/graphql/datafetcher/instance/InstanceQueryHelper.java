@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -32,6 +34,7 @@ import org.mongodb.morphia.query.Query;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class InstanceQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;

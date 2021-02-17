@@ -550,12 +550,15 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     notNullCheck("currentState", currentState);
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
+      if (skipDelayedStepIfRequired(context, currentState)) {
+        return;
+      }
       StateExecutionData stateExecutionData =
           aStateExecutionData()
               .withWaitInterval(currentState.getWaitInterval())
               .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
               .build();
-      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null, null,
+      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, STARTING, null, null, null, null,
           null, evaluateExpiryTs(currentState, context));
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
@@ -569,6 +572,19 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     startStateExecution(context, stateExecutionInstance);
+  }
+
+  boolean skipDelayedStepIfRequired(ExecutionContextImpl context, State currentState) {
+    ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                   .failureTypes(EnumSet.noneOf(FailureType.class))
+                                                                   .context(context)
+                                                                   .state(currentState)
+                                                                   .build());
+    if (executionEventAdvice != null && executionEventAdvice.isSkipState()) {
+      handleResponse(context, skipStateExecutionResponse(executionEventAdvice));
+      return true;
+    }
+    return false;
   }
 
   void startStateExecution(String appId, String executionUuid, String stateExecutionInstanceId) {
@@ -603,7 +619,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  private void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
+  @VisibleForTesting
+  protected void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 

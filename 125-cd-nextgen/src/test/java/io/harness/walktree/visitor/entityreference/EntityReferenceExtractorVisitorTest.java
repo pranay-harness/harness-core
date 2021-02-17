@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
+public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
   @Inject SimpleVisitorFactory factory;
 
   @Test

@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
+
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -143,6 +145,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskData.getServiceId())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 
@@ -173,6 +176,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskData.getServiceId())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedStorage;
@@ -43,6 +45,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8sMetricCollector {
   private static final TemporalAmount AGGREGATION_WINDOW = Duration.ofMinutes(20);
 

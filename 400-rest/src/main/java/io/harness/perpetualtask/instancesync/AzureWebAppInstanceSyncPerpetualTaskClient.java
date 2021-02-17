@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
@@ -97,6 +99,7 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
                   .build())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, clientParams.get(HARNESS_APPLICATION_ID))
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

@@ -4,6 +4,8 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.CPU_HISTOG
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.HISTOGRAM_BUCKET_SIZE_GROWTH;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class K8sWorkloadHistogramDataFetcher
     extends AbstractObjectDataFetcher<QLK8SWorkloadHistogramData, QLK8sWorkloadParameters> {
   @Inject private HPersistence hPersistence;

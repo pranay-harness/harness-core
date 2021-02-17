@@ -16,6 +16,6 @@ public interface AnomalyService {
   List<AnomalyEntity> listCloud(String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy);
   List<AnomalyEntity> listOverview(String accountId, List<QLBillingDataFilter> filters);
   void delete(List<String> ids, Instant date);
-  void insert(List<AnomalyEntity> anomalies);
+  void insert(List<? extends AnomalyEntity> anomalies);
   AnomalyEntity update(AnomalyEntity anomaly);
 }

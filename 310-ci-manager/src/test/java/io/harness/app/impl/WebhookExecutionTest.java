@@ -26,7 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class WebhookExecutionTest extends CIManagerTest {
+public class WebhookExecutionTest extends CIManagerTestBase {
   @Mock private NGPipelineService ngPipelineService;
   @Mock private CIPipelineExecutionService ciPipelineExecutionService;
   @Mock private WebhookTriggerProcessorUtils webhookTriggerProcessorUtils;

@@ -180,15 +180,6 @@ public class ConnectorResource {
   }
 
   @POST
-  @Path("validate")
-  @Deprecated
-  @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
-  public ResponseDTO<ConnectorValidationResult> validate(
-      ConnectorDTO connector, @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotBlank String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorService.validate(connector, accountIdentifier));
-  }
-
-  @POST
   @Path("testConnection/{identifier}")
   @ApiOperation(value = "Test the connection", nickname = "getTestConnectionResult")
   public ResponseDTO<ConnectorValidationResult> testConnection(
@@ -247,7 +238,6 @@ public class ConnectorResource {
   @InternalApi
   @Produces("application/x-kryo")
   public ResponseDTO<ConnectorValidationParams> getConnectorValidationParams(
-
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,

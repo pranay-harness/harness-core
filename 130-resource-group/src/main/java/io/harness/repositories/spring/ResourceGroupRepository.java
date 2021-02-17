@@ -14,11 +14,9 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(PL)
 public interface ResourceGroupRepository
     extends PagingAndSortingRepository<ResourceGroup, String>, ResourceGroupRepositoryCustom {
-  Optional<ResourceGroup> findDistinctById(String resourceGroupId);
-
   Optional<ResourceGroup> findDistinctByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
-  Optional<ResourceGroup> deleteByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+  Long deleteResourceGroupByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

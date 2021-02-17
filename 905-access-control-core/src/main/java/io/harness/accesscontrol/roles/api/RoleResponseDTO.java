@@ -12,7 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ApiModel(value = "RoleResponse")
 public class RoleResponseDTO {
   @ApiModelProperty(required = true) @NotNull RoleDTO role;
-  @NotEmpty String parentIdentifier;
+  @NotEmpty String scope;
   boolean harnessManaged;
   Long createdAt;
   Long lastModifiedAt;

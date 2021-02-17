@@ -21,7 +21,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class NgPipelineValidationTest extends CDNGBaseTest {
+public class NgPipelineValidationTest extends CDNGTestBase {
   @Inject Injector injector;
 
   @Before

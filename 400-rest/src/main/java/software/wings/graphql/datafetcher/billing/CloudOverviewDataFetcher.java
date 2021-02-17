@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggregationList<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;

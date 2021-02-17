@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import io.harness.shell.CommandExecutionData;
 
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 
@@ -48,6 +49,9 @@ public class ContainerSetupCommandUnitExecutionData implements CommandExecutionD
   private String ecsRegion;
   private String ecsServiceToBeDownsized;
   private int countToBeDownsizedForOldService;
+
+  private List<AwsElbConfig> awsElbConfigs;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   // For ECS BG Route 53 DNS weight swap
   private boolean useRoute53Swap;

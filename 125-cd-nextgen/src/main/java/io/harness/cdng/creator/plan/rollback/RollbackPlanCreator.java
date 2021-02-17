@@ -55,6 +55,10 @@ public class RollbackPlanCreator {
                                           .build());
     }
 
+    if (EmptyPredicate.isEmpty(stepParametersBuilder.build().getChildNodes())) {
+      return PlanCreationResponse.builder().build();
+    }
+
     PlanNode deploymentStageRollbackNode =
         PlanNode.builder()
             .uuid(executionStepsField.getNode().getUuid() + "_combinedRollback")

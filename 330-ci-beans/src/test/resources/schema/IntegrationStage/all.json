@@ -35,9 +35,6 @@
           "type": "string"
         }
       ]
-    },
-    "skipCondition": {
-      "type": "string"
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -220,17 +217,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "IgnoreFailureActionConfig": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/FailureStrategyActionConfig"
-        },
-        {
-          "type": "object"
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "Infrastructure": {
       "type": "object",
       "discriminator": "type",
@@ -282,9 +268,6 @@
               "type": "string"
             }
           ]
-        },
-        "skipCondition": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -404,9 +387,6 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
-            },
-            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -441,9 +421,6 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
-            },
-            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -470,9 +447,6 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
-            },
-            {
-              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
@@ -563,9 +537,6 @@
     },
     "StepElementConfig": {
       "type": "object",
-      "required": [
-        "timeout"
-      ],
       "properties": {
         "description": {
           "type": "string"
@@ -621,6 +592,9 @@
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
+        },
+        "skipCondition": {
+          "type": "string"
         },
         "steps": {
           "type": "array",

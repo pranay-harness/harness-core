@@ -1,7 +1,9 @@
 package software.wings.graphql.datafetcher.execution;
 
 import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class PipelineResumeRuntimeDataFetcher
     extends BaseMutatorDataFetcher<QLRuntimeExecutionInputs, QLContinueExecutionPayload> {
   @Inject ResumePipelineController resumePipelineController;

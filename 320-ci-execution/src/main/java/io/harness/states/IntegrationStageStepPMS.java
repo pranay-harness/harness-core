@@ -83,7 +83,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
       Ambiance ambiance, IntegrationStageStepParametersPMS stepParameters) {
     VariablesSweepingOutput variablesSweepingOutput = new VariablesSweepingOutput();
     variablesSweepingOutput.putAll(NGVariablesUtils.getMapOfVariables(
-        stepParameters.getOriginalVariables(), Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))));
+        stepParameters.getOriginalVariables(), ambiance.getExpressionFunctorToken()));
     return variablesSweepingOutput;
   }
 }

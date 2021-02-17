@@ -52,18 +52,19 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
-    ParameterField<String> instances = K8sInstanceUnitType.Count == stepParameters.getInstanceSelection().getType()
+    ParameterField<Integer> instances = K8sInstanceUnitType.Count == stepParameters.getInstanceSelection().getType()
         ? ((CountInstanceSelection) stepParameters.getInstanceSelection().getSpec()).getCount()
         : ((PercentageInstanceSelection) stepParameters.getInstanceSelection().getSpec()).getPercentage();
 
-    boolean skipSteadyCheck = stepParameters.getSkipSteadyStateCheck().getValue() != null
+    boolean skipSteadyCheck = stepParameters.getSkipSteadyStateCheck() != null
+        && stepParameters.getSkipSteadyStateCheck().getValue() != null
         && stepParameters.getSkipSteadyStateCheck().getValue();
 
     K8sScaleRequest request =
         K8sScaleRequest.builder()
             .commandName(K8S_SCALE_COMMAND_NAME)
             .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-            .instances(Integer.valueOf(instances.getValue()))
+            .instances(instances.getValue())
             .instanceUnitType(stepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .workload(stepParameters.getWorkload().getValue())
             .maxInstances(Optional.empty()) // do we need those for scale?

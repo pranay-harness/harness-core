@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -16,6 +19,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AddAccountPermissionDataFetcher
     extends BaseMutatorDataFetcher<QLAddAccountPermissionInput, QLAddAccountPermissionPayload> {
   @Inject UserGroupService userGroupService;

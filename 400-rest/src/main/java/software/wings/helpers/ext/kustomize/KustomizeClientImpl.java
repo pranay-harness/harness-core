@@ -7,6 +7,9 @@ import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_
 import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_DIR_PATH;
 import static software.wings.helpers.ext.kustomize.KustomizeConstants.XDG_CONFIG_HOME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.cli.CliHelper;
 import software.wings.helpers.ext.cli.CliResponse;
@@ -18,9 +21,11 @@ import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._960_API_SERVICES)
 public class KustomizeClientImpl implements KustomizeClient {
   @Inject CliHelper cliHelper;
 

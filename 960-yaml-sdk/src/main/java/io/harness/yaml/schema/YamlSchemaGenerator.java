@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -66,17 +68,6 @@ public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;
   List<YamlSchemaRootClass> rootClasses;
-  /**
-   * @param yamlSchemaConfiguration Configuration for generation of YamlSchema
-   */
-  public void generateYamlSchemaFiles(YamlSchemaConfiguration yamlSchemaConfiguration) {
-    final Set<Class<?>> rootSchemaClasses = getClassesForYamlSchemaGeneration(yamlSchemaConfiguration);
-    SwaggerGenerator swaggerGenerator = new io.harness.yaml.schema.SwaggerGenerator();
-
-    for (Class<?> rootSchemaClass : rootSchemaClasses) {
-      generateJsonSchemaForRootClass(yamlSchemaConfiguration, swaggerGenerator, rootSchemaClass);
-    }
-  }
 
   public Map<EntityType, JsonNode> generateYamlSchema() {
     Map<EntityType, JsonNode> schema = new HashMap<>();
@@ -102,7 +93,13 @@ public class YamlSchemaGenerator {
     log.info("Generated metainfo");
 
     final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
-    final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
+    final String entityName =
+        rootClasses.stream()
+            .map(rootClazz
+                -> rootClazz.getClazz().equals(rootSchemaClass) ? rootClazz.getEntityType().getYamlName() : null)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
 
     log.info("Generating yaml schema for {}", entityName);
     final String pathForSchemaStorageForEntity =
@@ -149,11 +146,6 @@ public class YamlSchemaGenerator {
 
     return moduleBasePath + yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName
         + File.separator;
-  }
-
-  @VisibleForTesting
-  Set<Class<?>> getClassesForYamlSchemaGeneration(YamlSchemaConfiguration yamlSchemaConfiguration) {
-    return YamlSchemaUtils.getClasses(yamlSchemaConfiguration.getClassLoader(), YamlSchemaRoot.class);
   }
 
   /**
@@ -415,6 +407,37 @@ public class YamlSchemaGenerator {
       final Iterator<JsonNode> elements = node.elements();
       while (elements.hasNext()) {
         removeUnwantedNodes(elements.next(), unwantedNode);
+      }
+    }
+  }
+
+  public void modifyRefsNamespace(JsonNode objectNode, String namespace) {
+    if (objectNode.isArray()) {
+      final Iterator<JsonNode> elements = objectNode.elements();
+      while (elements.hasNext()) {
+        final JsonNode node = elements.next();
+        if (node.isArray()) {
+          ArrayNode arrayNode = (ArrayNode) node;
+          final Iterator<JsonNode> nodeIterator = arrayNode.elements();
+          while (nodeIterator.hasNext()) {
+            JsonNode nextNode = nodeIterator.next();
+            modifyRefsNamespace(nextNode, namespace);
+          }
+        } else if (node.isObject()) {
+          modifyRefsNamespace(node, namespace);
+        }
+      }
+    } else if (objectNode.isObject()) {
+      ObjectNode node = (ObjectNode) objectNode;
+      JsonNode jsonNode = node.remove(REF_NODE);
+      if (jsonNode != null && jsonNode.isTextual()) {
+        String refValue = jsonNode.textValue();
+        refValue = refValue.substring(refValue.lastIndexOf('/') + 1);
+        node.put(REF_NODE, String.format(DEFINITIONS_NAMESPACE_STRING_PATTERN, namespace, refValue));
+      }
+      final Iterator<JsonNode> elements = node.elements();
+      while (elements.hasNext()) {
+        modifyRefsNamespace(elements.next(), namespace);
       }
     }
   }

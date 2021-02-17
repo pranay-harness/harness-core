@@ -2,7 +2,9 @@ package software.wings.graphql.schema.mutation.execution.export;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.execution.export.request.ExportExecutionsRequest.OutputFormat;
 import io.harness.execution.export.request.ExportExecutionsUserParams;
@@ -22,6 +24,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLExportExecutionsInputKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLExportExecutionsInput implements QLMutationInput {
   String clientMutationId;
   Boolean notifyOnlyTriggeringUser;

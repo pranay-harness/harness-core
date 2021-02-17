@@ -21,6 +21,9 @@ import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
+import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
+import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
+import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -189,5 +192,8 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BitbucketUsernamePasswordDTO.class, 19530);
     kryo.register(LocalConnectorDTO.class, 543237);
     kryo.register(GcpKmsConnectorDTO.class, 543238);
+    kryo.register(CEAzureConnectorDTO.class, 19540);
+    kryo.register(CEAzureFeatures.class, 19541);
+    kryo.register(BillingExportSpecDTO.class, 19542);
   }
 }

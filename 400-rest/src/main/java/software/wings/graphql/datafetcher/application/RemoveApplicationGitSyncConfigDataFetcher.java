@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.application;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
@@ -21,6 +24,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class RemoveApplicationGitSyncConfigDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateApplicationGitSyncConfigInput, QLRemoveApplicationGitSyncConfigPayload> {
   private final AppService appService;

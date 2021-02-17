@@ -9,7 +9,7 @@ class RoleAssignmentDBOMapper {
   public static RoleAssignmentDBO toDBO(RoleAssignment object) {
     return RoleAssignmentDBO.builder()
         .identifier(object.getIdentifier())
-        .parentIdentifier(object.getParentIdentifier())
+        .scopeIdentifier(object.getScopeIdentifier())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .principalIdentifier(object.getPrincipalIdentifier())
         .principalType(object.getPrincipalType())
@@ -24,7 +24,7 @@ class RoleAssignmentDBOMapper {
   public static RoleAssignment fromDBO(RoleAssignmentDBO object) {
     return RoleAssignment.builder()
         .identifier(object.getIdentifier())
-        .parentIdentifier(object.getParentIdentifier())
+        .scopeIdentifier(object.getScopeIdentifier())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .principalIdentifier(object.getPrincipalIdentifier())
         .principalType(object.getPrincipalType())

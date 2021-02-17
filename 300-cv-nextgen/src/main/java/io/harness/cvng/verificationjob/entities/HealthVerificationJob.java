@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
@@ -69,5 +70,14 @@ public class HealthVerificationJob extends VerificationJob {
   @Override
   public boolean collectHostData() {
     return false;
+  }
+
+  public static class HealthVerificationUpdatableEntity
+      extends VerificationJobUpdatableEntity<HealthVerificationJob, HealthVerificationJobDTO> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<HealthVerificationJob> updateOperations, HealthVerificationJobDTO dto) {
+      setCommonOperations(updateOperations, dto);
+    }
   }
 }

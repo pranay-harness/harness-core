@@ -9,8 +9,12 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -47,12 +51,14 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class InstanceStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLInstanceFilter, QLInstanceAggregation,
         QLNoOpSortCriteria, QLInstanceTagType, QLInstanceTagAggregation, QLInstanceEntityAggregation> {
   @Inject private InstanceTimeSeriesDataHelper timeSeriesDataHelper;
   @Inject private InstanceQueryHelper instanceMongoHelper;
   @Inject private TagHelper tagHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   protected QLInstanceTagAggregation getTagAggregation(QLInstanceAggregation groupBy) {
@@ -78,8 +84,10 @@ public class InstanceStatsDataFetcher
     if (groupByTime != null) {
       if (isNotEmpty(filters)) {
         filters.forEach(filter -> {
+          // TODO No use of newFilters here, check and delete it if not required
           List<QLInstanceFilter> newFilters = new ArrayList<>();
           if (filter.getTag() != null) {
+            // Process all tag filters and convert them to main entity filters
             QLInstanceTagFilter tagFilter = filter.getTag();
             List<QLTagInput> tags = tagFilter.getTags();
             Set<String> entityIds =
@@ -105,8 +113,14 @@ public class InstanceStatsDataFetcher
       }
 
       if (isNotEmpty(groupByEntityList)) {
-        return timeSeriesDataHelper.getTimeSeriesAggregatedData(
-            accountId, aggregateFunction, filters, groupByTime, groupByEntityList.get(0));
+        if (featureFlagService.isEnabled(
+                FeatureName.CUSTOM_DASHBOARD_INSTANCE_FETCH_LONGER_RETENTION_DATA, accountId)) {
+          return timeSeriesDataHelper.getTimeSeriesAggregatedDataUsingNewAggregators(
+              accountId, aggregateFunction, filters, groupByTime, groupByEntityList.get(0));
+        } else {
+          return timeSeriesDataHelper.getTimeSeriesAggregatedData(
+              accountId, aggregateFunction, filters, groupByTime, groupByEntityList.get(0));
+        }
       } else {
         return timeSeriesDataHelper.getTimeSeriesData(accountId, aggregateFunction, filters, groupByTime);
       }

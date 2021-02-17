@@ -1,5 +1,6 @@
 package io.harness.errorhandling;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.UnexpectedException;
@@ -18,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NGErrorHelper {
   public static int DEFAULT_ERROR_CODE = 450;
-  public static String DEFAULT_ERROR_SUMMARY = "Unexcpected Error";
-  public static String DEFAULT_ERROR_MESSAGE = "Oops, something went wrong on our end. Please contact Harness Support.";
-  public static String DEFAULT_REASON = "Could Not Find the Reason";
+  public static String DEFAULT_ERROR_SUMMARY = "Unexpected Error";
+  public static String DEFAULT_ERROR_MESSAGE = "Something went wrong on our end. Please contact Harness Support.";
+  public static String DEFAULT_REASON = "Unexpected Error";
   private static Map<Integer, ErrorMessageInfo> errorCodeToErrorMap = new HashMap<>();
   private static Map<String, ErrorMessageInfo> errorMessageToErrorMap = new HashMap<>();
   private static boolean isInitialized;
@@ -88,6 +89,9 @@ public class NGErrorHelper {
         }
       }
     }
+    if (isBlank(errorMessage)) {
+      errorMessage = DEFAULT_ERROR_MESSAGE;
+    }
     return ErrorDetail.builder().reason(DEFAULT_REASON).code(DEFAULT_ERROR_CODE).message(errorMessage).build();
   }
 
@@ -134,6 +138,9 @@ public class NGErrorHelper {
               getOveriddenMessageOrActualMessage(errorMessage, savedErrorDetail.getOverriddenMessage()));
         }
       }
+    }
+    if (isBlank(errorMessage)) {
+      errorMessage = DEFAULT_ERROR_MESSAGE;
     }
     return String.format("%s (%s)", "Error Encountered", errorMessage);
   }

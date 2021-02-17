@@ -12,6 +12,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.DOMAIN;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
@@ -22,6 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -29,7 +31,6 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +48,16 @@ public class CommandExecutionContextTest extends WingsBaseTest {
           .envId(ENV_ID)
           .accountId(ACCOUNT_ID)
           .activityId(ACTIVITY_ID)
-          .host(aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
+          .host(aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build())
+          .winRmConnectionAttributes(WinRmConnectionAttributes.builder()
+                                         .accountId(ACCOUNT_ID)
+                                         .username(USER_NAME)
+                                         .password(PASSWORD)
+                                         .domain(DOMAIN)
+                                         .port(22)
+                                         .useSSL(true)
+                                         .skipCertChecks(true)
+                                         .build());
 
   @Test
   @Owner(developers = PRASHANT)

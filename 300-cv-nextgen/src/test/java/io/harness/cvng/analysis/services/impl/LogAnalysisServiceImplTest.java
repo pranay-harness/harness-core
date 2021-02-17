@@ -9,7 +9,7 @@ import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.mock;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
@@ -71,7 +71,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-public class LogAnalysisServiceImplTest extends CvNextGenTest {
+public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   private String cvConfigId;
   private String verificationTaskId;
   @Inject private HPersistence hPersistence;

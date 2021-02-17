@@ -11,8 +11,10 @@ class PermissionDTOMapper {
         .permission(PermissionDTO.builder()
                         .identifier(object.getIdentifier())
                         .name(object.getName())
+                        .resourceType(object.getResourceType())
+                        .action(object.getAction())
                         .status(object.getStatus())
-                        .scopes(object.getScopes())
+                        .allowedScopeLevels(object.getAllowedScopeLevels())
                         .build())
         .build();
   }
@@ -22,7 +24,7 @@ class PermissionDTOMapper {
         .identifier(object.getIdentifier())
         .name(object.getName())
         .status(object.getStatus())
-        .scopes(object.getScopes())
+        .allowedScopeLevels(object.getAllowedScopeLevels())
         .build();
   }
 }

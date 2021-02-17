@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
@@ -61,7 +61,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
+public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private HostRecordService hostRecordService;

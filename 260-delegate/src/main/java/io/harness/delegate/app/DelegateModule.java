@@ -45,10 +45,12 @@ import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
 import io.harness.delegate.k8s.K8sCanaryRequestHandler;
+import io.harness.delegate.k8s.K8sDeleteRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRollbackRequestHandler;
 import io.harness.delegate.k8s.K8sScaleRequestHandler;
+import io.harness.delegate.k8s.K8sSwapServiceSelectorsHandler;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
@@ -229,6 +231,7 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHandler
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsListenerUpdateBGTaskHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSetupCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployCommandHandler;
+import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsDeployRollbackDataFetchCommandHandler;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDeployCommandHandler;
 import software.wings.delegatetasks.azure.AzureVMSSTask;
 import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
@@ -865,6 +868,8 @@ public class DelegateModule extends AbstractModule {
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_SETUP.name()).to(EcsSetupCommandHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.SERVICE_DEPLOY.name())
         .to(EcsDeployCommandHandler.class);
+    ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.DEPLOY_ROLLBACK_DATA_FETCH.name())
+        .to(EcsDeployRollbackDataFetchCommandHandler.class);
     ecsCommandTaskTypeToTaskHandlerMap.addBinding(EcsCommandType.ECS_RUN_TASK_DEPLOY.name())
         .to(EcsRunTaskDeployCommandHandler.class);
 
@@ -912,6 +917,9 @@ public class DelegateModule extends AbstractModule {
         .to(K8sRollingRollbackRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.CANARY_DEPLOY.name()).to(K8sCanaryRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SWAP_SERVICE_SELECTORS.name())
+        .to(K8sSwapServiceSelectorsHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);

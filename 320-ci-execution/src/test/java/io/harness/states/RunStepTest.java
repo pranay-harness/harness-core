@@ -16,7 +16,7 @@ import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class RunStepTest extends CIExecutionTest {
+public class RunStepTest extends CIExecutionTestBase {
   public static final String STEP_ID = "runStepId";
   public static final String OUTPUT_KEY = "VAR1";
   public static final String OUTPUT_VALUE = "VALUE1";

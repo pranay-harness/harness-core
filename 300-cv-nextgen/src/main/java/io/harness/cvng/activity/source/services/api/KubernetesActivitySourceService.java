@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.source.services.api;
 
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.encryption.Scope;
@@ -23,4 +24,7 @@ public interface KubernetesActivitySourceService {
 
   List<KubernetesActivitySource> findByConnectorIdentifier(String accountId, @Nullable String orgIdentifier,
       @Nullable String projectIdentifier, String connectorIdentifierWithoutScopePrefix, Scope scope);
+
+  KubernetesActivityDetailsDTO getEventDetails(
+      String accountId, String orgIdentifier, String projectIdentifier, String activityId);
 }

@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,10 +45,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class RoleDBO implements PersistentEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @EntityIdentifier final String identifier;
-  final String parentIdentifier;
+  final String scopeIdentifier;
   @NGEntityName final String name;
-  @NotEmpty final Set<String> scopes;
-  @NotEmpty final Set<String> permissions;
+  @NotEmpty final Set<String> allowedScopeLevels;
+  @NotNull final Set<String> permissions;
   final boolean managed;
   final String description;
   final Map<String, String> tags;
@@ -64,7 +65,7 @@ public class RoleDBO implements PersistentEntity {
                  .name("uniqueIndex")
                  .unique(true)
                  .field(RoleKeys.identifier)
-                 .field(RoleKeys.parentIdentifier)
+                 .field(RoleKeys.scopeIdentifier)
                  .build())
         .build();
   }

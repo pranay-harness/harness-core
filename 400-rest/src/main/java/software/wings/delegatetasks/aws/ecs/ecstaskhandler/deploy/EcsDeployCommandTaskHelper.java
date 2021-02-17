@@ -29,6 +29,7 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.AwsHelperService;
@@ -343,6 +344,16 @@ public class EcsDeployCommandTaskHelper {
     return ecsRunTaskDefinition;
   }
 
+  public RegisterTaskDefinitionRequest createRunTaskRegisterTaskDefinitionRequest(
+      String taskDefinitionJson, String ecsServiceName) {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+        JsonUtils.asObject(taskDefinitionJson, RegisterTaskDefinitionRequest.class);
+    if (registerTaskDefinitionRequest.getFamily() == null) {
+      registerTaskDefinitionRequest.setFamily(ecsServiceName);
+    }
+    return registerTaskDefinitionRequest;
+  }
+
   public RunTaskRequest createAwsRunTaskRequest(
       TaskDefinition registeredRunTaskDefinition, EcsRunTaskDeployRequest ecsRunTaskDeployRequest) {
     RunTaskRequest runTaskRequest = new RunTaskRequest();
@@ -398,6 +409,31 @@ public class EcsDeployCommandTaskHelper {
 
     executionLogCallback.saveExecutionLog(
         format("Registering task definition with family => %s", runTaskDefinition.getFamily()), LogLevel.INFO);
+
+    return awsClusterService.createTask(
+        region, cloudProviderSetting, encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  public TaskDefinition registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+      SettingAttribute cloudProviderSetting, RegisterTaskDefinitionRequest registerTaskDefinitionRequest,
+      String launchType, String region, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(null);
+    }
+
+    // Add extra parameters for Fargate launch type
+    if (isFargateTaskLauchType(launchType)) {
+      registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
+      registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
+    } else {
+      registerTaskDefinitionRequest.withCpu(null);
+      registerTaskDefinitionRequest.withMemory(null);
+    }
+
+    executionLogCallback.saveExecutionLog(
+        format("Registering task definition with family => %s", registerTaskDefinitionRequest.getFamily()),
+        LogLevel.INFO);
 
     return awsClusterService.createTask(
         region, cloudProviderSetting, encryptedDataDetails, registerTaskDefinitionRequest);
@@ -466,12 +502,9 @@ public class EcsDeployCommandTaskHelper {
 
   public Optional<Integer> getServiceDesiredCount(ContextData contextData) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
-    Optional<Service> service = awsClusterService
-                                    .getServices(resizeParams.getRegion(), contextData.getSettingAttribute(),
-                                        contextData.getEncryptedDataDetails(), resizeParams.getClusterName())
-                                    .stream()
-                                    .filter(svc -> svc.getServiceName().equals(resizeParams.getContainerServiceName()))
-                                    .findFirst();
+    Optional<Service> service = awsClusterService.getService(resizeParams.getRegion(),
+        contextData.getSettingAttribute(), contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+        resizeParams.getContainerServiceName());
     return service.map(Service::getDesiredCount);
   }
 
@@ -653,5 +686,12 @@ public class EcsDeployCommandTaskHelper {
     ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     ecsServiceDeployResponse.setOutput(StringUtils.EMPTY);
     return ecsServiceDeployResponse;
+  }
+
+  public EcsDeployRollbackDataFetchResponse getEmptyEcsDeployRollbackDataFetchResponse() {
+    EcsDeployRollbackDataFetchResponse response = EcsDeployRollbackDataFetchResponse.builder().build();
+    response.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    response.setOutput(StringUtils.EMPTY);
+    return response;
   }
 }

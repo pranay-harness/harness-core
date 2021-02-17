@@ -48,6 +48,8 @@ public interface WingsTestConstants {
 
   String SERVICE_NAME = "SERVICE_NAME";
 
+  String SERVICE_NAME_PREFIX = "SERVICE_NAME__";
+
   String SERVICE_URL = "SERVICE_URL";
 
   String INFRA_NAME = "INFRA_NAME";

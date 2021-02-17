@@ -3,7 +3,7 @@ package io.harness.accesscontrol.roleassignments;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDaoImpl;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentMorphiaRegistrar;
-import io.harness.accesscontrol.scopes.ScopeService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
