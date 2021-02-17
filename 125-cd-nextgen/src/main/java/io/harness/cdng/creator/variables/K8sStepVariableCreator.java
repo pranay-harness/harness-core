@@ -13,6 +13,7 @@ public class K8sStepVariableCreator extends GenericStepVariableCreator {
     return new HashSet<>(Arrays.asList(StepSpecTypeConstants.K8S_ROLLING_DEPLOY,
         StepSpecTypeConstants.K8S_ROLLING_ROLLBACK, StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY,
         StepSpecTypeConstants.K8S_APPLY, StepSpecTypeConstants.K8S_SCALE, StepSpecTypeConstants.K8S_BG_SWAP_SERVICES,
-        StepSpecTypeConstants.K8S_CANARY_DELETE, StepSpecTypeConstants.K8S_CANARY_DEPLOY));
+        StepSpecTypeConstants.K8S_CANARY_DELETE, StepSpecTypeConstants.K8S_CANARY_DEPLOY,
+        StepSpecTypeConstants.K8S_DELETE));
   }
 }
