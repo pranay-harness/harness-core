@@ -195,7 +195,7 @@ cd ../..
 
 mkdir -p dist/ci-manager
 cd dist/ci-manager
-cp ../../310-ci-manager/target/ci-manager-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/310-ci-manager/module_deploy.jar ci-manager-capsule.jar
 cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
 cp ../../310-ci-manager/key.pem .
