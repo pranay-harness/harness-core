@@ -1,5 +1,6 @@
 package io.harness.accesscontrol;
 
+import io.harness.DecisionModule;
 import io.harness.accesscontrol.permissions.PermissionsModule;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
 import io.harness.accesscontrol.roles.RoleModule;
@@ -48,6 +49,7 @@ public class AccessControlModule extends AbstractModule {
     install(PermissionsModule.getInstance());
     install(RoleModule.getInstance());
     install(RoleAssignmentModule.getInstance());
+    install(DecisionModule.getInstance(accessControlConfiguration.getDecisionModuleConfiguration()));
     registerRequiredBindings();
   }
 

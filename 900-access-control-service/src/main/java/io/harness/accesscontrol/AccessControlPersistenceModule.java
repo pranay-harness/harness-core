@@ -1,5 +1,6 @@
 package io.harness.accesscontrol;
 
+import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
@@ -45,8 +46,8 @@ public class AccessControlPersistenceModule extends PersistenceModule {
 
   @Override
   protected Class<?>[] getConfigClasses() {
-    return new Class[] {
-        PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class};
+    return new Class[] {PermissionPersistenceConfig.class, RolePersistenceConfig.class,
+        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {
