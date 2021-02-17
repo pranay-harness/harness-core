@@ -23,7 +23,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonTypeName("RunTests")
 @TypeAlias("runTestsStepInfo")
-@YamlSchemaIgnoreSubtype
 public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
