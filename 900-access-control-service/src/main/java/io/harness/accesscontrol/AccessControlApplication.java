@@ -6,10 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.accesscontrol.permissions.Permission;
-import io.harness.accesscontrol.permissions.PermissionService;
-import io.harness.accesscontrol.permissions.PermissionStatus;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
+import io.harness.accesscontrol.management.jobs.ManagementJob;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -31,7 +28,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
@@ -87,19 +83,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
 
-    // TODO: Remove once permission management through yaml is present.
-    PermissionService permissionService = injector.getInstance(PermissionService.class);
-    Set<String> scopes = new HashSet<>();
-    scopes.add(HarnessScopeLevel.ACCOUNT.toString());
-    scopes.add(HarnessScopeLevel.ORGANIZATION.toString());
-    scopes.add(HarnessScopeLevel.PROJECT.toString());
-    Permission permission = Permission.builder()
-                                .identifier("core.project.view")
-                                .name("View Project")
-                                .status(PermissionStatus.ACTIVE)
-                                .allowedScopeLevels(scopes)
-                                .build();
-    permissionService.get(permission.getIdentifier()).orElseGet(() -> permissionService.create(permission));
+    ManagementJob managementJob = injector.getInstance(ManagementJob.class);
+    managementJob.run();
 
     MaintenanceController.forceMaintenance(false);
   }

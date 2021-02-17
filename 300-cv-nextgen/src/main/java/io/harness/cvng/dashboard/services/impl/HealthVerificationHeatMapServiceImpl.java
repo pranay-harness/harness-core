@@ -75,7 +75,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     Set<String> taskIds = verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     List<Double> risks = new ArrayList<>();
     Query<HealthVerificationHeatMap> heatMapQuery =
-        hPersistence.createQuery(HealthVerificationHeatMap.class)
+        hPersistence.createQuery(HealthVerificationHeatMap.class, excludeAuthority)
             .field(HealthVerificationHeatMapKeys.aggregationId)
             .in(taskIds)
             .filter(HealthVerificationHeatMapKeys.aggregationLevel,

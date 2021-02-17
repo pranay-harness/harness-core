@@ -54,11 +54,20 @@ func NoOp() error {
 	return nil
 }
 
+// IsTest checks whether the parsed node is of a test type or not.
+func IsTest(node Node) bool {
+	return node.Type == NodeType_TEST
+}
+
+// IsSupported checks whether we can perform an action for the node type or not.
+func IsSupported(node Node) bool {
+	return node.Type == NodeType_TEST || node.Type == NodeType_SOURCE
+}
+
 //ParseJavaNode extracts the pkg and class names from a Java file path
 // e.g., 320-ci-execution/src/main/java/io/harness/stateutils/buildstate/ConnectorUtils.java
 // will return pkg = io.harness.stateutils.buildstate, class = ConnectorUtils
 func ParseJavaNode(filename string) (*Node, error) {
-
 	var node Node
 	node.Pkg = ""
 	node.Class = ""
@@ -93,10 +102,10 @@ func ParseJavaNode(filename string) (*Node, error) {
 }
 
 //ParseFileNames accepts a list of file names, parses and returns the list of Node
-func ParseFileNames(files *[]string) (*[]Node, error) {
+func ParseFileNames(files []string) ([]Node, error) {
 
 	nodes := make([]Node, 0)
-	for _, path := range *files {
+	for _, path := range files {
 		if len(path) == 0 {
 			continue
 		}
@@ -104,5 +113,5 @@ func ParseFileNames(files *[]string) (*[]Node, error) {
 		node, _ := ParseJavaNode(path)
 		nodes = append(nodes, *node)
 	}
-	return &nodes, nil
+	return nodes, nil
 }

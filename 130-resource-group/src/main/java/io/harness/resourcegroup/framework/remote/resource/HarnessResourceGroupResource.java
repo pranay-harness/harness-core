@@ -10,8 +10,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.remote.dto.ResourceGroupRequest;
-import io.harness.resourcegroup.framework.remote.dto.ResourceGroupResponse;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -22,7 +22,6 @@ import io.swagger.annotations.ApiResponses;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -60,10 +59,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.find(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (!resourceGroupResponseOpt.isPresent()) {
-      throw new BadRequestException(String.format("No resource group exists with id [%s]", identifier));
-    }
-    return ResponseDTO.newResponse(resourceGroupResponseOpt.get());
+    return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
   @GET

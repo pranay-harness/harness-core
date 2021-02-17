@@ -32,8 +32,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//120-ng-manager/... -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//120-ng-manager/...  -//310-ci-manager/... -//320-ci-execution/... -//330-ci-beans/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//120-ng-manager/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//120-ng-manager/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -63,6 +63,11 @@ BAZEL_MODULES="\
   //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //300-cv-nextgen:module_deploy.jar \
+  //310-ci-manager:module \
+  //310-ci-manager:module_deploy.jar \
+  //320-ci-execution:module \
+  //330-ci-beans:module \
   //340-ce-nextgen:module \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
@@ -98,8 +103,11 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
+  //900-access-control-service:module \
+  //900-access-control-service:module_deploy.jar \
+  //903-decision-module:module \
   //905-access-control-core:module \
-  //905-access-control-core:module_deploy.jar \
+  //909-access-control-sdk:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -282,16 +290,20 @@ build_proto_module() {
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
-build_bazel_application 905-access-control-core
+build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
+build_bazel_application 300-cv-nextgen
+build_bazel_application 310-ci-manager
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
+build_bazel_module 320-ci-execution
+build_bazel_module 330-ci-beans
 build_bazel_module 340-ce-nextgen
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest

@@ -586,9 +586,9 @@ public abstract class TerraformProvisionState extends State {
     gitConfigHelperService.convertToRepoGitConfig(
         gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
@@ -678,9 +678,9 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
@@ -1046,5 +1046,26 @@ public abstract class TerraformProvisionState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
+  }
+
+  private boolean isRunAndExportEncryptedPlan() {
+    return runPlanOnly && exportPlanToApplyStep;
+  }
+
+  private boolean isInheritingEncryptedPlan() {
+    return !runPlanOnly && inheritApprovedPlan;
+  }
+
+  boolean isExportingDestroyPlan() {
+    return runPlanOnly && TerraformCommand.DESTROY == command();
+  }
+
+  boolean isSecretManagerRequired() {
+    return isRunAndExportEncryptedPlan() || isInheritingEncryptedPlan() || isExportingDestroyPlan();
+  }
+
+  SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
+    return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+                                    : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
   }
 }

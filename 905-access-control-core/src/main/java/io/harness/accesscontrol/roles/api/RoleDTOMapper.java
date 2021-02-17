@@ -2,6 +2,7 @@ package io.harness.accesscontrol.roles.api;
 
 import io.harness.accesscontrol.roles.Role;
 
+import java.util.HashSet;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -29,9 +30,10 @@ public class RoleDTOMapper {
         .scopeIdentifier(scopeIdentifier)
         .name(object.getName())
         .allowedScopeLevels(object.getAllowedScopeLevels())
-        .permissions(object.getPermissions())
+        .permissions(object.getPermissions() == null ? new HashSet<>() : object.getPermissions())
         .description(object.getDescription())
         .tags(object.getTags())
+        .managed(false)
         .build();
   }
 }

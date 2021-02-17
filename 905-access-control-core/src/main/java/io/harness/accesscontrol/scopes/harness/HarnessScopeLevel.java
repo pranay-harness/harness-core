@@ -27,7 +27,7 @@ public enum HarnessScopeLevel implements ScopeLevel {
   ORGANIZATION {
     @Override
     public String toString() {
-      return "org";
+      return "organization";
     }
 
     @Override

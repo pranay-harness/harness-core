@@ -18,6 +18,7 @@ class RoleDBOMapper {
         .tags(object.getTags())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
+        .version(object.getVersion())
         .build();
   }
 
@@ -33,6 +34,7 @@ class RoleDBOMapper {
         .tags(roleDBO.getTags())
         .createdAt(roleDBO.getCreatedAt())
         .lastModifiedAt(roleDBO.getLastModifiedAt())
+        .version(roleDBO.getVersion())
         .build();
   }
 }

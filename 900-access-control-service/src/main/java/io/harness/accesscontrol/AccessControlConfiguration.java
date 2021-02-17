@@ -1,5 +1,6 @@
 package io.harness.accesscontrol;
 
+import io.harness.DecisionModuleConfiguration;
 import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -17,9 +18,11 @@ import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Path;
 import lombok.Getter;
+import lombok.Setter;
 import org.reflections.Reflections;
 
 @Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessControlConfiguration extends Configuration {
   public static final String SERVICE_ID = "access-control-microservice";
@@ -30,6 +33,7 @@ public class AccessControlConfiguration extends Configuration {
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
+  @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
 
   public AccessControlConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

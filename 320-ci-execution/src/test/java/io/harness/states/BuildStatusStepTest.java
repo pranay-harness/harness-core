@@ -47,7 +47,6 @@ public class BuildStatusStepTest extends CIExecutionTestBase {
     setupAbstractions.put("accountId", "accountId");
     setupAbstractions.put("projectId", "projectId");
     setupAbstractions.put("orgId", "orgId");
-    setupAbstractions.put("expressionFunctorToken", "1234");
     Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
     GitConfigDTO gitConfigDTO = GitConfigDTO.builder()
                                     .url("https://github.com/wings-software/portal.git")
