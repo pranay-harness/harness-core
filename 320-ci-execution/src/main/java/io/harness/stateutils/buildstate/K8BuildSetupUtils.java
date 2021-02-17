@@ -8,6 +8,7 @@ import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
@@ -218,7 +219,7 @@ public class K8BuildSetupUtils {
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables(accountId);
     Map<String, String> commonEnvVars = getCommonStepEnvVariables(
-        k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), ambiance);
+        k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
     Set<String> publishArtifactStepIds =
@@ -327,17 +328,17 @@ public class K8BuildSetupUtils {
     }
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String serializedLiteEngineStepInfo =
-        getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo, taskIds, accountId, logPrefix, stepLogKeys);
+        getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo, taskIds, accountId, stepLogKeys);
     String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
         k8PodDetails, serializedLiteEngineStepInfo, serviceToken, stageCpuRequest, stageMemoryRequest,
-        serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath, ambiance);
+        serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath, logPrefix, ambiance);
   }
 
   private String getSerializedLiteEngineStepInfo(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      Map<String, String> taskIds, String accountId, String logPrefix, Map<String, String> stepLogKeys) {
+      Map<String, String> taskIds, String accountId, Map<String, String> stepLogKeys) {
     Execution executionPrototype = protobufSerializer.convertExecutionElement(
-        liteEngineTaskStepInfo.getExecutionElementConfig(), liteEngineTaskStepInfo, taskIds, logPrefix, stepLogKeys);
+        liteEngineTaskStepInfo.getExecutionElementConfig(), liteEngineTaskStepInfo, taskIds, stepLogKeys);
     Execution execution = Execution.newBuilder(executionPrototype).setAccountId(accountId).build();
     return Base64.encodeBase64String(execution.toByteArray());
   }
@@ -402,7 +403,8 @@ public class K8BuildSetupUtils {
 
   @NotNull
   private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath, Ambiance ambiance) {
+      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath, String logPrefix,
+      Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = AmbianceHelper.getAccountId(ambiance);
     final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
@@ -426,6 +428,7 @@ public class K8BuildSetupUtils {
     envVars.put(HARNESS_PIPELINE_ID_VARIABLE, pipelineID);
     envVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildNumber));
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
+    envVars.put(HARNESS_LOG_PREFIX_VARIABLE, logPrefix);
     return envVars;
   }
 
