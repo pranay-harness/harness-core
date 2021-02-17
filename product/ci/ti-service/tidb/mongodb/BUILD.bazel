@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["mongodb.go"],
+    importpath = "github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//commons/go/lib/utils:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
+        "@com_github_kamva_mgm_v3//:go_default_library",
+        "@org_mongodb_go_mongo_driver//bson:go_default_library",
+        "@org_mongodb_go_mongo_driver//mongo:go_default_library",
+        "@org_mongodb_go_mongo_driver//mongo/options:go_default_library",
+        "@org_mongodb_go_mongo_driver//mongo/readpref:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
