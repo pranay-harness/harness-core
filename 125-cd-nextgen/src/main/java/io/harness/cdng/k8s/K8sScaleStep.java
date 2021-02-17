@@ -33,7 +33,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
 
   public static final String K8S_SCALE_COMMAND_NAME = "Scale";
   @Inject private OutcomeService outcomeService;
