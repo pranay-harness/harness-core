@@ -65,6 +65,7 @@ BAZEL_MODULES="\
   //230-model-test:module \
   //280-batch-processing:module \
   //280-batch-processing:module_deploy.jar \
+  //300-cv-nextgen:module_deploy.jar \
   //340-ce-nextgen:module \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
@@ -100,8 +101,11 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
+  //900-access-control-service:module \
+  //900-access-control-service:module_deploy.jar \
+  //903-decision-module:module \
   //905-access-control-core:module \
-  //905-access-control-core:module_deploy.jar \
+  //909-access-control-sdk:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -284,13 +288,14 @@ build_proto_module() {
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
-build_bazel_application 905-access-control-core
+build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
 build_bazel_application 280-batch-processing
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
+build_bazel_application 300-cv-nextgen
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group

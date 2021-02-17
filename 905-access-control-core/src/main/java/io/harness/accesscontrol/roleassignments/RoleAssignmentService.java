@@ -1,8 +1,10 @@
 package io.harness.accesscontrol.roleassignments;
 
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -15,6 +17,8 @@ public interface RoleAssignmentService {
       String principalIdentifier, String roleIdentifier);
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+
+  List<RoleAssignment> get(@NotEmpty String principal, @NotNull PrincipalType principalType);
 
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 }

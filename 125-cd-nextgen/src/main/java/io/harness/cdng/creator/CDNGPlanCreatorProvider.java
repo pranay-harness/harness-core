@@ -82,6 +82,12 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setType(StepSpecTypeConstants.K8S_CANARY_DELETE)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
+    StepInfo delete =
+        StepInfo.newBuilder()
+            .setName("Delete")
+            .setType(StepSpecTypeConstants.K8S_DELETE)
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .build();
 
     StepInfo stageDeployment =
         StepInfo.newBuilder()
@@ -118,6 +124,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<StepInfo> stepInfos = new ArrayList<>();
 
     stepInfos.add(k8sRolling);
+    stepInfos.add(delete);
     stepInfos.add(canaryDeploy);
     stepInfos.add(canaryDelete);
     stepInfos.add(stageDeployment);

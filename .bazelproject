@@ -44,7 +44,10 @@ directories:
   884-pms-commons
   890-pms-contracts
   890-sm-core
+  900-access-control-service
+  903-decision-module
   905-access-control-core
+  909-access-control-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -62,6 +65,7 @@ directories:
   950-delegate-tasks-beans
   950-events-api
   950-events-framework
+  950-git-sync-sdk
   950-ng-core
   950-ng-project-n-orgs
   950-timeout-engine
@@ -98,3 +102,4 @@ import_run_configurations:
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml
+  run-configurations/GitSyncTestApp.xml

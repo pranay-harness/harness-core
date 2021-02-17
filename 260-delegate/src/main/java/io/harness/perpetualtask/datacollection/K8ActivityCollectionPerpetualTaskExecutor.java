@@ -8,7 +8,6 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
-import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -108,13 +107,16 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
                 if (workLoadName.contains(activitySourceConfig.getWorkloadName())) {
                   kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
                       KubernetesActivityDTO.builder()
+                          .namespace(namespace)
+                          .workloadName(activitySourceConfig.getWorkloadName())
+                          .kind(v1Event.getInvolvedObject().getKind())
+                          .reason(v1Event.getReason())
                           .message(v1Event.getMessage())
-                          .eventDetails(v1Event.toString())
+                          .eventJson(v1Event.toString())
                           .activitySourceConfigId(activitySourceDTO.getUuid())
                           .name(v1Event.getInvolvedObject().getUid())
                           .activityStartTime(v1Event.getFirstTimestamp().getMillis())
                           .activityEndTime(v1Event.getLastTimestamp().getMillis())
-                          .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
                           .eventType(KubernetesEventType.valueOf(v1Event.getType()))
                           .serviceIdentifier(activitySourceConfig.getServiceIdentifier())
                           .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
