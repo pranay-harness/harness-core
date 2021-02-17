@@ -86,8 +86,9 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
-              .failureInfo(
-                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
       if (stepParameters.getRollbackInfo() != null) {
         responseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

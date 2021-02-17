@@ -106,10 +106,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sScaleResponse k8sScaleResponse = K8sScaleResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sScaleResponse)
-        .build();
+    return getGenericFailureResponse(k8sScaleResponse);
   }
 
   @VisibleForTesting

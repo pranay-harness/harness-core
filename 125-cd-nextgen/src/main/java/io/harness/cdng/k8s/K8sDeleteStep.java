@@ -86,7 +86,8 @@ public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
+          .failureInfo(
+              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse)).build())
           .build();
     }
   }

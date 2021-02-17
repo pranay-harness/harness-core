@@ -74,32 +74,32 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
             logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList())),
         timeoutInMillis, k8sApplyRequest.getAccountId());
     if (!success) {
-      return getFailureResponse();
+      return getGenericFailureResponse(null);
     }
 
     success = init(
         k8sApplyRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
-      return getFailureResponse();
+      return getGenericFailureResponse(null);
     }
 
     success = k8sApplyBaseHandler.prepare(k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true),
         k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig);
     if (!success) {
-      return getFailureResponse();
+      return getGenericFailureResponse(null);
     }
 
     success = k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
         k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
     if (!success) {
-      return getFailureResponse();
+      return getGenericFailureResponse(null);
     }
 
     success = k8sApplyBaseHandler.steadyStateCheck(k8sApplyRequest.isSkipSteadyStateCheck(),
         k8sApplyRequest.getK8sInfraDelegateConfig().getNamespace(), k8sDelegateTaskParams, timeoutInMillis,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true), k8sApplyHandlerConfig);
     if (!success) {
-      return getFailureResponse();
+      return getGenericFailureResponse(null);
     }
 
     k8sApplyBaseHandler.wrapUp(k8sDelegateTaskParams,
@@ -157,9 +157,5 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
       logCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
-  }
-
-  private K8sDeployResponse getFailureResponse() {
-    return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
   }
 }
