@@ -101,4 +101,5 @@ import_run_configurations:
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml
+  run-configurations/CIManagerApplication.xml
   run-configurations/GitSyncTestApp.xml

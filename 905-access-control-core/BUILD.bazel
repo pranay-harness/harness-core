@@ -24,6 +24,7 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
+        "//905-access-control-core/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

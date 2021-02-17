@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -77,5 +78,15 @@ public class ScopeServiceImpl implements ScopeService {
         .level(scopeLevel)
         .parentScope(buildScopeFromScopeIdentifier(parentScopeIdentifier))
         .build();
+  }
+
+  @Override
+  public boolean areScopeLevelsValid(Set<String> scopeLevelsToValidate) {
+    return scopeLevelsToValidate.stream().allMatch(scopeLevel -> scopeLevels.get(scopeLevel) != null);
+  }
+
+  @Override
+  public Set<String> getAllScopeLevels() {
+    return scopeLevels.keySet();
   }
 }

@@ -9,7 +9,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dashboard.Action;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
@@ -25,12 +24,12 @@ public class UserPermissionInfo {
   private String accountId;
   private AccountPermissionSummary accountPermissionSummary;
   // Key - appId, Value - app permission summary
-  private Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
+  private Map<String, AppPermissionSummaryForUI> appPermissionMap;
   private boolean hasAllAppAccess;
 
   // Key - appId, Value - app permission summary
   // This structure is optimized for AuthRuleFilter for faster lookup
-  @JsonIgnore private Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+  @JsonIgnore private Map<String, AppPermissionSummary> appPermissionMapInternal;
 
   @JsonIgnore private Map<String, Set<Action>> dashboardPermissions;
 
