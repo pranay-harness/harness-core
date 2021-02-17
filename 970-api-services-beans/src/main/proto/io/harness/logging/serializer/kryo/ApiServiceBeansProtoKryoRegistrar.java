@@ -1,4 +1,4 @@
-package io.harness.serializer.kryo;
+package io.harness.logging.serializer.kryo;
 
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;

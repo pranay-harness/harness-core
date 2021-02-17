@@ -1,8 +1,8 @@
 package io.harness.serializer;
 
+import io.harness.logging.serializer.kryo.ApiServiceBeansProtoKryoRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ApiServiceBeansKryoRegister;
-import io.harness.serializer.kryo.ApiServiceBeansProtoKryoRegistrar;
 import io.harness.serializer.morphia.ApiServiceBeansMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
