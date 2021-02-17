@@ -722,9 +722,9 @@
                 <version>2.2.0</version>
             </dependency>
             <dependency>
-                <groupId>com.jcraft</groupId>
-                <artifactId>jsch</artifactId>
-                <version>0.1.54.harness</version>
+                <groupId>com.jcraft.harness</groupId>
+                <artifactId>jsch-0-1-54-harness-patch</artifactId>
+                <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>com.microsoft.azure</groupId>

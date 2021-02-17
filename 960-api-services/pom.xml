@@ -9,8 +9,8 @@
     <artifactId>960-api-services</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
+            <groupId>com.jcraft.harness</groupId>
+            <artifactId>jsch-0-1-54-harness-patch</artifactId>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
