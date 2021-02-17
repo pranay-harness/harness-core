@@ -18,8 +18,11 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
@@ -52,17 +55,19 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     final StoreConfig storeConfig = k8sManifestOutcome.getStore();
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
-    final String instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
+    final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
+    final boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     K8sCanaryDeployRequest k8sCanaryDeployRequest =
         K8sCanaryDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .releaseName(releaseName)
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.CANARY_DEPLOY)
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
-            .instances(Integer.valueOf(instancesValue))
+            .instances(instancesValue)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
@@ -78,10 +83,19 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
-          .build();
+      StepResponseBuilder responseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(
+                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+      if (stepParameters.getRollbackInfo() != null) {
+        responseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return responseBuilder.build();
     }
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;

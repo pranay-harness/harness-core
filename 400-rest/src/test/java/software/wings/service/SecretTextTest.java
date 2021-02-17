@@ -86,7 +86,7 @@ import software.wings.resources.ServiceVariableResource;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.UsageRestrictionsServiceImplTest;
+import software.wings.service.impl.UsageRestrictionsServiceImplTestBase;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -320,7 +320,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveAndUpdateSecret() throws IllegalAccessException {
     UsageRestrictions usageRestrictions =
-        UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
+        UsageRestrictionsServiceImplTestBase.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
 
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -376,7 +376,7 @@ public class SecretTextTest extends WingsBaseTest {
                                       .environmentType(EnvironmentType.PROD)
                                       .build());
 
-    usageRestrictions = UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
+    usageRestrictions = UsageRestrictionsServiceImplTestBase.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
 
     // check only change in usage restrictions triggers change logs
     secretManagementResource.updateSecret(accountId, secretId,

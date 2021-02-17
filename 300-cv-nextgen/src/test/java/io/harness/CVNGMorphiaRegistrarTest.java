@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
-public class CVNGMorphiaRegistrarTest extends CvNextGenTest {
+public class CVNGMorphiaRegistrarTest extends CvNextGenTestBase {
   @Inject private CVNextGenMorphiaRegister cvNextGenMorphiaRegister;
 
   @Test

@@ -43,7 +43,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.entities.CanaryBlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -161,7 +161,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     String taskId = generateUuid();
     VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
         verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
-    CanaryVerificationJob verificationJob = (CanaryVerificationJob) verificationJobInstance.getResolvedJob();
+    CanaryBlueGreenVerificationJob verificationJob =
+        (CanaryBlueGreenVerificationJob) verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
     TimeSeriesCanaryLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesCanaryLearningEngineTask.builder()

@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -100,22 +101,23 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sBGDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success =
-        k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sBGDeployRequest.getManifestDelegateConfig(),
-            manifestFilesDirectory, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles),
-            timeoutInMillis, k8sBGDeployRequest.getAccountId());
+    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+        k8sBGDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sBGDeployRequest.getValuesYamlList())),
+        timeoutInMillis, k8sBGDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sBGDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
     success = prepareForBlueGreen(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare));
+        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true));
     if (!success) {
       return getFailureResponse();
     }
@@ -123,7 +125,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     currentRelease.setManagedWorkload(managedWorkload.getResourceId().cloneInternal());
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
@@ -138,7 +140,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
 
     success = k8sTaskHelperBase.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true));
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -148,7 +150,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     }
 
     k8sBGBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp), client);
+        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true), client);
 
     final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
         timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);

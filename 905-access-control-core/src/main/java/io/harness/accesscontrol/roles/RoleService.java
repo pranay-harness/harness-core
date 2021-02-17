@@ -8,14 +8,14 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
-interface RoleService {
-  RoleDTO create(@Valid RoleDTO roleDTO);
+public interface RoleService {
+  Role create(@Valid Role role);
 
-  PageResponse<RoleDTO> getAll(@NotNull PageRequest pageRequest, String parentIdentifier, boolean includeDefault);
+  PageResponse<Role> getAll(@NotNull PageRequest pageRequest, String parentIdentifier, boolean includeDefault);
 
-  Optional<RoleDTO> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<Role> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
-  RoleDTO update(@Valid RoleDTO roleDTO);
+  Role update(@Valid Role role);
 
-  RoleDTO delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<Role> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 }

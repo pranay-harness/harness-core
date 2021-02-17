@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.ExecutionStatus.isNegativeStatus;
+import static io.harness.beans.ExecutionStatus.negativeStatuses;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
@@ -21,7 +22,9 @@ import static software.wings.sm.StateType.ENV_STATE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -68,6 +71,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
   private static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
@@ -434,7 +438,12 @@ public class PipelineResumeUtils {
     notNullCheck("Pipeline stage " + stage.getName() + "seems to be invalid", stage.getPipelineStageElements());
 
     boolean anySkipped = stageExecutions.stream().anyMatch(t -> t.getStatus() == SKIPPED);
-    if (anySkipped) {
+    // Sometimes the workflow could get aborted, rejected or in error state before the workflow starts. They don't have
+    // any workflow executions attached to them
+    boolean anyEndedBeforeWorkflowStarted = stageExecutions.stream().anyMatch(t
+        -> ENV_STATE.name().equals(t.getStateType()) && negativeStatuses().contains(t.getStatus())
+            && isEmpty(t.getWorkflowExecutions()));
+    if (anySkipped || anyEndedBeforeWorkflowStarted) {
       // Don't check for skipped stage executions as they have no workflow executions attached to them. In case of
       // looped, either all should be skipped or none.
       return;

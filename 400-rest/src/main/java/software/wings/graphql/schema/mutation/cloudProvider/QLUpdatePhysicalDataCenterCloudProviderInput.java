@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.mutation.cloudProvider;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
@@ -14,6 +16,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLUpdatePhysicalDataCenterCloudProviderInput {
   private RequestField<String> name;
   private RequestField<QLUsageScope> usageScope;

@@ -10,9 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_TIMEOUT_BUFFER_MIN;
-import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.*;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -40,14 +38,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
-import software.wings.beans.Activity;
-import software.wings.beans.Application;
-import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.Environment;
-import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.beans.GitFileConfig;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
+import software.wings.beans.*;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
@@ -66,31 +57,16 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
-import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
-import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.*;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
@@ -116,6 +92,8 @@ public class EcsServiceSetup extends State {
   @Getter @Setter private String serviceSteadyStateTimeout;
   @Getter @Setter private ResizeStrategy resizeStrategy;
   @Getter @Setter private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
+  @Getter @Setter private List<AwsElbConfig> awsElbConfigs;
+  @Getter @Setter private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   @Inject private SecretManager secretManager;
   @Inject private AppService appService;
@@ -166,6 +144,8 @@ public class EcsServiceSetup extends State {
         ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN),
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
+    this.isMultipleLoadBalancersFeatureFlagActive =
+        featureFlagService.isEnabled(FeatureName.ECS_MULTI_LBS, context.getAccountId());
     if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
       appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
       valuesInGit = isRemoteManifest(appManifestMap);
@@ -243,6 +223,8 @@ public class EcsServiceSetup extends State {
         .loadBalancerName(loadBalancerName)
         .targetContainerName(targetContainerName)
         .desiredInstanceCount(desiredInstanceCount)
+        .isMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive)
+        .awsElbConfigs(awsElbConfigs)
         .serviceSteadyStateTimeout(
             ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN))
         .resizeStrategy(resizeStrategy)
@@ -295,6 +277,8 @@ public class EcsServiceSetup extends State {
             .ecsServiceSpecification(ecsSetUpDataBag.getServiceSpecification())
             .isDaemonSchedulingStrategy(false)
             .awsAutoScalarConfigs(awsAutoScalarConfigs)
+            .awsElbConfigs(awsElbConfigs)
+            .isMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive)
             .build());
 
     CommandStateExecutionData stateExecutionData =
@@ -517,6 +501,8 @@ public class EcsServiceSetup extends State {
     this.loadBalancerName = stateExecutionData.getLoadBalancerName();
     this.maxInstances = stateExecutionData.getMaxInstances();
     this.serviceSteadyStateTimeout = String.valueOf(stateExecutionData.getServiceSteadyStateTimeout());
+    this.awsElbConfigs = stateExecutionData.getAwsElbConfigs();
+    this.isMultipleLoadBalancersFeatureFlagActive = stateExecutionData.isMultipleLoadBalancersFeatureFlagActive();
     this.targetContainerName = stateExecutionData.getTargetContainerName();
     this.targetGroupArn = stateExecutionData.getTargetGroupArn();
     this.targetPort = stateExecutionData.getTargetPort();

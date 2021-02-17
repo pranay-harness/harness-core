@@ -13,12 +13,15 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -38,6 +41,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private GitDecryptionHelper gitDecryptionHelper;
 
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
   public static final String KUBECONFIG_FILENAME = "config";
@@ -164,8 +168,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
             ((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig();
         if (storeDelegateConfig instanceof GitStoreDelegateConfig) {
           GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
-          secretDecryptionService.decrypt(
-              gitStoreDelegateConfig.getGitConfigDTO().getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
+          GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+          gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
         }
         break;
 

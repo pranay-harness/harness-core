@@ -76,6 +76,7 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
   @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
   ExecutionSummaryInfo executionSummaryInfo;
   @Builder.Default int runSequence = 0;
+  @Singular List<String> stageNames;
 
   @Override
   public String getAccountId() {

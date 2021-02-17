@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.migration.CVNGBackgroundMigrationList;
 import io.harness.rule.Owner;
@@ -20,7 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
-public class CVNGMigrationServiceTest extends CvNextGenTest {
+public class CVNGMigrationServiceTest extends CvNextGenTestBase {
   private static Answer executeRunnable(ArgumentCaptor<Runnable> runnableCaptor) {
     return invocation -> {
       runnableCaptor.getValue().run();

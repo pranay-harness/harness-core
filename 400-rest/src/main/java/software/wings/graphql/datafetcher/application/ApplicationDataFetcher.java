@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.application;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -24,6 +26,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplication, QLApplicationQueryParameters> {
   private static final String APP_DOES_NOT_EXIST_MSG = "Application does not exist";
   @Inject HPersistence persistence;

@@ -37,6 +37,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -189,6 +190,9 @@ public class OrganizationServiceImpl implements OrganizationService {
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.key).regex(organizationFilterDTO.getSearchTerm(), "i"),
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
+    }
+    if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
+      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
     }
     return criteria;
   }

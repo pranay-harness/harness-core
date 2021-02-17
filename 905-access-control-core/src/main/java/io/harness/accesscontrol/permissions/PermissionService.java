@@ -1,20 +1,19 @@
 package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.scopes.Scope;
-
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface PermissionService {
-  String create(@Valid PermissionDTO permission);
+  Permission create(@NotNull @Valid Permission permission);
 
-  Optional<PermissionDTO> get(@NotEmpty String identifier);
+  Optional<Permission> get(@NotEmpty String identifier);
 
-  List<PermissionDTO> list(Scope scope, String resourceType);
+  List<Permission> list(@NotNull @Valid PermissionFilter permissionFilter);
 
-  String update(@Valid PermissionDTO permissionDTO);
+  String update(@Valid Permission permission);
 
   void delete(@NotEmpty String identifier);
 }

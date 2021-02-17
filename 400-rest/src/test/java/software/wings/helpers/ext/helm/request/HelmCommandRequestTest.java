@@ -36,6 +36,7 @@ public class HelmCommandRequestTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilities() {
     testWithoutContainerParams();
+    testWithoutContainerParams_ffOff();
     testWithoutGitConfig();
     testWithContainerParams();
   }
@@ -52,23 +53,35 @@ public class HelmCommandRequestTest extends WingsBaseTest {
 
   private void testWithContainerParams() {
     HelmInstallCommandRequest installCommandRequest = HelmInstallCommandRequest.builder()
-                                                          .gitConfig(new GitConfig())
+                                                          .gitConfig(GitConfig.builder().repoUrl("https://abc").build())
                                                           .containerServiceParams(containerServiceParams)
                                                           .build();
     assertThat(installCommandRequest.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
-        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.GIT_CONNECTION, CapabilityType.HTTP);
+        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.HTTP, CapabilityType.HTTP);
   }
 
   private void testWithoutContainerParams() {
-    HelmInstallCommandRequest installCommandRequest =
-        HelmInstallCommandRequest.builder().gitConfig(new GitConfig()).build();
+    HelmInstallCommandRequest installCommandRequest = HelmInstallCommandRequest.builder()
+                                                          .gitConfig(GitConfig.builder().repoUrl("https://abc").build())
+                                                          .mergeCapabilities(true)
+                                                          .build();
     assertThat(installCommandRequest.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
-        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.GIT_CONNECTION);
+        .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP);
+  }
+
+  private void testWithoutContainerParams_ffOff() {
+    HelmInstallCommandRequest installCommandRequest =
+        HelmInstallCommandRequest.builder().gitConfig(GitConfig.builder().repoUrl("https://abc").build()).build();
+    assertThat(installCommandRequest.fetchRequiredExecutionCapabilities(null)
+                   .stream()
+                   .map(ExecutionCapability::getCapabilityType)
+                   .collect(Collectors.toList()))
+        .containsExactly(CapabilityType.HELM_COMMAND, CapabilityType.HTTP);
   }
 }

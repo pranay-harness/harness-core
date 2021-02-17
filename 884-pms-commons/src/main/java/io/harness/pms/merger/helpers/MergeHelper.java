@@ -158,7 +158,7 @@ public class MergeHelper {
     for (String yaml : inputSetPipelineCompYamlList) {
       res = mergeInputSetIntoPipeline(res, yaml, false, appendInputSetValidator);
     }
-    return createTemplateFromPipeline(res, false);
+    return res;
   }
 
   private Object checkForRuntimeInputExpressions(Object inputSetValue, Object pipelineValue) {

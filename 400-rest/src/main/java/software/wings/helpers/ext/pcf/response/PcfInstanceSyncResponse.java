@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf.response;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.List;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfInstanceSyncResponse extends PcfCommandResponse {
   private String name;
   private String guid;

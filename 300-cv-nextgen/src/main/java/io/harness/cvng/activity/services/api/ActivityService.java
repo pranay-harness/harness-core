@@ -10,7 +10,6 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
-import io.harness.ng.core.dto.ResponseDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -47,6 +46,4 @@ public interface ActivityService {
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
-  ResponseDTO<List<String>> getActivityDetails(
-      String accountId, String orgIdentifier, String projectIdentifier, String activityId);
 }

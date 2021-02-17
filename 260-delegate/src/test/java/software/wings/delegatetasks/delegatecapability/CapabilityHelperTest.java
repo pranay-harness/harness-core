@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
@@ -11,6 +12,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -21,8 +24,11 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.VaultConfig;
 
 import java.util.ArrayList;
@@ -158,5 +164,41 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(encryptionConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
     assertThat(encryptionConfig instanceof VaultConfig).isTrue();
     assertThat(((VaultConfig) encryptionConfig).getVaultUrl()).isEqualTo(HTTP_VAUTL_URL);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGenerateExecutionCapabilitiesForGitSSH() {
+    String repoUrl = "git@github.com:abc";
+    Integer sshPort = 22;
+    HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
+    hostConnectionAttributes.setSshPort(sshPort);
+    SettingAttribute sshSettingAttribute = new SettingAttribute();
+    sshSettingAttribute.setValue(hostConnectionAttributes);
+    GitConfig gitConfig = GitConfig.builder().repoUrl(repoUrl).sshSettingAttribute(sshSettingAttribute).build();
+
+    List<ExecutionCapability> executionCapabilities = CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig);
+    assertThat(executionCapabilities.size()).isEqualTo(1);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(SocketConnectivityExecutionCapability.class);
+    SocketConnectivityExecutionCapability socketConnectivityExecutionCapability =
+        (SocketConnectivityExecutionCapability) executionCapabilities.get(0);
+    assertThat(socketConnectivityExecutionCapability.getPort()).isEqualTo(sshPort.toString());
+    assertThat(socketConnectivityExecutionCapability.getHostName()).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGenerateExecutionCapabilitiesForGitHTTP() {
+    String repoUrl = "https://github.com/abc";
+    GitConfig gitConfig = GitConfig.builder().repoUrl(repoUrl).build();
+
+    List<ExecutionCapability> executionCapabilities = CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig);
+    assertThat(executionCapabilities.size()).isEqualTo(1);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    HttpConnectionExecutionCapability httpConnectionExecutionCapability =
+        (HttpConnectionExecutionCapability) executionCapabilities.get(0);
+    assertThat(httpConnectionExecutionCapability.getUrl()).isEqualTo(repoUrl);
   }
 }

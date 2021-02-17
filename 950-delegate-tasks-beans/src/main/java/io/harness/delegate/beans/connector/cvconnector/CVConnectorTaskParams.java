@@ -7,7 +7,6 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import com.google.common.base.Preconditions;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -20,8 +19,6 @@ public class CVConnectorTaskParams implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    Preconditions.checkState(connectorConfigDTO instanceof ExecutionCapabilityDemander,
-        "ConnectorConfigDTO should implement ExecutionCapabilityDemander");
-    return ((ExecutionCapabilityDemander) connectorConfigDTO).fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return CVConnectorCapabilitiesHelper.fetchRequiredExecutionCapabilities(connectorConfigDTO, maskingEvaluator);
   }
 }

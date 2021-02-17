@@ -166,4 +166,14 @@ public interface PipelineService extends OwnedByApplication {
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline, List<String> artifactNeededServiceIds,
       List<String> envIds, DeploymentMetadata.Include... includeList);
+
+  /**
+   *
+   * Saves a list of pipelines
+   * @param pipelines list of pipelines to be saved
+   * @param skipValidations If set to true, directly saves the following pipelines to database. Doesn't perform any
+   *     validations or post-save actions, so please set it to false to save anywhere directly from apis. Meant for
+   *     saving pipelines after very minor and trivial changes only.
+   */
+  void savePipelines(@NotEmpty List<Pipeline> pipelines, boolean skipValidations);
 }

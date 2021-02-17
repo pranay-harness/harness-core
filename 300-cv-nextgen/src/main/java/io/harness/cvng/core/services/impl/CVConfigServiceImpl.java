@@ -254,11 +254,11 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void setCollectionTaskId(String cvConfigId, String perpetualTaskId) {
+  public void markFirstTaskCollected(CVConfig cvConfig) {
     UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.perpetualTaskId, perpetualTaskId);
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
     Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfigId);
+        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
     hPersistence.update(query, updateOperations);
   }
 
@@ -447,6 +447,18 @@ public class CVConfigServiceImpl implements CVConfigService {
         .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
         .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
+        .field(CVConfigKeys.identifier)
+        .notEqual(identifier)
+        .asList();
+  }
+
+  @Override
+  public List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
         .field(CVConfigKeys.identifier)
         .notEqual(identifier)
         .asList();

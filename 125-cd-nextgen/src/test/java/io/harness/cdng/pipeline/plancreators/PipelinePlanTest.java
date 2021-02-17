@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
@@ -36,7 +36,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PipelinePlanTest extends CDNGBaseTest {
+public class PipelinePlanTest extends CDNGTestBase {
   @Inject ExecutionPlanCreatorRegistrar executionPlanCreatorRegistrar;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private KryoSerializer kryoSerializer;
@@ -93,6 +93,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testRollbackPlan() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/rollbackPipeline.yaml");

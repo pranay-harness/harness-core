@@ -6,9 +6,10 @@ load("//:macros.bzl", "sources")
 
 sources()
 
-java_library(
+java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    main_class = "io.harness.DataGenApplication",
     resources = [
         "//160-model-gen-tool/src/main/resources:resource",
     ],

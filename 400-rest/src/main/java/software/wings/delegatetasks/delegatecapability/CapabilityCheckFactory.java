@@ -8,24 +8,25 @@ import io.harness.delegate.task.executioncapability.AwsRegionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.delegate.task.executioncapability.ChartMuseumCapabilityCheck;
 import io.harness.delegate.task.executioncapability.GitConnectionNGCapabilityChecker;
+import io.harness.delegate.task.executioncapability.GitInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
+import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
+import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SmbConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SmtpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+import io.harness.delegate.task.executioncapability.WinrmHostValidationCapabilityCheck;
 
 import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.PcfAutoScalarCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,6 +55,7 @@ public class CapabilityCheckFactory {
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
   @Inject GitConnectionNGCapabilityChecker gitConnectionNGCapabilityCheck;
+  @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -99,6 +101,8 @@ public class CapabilityCheckFactory {
         return smbConnectionCapabilityCheck;
       case GIT_CONNECTION_NG:
         return gitConnectionNGCapabilityCheck;
+      case GIT_INSTALLATION:
+        return gitInstallationCapabilityCheck;
       default:
         return null;
     }

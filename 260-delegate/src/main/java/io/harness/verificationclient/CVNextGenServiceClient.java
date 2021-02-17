@@ -15,6 +15,7 @@ import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.rest.RestResponse;
 
@@ -41,8 +42,8 @@ public interface CVNextGenServiceClient {
   @POST(HOST_RECORD_RESOURCE_PATH)
   Call<RestResponse<Void>> saveHostRecords(@Query("accountId") String accountId, @Body List<HostRecordDTO> hostRecords);
 
-  @GET(DELEGATE_DATA_COLLECTION_TASK + "/next-task")
-  Call<RestResponse<DataCollectionTaskDTO>> getNextDataCollectionTask(
+  @GET(DELEGATE_DATA_COLLECTION_TASK + "/next-tasks")
+  Call<RestResponse<List<DataCollectionTaskDTO>>> getNextDataCollectionTasks(
       @Query("accountId") String accountId, @Query("dataCollectionWorkerId") String dataCollectionWorkerId);
 
   @POST(DELEGATE_DATA_COLLECTION_TASK + "/update-status")
@@ -52,4 +53,8 @@ public interface CVNextGenServiceClient {
   @POST(KUBERNETES_RESOURCE + "/activities")
   Call<RestResponse<Boolean>> saveKubernetesActivities(@Query("accountId") String accountId,
       @Query("activitySourceId") String activitySourceId, @Body List<KubernetesActivityDTO> activityDTOS);
+
+  @GET(KUBERNETES_RESOURCE + "/source")
+  Call<RestResponse<KubernetesActivitySourceDTO>> getKubernetesActivitySourceDTO(
+      @Query("accountId") String accountId, @Query("dataCollectionWorkerId") String dataCollectionWorkerId);
 }

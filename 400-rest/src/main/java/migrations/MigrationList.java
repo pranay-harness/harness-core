@@ -52,6 +52,7 @@ import migrations.all.AuthTokenTtlMigration;
 import migrations.all.AwsAmiAsgDesiredInstancesMigration;
 import migrations.all.AwsConfigEc2IamRoleMigration;
 import migrations.all.BudgetsMigration;
+import migrations.all.CECloudAccountMigration;
 import migrations.all.CVCollectionCronFrequencyMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
@@ -413,6 +414,7 @@ public class MigrationList {
         .add(Pair.of(353, ChangeApiKeyHashFunction.class))
         .add(Pair.of(354, BaseMigration.class))
         .add(Pair.of(355, BudgetsMigration.class))
+        .add(Pair.of(356, CECloudAccountMigration.class))
         .build();
   }
 }

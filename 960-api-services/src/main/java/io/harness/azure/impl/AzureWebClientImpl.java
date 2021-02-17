@@ -1,6 +1,7 @@
 package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureAppServiceConnectionStringType.fromValue;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_PRODUCTION_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
@@ -210,9 +211,20 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
 
   @Override
   public String getSlotState(AzureWebClientContext context, final String slotName) {
+    if (DEPLOYMENT_SLOT_PRODUCTION_NAME.equalsIgnoreCase(slotName)) {
+      return getProductionState(context);
+    }
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     log.debug("Start getting slot with slotName: {}, context: {}", slotName, context);
     return deploymentSlot.state();
+  }
+
+  private String getProductionState(AzureWebClientContext context) {
+    Azure azure = getAzureClientByContext(context);
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    WebApp webApp = getWebApp(azure, resourceGroupName, webAppName);
+    return webApp.state();
   }
 
   @Override
@@ -404,7 +416,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     SiteConfigResourceInner siteConfigResourceInner =
         azure.webApps().inner().getConfigurationSlot(resourceGroupName, webAppName, slotName);
     siteConfigResourceInner.withLinuxFxVersion(EMPTY);
-    siteConfigResourceInner.withWindowsFxVersion(EMPTY);
+    siteConfigResourceInner.withWindowsFxVersion(null);
 
     log.debug("Start deleting slot docker image name and tag by slotName: {}, context: {}", slotName, context);
     azure.webApps().inner().updateConfigurationSlot(resourceGroupName, webAppName, slotName, siteConfigResourceInner);

@@ -23,6 +23,7 @@ public interface VerificationJobInstanceService {
       VerificationJobInstanceDTO verificationJobInstanceDTO);
   String create(VerificationJobInstance verificationJobInstance);
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
+  List<String> dedupCreate(List<VerificationJobInstance> verificationJobInstances);
   VerificationJobInstanceDTO get(String verificationJobInstanceId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
   List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds);

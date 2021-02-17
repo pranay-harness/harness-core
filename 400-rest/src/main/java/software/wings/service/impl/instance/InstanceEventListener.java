@@ -1,18 +1,23 @@
 package software.wings.service.impl.instance;
 
-import io.harness.event.timeseries.processor.InstanceEventProcessor;
+import io.harness.event.timeseries.TimeseriesLogContext;
+import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventProcessor;
+import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 
 import software.wings.api.InstanceEvent;
 
 import com.google.inject.Inject;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The instance event that has info about the instance changes, which needs to be pushed
  * @author rktummala on 08/04/19
  *
  */
+@Slf4j
 public class InstanceEventListener extends QueueListener<InstanceEvent> {
   @Inject private InstanceEventProcessor instanceEventProcessor;
 
@@ -24,8 +29,16 @@ public class InstanceEventListener extends QueueListener<InstanceEvent> {
   /* (non-Javadoc)
    * @see software.wings.core.queue.QueueListener#onMessage(software.wings.core.queue.Queuable)
    */
+  @SneakyThrows
   @Override
   public void onMessage(InstanceEvent instanceEvent) {
-    instanceEventProcessor.processEvent(instanceEvent.getTimeSeriesBatchEventInfo());
+    try (AutoLogContext ignore = new TimeseriesLogContext(AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+      //      log.info("InstanceTimeSeriesEvent received : {}", instanceEvent.getTimeSeriesBatchEventInfo().getLog());
+      instanceEventProcessor.processEvent(instanceEvent.getTimeSeriesBatchEventInfo());
+    } catch (Exception ex) {
+      log.error("Failed to process InstanceEvent : [{}]", instanceEvent.toString(), ex);
+      // Throw exception back for retry via queue
+      throw ex;
+    }
   }
 }

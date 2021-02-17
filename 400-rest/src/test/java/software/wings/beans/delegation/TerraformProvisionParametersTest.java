@@ -10,7 +10,9 @@ import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SettingAttribute;
 
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -22,6 +24,7 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void fetchRequiredExecutionCapabilities() {
     testWithGitConfig();
+    testWithGitConfigSSHConnection();
     testWithoutGitConfig();
     testWithSecretManagerConfig();
   }
@@ -38,23 +41,43 @@ public class TerraformProvisionParametersTest extends WingsBaseTest {
 
   private void testWithGitConfig() {
     TerraformProvisionParameters parameters =
-        TerraformProvisionParameters.builder().sourceRepo(GitConfig.builder().build()).build();
+        TerraformProvisionParameters.builder()
+            .sourceRepo(GitConfig.builder().repoUrl("https://github.com/abc").build())
+            .build();
     assertThat(parameters.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
-        .containsExactlyInAnyOrder(CapabilityType.GIT_CONNECTION, CapabilityType.PROCESS_EXECUTOR);
+        .containsExactlyInAnyOrder(CapabilityType.HTTP, CapabilityType.PROCESS_EXECUTOR);
+  }
+
+  private void testWithGitConfigSSHConnection() {
+    HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
+    hostConnectionAttributes.setSshPort(22);
+    SettingAttribute sshSettingAttribute = new SettingAttribute();
+    sshSettingAttribute.setValue(hostConnectionAttributes);
+    TerraformProvisionParameters parameters =
+        TerraformProvisionParameters.builder()
+            .sourceRepo(
+                GitConfig.builder().repoUrl("git@github.com:abc").sshSettingAttribute(sshSettingAttribute).build())
+            .build();
+    assertThat(parameters.fetchRequiredExecutionCapabilities(null)
+                   .stream()
+                   .map(ExecutionCapability::getCapabilityType)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(CapabilityType.SOCKET, CapabilityType.PROCESS_EXECUTOR);
   }
 
   private void testWithSecretManagerConfig() {
-    TerraformProvisionParameters parameters = TerraformProvisionParameters.builder()
-                                                  .sourceRepo(GitConfig.builder().build())
-                                                  .secretManagerConfig(KmsConfig.builder().build())
-                                                  .build();
+    TerraformProvisionParameters parameters =
+        TerraformProvisionParameters.builder()
+            .sourceRepo(GitConfig.builder().repoUrl("https://github.com/abc").build())
+            .secretManagerConfig(KmsConfig.builder().build())
+            .build();
     assertThat(parameters.fetchRequiredExecutionCapabilities(null)
                    .stream()
                    .map(ExecutionCapability::getCapabilityType)
                    .collect(Collectors.toList()))
-        .containsExactlyInAnyOrder(CapabilityType.GIT_CONNECTION, CapabilityType.PROCESS_EXECUTOR, CapabilityType.HTTP);
+        .containsExactlyInAnyOrder(CapabilityType.HTTP, CapabilityType.PROCESS_EXECUTOR, CapabilityType.HTTP);
   }
 }

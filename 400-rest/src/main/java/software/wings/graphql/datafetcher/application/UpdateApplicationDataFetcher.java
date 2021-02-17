@@ -5,6 +5,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateApplicationDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateApplicationInput, QLUpdateApplicationPayload> {
   private AppService appService;

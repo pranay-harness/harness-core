@@ -14,7 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -54,7 +54,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-public class CVConfigServiceImplTest extends CvNextGenTest {
+public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Inject private DSConfigService dsConfigService;
   @Mock private NextGenService nextGenService;
@@ -105,9 +105,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
           .build();
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
-
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-
     FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
@@ -370,16 +368,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void setCollectionTaskId() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    assertThat(cvConfig.getPerpetualTaskId()).isNull();
-    String taskId = generateUuid();
-    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
+    assertThat(cvConfig.getFirstTaskQueued()).isNull();
+    cvConfigService.markFirstTaskCollected(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getPerpetualTaskId()).isEqualTo(taskId);
+    assertThat(updated.getFirstTaskQueued()).isTrue();
   }
 
   @Test

@@ -346,7 +346,6 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    data = ["//:resource"],
     resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [

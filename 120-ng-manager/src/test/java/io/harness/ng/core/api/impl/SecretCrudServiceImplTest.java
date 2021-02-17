@@ -1,8 +1,8 @@
 package io.harness.ng.core.api.impl;
-
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -261,7 +261,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(ngSecretServiceV2.list(any(), anyInt(), anyInt()))
         .thenReturn(new PageImpl<>(Lists.newArrayList(Secret.builder().build()), PageRequest.of(0, 10), 1));
     PageResponse<SecretResponseWrapper> secretPage =
-        secretCrudService.list("account", "org", "proj", SecretType.SSHKey, "abc", 0, 100);
+        secretCrudService.list("account", "org", "proj", singletonList(SecretType.SSHKey), false, "abc", 0, 100);
     assertThat(secretPage.getContent()).isNotEmpty();
     assertThat(secretPage.getContent().size()).isEqualTo(1);
     verify(ngSecretServiceV2).list(any(), anyInt(), anyInt());

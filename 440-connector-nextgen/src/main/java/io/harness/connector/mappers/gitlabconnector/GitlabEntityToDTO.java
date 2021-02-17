@@ -21,7 +21,6 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
@@ -52,11 +51,9 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
     switch (authType) {
       case SSH:
         final GitlabSshAuthentication gitlabSshAuthentication = (GitlabSshAuthentication) authenticationDetails;
-        final GitlabSshCredentialsSpecDTO gitlabSshCredentialsSpecDTO =
-            GitlabSshCredentialsSpecDTO.builder()
-                .sshKeyRef(SecretRefHelper.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
-                .build();
-        gitlabCredentialsDTO = GitlabSshCredentialsDTO.builder().spec(gitlabSshCredentialsSpecDTO).build();
+        gitlabCredentialsDTO = GitlabSshCredentialsDTO.builder()
+                                   .sshKeyRef(SecretRefHelper.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
+                                   .build();
         break;
       case HTTP:
         final GitlabHttpAuthentication gitlabHttpAuthentication = (GitlabHttpAuthentication) authenticationDetails;

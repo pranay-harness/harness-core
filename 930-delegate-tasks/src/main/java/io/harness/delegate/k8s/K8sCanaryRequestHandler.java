@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -71,27 +72,28 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles), timeoutInMillis,
-        k8sCanaryDeployRequest.getAccountId());
+        k8sTaskHelperBase.getLogCallback(
+            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList())),
+        timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
     success = prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
 
     success =
         k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-            k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+            k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
     if (!success) {
       k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
           k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
@@ -99,7 +101,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     LogCallback steadyStateLogCallback =
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true);
     KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
     success = k8sTaskHelperBase.doStatusCheck(k8sCanaryHandlerConfig.getClient(), canaryWorkload.getResourceId(),
         k8sDelegateTaskParams, steadyStateLogCallback);
@@ -113,7 +115,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName(), timeoutInMillis);
 
     k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true));
 
     ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
     k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),

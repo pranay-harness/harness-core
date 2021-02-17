@@ -98,7 +98,7 @@ import org.zeroturnaround.exec.StartedProcess;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmTaskHelperTest extends WingsBaseTest {
   public static final String V_3_HELM_SEARCH_REPO_COMMAND =
-      "v3/helm search repo repoName/chartName -l --max-col-width 300";
+      "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";
   @Mock private ProcessExecutor processExecutor;
   @Mock K8sGlobalConfigService k8sGlobalConfigService;
   @Mock EncryptionService encryptionService;

@@ -11,7 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.DataSourceType;
@@ -53,7 +53,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
-public class StateMachineServiceTest extends CvNextGenTest {
+public class StateMachineServiceTest extends CvNextGenTestBase {
   private String cvConfigId;
   private String verificationTaskId;
   private CVConfig cvConfig;

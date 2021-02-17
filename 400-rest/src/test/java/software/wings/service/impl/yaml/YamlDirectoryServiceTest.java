@@ -30,7 +30,6 @@ import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
-import static software.wings.service.impl.artifact.ArtifactCollectionServiceTest.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -150,6 +149,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class YamlDirectoryServiceTest extends WingsBaseTest {
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;

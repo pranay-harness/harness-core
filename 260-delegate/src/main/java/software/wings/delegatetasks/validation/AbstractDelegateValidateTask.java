@@ -6,6 +6,8 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by brett on 11/1/17
  */
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public abstract class AbstractDelegateValidateTask implements DelegateValidateTask {
   protected String delegateTaskId;
 

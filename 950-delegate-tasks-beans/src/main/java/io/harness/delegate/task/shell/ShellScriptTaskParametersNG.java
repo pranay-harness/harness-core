@@ -23,7 +23,7 @@ public class ShellScriptTaskParametersNG implements TaskParameters {
   String accountId;
   String executionId;
   String workingDirectory;
-  Map<String, String> environmentVariables;
+  @Expression(ALLOW_SECRETS) Map<String, String> environmentVariables;
   ScriptType scriptType;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
 

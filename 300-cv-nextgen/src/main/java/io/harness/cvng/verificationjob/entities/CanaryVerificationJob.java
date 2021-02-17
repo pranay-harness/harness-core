@@ -1,94 +1,23 @@
 package io.harness.cvng.verificationjob.entities;
 
-import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
-import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
-import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.core.beans.TimeRange;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "CanaryVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CanaryVerificationJob extends VerificationJob {
-  // TODO: move sensitivity to common base class.
-  private RuntimeParameter sensitivity;
-  private Integer trafficSplitPercentage;
+public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.CANARY;
-  }
-
-  public Sensitivity getSensitivity() {
-    if (sensitivity.isRuntimeParam()) {
-      return null;
-    }
-    return Sensitivity.valueOf(sensitivity.getValue());
-  }
-
-  public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
-    this.sensitivity = sensitivity == null
-        ? null
-        : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(sensitivity).build();
-  }
-
-  public void setSensitivity(Sensitivity sensitivity) {
-    this.sensitivity =
-        sensitivity == null ? null : RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.name()).build();
-  }
-
-  @Override
-  public boolean shouldDoDataCollection() {
-    return true;
-  }
-
-  @Override
-  public VerificationJobDTO getVerificationJobDTO() {
-    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
-    canaryVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
-    canaryVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
-    populateCommonFields(canaryVerificationJobDTO);
-    return canaryVerificationJobDTO;
-  }
-
-  @Override
-  protected void validateParams() {
-    checkNotNull(sensitivity, generateErrorMessageFromParam(CanaryVerificationJobKeys.sensitivity));
-    Optional.ofNullable(trafficSplitPercentage)
-        .ifPresent(percentage
-            -> checkState(percentage >= 0 && percentage <= 100,
-                CanaryVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range"));
-  }
-
-  @Override
-  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
-    return Optional.of(
-        TimeRange.builder().startTime(deploymentStartTime.minus(getDuration())).endTime(deploymentStartTime).build());
-  }
-
-  @Override
-  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
-    throw new UnsupportedOperationException("Not implemented");
-  }
-
-  @Override
-  public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    return getTimeRangesForDuration(startTime);
   }
 
   @Override
@@ -101,20 +30,23 @@ public class CanaryVerificationJob extends VerificationJob {
   }
 
   @Override
-  public void resolveJobParams(Map<String, String> runtimeParameters) {
-    runtimeParameters.keySet().forEach(key -> {
-      switch (key) {
-        case SENSITIVITY_KEY:
-          this.setSensitivity(runtimeParameters.get(key), false);
-          break;
-        default:
-          break;
-      }
-    });
+  public VerificationJobDTO getVerificationJobDTO() {
+    CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
+    canaryVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    canaryVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
+    populateCommonFields(canaryVerificationJobDTO);
+    return canaryVerificationJobDTO;
   }
 
-  @Override
-  public boolean collectHostData() {
-    return true;
+  public static class CanaryVerificationUpdatableEntity<T extends CanaryVerificationJob, D
+                                                            extends CanaryVerificationJobDTO>
+      extends VerificationJobUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(CanaryVerificationJob.DeploymentVerificationJobKeys.sensitivity, dto.getSensitivity())
+          .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
+              dto.getTrafficSplitPercentage());
+    }
   }
 }

@@ -22,13 +22,14 @@ public enum ConnectorType implements EntitySubtype {
   //  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
   @JsonProperty("Aws") AWS("Aws"),
-  @JsonProperty("CEAws") CE_AWS("CEAws"),
   @JsonProperty("Artifactory") ARTIFACTORY("Artifactory"),
   @JsonProperty("Jira") JIRA("Jira"),
   @JsonProperty("Nexus") NEXUS("Nexus"),
   @JsonProperty("Github") GITHUB("Github"),
   @JsonProperty("Gitlab") GITLAB("Gitlab"),
-  @JsonProperty("Bitbucket") BITBUCKET("Bitbucket");
+  @JsonProperty("Bitbucket") BITBUCKET("Bitbucket"),
+  @JsonProperty("CEAws") CE_AWS("CEAws"),
+  @JsonProperty("CEAzure") CE_AZURE("CEAzure");
 
   private final String displayName;
 

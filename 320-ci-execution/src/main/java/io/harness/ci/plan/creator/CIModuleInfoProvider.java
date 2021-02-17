@@ -51,7 +51,11 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         return null;
       }
 
-      ParameterField<Build> buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+      ParameterField<Build> buildParameterField = null;
+      if (liteEngineTaskStepInfo.getCiCodebase() != null) {
+        buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+      }
+
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
       if (build != null && build.getType().equals(BuildType.BRANCH)) {
         branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();

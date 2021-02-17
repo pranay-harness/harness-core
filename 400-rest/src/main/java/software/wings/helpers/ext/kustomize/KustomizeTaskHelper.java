@@ -5,6 +5,8 @@ import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class KustomizeTaskHelper {
   @Inject private KustomizeClient kustomizeClient;
 

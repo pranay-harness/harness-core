@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
@@ -16,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 3/22/18.
  */
+@TargetModule(Module._960_API_SERVICES)
 public interface HelmClient {
   /**
    * Install helm command response.

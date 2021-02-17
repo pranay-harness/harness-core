@@ -18,7 +18,7 @@ import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.when;
 
 import io.harness.app.beans.dto.CIBuildResponseDTO;
-import io.harness.app.impl.CIManagerTest;
+import io.harness.app.impl.CIManagerTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.pms.contracts.execution.Status;
@@ -32,7 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @Slf4j
-public class BuildDtoMapperTest extends CIManagerTest {
+public class BuildDtoMapperTest extends CIManagerTestBase {
   @Mock private GraphGenerationService graphGenerationService;
   @InjectMocks BuildDtoMapper buildDtoMapper;
 

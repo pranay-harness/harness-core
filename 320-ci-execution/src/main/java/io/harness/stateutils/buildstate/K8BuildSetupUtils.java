@@ -545,10 +545,10 @@ public class K8BuildSetupUtils {
       throw new InvalidArgumentsException("Git connector is not valid", WingsException.USER);
     }
     if (gitConnector.getConnectorType() != ConnectorType.GIT && gitConnector.getConnectorType() != ConnectorType.GITHUB
-        && gitConnector.getConnectorType() != ConnectorType.GITLAB) {
+        && gitConnector.getConnectorType() != ConnectorType.GITLAB && gitConnector.getConnectorType() != BITBUCKET) {
       log.error("Git connector ref is not of type git {}", gitConnector);
       throw new InvalidArgumentsException(
-          "Connector type for git connector is not GITHUB OR GITLAB OR GIT ", WingsException.USER);
+          "Connector type for git connector is not GITHUB OR GITLAB OR GIT OR BITBUCKET ", WingsException.USER);
     }
 
     // TODO Validate all
@@ -566,11 +566,11 @@ public class K8BuildSetupUtils {
     }
 
     if (codeBase == null) {
-      throw new IllegalArgumentException("CI codebase is not set");
+      throw new CIStageExecutionException("CI codebase is mandatory in case git clone is enabled");
     }
 
     if (codeBase.getConnectorRef() == null) {
-      throw new IllegalArgumentException("Git connector is not set in CI codebase");
+      throw new CIStageExecutionException("Git connector is mandatory in case git clone is enabled");
     }
     return connectorUtils.getConnectorDetails(ngAccess, codeBase.getConnectorRef());
   }

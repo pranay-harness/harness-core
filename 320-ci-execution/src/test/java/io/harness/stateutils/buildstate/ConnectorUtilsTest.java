@@ -24,7 +24,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,7 +49,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ConnectorUtilsTest extends CIExecutionTest {
+public class ConnectorUtilsTest extends CIExecutionTestBase {
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
   @Mock private ConnectorResourceClient connectorResourceClient;

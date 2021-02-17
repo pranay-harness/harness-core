@@ -9,7 +9,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
@@ -28,7 +27,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
-import software.wings.beans.HttpMethod;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
@@ -45,18 +43,14 @@ import software.wings.utils.WingsTestConstants;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import java.io.IOException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Created by rishi on 5/19/16.
- */
 public class AuditServiceTest extends WingsBaseTest {
   @Inject private AccountService accountService;
-
+  @Inject AuditServiceTestHelper auditServiceTestHelper;
   @Inject private LicenseService licenseService;
   @Inject protected FileService fileService;
   @Inject protected AuditService auditService;
@@ -64,36 +58,6 @@ public class AuditServiceTest extends WingsBaseTest {
   @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;
 
   private static final String appId = generateUuid();
-
-  public AuditHeader createAuditHeader() throws IOException {
-    try (UserThreadLocal.Guard guard = userGuard(null)) {
-      AuditHeader header =
-          AuditHeader.Builder.anAuditHeader()
-              .withAppId(appId)
-              .withUrl("http://localhost:9090/wings/catalogs")
-              .withResourcePath("catalogs")
-              .withRequestMethod(HttpMethod.GET)
-              .withHeaderString(
-                  "Cache-Control=;no-cache,Accept=;*/*,Connection=;keep-alive,User-Agent=;Mozilla/5.0 (Macintosh; "
-                  + "Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 "
-                  + "Safari/537.36,Host=;localhost:9090,"
-                  + "Postman-Token=;bdd7280e-bfac-b0f1-9603-c7b0e55a74af,"
-                  + "Accept-Encoding=;"
-                  + "gzip, deflate, sdch,Accept-Language=;en-US,en;q=0.8,Content-Type=;application/json")
-              .withRemoteHostName("0:0:0:0:0:0:0:1")
-              .withRemoteHostPort(555555)
-              .withRemoteIpAddress("0:0:0:0:0:0:0:1")
-              .withLocalHostName("Rishis-MacBook-Pro.local")
-              .withLocalIpAddress("192.168.0.110")
-              .build();
-      auditService.create(header);
-      AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
-      assertThat(header2).isNotNull();
-      assertThat(header2.getUuid()).isNotNull();
-      assertThat(header2).isEqualToComparingFieldByField(header);
-      return header;
-    }
-  }
 
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);
 
@@ -113,7 +77,7 @@ public class AuditServiceTest extends WingsBaseTest {
                           .withCompanyName(WingsTestConstants.COMPANY_NAME)
                           .withLicenseInfo(getLicenseInfo())
                           .build();
-    accountService.save(account, false);
+    accountService.save(account, false, false);
     accountId = account.getUuid();
     setUserRequestContext();
   }
@@ -122,7 +86,7 @@ public class AuditServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCreate() throws Exception {
-    createAuditHeader();
+    auditServiceTestHelper.createAuditHeader(appId);
   }
 
   /**
@@ -134,10 +98,10 @@ public class AuditServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldList() throws Exception {
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
 
     PageResponse<AuditHeader> res =
         auditService.list(aPageRequest().withOffset("1").withLimit("2").addFilter("appId", Operator.EQ, appId).build());
@@ -202,7 +166,7 @@ public class AuditServiceTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldUpdateUser() throws Exception {
-    AuditHeader header = createAuditHeader();
+    AuditHeader header = auditServiceTestHelper.createAuditHeader(appId);
     assertThat(header).isNotNull();
     assertThat(header.getRemoteUser()).isNull();
     User user = User.Builder.anUser().uuid(generateUuid()).name("abc").build();
@@ -216,10 +180,10 @@ public class AuditServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteAuditRecords() throws Exception {
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
 
     auditService.deleteAuditRecords(0);
     assertThat(auditService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, appId).build())).hasSize(0);
@@ -229,10 +193,10 @@ public class AuditServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotDeleteAuditRecordsWithInRetentionTime() throws Exception {
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
-    createAuditHeader();
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
+    auditServiceTestHelper.createAuditHeader(appId);
 
     auditService.deleteAuditRecords(1 * 24 * 60 * 60 * 1000);
     assertThat(auditService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, appId).build())).hasSize(4);

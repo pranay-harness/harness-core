@@ -15,23 +15,12 @@ java_library(
         "//960-persistence:module",
         "@maven//:com_google_inject_guice",
         "@maven//:org_slf4j_slf4j_api",
-    ],
-)
-
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
+        "@maven//:ru_vyarus_guice_validator",
     ],
 )
 
 java_binary(
-    name = "accesscontrol",
+    name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.accesscontrol.AccessControlApplication",

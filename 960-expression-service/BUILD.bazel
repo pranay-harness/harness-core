@@ -54,7 +54,7 @@ java_library(
     resources = [
         "//960-expression-service/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "module",

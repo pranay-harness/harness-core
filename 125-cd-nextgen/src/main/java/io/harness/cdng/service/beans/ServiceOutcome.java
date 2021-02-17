@@ -45,6 +45,10 @@ public class ServiceOutcome implements Outcome {
     return "serviceOutcome";
   }
 
+  public String getServiceDefinitionType() {
+    return type;
+  }
+
   @Data
   @Builder
   @TypeAlias("serviceOutcome_artifactsOutcome")

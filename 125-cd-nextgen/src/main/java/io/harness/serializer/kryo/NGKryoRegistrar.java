@@ -16,10 +16,14 @@ import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.k8s.DeleteResourcesType;
+import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
 import io.harness.cdng.k8s.K8sCanaryStepInfo;
 import io.harness.cdng.k8s.K8sCanaryStepParameters;
+import io.harness.cdng.k8s.K8sDeleteStepInfo;
+import io.harness.cdng.k8s.K8sDeleteStepParameters;
 import io.harness.cdng.k8s.K8sInstanceUnitType;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
@@ -143,5 +147,9 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sCanaryOutcome.class, 12515);
     kryo.register(K8sCanaryStepInfo.class, 12516);
     kryo.register(K8sCanaryStepParameters.class, 12517);
+    kryo.register(DeleteResourcesType.class, 12518);
+    kryo.register(DeleteResourcesWrapper.class, 12519);
+    kryo.register(K8sDeleteStepParameters.class, 12520);
+    kryo.register(K8sDeleteStepInfo.class, 12521);
   }
 }

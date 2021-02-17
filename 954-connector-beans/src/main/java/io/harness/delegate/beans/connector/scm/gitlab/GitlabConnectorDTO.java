@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("GitlabConnector")
 public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   @Valid @NotNull GitlabAuthenticationDTO authentication;
   @Valid GitlabApiAccessDTO apiAccess;
 
@@ -44,7 +45,7 @@ public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnect
     if (authentication.getAuthType() == GitAuthType.HTTP) {
       return ((GitlabHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
     } else {
-      return ((GitlabSshCredentialsDTO) authentication.getCredentials()).getSpec();
+      return (GitlabSshCredentialsDTO) authentication.getCredentials();
     }
   }
 }

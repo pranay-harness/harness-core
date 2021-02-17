@@ -8,10 +8,11 @@ RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
     apt-get update && \
     \
     apt-get install -o APT::Immediate-Configure=0 -y curl gnupg && \
-    curl https://bazel.build/bazel-release.pub.gpg | apt-key add - && \
-    echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list && \
-    apt-get update && \
-    apt-get install -y bazel && \
+    \
+    curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.7.4/bazelisk-linux-amd64 && \
+    chown root:root /usr/local/bin/bazel && \
+    chmod 0755 /usr/local/bin/bazel && \
+    bazel version && \
     \
     apt-get install -y maven && \
     \

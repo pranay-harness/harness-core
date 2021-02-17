@@ -35,6 +35,7 @@ public class ExpressionEvaluatorUtils {
   public final int EXPANSION_LIMIT = 6 * 1024 * 1024; // 6 MB
   public final int EXPANSION_MULTIPLIER_LIMIT = 10;
   public final int DEPTH_LIMIT = 10;
+  private final int DEBUG_LENGTH_LIMIT = 1 * 1024 * 1024; // 1 MB
 
   private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private static final String REGEX = "[0-9]+";
@@ -100,24 +101,44 @@ public class ExpressionEvaluatorUtils {
 
     String result = expression;
     int limit = Math.max(EXPANSION_LIMIT, EXPANSION_MULTIPLIER_LIMIT * expression.length());
+    // We go maximum upto DEPTH_LIMIT depth while resolving all the variables
     for (int i = 0; i < DEPTH_LIMIT; i++) {
+      // Lets use an example, we want to replace variables (i.e, ${..}) in expression - echo "${testVar}" && echo "1234"
+      // ctx has map having (testVar, example) as one of its enteries.
+      // pattern - ABCD[0-9]+WXYZ
       String original = result;
+      // This replaces all the variables (i.e, ${...}) in original string.
+      // Each variable in original is replaced with the corresponding output of EvaluateVariableResolver#lookup
+      // After this step: result - echo "ABCD1WXYZ" && echo "1234", ctx map has one more entry now (ABCD1WXYZ, example)
       result = substitutor.replace(new StringBuffer(original));
 
+      // Now we replace each pattern of type ABCD[0-9]+WXYZ in result string with its correct value.
       for (;;) {
         final Matcher matcher = pattern.matcher(result);
+        // If we don't find ABCD[0-9]+WXYZ pattern in string, it means there is nothing left to replace and we exit the
+        // outer loop
         if (!matcher.find()) {
           break;
         }
 
         StringBuffer sb = new StringBuffer();
+        // We iterate till all the matched patterns are replaced.
         do {
+          // Extract the current matched entry with pattern. After this step: name - ABCD1WXYZ
           String name = matcher.group(0);
+          // Get the value from ctx map. After this step: value - example
           String value = String.valueOf(ctx.get(name));
+          // '\' and '$' are escaped in the value. The matched entry with pattern is replaced with value.
+          // This appends the string to sb till the replaced matched entry.
+          // After this step: sb - echo "example
           matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
         } while (matcher.find());
+        // This appends the left over string to sb. After this step: sb - echo "example" && echo "1234"
         matcher.appendTail(sb);
         result = sb.toString();
+      }
+      if (result.length() > DEBUG_LENGTH_LIMIT) {
+        log.info("The expression length: {} has exceeded {} limit.", result.length(), DEBUG_LENGTH_LIMIT);
       }
       if (result.equals(original)) {
         return result;

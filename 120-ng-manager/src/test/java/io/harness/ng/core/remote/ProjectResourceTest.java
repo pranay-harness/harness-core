@@ -31,6 +31,7 @@ import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import org.junit.Before;
@@ -126,8 +127,8 @@ public class ProjectResourceTest extends CategoryTest {
 
     when(projectService.list(eq(accountIdentifier), any(), any())).thenReturn(getPage(singletonList(project), 1));
 
-    ResponseDTO<PageResponse<ProjectResponse>> response =
-        projectResource.list(accountIdentifier, orgIdentifier, true, ModuleType.CD, searchTerm, pageRequest);
+    ResponseDTO<PageResponse<ProjectResponse>> response = projectResource.list(
+        accountIdentifier, orgIdentifier, true, Collections.EMPTY_LIST, ModuleType.CD, searchTerm, pageRequest);
 
     verify(projectService, times(1)).list(eq(accountIdentifier), any(), argumentCaptor.capture());
     ProjectFilterDTO projectFilterDTO = argumentCaptor.getValue();

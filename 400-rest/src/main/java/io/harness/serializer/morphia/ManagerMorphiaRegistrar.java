@@ -287,6 +287,7 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
+import software.wings.beans.alert.DeploymentFreezeEventAlert;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -337,6 +338,7 @@ import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.ce.depricated.CECloudAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.AzureARMCommandUnit;
@@ -393,7 +395,6 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
-import software.wings.beans.infrastructure.ARMRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.TerraformConfig;
@@ -472,11 +473,8 @@ import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -864,6 +862,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Budget.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CECloudAccount.class);
+    set.add(CECloudAccountOld.class);
     set.add(CECluster.class);
     set.add(CEMetadataRecord.class);
     set.add(CECommunications.class);
@@ -1082,7 +1081,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
-    set.add(ARMRollbackConfig.class);
   }
 
   @Override
@@ -1215,6 +1213,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.cv.ContinuousVerificationDataCollectionAlert", ContinuousVerificationDataCollectionAlert.class);
     w.put("beans.alert.DelegateProfileErrorAlert", DelegateProfileErrorAlert.class);
     w.put("beans.alert.DelegatesDownAlert", DelegatesDownAlert.class);
+    w.put("beans.alert.DeploymentFreezeEventAlert", DeploymentFreezeEventAlert.class);
     w.put("beans.alert.DeploymentRateApproachingLimitAlert", DeploymentRateApproachingLimitAlert.class);
     w.put("beans.alert.EmailSendingFailedAlert", EmailSendingFailedAlert.class);
     w.put("beans.alert.GitConnectionErrorAlert", GitConnectionErrorAlert.class);
@@ -1366,10 +1365,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
         ClusterMasterUrlValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.HelmCommandCapability", HelmCommandCapability.class);
     w.put("delegatetasks.validation.capabilities.GitConnectionCapability", GitConnectionCapability.class);
-    w.put("delegatetasks.validation.capabilities.PcfAutoScalarCapability", PcfAutoScalarCapability.class);
-    w.put("delegatetasks.validation.capabilities.PcfConnectivityCapability", PcfConnectivityCapability.class);
     w.put("delegatetasks.validation.capabilities.SSHHostValidationCapability", SSHHostValidationCapability.class);
-    w.put("delegatetasks.validation.capabilities.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);
     w.put("helpers.ext.cloudformation.CloudFormationCompletionFlag", CloudFormationCompletionFlag.class);
     w.put("helpers.ext.ecs.request.EcsBGListenerUpdateRequest", EcsBGListenerUpdateRequest.class);

@@ -7,6 +7,8 @@ import static software.wings.helpers.ext.openshift.OpenShiftConstants.OC_BINARY_
 import static software.wings.helpers.ext.openshift.OpenShiftConstants.PROCESS_COMMAND;
 import static software.wings.helpers.ext.openshift.OpenShiftConstants.TEMPLATE_FILE_PATH;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@TargetModule(Module._960_API_SERVICES)
 public class OpenShiftClientImpl implements OpenShiftClient {
   @Inject CliHelper cliHelper;
 

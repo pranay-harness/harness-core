@@ -15,6 +15,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -108,6 +110,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmDeployServiceImpl implements HelmDeployService {
   public static final String MANIFEST_FILE_NAME = "manifest.yaml";
   @Inject private transient K8sTaskHelper k8sTaskHelper;

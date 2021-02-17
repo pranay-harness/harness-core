@@ -5,6 +5,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
+import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -42,6 +43,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
       @JsonSubTypes.Type(value = GithubConnectorDTO.class, name = "Github"),
       @JsonSubTypes.Type(value = GitlabConnectorDTO.class, name = "Gitlab"),
       @JsonSubTypes.Type(value = BitbucketConnectorDTO.class, name = "Bitbucket"),
+      @JsonSubTypes.Type(value = CEAzureConnectorDTO.class, name = "CEAzure"),
 })
 public abstract class ConnectorConfigDTO implements DecryptableEntity {
   @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();

@@ -88,10 +88,10 @@ import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
+import software.wings.app.ObserversHelper;
 import software.wings.app.SSOModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
-import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.integration.IntegrationTestBase;
@@ -298,7 +298,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
   }
 
   protected void registerObservers() {
-    WingsApplication.registerSharedObservers(injector);
+    ObserversHelper.registerSharedObservers(injector);
   }
 
   protected void addQueueModules(List<Module> modules) {

@@ -344,9 +344,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthenticationExemptedRequestsPredicate() {
     return getAuthFilterPredicate(PublicApi.class)
         .or(resourceInfoAndRequest
-            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("version")
-                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("swagger")
-                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("swagger.json"));
+            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "/swagger.json"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(

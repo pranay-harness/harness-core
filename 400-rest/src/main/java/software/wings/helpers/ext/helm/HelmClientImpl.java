@@ -14,6 +14,8 @@ import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -54,6 +56,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";

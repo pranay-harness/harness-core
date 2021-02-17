@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -11,6 +13,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsCodeDeployListDeploymentGroupRequest extends AwsCodeDeployRequest {
   private String appName;
 

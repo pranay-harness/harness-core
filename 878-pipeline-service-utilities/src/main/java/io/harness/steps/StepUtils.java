@@ -21,13 +21,18 @@ import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
@@ -63,12 +68,51 @@ public class StepUtils {
     }
 
     for (ResponseData responseData : responseDataMap.values()) {
-      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
       if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
         responseBuilder.status(executionStatus);
       }
       if (StatusUtils.brokeStatuses().contains(executionStatus)) {
-        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+      }
+    }
+    return responseBuilder.build();
+  }
+
+  public static RollbackOutcome getFailedChildRollbackOutcome(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)
+          || StatusUtils.brokeStatuses().contains(executionStatus)) {
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          if (outcome instanceof RollbackOutcome) {
+            return (RollbackOutcome) outcome;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static StepResponse createStepResponseFromChildWithChildOutcomes(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
+        responseBuilder.status(executionStatus);
+      }
+      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          responseBuilder.stepOutcome(StepOutcome.builder().name(stepOutcomeRef.getName()).outcome(outcome).build());
+        }
       }
     }
     return responseBuilder.build();

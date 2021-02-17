@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class K8sTrafficSplitTaskParameters extends K8sTaskParameters {
   private String virtualServiceName;
   private List<IstioDestinationWeight> istioDestinationWeights;

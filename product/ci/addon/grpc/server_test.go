@@ -11,7 +11,7 @@ import (
 
 func TestServerFailToListen(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewAddonServer(65536, log.Sugar())
+	_, err := NewAddonServer(65536, false, log.Sugar())
 	assert.Error(t, err)
 }
 
@@ -43,6 +43,6 @@ func TestStopRunningServer(t *testing.T) {
 func TestNewAddonServer(t *testing.T) {
 	port := uint(5000)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewAddonServer(port, log.Sugar())
+	_, err := NewAddonServer(port, false, log.Sugar())
 	assert.Equal(t, err, nil)
 }

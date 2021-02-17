@@ -2,10 +2,7 @@ package software.wings.sm.states;
 
 import io.harness.k8s.model.ImageDetails;
 
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.Service;
+import software.wings.beans.*;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -49,6 +46,8 @@ public class EcsSetupStateConfig {
   private String ecsServiceArn;
   private String orchestrationWorkflowType;
   private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
+  private List<AwsElbConfig> awsElbConfigs;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   // Only for ECS BG route 53 DNS swap
   private boolean useRoute53DNSSwap;

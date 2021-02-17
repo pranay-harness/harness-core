@@ -15,3 +15,6 @@ build --strict_java_deps=strict
 build --java_header_compilation=false
 build --test_env=LC_ALL="en_US.UTF-8"
 build --javacopt=' -XepDisableAllChecks'
+
+#CV-Nextgen
+build --action_env=VERIFICATION_SERVICE_SECRET=67d9b94d9856665afc21acd3aa745401

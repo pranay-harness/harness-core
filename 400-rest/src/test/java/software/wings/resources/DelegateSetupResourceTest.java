@@ -40,6 +40,7 @@ import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateScalingGroup;
@@ -85,6 +86,7 @@ public class DelegateSetupResourceTest {
   private static DelegateScopeService delegateScopeService = mock(DelegateScopeService.class);
   private static DownloadTokenService downloadTokenService = mock(DownloadTokenService.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static DelegateCache delegateCache = mock(DelegateCache.class);
 
   @Parameter public String apiUrl;
 
@@ -97,7 +99,7 @@ public class DelegateSetupResourceTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new DelegateSetupResource(
-              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper))
+              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper, delegateCache))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -239,13 +241,13 @@ public class DelegateSetupResourceTest {
   public void shouldGet() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
 
-    when(delegateService.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
+    when(delegateCache.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
     RestResponse<Delegate> restResponse = RESOURCES.client()
                                               .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID)
                                               .request()
                                               .get(new GenericType<RestResponse<Delegate>>() {});
 
-    verify(delegateService, atLeastOnce()).get(ACCOUNT_ID, ID_KEY, true);
+    verify(delegateCache, atLeastOnce()).get(ACCOUNT_ID, ID_KEY, true);
     assertThat(restResponse.getResource()).isEqualTo(delegate);
   }
 
@@ -408,7 +410,7 @@ public class DelegateSetupResourceTest {
     DelegateTags delegateTags = new DelegateTags();
     delegateTags.setTags(asList("tag"));
 
-    when(delegateService.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
+    when(delegateCache.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
 
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
@@ -429,7 +431,7 @@ public class DelegateSetupResourceTest {
     delegateScopes.setIncludeScopeIds(asList("Scope1", "Scope2"));
     delegateScopes.setExcludeScopeIds(asList("Scope3", "Scope4"));
 
-    when(delegateService.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
+    when(delegateCache.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
 
     RestResponse<Delegate> restResponse =
         RESOURCES.client()

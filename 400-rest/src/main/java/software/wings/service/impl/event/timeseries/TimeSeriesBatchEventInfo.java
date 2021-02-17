@@ -19,4 +19,9 @@ public class TimeSeriesBatchEventInfo implements EventInfo {
   public static class DataPoint {
     private Map<String, Object> data;
   }
+
+  public String getLog() {
+    return "TimeSeriesBatchEventInfo{"
+        + "accountId='" + accountId + '\'' + ", timestamp=" + timestamp + '}';
+  }
 }

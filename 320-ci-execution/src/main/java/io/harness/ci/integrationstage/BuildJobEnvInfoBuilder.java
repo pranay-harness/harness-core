@@ -1,5 +1,6 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
@@ -29,7 +30,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
@@ -56,6 +57,7 @@ import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
@@ -206,6 +208,11 @@ public class BuildJobEnvInfoBuilder {
       if (!executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
         stepIndex++;
+        if (stepElementConfig.getTimeout() != null && stepElementConfig.getTimeout().isExpression()) {
+          throw new InvalidRequestException(
+              "Timeout field must be resolved in step: " + stepElementConfig.getIdentifier());
+        }
+
         ContainerDefinitionInfo containerDefinitionInfo =
             createStepContainerDefinition(stepElementConfig, integrationStage, ciExecutionArgs, portFinder, stepIndex);
         if (containerDefinitionInfo != null) {
@@ -242,6 +249,7 @@ public class BuildJobEnvInfoBuilder {
     }
 
     CIStepInfo ciStepInfo = (CIStepInfo) stepElement.getStepSpecType();
+    long timeout = TimeoutUtils.getTimeoutInSeconds(stepElement.getTimeout(), ciStepInfo.getDefaultTimeout());
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
         return createRunStepContainerDefinition((RunStepInfo) ciStepInfo, integrationStage, ciExecutionArgs, portFinder,
@@ -257,26 +265,27 @@ public class BuildJobEnvInfoBuilder {
       case UPLOAD_S3:
       case UPLOAD_GCS:
         return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
-            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getType());
+            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getType(), timeout);
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
             stepElement.getIdentifier(), stepElement.getName());
       case TEST_INTELLIGENCE:
-        return createTestIntelligenceStepContainerDefinition((TestIntelligenceStepInfo) ciStepInfo, integrationStage,
-            ciExecutionArgs, portFinder, stepIndex, stepElement.getIdentifier());
+        return createRunTestsStepContainerDefinition((RunTestsStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
+            portFinder, stepIndex, stepElement.getIdentifier());
       default:
         return null;
     }
   }
 
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepType) {
+      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepType,
+      long timeout) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier));
+    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
 
     return ContainerDefinitionInfo.builder()
         .name(containerName)
@@ -331,9 +340,9 @@ public class BuildJobEnvInfoBuilder {
         .build();
   }
 
-  private ContainerDefinitionInfo createTestIntelligenceStepContainerDefinition(
-      TestIntelligenceStepInfo testIntelligenceStepInfo, StageElementConfig integrationStage,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier) {
+  private ContainerDefinitionInfo createRunTestsStepContainerDefinition(RunTestsStepInfo runTestsStepInfo,
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier) {
     Integer port = portFinder.getNextPort();
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
@@ -349,11 +358,10 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(testIntelligenceStepInfo.getImage()))
-                                   .connectorIdentifier(testIntelligenceStepInfo.getConnector())
+                                   .imageDetails(getImageInfo(runTestsStepInfo.getImage()))
+                                   .connectorIdentifier(runTestsStepInfo.getConnector())
                                    .build())
-        .containerResourceParams(
-            getStepContainerResource(testIntelligenceStepInfo.getResources(), "TestIntelligence", identifier))
+        .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
         .build();
@@ -632,7 +640,9 @@ public class BuildJobEnvInfoBuilder {
     if (resource != null && resource.getLimits() != null && resource.getLimits().getMemory() != null) {
       String memoryLimitMemoryQuantity =
           resolveStringParameter("memory", stepType, stepId, resource.getLimits().getMemory(), false);
-      memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, MemoryQuantityUnit.Mi);
+      if (isNotEmpty(memoryLimitMemoryQuantity) && !UNRESOLVED_PARAMETER.equals(memoryLimitMemoryQuantity)) {
+        memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, MemoryQuantityUnit.Mi);
+      }
     }
     return memoryLimit;
   }
@@ -641,7 +651,9 @@ public class BuildJobEnvInfoBuilder {
     Integer cpuLimit = ciExecutionServiceConfig.getDefaultCPULimit();
     if (resource != null && resource.getLimits() != null && resource.getLimits().getCpu() != null) {
       String cpuLimitQuantity = resolveStringParameter("cpu", stepType, stepId, resource.getLimits().getCpu(), false);
-      cpuLimit = QuantityUtils.getCpuQuantityValueInUnit(cpuLimitQuantity, DecimalQuantityUnit.m);
+      if (isNotEmpty(cpuLimitQuantity) && !UNRESOLVED_PARAMETER.equals(cpuLimitQuantity)) {
+        cpuLimit = QuantityUtils.getCpuQuantityValueInUnit(cpuLimitQuantity, DecimalQuantityUnit.m);
+      }
     }
     return cpuLimit;
   }
@@ -691,7 +703,7 @@ public class BuildJobEnvInfoBuilder {
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case TEST_INTELLIGENCE:
         return getContainerMemoryLimit(
-            ((TestIntelligenceStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
+            ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
       case ECR:
       case DOCKER:
@@ -755,7 +767,7 @@ public class BuildJobEnvInfoBuilder {
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case TEST_INTELLIGENCE:
         return getContainerCpuLimit(
-            ((TestIntelligenceStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
+            ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
       case ECR:
       case DOCKER:

@@ -62,7 +62,7 @@ if [[ "" != "$NOTIFICATION_BASE_URL" ]]; then
 fi
 
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 fi
 
 if [[ "" != "$PORTAL_URL" ]]; then

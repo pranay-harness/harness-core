@@ -63,7 +63,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .infrastructure(infrastructure)
         .dependencies(integrationStageConfig.getServiceDependencies())
         .type(stageElementConfig.getType())
-        .skipCondition(integrationStageConfig.getSkipCondition())
+        .skipCondition(stageElementConfig.getSkipCondition())
         .originalVariables(stageElementConfig.getVariables())
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())

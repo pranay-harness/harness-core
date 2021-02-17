@@ -50,10 +50,13 @@ import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import com.google.common.base.Suppliers;
@@ -136,13 +139,14 @@ public class PipelineServiceModule extends AbstractModule {
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
+    install(YamlSdkModule.getInstance());
 
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new YamlSchemaClientModule(configuration.getCiManagerClientConfig(),
-        configuration.getCiManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(
+        YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
@@ -201,6 +205,14 @@ public class PipelineServiceModule extends AbstractModule {
   List<Class<? extends Converter<?, ?>>> springConverters() {
     return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
         .addAll(PipelineServiceModuleRegistrars.springConverters)
+        .build();
+  }
+
+  @Provides
+  @Singleton
+  List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+    return ImmutableList.<YamlSchemaRootClass>builder()
+        .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
         .build();
   }
 

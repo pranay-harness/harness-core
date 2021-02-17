@@ -12,13 +12,13 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.FrequencyDTO;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO.LogData;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.inject.Inject;
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LogDashboardServiceImpl implements LogDashboardService {
   @Inject private LogAnalysisService logAnalysisService;
   @Inject private CVConfigService cvConfigService;
-  @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private ActivityService activityService;
 
@@ -175,7 +175,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       });
     });
 
-    List<Map<String, List<AnalysisResult>>> allResults = cvParallelExecutor.executeParallel(callables);
+    List<Map<String, List<AnalysisResult>>> allResults = cvngParallelExecutor.executeParallel(callables);
     allResults.forEach(result -> cvConfigAnalysisResultMap.putAll(result));
 
     // for each cvConfigId, make a call to get the labels/texts
@@ -190,7 +190,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       });
     });
 
-    List<List<LogData>> logDataResults = cvParallelExecutor.executeParallel(logDataCallables);
+    List<List<LogData>> logDataResults = cvngParallelExecutor.executeParallel(logDataCallables);
     logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
     SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();

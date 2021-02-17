@@ -69,7 +69,7 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
-import static software.wings.sm.StepType.ARM_PROVISION;
+import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -155,6 +155,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -249,6 +250,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -1138,6 +1140,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (envChanged) {
+      List<Pipeline> pipelinesWithWorkflowLinked = pipelineService.listPipelines(
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
+              .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
+              .build());
+      if (isNotEmpty(pipelinesWithWorkflowLinked)) {
+        updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
+        pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+      }
+    }
+
     if (isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
@@ -1203,6 +1218,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void updateEnvIdInLinkedPipelines(
+      Workflow workflow, String newEnvId, List<Pipeline> pipelinesWithWorkflowLinked) {
+    if (isEmpty(pipelinesWithWorkflowLinked)) {
+      return;
+    }
+    for (Pipeline pipeline : pipelinesWithWorkflowLinked) {
+      if (isNotEmpty(pipeline.getPipelineStages())) {
+        for (PipelineStage stage : pipeline.getPipelineStages()) {
+          if (workflow.getUuid().equals(
+                  stage.getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.workflowId))) {
+            stage.getPipelineStageElements().get(0).getProperties().put(EnvStateKeys.envId, newEnvId);
+          }
+        }
+      }
+    }
   }
 
   private void populateServices(Workflow workflow) {
@@ -1570,6 +1602,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<String> getResolvedInfraDefinitionIds(Workflow workflow, Map<String, String> workflowVariables) {
     return workflowServiceHelper.getResolvedInfraDefinitionIds(workflow, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedServiceIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedServiceIdFromPhase(workflowPhase, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedInfraDefinitionIdFromPhase(
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraDefinitionIdFromPhase(workflowPhase, workflowVariables);
   }
 
   @Override
@@ -3827,7 +3870,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (featureFlagService.isEnabled(FeatureName.AZURE_ARM, accountId)) {
       return steps;
     }
-    return steps.stream().filter(step -> step != ARM_PROVISION).collect(toList());
+    return steps.stream().filter(step -> step != ARM_CREATE_RESOURCE).collect(toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,

@@ -22,7 +22,7 @@ public interface NGSecretService {
   EncryptedData createSecretText(SecretTextDTO dto);
 
   PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SettingVariableTypes settingVariableTypes, String page, String size);
+      List<String> identifiers, SettingVariableTypes settingVariableTypes, String page, String size);
 
   Optional<EncryptedData> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

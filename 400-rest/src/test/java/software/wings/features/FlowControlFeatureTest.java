@@ -3,7 +3,7 @@ package software.wings.features;
 import static io.harness.rule.OwnerRule.ANKIT;
 
 import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.service.impl.PreDeploymentCheckerTest.getWorkflow;
+import static software.wings.service.impl.PreDeploymentCheckerTestHelper.getWorkflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;

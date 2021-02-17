@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
@@ -56,7 +57,11 @@ public class TestVerificationJob extends VerificationJob {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
     testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
-    testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    if (baselineVerificationJobInstanceId == null) {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId("LAST");
+    } else {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    }
     return testVerificationJobDTO;
   }
 
@@ -90,7 +95,9 @@ public class TestVerificationJob extends VerificationJob {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) verificationJobDTO;
     this.setSensitivity(testVerificationJobDTO.getSensitivity(),
         VerificationJobDTO.isRuntimeParam(testVerificationJobDTO.getSensitivity()));
-    this.setBaselineVerificationJobInstanceId(testVerificationJobDTO.getBaselineVerificationJobInstanceId());
+    if (!testVerificationJobDTO.getBaselineVerificationJobInstanceId().equals("LAST")) {
+      this.setBaselineVerificationJobInstanceId(testVerificationJobDTO.getBaselineVerificationJobInstanceId());
+    }
   }
 
   @Override
@@ -109,5 +116,18 @@ public class TestVerificationJob extends VerificationJob {
                                               .orElse(null);
     }
     return this;
+  }
+
+  public static class TestVerificationUpdatableEntity
+      extends VerificationJobUpdatableEntity<TestVerificationJob, TestVerificationJobDTO> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<TestVerificationJob> updateOperations, TestVerificationJobDTO dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(TestVerificationJobKeys.sensitivity,
+          getRunTimeParameter(dto.getSensitivity(), VerificationJobDTO.isRuntimeParam(dto.getEnvIdentifier())));
+      updateOperations.set(
+          TestVerificationJobKeys.baselineVerificationJobInstanceId, dto.getBaselineVerificationJobInstanceId());
+    }
   }
 }

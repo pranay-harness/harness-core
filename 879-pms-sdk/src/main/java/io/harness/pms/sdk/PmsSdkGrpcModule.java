@@ -127,12 +127,14 @@ public class PmsSdkGrpcModule extends AbstractModule {
       channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                     .overrideAuthority(authorityToUse)
                     .usePlaintext()
+                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
                     .build();
     } else {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
       channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                     .overrideAuthority(authorityToUse)
                     .sslContext(sslContext)
+                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
                     .build();
     }
 

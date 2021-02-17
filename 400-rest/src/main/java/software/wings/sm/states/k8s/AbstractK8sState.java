@@ -1,4 +1,3 @@
-
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
@@ -25,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
@@ -715,6 +715,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
+        .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
         .build();
   }
 

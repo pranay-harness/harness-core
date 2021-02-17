@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.SettingAttribute;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ConnectorConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLConnectorFilter, QLNoOpSortCriteria, QLConnectorsConnection> {
   @Inject private SettingsService settingsService;

@@ -15,7 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -71,7 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HeatMapServiceImplTest extends CvNextGenTest {
+public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Inject private HeatMapService heatMapService;
 
   private String projectIdentifier;

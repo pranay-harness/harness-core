@@ -2,6 +2,8 @@ package software.wings.service.impl.aws.model;
 
 import static software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType.EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -14,6 +16,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsAmiTrafficShiftAlbSwitchRouteRequest extends AwsAmiRequest {
   private String accountId;
   private String appId;

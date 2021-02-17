@@ -11,7 +11,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
@@ -53,7 +53,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
+public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
   @Inject private HPersistence hPersistence;
 
@@ -497,7 +497,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   }
 
   private List<TimeSeriesRecord> getTimeSeriesRecords(String cvConfigId, boolean anomalousOnly) throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("timeseries/timeseriesRecords.json").getFile());
+    File file = new File(getResourceFilePath("timeseries/timeseriesRecords.json"));
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();

@@ -39,6 +39,8 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -81,6 +83,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -111,6 +114,14 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(OrchestrationStepsModuleRegistrars.springConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder()
+            .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
             .build();
       }
     });

@@ -6,20 +6,20 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.accesscontrol.permissions.Permission;
+import io.harness.accesscontrol.permissions.PermissionService;
+import io.harness.accesscontrol.permissions.PermissionStatus;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
-import io.harness.remote.NGObjectMapperHelper;
-import io.harness.threading.ExecutorModule;
-import io.harness.threading.ThreadPool;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -31,8 +31,8 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
 public class AccessControlApplication extends Application<AccessControlConfiguration> {
-  private static final String APPLICATION_NAME = "Access Control Microservice";
+  private static final String APPLICATION_NAME = "Access Control Service";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -71,28 +71,36 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    configureObjectMapper(bootstrap.getObjectMapper());
-  }
-
-  public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGObjectMapperHelper.configureNGObjectMapper(mapper);
   }
 
   @Override
   public void run(AccessControlConfiguration appConfig, Environment environment) {
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Access Control Application ...");
     MaintenanceController.forceMaintenance(true);
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
-
+    injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+
+    // TODO: Remove once permission management through yaml is present.
+    PermissionService permissionService = injector.getInstance(PermissionService.class);
+    Set<String> scopes = new HashSet<>();
+    scopes.add(HarnessScopeLevel.ACCOUNT.toString());
+    scopes.add(HarnessScopeLevel.ORGANIZATION.toString());
+    scopes.add(HarnessScopeLevel.PROJECT.toString());
+    Permission permission = Permission.builder()
+                                .identifier("core.project.view")
+                                .name("View Project")
+                                .status(PermissionStatus.ACTIVE)
+                                .allowedScopeLevels(scopes)
+                                .build();
+    permissionService.get(permission.getIdentifier()).orElseGet(() -> permissionService.create(permission));
+
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -133,7 +141,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   public SwaggerBundleConfiguration getSwaggerConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    Collection<Class<?>> classes = getResourceClasses();
+    classes.add(AccessControlSwaggerListener.class);
+    String resourcePackage = String.join(",", getUniquePackages(classes));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setVersion("1.0");
