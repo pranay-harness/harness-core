@@ -4,6 +4,7 @@ import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.logging.LogCallback;
 import io.harness.logging.NoopExecutionCallback;
 import io.harness.security.EncryptionUtils;
@@ -78,7 +79,6 @@ public class SshSessionFactory {
       logCallback.saveExecutionLog("SSH using Kerberos Auth");
       log.info("SSH using Kerberos Auth");
       generateTGTUsingSshConfig(config, logCallback);
-
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
     } else if (config.getAccessType() != null && config.getAccessType() == USER_PASSWORD) {
@@ -105,7 +105,7 @@ public class SshSessionFactory {
       final char[] copyOfKey = getCopyOfKey(config);
       log.info("Testing : SSH signed public key {}", config.getSignedPublicKey());
       log.info("Testing : SSH  private key {}", config.getKey());
-      if (null == config.getKeyPassphrase()) {
+      if (EmptyPredicate.isEmpty(config.getKeyPassphrase())) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
             EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8), null);
       } else {
@@ -119,7 +119,7 @@ public class SshSessionFactory {
         // Copy Key because EncryptionUtils has a side effect of modifying the original array
         final char[] copyOfKey = getCopyOfKey(config);
         log.info("SSH using Key");
-        if (null == config.getKeyPassphrase()) {
+        if (EmptyPredicate.isNotEmpty(config.getKeyPassphrase())) {
           jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8), null, null);
         } else {
           jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8), null,
