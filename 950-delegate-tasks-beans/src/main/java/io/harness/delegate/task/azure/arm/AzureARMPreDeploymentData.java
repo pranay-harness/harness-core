@@ -5,4 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AzureARMPreDeploymentData {}
+public class AzureARMPreDeploymentData {
+  String resourceGroup;
+  String subscriptionId;
+  String resourceGroupTemplateJson;
+}

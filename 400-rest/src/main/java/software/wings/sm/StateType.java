@@ -89,6 +89,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsConstants;
@@ -207,6 +208,7 @@ import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -732,6 +734,11 @@ public enum StateType implements StateTypeDescriptor {
       asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
           InfrastructureMappingType.AZURE_WEBAPP),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), ORCHESTRATION_STENCILS),
+
+  ARM_ROLLBACK(ARMRollbackState.class, PROVISIONERS, ProvisionerConstants.ARM_ROLLBACK,
+      asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
+          InfrastructureMappingType.AZURE_WEBAPP),
+      singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT,
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),

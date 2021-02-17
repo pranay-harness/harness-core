@@ -195,7 +195,7 @@ public class AzureSweepingOutputServiceHelper {
         .collect(toList());
   }
 
-  public SweepingOutput getSetupElementFromSweepingOutput(ExecutionContext context, String prefix) {
+  public SweepingOutput getInfoFromSweepingOutput(ExecutionContext context, String prefix) {
     String sweepingOutputName = getSweepingOutputName(context, prefix);
     SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
     return sweepingOutputService.findSweepingOutput(inquiry);
@@ -213,5 +213,12 @@ public class AzureSweepingOutputServiceHelper {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String suffix = phaseElement.getServiceElement().getUuid().trim();
     return prefix + suffix;
+  }
+
+  public boolean dataExist(ExecutionContext context, String prefix) {
+    String sweepingOutputName = getSweepingOutputName(context, prefix);
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build());
+    return sweepingOutputInstance != null;
   }
 }
