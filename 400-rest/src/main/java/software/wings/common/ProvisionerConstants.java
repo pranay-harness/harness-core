@@ -6,4 +6,5 @@ public interface ProvisionerConstants {
   String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
   String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
   String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
+  String ARM_ROLLBACK = "ARM Rollback";
 }

@@ -308,7 +308,7 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
     doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
     doReturn(phaseElement).when(executionContext).getContextElement(any(), any());
 
-    azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(executionContext, "test");
+    azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(executionContext, "test");
 
     verify(sweepingOutputService, times(1)).findSweepingOutput(any());
   }

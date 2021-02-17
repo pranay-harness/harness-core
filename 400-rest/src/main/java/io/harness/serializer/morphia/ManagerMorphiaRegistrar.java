@@ -746,6 +746,7 @@ import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.AdjustTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
@@ -1564,6 +1565,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.provision.ShellScriptProvisionState", ShellScriptProvisionState.class);
     w.put("sm.states.provision.TerraformRollbackState", TerraformRollbackState.class);
     w.put("sm.states.provision.ARMProvisionState", ARMProvisionState.class);
+    w.put("sm.states.provision.ARMRollbackState", ARMRollbackState.class);
     w.put("sm.states.RepeatState", RepeatState.class);
     w.put("sm.states.RepeatState$RepeatStateExecutionData", RepeatStateExecutionData.class);
     w.put("sm.states.ResourceConstraintState", ResourceConstraintState.class);

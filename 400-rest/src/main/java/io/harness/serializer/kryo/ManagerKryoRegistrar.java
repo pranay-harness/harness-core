@@ -103,6 +103,8 @@ import software.wings.api.TerraformPlanParam;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
+import software.wings.api.arm.ARMOutputVariables;
+import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -1744,5 +1746,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(AwsElbConfig.class, 8500);
     kryo.register(CVNGStateExecutionData.class, 8501);
+
+    kryo.register(ARMOutputVariables.class, 8121);
+    kryo.register(ARMPreExistingTemplate.class, 8122);
   }
 }
