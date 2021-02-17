@@ -31,7 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
   @Inject private OutcomeService outcomeService;
