@@ -33,6 +33,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -69,6 +70,24 @@ public class DSConfigResource {
   @ApiOperation(value = "saves a data source config", nickname = "saveDataSourceCVConfig")
   public void saveDataSourceCVConfig(@QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
     dsConfigService.upsert(dsConfig);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "creates a data source config", nickname = "createDataSource")
+  public void create(@QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
+    dsConfigService.create(dsConfig);
+  }
+
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}")
+  @ApiOperation(value = "creates a data source config", nickname = "createDataSourceCVConfig")
+  public void update(@NotNull @PathParam("identifier") String identifier,
+      @QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
+    dsConfigService.update(identifier, dsConfig);
   }
 
   @DELETE

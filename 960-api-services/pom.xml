@@ -49,6 +49,10 @@
             <artifactId>azure</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.cloudsoft.windows</groupId>
+            <artifactId>winrm4j</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-api</artifactId>
         </dependency>

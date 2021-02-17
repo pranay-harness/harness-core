@@ -11,6 +11,10 @@ use multimap::MultiMap;
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
 pub struct Analyze {
+    /// Filter the reports by affected class class_filter.
+    #[clap(short, long)]
+    class_filter: Option<String>,
+
     /// Filter the reports by affected module module_filter.
     #[clap(short, long)]
     module_filter: Option<String>,
@@ -54,6 +58,10 @@ pub fn analyze(opts: Analyze) {
     let modules = modules();
     //println!("{:?}", modules);
 
+    if opts.module_filter.is_some() && !modules.keys().any(|module_name| module_name.eq(opts.module_filter.as_ref().unwrap())) {
+        panic!("There is no module {}", opts.module_filter.unwrap());
+    }
+
     let mut class_modules: HashMap<&JavaClass, &JavaModule> = HashMap::new();
 
     let mut class_dependees: MultiMap<&String, &String> = MultiMap::new();
@@ -83,6 +91,10 @@ pub fn analyze(opts: Analyze) {
         .keys()
         .map(|&class| (class.name.clone(), class))
         .collect::<HashMap<String, &JavaClass>>();
+
+    if opts.class_filter.is_some() && !classes.contains_key(opts.class_filter.as_ref().unwrap()) {
+        panic!("There is no class {}", opts.class_filter.unwrap());
+    }
 
     if opts.module_filter.is_some() {
         println!("analizing for module {} ...", opts.module_filter.as_ref().unwrap());
@@ -170,7 +182,15 @@ pub fn analyze(opts: Analyze) {
 }
 
 fn filter_report(opts: &Analyze, report: &Report) -> bool {
-    filter_by_module(&opts, report) && filter_by_root(&opts, report)
+    filter_by_class(&opts, report) &&    filter_by_module(&opts, report) && filter_by_root(&opts, report)
+}
+
+fn filter_by_class(opts: &Analyze, report: &Report) -> bool {
+    opts.class_filter.is_none() || report.for_class.contains(opts.class_filter.as_ref().unwrap())
+}
+
+fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
+    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
 }
 
 fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
@@ -180,13 +200,13 @@ fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
 fn filter_by_root(opts: &Analyze, report: &Report) -> bool {
     opts.root_filter.is_none()
         || report.for_modules.iter().any(|name| {
-            let root = opts.root_filter.as_ref().unwrap();
-            name.starts_with(root) && name.chars().nth(root.len()).unwrap() == ':'
-        })
+        is_with_root(opts, name)
+    })
 }
 
-fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
+fn is_with_root(opts: &Analyze, module_name: &String) -> bool {
+    let root = opts.root_filter.as_ref().unwrap();
+    module_name.starts_with(root) && module_name.chars().nth(root.len()).unwrap() == ':'
 }
 
 fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> {

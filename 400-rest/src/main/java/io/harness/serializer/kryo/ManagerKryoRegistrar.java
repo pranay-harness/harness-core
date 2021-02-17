@@ -393,9 +393,7 @@ import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlVali
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
@@ -1587,8 +1585,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(KustomizeConfig.class, 7323);
     kryo.register(BasicValidationInfo.class, 7325);
     kryo.register(SSHHostValidationCapability.class, 7326);
-    kryo.register(SftpCapability.class, 7351);
-    kryo.register(WinrmHostValidationCapability.class, 7327);
     kryo.register(PcfCommandTaskParameters.class, 7328);
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);

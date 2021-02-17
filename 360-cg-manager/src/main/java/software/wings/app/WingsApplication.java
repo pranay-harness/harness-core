@@ -166,7 +166,6 @@ import software.wings.scheduler.ManagerVersionsCleanUpJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
-import software.wings.scheduler.account.AccountBackgroundJobHandler;
 import software.wings.scheduler.account.DeleteAccountHandler;
 import software.wings.scheduler.account.LicenseCheckHandler;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
@@ -969,7 +968,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
-    injector.getInstance(AccountBackgroundJobHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();

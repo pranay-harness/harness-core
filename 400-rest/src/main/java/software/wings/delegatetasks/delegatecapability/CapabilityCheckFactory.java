@@ -19,6 +19,7 @@ import io.harness.delegate.task.executioncapability.SmbConnectionCapabilityCheck
 import io.harness.delegate.task.executioncapability.SmtpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
+import io.harness.delegate.task.executioncapability.WinrmHostValidationCapabilityCheck;
 
 import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
@@ -26,7 +27,6 @@ import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabi
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

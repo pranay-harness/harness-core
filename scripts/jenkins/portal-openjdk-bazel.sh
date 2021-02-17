@@ -78,7 +78,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ../../210-command-library-server/target/command-library-app-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 
