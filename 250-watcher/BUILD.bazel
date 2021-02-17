@@ -9,6 +9,8 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 shared_dependencies = [
+    "@delegate//:com_squareup_okhttp3_okhttp",
+] + [
     "//:lombok",
     "//980-commons:module",
     "//970-grpc:module",
