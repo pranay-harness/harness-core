@@ -22,6 +22,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -67,7 +68,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+                                                  K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sDeleteRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sDeleteRequest"));
     }
@@ -75,7 +76,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     K8sDeleteRequest k8sDeleteRequest = (K8sDeleteRequest) k8sDeployRequest;
     releaseName = k8sDeleteRequest.getReleaseName();
     manifestFilesDirectory = Paths.get(k8SDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
-    LogCallback executionLogCallback = k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true);
+    LogCallback executionLogCallback = k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true, commandUnitsProgress);
 
     if (isEmpty(k8sDeleteRequest.getResources())) {
       return executeDeleteUsingFiles(
@@ -95,13 +96,13 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
     boolean success =
         k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sDeleteRequest.getManifestDelegateConfig(),
-            manifestFilesDirectory, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true),
+            manifestFilesDirectory, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true, null),
             steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
     }
     success = initUsingFilePaths(
-        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, null));
     if (!success) {
       return getGenericFailureResponse(null);
     }
@@ -159,7 +160,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
       ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
     boolean success = init(
-        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, null));
     if (!success) {
       return getGenericFailureResponse(null);
     }
