@@ -126,6 +126,7 @@ import io.harness.delegate.beans.gitapi.GitApiTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
 import io.harness.delegate.beans.gitapi.GitRepoType;
 import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
@@ -609,5 +610,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SocketConnectivityParameters.class, 10011);
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
+
+    kryo.register(UnitProgressData.class, 9501);
   }
 }

@@ -16,6 +16,7 @@ import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.git.UsernamePasswordAuthRequest;
@@ -48,6 +49,8 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
 import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -260,5 +263,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ARMScopeType.class, 1447);
 
     kryo.register(AdditionalMetadata.class, 72101);
+
+    kryo.register(UnitProgress.class, UnitProgressKryoSerializer.getInstance(), 9701);
+    kryo.register(UnitStatus.class, 9702);
   }
 }
