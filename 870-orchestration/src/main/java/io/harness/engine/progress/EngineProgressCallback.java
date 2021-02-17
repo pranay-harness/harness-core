@@ -10,6 +10,8 @@ import io.harness.tasks.ProgressData;
 import io.harness.waiter.ProgressCallback;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +35,9 @@ public class EngineProgressCallback implements ProgressCallback {
     if (progressData instanceof BinaryResponseData) {
       data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
       if (data instanceof UnitProgressData) {
+        ProgressData finalData = data;
         nodeExecutionService.update(nodeExecutionId,
-            ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) progressData).getUnitProgresses()));
+            ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) finalData).getUnitProgresses()));
         return;
       }
     } else {

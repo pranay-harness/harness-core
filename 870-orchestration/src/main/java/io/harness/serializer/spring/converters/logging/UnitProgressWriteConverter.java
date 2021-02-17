@@ -8,8 +8,9 @@ import io.harness.serializer.spring.ProtoWriteConverter;
 
 import com.google.inject.Singleton;
 import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 
 @OwnedBy(CDC)
 @Singleton
-@ReadingConverter
+@WritingConverter
 public class UnitProgressWriteConverter extends ProtoWriteConverter<UnitProgress> {}
