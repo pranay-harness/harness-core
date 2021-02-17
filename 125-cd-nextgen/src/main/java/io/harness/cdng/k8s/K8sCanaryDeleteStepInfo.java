@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.common.SwaggerConstants;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -27,7 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
-  ParameterField<Boolean> skipDryRun;
+  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
