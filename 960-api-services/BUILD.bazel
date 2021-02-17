@@ -99,6 +99,7 @@ java_library(
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
         "@maven//:org_zeroturnaround_zt_exec",
+         "@maven//:com_jcraft_jsch"
     ],
 )
 

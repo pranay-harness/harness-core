@@ -169,8 +169,8 @@ public class CapabilityHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testGenerateExecutionCapabilitiesForGitSSH() {
-    String repoUrl = "git@github.com:abc";
+  public void testGenerateExecutionCapabilitiesForGitSSH_CustomPort() {
+    String repoUrl = "ssh://git@code.redbullmediahouse.com:7999/smartag/smartag-cloudcroft.git";
     Integer sshPort = 22;
     HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
     hostConnectionAttributes.setSshPort(sshPort);
@@ -183,7 +183,28 @@ public class CapabilityHelperTest extends WingsBaseTest {
     assertThat(executionCapabilities.get(0)).isInstanceOf(SocketConnectivityExecutionCapability.class);
     SocketConnectivityExecutionCapability socketConnectivityExecutionCapability =
         (SocketConnectivityExecutionCapability) executionCapabilities.get(0);
-    assertThat(socketConnectivityExecutionCapability.getPort()).isEqualTo(sshPort.toString());
+    assertThat(socketConnectivityExecutionCapability.getPort()).isEqualTo("7999");
+    assertThat(socketConnectivityExecutionCapability.getHostName()).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGenerateExecutionCapabilitiesForGitSSH() {
+    String repoUrl = "ssh://git@github.com/wings-software";
+    Integer sshPort = 22;
+    HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
+    hostConnectionAttributes.setSshPort(sshPort);
+    SettingAttribute sshSettingAttribute = new SettingAttribute();
+    sshSettingAttribute.setValue(hostConnectionAttributes);
+    GitConfig gitConfig = GitConfig.builder().repoUrl(repoUrl).sshSettingAttribute(sshSettingAttribute).build();
+
+    List<ExecutionCapability> executionCapabilities = CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig);
+    assertThat(executionCapabilities.size()).isEqualTo(1);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(SocketConnectivityExecutionCapability.class);
+    SocketConnectivityExecutionCapability socketConnectivityExecutionCapability =
+        (SocketConnectivityExecutionCapability) executionCapabilities.get(0);
+    assertThat(socketConnectivityExecutionCapability.getPort()).isEqualTo("22");
     assertThat(socketConnectivityExecutionCapability.getHostName()).isEqualTo("github.com");
   }
 

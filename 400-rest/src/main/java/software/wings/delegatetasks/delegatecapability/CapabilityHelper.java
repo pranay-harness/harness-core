@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -231,8 +232,13 @@ public class CapabilityHelper {
       } else {
         HostConnectionAttributes hostConnectionAttributes =
             (HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue();
+        int port = hostConnectionAttributes.getSshPort();
+        final Optional<Integer> portFromUrl = getPort(gitConfig.getRepoUrl());
+        if (portFromUrl.isPresent()) {
+          port = portFromUrl.get();
+        }
         executionCapabilities.add(SocketConnectivityExecutionCapability.builder()
-                                      .port(hostConnectionAttributes.getSshPort().toString())
+                                      .port(String.valueOf(port))
                                       .hostName(getHostname(gitConfig.getRepoUrl()))
                                       .scheme("ssh")
                                       .url(gitConfig.getRepoUrl())
@@ -249,6 +255,16 @@ public class CapabilityHelper {
     } catch (URISyntaxException e) {
       log.error("Failed to construct uri for {} repo", repoUrl, e);
       return repoUrl;
+    }
+  }
+
+  private static Optional<Integer> getPort(String repoUrl) {
+    try {
+      final URIish urIish = new URIish(repoUrl);
+      return Optional.of(urIish.getPort());
+    } catch (URISyntaxException e) {
+      log.error("Failed to construct uri for {} repo", repoUrl, e);
+      return Optional.empty();
     }
   }
 }
