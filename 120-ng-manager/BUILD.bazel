@@ -678,21 +678,8 @@ shared_dependencies = [
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//120-ng-manager/src/main/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//120-ng-manager/src/main/resources",
-    ],
-    deps = shared_dependencies,
-)
-
 java_binary(
-    name = "ngManager",
+    name = "module",
     srcs = glob([
         "src/main/**/*.java",
         "src/generated/**/*.java",
@@ -704,7 +691,6 @@ java_binary(
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":module",
         "//120-ng-manager/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
@@ -731,6 +717,7 @@ java_library(
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_powermock_powermock_core",
     ],
 )
 

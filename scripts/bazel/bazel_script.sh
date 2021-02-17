@@ -32,8 +32,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//120-ng-manager/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//120-ng-manager/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -54,6 +54,8 @@ ps auxwwwe
 echo end off ps-report
 
 BAZEL_MODULES="\
+  //120-ng-manager:module \
+  //120-ng-manager:module_deploy.jar \
   //125-cd-nextgen:module \
   //130-resource-group:module \
   //160-model-gen-tool:module \
@@ -294,6 +296,7 @@ build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
+build_bazel_application 120-ng-manager
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
 build_bazel_application 300-cv-nextgen
