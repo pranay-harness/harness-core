@@ -28,7 +28,9 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -59,13 +61,15 @@ public class GithubDTOToEntityTest extends CategoryTest {
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(GithubHttpCredentialsDTO.builder()
-                             .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
-                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
-                                                      .username(username)
-                                                      .build())
-                             .build())
+            .credentials(
+                GithubHttpCredentialsDTO.builder()
+                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .httpCredentialsSpec(
+                        GithubUsernamePasswordDTO.builder()
+                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
+                            .username(username)
+                            .build())
+                    .build())
             .build();
 
     final GithubApiAccessDTO githubApiAccessDTO =
@@ -74,7 +78,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
             .spec(GithubAppSpecDTO.builder()
                       .applicationId(appId)
                       .installationId(insId)
-                      .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .privateKeyRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateKeyRef).build())
                       .build())
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
@@ -83,7 +87,8 @@ public class GithubDTOToEntityTest extends CategoryTest {
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
-    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(githubConnectorDTO);
+    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(
+        githubConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(githubConnector).isNotNull();
     assertThat(githubConnector.getUrl()).isEqualTo(url);
     assertThat(githubConnector.getApiAccessType()).isEqualTo(GITHUB_APP);
@@ -115,13 +120,15 @@ public class GithubDTOToEntityTest extends CategoryTest {
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(GithubHttpCredentialsDTO.builder()
-                             .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
-                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
-                                                      .usernameRef(SecretRefHelper.createSecretRef(usernameRef))
-                                                      .build())
-                             .build())
+            .credentials(
+                GithubHttpCredentialsDTO.builder()
+                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .httpCredentialsSpec(
+                        GithubUsernamePasswordDTO.builder()
+                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
+                            .usernameRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(usernameRef).build())
+                            .build())
+                    .build())
             .build();
 
     final GithubApiAccessDTO githubApiAccessDTO =
@@ -130,7 +137,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
             .spec(GithubAppSpecDTO.builder()
                       .applicationId(appId)
                       .installationId(insId)
-                      .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .privateKeyRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateKeyRef).build())
                       .build())
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
@@ -139,7 +146,8 @@ public class GithubDTOToEntityTest extends CategoryTest {
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
-    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(githubConnectorDTO);
+    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(
+        githubConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(githubConnector).isNotNull();
     assertThat(githubConnector.getUrl()).isEqualTo(url);
     assertThat(githubConnector.getApiAccessType()).isEqualTo(GITHUB_APP);
@@ -170,14 +178,18 @@ public class GithubDTOToEntityTest extends CategoryTest {
                 GithubHttpCredentialsDTO.builder()
                     .type(GithubHttpAuthenticationType.USERNAME_AND_TOKEN)
                     .httpCredentialsSpec(
-                        GithubUsernameTokenDTO.builder().tokenRef(SecretRefHelper.createSecretRef(tokenRef)).build())
+                        GithubUsernameTokenDTO.builder()
+                            .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenRef).build())
+                            .build())
                     .build())
             .build();
 
     final GithubApiAccessDTO githubApiAccessDTO =
         GithubApiAccessDTO.builder()
             .type(GithubApiAccessType.TOKEN)
-            .spec(GithubTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(tokenRef)).build())
+            .spec(GithubTokenSpecDTO.builder()
+                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenRef).build())
+                      .build())
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
                                                       .url(url)
@@ -185,7 +197,8 @@ public class GithubDTOToEntityTest extends CategoryTest {
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
-    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(githubConnectorDTO);
+    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(
+        githubConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(githubConnector).isNotNull();
     assertThat(githubConnector.getUrl()).isEqualTo(url);
     assertThat(githubConnector.getApiAccessType()).isEqualTo(GithubApiAccessType.TOKEN);
@@ -208,8 +221,9 @@ public class GithubDTOToEntityTest extends CategoryTest {
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
             .authType(GitAuthType.SSH)
-            .credentials(
-                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
+            .credentials(GithubSshCredentialsDTO.builder()
+                             .sshKeyRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(sshKeyRef).build())
+                             .build())
             .build();
 
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
@@ -217,7 +231,8 @@ public class GithubDTOToEntityTest extends CategoryTest {
                                                       .connectionType(GitConnectionType.REPO)
                                                       .authentication(githubAuthenticationDTO)
                                                       .build();
-    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(githubConnectorDTO);
+    final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(
+        githubConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(githubConnector).isNotNull();
     assertThat(githubConnector.getUrl()).isEqualTo(url);
     assertThat(githubConnector.getAuthType()).isEqualTo(GitAuthType.SSH);

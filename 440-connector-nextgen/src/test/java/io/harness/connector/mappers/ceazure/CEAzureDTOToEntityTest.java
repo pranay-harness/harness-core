@@ -11,6 +11,7 @@ import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.utils.AzureConnectorTestHelper;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -32,7 +33,8 @@ public class CEAzureDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToConnectorEntity() {
     final CEAzureConfig ceAzureConfig =
-        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTO());
+        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTO(),
+            BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(ceAzureConfig).isEqualTo(AzureConnectorTestHelper.createCEAzureConfig());
   }
 
@@ -41,7 +43,8 @@ public class CEAzureDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testBillingOnly() {
     final CEAzureConfig ceAzureConfig =
-        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTOBillingOnly());
+        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTOBillingOnly(),
+            BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(ceAzureConfig).isEqualTo(AzureConnectorTestHelper.createCEAzureConfigBillingOnly());
   }
 
@@ -50,7 +53,8 @@ public class CEAzureDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testOptimizationOnly() {
     final CEAzureConfig ceAzureConfig =
-        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTOOptimizationOnly());
+        ceAzureDTOToEntity.toConnectorEntity(AzureConnectorTestHelper.createCEAzureConnectorDTOOptimizationOnly(),
+            BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(ceAzureConfig).isEqualTo(AzureConnectorTestHelper.createCEAzureConfigOptimizationOnly());
   }
 
@@ -60,7 +64,9 @@ public class CEAzureDTOToEntityTest extends CategoryTest {
   public void testThrowOnBillingExportMissing() {
     final CEAzureConnectorDTO ceAzureConnectorDTO = AzureConnectorTestHelper.createCEAzureConnectorDTO();
     ceAzureConnectorDTO.setBillingExportSpec(null);
-    assertThatThrownBy(() -> ceAzureDTOToEntity.toConnectorEntity(ceAzureConnectorDTO))
+    assertThatThrownBy(()
+                           -> ceAzureDTOToEntity.toConnectorEntity(ceAzureConnectorDTO,
+                               BaseNGAccess.builder().accountIdentifier("accountIdentifier").build()))
         .isExactlyInstanceOf(InvalidRequestException.class);
   }
 }

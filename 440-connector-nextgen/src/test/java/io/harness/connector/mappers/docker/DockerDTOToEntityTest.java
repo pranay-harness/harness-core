@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -47,7 +48,8 @@ public class DockerDTOToEntityTest extends CategoryTest {
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
     DockerConnectorDTO dockerConnectorDTO =
         DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
-    DockerConnector dockerConectorEntity = dockerDTOToEntity.toConnectorEntity(dockerConnectorDTO);
+    DockerConnector dockerConectorEntity = dockerDTOToEntity.toConnectorEntity(
+        dockerConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(dockerConectorEntity).isNotNull();
     assertThat(dockerConectorEntity.getUrl()).isEqualTo(dockerRegistryUrl);
     assertThat(((DockerUserNamePasswordAuthentication) (dockerConectorEntity.getDockerAuthentication())).getUsername())

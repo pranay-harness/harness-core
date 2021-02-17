@@ -8,14 +8,20 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConnectorDTO, DockerConnector> {
+  private SecretRefService secretRefService;
+
   @Override
-  public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO) {
+  public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO, NGAccess ngAccess) {
     DockerAuthType dockerAuthType = configDTO.getAuth().getAuthType();
     DockerConnectorBuilder dockerConnectorBuilder = DockerConnector.builder()
                                                         .url(configDTO.getDockerRegistryUrl())
@@ -24,7 +30,7 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
     if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
           (DockerUserNamePasswordDTO) configDTO.getAuth().getCredentials();
-      dockerConnectorBuilder.dockerAuthentication(createDockerAuthentication(dockerUserNamePasswordDTO));
+      dockerConnectorBuilder.dockerAuthentication(createDockerAuthentication(dockerUserNamePasswordDTO, ngAccess));
     }
 
     DockerConnector dockerConnector = dockerConnectorBuilder.build();
@@ -33,11 +39,13 @@ public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConne
   }
 
   private DockerUserNamePasswordAuthentication createDockerAuthentication(
-      DockerUserNamePasswordDTO dockerUserNamePasswordDTO) {
+      DockerUserNamePasswordDTO dockerUserNamePasswordDTO, NGAccess ngAccess) {
     return DockerUserNamePasswordAuthentication.builder()
         .username(dockerUserNamePasswordDTO.getUsername())
-        .usernameRef(SecretRefHelper.getSecretConfigString(dockerUserNamePasswordDTO.getUsernameRef()))
-        .passwordRef(SecretRefHelper.getSecretConfigString(dockerUserNamePasswordDTO.getPasswordRef()))
+        .usernameRef(
+            secretRefService.validateAndGetSecretConfigString(dockerUserNamePasswordDTO.getUsernameRef(), ngAccess))
+        .passwordRef(
+            secretRefService.validateAndGetSecretConfigString(dockerUserNamePasswordDTO.getPasswordRef(), ngAccess))
         .build();
   }
 }

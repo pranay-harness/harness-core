@@ -12,7 +12,8 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -38,7 +39,6 @@ public class NexusEntityToDTOTest extends CategoryTest {
     String userName = "userName";
     String passwordRef = ACCOUNT.getYamlRepresentation() + ".passwordRef";
     final String version = "1.2";
-
     NexusConnector nexusConnector =
         NexusConnector.builder()
             .authType(NexusAuthType.USER_PASSWORD)
@@ -58,6 +58,7 @@ public class NexusEntityToDTOTest extends CategoryTest {
         (NexusUsernamePasswordAuthDTO) nexusAuthenticationDTO.getCredentials();
     assertThat(nexusUsernamePasswordAuthDTO).isNotNull();
     assertThat(nexusUsernamePasswordAuthDTO.getUsername()).isEqualTo(userName);
-    assertThat(nexusUsernamePasswordAuthDTO.getPasswordRef()).isEqualTo(SecretRefHelper.createSecretRef(passwordRef));
+    assertThat(nexusUsernamePasswordAuthDTO.getPasswordRef())
+        .isEqualTo(SecretRefData.builder().scope(Scope.ACCOUNT).identifier("passwordRef").build());
   }
 }

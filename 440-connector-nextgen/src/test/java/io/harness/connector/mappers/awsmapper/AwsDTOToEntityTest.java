@@ -16,6 +16,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSp
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -48,7 +49,8 @@ public class AwsDTOToEntityTest extends CategoryTest {
             .config(AwsInheritFromDelegateSpecDTO.builder().delegateSelector(delegateSelector).build())
             .build();
     final AwsConnectorDTO awsConnectorDTO = AwsConnectorDTO.builder().credential(awsCredentialDTO).build();
-    final AwsConfig awsConfig = awsDTOToEntity.toConnectorEntity(awsConnectorDTO);
+    final AwsConfig awsConfig = awsDTOToEntity.toConnectorEntity(
+        awsConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
 
     assertThat(awsConfig).isNotNull();
     assertThat(awsConfig.getCredentialType()).isEqualTo(AwsCredentialType.INHERIT_FROM_DELEGATE);
@@ -66,7 +68,8 @@ public class AwsDTOToEntityTest extends CategoryTest {
                                                                .build())
                                                    .build();
     final AwsConnectorDTO awsConnectorDTO1 = AwsConnectorDTO.builder().credential(awsCredentialDTO1).build();
-    final AwsConfig awsConfig1 = awsDTOToEntity.toConnectorEntity(awsConnectorDTO1);
+    final AwsConfig awsConfig1 = awsDTOToEntity.toConnectorEntity(
+        awsConnectorDTO1, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
 
     assertThat(awsConfig1).isNotNull();
     assertThat(awsConfig1.getCredentialType()).isEqualTo(AwsCredentialType.MANUAL_CREDENTIALS);

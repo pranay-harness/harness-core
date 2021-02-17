@@ -29,19 +29,25 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class KubernetesDTOToEntity
     implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
+  private SecretRefService secretRefService;
+
   @Override
-  public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO) {
+  public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO, NGAccess ngAccess) {
     KubernetesCredentialType credentialType = getKubernetesCredentialType(k8ClusterDTO);
-    KubernetesCredential kubernetesCredential = getKubernetesCredential(k8ClusterDTO);
+    KubernetesCredential kubernetesCredential = getKubernetesCredential(k8ClusterDTO, ngAccess);
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder().credentialType(credentialType).credential(kubernetesCredential).build();
     kubernetesClusterConfig.setType(KUBERNETES_CLUSTER);
@@ -52,7 +58,7 @@ public class KubernetesDTOToEntity
     return k8ClusterDTO.getCredential().getKubernetesCredentialType();
   }
 
-  private KubernetesCredential getKubernetesCredential(KubernetesClusterConfigDTO k8ClusterDTO) {
+  private KubernetesCredential getKubernetesCredential(KubernetesClusterConfigDTO k8ClusterDTO, NGAccess ngAccess) {
     KubernetesCredentialType k8CredentialType = getKubernetesCredentialType(k8ClusterDTO);
     if (k8CredentialType == INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO kubernetesDelegateDetails =
@@ -61,7 +67,7 @@ public class KubernetesDTOToEntity
     } else if (k8CredentialType == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO kubernetesClusterDetails =
           castToKubernetesClusterDetails(k8ClusterDTO.getCredential().getConfig());
-      return getKubernetesManualDetails(kubernetesClusterDetails);
+      return getKubernetesManualDetails(kubernetesClusterDetails, ngAccess);
     } else {
       throw new UnknownEnumTypeException(
           "Kubernetes credential type", k8CredentialType == null ? null : k8CredentialType.getDisplayName());
@@ -90,10 +96,12 @@ public class KubernetesDTOToEntity
     }
   }
 
-  private KubernetesClusterDetails getKubernetesManualDetails(KubernetesClusterDetailsDTO kubernetesCredentialDetails) {
+  private KubernetesClusterDetails getKubernetesManualDetails(
+      KubernetesClusterDetailsDTO kubernetesCredentialDetails, NGAccess ngAccess) {
     KubernetesAuthType kubernetesAuthType = kubernetesCredentialDetails.getAuth().getAuthType();
-    KubernetesAuth kubernetesCredential = getManualKubernetesCredentials(
-        kubernetesCredentialDetails.getAuth().getCredentials(), kubernetesCredentialDetails.getAuth().getAuthType());
+    KubernetesAuth kubernetesCredential =
+        getManualKubernetesCredentials(kubernetesCredentialDetails.getAuth().getCredentials(),
+            kubernetesCredentialDetails.getAuth().getAuthType(), ngAccess);
     return KubernetesClusterDetails.builder()
         .masterUrl(kubernetesCredentialDetails.getMasterUrl())
         .authType(kubernetesAuthType)
@@ -101,22 +109,22 @@ public class KubernetesDTOToEntity
         .build();
   }
 
-  private KubernetesAuth getManualKubernetesCredentials(
-      KubernetesAuthCredentialDTO kubernetesAuthCredentialDTO, KubernetesAuthType kubernetesAuthType) {
+  private KubernetesAuth getManualKubernetesCredentials(KubernetesAuthCredentialDTO kubernetesAuthCredentialDTO,
+      KubernetesAuthType kubernetesAuthType, NGAccess ngAccess) {
     switch (kubernetesAuthType) {
       case USER_PASSWORD:
         KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
             castToUserNamePasswordDTO(kubernetesAuthCredentialDTO);
-        return toUserNamePasswordKubernetesCredential(kubernetesUserNamePasswordDTO);
+        return toUserNamePasswordKubernetesCredential(kubernetesUserNamePasswordDTO, ngAccess);
       case CLIENT_KEY_CERT:
         KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO = castToClientKeyCertDTO(kubernetesAuthCredentialDTO);
-        return toClientKeyCertKubernetesCredential(kubernetesClientKeyCertDTO);
+        return toClientKeyCertKubernetesCredential(kubernetesClientKeyCertDTO, ngAccess);
       case SERVICE_ACCOUNT:
         KubernetesServiceAccountDTO kubernetesServiceAccountDTO = castToServiceAccountDTO(kubernetesAuthCredentialDTO);
-        return toServiceAccountKubernetesCredential(kubernetesServiceAccountDTO);
+        return toServiceAccountKubernetesCredential(kubernetesServiceAccountDTO, ngAccess);
       case OPEN_ID_CONNECT:
         KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO = castToOpenIdConnectDTO(kubernetesAuthCredentialDTO);
-        return toOpenIdConnectKubernetesCredential(kubernetesOpenIdConnectDTO);
+        return toOpenIdConnectKubernetesCredential(kubernetesOpenIdConnectDTO, ngAccess);
       default:
         throw new UnknownEnumTypeException("Kubernetes Manual Credential type",
             kubernetesAuthType == null ? null : kubernetesAuthType.getDisplayName());
@@ -124,41 +132,53 @@ public class KubernetesDTOToEntity
   }
 
   private KubernetesAuth toUserNamePasswordKubernetesCredential(
-      KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO) {
+      KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO, NGAccess ngAccess) {
     return K8sUserNamePassword.builder()
         .userName(kubernetesUserNamePasswordDTO.getUsername())
-        .userNameRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getUsernameRef()))
-        .passwordRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getPasswordRef()))
+        .userNameRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesUserNamePasswordDTO.getUsernameRef(), ngAccess))
+        .passwordRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesUserNamePasswordDTO.getPasswordRef(), ngAccess))
         .build();
   }
 
-  private KubernetesAuth toClientKeyCertKubernetesCredential(KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO) {
+  private KubernetesAuth toClientKeyCertKubernetesCredential(
+      KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO, NGAccess ngAccess) {
     return K8sClientKeyCert.builder()
-        .clientKeyRef(SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientKeyRef()))
-        .clientCertRef(SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientCertRef()))
-        .clientKeyPassphraseRef(
-            SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getClientKeyPassphraseRef()))
+        .clientKeyRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesClientKeyCertDTO.getClientKeyRef(), ngAccess))
+        .clientCertRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesClientKeyCertDTO.getClientCertRef(), ngAccess))
+        .clientKeyPassphraseRef(secretRefService.validateAndGetSecretConfigString(
+            kubernetesClientKeyCertDTO.getClientKeyPassphraseRef(), ngAccess))
         .clientKeyAlgo(kubernetesClientKeyCertDTO.getClientKeyAlgo())
-        .caCertRef(SecretRefHelper.getSecretConfigString(kubernetesClientKeyCertDTO.getCaCertRef()))
+        .caCertRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesClientKeyCertDTO.getCaCertRef(), ngAccess))
         .build();
   }
 
-  private KubernetesAuth toServiceAccountKubernetesCredential(KubernetesServiceAccountDTO kubernetesServiceAccountDTO) {
+  private KubernetesAuth toServiceAccountKubernetesCredential(
+      KubernetesServiceAccountDTO kubernetesServiceAccountDTO, NGAccess ngAccess) {
     return K8sServiceAccount.builder()
-        .serviceAcccountTokenRef(
-            SecretRefHelper.getSecretConfigString(kubernetesServiceAccountDTO.getServiceAccountTokenRef()))
+        .serviceAcccountTokenRef(secretRefService.validateAndGetSecretConfigString(
+            kubernetesServiceAccountDTO.getServiceAccountTokenRef(), ngAccess))
         .build();
   }
 
-  private KubernetesAuth toOpenIdConnectKubernetesCredential(KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO) {
+  private KubernetesAuth toOpenIdConnectKubernetesCredential(
+      KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO, NGAccess ngAccess) {
     return K8sOpenIdConnect.builder()
         .oidcUsername(kubernetesOpenIdConnectDTO.getOidcUsername())
-        .oidcUsernameRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcUsernameRef()))
-        .oidcSecretRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcSecretRef()))
+        .oidcUsernameRef(secretRefService.validateAndGetSecretConfigString(
+            kubernetesOpenIdConnectDTO.getOidcUsernameRef(), ngAccess))
+        .oidcSecretRef(
+            secretRefService.validateAndGetSecretConfigString(kubernetesOpenIdConnectDTO.getOidcSecretRef(), ngAccess))
         .oidcScopes(kubernetesOpenIdConnectDTO.getOidcScopes())
-        .oidcPasswordRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcPasswordRef()))
+        .oidcPasswordRef(secretRefService.validateAndGetSecretConfigString(
+            kubernetesOpenIdConnectDTO.getOidcPasswordRef(), ngAccess))
         .oidcScopes(kubernetesOpenIdConnectDTO.getOidcScopes())
-        .oidcClientIdRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcClientIdRef()))
+        .oidcClientIdRef(secretRefService.validateAndGetSecretConfigString(
+            kubernetesOpenIdConnectDTO.getOidcClientIdRef(), ngAccess))
         .oidcIssuerUrl(kubernetesOpenIdConnectDTO.getOidcIssuerUrl())
         .build();
   }

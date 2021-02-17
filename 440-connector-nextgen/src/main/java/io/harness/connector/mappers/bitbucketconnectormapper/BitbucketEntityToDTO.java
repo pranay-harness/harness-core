@@ -22,10 +22,18 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<BitbucketConnectorDTO, BitbucketConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public BitbucketConnectorDTO createConnectorDTO(BitbucketConnector connector) {
     BitbucketAuthenticationDTO bitbucketAuthenticationDTO = buildBitbucketAuthentication(connector);
@@ -51,7 +59,7 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
             (BitbucketSshAuthentication) authenticationDetails;
         bitbucketCredentialsDTO =
             BitbucketSshCredentialsDTO.builder()
-                .sshKeyRef(SecretRefHelper.createSecretRef(bitbucketSshAuthentication.getSshKeyRef()))
+                .sshKeyRef(secretRefService.createSecretRef(bitbucketSshAuthentication.getSshKeyRef()))
                 .build();
         break;
       case HTTP:
@@ -78,11 +86,11 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
         final BitbucketUsernamePassword bitbucketUsernamePassword = (BitbucketUsernamePassword) auth;
         SecretRefData usernameRef = null;
         if (bitbucketUsernamePassword.getUsernameRef() != null) {
-          usernameRef = SecretRefHelper.createSecretRef(bitbucketUsernamePassword.getUsernameRef());
+          usernameRef = secretRefService.createSecretRef(bitbucketUsernamePassword.getUsernameRef());
         }
         bitbucketHttpCredentialsSpecDTO =
             BitbucketUsernamePasswordDTO.builder()
-                .passwordRef(SecretRefHelper.createSecretRef(bitbucketUsernamePassword.getPasswordRef()))
+                .passwordRef(secretRefService.createSecretRef(bitbucketUsernamePassword.getPasswordRef()))
                 .username(bitbucketUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
@@ -96,14 +104,14 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
   private BitbucketApiAccessDTO buildApiAccess(BitbucketConnector connector) {
     final BitbucketUsernamePasswordApiAccess bitbucketTokenApiAccess = connector.getBitbucketApiAccess();
     SecretRefData usernameRef = bitbucketTokenApiAccess.getUsernameRef() != null
-        ? SecretRefHelper.createSecretRef(bitbucketTokenApiAccess.getUsernameRef())
+        ? secretRefService.createSecretRef(bitbucketTokenApiAccess.getUsernameRef())
         : null;
     final BitbucketApiAccessSpecDTO bitbucketTokenSpecDTO =
 
         BitbucketUsernameTokenApiAccessDTO.builder()
             .username(bitbucketTokenApiAccess.getUsername())
             .usernameRef(usernameRef)
-            .tokenRef(SecretRefHelper.createSecretRef(bitbucketTokenApiAccess.getTokenRef()))
+            .tokenRef(secretRefService.createSecretRef(bitbucketTokenApiAccess.getTokenRef()))
             .build();
     return BitbucketApiAccessDTO.builder()
         .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)

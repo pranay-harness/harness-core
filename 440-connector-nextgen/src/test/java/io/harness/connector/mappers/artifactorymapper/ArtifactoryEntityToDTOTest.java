@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthT
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthenticationDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -56,6 +56,6 @@ public class ArtifactoryEntityToDTOTest extends CategoryTest {
     assertThat(artifactoryUsernamePasswordAuthDTO).isNotNull();
     assertThat(artifactoryUsernamePasswordAuthDTO.getUsername()).isEqualTo(userName);
     assertThat(artifactoryUsernamePasswordAuthDTO.getPasswordRef())
-        .isEqualTo(SecretRefHelper.createSecretRef(passwordRef));
+        .isEqualTo(SecretRefData.builder().scope(ACCOUNT).identifier("passwordRef").build());
   }
 }

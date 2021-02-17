@@ -3,10 +3,11 @@ package io.harness.connector.mappers.secretmanagermapper;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.ng.core.NGAccess;
 
 public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnectorDTO, VaultConnector> {
   @Override
-  public VaultConnector toConnectorEntity(VaultConnectorDTO connectorDTO) {
+  public VaultConnector toConnectorEntity(VaultConnectorDTO connectorDTO, NGAccess ngAccess) {
     return VaultConnector.builder()
         .accessType(connectorDTO.getAccessType())
         .isDefault(connectorDTO.isDefault())

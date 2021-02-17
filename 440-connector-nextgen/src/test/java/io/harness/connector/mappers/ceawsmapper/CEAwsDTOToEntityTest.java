@@ -16,6 +16,7 @@ import io.harness.connector.utils.AWSConnectorTestHelper;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import java.util.Optional;
@@ -43,7 +44,8 @@ public class CEAwsDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToConnectorEntity() {
     final CEAwsConnectorDTO ceAwsConnectorDTO = AWSConnectorTestHelper.createCEAwsConnectorDTO();
-    final CEAwsConfig awsConfig = ceAwsDTOToEntity.toConnectorEntity(ceAwsConnectorDTO);
+    final CEAwsConfig awsConfig = ceAwsDTOToEntity.toConnectorEntity(
+        ceAwsConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
 
     assertThat(awsConfig).isEqualTo(AWSConnectorTestHelper.createCEAwsConfigEntity());
   }
@@ -55,7 +57,9 @@ public class CEAwsDTOToEntityTest extends CategoryTest {
     final CEAwsConnectorDTO ceAwsConnectorDTO = AWSConnectorTestHelper.createCEAwsConnectorDTO();
     ceAwsConnectorDTO.setCurAttributes(null);
 
-    assertThatThrownBy(() -> ceAwsDTOToEntity.toConnectorEntity(ceAwsConnectorDTO))
+    assertThatThrownBy(()
+                           -> ceAwsDTOToEntity.toConnectorEntity(ceAwsConnectorDTO,
+                               BaseNGAccess.builder().accountIdentifier("accountIdentifier").build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(CEAwsFeatures.CUR.name());
   }

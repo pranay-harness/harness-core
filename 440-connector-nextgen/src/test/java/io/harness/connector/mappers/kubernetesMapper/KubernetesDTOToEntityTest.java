@@ -32,6 +32,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswor
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -61,7 +62,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithDelegateCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
@@ -80,7 +82,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 
   @Test(expected = UnexpectedException.class)
@@ -94,7 +97,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesDelegateDetailsDTO.builder().build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 
   @Test
@@ -122,7 +126,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -166,7 +171,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithClientKeyCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithClientKeyCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -215,7 +221,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithOpenIdConnectCred);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithOpenIdConnectCred, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -252,7 +259,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithServiceAccountCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithServiceAccountCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -279,7 +287,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 
   @Test(expected = UnexpectedException.class)
@@ -297,7 +306,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 
   @Test(expected = UnexpectedException.class)
@@ -315,7 +325,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 
   @Test(expected = UnexpectedException.class)
@@ -333,6 +344,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
+        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
   }
 }

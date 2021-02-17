@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -50,7 +51,8 @@ public class NexusDTOToEntityTest extends CategoryTest {
                                                         .build();
     NexusConnectorDTO nexusConnectorDTO =
         NexusConnectorDTO.builder().nexusServerUrl(url).version(version).auth(nexusAuthenticationDTO).build();
-    NexusConnector nexusConnector = nexusDTOToEntity.toConnectorEntity(nexusConnectorDTO);
+    NexusConnector nexusConnector = nexusDTOToEntity.toConnectorEntity(
+        nexusConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(nexusConnector).isNotNull();
     assertThat(nexusConnector.getUrl()).isEqualTo(url);
     assertThat(nexusConnector.getNexusVersion()).isEqualTo(version);

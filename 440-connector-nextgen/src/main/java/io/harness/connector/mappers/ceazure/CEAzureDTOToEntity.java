@@ -8,14 +8,18 @@ import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccess;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CEAzureDTOToEntity implements ConnectorDTOToEntityMapper<CEAzureConnectorDTO, CEAzureConfig> {
   @Override
-  public CEAzureConfig toConnectorEntity(CEAzureConnectorDTO connectorDTO) {
+  public CEAzureConfig toConnectorEntity(CEAzureConnectorDTO connectorDTO, NGAccess ngAccess) {
     final List<CEAzureFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
 
     CEAzureConfigBuilder builder = CEAzureConfig.builder()

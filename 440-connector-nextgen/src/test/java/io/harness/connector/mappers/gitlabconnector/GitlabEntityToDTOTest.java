@@ -21,7 +21,8 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,19 +53,23 @@ public class GitlabEntityToDTOTest {
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(GitlabHttpCredentialsDTO.builder()
-                             .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GitlabUsernamePasswordDTO.builder()
-                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
-                                                      .username(username)
-                                                      .build())
-                             .build())
+            .credentials(
+                GitlabHttpCredentialsDTO.builder()
+                    .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .httpCredentialsSpec(
+                        GitlabUsernamePasswordDTO.builder()
+                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
+                            .username(username)
+                            .build())
+                    .build())
             .build();
 
     final GitlabApiAccessDTO gitlabApiAccessDTO =
         GitlabApiAccessDTO.builder()
             .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(privateKeyRef)).build())
+            .spec(GitlabTokenSpecDTO.builder()
+                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateKeyRef).build())
+                      .build())
             .build();
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)
@@ -104,16 +109,20 @@ public class GitlabEntityToDTOTest {
             .authType(HTTP)
             .credentials(GitlabHttpCredentialsDTO.builder()
                              .type(GitlabHttpAuthenticationType.KERBEROS)
-                             .httpCredentialsSpec(GitlabKerberosDTO.builder()
-                                                      .kerberosKeyRef(SecretRefHelper.createSecretRef(tokenKeyRef))
-                                                      .build())
+                             .httpCredentialsSpec(
+                                 GitlabKerberosDTO.builder()
+                                     .kerberosKeyRef(
+                                         SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenKeyRef).build())
+                                     .build())
                              .build())
             .build();
 
     final GitlabApiAccessDTO gitlabApiAccessDTO =
         GitlabApiAccessDTO.builder()
             .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(tokenKeyRef)).build())
+            .spec(GitlabTokenSpecDTO.builder()
+                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenKeyRef).build())
+                      .build())
             .build();
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)

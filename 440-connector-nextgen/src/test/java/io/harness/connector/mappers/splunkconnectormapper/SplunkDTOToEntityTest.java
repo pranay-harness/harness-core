@@ -11,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -44,7 +45,8 @@ public class SplunkDTOToEntityTest extends CategoryTest {
                                                 .accountId(accountId)
                                                 .build();
 
-    SplunkConnector splunkConnector = splunkDTOToEntity.toConnectorEntity(splunkConnectorDTO);
+    SplunkConnector splunkConnector = splunkDTOToEntity.toConnectorEntity(
+        splunkConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(splunkConnector).isNotNull();
     assertThat(splunkConnector.getUsername()).isEqualTo(splunkConnectorDTO.getUsername());
     assertThat(splunkConnector.getPasswordRef()).isNotNull();

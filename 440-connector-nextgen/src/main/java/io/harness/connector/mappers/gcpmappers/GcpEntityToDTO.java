@@ -10,13 +10,18 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConnectorDTO, GcpConfig> {
+  private SecretRefService secretRefService;
+
   @Override
   public GcpConnectorDTO createConnectorDTO(GcpConfig connector) {
     final GcpCredentialType credentialType = connector.getCredentialType();
@@ -32,7 +37,7 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConnectorDT
 
   private GcpConnectorDTO buildManualCredential(GcpConfig connector) {
     final GcpServiceAccountKey auth = (GcpServiceAccountKey) connector.getCredential();
-    final SecretRefData secretRef = SecretRefHelper.createSecretRef(auth.getSecretKeyRef());
+    final SecretRefData secretRef = secretRefService.createSecretRef(auth.getSecretKeyRef());
     final GcpManualDetailsDTO gcpManualDetailsDTO = GcpManualDetailsDTO.builder().secretKeyRef(secretRef).build();
     return GcpConnectorDTO.builder()
         .credential(GcpConnectorCredentialDTO.builder()

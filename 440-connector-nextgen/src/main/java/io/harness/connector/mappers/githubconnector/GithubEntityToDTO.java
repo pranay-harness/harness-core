@@ -26,10 +26,18 @@ import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
     GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);
@@ -53,7 +61,7 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
       case SSH:
         final GithubSshAuthentication githubSshAuthentication = (GithubSshAuthentication) authenticationDetails;
         githubCredentialsDTO = GithubSshCredentialsDTO.builder()
-                                   .sshKeyRef(SecretRefHelper.createSecretRef(githubSshAuthentication.getSshKeyRef()))
+                                   .sshKeyRef(secretRefService.createSecretRef(githubSshAuthentication.getSshKeyRef()))
                                    .build();
         break;
       case HTTP:
@@ -77,23 +85,23 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         final GithubUsernameToken usernameToken = (GithubUsernameToken) auth;
         SecretRefData usernameReference = null;
         if (usernameToken.getUsernameRef() != null) {
-          usernameReference = SecretRefHelper.createSecretRef(usernameToken.getUsernameRef());
+          usernameReference = secretRefService.createSecretRef(usernameToken.getUsernameRef());
         }
         githubHttpCredentialsSpecDTO = GithubUsernameTokenDTO.builder()
                                            .username(usernameToken.getUsername())
                                            .usernameRef(usernameReference)
-                                           .tokenRef(SecretRefHelper.createSecretRef(usernameToken.getTokenRef()))
+                                           .tokenRef(secretRefService.createSecretRef(usernameToken.getTokenRef()))
                                            .build();
         break;
       case USERNAME_AND_PASSWORD:
         final GithubUsernamePassword githubUsernamePassword = (GithubUsernamePassword) auth;
         SecretRefData usernameRef = null;
         if (githubUsernamePassword.getUsernameRef() != null) {
-          usernameRef = SecretRefHelper.createSecretRef(githubUsernamePassword.getUsernameRef());
+          usernameRef = secretRefService.createSecretRef(githubUsernamePassword.getUsernameRef());
         }
         githubHttpCredentialsSpecDTO =
             GithubUsernamePasswordDTO.builder()
-                .passwordRef(SecretRefHelper.createSecretRef(githubUsernamePassword.getPasswordRef()))
+                .passwordRef(secretRefService.createSecretRef(githubUsernamePassword.getPasswordRef()))
                 .username(githubUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
@@ -113,13 +121,13 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         apiAccessSpecDTO = GithubAppSpecDTO.builder()
                                .applicationId(githubApiAccess.getApplicationId())
                                .installationId(githubApiAccess.getInstallationId())
-                               .privateKeyRef(SecretRefHelper.createSecretRef(githubApiAccess.getPrivateKeyRef()))
+                               .privateKeyRef(secretRefService.createSecretRef(githubApiAccess.getPrivateKeyRef()))
                                .build();
         break;
       case TOKEN:
         final GithubTokenApiAccess githubTokenApiAccess = (GithubTokenApiAccess) connector.getGithubApiAccess();
         apiAccessSpecDTO = GithubTokenSpecDTO.builder()
-                               .tokenRef(SecretRefHelper.createSecretRef(githubTokenApiAccess.getTokenRef()))
+                               .tokenRef(secretRefService.createSecretRef(githubTokenApiAccess.getTokenRef()))
                                .build();
         break;
       default:

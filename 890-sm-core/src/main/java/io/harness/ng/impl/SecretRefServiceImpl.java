@@ -1,0 +1,70 @@
+package io.harness.ng.impl;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.api.SecretCrudService;
+import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.ng.service.SecretRefService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.Optional;
+
+@Singleton
+public class SecretRefServiceImpl implements SecretRefService {
+  @Inject SecretCrudService secretCrudService;
+
+  @Override
+  public SecretRefData createSecretRef(String secretConfigString) {
+    return new SecretRefData(secretConfigString);
+  }
+
+  private void validateTheSecretInput(SecretRefData secretRefData, NGAccess ngAccess) {
+    validateTheScopeOfTheSecret(secretRefData, ngAccess);
+    validateTheSecretIsPresent(secretRefData, ngAccess);
+  }
+
+  private void validateTheScopeOfTheSecret(SecretRefData secretRefData, NGAccess ngAccess) {
+    if (isNotBlank(ngAccess.getProjectIdentifier())) {
+      // It is a project level entity
+      return;
+    } else if (isNotBlank(ngAccess.getOrgIdentifier())) {
+      // It is a org level entity
+      if (secretRefData.getScope() == Scope.PROJECT) {
+        throw new InvalidRequestException("The project level secret cannot be used at a org level");
+      }
+    } else {
+      // It is a account level entity
+      if (secretRefData.getScope() == Scope.PROJECT || secretRefData.getScope() == Scope.ORG) {
+        throw new InvalidRequestException(String.format(
+            "The %s level secret cannot be used at account level", secretRefData.getScope().getYamlRepresentation()));
+      }
+    }
+  }
+
+  private void validateTheSecretIsPresent(SecretRefData secretRefData, NGAccess ngAccess) {
+    Optional<SecretResponseWrapper> secretResponseWrapper = secretCrudService.get(ngAccess.getAccountIdentifier(),
+        ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier(), secretRefData.getIdentifier());
+    if (!secretResponseWrapper.isPresent()) {
+      String projectScopeString =
+          isNotBlank(ngAccess.getProjectIdentifier()) ? " in project " + ngAccess.getProjectIdentifier() : "";
+      String orgScopeString =
+          isNotBlank(ngAccess.getOrgIdentifier()) ? " in organization " + ngAccess.getOrgIdentifier() : "";
+      throw new InvalidRequestException(String.format(
+          "No secret exists with the id %s %s", secretRefData.getIdentifier(), orgScopeString + projectScopeString));
+    }
+  }
+
+  @Override
+  public String validateAndGetSecretConfigString(SecretRefData secretRefData, NGAccess ngAccess) {
+    if (secretRefData == null) {
+      return null;
+    }
+    validateTheSecretInput(secretRefData, ngAccess);
+    return secretRefData.toSecretRefStringValue();
+  }
+}

@@ -9,13 +9,18 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, GitConfig> {
+  private SecretRefService secretRefService;
+
   @Override
   public GitConfigDTO createConnectorDTO(GitConfig gitConnector) {
     GitAuthenticationDTO gitAuth = createGitAuthenticationDTO(gitConnector);
@@ -47,15 +52,15 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
     return GitHTTPAuthenticationDTO.builder()
         .username(userNamePasswordAuth.getUserName())
-        .usernameRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getUserNameRef()))
-        .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getPasswordReference()))
+        .usernameRef(secretRefService.createSecretRef(userNamePasswordAuth.getUserNameRef()))
+        .passwordRef(secretRefService.createSecretRef(userNamePasswordAuth.getPasswordReference()))
         .build();
   }
 
   private GitSSHAuthenticationDTO createSSHAuthenticationDTO(GitConfig gitConfig) {
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     return GitSSHAuthenticationDTO.builder()
-        .encryptedSshKey(SecretRefHelper.createSecretRef(gitSSHAuthentication.getSshKeyReference()))
+        .encryptedSshKey(secretRefService.createSecretRef(gitSSHAuthentication.getSshKeyReference()))
         .build();
   }
 

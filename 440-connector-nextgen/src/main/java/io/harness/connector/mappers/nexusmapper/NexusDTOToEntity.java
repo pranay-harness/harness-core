@@ -7,14 +7,20 @@ import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnectorDTO, NexusConnector> {
+  private SecretRefService secretRefService;
+
   @Override
-  public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO) {
+  public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO, NGAccess ngAccess) {
     NexusAuthType nexusAuthType = configDTO.getAuth().getAuthType();
     NexusConnectorBuilder nexusConnectorBuilder = NexusConnector.builder()
                                                       .url(configDTO.getNexusServerUrl())
@@ -23,17 +29,19 @@ public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnect
     if (nexusAuthType == NexusAuthType.USER_PASSWORD) {
       NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO =
           (NexusUsernamePasswordAuthDTO) configDTO.getAuth().getCredentials();
-      nexusConnectorBuilder.nexusAuthentication(createNexusAuthentication(nexusUsernamePasswordAuthDTO));
+      nexusConnectorBuilder.nexusAuthentication(createNexusAuthentication(nexusUsernamePasswordAuthDTO, ngAccess));
     }
     return nexusConnectorBuilder.build();
   }
 
   private NexusUserNamePasswordAuthentication createNexusAuthentication(
-      NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO) {
+      NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO, NGAccess ngAccess) {
     return NexusUserNamePasswordAuthentication.builder()
         .username(nexusUsernamePasswordAuthDTO.getUsername())
-        .usernameRef(SecretRefHelper.getSecretConfigString(nexusUsernamePasswordAuthDTO.getUsernameRef()))
-        .passwordRef(SecretRefHelper.getSecretConfigString(nexusUsernamePasswordAuthDTO.getPasswordRef()))
+        .usernameRef(
+            secretRefService.validateAndGetSecretConfigString(nexusUsernamePasswordAuthDTO.getUsernameRef(), ngAccess))
+        .passwordRef(
+            secretRefService.validateAndGetSecretConfigString(nexusUsernamePasswordAuthDTO.getPasswordRef(), ngAccess))
         .build();
   }
 }

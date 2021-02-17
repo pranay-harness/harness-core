@@ -20,22 +20,30 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredential
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
-import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
+  private SecretRefService secretRefService;
+
   @Override
-  public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO) {
+  public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO, NGAccess ngAccess) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
     BitbucketAuthentication bitbucketAuthentication =
-        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType);
+        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType, ngAccess);
     boolean hasApiAccess = hasApiAccess(configDTO.getApiAccess());
     BitbucketApiAccessType apiAccessType = null;
     BitbucketUsernamePasswordApiAccess bitbucketApiAccess = null;
     if (hasApiAccess) {
       apiAccessType = getApiAccessType(configDTO.getApiAccess());
-      bitbucketApiAccess = getApiAccessByType(configDTO.getApiAccess().getSpec(), apiAccessType);
+      bitbucketApiAccess = getApiAccessByType(configDTO.getApiAccess().getSpec(), apiAccessType, ngAccess);
     }
     return BitbucketConnector.builder()
         .connectionType(configDTO.getConnectionType())
@@ -48,31 +56,36 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
   }
 
   private BitbucketAuthentication buildAuthenticationDetails(
-      BitbucketCredentialsDTO credentialsDTO, GitAuthType gitAuthType) {
+      BitbucketCredentialsDTO credentialsDTO, GitAuthType gitAuthType, NGAccess ngAccess) {
     switch (gitAuthType) {
       case SSH:
         final BitbucketSshCredentialsDTO sshCredentialsDTO = (BitbucketSshCredentialsDTO) credentialsDTO;
         return BitbucketSshAuthentication.builder()
-            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
+            .sshKeyRef(secretRefService.validateAndGetSecretConfigString(sshCredentialsDTO.getSshKeyRef(), ngAccess))
             .build();
       case HTTP:
         final BitbucketHttpCredentialsDTO httpCredentialsDTO = (BitbucketHttpCredentialsDTO) credentialsDTO;
         final BitbucketHttpAuthenticationType type = httpCredentialsDTO.getType();
-        return BitbucketHttpAuthentication.builder().type(type).auth(getHttpAuth(type, httpCredentialsDTO)).build();
+        return BitbucketHttpAuthentication.builder()
+            .type(type)
+            .auth(getHttpAuth(type, httpCredentialsDTO, ngAccess))
+            .build();
       default:
         throw new UnknownEnumTypeException("Bitbucket Auth Type", String.valueOf(gitAuthType.getDisplayName()));
     }
   }
 
   private BitbucketHttpAuth getHttpAuth(
-      BitbucketHttpAuthenticationType type, BitbucketHttpCredentialsDTO httpCredentialsDTO) {
+      BitbucketHttpAuthenticationType type, BitbucketHttpCredentialsDTO httpCredentialsDTO, NGAccess ngAccess) {
     switch (type) {
       case USERNAME_AND_PASSWORD:
         final BitbucketUsernamePasswordDTO usernamePasswordDTO =
             (BitbucketUsernamePasswordDTO) httpCredentialsDTO.getHttpCredentialsSpec();
-        String usernameRef = getStringSecretForNullableSecret(usernamePasswordDTO.getUsernameRef());
+        String usernameRef =
+            secretRefService.validateAndGetSecretConfigString(usernamePasswordDTO.getUsernameRef(), ngAccess);
         return BitbucketUsernamePassword.builder()
-            .passwordRef(SecretRefHelper.getSecretConfigString(usernamePasswordDTO.getPasswordRef()))
+            .passwordRef(
+                secretRefService.validateAndGetSecretConfigString(usernamePasswordDTO.getPasswordRef(), ngAccess))
             .username(usernamePasswordDTO.getUsername())
             .usernameRef(usernameRef)
             .build();
@@ -80,17 +93,14 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
         throw new UnknownEnumTypeException("Bitbucket Http Auth Type", String.valueOf(type.getDisplayName()));
     }
   }
-  private String getStringSecretForNullableSecret(SecretRefData secretRefData) {
-    return SecretRefHelper.getSecretConfigString(secretRefData);
-  }
 
   private BitbucketUsernamePasswordApiAccess getApiAccessByType(
-      BitbucketApiAccessSpecDTO spec, BitbucketApiAccessType apiAccessType) {
+      BitbucketApiAccessSpecDTO spec, BitbucketApiAccessType apiAccessType, NGAccess ngAccess) {
     final BitbucketUsernameTokenApiAccessDTO apiAccessDTO = (BitbucketUsernameTokenApiAccessDTO) spec;
     return BitbucketUsernamePasswordApiAccess.builder()
         .username(apiAccessDTO.getUsername())
-        .usernameRef(getStringSecretForNullableSecret(apiAccessDTO.getUsernameRef()))
-        .tokenRef(getStringSecretForNullableSecret(apiAccessDTO.getTokenRef()))
+        .usernameRef(secretRefService.validateAndGetSecretConfigString(apiAccessDTO.getUsernameRef(), ngAccess))
+        .tokenRef(secretRefService.validateAndGetSecretConfigString(apiAccessDTO.getTokenRef(), ngAccess))
         .build();
   }
 

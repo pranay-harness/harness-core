@@ -22,8 +22,8 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
+import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -119,13 +119,15 @@ public class GitCloneContainerSpecBuilderTestHelper {
                 .builder()
 
                 .connectorType(ConnectorType.GIT)
-                .connectorConfig(GitConfigDTO.builder()
-                                     .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder()
-                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
-                                                  .build())
-                                     .url(gitSshRepoUrl)
+                .connectorConfig(
+                    GitConfigDTO.builder()
+                        .gitAuthType(GitAuthType.SSH)
+                        .gitAuth(GitSSHAuthenticationDTO.builder()
+                                     .encryptedSshKey(
+                                         SecretRefData.builder().scope(Scope.ACCOUNT).identifier(gitSshKey).build())
                                      .build())
+                        .url(gitSshRepoUrl)
+                        .build())
                 .build())
         .build();
   }
@@ -173,14 +175,16 @@ public class GitCloneContainerSpecBuilderTestHelper {
                 .builder()
 
                 .connectorType(ConnectorType.GIT)
-                .connectorConfig(GitConfigDTO.builder()
-                                     .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder()
-                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
-                                                  .build())
-                                     .branchName(gitBranch)
-                                     .url(gitSshRepoUrl)
+                .connectorConfig(
+                    GitConfigDTO.builder()
+                        .gitAuthType(GitAuthType.SSH)
+                        .gitAuth(GitSSHAuthenticationDTO.builder()
+                                     .encryptedSshKey(
+                                         SecretRefData.builder().scope(Scope.ACCOUNT).identifier(gitSshKey).build())
                                      .build())
+                        .branchName(gitBranch)
+                        .url(gitSshRepoUrl)
+                        .build())
                 .build())
         .build();
   }
@@ -191,14 +195,16 @@ public class GitCloneContainerSpecBuilderTestHelper {
         .gitConnectorDetails(
             ConnectorDetails.builder()
                 .connectorType(ConnectorType.GIT)
-                .connectorConfig(GitConfigDTO.builder()
-                                     .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder()
-                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
-                                                  .build())
-                                     .branchName(gitBranch)
-                                     .url(gitSshRepoUrl)
+                .connectorConfig(
+                    GitConfigDTO.builder()
+                        .gitAuthType(GitAuthType.SSH)
+                        .gitAuth(GitSSHAuthenticationDTO.builder()
+                                     .encryptedSshKey(
+                                         SecretRefData.builder().scope(Scope.ACCOUNT).identifier(gitSshKey).build())
                                      .build())
+                        .branchName(gitBranch)
+                        .url(gitSshRepoUrl)
+                        .build())
                 .build())
         .build();
   }

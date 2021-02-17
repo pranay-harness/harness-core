@@ -19,7 +19,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthentica
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,25 +47,28 @@ public class BitbucketEntityToDTOTest {
     final String passwordRef = "passwordRef";
     final String username = "username";
     final String privateKeyRef = "privateKeyRef";
+    final String usernameRef = "usernameRef";
 
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(BitbucketHttpCredentialsDTO.builder()
-                             .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(BitbucketUsernamePasswordDTO.builder()
-                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
-                                                      .username(username)
-                                                      .build())
-                             .build())
+            .credentials(
+                BitbucketHttpCredentialsDTO.builder()
+                    .type(BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .httpCredentialsSpec(
+                        BitbucketUsernamePasswordDTO.builder()
+                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
+                            .username(username)
+                            .build())
+                    .build())
             .build();
 
     final BitbucketApiAccessDTO bitbucketApiAccessDTO =
         BitbucketApiAccessDTO.builder()
             .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)
             .spec(BitbucketUsernameTokenApiAccessDTO.builder()
-                      .usernameRef(SecretRefHelper.createSecretRef(privateKeyRef))
-                      .tokenRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .usernameRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(usernameRef).build())
+                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateKeyRef).build())
                       .build())
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()

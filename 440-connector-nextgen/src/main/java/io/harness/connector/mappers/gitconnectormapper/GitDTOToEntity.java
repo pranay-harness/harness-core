@@ -12,18 +12,25 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO, GitConfig> {
+  private SecretRefService secretRefService;
+
   @Override
-  public GitConfig toConnectorEntity(GitConfigDTO configDTO) {
+  public GitConfig toConnectorEntity(GitConfigDTO configDTO, NGAccess ngAccess) {
     GitConnectionType gitConnectionType = getGitConnectionLevel(configDTO);
     CustomCommitAttributes customCommitAttributes = getCustomCommitAttributes(configDTO);
-    GitAuthentication gitAuthentication = getGitAuthentication(configDTO.getGitAuth(), configDTO.getGitAuthType());
+    GitAuthentication gitAuthentication =
+        getGitAuthentication(configDTO.getGitAuth(), configDTO.getGitAuthType(), ngAccess);
     boolean isGitSyncSupported = isGitSyncSupported(configDTO);
     return GitConfig.builder()
         .connectionType(gitConnectionType)
@@ -58,12 +65,13 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO, 
     return null;
   }
 
-  private GitAuthentication getGitAuthentication(GitAuthenticationDTO gitAuthenticationDTO, GitAuthType gitAuthType) {
+  private GitAuthentication getGitAuthentication(
+      GitAuthenticationDTO gitAuthenticationDTO, GitAuthType gitAuthType, NGAccess ngAccess) {
     switch (gitAuthType) {
       case HTTP:
-        return getHTTPGitAuthentication((GitHTTPAuthenticationDTO) gitAuthenticationDTO);
+        return getHTTPGitAuthentication((GitHTTPAuthenticationDTO) gitAuthenticationDTO, ngAccess);
       case SSH:
-        return getSSHGitAuthentication((GitSSHAuthenticationDTO) gitAuthenticationDTO);
+        return getSSHGitAuthentication((GitSSHAuthenticationDTO) gitAuthenticationDTO, ngAccess);
       default:
         throw new UnknownEnumTypeException(
             "Git Authentication Type", gitAuthType == null ? null : gitAuthType.getDisplayName());
@@ -71,17 +79,21 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO, 
   }
 
   private GitUserNamePasswordAuthentication getHTTPGitAuthentication(
-      GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO) {
+      GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO, NGAccess ngAccess) {
     return GitUserNamePasswordAuthentication.builder()
         .userName(gitHTTPAuthenticationDTO.getUsername())
-        .userNameRef(SecretRefHelper.getSecretConfigString(gitHTTPAuthenticationDTO.getUsernameRef()))
-        .passwordReference(SecretRefHelper.getSecretConfigString(gitHTTPAuthenticationDTO.getPasswordRef()))
+        .userNameRef(
+            secretRefService.validateAndGetSecretConfigString(gitHTTPAuthenticationDTO.getUsernameRef(), ngAccess))
+        .passwordReference(
+            secretRefService.validateAndGetSecretConfigString(gitHTTPAuthenticationDTO.getPasswordRef(), ngAccess))
         .build();
   }
 
-  private GitSSHAuthentication getSSHGitAuthentication(GitSSHAuthenticationDTO gitSSHAuthenticationDTO) {
+  private GitSSHAuthentication getSSHGitAuthentication(
+      GitSSHAuthenticationDTO gitSSHAuthenticationDTO, NGAccess ngAccess) {
     return GitSSHAuthentication.builder()
-        .sshKeyReference(SecretRefHelper.getSecretConfigString(gitSSHAuthenticationDTO.getEncryptedSshKey()))
+        .sshKeyReference(
+            secretRefService.validateAndGetSecretConfigString(gitSSHAuthenticationDTO.getEncryptedSshKey(), ngAccess))
         .build();
   }
 

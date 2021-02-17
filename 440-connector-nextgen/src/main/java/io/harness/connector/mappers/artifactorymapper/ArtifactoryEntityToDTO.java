@@ -7,13 +7,18 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthT
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthenticationDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class ArtifactoryEntityToDTO
     implements ConnectorEntityToDTOMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public ArtifactoryConnectorDTO createConnectorDTO(ArtifactoryConnector artifactoryConnector) {
     ArtifactoryAuthenticationDTO artifactoryAuthenticationDTO = null;
@@ -24,8 +29,8 @@ public class ArtifactoryEntityToDTO
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
           ArtifactoryUsernamePasswordAuthDTO.builder()
               .username(artifactoryCredentials.getUsername())
-              .usernameRef(SecretRefHelper.createSecretRef(artifactoryCredentials.getUsernameRef()))
-              .passwordRef(SecretRefHelper.createSecretRef(artifactoryCredentials.getPasswordRef()))
+              .usernameRef(secretRefService.createSecretRef(artifactoryCredentials.getUsernameRef()))
+              .passwordRef(secretRefService.createSecretRef(artifactoryCredentials.getPasswordRef()))
               .build();
       artifactoryAuthenticationDTO = ArtifactoryAuthenticationDTO.builder()
                                          .authType(artifactoryConnector.getAuthType())

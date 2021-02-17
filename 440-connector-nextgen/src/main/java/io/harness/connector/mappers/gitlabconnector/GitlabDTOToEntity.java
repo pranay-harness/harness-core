@@ -25,21 +25,30 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConnectorDTO, GitlabConnector> {
+  private SecretRefService secretRefService;
+
   @Override
-  public GitlabConnector toConnectorEntity(GitlabConnectorDTO configDTO) {
+  public GitlabConnector toConnectorEntity(GitlabConnectorDTO configDTO, NGAccess ngAccess) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
     GitlabAuthentication gitlabAuthentication =
-        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType);
+        buildAuthenticationDetails(configDTO.getAuthentication().getCredentials(), gitAuthType, ngAccess);
     boolean hasApiAccess = hasApiAccess(configDTO.getApiAccess());
     GitlabApiAccessType apiAccessType = null;
     GitlabTokenApiAccess gitlabApiAccess = null;
     if (hasApiAccess) {
       apiAccessType = getApiAccessType(configDTO.getApiAccess());
-      gitlabApiAccess = getApiAcessByType(configDTO.getApiAccess().getSpec(), apiAccessType);
+      gitlabApiAccess = getApiAcessByType(configDTO.getApiAccess().getSpec(), apiAccessType, ngAccess);
     }
     return GitlabConnector.builder()
         .connectionType(configDTO.getConnectionType())
@@ -52,64 +61,71 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
   }
 
   private GitlabAuthentication buildAuthenticationDetails(
-      GitlabCredentialsDTO credentialsDTO, GitAuthType gitAuthType) {
+      GitlabCredentialsDTO credentialsDTO, GitAuthType gitAuthType, NGAccess ngAccess) {
     switch (gitAuthType) {
       case SSH:
         final GitlabSshCredentialsDTO sshCredentialsDTO = (GitlabSshCredentialsDTO) credentialsDTO;
         return GitlabSshAuthentication.builder()
-            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
+            .sshKeyRef(secretRefService.validateAndGetSecretConfigString(sshCredentialsDTO.getSshKeyRef(), ngAccess))
             .build();
       case HTTP:
         final GitlabHttpCredentialsDTO httpCredentialsDTO = (GitlabHttpCredentialsDTO) credentialsDTO;
         final GitlabHttpAuthenticationType type = httpCredentialsDTO.getType();
-        return GitlabHttpAuthentication.builder().type(type).auth(getHttpAuth(type, httpCredentialsDTO)).build();
+        return GitlabHttpAuthentication.builder()
+            .type(type)
+            .auth(getHttpAuth(type, httpCredentialsDTO, ngAccess))
+            .build();
       default:
         throw new UnknownEnumTypeException(
             "Gitlab Auth Type", gitAuthType == null ? null : gitAuthType.getDisplayName());
     }
   }
 
-  private GitlabHttpAuth getHttpAuth(GitlabHttpAuthenticationType type, GitlabHttpCredentialsDTO httpCredentialsDTO) {
+  private GitlabHttpAuth getHttpAuth(
+      GitlabHttpAuthenticationType type, GitlabHttpCredentialsDTO httpCredentialsDTO, NGAccess ngAccess) {
     switch (type) {
       case USERNAME_AND_PASSWORD:
         final GitlabUsernamePasswordDTO usernamePasswordDTO =
             (GitlabUsernamePasswordDTO) httpCredentialsDTO.getHttpCredentialsSpec();
-        String usernameRef = getStringSecretForNullableSecret(usernamePasswordDTO.getUsernameRef());
+        String usernameRef = getStringSecretForNullableSecret(usernamePasswordDTO.getUsernameRef(), ngAccess);
         return GitlabUsernamePassword.builder()
-            .passwordRef(SecretRefHelper.getSecretConfigString(usernamePasswordDTO.getPasswordRef()))
+            .passwordRef(
+                secretRefService.validateAndGetSecretConfigString(usernamePasswordDTO.getPasswordRef(), ngAccess))
             .username(usernamePasswordDTO.getUsername())
             .usernameRef(usernameRef)
             .build();
       case USERNAME_AND_TOKEN:
         final GitlabUsernameTokenDTO gitlabUsernameTokenDTO =
             (GitlabUsernameTokenDTO) httpCredentialsDTO.getHttpCredentialsSpec();
-        String usernameReference = getStringSecretForNullableSecret(gitlabUsernameTokenDTO.getUsernameRef());
+        String usernameReference = getStringSecretForNullableSecret(gitlabUsernameTokenDTO.getUsernameRef(), ngAccess);
         return GitlabUsernameToken.builder()
-            .tokenRef(SecretRefHelper.getSecretConfigString(gitlabUsernameTokenDTO.getTokenRef()))
+            .tokenRef(secretRefService.validateAndGetSecretConfigString(gitlabUsernameTokenDTO.getTokenRef(), ngAccess))
             .username(gitlabUsernameTokenDTO.getUsername())
             .usernameRef(usernameReference)
             .build();
       case KERBEROS:
         final GitlabKerberosDTO gitlabKerberosDTO = (GitlabKerberosDTO) httpCredentialsDTO.getHttpCredentialsSpec();
         return GitlabKerberos.builder()
-            .kerberosKeyRef(SecretRefHelper.getSecretConfigString(gitlabKerberosDTO.getKerberosKeyRef()))
+            .kerberosKeyRef(
+                secretRefService.validateAndGetSecretConfigString(gitlabKerberosDTO.getKerberosKeyRef(), ngAccess))
             .build();
       default:
         throw new UnknownEnumTypeException("Gitlab Http Auth Type", type == null ? null : type.getDisplayName());
     }
   }
-  private String getStringSecretForNullableSecret(SecretRefData secretRefData) {
+  private String getStringSecretForNullableSecret(SecretRefData secretRefData, NGAccess ngAccess) {
     String usernameRef = null;
     if (secretRefData != null) {
-      usernameRef = SecretRefHelper.getSecretConfigString(secretRefData);
+      usernameRef = secretRefService.validateAndGetSecretConfigString(secretRefData, ngAccess);
     }
     return usernameRef;
   }
 
-  private GitlabTokenApiAccess getApiAcessByType(GitlabApiAccessSpecDTO spec, GitlabApiAccessType apiAccessType) {
+  private GitlabTokenApiAccess getApiAcessByType(
+      GitlabApiAccessSpecDTO spec, GitlabApiAccessType apiAccessType, NGAccess ngAccess) {
     final GitlabTokenSpecDTO tokenSpec = (GitlabTokenSpecDTO) spec;
     return GitlabTokenApiAccess.builder()
-        .tokenRef(SecretRefHelper.getSecretConfigString(tokenSpec.getTokenRef()))
+        .tokenRef(secretRefService.validateAndGetSecretConfigString(tokenSpec.getTokenRef(), ngAccess))
         .build();
   }
 

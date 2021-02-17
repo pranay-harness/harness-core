@@ -11,13 +11,18 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDTO, AwsConfig> {
+  private SecretRefService secretRefService;
+
   @Override
   public AwsConnectorDTO createConnectorDTO(AwsConfig connector) {
     final AwsCredentialType credentialType = connector.getCredentialType();
@@ -38,8 +43,8 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDT
   }
 
   private AwsCredentialDTOBuilder buildManualCredential(AwsAccessKeyCredential credential) {
-    final SecretRefData secretRef = SecretRefHelper.createSecretRef(credential.getSecretKeyRef());
-    final SecretRefData accessKeyRef = SecretRefHelper.createSecretRef(credential.getAccessKeyRef());
+    final SecretRefData secretRef = secretRefService.createSecretRef(credential.getSecretKeyRef());
+    final SecretRefData accessKeyRef = secretRefService.createSecretRef(credential.getAccessKeyRef());
     final AwsManualConfigSpecDTO awsManualConfigSpecDTO = AwsManualConfigSpecDTO.builder()
                                                               .accessKey(credential.getAccessKey())
                                                               .secretKeyRef(secretRef)

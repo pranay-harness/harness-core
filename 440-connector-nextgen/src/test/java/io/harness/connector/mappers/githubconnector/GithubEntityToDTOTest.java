@@ -19,7 +19,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,13 +54,15 @@ public class GithubEntityToDTOTest {
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(GithubHttpCredentialsDTO.builder()
-                             .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
-                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
-                                                      .username(username)
-                                                      .build())
-                             .build())
+            .credentials(
+                GithubHttpCredentialsDTO.builder()
+                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .httpCredentialsSpec(
+                        GithubUsernamePasswordDTO.builder()
+                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
+                            .username(username)
+                            .build())
+                    .build())
             .build();
 
     final GithubApiAccessDTO githubApiAccessDTO =
@@ -68,7 +71,7 @@ public class GithubEntityToDTOTest {
             .spec(GithubAppSpecDTO.builder()
                       .applicationId(appId)
                       .installationId(insId)
-                      .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .privateKeyRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateKeyRef).build())
                       .build())
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()

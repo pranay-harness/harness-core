@@ -12,7 +12,8 @@ import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -56,6 +57,7 @@ public class DockerEntityToDTOTest extends CategoryTest {
         (DockerUserNamePasswordDTO) dockerAuthenticationDTO.getCredentials();
     assertThat(dockerAuthCredentialsDTO).isNotNull();
     assertThat(dockerAuthCredentialsDTO.getUsername()).isEqualTo(dockerUserName);
-    assertThat(dockerAuthCredentialsDTO.getPasswordRef()).isEqualTo(SecretRefHelper.createSecretRef(passwordRef));
+    assertThat(dockerAuthCredentialsDTO.getPasswordRef())
+        .isEqualTo(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build());
   }
 }

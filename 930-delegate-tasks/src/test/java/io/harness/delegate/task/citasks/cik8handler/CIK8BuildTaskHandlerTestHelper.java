@@ -30,7 +30,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -165,13 +164,15 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static ConnectorDetails getGitConnector() {
     return ConnectorDetails.builder()
         .connectorType(ConnectorType.GIT)
-        .connectorConfig(GitConfigDTO.builder()
-                             .gitAuthType(GitAuthType.SSH)
-                             .gitAuth(GitSSHAuthenticationDTO.builder()
-                                          .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
-                                          .build())
-                             .url(gitSshRepoUrl)
-                             .build())
+        .connectorConfig(
+            GitConfigDTO.builder()
+                .gitAuthType(GitAuthType.SSH)
+                .gitAuth(
+                    GitSSHAuthenticationDTO.builder()
+                        .encryptedSshKey(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(gitSshKey).build())
+                        .build())
+                .url(gitSshRepoUrl)
+                .build())
         .build();
   }
 

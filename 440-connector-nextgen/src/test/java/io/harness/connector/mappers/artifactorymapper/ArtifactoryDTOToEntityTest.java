@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -48,7 +49,8 @@ public class ArtifactoryDTOToEntityTest extends CategoryTest {
                                                                     .build();
     ArtifactoryConnectorDTO artifactoryConnectorDTO =
         ArtifactoryConnectorDTO.builder().artifactoryServerUrl(url).auth(artifactoryAuthenticationDTO).build();
-    ArtifactoryConnector artifactoryConnector = artifactoryDTOToEntity.toConnectorEntity(artifactoryConnectorDTO);
+    ArtifactoryConnector artifactoryConnector = artifactoryDTOToEntity.toConnectorEntity(
+        artifactoryConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(artifactoryConnector).isNotNull();
     assertThat(artifactoryConnector.getUrl()).isEqualTo(url);
     assertThat(((ArtifactoryUserNamePasswordAuthentication) (artifactoryConnector.getArtifactoryAuthentication()))

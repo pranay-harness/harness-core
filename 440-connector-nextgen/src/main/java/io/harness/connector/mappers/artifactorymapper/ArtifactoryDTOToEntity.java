@@ -7,15 +7,21 @@ import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class ArtifactoryDTOToEntity
     implements ConnectorDTOToEntityMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
+  private SecretRefService secretRefService;
+
   @Override
-  public ArtifactoryConnector toConnectorEntity(ArtifactoryConnectorDTO configDTO) {
+  public ArtifactoryConnector toConnectorEntity(ArtifactoryConnectorDTO configDTO, NGAccess ngAccess) {
     ArtifactoryAuthType artifactoryAuthType = configDTO.getAuth().getAuthType();
     ArtifactoryConnectorBuilder artifactoryConnectorBuilder =
         ArtifactoryConnector.builder().url(configDTO.getArtifactoryServerUrl()).authType(artifactoryAuthType);
@@ -23,17 +29,19 @@ public class ArtifactoryDTOToEntity
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
           (ArtifactoryUsernamePasswordAuthDTO) configDTO.getAuth().getCredentials();
       artifactoryConnectorBuilder.artifactoryAuthentication(
-          createArtifactoryAuthentication(artifactoryUsernamePasswordAuthDTO));
+          createArtifactoryAuthentication(artifactoryUsernamePasswordAuthDTO, ngAccess));
     }
     return artifactoryConnectorBuilder.build();
   }
 
   private ArtifactoryUserNamePasswordAuthentication createArtifactoryAuthentication(
-      ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO) {
+      ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO, NGAccess ngAccess) {
     return ArtifactoryUserNamePasswordAuthentication.builder()
         .username(artifactoryUsernamePasswordAuthDTO.getUsername())
-        .usernameRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getUsernameRef()))
-        .passwordRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getPasswordRef()))
+        .usernameRef(secretRefService.validateAndGetSecretConfigString(
+            artifactoryUsernamePasswordAuthDTO.getUsernameRef(), ngAccess))
+        .passwordRef(secretRefService.validateAndGetSecretConfigString(
+            artifactoryUsernamePasswordAuthDTO.getPasswordRef(), ngAccess))
         .build();
   }
 }

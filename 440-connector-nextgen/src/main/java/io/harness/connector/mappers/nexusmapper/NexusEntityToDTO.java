@@ -7,12 +7,17 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NexusEntityToDTO implements ConnectorEntityToDTOMapper<NexusConnectorDTO, NexusConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public NexusConnectorDTO createConnectorDTO(NexusConnector nexusConnector) {
     NexusAuthenticationDTO nexusAuthenticationDTO = null;
@@ -22,8 +27,8 @@ public class NexusEntityToDTO implements ConnectorEntityToDTOMapper<NexusConnect
       NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO =
           NexusUsernamePasswordAuthDTO.builder()
               .username(nexusCredentials.getUsername())
-              .usernameRef(SecretRefHelper.createSecretRef(nexusCredentials.getUsernameRef()))
-              .passwordRef(SecretRefHelper.createSecretRef(nexusCredentials.getPasswordRef()))
+              .usernameRef(secretRefService.createSecretRef(nexusCredentials.getUsernameRef()))
+              .passwordRef(secretRefService.createSecretRef(nexusCredentials.getPasswordRef()))
               .build();
       nexusAuthenticationDTO = NexusAuthenticationDTO.builder()
                                    .authType(nexusConnector.getAuthType())

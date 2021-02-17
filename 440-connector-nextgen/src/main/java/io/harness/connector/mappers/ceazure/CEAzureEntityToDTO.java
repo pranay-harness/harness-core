@@ -9,9 +9,12 @@ import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO.CEAzureCo
 import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 
 import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CEAzureEntityToDTO implements ConnectorEntityToDTOMapper<CEAzureConnectorDTO, CEAzureConfig> {
   @Override
   public CEAzureConnectorDTO createConnectorDTO(CEAzureConfig connector) {

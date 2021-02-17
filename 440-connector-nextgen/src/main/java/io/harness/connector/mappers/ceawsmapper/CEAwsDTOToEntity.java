@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccess;
 import io.harness.remote.CEAwsSetupConfig;
 
 import com.amazonaws.arn.Arn;
@@ -22,16 +23,18 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Inject AwsClient awsClient;
   @Inject CEAwsSetupConfig ceAwsSetupConfig;
 
   @Override
-  public CEAwsConfig toConnectorEntity(CEAwsConnectorDTO connectorDTO) {
+  public CEAwsConfig toConnectorEntity(CEAwsConnectorDTO connectorDTO, NGAccess ngAccess) {
     CEAwsConfigBuilder ceAwsConfigBuilder = CEAwsConfig.builder();
 
     List<CEAwsFeatures> featuresList = connectorDTO.getFeaturesEnabled();

@@ -25,10 +25,18 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConnectorDTO, GitlabConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public GitlabConnectorDTO createConnectorDTO(GitlabConnector connector) {
     GitlabAuthenticationDTO gitlabAuthenticationDTO = buildGitlabAuthentication(connector);
@@ -52,7 +60,7 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
       case SSH:
         final GitlabSshAuthentication gitlabSshAuthentication = (GitlabSshAuthentication) authenticationDetails;
         gitlabCredentialsDTO = GitlabSshCredentialsDTO.builder()
-                                   .sshKeyRef(SecretRefHelper.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
+                                   .sshKeyRef(secretRefService.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
                                    .build();
         break;
       case HTTP:
@@ -76,23 +84,23 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
         final GitlabUsernameToken usernameToken = (GitlabUsernameToken) auth;
         SecretRefData usernameReference = null;
         if (usernameToken.getUsernameRef() != null) {
-          usernameReference = SecretRefHelper.createSecretRef(usernameToken.getUsernameRef());
+          usernameReference = secretRefService.createSecretRef(usernameToken.getUsernameRef());
         }
         gitlabHttpCredentialsSpecDTO = GitlabUsernameTokenDTO.builder()
                                            .username(usernameToken.getUsername())
                                            .usernameRef(usernameReference)
-                                           .tokenRef(SecretRefHelper.createSecretRef(usernameToken.getTokenRef()))
+                                           .tokenRef(secretRefService.createSecretRef(usernameToken.getTokenRef()))
                                            .build();
         break;
       case USERNAME_AND_PASSWORD:
         final GitlabUsernamePassword gitlabUsernamePassword = (GitlabUsernamePassword) auth;
         SecretRefData usernameRef = null;
         if (gitlabUsernamePassword.getUsernameRef() != null) {
-          usernameRef = SecretRefHelper.createSecretRef(gitlabUsernamePassword.getUsernameRef());
+          usernameRef = secretRefService.createSecretRef(gitlabUsernamePassword.getUsernameRef());
         }
         gitlabHttpCredentialsSpecDTO =
             GitlabUsernamePasswordDTO.builder()
-                .passwordRef(SecretRefHelper.createSecretRef(gitlabUsernamePassword.getPasswordRef()))
+                .passwordRef(secretRefService.createSecretRef(gitlabUsernamePassword.getPasswordRef()))
                 .username(gitlabUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
@@ -101,7 +109,7 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
         final GitlabKerberos gitlabKerberos = (GitlabKerberos) auth;
         gitlabHttpCredentialsSpecDTO =
             GitlabKerberosDTO.builder()
-                .kerberosKeyRef(SecretRefHelper.createSecretRef(gitlabKerberos.getKerberosKeyRef()))
+                .kerberosKeyRef(secretRefService.createSecretRef(gitlabKerberos.getKerberosKeyRef()))
                 .build();
         break;
       default:
@@ -114,7 +122,7 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
     final GitlabTokenApiAccess gitlabTokenApiAccess = connector.getGitlabApiAccess();
     final GitlabTokenSpecDTO gitlabTokenSpecDTO =
         GitlabTokenSpecDTO.builder()
-            .tokenRef(SecretRefHelper.createSecretRef(gitlabTokenApiAccess.getTokenRef()))
+            .tokenRef(secretRefService.createSecretRef(gitlabTokenApiAccess.getTokenRef()))
             .build();
     return GitlabApiAccessDTO.builder().type(GitlabApiAccessType.TOKEN).spec(gitlabTokenSpecDTO).build();
   }

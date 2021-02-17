@@ -19,7 +19,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -45,7 +45,7 @@ public class GitDTOToEntityTest extends CategoryTest {
     String passwordIdentifier = "passwordIdentifier";
     String passwordReference = Scope.ACCOUNT.getYamlRepresentation() + "." + passwordIdentifier;
 
-    SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
+    SecretRefData passwordRef = SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordReference).build();
     CustomCommitAttributes customCommitAttributes = CustomCommitAttributes.builder()
                                                         .authorEmail("author")
                                                         .authorName("authorName")
@@ -62,7 +62,8 @@ public class GitDTOToEntityTest extends CategoryTest {
                                     .url(url)
                                     .gitAuth(httpAuthentication)
                                     .build();
-    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
+    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(
+        gitConfigDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isTrue();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
@@ -87,10 +88,13 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .commitMessage("commitMessage")
                                                         .build();
     GitSSHAuthenticationDTO httpAuthentication =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(sshKeyReference)).build();
+        GitSSHAuthenticationDTO.builder()
+            .encryptedSshKey(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(sshKeyReference).build())
+            .build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitAuthType(SSH).gitConnectionType(ACCOUNT).url(url).gitAuth(httpAuthentication).build();
-    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
+    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(
+        gitConfigDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isFalse();
     assertThat(gitConfig.getUrl()).isEqualTo(url);

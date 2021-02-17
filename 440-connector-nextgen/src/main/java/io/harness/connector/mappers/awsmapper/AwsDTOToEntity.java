@@ -10,15 +10,21 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDTO, AwsConfig> {
+  private SecretRefService secretRefService;
+
   @Override
-  public AwsConfig toConnectorEntity(AwsConnectorDTO connectorDTO) {
+  public AwsConfig toConnectorEntity(AwsConnectorDTO connectorDTO, NGAccess ngAccess) {
     final AwsCredentialDTO credential = connectorDTO.getCredential();
     final AwsCredentialType credentialType = credential.getAwsCredentialType();
     AwsConfigBuilder awsConfigBuilder;
@@ -27,7 +33,7 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
         awsConfigBuilder = buildInheritFromDelegate(credential);
         break;
       case MANUAL_CREDENTIALS:
-        awsConfigBuilder = buildManualCredential(credential);
+        awsConfigBuilder = buildManualCredential(credential, ngAccess);
         break;
       default:
         throw new InvalidRequestException("Invalid Credential type.");
@@ -42,10 +48,10 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
     return AwsConfig.builder().credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).credential(awsIamCredential);
   }
 
-  private AwsConfigBuilder buildManualCredential(AwsCredentialDTO connector) {
+  private AwsConfigBuilder buildManualCredential(AwsCredentialDTO connector, NGAccess ngAccess) {
     final AwsManualConfigSpecDTO config = (AwsManualConfigSpecDTO) connector.getConfig();
-    final String secretKeyRef = SecretRefHelper.getSecretConfigString(config.getSecretKeyRef());
-    final String accessKeyRef = SecretRefHelper.getSecretConfigString(config.getAccessKeyRef());
+    final String secretKeyRef = secretRefService.validateAndGetSecretConfigString(config.getSecretKeyRef(), ngAccess);
+    final String accessKeyRef = secretRefService.validateAndGetSecretConfigString(config.getAccessKeyRef(), ngAccess);
     AwsAccessKeyCredential accessKeyCredential = AwsAccessKeyCredential.builder()
                                                      .accessKey(config.getAccessKey())
                                                      .accessKeyRef(accessKeyRef)

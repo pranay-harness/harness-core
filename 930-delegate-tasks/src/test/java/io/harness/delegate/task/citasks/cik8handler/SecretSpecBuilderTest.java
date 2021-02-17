@@ -38,7 +38,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -94,7 +93,9 @@ public class SecretSpecBuilderTest extends CategoryTest {
 
   private GitConfigDTO getGitConfigWithSshKeys() {
     GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(encryptedKey)).build();
+        GitSSHAuthenticationDTO.builder()
+            .encryptedSshKey(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(encryptedKey).build())
+            .build();
     return GitConfigDTO.builder()
         .url(gitRepoUrl)
         .branchName("master")

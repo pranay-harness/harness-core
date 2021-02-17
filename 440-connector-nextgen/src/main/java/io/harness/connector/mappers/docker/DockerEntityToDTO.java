@@ -8,12 +8,17 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.ng.service.SecretRefService;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class DockerEntityToDTO implements ConnectorEntityToDTOMapper<DockerConnectorDTO, DockerConnector> {
+  private SecretRefService secretRefService;
+
   @Override
   public DockerConnectorDTO createConnectorDTO(DockerConnector dockerConnector) {
     DockerAuthenticationDTO dockerAuthenticationDTO = null;
@@ -23,8 +28,8 @@ public class DockerEntityToDTO implements ConnectorEntityToDTOMapper<DockerConne
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
           DockerUserNamePasswordDTO.builder()
               .username(dockerCredentials.getUsername())
-              .usernameRef(SecretRefHelper.createSecretRef(dockerCredentials.getUsernameRef()))
-              .passwordRef(SecretRefHelper.createSecretRef(dockerCredentials.getPasswordRef()))
+              .usernameRef(secretRefService.createSecretRef(dockerCredentials.getUsernameRef()))
+              .passwordRef(secretRefService.createSecretRef(dockerCredentials.getPasswordRef()))
               .build();
       dockerAuthenticationDTO = DockerAuthenticationDTO.builder()
                                     .authType(dockerConnector.getAuthType())

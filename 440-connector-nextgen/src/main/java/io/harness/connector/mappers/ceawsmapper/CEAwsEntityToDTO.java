@@ -8,10 +8,13 @@ import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO.CEAwsConnectorDTOBuilder;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import lombok.AllArgsConstructor;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CEAwsEntityToDTO implements ConnectorEntityToDTOMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Override
   public CEAwsConnectorDTO createConnectorDTO(CEAwsConfig ceAwsConfig) {

@@ -19,6 +19,8 @@ import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -47,7 +49,12 @@ public class ConnectorMapper {
     ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
     ConnectorDTOToEntityMapper connectorDTOToEntityMapper =
         connectorDTOToEntityMapperMap.get(connectorInfo.getConnectorType().toString());
-    Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorInfo.getConnectorConfig());
+    NGAccess ngAccess = BaseNGAccess.builder()
+                            .accountIdentifier(accountIdentifier)
+                            .orgIdentifier(connectorInfo.getOrgIdentifier())
+                            .projectIdentifier(connectorInfo.getProjectIdentifier())
+                            .build();
+    Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorInfo.getConnectorConfig(), ngAccess);
     connector.setIdentifier(connectorInfo.getIdentifier());
     connector.setName(connectorInfo.getName());
     connector.setScope(getScopeFromConnectorDTO(connectorRequestDTO));

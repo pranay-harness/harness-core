@@ -11,6 +11,7 @@ import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsCo
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -46,7 +47,8 @@ public class AppDynamicsDTOToEntityTest extends CategoryTest {
                                                           .accountId(accountId)
                                                           .build();
 
-    AppDynamicsConnector appDynamicsConnector = appDynamicsDTOToEntity.toConnectorEntity(appDynamicsConnectorDTO);
+    AppDynamicsConnector appDynamicsConnector = appDynamicsDTOToEntity.toConnectorEntity(
+        appDynamicsConnectorDTO, BaseNGAccess.builder().accountIdentifier(accountId).build());
     assertThat(appDynamicsConnector).isNotNull();
     assertThat(appDynamicsConnector.getUsername()).isEqualTo(appDynamicsConnectorDTO.getUsername());
     assertThat(appDynamicsConnector.getPasswordRef()).isNotNull();

@@ -8,7 +8,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.jira.JiraConnector;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
-import io.harness.encryption.SecretRefHelper;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -41,6 +42,7 @@ public class JiraEntityToDTOTest extends CategoryTest {
     assertThat(jiraConnectorDTO).isNotNull();
     assertThat(jiraConnectorDTO.getJiraUrl()).isEqualTo(jiraUrl);
     assertThat(jiraConnectorDTO.getUsername()).isEqualTo(userName);
-    assertThat(jiraConnectorDTO.getPasswordRef()).isEqualTo(SecretRefHelper.createSecretRef(passwordRef));
+    assertThat(jiraConnectorDTO.getPasswordRef())
+        .isEqualTo(SecretRefData.builder().scope(Scope.ACCOUNT).identifier("passwordRef").build());
   }
 }
