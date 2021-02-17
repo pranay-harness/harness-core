@@ -10,7 +10,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.core.services.api.SplunkService;
@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class SplunkResourceTest extends CvNextGenTest {
+public class SplunkResourceTest extends CvNextGenTestBase {
   @Inject private static SplunkResource splunkResource = new SplunkResource();
   @Mock private SplunkService splunkService;
   private String accountId;

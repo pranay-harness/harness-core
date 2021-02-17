@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -23,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppListWebAppNamesTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Inject private AzureWebClient azureWebClient;
 

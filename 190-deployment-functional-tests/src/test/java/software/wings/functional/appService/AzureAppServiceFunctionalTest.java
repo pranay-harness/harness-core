@@ -16,6 +16,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_DEPLOYMENT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP;
@@ -79,8 +80,6 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
   public static final String ROLLBACK_BLUE_GREEN_DEPLOYMENT_SERVICE_NAME = "Azure_WebApp_Service_Rollback_Blue_Green";
   public static final String CANARY_DEPLOYMENT_SERVICE_NAME = "Azure_WebApp_Service_Canary";
 
-  private static final long TIMEOUT = 20 * 60 * 1000; // 20 minutes
-
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
@@ -99,7 +98,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     environment = getEnvironment();
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflow() {
@@ -122,7 +121,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     verifyExecution(workflowExecution);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflowRollback() {
@@ -147,7 +146,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getRollbackDuration()).isNotNull();
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TMACARI)
   @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppCanaryWorkflow() {
@@ -228,7 +227,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                    .name(AZURE_WEBAPP_SLOT_SETUP)
+                                    .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                     .properties(properties)
                                     .build())
                        .build());

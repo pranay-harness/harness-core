@@ -1,5 +1,8 @@
 package io.harness.pms.plan.execution.service;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
+import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
@@ -9,6 +12,7 @@ import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -37,7 +41,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
-      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName) {
+      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
+      String searchTerm) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -64,6 +69,18 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       criteria.orOperator(
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
+    }
+    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+      Criteria searchCriteria =
+          new Criteria().orOperator(where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier)
+                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.name)
+                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      criteria.andOperator(searchCriteria);
     }
     return criteria;
   }

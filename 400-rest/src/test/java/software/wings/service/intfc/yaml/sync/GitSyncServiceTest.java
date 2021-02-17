@@ -7,6 +7,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -27,6 +28,8 @@ import org.junit.experimental.categories.Category;
 
 public class GitSyncServiceTest extends WingsBaseTest {
   @Inject GitSyncService gitSyncService;
+  @Inject private HPersistence persistence;
+
   private GitRepositoryInfo repositoryInfo = GitRepositoryInfo.builder()
                                                  .url("https://abc.com/xyz.git")
                                                  .displayUrl("xyz")
@@ -81,14 +84,13 @@ public class GitSyncServiceTest extends WingsBaseTest {
 
   private String setupConnectorAndYamlGitConfig(
       String gitConnectorName, String branchName, String gitConnectorid, String appId) {
-    wingsPersistence.save(SettingAttribute.Builder.aSettingAttribute()
-                              .withName(gitConnectorName)
-                              .withUuid(gitConnectorid)
-                              .withAccountId(GLOBAL_ACCOUNT_ID)
-                              .withValue(GitConfig.builder().repoUrl("https://abc.com/xyz.git").build())
-                              .build());
-    wingsPersistence.save(
-        Application.Builder.anApplication().uuid(appId).appId(appId).accountId(GLOBAL_ACCOUNT_ID).build());
+    persistence.save(SettingAttribute.Builder.aSettingAttribute()
+                         .withName(gitConnectorName)
+                         .withUuid(gitConnectorid)
+                         .withAccountId(GLOBAL_ACCOUNT_ID)
+                         .withValue(GitConfig.builder().repoUrl("https://abc.com/xyz.git").build())
+                         .build());
+    persistence.save(Application.Builder.anApplication().uuid(appId).appId(appId).accountId(GLOBAL_ACCOUNT_ID).build());
     YamlGitConfig yamlGitConfig = YamlGitConfig.builder()
                                       .gitConnectorId(gitConnectorid)
                                       .branchName(branchName)
@@ -96,12 +98,12 @@ public class GitSyncServiceTest extends WingsBaseTest {
                                       .entityType(EntityType.APPLICATION)
                                       .entityId(appId)
                                       .build();
-    return wingsPersistence.save(yamlGitConfig);
+    return persistence.save(yamlGitConfig);
   }
 
   private void saveYamlChangeSet(YamlChangeSet.Status status, String connectorId, String yamlGitConfigId,
       String branchName, boolean gitToHarness, String appId) {
-    wingsPersistence.save(buildYamlChangeSet(status, connectorId, yamlGitConfigId, branchName, gitToHarness, appId));
+    persistence.save(buildYamlChangeSet(status, connectorId, yamlGitConfigId, branchName, gitToHarness, appId));
   }
 
   private YamlChangeSet buildYamlChangeSet(YamlChangeSet.Status status, String connectorId, String yamlGitConfigId,

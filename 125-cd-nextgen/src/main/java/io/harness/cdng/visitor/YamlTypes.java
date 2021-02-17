@@ -22,6 +22,10 @@ public interface YamlTypes {
   String K8S_BLUE_GREEN_DEPLOY = StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY;
   String K8S_APPLY = StepSpecTypeConstants.K8S_APPLY;
   String K8S_SCALE = StepSpecTypeConstants.K8S_SCALE;
+  String K8S_CANARY_DEPLOY = StepSpecTypeConstants.K8S_CANARY_DEPLOY;
+  String K8S_BG_SWAP_SERVICES = StepSpecTypeConstants.K8S_BG_SWAP_SERVICES;
+  String K8S_DELETE = StepSpecTypeConstants.K8S_DELETE;
+  String K8S_CANARY_DELETE = StepSpecTypeConstants.K8S_CANARY_DELETE;
 
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
@@ -40,7 +44,7 @@ public interface YamlTypes {
   String SERVICE_USE_FROM_STAGE_OVERRIDES = "overrides";
   String STAGE_OVERRIDES_CONFIG = "stageOverrides";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
-  String VARIABLE_OVERRIDE_SETS = "variablesOverrideSets";
+  String VARIABLE_OVERRIDE_SETS = "variableOverrideSets";
   String CONNECTOR_REF = "connectorRef";
   String TAG = "tag";
   String TAG_REGEX = "tagRegex";

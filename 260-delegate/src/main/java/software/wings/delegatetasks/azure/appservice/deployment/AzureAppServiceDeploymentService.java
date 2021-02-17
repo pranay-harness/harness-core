@@ -9,6 +9,7 @@ import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
 import static io.harness.azure.model.AzureConstants.START_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.SUCCESS_REQUEST;
+import static io.harness.azure.model.AzureConstants.TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
@@ -19,6 +20,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
+import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatus.STOPPED;
 import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.START_VERIFIER;
 import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.STOP_VERIFIER;
 import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.SWAP_VERIFIER;
@@ -40,7 +42,6 @@ import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.WebAppHostingOS;
-import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -52,7 +53,6 @@ import io.harness.logging.LogCallback;
 
 import software.wings.delegatetasks.azure.AzureServiceCallBack;
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
-import software.wings.delegatetasks.azure.DefaultCompletableSubscriber;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
@@ -64,7 +64,6 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
-import com.microsoft.azure.management.monitor.EventData;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -73,13 +72,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.joda.time.DateTime;
 
 @Singleton
 @NoArgsConstructor
@@ -315,7 +311,7 @@ public class AzureAppServiceDeploymentService {
       azureWebClient.startDeploymentSlotAsync(deploymentContext.getAzureWebClientContext(), slotName, restCallBack);
       startLogCallback.saveExecutionLog(SUCCESS_REQUEST);
 
-      SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(START_VERIFIER, startLogCallback,
+      SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(START_VERIFIER.name(), startLogCallback,
           slotName, azureWebClient, null, deploymentContext.getAzureWebClientContext(), restCallBack);
       slotSteadyStateChecker.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
           SLOT_STARTING_STATUS_CHECK_INTERVAL, startLogCallback, START_DEPLOYMENT_SLOT, statusVerifier);
@@ -340,8 +336,8 @@ public class AzureAppServiceDeploymentService {
       azureWebClient.stopDeploymentSlotAsync(deploymentContext.getAzureWebClientContext(), slotName, restCallBack);
       stopLogCallback.saveExecutionLog(SUCCESS_REQUEST);
 
-      SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(STOP_VERIFIER, stopLogCallback, slotName,
-          azureWebClient, null, deploymentContext.getAzureWebClientContext(), restCallBack);
+      SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(STOP_VERIFIER.name(), stopLogCallback,
+          slotName, azureWebClient, null, deploymentContext.getAzureWebClientContext(), restCallBack);
       slotSteadyStateChecker.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
           SLOT_STOPPING_STATUS_CHECK_INTERVAL, stopLogCallback, STOP_DEPLOYMENT_SLOT, statusVerifier);
       stopLogCallback.saveExecutionLog("Deployment slot stopped successfully", INFO, SUCCESS);
@@ -353,7 +349,7 @@ public class AzureAppServiceDeploymentService {
   }
 
   public AzureAppServicePreDeploymentData getAzureAppServicePreDeploymentData(
-      AzureWebClientContext azureWebClientContext, final String slotName,
+      AzureWebClientContext azureWebClientContext, final String slotName, String targetSlotName,
       Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings,
       Map<String, AzureAppServiceConnectionString> userAddedConnStrings,
       ILogStreamingTaskClient logStreamingTaskClient) {
@@ -361,9 +357,10 @@ public class AzureAppServiceDeploymentService {
     logCallback.saveExecutionLog(String.format("Saving existing configurations for slot - [%s] of App Service - [%s]",
         slotName, azureWebClientContext.getAppName()));
     try {
+      validateSlotStatus(azureWebClientContext, slotName, targetSlotName, logCallback);
+
       AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder =
           getDefaultPreDeploymentDataBuilder(azureWebClientContext.getAppName(), slotName);
-
       saveApplicationSettings(
           azureWebClientContext, slotName, userAddedAppSettings, preDeploymentDataBuilder, logCallback);
       saveConnectionStrings(
@@ -377,10 +374,23 @@ public class AzureAppServiceDeploymentService {
       return preDeploymentDataBuilder.build();
     } catch (Exception exception) {
       logCallback.saveExecutionLog(
-          String.format("Failed to save the deployment slot existing configurations - [%s]", exception.getMessage()),
+          String.format("Failed to save the deployment slot existing configurations - %n[%s]", exception.getMessage()),
           ERROR, FAILURE);
       throw exception;
     }
+  }
+
+  private void validateSlotStatus(
+      AzureWebClientContext azureWebClientContext, String slotName, String targetSlotName, LogCallback logCallback) {
+    if (isBlank(slotName)) {
+      throw new InvalidRequestException(SLOT_NAME_BLANK_ERROR_MSG);
+    }
+    String slotState = azureWebClient.getSlotState(azureWebClientContext, targetSlotName);
+    if (STOPPED.name().equalsIgnoreCase(slotState)) {
+      throw new InvalidRequestException(
+          String.format("Pre validation failed. " + TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE, targetSlotName));
+    }
+    logCallback.saveExecutionLog("Pre validation was success");
   }
 
   public AzureAppServicePreDeploymentDataBuilder getDefaultPreDeploymentDataBuilder(String appName, String slotName) {
@@ -570,7 +580,7 @@ public class AzureAppServiceDeploymentService {
     AzureServiceCallBack restCallBack = new AzureServiceCallBack(slotSwapLogCallback, SLOT_SWAP);
 
     SlotStatusVerifier statusVerifier =
-        SlotStatusVerifier.getStatusVerifier(SWAP_VERIFIER, slotSwapLogCallback, sourceSlotName, azureWebClient,
+        SlotStatusVerifier.getStatusVerifier(SWAP_VERIFIER.name(), slotSwapLogCallback, sourceSlotName, azureWebClient,
             azureMonitorClient, azureAppServiceDeploymentContext.getAzureWebClientContext(), restCallBack);
 
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -581,44 +591,5 @@ public class AzureAppServiceDeploymentService {
     slotSteadyStateChecker.waitUntilCompleteWithTimeout(steadyStateTimeoutInMinutes,
         SLOT_STOPPING_STATUS_CHECK_INTERVAL, slotSwapLogCallback, SLOT_SWAP, statusVerifier);
     slotSwapLogCallback.saveExecutionLog("Swapping slots done successfully", INFO, SUCCESS);
-  }
-
-  public void swapSlots(AzureAppServiceDeploymentContext azureAppServiceDeploymentContext, String targetSlotName,
-      ILogStreamingTaskClient logStreamingTaskClient) {
-    String sourceSlotName = azureAppServiceDeploymentContext.getSlotName();
-    int steadyStateTimeoutInMinutes = azureAppServiceDeploymentContext.getSteadyStateTimeoutInMin();
-    AzureWebClientContext webClientContext = azureAppServiceDeploymentContext.getAzureWebClientContext();
-
-    LogCallback slotSwapLogCallback = logStreamingTaskClient.obtainLogCallback(SLOT_SWAP);
-    DefaultCompletableSubscriber defaultSubscriber = new DefaultCompletableSubscriber();
-
-    slotSwapLogCallback.saveExecutionLog(format(
-        "Sending request for swapping source slot: [%s] with target slot: [%s]", sourceSlotName, targetSlotName));
-    AtomicReference<DateTime> startTime = new AtomicReference<>(DateTime.now());
-    azureWebClient.swapDeploymentSlotsAsync(webClientContext, sourceSlotName, targetSlotName)
-        .subscribe(defaultSubscriber);
-    slotSwapLogCallback.saveExecutionLog(SUCCESS_REQUEST);
-
-    Supplier<Void> getSwappingStatus = getSwappingSlotsStatus(webClientContext, slotSwapLogCallback, startTime);
-
-    azureTimeLimiter.waitUntilCompleteWithTimeout(steadyStateTimeoutInMinutes, SLOT_STOPPING_STATUS_CHECK_INTERVAL,
-        defaultSubscriber, getSwappingStatus, slotSwapLogCallback, SLOT_SWAP);
-    slotSwapLogCallback.saveExecutionLog("Swapping slots done successfully", INFO, SUCCESS);
-  }
-
-  @NotNull
-  private Supplier<Void> getSwappingSlotsStatus(
-      AzureWebClientContext webClientContext, LogCallback slotSwapLogCallback, AtomicReference<DateTime> startTime) {
-    AzureConfig azureConfig = webClientContext.getAzureConfig();
-    String subscriptionId = webClientContext.getSubscriptionId();
-    String resourceGroupName = webClientContext.getResourceGroupName();
-    return () -> {
-      slotSwapLogCallback.saveExecutionLog("Checking swapping slots status");
-      List<EventData> eventData = azureMonitorClient.listEventDataWithAllPropertiesByResourceGroupName(
-          azureConfig, subscriptionId, resourceGroupName, startTime.get(), DateTime.now());
-      slotSwapLogCallback.saveExecutionLog(AzureResourceUtility.activityLogEventDataToString(eventData));
-      startTime.set(DateTime.now());
-      return null;
-    };
   }
 }

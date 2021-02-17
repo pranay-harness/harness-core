@@ -2,7 +2,6 @@ package io.harness.beans.stages;
 
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.EntityType;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
@@ -11,7 +10,6 @@ import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageInfoConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
-import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -30,7 +28,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("CI")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("integrationStage")
-@YamlSchemaRoot(EntityType.INTEGRATION_STAGE)
 public class IntegrationStageConfig implements StageInfoConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
 
@@ -43,5 +40,4 @@ public class IntegrationStageConfig implements StageInfoConfig {
   private Infrastructure infrastructure;
   private List<DependencyElement> serviceDependencies;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) private ParameterField<Boolean> cloneCodebase;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 }

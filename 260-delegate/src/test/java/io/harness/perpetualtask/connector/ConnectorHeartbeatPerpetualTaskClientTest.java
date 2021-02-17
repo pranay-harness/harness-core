@@ -7,13 +7,14 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -22,6 +23,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
+import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 
 import com.google.common.collect.ImmutableMap;
@@ -40,11 +42,12 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
-  @InjectMocks ConnectorHeartbeatPerpetualTaskClient connectorHeartbeatPerpetualTaskClient;
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock private NGSecretService ngSecretService;
-  @Mock private Call<ResponseDTO<Optional<ConnectorDTO>>> call;
+  @Mock private NGSecretManagerService ngSecretManagerService;
+  @Mock private Call<ResponseDTO<ConnectorValidationParams>> call;
+  @InjectMocks ConnectorHeartbeatPerpetualTaskClient connectorHeartbeatPerpetualTaskClient;
   private static final String accountIdentifier = "accountIdentifier";
   private static final String orgIdentifier = "orgIdentifier";
   private static final String projectIdentifier = "projectIdentifier";
@@ -54,12 +57,13 @@ public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException, IllegalAccessException {
     MockitoAnnotations.initMocks(this);
-    when(connectorResourceClient.get(anyString(), anyString(), anyString(), anyString())).thenReturn(call);
-    ConnectorDTO connectorDTO =
-        ConnectorDTO.builder()
-            .connectorInfo(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
-            .build();
-    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(connectorDTO))));
+    when(connectorResourceClient.getConnectorValidationParams(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(call);
+    when(ngSecretManagerService.get(anyString(), anyString(), anyString(), anyString(), eq(false)))
+        .thenReturn(Optional.empty());
+    ScmValidationParams gitValidationParameters =
+        ScmValidationParams.builder().gitConfigDTO(GitConfigDTO.builder().build()).build();
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(gitValidationParameters)));
     FieldUtils.writeField(connectorHeartbeatPerpetualTaskClient, "kryoSerializer", kryoSerializer, true);
     Map<String, String> connectorDetails = ImmutableMap.of(ACCOUNT_KEY, accountIdentifier, ORG_KEY, orgIdentifier,
         PROJECT_KEY, projectIdentifier, CONNECTOR_IDENTIFIER_KEY, identifier);

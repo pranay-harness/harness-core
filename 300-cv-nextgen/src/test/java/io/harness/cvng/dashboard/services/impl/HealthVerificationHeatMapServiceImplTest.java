@@ -10,7 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.entities.Activity;
@@ -50,7 +50,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
+public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase {
   @Mock private CVConfigService cvConfigService;
   @Mock private ActivityService activityService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;

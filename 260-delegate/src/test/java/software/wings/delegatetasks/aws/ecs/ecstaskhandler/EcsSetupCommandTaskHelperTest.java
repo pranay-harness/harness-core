@@ -372,7 +372,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
-        ContainerSetupCommandUnitExecutionData.builder());
+        ContainerSetupCommandUnitExecutionData.builder(), false);
 
     assertThat(createServiceRequest).isNotNull();
 
@@ -427,7 +427,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
-        ContainerSetupCommandUnitExecutionData.builder());
+        ContainerSetupCommandUnitExecutionData.builder(), false);
 
     assertCreateServiceRequestObject(taskDefinition, createServiceRequest);
   }
@@ -451,7 +451,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
-        ContainerSetupCommandUnitExecutionData.builder());
+        ContainerSetupCommandUnitExecutionData.builder(), false);
 
     List<ServiceRegistry> serviceRegistries = createServiceRequest.getServiceRegistries();
     assertThat(createServiceRequest.getServiceRegistries()).isNotNull();
@@ -525,7 +525,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
         encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
-        ContainerSetupCommandUnitExecutionData.builder());
+        ContainerSetupCommandUnitExecutionData.builder(), false);
 
     assertThat(createServiceRequest.getNetworkConfiguration()).isNotNull();
     assertThat(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration()).isNotNull();
@@ -1149,7 +1149,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         new CreateServiceRequest().withServiceName("foo__2").withCluster("cluster");
     doReturn(createServiceRequest)
         .when(ecsSetupCommandTaskHelper)
-        .getCreateServiceRequest(any(), anyList(), any(), any(), anyString(), any(), any(), any());
+        .getCreateServiceRequest(any(), anyList(), any(), any(), anyString(), any(), any(), any(), eq(false));
     ecsSetupCommandTaskHelper.createEcsService(params, taskDefinition, attribute, emptyList(), builder, mockCallback);
     verify(awsClusterService).createService(anyString(), any(), anyList(), any());
   }
@@ -1189,7 +1189,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
                  new Service().withServiceName("foo__2").withDesiredCount(2),
                  new Service().withServiceName("foo__3").withDesiredCount(0)))
         .when(awsClusterService)
-        .getServices(anyString(), any(), anyList(), anyString());
+        .getServices(anyString(), any(), anyList(), anyString(), anyString());
     SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -1262,7 +1262,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     params.setTargetPort("80");
     params.setGeneratedContainerName("generatedContainerName");
     ecsSetupCommandTaskHelper.setLoadBalancerToService(
-        params, attribute, emptyList(), taskDefinition, createServiceRequest, awsClusterService, mockCallback);
+        params, attribute, emptyList(), taskDefinition, createServiceRequest, awsClusterService, mockCallback, false);
     List<LoadBalancer> loadBalancers = createServiceRequest.getLoadBalancers();
     assertThat(loadBalancers.size()).isEqualTo(1);
     assertThat(loadBalancers.get(0).getContainerPort()).isEqualTo(80);

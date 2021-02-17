@@ -264,10 +264,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return method;
   }
 
-  protected String getFinalHeader(ExecutionContext context) {
-    return header;
-  }
-
   protected List<KeyValuePair> getFinalHeaders(ExecutionContext context) {
     return headers;
   }
@@ -299,7 +295,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   public List<String> getPatternsForRequiredContextElementType() {
     String resolvedUrl = url;
     String resolvedBody = body;
-    String resolvedHeader = header;
     String resolvedAssertion = assertion;
     List<Variable> variables = new ArrayList<>();
     if (isNotEmpty(getTemplateVariables())) {
@@ -312,11 +307,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       if (isNotEmpty(templateVariables)) {
         resolvedUrl = fetchTemplatedValue(url, templateVariables);
         resolvedBody = fetchTemplatedValue(body, templateVariables);
-        resolvedHeader = fetchTemplatedValue(header, templateVariables);
         resolvedAssertion = fetchTemplatedValue(assertion, templateVariables);
       }
     }
-    return asList(resolvedUrl, resolvedBody, resolvedHeader, resolvedAssertion);
+    return asList(resolvedUrl, resolvedBody, resolvedAssertion);
   }
 
   private String fetchTemplatedValue(String fieldName, Map<String, Object> templatedVariables) {
@@ -337,7 +331,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return MoreObjects.toStringHelper(this)
         .add("url", url)
         .add("method", method)
-        .add("header", header)
         .add("headers", headers)
         .add("body", body)
         .add("assertion", assertion)
@@ -360,7 +353,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } catch (UnsupportedEncodingException e) {
       log.error("", e);
     }
-    String finalHeader = getFinalHeader(context);
     List<KeyValuePair> finalHeaders = getFinalHeaders(context);
     String finalMethod = getFinalMethod(context);
     String infrastructureMappingId = context.fetchInfraMappingId();
@@ -387,7 +379,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     boolean isCertValidationRequired = accountService.isCertValidationRequired(context.getAccountId());
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
-                                                .header(finalHeader)
                                                 .method(finalMethod)
                                                 .body(finalBody)
                                                 .url(finalUrl)
@@ -420,7 +411,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
     executionDataBuilder.httpUrl(expressionEvaluator.substitute(httpTaskParameters.getUrl(), Collections.emptyMap()))
         .httpMethod(expressionEvaluator.substitute(httpTaskParameters.getMethod(), Collections.emptyMap()))
-        .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()))
         .warningMessage(warningMessage);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);

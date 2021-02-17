@@ -1,5 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
@@ -7,6 +8,7 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -57,29 +59,32 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> sourcePaths;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
-      "sourcePaths", "target"})
+      "sourcePaths", "override", "archiveFormat"})
   public SaveCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
-      ParameterField<String> bucket, ParameterField<List<String>> sourcePaths, ParameterField<String> target) {
+      ParameterField<String> bucket, ParameterField<List<String>> sourcePaths, ParameterField<Boolean> override,
+      ParameterField<ArchiveFormat> archiveFormat) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.connectorRef = connectorRef;
-    this.containerImage = Optional.ofNullable(containerImage)
-                              .orElse(ParameterField.createValueField("homerovalle/drone-gcs-cache:latest"));
+    this.containerImage =
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/cache:latest"));
     if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("homerovalle/drone-gcs-cache:latest");
+      this.containerImage = ParameterField.createValueField("plugins/cache:latest");
     }
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;
     this.sourcePaths = sourcePaths;
-    this.target = target;
+    this.override = override;
+    this.archiveFormat = archiveFormat;
   }
 
   @Override

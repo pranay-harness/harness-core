@@ -7,13 +7,17 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
+import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -21,7 +25,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.encryption.SecretRefHelper;
-import io.harness.errorhandling.NGErrorHelper;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -37,12 +40,15 @@ public class GitConnectorValidatorTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock SecretManagerClientService secretManagerClientService;
-  @Mock NGErrorHelper ngErrorHelper;
+  @Mock EncryptionHelper encryptionHelper;
+  @Mock GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @InjectMocks GitConnectorValidator gitConnectorValidator;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(any(), any(), any())).thenReturn(null);
+    when(gitConfigAuthenticationInfoHelper.getSSHKey(any(), any(), any(), anyString())).thenReturn(null);
   }
 
   @Test
@@ -65,6 +71,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .build();
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
@@ -91,6 +98,8 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
             .build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
+
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);

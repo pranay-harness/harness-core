@@ -12,7 +12,6 @@ import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.rule.Owner;
 
-import com.google.common.base.Preconditions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

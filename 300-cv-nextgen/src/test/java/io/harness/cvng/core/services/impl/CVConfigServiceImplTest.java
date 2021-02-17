@@ -9,13 +9,12 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -44,9 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -57,7 +54,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-public class CVConfigServiceImplTest extends CvNextGenTest {
+public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Inject private DSConfigService dsConfigService;
   @Mock private NextGenService nextGenService;
@@ -86,42 +83,29 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     orgIdentifier = generateUuid();
     monitoringSourceIdentifier = generateUuid();
     monitoringSourceName = generateUuid();
-    when(nextGenService.listEnvironmentsForProject(anyString(), anyString(), anyString(), anySet()))
-        .then(invocation -> {
-          Object[] args = invocation.getArguments();
-          Map<String, EnvironmentResponseDTO> environments = new HashMap<>();
-          Set<String> envIdentifiers = (Set<String>) args[3];
-          envIdentifiers.forEach(envIdentifier
-              -> environments.put(envIdentifier,
-                  EnvironmentResponseDTO.builder()
-                      .identifier(envIdentifier)
-                      .accountId((String) args[0])
-                      .orgIdentifier((String) args[1])
-                      .projectIdentifier((String) args[2])
-                      .name(envIdentifier)
-                      .type(EnvironmentType.Production)
-                      .build()));
-          return environments;
-        });
-    when(nextGenService.listServicesForProject(anyString(), anyString(), anyString(), anySet())).then(invocation -> {
+    when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
-      Set<String> serviceIdentifiers = (Set<String>) args[3];
-      Map<String, ServiceResponseDTO> services = new HashMap<>();
-      serviceIdentifiers.forEach(serviceIdentifier
-          -> services.put(serviceIdentifier,
-              ServiceResponseDTO.builder()
-                  .identifier(serviceIdentifier)
-                  .accountId((String) args[0])
-                  .orgIdentifier((String) args[1])
-                  .projectIdentifier((String) args[2])
-                  .name(serviceIdentifier)
-                  .build()));
-      return services;
+      return EnvironmentResponseDTO.builder()
+          .accountId((String) args[0])
+          .orgIdentifier((String) args[1])
+          .projectIdentifier((String) args[2])
+          .identifier((String) args[3])
+          .name((String) args[3])
+          .type(EnvironmentType.Production)
+          .build();
+    });
+    when(nextGenService.getService(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return ServiceResponseDTO.builder()
+          .accountId((String) args[0])
+          .orgIdentifier((String) args[1])
+          .projectIdentifier((String) args[2])
+          .identifier((String) args[3])
+          .name((String) args[3])
+          .build();
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
-
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-
     FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
@@ -384,16 +368,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void setCollectionTaskId() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    assertThat(cvConfig.getPerpetualTaskId()).isNull();
-    String taskId = generateUuid();
-    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
+    assertThat(cvConfig.getFirstTaskQueued()).isNull();
+    cvConfigService.markFirstTaskCollected(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getPerpetualTaskId()).isEqualTo(taskId);
+    assertThat(updated.getFirstTaskQueued()).isTrue();
   }
 
   @Test

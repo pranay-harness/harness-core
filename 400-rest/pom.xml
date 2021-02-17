@@ -240,6 +240,10 @@
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-secretmanager</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
         </dependency>
         <dependency>
@@ -794,7 +798,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>940-delegate-beans</artifactId>
+            <artifactId>955-delegate-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -805,11 +809,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>940-notification-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>945-connector-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -845,6 +844,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>950-ng-project-n-orgs</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>954-connector-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

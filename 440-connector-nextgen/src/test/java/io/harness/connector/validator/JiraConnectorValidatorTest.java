@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.encryption.SecretRefData;
@@ -35,6 +36,7 @@ public class JiraConnectorValidatorTest {
 
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
+  @Mock private EncryptionHelper encryptionHelper;
   @InjectMocks JiraConnectorValidator connectorValidator;
 
   @Before
@@ -51,6 +53,7 @@ public class JiraConnectorValidatorTest {
                                             .jiraUrl(JIRA_URL)
                                             .passwordRef(SecretRefData.builder().build())
                                             .build();
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
 
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
@@ -72,6 +75,7 @@ public class JiraConnectorValidatorTest {
                                             .jiraUrl(JIRA_URL)
                                             .passwordRef(SecretRefData.builder().build())
                                             .build();
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
 
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))

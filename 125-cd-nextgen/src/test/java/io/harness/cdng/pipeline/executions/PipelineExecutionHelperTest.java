@@ -7,8 +7,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -19,6 +18,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.execution.NodeExecution;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary.CDStageExecutionSummaryKeys;
@@ -48,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.query.Update;
 
-public class PipelineExecutionHelperTest extends CDNGBaseTest {
+public class PipelineExecutionHelperTest extends CDNGTestBase {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
 
   @Test

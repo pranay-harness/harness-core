@@ -37,19 +37,16 @@ public class NGActivityDTO {
   ActivityDetail detail;
   @NotNull long activityTime;
   @NotBlank String description;
-  String errorMessage;
 
   @Builder
   public NGActivityDTO(String accountIdentifier, EntityDetail referredEntity, NGActivityType type,
-      NGActivityStatus activityStatus, ActivityDetail detail, long activityTime, String description,
-      String errorMessage) {
+      NGActivityStatus activityStatus, ActivityDetail detail, long activityTime, String description) {
     this.accountIdentifier = accountIdentifier;
     this.referredEntity = referredEntity;
     this.type = type;
     this.activityStatus = activityStatus;
     this.detail = detail;
     this.description = description;
-    this.errorMessage = errorMessage;
     this.activityTime = activityTime;
   }
 }

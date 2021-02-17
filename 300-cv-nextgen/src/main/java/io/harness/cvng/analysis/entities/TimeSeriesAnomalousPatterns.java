@@ -1,5 +1,8 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
@@ -9,8 +12,11 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +45,38 @@ public class TimeSeriesAnomalousPatterns implements PersistentEntity, UuidAware,
   @FdIndex private long lastUpdatedAt;
   @FdIndex private String verificationTaskId;
   private List<TimeSeriesAnomalies> anomalies;
+  private byte[] compressedAnomalies;
+
+  public byte[] getCompressedAnomalies() {
+    if (isEmpty(compressedAnomalies)) {
+      return new byte[0];
+    }
+
+    return compressedAnomalies;
+  }
+
+  public void compressAnomalies() {
+    if (isNotEmpty(anomalies)) {
+      try {
+        setCompressedAnomalies(compressString(JsonUtils.asJson(anomalies)));
+        setAnomalies(null);
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  public void deCompressAnomalies() {
+    if (isNotEmpty(compressedAnomalies)) {
+      try {
+        String decompressedAnomalies = deCompressString(compressedAnomalies);
+        setAnomalies(JsonUtils.asObject(decompressedAnomalies, new TypeReference<List<TimeSeriesAnomalies>>() {}));
+        setCompressedAnomalies(null);
+      } catch (Exception ex) {
+        throw new IllegalStateException(ex);
+      }
+    }
+  }
 
   public static List<TimeSeriesAnomalies> convertFromMap(
       Map<String, Map<String, List<TimeSeriesAnomalies>>> txnMetricAnomMap) {

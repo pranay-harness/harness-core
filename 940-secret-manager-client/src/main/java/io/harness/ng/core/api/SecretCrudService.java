@@ -8,6 +8,7 @@ import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -24,6 +25,9 @@ public interface SecretCrudService {
     return RequestBody.create(MediaType.parse("text/plain"), bytes);
   }
 
+  Boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
   SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto);
 
   SecretResponseWrapper createViaYaml(String accountIdentifier, SecretDTOV2 dto);
@@ -32,17 +36,20 @@ public interface SecretCrudService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SecretType secretType, String searchTerm, int page, int size);
+      List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   SecretResponseWrapper createFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 
-  SecretResponseWrapper updateFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
+  SecretResponseWrapper updateFile(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, SecretDTOV2 updateDTO, InputStream inputStream);
 
-  SecretResponseWrapper update(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper update(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, SecretDTOV2 updateDTO);
 
-  SecretResponseWrapper updateViaYaml(String accountIdentifier, SecretDTOV2 dto);
+  SecretResponseWrapper updateViaYaml(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, SecretDTOV2 updateDTO);
 
   SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretValidationMetaData metadata);

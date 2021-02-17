@@ -43,6 +43,8 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +63,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -68,6 +71,7 @@ import org.mockito.Mockito;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
 
@@ -81,6 +85,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
 
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -110,6 +115,12 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(ManagerRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CDNGRegistrars.yamlSchemaRegistrars).build();
       }
     });
     modules.add(new AbstractModule() {
@@ -197,6 +208,6 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
 
   @Override
   public Statement apply(Statement base, FrameworkMethod method, Object target) {
-    return applyInjector(base, method, target);
+    return applyInjector(log, base, method, target);
   }
 }

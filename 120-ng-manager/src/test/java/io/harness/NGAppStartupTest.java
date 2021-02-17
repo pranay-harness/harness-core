@@ -9,7 +9,6 @@ import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.rule.Owner;
-import io.harness.yaml.YamlSdkModule;
 
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -26,13 +25,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PmsSdkModule.class, YamlSdkModule.class})
+@PrepareForTest({PmsSdkModule.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
 public class NGAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
@@ -59,8 +57,7 @@ public class NGAppStartupTest extends CategoryTest {
   @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
-    PowerMockito.mockStatic(YamlSdkModule.class);
-    //    initializeDefaultInstance(any());
+    //        initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,
         ResourceHelpers.resourceFilePath("test-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
     SUPPORT.before();
@@ -73,12 +70,12 @@ public class NGAppStartupTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = VIKAS, intermittent = true)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
-        client.target(String.format("http://localhost:%d/swagger.json", SUPPORT.getLocalPort())).request().get();
+        client.target(String.format("http://localhost:%d/health", SUPPORT.getLocalPort())).request().get();
 
     assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
     response.close();

@@ -2,11 +2,11 @@ package software.wings.utils;
 
 import static io.harness.govern.Switch.noop;
 import static io.harness.shell.SshHelperUtils.normalizeError;
+import static io.harness.winrm.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
-import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;

@@ -7,6 +7,8 @@ import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
@@ -14,8 +16,7 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.persistence.HIterator;
-
-import software.wings.dl.WingsPersistence;
+import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -27,11 +28,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class PerpetualTaskRecordDao {
-  private final WingsPersistence persistence;
+  private final HPersistence persistence;
 
   @Inject
-  public PerpetualTaskRecordDao(WingsPersistence persistence) {
+  public PerpetualTaskRecordDao(HPersistence persistence) {
     this.persistence = persistence;
   }
 

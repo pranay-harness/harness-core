@@ -7,6 +7,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.delegate.beans.ConnectionMode;
@@ -34,6 +36,7 @@ import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -42,7 +45,6 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
@@ -80,10 +82,11 @@ import org.jetbrains.annotations.NotNull;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
-  private WingsPersistence wingsPersistence;
+  private HPersistence persistence;
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
@@ -94,16 +97,16 @@ public class DelegateAgentResource {
   private ConfigurationController configurationController;
 
   @Inject
-  public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
-      WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
-      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
+  public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
+      DelegateRequestRateLimiter delegateRequestRateLimiter, SubdomainUrlHelperIntfc subdomainUrlHelper,
+      ArtifactCollectionResponseHandler artifactCollectionResponseHandler, InstanceHelper instanceHelper,
+      ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
-    this.wingsPersistence = wingsPersistence;
+    this.persistence = persistence;
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
@@ -380,7 +383,7 @@ public class DelegateAgentResource {
       List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
       log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
 
-      wingsPersistence.save(logs);
+      persistence.save(logs);
     }
   }
 

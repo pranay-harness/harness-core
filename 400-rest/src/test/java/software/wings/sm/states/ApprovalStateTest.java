@@ -224,8 +224,8 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   @BeforeClass
   public static void readMockData() throws IOException {
-    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
-    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+    projects = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_statuses"), JSONArray.class);
   }
 
   @Before
@@ -313,7 +313,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("infra").name("infra").build());
     when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("app").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("nameW/Omrkdwn").build());
     when(workflowNotificationHelper.calculateEnvDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("*Environments:* env").build());
   }
@@ -394,6 +394,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion("true");
     when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression("true");
     verify(alertService, times(0))
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
@@ -408,6 +409,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -423,6 +425,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -442,6 +445,7 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = approvalState.execute(context);
 
+    verify(context).renderExpression(disableAssertion);
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
@@ -1485,6 +1489,7 @@ public class ApprovalStateTest extends WingsBaseTest {
         SlackApprovalParams.builder()
             .appId(APP_ID)
             .appName("app")
+            .nonFormattedAppName("nameW/Omrkdwn")
             .routingId(ACCOUNT_ID)
             .deploymentId(PIPELINE_WORKFLOW_EXECUTION_ID)
             .workflowId(WORKFLOW_ID)
@@ -1525,7 +1530,7 @@ public class ApprovalStateTest extends WingsBaseTest {
                         .environments(Collections.singletonList(EnvSummary.builder().name("env").build()))
                         .build());
 
-    JSONObject customData = new JSONObject(slackApprovalParams);
+    JSONObject customData = new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
     String buttonValue = StringEscapeUtils.escapeJson(customData.toString());
     String displayText = createSlackApprovalMessage(
         slackApprovalParams, ApprovalState.class.getResource("/slack/workflow-approval-message.txt"));
@@ -1535,6 +1540,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.APPROVAL_MESSAGE)).isEqualTo(displayText);
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER))
         .isEqualTo("suppressTraditionalNotificationOnSlack");
+    assertThat(customData.get("nonFormattedAppName")).isEqualTo("nameW/Omrkdwn");
     assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
 
@@ -1543,10 +1549,10 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTrimExcessiveServicesAndArtifactsDetails() {
     String excessiveInfo =
-        "first, second, third, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo, lotsOfLongExcessiveInfo";
+        "first,second,third,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo";
     WorkflowNotificationDetails serviceDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
     WorkflowNotificationDetails infraDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
-    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo));
+    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo.replace(",", ", ")));
     SlackApprovalParams slackApprovalParams =
         SlackApprovalParams.builder()
             .appId(APP_ID)
@@ -1575,13 +1581,19 @@ public class ApprovalStateTest extends WingsBaseTest {
             .expiryDate("someMockDate")
             .verb("paused")
             .build();
-    JSONObject customData =
-        approvalState.createCustomData(slackApprovalParams, serviceDetails, artifacts, infraDetails);
-    assertThat(customData.toString().length()).isLessThanOrEqualTo(2000);
-    assertThat(customData.get("servicesInvolved")).isEqualTo("*Services*: first, second, third... 25 more");
-    assertThat(customData.get("artifactsInvolved")).isEqualTo("*Artifacts:* first, second, third... 25 more");
-    assertThat(customData.get("infraDefinitionsInvolved"))
-        .isEqualTo("*Infrastructure Definitions*: first, second, third... 25 more");
+    String displayText = createSlackApprovalMessage(slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE));
+
+    String trimmedMessage = approvalState.validateMessageLength(displayText, slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE), serviceDetails,
+        artifacts, infraDetails);
+    assertThat(trimmedMessage.length()).isLessThanOrEqualTo(2000);
+    assertThat(trimmedMessage).contains("*Services*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getServicesInvolved());
+    assertThat(trimmedMessage).contains("*Artifacts:* first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getArtifactsInvolved());
+    assertThat(trimmedMessage).contains("*Infrastructure Definitions*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getInfraDefinitionsInvolved());
   }
 
   private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {

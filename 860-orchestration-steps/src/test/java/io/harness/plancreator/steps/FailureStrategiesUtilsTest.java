@@ -1,7 +1,6 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static io.harness.yaml.core.failurestrategy.NGFailureType.ALL_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHENTICATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 
@@ -152,7 +151,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     stageFailureStrategies =
         Collections.singletonList(FailureStrategyConfig.builder()
                                       .onFailure(OnFailureConfig.builder()
-                                                     .errors(Collections.singletonList(NGFailureType.OTHER_ERRORS))
+                                                     .errors(Collections.singletonList(NGFailureType.ANY_OTHER_ERRORS))
                                                      .action(AbortFailureActionConfig.builder().build())
                                                      .build())
                                       .build());

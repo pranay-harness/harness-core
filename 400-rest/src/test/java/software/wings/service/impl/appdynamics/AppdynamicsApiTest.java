@@ -29,6 +29,7 @@ import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.encryption.SecretRefData;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -43,7 +44,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -86,7 +86,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
 
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private EncryptionService encryptionService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private RequestExecutor requestExecutor;
@@ -130,7 +130,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
     String savedAttributeId = saveAppdynamicsConfig();
-    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    SettingAttribute settingAttribute = persistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     final List<NewRelicApplication> applications = appdynamicsService.getApplications(savedAttributeId);
     assertThat(applications.size()).isEqualTo(1);
@@ -408,7 +408,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                             .withName(UUID.randomUUID().toString())
                                             .build();
 
-    return wingsPersistence.save(settingAttribute);
+    return persistence.save(settingAttribute);
   }
 
   private void handleClone(Call restCall) {

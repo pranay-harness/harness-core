@@ -5,9 +5,9 @@ import static io.harness.rule.OwnerRule.SANDESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.anomalydetection.types.EntityType;
-import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.anomaly.entities.EntityType;
+import io.harness.ccm.anomaly.entities.TimeGranularity;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.billing.BillingDataTableSchema;

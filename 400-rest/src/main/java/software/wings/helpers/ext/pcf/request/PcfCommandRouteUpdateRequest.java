@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.PcfConfig;
 
 import lombok.Builder;
@@ -9,6 +12,7 @@ import lombok.Data;
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task
  */
 @Data
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfCommandRouteUpdateRequest extends PcfCommandRequest {
   private PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData;
 

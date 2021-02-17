@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
-import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createCustomLogsConfig;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTestBase.createCustomLogsConfig;
 import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -50,7 +50,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
-import software.wings.service.impl.apm.APMParserTest;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
@@ -88,10 +87,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -200,8 +201,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(ddConfig);
 
-    String textLoad =
-        Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_load.json"), Charsets.UTF_8);
+    String textLoad = FileUtils.readFileToString(
+        new File("400-rest/src/test/resources/apm/datadog_sample_response_load.json"), Charsets.UTF_8);
 
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
@@ -241,8 +242,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(ddConfig);
 
-    String textLoad =
-        Resources.toString(APMParserTest.class.getResource("/apm/datadog-emptyResponse.json"), Charsets.UTF_8);
+    String textLoad = Resources.toString(
+        APMVerificationServiceImplTest.class.getResource("/apm/datadog-emptyResponse.json"), Charsets.UTF_8);
 
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);

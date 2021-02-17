@@ -13,6 +13,7 @@
       "artifactSourceId":"nKKHUZQ-TMia1Rll3ko8ew"
     }
   ],
+  "rollbackArtifacts":[],
   "cause":{
     "user":{
       "id":"USER_ID",

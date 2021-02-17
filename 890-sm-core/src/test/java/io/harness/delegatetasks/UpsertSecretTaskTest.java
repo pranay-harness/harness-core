@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -71,7 +72,8 @@ public class UpsertSecretTaskTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRunUpdateTask() {
     when(upsertSecretTaskParameters.getTaskType()).thenReturn(UpsertSecretTaskType.UPDATE);
-    when(vaultEncryptor.updateSecret(accountId, name, plaintext, encryptedRecord, encryptionConfig))
+    when(vaultEncryptor.updateSecret(
+             accountId, SecretText.builder().name(name).value(plaintext).build(), encryptedRecord, encryptionConfig))
         .thenReturn(encryptedRecord);
     UpsertSecretTaskResponse upsertSecretTaskResponse =
         (UpsertSecretTaskResponse) upsertSecretTask.run(upsertSecretTaskParameters);
@@ -84,7 +86,9 @@ public class UpsertSecretTaskTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRunCreateTask() {
     when(upsertSecretTaskParameters.getTaskType()).thenReturn(UpsertSecretTaskType.CREATE);
-    when(vaultEncryptor.createSecret(accountId, name, plaintext, encryptionConfig)).thenReturn(encryptedRecord);
+    when(vaultEncryptor.createSecret(
+             accountId, SecretText.builder().name(name).value(plaintext).build(), encryptionConfig))
+        .thenReturn(encryptedRecord);
     UpsertSecretTaskResponse upsertSecretTaskResponse =
         (UpsertSecretTaskResponse) upsertSecretTask.run(upsertSecretTaskParameters);
     assertThat(upsertSecretTaskResponse).isNotNull();

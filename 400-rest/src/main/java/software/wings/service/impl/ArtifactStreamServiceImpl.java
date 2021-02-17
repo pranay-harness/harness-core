@@ -1048,6 +1048,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
 
+    artifactStream.setSyncFromGit(syncFromGit);
     boolean retVal = pruneArtifactStream(artifactStream);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
     return retVal;
@@ -1081,6 +1082,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       ensureArtifactStreamSafeToDelete(appId, artifactStreamId, accountId);
     }
 
+    artifactStream.setSyncFromGit(syncFromGit);
     boolean retVal = pruneArtifactStream(artifactStream);
     yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
     return retVal;
@@ -1088,16 +1090,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean pruneArtifactStream(ArtifactStream artifactStream) {
-    boolean retVal = pruneArtifactStream(artifactStream.fetchAppId(), artifactStream.getUuid());
+    boolean retVal =
+        pruneArtifactStream(artifactStream.fetchAppId(), artifactStream.getUuid(), artifactStream.isSyncFromGit());
     deletePerpetualTask(artifactStream);
     return retVal;
   }
 
-  private boolean pruneArtifactStream(String appId, String artifactStreamId) {
+  private boolean pruneArtifactStream(String appId, String artifactStreamId, boolean gitSync) {
     alertService.deleteByArtifactStream(appId, artifactStreamId);
-    pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId));
+    pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId, gitSync));
     boolean retVal = wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
-    artifactStreamServiceBindingService.deleteByArtifactStream(artifactStreamId);
+    artifactStreamServiceBindingService.deleteByArtifactStream(artifactStreamId, gitSync);
     return retVal;
   }
 

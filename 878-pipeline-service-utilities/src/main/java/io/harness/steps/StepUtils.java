@@ -21,13 +21,18 @@ import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
@@ -53,13 +58,61 @@ public class StepUtils {
 
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+
     for (ResponseData responseData : responseDataMap.values()) {
-      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
+      if (((StepResponseNotifyData) responseData).getStatus() == Status.FAILED) {
+        responseBuilder.status(Status.FAILED);
+        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+        return responseBuilder.build();
+      }
+    }
+
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
       if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
         responseBuilder.status(executionStatus);
       }
       if (StatusUtils.brokeStatuses().contains(executionStatus)) {
-        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+      }
+    }
+    return responseBuilder.build();
+  }
+
+  public static RollbackOutcome getFailedChildRollbackOutcome(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)
+          || StatusUtils.brokeStatuses().contains(executionStatus)) {
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          if (outcome instanceof RollbackOutcome) {
+            return (RollbackOutcome) outcome;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static StepResponse createStepResponseFromChildWithChildOutcomes(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
+        responseBuilder.status(executionStatus);
+      }
+      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          responseBuilder.stepOutcome(StepOutcome.builder().name(stepOutcomeRef.getName()).outcome(outcome).build());
+        }
       }
     }
     return responseBuilder.build();
@@ -105,12 +158,23 @@ public class StepUtils {
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
-    return prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V2,
-        Collections.emptyList());
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true);
+  }
+
+  public static TaskRequest prepareTaskRequestWithoutLogs(
+      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), false);
+  }
+
+  public static TaskRequest prepareTaskRequest(
+      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<String> units) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
-      LinkedHashMap<String, String> logAbstractions, TaskCategory taskCategory, List<String> units) {
+      TaskCategory taskCategory, List<String> units, boolean withLogs) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -118,8 +182,9 @@ public class StepUtils {
       capabilities = ListUtils.emptyIfNull(
           ((ExecutionCapabilityDemander) taskParameters).fetchRequiredExecutionCapabilities(null));
     }
-    LinkedHashMap<String, String> logAbstractionMap = generateLogAbstractions(ambiance);
-    logAbstractionMap.putAll(MapUtils.emptyIfNull(logAbstractions));
+    LinkedHashMap<String, String> logAbstractionMap =
+        withLogs ? generateLogAbstractions(ambiance) : new LinkedHashMap<>();
+    units = withLogs ? units : new ArrayList<>();
 
     DelegateTaskRequest.Builder requestBuilder =
         DelegateTaskRequest.newBuilder()
@@ -130,9 +195,7 @@ public class StepUtils {
                             ? new byte[] {}
                             : kryoSerializer.asDeflatedBytes(taskParameters)))
                     .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
-                    // TODO : Change this spmehow and obtain from ambiance
-                    .setExpressionFunctorToken(
-                        Long.parseLong(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken")))
+                    .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
                     .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
                     .setParked(taskData.isParked())
                     .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
@@ -163,6 +226,9 @@ public class StepUtils {
   }
 
   private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
+    if (isEmpty(logAbstractionMap)) {
+      return Collections.emptyList();
+    }
     String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
     if (isEmpty(units)) {
       return Collections.singletonList(baseLogKey);

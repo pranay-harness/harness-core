@@ -12,7 +12,7 @@ import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.git.GitClientHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreators.IntegrationStagePlanCreator;
@@ -34,7 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class GitBuildStatusUtilityTest extends CIExecutionTest {
+public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   private final String accountId = "accountId";
   @Mock private GitClientHelper gitClientHelper;
   @Mock private ConnectorUtils connectorUtils;

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 
@@ -101,6 +102,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -132,7 +134,6 @@ import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.PermissionAttribute.Action;
@@ -183,7 +184,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @InjectMocks @Inject private DashboardStatisticsService dashboardService = spy(DashboardStatisticsServiceImpl.class);
 
   private Instance instance1;
@@ -257,59 +258,59 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     currentTime = System.currentTimeMillis();
     instance1 = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
         INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
-    wingsPersistence.save(instance1);
+    persistence.save(instance1);
     instance2 = buildInstance(INSTANCE_2_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_2_ID, ENV_1_ID, INFRA_MAPPING_2_ID,
         INFRA_MAPPING_2_NAME, CONTAINER_2_ID, currentTime);
-    wingsPersistence.save(instance2);
+    persistence.save(instance2);
     instance3 = buildInstance(INSTANCE_3_ID, ACCOUNT_1_ID, APP_2_ID, SERVICE_3_ID, ENV_2_ID, INFRA_MAPPING_3_ID,
         INFRA_MAPPING_3_NAME, CONTAINER_3_ID, currentTime - 10000);
-    wingsPersistence.save(instance3);
+    persistence.save(instance3);
     instance4 = buildInstance(INSTANCE_4_ID, ACCOUNT_1_ID, APP_2_ID, SERVICE_4_ID, ENV_3_ID, INFRA_MAPPING_4_ID,
         INFRA_MAPPING_4_NAME, CONTAINER_4_ID, currentTime - 20000);
-    wingsPersistence.save(instance4);
+    persistence.save(instance4);
     instance5 = buildInstance(INSTANCE_5_ID, ACCOUNT_1_ID, APP_3_ID, SERVICE_5_ID, ENV_4_ID, INFRA_MAPPING_5_ID,
         INFRA_MAPPING_5_NAME, CONTAINER_5_ID, currentTime - 30000);
-    wingsPersistence.save(instance5);
+    persistence.save(instance5);
     instance6 = buildInstance(INSTANCE_6_ID, ACCOUNT_1_ID, APP_3_ID, SERVICE_5_ID, ENV_4_ID, INFRA_MAPPING_6_ID,
         INFRA_MAPPING_6_NAME, CONTAINER_6_ID, currentTime - 30000);
-    wingsPersistence.save(instance6);
+    persistence.save(instance6);
     instance7 = buildInstance(INSTANCE_7_ID, ACCOUNT_2_ID, APP_4_ID, SERVICE_6_ID, ENV_5_ID, INFRA_MAPPING_7_ID,
         INFRA_MAPPING_7_NAME, CONTAINER_7_ID, currentTime - 40000);
-    wingsPersistence.save(instance7);
+    persistence.save(instance7);
     instance8 = buildInstance(INSTANCE_8_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
         INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 50000);
-    wingsPersistence.save(instance8);
+    persistence.save(instance8);
     deletedInstance9 = buildInstance(INSTANCE_9_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
         INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
-    wingsPersistence.save(deletedInstance9);
+    persistence.save(deletedInstance9);
     deletedInstance10 = buildInstance(INSTANCE_10_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
-    wingsPersistence.save(deletedInstance10);
+    persistence.save(deletedInstance10);
     deletedInstance11 = buildInstance(INSTANCE_11_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
-    wingsPersistence.save(deletedInstance11);
+    persistence.save(deletedInstance11);
     deletedInstance12 = buildInstance(INSTANCE_12_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
-    wingsPersistence.save(deletedInstance12);
+    persistence.save(deletedInstance12);
     deletedInstance13 = buildInstance(INSTANCE_9_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
         INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
-    wingsPersistence.save(deletedInstance9);
+    persistence.save(deletedInstance9);
     deletedInstance14 = buildInstance(INSTANCE_10_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
-    wingsPersistence.save(deletedInstance10);
+    persistence.save(deletedInstance10);
     deletedInstance15 = buildInstance(INSTANCE_11_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
-    wingsPersistence.save(deletedInstance11);
+    persistence.save(deletedInstance11);
     deletedInstance16 = buildInstance(INSTANCE_12_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, INFRA_MAPPING_8_NAME, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
-    wingsPersistence.save(deletedInstance12);
+    persistence.save(deletedInstance12);
     instance17 = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
         INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
     instance17.setInstanceInfo(
         K8sPodInfo.builder()
             .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
             .build());
-    wingsPersistence.save(instance17);
+    persistence.save(instance17);
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
@@ -660,7 +661,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                               .uuid(WORKFLOW_EXECUTION_ID)
                                               .name(WORKFLOW_NAME)
                                               .build();
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
     Instance instance = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
         INFRA_MAPPING_1_NAME, CONTAINER_1_ID, currentTime);
     instance.setInstanceInfo(
@@ -668,7 +669,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
             .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
             .build());
     instance.setLastWorkflowExecutionId(WORKFLOW_EXECUTION_ID);
-    wingsPersistence.save(instance);
+    persistence.save(instance);
     DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
     List<CurrentActiveInstances> activeInstances =
         dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
@@ -683,7 +684,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = {PRABU, DEEPAK_PUTHRAYA})
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetDeploymentHistoryWithManifest() {
@@ -718,8 +719,18 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                                .uuid(WORKFLOW_EXECUTION_ID)
                                                .name(WORKFLOW_NAME)
                                                .build();
+    ExecutionArgs executionArgs3 = new ExecutionArgs();
+    WorkflowExecution workflowExecution3 = WorkflowExecution.builder()
+                                               .appId(APP_1_ID)
+                                               .status(ExecutionStatus.SUCCESS)
+                                               .executionArgs(executionArgs3)
+                                               .serviceIds(asList(SERVICE_1_ID, SERVICE_2_ID))
+                                               .workflowId(WORKFLOW_ID)
+                                               .uuid(WORKFLOW_EXECUTION_ID)
+                                               .name(WORKFLOW_NAME)
+                                               .build();
     PageResponse<WorkflowExecution> pageResponse =
-        aPageResponse().withResponse(asList(workflowExecution1, workflowExecution2)).build();
+        aPageResponse().withResponse(asList(workflowExecution1, workflowExecution2, workflowExecution3)).build();
     when(workflowExecutionService.listExecutions(any(), eq(false))).thenReturn(pageResponse);
     when(serviceResourceService.getWithDetails(APP_1_ID, SERVICE_ID)).thenReturn(Service.builder().build());
     when(artifactStreamServiceBindingService.listArtifactStreamIds(any(Service.class)))
@@ -727,7 +738,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     DashboardStatisticsServiceImpl dashboardStatisticsService = (DashboardStatisticsServiceImpl) dashboardService;
     List<DeploymentHistory> deploymentHistories =
         dashboardStatisticsService.getDeploymentHistory(ACCOUNT_ID, APP_1_ID, SERVICE_ID);
-    assertThat(deploymentHistories).hasSize(2);
+    assertThat(deploymentHistories).hasSize(3);
     DeploymentHistory deploymentHistory1 = deploymentHistories.get(0);
     assertThat(deploymentHistory1.getManifest().getName()).isEqualTo(CHART_NAME);
     assertThat(deploymentHistory1.getManifest().getVersionNo()).isEqualTo("1");
@@ -736,5 +747,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     assertThat(deploymentHistory2.getManifest().getName()).isEqualTo(CHART_NAME);
     assertThat(deploymentHistory2.getManifest().getVersionNo()).isEqualTo("2");
     assertThat(deploymentHistory2.getArtifact()).isNull();
+    DeploymentHistory deploymentHistory3 = deploymentHistories.get(2);
+    assertThat(deploymentHistory3.getManifest()).isNull();
+    assertThat(deploymentHistory3.getArtifact()).isNull();
   }
 }

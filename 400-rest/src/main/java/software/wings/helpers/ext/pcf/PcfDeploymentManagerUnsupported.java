@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import io.harness.pcf.PivotalClientApiException;
+
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
@@ -104,19 +106,9 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
-    throw new PivotalClientApiException("PCF operations not supported by this API.");
-  }
-
-  @Override
   public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
-  }
-
-  @Override
-  public String resolvePcfPluginHome() {
-    return null;
   }
 
   @Override

@@ -1,5 +1,8 @@
 package software.wings.graphql.instrumentation;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.common.collect.Sets;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.execution.instrumentation.InstrumentationContext;
@@ -11,6 +14,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QueryDepthInstrumentation extends MaxQueryDepthInstrumentation {
   public static final int MAX_QUERY_DEPTH = 10;
 

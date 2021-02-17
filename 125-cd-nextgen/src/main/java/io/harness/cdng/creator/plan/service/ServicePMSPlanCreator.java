@@ -62,7 +62,7 @@ public class ServicePMSPlanCreator {
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))
-        .skipExpressionChain(false)
+        .skipExpressionChain(true)
         .build();
   }
 

@@ -141,13 +141,15 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public void removeCVConfigMappings(String cvConfigId) {
-    hPersistence.delete(
-        hPersistence.createQuery(VerificationTask.class).filter(VerificationTaskKeys.cvConfigId, cvConfigId));
+    hPersistence.delete(hPersistence.createQuery(VerificationTask.class)
+                            .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+                            .field(VerificationTaskKeys.verificationJobInstanceId)
+                            .doesNotExist());
   }
 
   @Override
   public List<String> getVerificationTaskIds(String cvConfigId) {
-    return hPersistence.createQuery(VerificationTask.class)
+    return hPersistence.createQuery(VerificationTask.class, excludeAuthority)
         .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
         .project(VerificationTaskKeys.uuid, true)
         .asList()

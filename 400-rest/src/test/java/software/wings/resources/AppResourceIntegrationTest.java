@@ -12,12 +12,12 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsIntegrationTestConstants;
@@ -48,7 +48,7 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 public class AppResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationService limitConfigurationService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   @Inject private InitializeAppCounters initializeAppCounters;
 
   private final ExecutorService executors = Executors.newFixedThreadPool(5);

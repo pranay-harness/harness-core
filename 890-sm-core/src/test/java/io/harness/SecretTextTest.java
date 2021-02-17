@@ -213,8 +213,7 @@ public class SecretTextTest extends SMCoreTestBase {
                                                   .encryptionKey(generateUuid())
                                                   .build();
     VaultEncryptor vaultEncryptor = mock(VaultEncryptor.class);
-    when(vaultEncryptor.createSecret(accountId, secretText.getName(), secretText.getValue(), config))
-        .thenReturn(encryptedRecordData);
+    when(vaultEncryptor.createSecret(accountId, secretText, config)).thenReturn(encryptedRecordData);
     when(vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType())).thenReturn(vaultEncryptor);
     when(mockSecretManagerConfigService.getSecretManager(
              accountId, secretText.getKmsId(), null, secretText.getRuntimeParameters()))
@@ -242,7 +241,7 @@ public class SecretTextTest extends SMCoreTestBase {
                 .inheritScopesFromSM(secretText.isInheritScopesFromSM())
                 .build());
     verify(vaultEncryptorsRegistry, times(1)).getVaultEncryptor(config.getEncryptionType());
-    verify(vaultEncryptor, times(1)).createSecret(accountId, secretText.getName(), secretText.getValue(), config);
+    verify(vaultEncryptor, times(1)).createSecret(accountId, secretText, config);
     ArgumentCaptor<EncryptedData> captor = ArgumentCaptor.forClass(EncryptedData.class);
     verify(mockSecretsAuditService, times(1)).logSecretCreateEvent(captor.capture());
     EncryptedData capturedRecord = captor.getValue();
@@ -305,7 +304,7 @@ public class SecretTextTest extends SMCoreTestBase {
     SecretText secretText = getReferenceSecretText();
     SecretManagerConfig config = getVaultConfig(accountId, secretText.getKmsId());
     VaultEncryptor vaultEncryptor = mock(VaultEncryptor.class);
-    when(vaultEncryptor.validateReference(accountId, secretText.getPath(), config)).thenReturn(true);
+    when(vaultEncryptor.validateReference(accountId, secretText, config)).thenReturn(true);
     when(vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType())).thenReturn(vaultEncryptor);
     when(mockSecretManagerConfigService.getSecretManager(
              accountId, secretText.getKmsId(), null, secretText.getRuntimeParameters()))
@@ -332,7 +331,7 @@ public class SecretTextTest extends SMCoreTestBase {
                 .inheritScopesFromSM(secretText.isInheritScopesFromSM())
                 .build());
     verify(vaultEncryptorsRegistry, times(1)).getVaultEncryptor(config.getEncryptionType());
-    verify(vaultEncryptor, times(1)).validateReference(accountId, secretText.getPath(), config);
+    verify(vaultEncryptor, times(1)).validateReference(accountId, secretText, config);
     ArgumentCaptor<EncryptedData> captor = ArgumentCaptor.forClass(EncryptedData.class);
     verify(mockSecretsAuditService, times(1)).logSecretCreateEvent(captor.capture());
     EncryptedData capturedRecord = captor.getValue();

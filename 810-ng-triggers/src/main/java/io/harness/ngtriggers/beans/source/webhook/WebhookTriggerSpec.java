@@ -17,7 +17,7 @@ import java.util.List;
 })
 @JsonDeserialize()
 public interface WebhookTriggerSpec {
-  String getRepoUrl();
+  RepoSpec getRepoSpec();
   WebhookEvent getEvent();
   List<WebhookAction> getActions();
   List<WebhookCondition> getPayloadConditions();

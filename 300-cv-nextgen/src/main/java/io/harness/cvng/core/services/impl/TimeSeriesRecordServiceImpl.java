@@ -22,6 +22,8 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricCVConfig;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesGroupValue;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
@@ -280,27 +282,21 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
     List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
         metricCVConfig.getAccountId(), metricCVConfig.getOrgIdentifier(), metricCVConfig.getProjectIdentifier(),
         metricCVConfig.getMetricPack().getIdentifier(), metricCVConfig.getType());
-    metricPackThresholds.forEach(timeSeriesThreshold
-        -> timeSeriesMetricDefinitions.add(TimeSeriesMetricDefinition.builder()
-                                               .metricName(timeSeriesThreshold.getMetricName())
-                                               .metricType(timeSeriesThreshold.getMetricType())
-                                               .metricGroupName(timeSeriesThreshold.getMetricGroupName())
-                                               .actionType(timeSeriesThreshold.getAction())
-                                               .comparisonType(timeSeriesThreshold.getCriteria().getType())
-                                               .action(timeSeriesThreshold.getCriteria().getAction())
-                                               .occurrenceCount(timeSeriesThreshold.getCriteria().getOccurrenceCount())
-                                               .thresholdType(timeSeriesThreshold.getCriteria().getThresholdType())
-                                               .value(timeSeriesThreshold.getCriteria().getValue())
-                                               .build()));
 
-    // add data source level thresholds
-    metricCVConfig.getMetricPack().getMetrics().forEach(metricDefinition -> {
-      if (isNotEmpty(metricDefinition.getThresholds())) {
-        metricDefinition.getThresholds().forEach(timeSeriesThreshold
+    Set<String> includedMetrics = metricCVConfig.getMetricPack()
+                                      .getMetrics()
+                                      .stream()
+                                      .filter(MetricDefinition::isIncluded)
+                                      .map(MetricPack.MetricDefinition::getName)
+                                      .collect(Collectors.toSet());
+
+    metricPackThresholds.stream()
+        .filter(mpt -> includedMetrics.contains(mpt.getMetricName()))
+        .forEach(timeSeriesThreshold
             -> timeSeriesMetricDefinitions.add(
                 TimeSeriesMetricDefinition.builder()
-                    .metricName(metricDefinition.getName())
-                    .metricType(metricDefinition.getType())
+                    .metricName(timeSeriesThreshold.getMetricName())
+                    .metricType(timeSeriesThreshold.getMetricType())
                     .metricGroupName(timeSeriesThreshold.getMetricGroupName())
                     .actionType(timeSeriesThreshold.getAction())
                     .comparisonType(timeSeriesThreshold.getCriteria().getType())
@@ -309,8 +305,29 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                     .thresholdType(timeSeriesThreshold.getCriteria().getThresholdType())
                     .value(timeSeriesThreshold.getCriteria().getValue())
                     .build()));
-      }
-    });
+
+    // add data source level thresholds
+    metricCVConfig.getMetricPack()
+        .getMetrics()
+        .stream()
+        .filter(MetricDefinition::isIncluded)
+        .forEach(metricDefinition -> {
+          if (isNotEmpty(metricDefinition.getThresholds())) {
+            metricDefinition.getThresholds().forEach(timeSeriesThreshold
+                -> timeSeriesMetricDefinitions.add(
+                    TimeSeriesMetricDefinition.builder()
+                        .metricName(metricDefinition.getName())
+                        .metricType(metricDefinition.getType())
+                        .metricGroupName(timeSeriesThreshold.getMetricGroupName())
+                        .actionType(timeSeriesThreshold.getAction())
+                        .comparisonType(timeSeriesThreshold.getCriteria().getType())
+                        .action(timeSeriesThreshold.getCriteria().getAction())
+                        .occurrenceCount(timeSeriesThreshold.getCriteria().getOccurrenceCount())
+                        .thresholdType(timeSeriesThreshold.getCriteria().getThresholdType())
+                        .value(timeSeriesThreshold.getCriteria().getValue())
+                        .build()));
+          }
+        });
     return timeSeriesMetricDefinitions;
   }
 

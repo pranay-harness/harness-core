@@ -18,8 +18,11 @@ import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -36,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -43,6 +47,7 @@ import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
+@Slf4j
 public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private final ClosingFactory closingFactory;
 
@@ -69,6 +74,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(new ComponentTestsModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Override
       protected void configure() {
@@ -104,6 +110,12 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
       }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+      }
     });
 
     modules.add(CIBeansModule.getInstance());
@@ -120,6 +132,6 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

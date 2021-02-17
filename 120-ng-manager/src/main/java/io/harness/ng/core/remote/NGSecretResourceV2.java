@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -19,7 +20,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
+import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -48,7 +54,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 public class NGSecretResourceV2 {
+  private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
+  private final Validator validator;
+
+  @GET
+  @Path("/validateUniqueIdentifier/{identifier}")
+  @ApiOperation(value = "Validate Secret Identifier is unique", nickname = "validateSecretIdentifierIsUnique")
+  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        ngSecretService.validateTheIdentifierIsUnique(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+  }
 
   @POST
   @Consumes({"application/json"})
@@ -90,10 +110,15 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("type") SecretType secretType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("types") List<SecretType> secretTypes,
+      @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
-    return ResponseDTO.newResponse(
-        ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size));
+    if (secretType != null) {
+      secretTypes.add(secretType);
+    }
+    return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
+        secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size));
   }
 
   @GET
@@ -126,8 +151,10 @@ public class NGSecretResourceV2 {
   public ResponseDTO<SecretResponseWrapper> updateSecret(
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @Valid SecretRequestWrapper dto) {
-    return ResponseDTO.newResponse(ngSecretService.update(accountIdentifier, dto.getSecret()));
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
+    return ResponseDTO.newResponse(
+        ngSecretService.update(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret()));
   }
 
   @PUT
@@ -137,29 +164,48 @@ public class NGSecretResourceV2 {
   public ResponseDTO<SecretResponseWrapper> updateSecretViaYaml(
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @Valid SecretRequestWrapper dto) {
-    return ResponseDTO.newResponse(ngSecretService.updateViaYaml(accountIdentifier, dto.getSecret()));
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
+    return ResponseDTO.newResponse(ngSecretService.updateViaYaml(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret()));
+  }
+
+  private void validateRequestPayload(SecretRequestWrapper dto) {
+    Set<ConstraintViolation<SecretRequestWrapper>> violations = validator.validate(dto);
+    if (!violations.isEmpty()) {
+      throw new ConstraintViolationException(violations);
+    }
   }
 
   @PUT
   @Path("files/{identifier}")
   @ApiOperation(value = "Update a secret file", nickname = "putSecretFileV2")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<SecretResponseWrapper> updateSecretFile(@PathParam("identifier") String identifier,
+  public ResponseDTO<SecretResponseWrapper> updateSecretFile(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
-    return ResponseDTO.newResponse(ngSecretService.updateFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
+
+    validateRequestPayload(dto);
+
+    return ResponseDTO.newResponse(ngSecretService.updateFile(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret(), uploadedInputStream));
   }
 
   @POST
   @Path("files")
   @ApiOperation(value = "Create a secret file", nickname = "postSecretFileV2")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
-  public ResponseDTO<SecretResponseWrapper> createSecretFile(@PathParam("identifier") String identifier,
+  public ResponseDTO<SecretResponseWrapper> createSecretFile(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @NotNull @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
+
+    validateRequestPayload(dto);
+
     return ResponseDTO.newResponse(ngSecretService.createFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
   }
 }

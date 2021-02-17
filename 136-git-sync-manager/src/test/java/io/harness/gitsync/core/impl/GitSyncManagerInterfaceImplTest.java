@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFileChange;
-import io.harness.gitsync.GitSyncBaseTest;
+import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
@@ -30,7 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class GitSyncManagerInterfaceImplTest extends GitSyncBaseTest {
+public class GitSyncManagerInterfaceImplTest extends GitSyncTestBase {
   public static final String ACCOUNT_ID = "accountId";
   public static final String FOLDER_NAME = "folderName";
   public static final String ENTITY_TYPE = "pipeline";

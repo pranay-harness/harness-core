@@ -3,16 +3,16 @@ pipeline:
   name: Vistaar Pipeline 2
   variables:
   - name: name
-    value: value
     type: type
+    value: value
   - name: name2
-    value: value
     type: type
+    value: value
   stages:
   - stage:
       identifier: Test_Build_and_Push
-      name: Test Build and Push jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj j
       type: CI
+      name: Test Build and Push jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj j
       spec:
         cloneCodebase: true
         execution:
@@ -32,7 +32,7 @@ pipeline:
                     - file1.xml
           - step:
               identifier: Build_and_push_image_to_DockerHub
-              type: BuildAndPushDockerHub
+              type: BuildAndPushDockerRegistry
               name: Build and push image to DockerHub
               spec:
                 connectorRef: account.harnessimage
@@ -46,8 +46,8 @@ pipeline:
             namespace: harness-delegate-qb
   - stage:
       identifier: Run_Integration_Test
-      name: Run Integration Test
       type: CI
+      name: Run Integration Test
       spec:
         cloneCodebase: false
         execution:
@@ -62,8 +62,8 @@ pipeline:
                 command: curl runhelloworldxxxxxxxx8080
         serviceDependencies:
         - identifier: runhelloworldserver
-          name: Run Hello World Server
           type: Service
+          name: Run Hello World Server
           spec:
             connectorRef: account.harnessimage
             image: harnessdev/godemo

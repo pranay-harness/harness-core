@@ -24,6 +24,7 @@ public class GitlabServiceImpl implements GitlabService {
   public static final String DESC = "description";
   public static final String STATE = "state";
   public static final String CONTEXT = "context";
+  public static final String TARGET_URL = "target_url";
   private static final String SEPARATOR = "/";
 
   @Override

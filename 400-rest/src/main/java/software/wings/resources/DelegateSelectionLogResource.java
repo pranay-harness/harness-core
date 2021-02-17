@@ -3,6 +3,8 @@ package software.wings.resources;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.rest.RestResponse;
@@ -26,6 +28,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(APPLICATION)
 @AuthRule(permissionType = LOGGED_IN)
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateSelectionLogResource {
   private DelegateSelectionLogsService delegateSelectionLogsService;
 

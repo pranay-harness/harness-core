@@ -14,6 +14,8 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -53,6 +55,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
  */
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateQueueTask implements Runnable {
   private static final SecureRandom random = new SecureRandom();
 

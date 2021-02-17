@@ -1,6 +1,7 @@
 package io.harness.connector.entities;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
@@ -9,7 +10,9 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -50,7 +53,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
-  @NotEmpty String fullyQualifiedIdentifier;
+  @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
@@ -61,6 +64,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Version Long version;
   Long timeWhenConnectorIsLastUpdated;
   ConnectorConnectivityDetails connectivityDetails;
+  ConnectorActivityDetails activityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
 
@@ -82,18 +86,20 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_fullyQualifiedIdentifier")
-                 .unique(true)
-                 .field(ConnectorKeys.fullyQualifiedIdentifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_Index")
-                 .fields(Arrays.asList(
-                     ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier, ConnectorKeys.projectIdentifier))
+                 .name("accountId_orgId_projectId_name_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.name))
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("fullyQualifiedIdentifier_deleted_Index")
                  .fields(Arrays.asList(ConnectorKeys.fullyQualifiedIdentifier, ConnectorKeys.deleted))
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_type_status_deletedAt_decreasing_sort_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.type, ConnectorKeys.connectionStatus,
+                     ConnectorKeys.deleted))
+                 .descSortField(ConnectorKeys.createdAt)
                  .build())
         .build();
   }

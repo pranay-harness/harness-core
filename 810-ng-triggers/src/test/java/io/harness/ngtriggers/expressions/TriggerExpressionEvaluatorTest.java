@@ -17,7 +17,7 @@ public class TriggerExpressionEvaluatorTest extends CategoryTest {
       + "  \"number\": 1,\n"
       + "  \"pull_request\": {\n"
       + "    \"id\": 526274089,\n"
-      + "    \"assignee\": null,\n"
+      + "    \"assignee\": [\"test\", \"test1\"],\n"
       + "    \"assignees\": [\n"
       + "       {\"name\": \"wings\"},\n"
       + "       {\"name\": \"harness\"}\n"
@@ -31,6 +31,8 @@ public class TriggerExpressionEvaluatorTest extends CategoryTest {
     TriggerExpressionEvaluator triggerExpressionEvaluator = new TriggerExpressionEvaluator(json);
     assertThat(triggerExpressionEvaluator.renderExpression("<+eventPayload.pull_request.assignees[0].name>"))
         .isEqualTo("wings");
+    Object o = triggerExpressionEvaluator.evaluateExpression("<+eventPayload.pull_request.assignee.contains('test')>");
+    assertThat((Boolean) o).isTrue();
     assertThat(triggerExpressionEvaluator.renderExpression("<+eventPayload.pull_request.assignees[1].name>"))
         .isEqualTo("harness");
     int i = 0;

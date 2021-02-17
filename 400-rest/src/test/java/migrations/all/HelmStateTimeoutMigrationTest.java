@@ -20,6 +20,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -30,7 +31,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.dl.WingsPersistence;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -60,7 +60,7 @@ public class HelmStateTimeoutMigrationTest extends WingsBaseTest {
   @Mock private Application application;
   @Mock private Account account;
   @Mock private EnvironmentService environmentService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowService workflowService;
@@ -80,9 +80,9 @@ public class HelmStateTimeoutMigrationTest extends WingsBaseTest {
                         .infrastructure(GoogleKubernetesEngine.builder().build())
                         .appId(APP_ID)
                         .build());
-    wingsPersistence.save(anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    persistence.save(anApplication().appId(APP_ID).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountName("ACCOUNT_NAME").build();
-    wingsPersistence.save(account);
+    persistence.save(account);
   }
 
   @Test

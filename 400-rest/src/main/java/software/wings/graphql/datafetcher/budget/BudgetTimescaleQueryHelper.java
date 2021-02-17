@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +44,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BudgetTimescaleQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private DataUtils utils;

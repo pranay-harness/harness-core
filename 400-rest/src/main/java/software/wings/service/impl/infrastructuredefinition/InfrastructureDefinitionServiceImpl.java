@@ -64,6 +64,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
@@ -178,6 +179,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
@@ -266,6 +268,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
+  @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
@@ -1963,6 +1966,45 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     try {
       return azureVMSSHelperServiceManager.listResourceGroupsNames(
           azureConfig, subscriptionId, encryptionDetails, appId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listSubscriptionLocations(String appId, String computeProviderId, String subscriptionId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listSubscriptionLocations(azureConfig, encryptionDetails, appId, subscriptionId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listAzureCloudProviderLocations(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listAzureCloudProviderLocations(azureConfig, encryptionDetails, appId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public Map<String, String> listManagementGroups(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      List<ManagementGroupData> managementGroups =
+          azureARMManager.listManagementGroups(azureConfig, encryptionDetails, appId);
+      return managementGroups.stream().collect(
+          Collectors.toMap(ManagementGroupData::getId, ManagementGroupData::getDisplayName));
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

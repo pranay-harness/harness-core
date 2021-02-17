@@ -135,6 +135,7 @@ public class SecretServiceImpl implements SecretService {
                                                     .hideFromListing(secret.isHideFromListing())
                                                     .scopedToAccount(secret.isScopedToAccount())
                                                     .usageRestrictions(secret.getUsageRestrictions())
+                                                    .additionalMetadata(secret.getAdditionalMetadata())
                                                     .inheritScopesFromSM(secret.isInheritScopesFromSM());
 
     EncryptedData encryptedData;
@@ -303,13 +304,12 @@ public class SecretServiceImpl implements SecretService {
       if (secretManagerType.equals(KMS)) {
         encryptedRecord = encryptSecret(accountId, secretText.getValue(), secretManagerConfig);
       } else {
-        encryptedRecord =
-            upsertSecret(accountId, secretText.getName(), secretText.getValue(), null, secretManagerConfig);
+        encryptedRecord = upsertSecret(accountId, secretText, null, secretManagerConfig);
       }
       encryptedDataBuilder.encryptionKey(encryptedRecord.getEncryptionKey())
           .encryptedValue(encryptedRecord.getEncryptedValue());
     } else if (secretText.isReferencedSecret()) {
-      validateReference(accountId, secretText.getPath(), secretManagerConfig);
+      validateReference(accountId, secretText, secretManagerConfig);
       encryptedDataBuilder.path(secretText.getPath());
     } else if (secretManagerType.equals(CUSTOM)) {
       validateParameters(accountId, secretText.getParameters(), secretManagerConfig);
@@ -331,9 +331,17 @@ public class SecretServiceImpl implements SecretService {
       encryptedRecord = EncryptedRecordData.builder()
                             .encryptedValue(encryptedFileId.toCharArray())
                             .encryptionKey(encryptedRecord.getEncryptionKey())
+                            .additionalMetadata(secretFile.getAdditionalMetadata())
                             .build();
     } else {
-      encryptedRecord = upsertSecret(accountId, secretFile.getName(), fileContent, null, secretManagerConfig);
+      //   encryptedRecord = upsertSecret(accountId, secretFile.getName(), fileContent, null, secretManagerConfig);
+      encryptedRecord = upsertSecret(accountId,
+          SecretText.builder()
+              .name(secretFile.getName())
+              .additionalMetadata(secretFile.getAdditionalMetadata())
+              .value(fileContent)
+              .build(),
+          null, secretManagerConfig);
     }
     return encryptedDataBuilder.type(CONFIG_FILE)
         .base64Encoded(true)
@@ -352,10 +360,9 @@ public class SecretServiceImpl implements SecretService {
     if (secretUpdateData.shouldRencryptUsingKms(secretManagerType)) {
       updatedEncryptedData = encryptSecret(accountId, secretText.getValue(), secretManagerConfig);
     } else if (secretUpdateData.shouldRencryptUsingVault(secretManagerType)) {
-      updatedEncryptedData =
-          upsertSecret(accountId, secretText.getName(), secretText.getValue(), existingRecord, secretManagerConfig);
+      updatedEncryptedData = upsertSecret(accountId, secretText, existingRecord, secretManagerConfig);
     } else if (secretUpdateData.validateReferenceUsingVault(secretManagerType)) {
-      validateReference(accountId, secretText.getPath(), secretManagerConfig);
+      validateReference(accountId, secretText, secretManagerConfig);
       if (existingRecord.isInlineSecret()) {
         deleteSecret(accountId, existingRecord, secretManagerConfig);
       }
@@ -384,7 +391,10 @@ public class SecretServiceImpl implements SecretService {
                                  .build();
       secretsFileService.deleteFile(existingRecord.getEncryptedValue());
     } else if (secretUpdateData.shouldRencryptUsingVault(secretManagerType)) {
-      updatedEncryptedData = upsertSecret(accountId, secretUpdateData.getUpdatedSecret().getName(), updatedFileContent,
+      /*updatedEncryptedData = upsertSecret(accountId, secretUpdateData.getUpdatedSecret().getName(),
+         updatedFileContent, existingRecord, secretManagerConfig);*/
+      updatedEncryptedData = upsertSecret(accountId,
+          SecretText.builder().name(secretUpdateData.getUpdatedSecret().getName()).value(updatedFileContent).build(),
           existingRecord, secretManagerConfig);
     }
     return updatedEncryptedData;
@@ -397,26 +407,26 @@ public class SecretServiceImpl implements SecretService {
     return encryptedRecord;
   }
 
-  private EncryptedRecord upsertSecret(String accountId, String name, String value, EncryptedRecord existingRecord,
+  private EncryptedRecord upsertSecret(String accountId, SecretText secretText, EncryptedRecord existingRecord,
       SecretManagerConfig secretManagerConfig) {
     VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
     EncryptedRecord encryptedRecord;
     if (existingRecord == null) {
-      encryptedRecord = vaultEncryptor.createSecret(accountId, name, value, secretManagerConfig);
-    } else if (value != null && !value.equals(SECRET_MASK)) {
-      encryptedRecord = vaultEncryptor.updateSecret(accountId, name, value, existingRecord, secretManagerConfig);
+      encryptedRecord = vaultEncryptor.createSecret(accountId, secretText, secretManagerConfig);
+    } else if (secretText.getValue() != null && !secretText.getValue().equals(SECRET_MASK)) {
+      encryptedRecord = vaultEncryptor.updateSecret(accountId, secretText, existingRecord, secretManagerConfig);
     } else {
-      encryptedRecord = vaultEncryptor.renameSecret(accountId, name, existingRecord, secretManagerConfig);
+      encryptedRecord = vaultEncryptor.renameSecret(accountId, secretText, existingRecord, secretManagerConfig);
     }
     validateEncryptedData(encryptedRecord);
     return encryptedRecord;
   }
 
-  private void validateReference(String accountId, String path, SecretManagerConfig secretManagerConfig) {
+  private void validateReference(String accountId, SecretText secretText, SecretManagerConfig secretManagerConfig) {
     VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
-    boolean isValidReference = vaultEncryptor.validateReference(accountId, path, secretManagerConfig);
+    boolean isValidReference = vaultEncryptor.validateReference(accountId, secretText, secretManagerConfig);
     if (!isValidReference) {
-      String message = format("Could not find the secret at the path %s or the secret was empty", path);
+      String message = format("Could not find the secret at the path %s or the secret was empty", secretText.getPath());
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
   }

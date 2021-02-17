@@ -1,6 +1,7 @@
 package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
+import io.harness.exception.GeneralException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,6 +13,9 @@ public class ProtoCapabilityCheckFactory {
   @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
+  @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
+  @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
+  @Inject PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
@@ -34,6 +38,12 @@ public class ProtoCapabilityCheckFactory {
         return helmInstallationCapabilityCheck;
       case HTTP_CONNECTION_PARAMETERS:
         return httpConnectionExecutionCapabilityCheck;
+      case KUSTOMIZE_PARAMETERS:
+        return kustomizeCapabilityCheck;
+      case PCF_AUTO_SCALAR_PARAMETERS:
+        return pcfAutoScalarCapabilityCheck;
+      case PCF_CONNECTIVITY_PARAMETERS:
+        return pcfConnectivityCapabilityCheck;
       case PROCESS_EXECUTOR_PARAMETERS:
         return processExecutorCapabilityCheck;
       case SFTP_CAPABILITY_PARAMETERS:
@@ -47,7 +57,7 @@ public class ProtoCapabilityCheckFactory {
       case SYSTEM_ENV_PARAMETERS:
         return systemEnvCapabilityCheck;
       default:
-        return null;
+        throw new GeneralException("capability is not registered");
     }
   }
 }

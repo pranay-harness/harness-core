@@ -1,10 +1,10 @@
 package software.wings.service.impl.pipeline.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.ExecutionStatus.isNegativeStatus;
+import static io.harness.beans.ExecutionStatus.negativeStatuses;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
@@ -22,7 +22,10 @@ import static software.wings.sm.StateType.ENV_STATE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
@@ -68,9 +71,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
   private static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
+  public static final String PIPELINE_RESUME_ERROR_INVALID_STATUS = "Pipeline resume is not available for [%s]. "
+      + "Resumable states are : [%s]";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
@@ -377,9 +383,9 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(
           format("Pipeline resume not available for workflow executions: %s", prevWorkflowExecution.getUuid()));
     }
-    if (prevWorkflowExecution.getStatus() != FAILED) {
-      throw new InvalidRequestException(
-          format("Pipeline resume is not available for non failed executions: %s", prevWorkflowExecution.getUuid()));
+    if (!ExecutionStatus.resumableStatuses.contains(prevWorkflowExecution.getStatus())) {
+      throw new InvalidRequestException(format(PIPELINE_RESUME_ERROR_INVALID_STATUS, prevWorkflowExecution.getUuid(),
+          ExecutionStatus.resumableStatuses.toString()));
     }
     if (isNotEmpty(prevWorkflowExecution.getPipelineResumeId()) && !prevWorkflowExecution.isLatestPipelineResume()) {
       throw new InvalidRequestException(
@@ -387,23 +393,21 @@ public class PipelineResumeUtils {
               prevWorkflowExecution.getUuid()));
     }
 
-    if (prevWorkflowExecution.getStatus() == FAILED) {
-      List<PipelineStageExecution> pipelineStageExecutions =
-          prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
-      if (isEmpty(pipelineStageExecutions)) {
-        throw new InvalidRequestException("You cannot resume an empty pipeline");
-      } else {
-        boolean notInActiveStatus = false;
-        for (PipelineStageExecution pipelineStageExecution : pipelineStageExecutions) {
-          if (!isActiveStatus(pipelineStageExecution.getStatus())) {
-            notInActiveStatus = true;
-            break;
-          }
+    List<PipelineStageExecution> pipelineStageExecutions =
+        prevWorkflowExecution.getPipelineExecution().getPipelineStageExecutions();
+    if (isEmpty(pipelineStageExecutions)) {
+      throw new InvalidRequestException("You cannot resume an empty pipeline");
+    } else {
+      boolean notInActiveStatus = false;
+      for (PipelineStageExecution pipelineStageExecution : pipelineStageExecutions) {
+        if (!isActiveStatus(pipelineStageExecution.getStatus())) {
+          notInActiveStatus = true;
+          break;
         }
-        if (!notInActiveStatus) {
-          throw new InvalidRequestException(
-              "Pipeline resume is not available for a pipeline that failed during artifact collection");
-        }
+      }
+      if (!notInActiveStatus) {
+        throw new InvalidRequestException(
+            "Pipeline resume is not available for a pipeline that failed during artifact collection");
       }
     }
   }
@@ -434,7 +438,12 @@ public class PipelineResumeUtils {
     notNullCheck("Pipeline stage " + stage.getName() + "seems to be invalid", stage.getPipelineStageElements());
 
     boolean anySkipped = stageExecutions.stream().anyMatch(t -> t.getStatus() == SKIPPED);
-    if (anySkipped) {
+    // Sometimes the workflow could get aborted, rejected or in error state before the workflow starts. They don't have
+    // any workflow executions attached to them
+    boolean anyEndedBeforeWorkflowStarted = stageExecutions.stream().anyMatch(t
+        -> ENV_STATE.name().equals(t.getStateType()) && negativeStatuses().contains(t.getStatus())
+            && isEmpty(t.getWorkflowExecutions()));
+    if (anySkipped || anyEndedBeforeWorkflowStarted) {
       // Don't check for skipped stage executions as they have no workflow executions attached to them. In case of
       // looped, either all should be skipped or none.
       return;

@@ -67,7 +67,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sScaleRequest.getK8sInfraDelegateConfig());
 
     boolean success = init(k8sScaleRequest, k8SDelegateTaskParams, kubernetesConfig.getNamespace(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
     if (!success) {
       return getFailureResponse();
     }
@@ -78,14 +78,14 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
         k8sScaleRequest.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelperBase.scale(client, k8SDelegateTaskParams, resourceIdToScale, targetReplicaCount,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Scale));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Scale, true));
     if (!success) {
       return getFailureResponse();
     }
 
     if (!k8sScaleRequest.isSkipSteadyStateCheck()) {
       success = k8sTaskHelperBase.doStatusCheck(client, resourceIdToScale, k8SDelegateTaskParams,
-          k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState));
+          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true));
 
       if (!success) {
         return getFailureResponse();
@@ -106,10 +106,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sScaleResponse k8sScaleResponse = K8sScaleResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sScaleResponse)
-        .build();
+    return getGenericFailureResponse(k8sScaleResponse);
   }
 
   @VisibleForTesting

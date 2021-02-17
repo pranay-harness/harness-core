@@ -22,7 +22,6 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
@@ -30,7 +29,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.govern.Switch;
 
-public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
+public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
     GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);
@@ -53,11 +52,9 @@ public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnecto
     switch (authType) {
       case SSH:
         final GithubSshAuthentication githubSshAuthentication = (GithubSshAuthentication) authenticationDetails;
-        final GithubSshCredentialsSpecDTO githubSshCredentialsSpecDTO =
-            GithubSshCredentialsSpecDTO.builder()
-                .sshKeyRef(SecretRefHelper.createSecretRef(githubSshAuthentication.getSshKeyRef()))
-                .build();
-        githubCredentialsDTO = GithubSshCredentialsDTO.builder().spec(githubSshCredentialsSpecDTO).build();
+        githubCredentialsDTO = GithubSshCredentialsDTO.builder()
+                                   .sshKeyRef(SecretRefHelper.createSecretRef(githubSshAuthentication.getSshKeyRef()))
+                                   .build();
         break;
       case HTTP:
         final GithubHttpAuthentication githubHttpAuthentication = (GithubHttpAuthentication) authenticationDetails;

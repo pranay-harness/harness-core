@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -73,7 +74,10 @@ public class ValidateSecretReferenceTaskTest extends CategoryTest {
     when(validateSecretReferenceTaskParameters.getEncryptionConfig().getType()).thenReturn(SecretManagerType.VAULT);
     when(vaultEncryptorsRegistry.getVaultEncryptor(encryptionType)).thenReturn(vaultEncryptor);
     when(vaultEncryptor.validateReference(accountId,
-             validateSecretReferenceTaskParameters.getEncryptedRecord().getPath(),
+             SecretText.builder()
+                 .path(validateSecretReferenceTaskParameters.getEncryptedRecord().getPath())
+                 .name(validateSecretReferenceTaskParameters.getEncryptedRecord().getName())
+                 .build(),
              validateSecretReferenceTaskParameters.getEncryptionConfig()))
         .thenReturn(true);
     ValidateSecretReferenceTaskResponse validateSecretReferenceTaskResponse =

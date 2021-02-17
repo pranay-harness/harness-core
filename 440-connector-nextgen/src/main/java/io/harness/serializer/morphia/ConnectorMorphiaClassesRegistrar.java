@@ -16,6 +16,7 @@ import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUserna
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
+import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
@@ -78,6 +79,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GithubConnector.class);
     set.add(GitlabConnector.class);
     set.add(BitbucketConnector.class);
+    set.add(CEAzureConfig.class);
   }
 
   @Override
@@ -123,5 +125,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication",
         BitbucketHttpAuthentication.class);
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword", BitbucketUsernamePassword.class);
+    h.put("connector.entities.embedded.ceazure.CEAzureConfig", CEAzureConfig.class);
   }
 }

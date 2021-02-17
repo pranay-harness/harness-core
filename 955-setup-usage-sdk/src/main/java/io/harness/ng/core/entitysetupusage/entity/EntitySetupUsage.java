@@ -2,8 +2,10 @@ package io.harness.ng.core.entitysetupusage.entity;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 
@@ -14,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -58,12 +61,12 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   }
 
   @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotBlank String accountIdentifier;
+  @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
-  @NotBlank String referredEntityFQN;
+  @FdIndex @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
-  @NotBlank String referredByEntityFQN;
+  @FdIndex @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;
   // todo @deepak: Add the support for activity
   @CreatedDate Long createdAt;
@@ -71,4 +74,11 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @Version Long version;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+
+  @UtilityClass
+  public static final class EntitySetupUsageKeys {
+    public static final String referredEntityName = EntitySetupUsageKeys.referredEntity + "." + EntityDetailKeys.name;
+    public static final String referredByEntityName =
+        EntitySetupUsageKeys.referredByEntity + "." + EntityDetailKeys.name;
+  }
 }

@@ -3,7 +3,7 @@ package io.harness.ngtriggers.eventmapper.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_CUSTOM_TRIGGER_FOUND_FOR_PROJECT;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -89,7 +89,7 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
       log.info(msg);
       return WebhookEventMappingResponse.builder()
           .webhookEventResponse(WebhookEventResponseHelper.toResponse(
-              NO_MATCHING_TRIGGER_FOR_CONDITIONS, triggerWebhookEvent, null, null, msg, null))
+              NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS, triggerWebhookEvent, null, null, msg, null))
           .build();
     }
 

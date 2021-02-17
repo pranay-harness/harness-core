@@ -24,7 +24,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -184,12 +184,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
   private void registerQueueListeners(Injector injector, NotificationConfiguration appConfig) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    if (appConfig.getNotificationClientConfiguration()
-            .getNotificationClientBackendConfiguration()
-            .getType()
-            .equalsIgnoreCase("mongo")) {
-      queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
-    }
+    queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
   }
 
   public SwaggerBundleConfiguration getSwaggerConfiguration() {
@@ -213,16 +208,19 @@ public class NotificationApplication extends Application<NotificationConfigurati
   private void registerAuthFilters(
       NotificationConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      // sample usage
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NotificationMicroserviceAuth.class)
               != null
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
               != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getNotificationSecrets().getJwtAuthSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
+          configuration.getNotificationSecrets().getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
           configuration.getNotificationSecrets().getManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
   }
 

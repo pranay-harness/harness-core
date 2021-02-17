@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyString;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -24,7 +25,6 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -38,7 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private ApplicationManifestService applicationManifestService;
   @InjectMocks @Inject private ServiceHelmValuesToManifestFileMigration serviceHelmValuesToManifestFileMigration;
 
@@ -55,7 +55,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   public void setupMocks() {
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
-    wingsPersistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    persistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
 
     service = Service.builder()
                   .uuid(SERVICE_ID)
@@ -71,7 +71,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testMigrateHelmValuesInServices() {
-    wingsPersistence.save(service);
+    persistence.save(service);
 
     serviceHelmValuesToManifestFileMigration.migrate();
 

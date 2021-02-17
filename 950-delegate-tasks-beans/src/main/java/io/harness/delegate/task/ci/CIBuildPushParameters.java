@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = false)
 public abstract class CIBuildPushParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String buildNumber;
+  private String detailsUrl;
   private String repo;
   private String owner;
   private String sha;
@@ -33,10 +34,11 @@ public abstract class CIBuildPushParameters implements TaskParameters, Execution
   @NotEmpty CIBuildPushTaskType commandType;
   public enum CIBuildPushTaskType { STATUS, CHECKS }
 
-  public CIBuildPushParameters(String buildNumber, String repo, String owner, String sha, String identifier,
-      String target_url, String key, String installId, String appId, String token, String userName,
+  public CIBuildPushParameters(String buildNumber, String detailsUrl, String repo, String owner, String sha,
+      String identifier, String target_url, String key, String installId, String appId, String token, String userName,
       GitSCMType gitSCMType, ConnectorDetails connectorDetails) {
     this.buildNumber = buildNumber;
+    this.detailsUrl = detailsUrl;
     this.repo = repo;
     this.owner = owner;
     this.sha = sha;

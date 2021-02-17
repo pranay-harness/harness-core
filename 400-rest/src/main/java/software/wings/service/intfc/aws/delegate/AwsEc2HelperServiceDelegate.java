@@ -1,5 +1,7 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -16,6 +18,7 @@ import com.amazonaws.services.ec2.model.LaunchTemplateVersion;
 import java.util.List;
 import java.util.Set;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public interface AwsEc2HelperServiceDelegate {
   AwsEc2ValidateCredentialsResponse validateAwsAccountCredential(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);

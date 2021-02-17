@@ -72,6 +72,7 @@ message FilterCreationBlobResponse {
   map<string, YamlFieldBlob> resolvedDependencies = 4;
   string startingNodeId = 6;
   repeated io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntities = 7;
+  repeated string stageNames = 8;
 }
 
 message VariablesCreationBlobRequest {
@@ -89,6 +90,7 @@ message VariablesCreationBlobResponse {
   map<string, YamlProperties> yamlProperties = 1;
   map<string, YamlFieldBlob> dependencies = 2;
   map<string, YamlFieldBlob> resolvedDependencies = 3;
+  repeated ErrorResponse errorResponse = 4;
 }
 
 message ErrorResponse {

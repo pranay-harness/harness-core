@@ -2,12 +2,12 @@ package io.harness.cdng.pipeline.executions;
 
 import static io.harness.pms.execution.ExecutionStatus.getExecutionStatus;
 
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
 import io.harness.execution.NodeExecution;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;

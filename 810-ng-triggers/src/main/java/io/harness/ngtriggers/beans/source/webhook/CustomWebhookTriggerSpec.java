@@ -2,22 +2,22 @@ package io.harness.ngtriggers.beans.source.webhook;
 
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> payloadConditions;
   List<WebhookCondition> headerConditions;
   AuthToken authToken;
 
-  public void setRepoUrl(String repoUrl) {}
+  public void setRepoSpec(RepoSpec repoUrl) {}
   public void setEvent(WebhookEvent webhookEvent) {}
 
   public void setActions(List<WebhookAction> webhookActions) {}
@@ -25,8 +25,8 @@ public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
   public void setPathFilters(List<String> pathFilters) {}
 
   @Override
-  public String getRepoUrl() {
-    return EMPTY;
+  public RepoSpec getRepoSpec() {
+    return null;
   }
 
   @Override

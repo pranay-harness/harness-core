@@ -404,6 +404,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       try {
+        context.renderExpression(assertionExpression);
         Object resultObj = context.evaluateExpression(assertionExpression);
         if (!(resultObj instanceof Boolean)) {
           return anExecutionEventAdvice()

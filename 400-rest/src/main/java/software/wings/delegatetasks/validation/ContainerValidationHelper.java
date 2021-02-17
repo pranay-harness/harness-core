@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.network.Http.connectableHttpUrl;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
@@ -11,7 +10,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -37,58 +35,6 @@ public class ContainerValidationHelper {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;
-
-  boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
-    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-
-    // see if we can decrypt from this delegate
-    if (value instanceof EncryptableSetting && !value.isDecrypted()
-        && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
-      try {
-        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails(), false);
-      } catch (Exception e) {
-        log.info("failed to decrypt " + value, e);
-        return false;
-      }
-    }
-
-    boolean validated;
-    if (value instanceof AwsConfig) {
-      validated = true;
-    } else if (value instanceof KubernetesClusterConfig
-        && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
-      validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
-    } else {
-      String url;
-      url = "None".equals(containerServiceParams.getClusterName()) ? "https://container.googleapis.com/"
-                                                                   : getKubernetesMasterUrl(containerServiceParams);
-      validated = connectableHttpUrl(url);
-    }
-
-    return validated;
-  }
-
-  public String getCriteria(ContainerServiceParams containerServiceParams) {
-    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (value instanceof AwsConfig) {
-      return ALWAYS_TRUE_CRITERIA;
-    } else if (value instanceof KubernetesClusterConfig) {
-      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-      if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
-        return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
-      }
-      return kubernetesClusterConfig.getMasterUrl();
-    } else if (value instanceof GcpConfig) {
-      return "GCP:" + containerServiceParams.getClusterName();
-    } else if (value instanceof AzureConfig) {
-      String subscriptionId = containerServiceParams.getSubscriptionId();
-      String resourceGroup = containerServiceParams.getResourceGroup();
-      return "Azure:" + subscriptionId + resourceGroup + containerServiceParams.getClusterName();
-    } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
-    }
-  }
 
   public String getK8sMasterUrl(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();

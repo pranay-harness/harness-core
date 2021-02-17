@@ -13,9 +13,9 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.LimitChecker;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 
 public class LimitsEnforcementIntegrationTest extends IntegrationTestBase {
-  @Inject private WingsPersistence dao;
+  @Inject private HPersistence dao;
   @Inject private LimitConfigurationService limitConfigSvc;
   @Inject private LimitCheckerFactory limitCheckerFactory;
 

@@ -2,7 +2,6 @@ package io.harness.cdng.creator;
 
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
-import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
@@ -37,7 +36,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     planCreators.add(new CDExecutionPMSPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
-    planCreators.add(new RollbackPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -84,6 +82,12 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setType(StepSpecTypeConstants.K8S_CANARY_DELETE)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
+    StepInfo delete =
+        StepInfo.newBuilder()
+            .setName("Delete")
+            .setType(StepSpecTypeConstants.K8S_DELETE)
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
+            .build();
 
     StepInfo stageDeployment =
         StepInfo.newBuilder()
@@ -120,6 +124,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<StepInfo> stepInfos = new ArrayList<>();
 
     stepInfos.add(k8sRolling);
+    stepInfos.add(delete);
     stepInfos.add(canaryDeploy);
     stepInfos.add(canaryDelete);
     stepInfos.add(stageDeployment);

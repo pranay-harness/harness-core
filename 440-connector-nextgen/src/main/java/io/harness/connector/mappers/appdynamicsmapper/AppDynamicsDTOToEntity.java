@@ -8,7 +8,8 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
-public class AppDynamicsDTOToEntity extends ConnectorDTOToEntityMapper<AppDynamicsConnectorDTO, AppDynamicsConnector> {
+public class AppDynamicsDTOToEntity
+    implements ConnectorDTOToEntityMapper<AppDynamicsConnectorDTO, AppDynamicsConnector> {
   @Override
   public AppDynamicsConnector toConnectorEntity(AppDynamicsConnectorDTO connectorDTO) {
     return AppDynamicsConnector.builder()

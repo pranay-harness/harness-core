@@ -7,6 +7,7 @@ import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -77,7 +78,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     encryptedData.setEncryptionType(VAULT);
 
     doReturn(Optional.empty()).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any(), eq(true))).thenReturn(Optional.of(secretManagerConfig));
     when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
 
     EncryptedData savedData = ngSecretService.createSecretText(secretTextDTO);
@@ -100,7 +101,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     ((VaultConfig) secretManagerConfig).setReadOnly(false);
 
     doReturn(Optional.of(encryptedData)).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any(), eq(true))).thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     doNothing().when(ngSecretService).deleteSecretInSecretManager(any(), any(), any());
     when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
@@ -121,7 +122,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     DecryptableEntity decryptableEntity = random(KubernetesClientKeyCertDTO.class);
     decryptableEntity.setDecrypted(false);
     doReturn(Optional.of(encryptedData)).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any(), eq(true))).thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
 
     List<EncryptedDataDetail> detailList =

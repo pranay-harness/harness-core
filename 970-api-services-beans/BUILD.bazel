@@ -32,7 +32,7 @@ java_library(
     resources = [
         "//970-api-services-beans/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         ":module",
         "//:lombok",

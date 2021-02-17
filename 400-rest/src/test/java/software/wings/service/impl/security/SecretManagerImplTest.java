@@ -45,6 +45,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.User;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.UsageRestrictions;
@@ -88,6 +89,7 @@ public class SecretManagerImplTest extends WingsBaseTest {
   @Inject @InjectMocks private SecretManagerImpl secretManager;
   @Inject private SecretsRBACService secretsRBACService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private WingsPersistence wingsPersistence;
   private String secretName = "secretName";
   private String secretValue = "secretValue";
 

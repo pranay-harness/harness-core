@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -31,7 +32,7 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
   @Wither Map<String, String> tags;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {

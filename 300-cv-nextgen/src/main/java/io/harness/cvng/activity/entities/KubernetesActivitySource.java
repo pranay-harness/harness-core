@@ -6,6 +6,7 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig.KubernetesActivitySourceConfigKeys;
 
+import com.google.common.base.Preconditions;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -35,12 +36,20 @@ public class KubernetesActivitySource extends ActivitySource {
     return KubernetesActivitySourceDTO.builder()
         .uuid(getUuid())
         .identifier(getIdentifier())
+        .orgIdentifier(getOrgIdentifier())
+        .projectIdentifier(getProjectIdentifier())
         .name(getName())
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)
         .createdAt(getCreatedAt())
         .lastUpdatedAt(getLastUpdatedAt())
         .build();
+  }
+
+  @Override
+  protected void validateParams() {
+    Preconditions.checkNotNull(connectorIdentifier);
+    Preconditions.checkNotNull(activitySourceConfigs);
   }
 
   public static KubernetesActivitySource fromDTO(

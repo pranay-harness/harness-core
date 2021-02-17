@@ -1,9 +1,12 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,12 +16,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -30,6 +35,7 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsCommandTaskHelper;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
@@ -37,12 +43,17 @@ import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import com.amazonaws.services.applicationautoscaling.model.DeregisterScalableTargetRequest;
 import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.ecs.model.NetworkMode;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -225,9 +236,9 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
                                              .withInstanceUnitType(COUNT)
                                              .build())
                            .build();
-    doReturn(singletonList(new Service().withServiceName("foo__1").withDesiredCount(1)))
+    doReturn(Optional.of(new Service().withServiceName("foo__1").withDesiredCount(1)))
         .when(mockAwsClusterService)
-        .getServices(anyString(), any(), anyList(), anyString());
+        .getService(anyString(), any(), anyList(), anyString(), anyString());
     ContainerServiceData instanceData = helper.getNewInstanceData(data, mock(ExecutionLogCallback.class));
     assertThat(instanceData).isNotNull();
     assertThat(instanceData.getDesiredCount()).isEqualTo(2);
@@ -281,5 +292,91 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     assertThat(map.size()).isEqualTo(2);
     assertThat(map.get("foo__1")).isEqualTo(1);
     assertThat(map.get("foo__2")).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testRegisterRunTaskDefinitionWithRegisterTaskDefinitionRequest() {
+    doReturn(null).when(mockAwsClusterService).createTask(any(), any(), any(), any());
+    ExecutionLogCallback mockExecutionLogCallback = mock(ExecutionLogCallback.class);
+
+    ArgumentCaptor<RegisterTaskDefinitionRequest> registerTaskDefinitionRequestArgumentCaptor =
+        ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
+
+    // with empty executionRoleArn and FARGATE launchType
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = new RegisterTaskDefinitionRequest();
+    registerTaskDefinitionRequest.withExecutionRoleArn("");
+    String launchType = "FARGATE";
+    helper.registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        null, registerTaskDefinitionRequest, launchType, null, null, mockExecutionLogCallback);
+    verify(helper).registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        any(), registerTaskDefinitionRequestArgumentCaptor.capture(), any(), any(), any(), any());
+
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequestArgumentCaptorValue =
+        registerTaskDefinitionRequestArgumentCaptor.getValue();
+    assertThat(registerTaskDefinitionRequestArgumentCaptorValue.getExecutionRoleArn()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getNetworkMode()).isEqualTo(NetworkMode.Awsvpc.toString());
+    assertThat(registerTaskDefinitionRequest.getRequiresCompatibilities()).contains("FARGATE");
+
+    // with non empty executionRoleArn and non FARGATE launchType
+    registerTaskDefinitionRequest.withExecutionRoleArn("executionRoleArn");
+    registerTaskDefinitionRequest.withCpu("cpu");
+    registerTaskDefinitionRequest.withMemory("memory");
+    helper.registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+        null, registerTaskDefinitionRequest, null, null, null, mockExecutionLogCallback);
+    verify(helper, times(2))
+        .registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+            any(), registerTaskDefinitionRequestArgumentCaptor.capture(), any(), any(), any(), any());
+
+    registerTaskDefinitionRequestArgumentCaptorValue = registerTaskDefinitionRequestArgumentCaptor.getValue();
+    assertThat(registerTaskDefinitionRequestArgumentCaptorValue.getExecutionRoleArn()).isEqualTo("executionRoleArn");
+    assertThat(registerTaskDefinitionRequest.getCpu()).isEqualTo(null);
+    assertThat(registerTaskDefinitionRequest.getMemory()).isEqualTo(null);
+  }
+
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testEmptyEcsDeployRollbackDataFetchResponse() {
+    EcsDeployRollbackDataFetchResponse response = helper.getEmptyEcsDeployRollbackDataFetchResponse();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(response.getOutput()).isEqualTo(StringUtils.EMPTY);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetServiceDesiredCount() {
+    EcsResizeParams resizeParams = anEcsResizeParams()
+                                       .withRegion("us-east-1")
+                                       .withPreviousEcsAutoScalarsAlreadyRemoved(false)
+                                       .withPreviousAwsAutoScalarConfigs(singletonList(
+                                           AwsAutoScalarConfig.builder().scalableTargetJson("ScalTJson").build()))
+                                       .withContainerServiceName(SERVICE_NAME)
+                                       .build();
+    ContextData data = ContextData.builder()
+                           .awsConfig(AwsConfig.builder().build())
+                           .resizeParams(resizeParams)
+                           .encryptedDataDetails(new ArrayList<>())
+                           .build();
+
+    doReturn(Optional.of(new Service().withDesiredCount(12)))
+        .when(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    Optional<Integer> serviceDesiredCount = helper.getServiceDesiredCount(data);
+    assertThat(serviceDesiredCount).isEqualTo(Optional.of(12));
+    verify(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    doReturn(Optional.empty())
+        .when(mockAwsClusterService)
+        .getService(resizeParams.getRegion(), data.getSettingAttribute(), data.getEncryptedDataDetails(),
+            resizeParams.getClusterName(), resizeParams.getContainerServiceName());
+
+    serviceDesiredCount = helper.getServiceDesiredCount(data);
+    assertThat(serviceDesiredCount).isEqualTo(Optional.empty());
   }
 }

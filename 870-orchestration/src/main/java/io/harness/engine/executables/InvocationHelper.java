@@ -34,6 +34,7 @@ public class InvocationHelper {
                                               .status(childExecution.getStatus())
                                               .failureInfo(childExecution.getFailureInfo())
                                               .stepOutcomeRefs(childExecution.getOutcomeRefs())
+                                              .adviserResponse(childExecution.getAdviserResponse())
                                               .build();
       response.put(node.getUuid(), notifyData);
     }

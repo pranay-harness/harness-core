@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
@@ -46,6 +47,8 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   @Mock SettingsService settingsService;
   @Inject @InjectMocks SettingAttributeSetupUsageBuilder settingAttributeSetupUsageBuilder;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private HPersistence persistence;
+
   private Account account;
   private EncryptedData encryptedData;
   private SettingAttribute settingAttribute;
@@ -55,7 +58,7 @@ public class SettingAttributeSetupUsageBuilderTest extends WingsBaseTest {
   public void setup() {
     initMocks(this);
     account = getAccount(AccountType.PAID);
-    account.setUuid(wingsPersistence.save(account));
+    account.setUuid(persistence.save(account));
 
     encryptedData = EncryptedData.builder()
                         .encryptionKey("plainTextKey")

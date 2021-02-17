@@ -8,8 +8,10 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+] + [
     "//:lombok",
-    "//460-capability:module",  #TODO: remove this dependency
+    "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
     "//960-api-services:module",
     "//970-api-services-beans:module",
@@ -24,7 +26,6 @@ shared_dependencies = [
     "@maven//:com_amazonaws_aws_java_sdk_ecr",
     "@maven//:com_amazonaws_aws_java_sdk_ecs",
     "@maven//:com_google_code_findbugs_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_hierynomus_smbj",
@@ -58,7 +59,7 @@ java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//930-delegate-tasks/src/test/resources:resource"],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",

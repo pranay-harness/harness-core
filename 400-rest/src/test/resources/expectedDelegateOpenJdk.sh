@@ -243,6 +243,10 @@ else
   sed -i.bak "s|^logStreamingServiceBaseUrl:.*$|logStreamingServiceBaseUrl: http://localhost:8079|" config-delegate.yml
 fi
 
+if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
+  echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=v1.12.2

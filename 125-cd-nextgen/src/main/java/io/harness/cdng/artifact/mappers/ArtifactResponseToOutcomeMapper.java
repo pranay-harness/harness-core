@@ -2,21 +2,23 @@ package io.harness.cdng.artifact.mappers;
 
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
-import io.harness.cdng.artifact.bean.GcrArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
-import io.harness.datacollection.utils.EmptyPredicate;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ArtifactResponseToOutcomeMapper {
+  private final String IMAGE_PULL_SECRET = "<+imagePullSecret.";
   public ArtifactOutcome toArtifactOutcome(
       ArtifactConfig artifactConfig, ArtifactDelegateResponse artifactDelegateResponse, boolean useDelegateResponse) {
     switch (artifactConfig.getSourceType()) {
@@ -48,6 +50,7 @@ public class ArtifactResponseToOutcomeMapper {
         .identifier(dockerConfig.getIdentifier())
         .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
         .primaryArtifact(dockerConfig.isPrimaryArtifact())
+        .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(dockerConfig) + ">")
         .build();
   }
 
@@ -57,12 +60,14 @@ public class ArtifactResponseToOutcomeMapper {
         .image(getImageValue(gcrArtifactDelegateResponse))
         .connectorRef(gcrArtifactConfig.getConnectorRef().getValue())
         .imagePath(gcrArtifactConfig.getImagePath().getValue())
+        .registryHostname(gcrArtifactConfig.getRegistryHostname().getValue())
         .tag(useDelegateResponse ? gcrArtifactDelegateResponse.getTag()
                                  : (gcrArtifactConfig.getTag() != null ? gcrArtifactConfig.getTag().getValue() : null))
         .tagRegex(gcrArtifactConfig.getTagRegex() != null ? gcrArtifactConfig.getTagRegex().getValue() : null)
         .identifier(gcrArtifactConfig.getIdentifier())
         .artifactType(ArtifactSourceType.GCR.getDisplayName())
         .primaryArtifact(gcrArtifactConfig.isPrimaryArtifact())
+        .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(gcrArtifactConfig) + ">")
         .build();
   }
 

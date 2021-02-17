@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"syscall"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -26,14 +27,16 @@ func TestIntegrationSvcSuccess(t *testing.T) {
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	cmdFactory := mexec.NewMockCommandFactory(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	svc := &integrationSvc{
-		id:         svcID,
-		image:      image,
-		entrypoint: entrypoint,
-		args:       args,
-		log:        log.Sugar(),
-		procWriter: &buf,
-		cmdFactory: cmdFactory,
+		id:          svcID,
+		image:       image,
+		entrypoint:  entrypoint,
+		args:        args,
+		log:         log.Sugar(),
+		addonLogger: log.Sugar(),
+		procWriter:  &buf,
+		cmdFactory:  cmdFactory,
 	}
 
 	cmd := mexec.NewMockCommand(ctrl)
@@ -41,7 +44,11 @@ func TestIntegrationSvcSuccess(t *testing.T) {
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
 	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().Start().Return(nil)
+	// cmd.EXPECT().Pid().Return(int(1))
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
 
 	err := svc.Run()
 	assert.Nil(t, err)
@@ -59,14 +66,16 @@ func TestIntegrationSvcNonZeroStatus(t *testing.T) {
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	cmdFactory := mexec.NewMockCommandFactory(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	svc := &integrationSvc{
-		id:         svcID,
-		image:      image,
-		entrypoint: entrypoint,
-		args:       args,
-		log:        log.Sugar(),
-		procWriter: &buf,
-		cmdFactory: cmdFactory,
+		id:          svcID,
+		image:       image,
+		entrypoint:  entrypoint,
+		args:        args,
+		log:         log.Sugar(),
+		addonLogger: log.Sugar(),
+		procWriter:  &buf,
+		cmdFactory:  cmdFactory,
 	}
 
 	cmd := mexec.NewMockCommand(ctrl)
@@ -74,7 +83,10 @@ func TestIntegrationSvcNonZeroStatus(t *testing.T) {
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
 	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(&exec.ExitError{})
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(&exec.ExitError{})
 
 	err := svc.Run()
 	assert.NotNil(t, err)
@@ -91,7 +103,7 @@ func TestServiceCreate(t *testing.T) {
 	svcID := "git-clone"
 	image := "alpine/git"
 
-	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)
+	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf, false, log.Sugar())
 	assert.NotNil(t, executor)
 }
 
@@ -112,7 +124,7 @@ func TestServiceEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)
+	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf, false, log.Sugar())
 	err := executor.Run()
 	assert.NotNil(t, err)
 }
@@ -134,7 +146,7 @@ func TestServiceEmptyEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf)
+	executor := NewIntegrationSvc(svcID, image, entrypoint, args, log.Sugar(), &buf, false, log.Sugar())
 	err := executor.Run()
 	assert.NotNil(t, err)
 }

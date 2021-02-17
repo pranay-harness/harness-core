@@ -15,8 +15,9 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -26,7 +27,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PluginSettingUtilsTest extends CIExecutionTest {
+public class PluginSettingUtilsTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -42,7 +43,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_SOURCE", "target/libmodule.jar");
 
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier");
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -72,7 +73,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -102,7 +103,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
   @Test
@@ -128,7 +129,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -138,45 +139,116 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   public void shouldGetRestoreCacheS3StepInfoEnvVariables() {
     RestoreCacheS3StepInfo restoreCacheS3StepInfo = RestoreCacheS3StepInfo.builder()
                                                         .key(ParameterField.createValueField("key"))
-                                                        .target(ParameterField.createValueField("target"))
                                                         .bucket(ParameterField.createValueField("bucket"))
                                                         .endpoint(ParameterField.createValueField("endpoint"))
                                                         .region(ParameterField.createValueField("region"))
                                                         .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_PATH", "target");
-    expected.put("PLUGIN_ROOT", "bucket");
+    expected.put("PLUGIN_BACKEND", "s3");
+    expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_ENDPOINT", "endpoint");
-    expected.put("PLUGIN_FILENAME", "key.tar");
+    expected.put("PLUGIN_CACHE_KEY", "key");
     expected.put("PLUGIN_RESTORE", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
     expected.put("PLUGIN_REGION", "region");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
+    expected.put("PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT", "false");
+    expected.put("PLUGIN_PATH_STYLE", "false");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier");
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldGetSaveCacheS3StepInfoEnvVariables() {
+  public void shouldGetRestoreCacheS3StepInfoEnvVariablesArchiveSet() {
+    RestoreCacheS3StepInfo restoreCacheS3StepInfo =
+        RestoreCacheS3StepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .endpoint(ParameterField.createValueField("endpoint"))
+            .region(ParameterField.createValueField("region"))
+            .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
+            .failIfKeyNotFound(ParameterField.createValueField(true))
+            .build();
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_BACKEND", "s3");
+    expected.put("PLUGIN_BUCKET", "bucket");
+    expected.put("PLUGIN_ENDPOINT", "endpoint");
+    expected.put("PLUGIN_CACHE_KEY", "key");
+    expected.put("PLUGIN_RESTORE", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_REGION", "region");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
+    expected.put("PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT", "true");
+    expected.put("PLUGIN_PATH_STYLE", "false");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldGetSaveCacheS3StepInfoEnvVariablesBasic() {
     SaveCacheS3StepInfo saveCacheS3StepInfo =
         SaveCacheS3StepInfo.builder()
             .key(ParameterField.createValueField("key"))
-            .target(ParameterField.createValueField("target"))
             .bucket(ParameterField.createValueField("bucket"))
             .region(ParameterField.createValueField("region"))
             .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
             .endpoint(ParameterField.createValueField("endpoint"))
             .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_PATH", "target");
+    expected.put("PLUGIN_BACKEND", "s3");
     expected.put("PLUGIN_MOUNT", "path1,path2");
-    expected.put("PLUGIN_ROOT", "bucket");
+    expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_ENDPOINT", "endpoint");
-    expected.put("PLUGIN_FILENAME", "key.tar");
+    expected.put("PLUGIN_CACHE_KEY", "key");
     expected.put("PLUGIN_REBUILD", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
     expected.put("PLUGIN_REGION", "region");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier");
+    expected.put("PLUGIN_PATH_STYLE", "false");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    expected.put("PLUGIN_OVERRIDE", "true");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldGetSaveCacheS3StepInfoEnvVariablesArchiveSet() {
+    SaveCacheS3StepInfo saveCacheS3StepInfo =
+        SaveCacheS3StepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .region(ParameterField.createValueField("region"))
+            .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
+            .endpoint(ParameterField.createValueField("endpoint"))
+            .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
+            .override(ParameterField.createValueField(false))
+            .build();
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_BACKEND", "s3");
+    expected.put("PLUGIN_MOUNT", "path1,path2");
+    expected.put("PLUGIN_BUCKET", "bucket");
+    expected.put("PLUGIN_ENDPOINT", "endpoint");
+    expected.put("PLUGIN_CACHE_KEY", "key");
+    expected.put("PLUGIN_REBUILD", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_REGION", "region");
+    expected.put("PLUGIN_PATH_STYLE", "false");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    expected.put("PLUGIN_OVERRIDE", "false");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -186,16 +258,44 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   public void shouldGetRestoreCacheGCSStepInfoEnvVariables() {
     RestoreCacheGCSStepInfo restoreCacheGCSStepInfo = RestoreCacheGCSStepInfo.builder()
                                                           .key(ParameterField.createValueField("key"))
-                                                          .target(ParameterField.createValueField("target"))
                                                           .bucket(ParameterField.createValueField("bucket"))
                                                           .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_PATH", "target");
+    expected.put("PLUGIN_BACKEND", "gcs");
     expected.put("PLUGIN_BUCKET", "bucket");
-    expected.put("PLUGIN_FILENAME", "key.tar");
+    expected.put("PLUGIN_CACHE_KEY", "key");
     expected.put("PLUGIN_RESTORE", "true");
+    expected.put("PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT", "false");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier");
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldGetRestoreCacheGCSStepInfoEnvVariablesArchiveSet() {
+    RestoreCacheGCSStepInfo restoreCacheGCSStepInfo =
+        RestoreCacheGCSStepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
+            .failIfKeyNotFound(ParameterField.createValueField(true))
+            .build();
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_BACKEND", "gcs");
+    expected.put("PLUGIN_BUCKET", "bucket");
+    expected.put("PLUGIN_CACHE_KEY", "key");
+    expected.put("PLUGIN_RESTORE", "true");
+    expected.put("PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -206,17 +306,48 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     SaveCacheGCSStepInfo saveCacheGCSStepInfo =
         SaveCacheGCSStepInfo.builder()
             .key(ParameterField.createValueField("key"))
-            .target(ParameterField.createValueField("target"))
             .bucket(ParameterField.createValueField("bucket"))
             .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
             .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_PATH", "target");
+    expected.put("PLUGIN_BACKEND", "gcs");
     expected.put("PLUGIN_MOUNT", "path1,path2");
     expected.put("PLUGIN_BUCKET", "bucket");
-    expected.put("PLUGIN_FILENAME", "key.tar");
+    expected.put("PLUGIN_CACHE_KEY", "key");
     expected.put("PLUGIN_REBUILD", "true");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
+    expected.put("PLUGIN_OVERRIDE", "true");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldGetSaveCacheGCSStepInfoEnvVariablesArchiveSet() {
+    SaveCacheGCSStepInfo saveCacheGCSStepInfo =
+        SaveCacheGCSStepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
+            .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
+            .override(ParameterField.createValueField(false))
+            .build();
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_BACKEND", "gcs");
+    expected.put("PLUGIN_MOUNT", "path1,path2");
+    expected.put("PLUGIN_BUCKET", "bucket");
+    expected.put("PLUGIN_CACHE_KEY", "key");
+    expected.put("PLUGIN_REBUILD", "true");
+    expected.put("PLUGIN_EXIT_CODE", "true");
+    expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
+    expected.put("PLUGIN_OVERRIDE", "false");
+    expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -238,7 +369,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_SOURCE", "sources");
     expected.put("PLUGIN_TARGET", "target");
 
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -256,7 +388,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");
 
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
 }

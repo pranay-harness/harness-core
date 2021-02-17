@@ -57,19 +57,27 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       throw new IllegalStateException("No AccountId present in notification. Notification: " + notification);
     }
 
-    for (NotificationRule notificationRule : notificationRules) {
-      List<UserGroup> userGroups = notificationRule.getUserGroupIds()
-                                       .stream()
-                                       .distinct()
-                                       .map(id -> userGroupService.get(accountId, id))
-                                       .filter(Objects::nonNull)
-                                       .collect(toList());
+    List<UserGroup> userGroups = getDistinctUserGroups(notificationRules, accountId);
+    List<NotificationGroup> notificationGroups = getDistinctNotificationGroups(notificationRules);
 
-      dispatch(singletonList(notification), userGroups);
+    dispatch(singletonList(notification), userGroups);
+    dispatch(singletonList(notification), notificationGroups);
+  }
 
-      // TODO(jatin): delete this once (userGroup -> notificationGroup) Migration is done
-      dispatch(singletonList(notification), notificationRule.getNotificationGroups());
-    }
+  protected List<NotificationGroup> getDistinctNotificationGroups(List<NotificationRule> notificationRules) {
+    return notificationRules.stream()
+        .flatMap(notificationRule -> notificationRule.getNotificationGroups().stream())
+        .distinct()
+        .collect(toList());
+  }
+
+  protected List<UserGroup> getDistinctUserGroups(List<NotificationRule> notificationRules, String accountId) {
+    return notificationRules.stream()
+        .flatMap(notificationRule -> notificationRule.getUserGroupIds().stream())
+        .distinct()
+        .map(id -> userGroupService.get(accountId, id))
+        .filter(Objects::nonNull)
+        .collect(toList());
   }
 
   @Override

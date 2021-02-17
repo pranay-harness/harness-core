@@ -15,8 +15,9 @@ import (
 
 // handler is used to implement AddonServer
 type handler struct {
-	stopCh chan bool
-	log    *zap.SugaredLogger
+	stopCh     chan bool
+	logMetrics bool
+	log        *zap.SugaredLogger
 }
 
 var (
@@ -26,8 +27,8 @@ var (
 )
 
 // NewAddonHandler returns a GRPC handler that implements pb.AddonServer
-func NewAddonHandler(stopCh chan bool, log *zap.SugaredLogger) pb.AddonServer {
-	return &handler{stopCh, log}
+func NewAddonHandler(stopCh chan bool, logMetrics bool, log *zap.SugaredLogger) pb.AddonServer {
+	return &handler{stopCh, logMetrics, log}
 }
 
 // SignalStop sends a signal to stop the GRPC service.
@@ -54,14 +55,14 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
-		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.log).Run(ctx)
+		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.log).Run(ctx)
+		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}

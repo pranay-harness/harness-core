@@ -215,12 +215,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig config = (KubernetesClusterConfig) contextData.settingAttribute.getValue();
       encryptionService.decrypt(config, contextData.encryptedDataDetails, false);
-      String delegateName = System.getenv().get("DELEGATE_NAME");
-      if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
-        throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
-                + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
-            delegateName, config.getDelegateName(), contextData.settingAttribute.getName()));
-      }
+
       kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue())
                              .createKubernetesConfig(resizeParams.getNamespace());
     } else if (contextData.settingAttribute.getValue() instanceof AzureConfig) {

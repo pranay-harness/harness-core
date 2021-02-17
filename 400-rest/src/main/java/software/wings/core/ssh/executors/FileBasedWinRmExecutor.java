@@ -5,8 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-
-import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
+import static io.harness.winrm.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;

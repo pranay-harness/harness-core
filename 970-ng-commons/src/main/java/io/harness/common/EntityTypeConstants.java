@@ -15,4 +15,6 @@ public interface EntityTypeConstants {
   String INTEGRATION_STAGE = "IntegrationStage";
   String INTEGRATION_STEPS = "IntegrationSteps";
   String CV_KUBERNETES_ACTIVITY_SOURCE = "CvKubernetesActivitySource";
+  String DEPLOYMENT_STEPS = "DeploymentSteps";
+  String DEPLOYMENT_STAGE = "DeploymentStage";
 }

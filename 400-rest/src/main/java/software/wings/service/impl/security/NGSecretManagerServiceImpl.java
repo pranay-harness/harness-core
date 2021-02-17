@@ -109,7 +109,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
     if (secretManagerConfigOptional.isPresent()) {
       secretManagerConfigService.decryptEncryptionConfigSecrets(
           accountIdentifier, secretManagerConfigOptional.get(), false);
@@ -141,7 +141,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   boolean checkForDuplicate(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    return get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).isPresent();
+    return get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true).isPresent();
   }
 
   Query<SecretManagerConfig> getQuery(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -156,20 +156,40 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         .notEqual(Boolean.TRUE);
   }
 
+  Query<SecretManagerConfig> getQueryWithIdentifiers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
+    return wingsPersistence.createQuery(SecretManagerConfig.class)
+        .field(ACCOUNT_IDENTIFIER_KEY)
+        .equal(accountIdentifier)
+        .field(ORG_IDENTIFIER_KEY)
+        .equal(orgIdentifier)
+        .field(PROJECT_IDENTIFIER_KEY)
+        .equal(projectIdentifier)
+        .field(IDENTIFIER_KEY)
+        .in(identifiers)
+        .field(DELETED_KEY)
+        .notEqual(Boolean.TRUE);
+  }
+
   @Override
   public List<SecretManagerConfig> list(
-      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
     Query<SecretManagerConfig> secretManagerConfigQuery;
-    secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
+    secretManagerConfigQuery =
+        getQueryWithIdentifiers(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
     return secretManagerConfigQuery.asList();
   }
 
   @Override
-  public Optional<SecretManagerConfig> get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+  public Optional<SecretManagerConfig> get(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, boolean maskSecrets) {
     Query<SecretManagerConfig> secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
     secretManagerConfigQuery.field(IDENTIFIER_KEY).equal(identifier);
-    return Optional.ofNullable(secretManagerConfigQuery.get());
+    SecretManagerConfig secretManagerConfig = secretManagerConfigQuery.get();
+    if (secretManagerConfig != null && !maskSecrets) {
+      secretManagerConfigService.decryptEncryptionConfigSecrets(accountIdentifier, secretManagerConfig, false);
+    }
+    return Optional.ofNullable(secretManagerConfig);
   }
 
   @Override
@@ -214,7 +234,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public SecretManagerConfig update(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretManagerConfigUpdateDTO updateDTO) throws InvalidRequestException {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
 
     if (secretManagerConfigOptional.isPresent()) {
       NGSecretManagerMetadata metadata = secretManagerConfigOptional.get().getNgMetadata();
@@ -255,7 +275,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean softDelete) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
     if (!secretManagerConfigOptional.isPresent()) {
       return false;
     }
@@ -325,7 +345,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
                                                  .filter(x -> !x.isEmpty());
 
       Optional<SecretManagerConfig> secretManagerConfigOptional = get(accountIdentifier, requestDTO.getOrgIdentifier(),
-          requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
+          requestDTO.getProjectIdentifier(), requestDTO.getIdentifier(), true);
       VaultConfig vaultConfig;
       if (secretManagerConfigOptional.isPresent()) {
         vaultConfig = (VaultConfig) secretManagerConfigOptional.get();

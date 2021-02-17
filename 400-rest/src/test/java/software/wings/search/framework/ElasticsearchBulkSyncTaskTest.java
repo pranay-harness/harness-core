@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -38,6 +39,8 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
   @Mock private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
   @Inject @InjectMocks private ApplicationSearchEntity aSearchEntity;
   @Inject @InjectMocks private ElasticsearchBulkSyncTask elasticsearchBulkSyncTask;
+  @Inject private HPersistence persistence;
+
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
@@ -57,11 +60,11 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
             .oldIndexName(oldIndexName)
             .newIndexName(newIndexName)
             .build();
-    wingsPersistence.save(elasticsearchBulkMigrationJob);
+    persistence.save(elasticsearchBulkMigrationJob);
 
     SearchEntityIndexState searchEntityIndexState =
         new SearchEntityIndexState(aSearchEntity.getClass().getCanonicalName(), "0.05", oldIndexName, false);
-    wingsPersistence.save(searchEntityIndexState);
+    persistence.save(searchEntityIndexState);
 
     Future f = threadPoolExecutor.submit(() -> {
       try {
@@ -119,11 +122,11 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
     assertThat(capturedSearchEntities.size()).isEqualTo(6);
 
     ElasticsearchBulkMigrationJob shouldBeDeletedJob =
-        wingsPersistence.get(ElasticsearchBulkMigrationJob.class, ApplicationSearchEntity.class.getCanonicalName());
+        persistence.get(ElasticsearchBulkMigrationJob.class, ApplicationSearchEntity.class.getCanonicalName());
     assertThat(shouldBeDeletedJob).isNull();
 
     SearchEntityIndexState createdSearchEntityIndexState =
-        wingsPersistence.get(SearchEntityIndexState.class, aSearchEntity.getClass().getCanonicalName());
+        persistence.get(SearchEntityIndexState.class, aSearchEntity.getClass().getCanonicalName());
     assertThat(createdSearchEntityIndexState).isNotNull();
     assertThat(createdSearchEntityIndexState.getSyncVersion()).isEqualTo(ApplicationSearchEntity.VERSION);
     assertThat(createdSearchEntityIndexState.isRecreateIndex()).isEqualTo(false);

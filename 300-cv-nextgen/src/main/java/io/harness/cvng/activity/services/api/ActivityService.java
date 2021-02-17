@@ -9,7 +9,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
-import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
   String register(String accountId, String webhookToken, ActivityDTO activityDTO);
-  String register(String accountId, ActivityDTO activityDTO);
+  CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
 
   void updateActivityStatus(Activity activity);
 
@@ -46,6 +46,4 @@ public interface ActivityService {
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
-  ResponseDTO<List<String>> getActivityDetails(
-      String accountId, String orgIdentifier, String projectIdentifier, String activityId);
 }

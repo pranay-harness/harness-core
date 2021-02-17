@@ -49,8 +49,7 @@ public class OpenShiftDelegateServiceTest extends WingsBaseTest {
     List<String> paramFilePaths = Arrays.asList("params-0", "params-1");
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
 
-    File ocResultYamlFile =
-        new File(getClass().getClassLoader().getResource("./openshift/oc_empty_items.yaml").getFile());
+    File ocResultYamlFile = new File("400-rest/src/test/resources/openshift/oc_empty_items.yaml");
 
     CliResponse cliResponse = CliResponse.builder()
                                   .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -122,10 +121,8 @@ public class OpenShiftDelegateServiceTest extends WingsBaseTest {
     List<String> paramFilePaths = Arrays.asList("params-0", "params-1");
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
 
-    File ocResultYamlFile =
-        new File(getClass().getClassLoader().getResource("./openshift/oc_process_result.yaml").getFile());
-    File expectedYamlFile =
-        new File(getClass().getClassLoader().getResource("./openshift/expected_parsed_result.yaml").getFile());
+    File ocResultYamlFile = new File("400-rest/src/test/resources/openshift/oc_process_result.yaml");
+    File expectedYamlFile = new File("400-rest/src/test/resources/openshift/expected_parsed_result.yaml");
 
     CliResponse cliResponse = CliResponse.builder()
                                   .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

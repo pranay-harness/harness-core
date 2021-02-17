@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @JsonTypeName("CUSTOM")
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class CustomAppFilter extends ApplicationFilter {
   private List<String> apps;
 

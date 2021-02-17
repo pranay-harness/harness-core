@@ -10,4 +10,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationSecrets {
   String managerServiceSecret;
+  String jwtAuthSecret;
+  String jwtIdentityServiceSecret;
 }

@@ -2,6 +2,8 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class GitFetchFilesValidationHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private GitClient gitClient;

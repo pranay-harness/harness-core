@@ -1,14 +1,22 @@
 package software.wings.service.impl.pipeline.resume;
 
+import static io.harness.beans.ExecutionStatus.ABORTED;
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.REJECTED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.service.impl.pipeline.resume.PipelineResumeUtils.PIPELINE_RESUME_ERROR_INVALID_STATUS;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
@@ -20,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -702,6 +711,43 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     pipelineResumeUtils.checkPipelineResumeAvailable(workflowExecution);
   }
 
+  @Test(expected = Test.None.class)
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testCheckPipelineResumeAvailableForResumableStatuses() {
+    WorkflowExecution abortedWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, ABORTED);
+    pipelineResumeUtils.checkPipelineResumeAvailable(abortedWorkflowExecution);
+
+    WorkflowExecution failedWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, FAILED);
+    pipelineResumeUtils.checkPipelineResumeAvailable(failedWorkflowExecution);
+
+    WorkflowExecution rejectedWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, REJECTED);
+    pipelineResumeUtils.checkPipelineResumeAvailable(rejectedWorkflowExecution);
+
+    WorkflowExecution expiredWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, EXPIRED);
+    pipelineResumeUtils.checkPipelineResumeAvailable(expiredWorkflowExecution);
+
+    WorkflowExecution errorWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, ERROR);
+    pipelineResumeUtils.checkPipelineResumeAvailable(errorWorkflowExecution);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testCheckPipelineResumeAvailableForUnResumableStatuses() {
+    WorkflowExecution abortedWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, RUNNING);
+    assertThatThrownBy(() -> pipelineResumeUtils.checkPipelineResumeAvailable(abortedWorkflowExecution))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(PIPELINE_RESUME_ERROR_INVALID_STATUS, abortedWorkflowExecution.getUuid(),
+            ExecutionStatus.resumableStatuses.toString());
+
+    WorkflowExecution failedWorkflowExecution = preparePipelineExecution(WorkflowType.PIPELINE, WAITING);
+    assertThatThrownBy(() -> pipelineResumeUtils.checkPipelineResumeAvailable(failedWorkflowExecution))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(PIPELINE_RESUME_ERROR_INVALID_STATUS, failedWorkflowExecution.getUuid(),
+            ExecutionStatus.resumableStatuses.toString());
+  }
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
@@ -898,6 +944,20 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         .status(ExecutionStatus.FAILED)
         .executionArgs(new ExecutionArgs())
         .pipelineExecution(PipelineExecution.Builder.aPipelineExecution().build())
+        .build();
+  }
+
+  private WorkflowExecution preparePipelineExecution(WorkflowType workflowType, ExecutionStatus status) {
+    return WorkflowExecution.builder()
+        .uuid(pipelineId)
+        .accountId(ACCOUNT_ID)
+        .workflowType(workflowType)
+        .status(status)
+        .executionArgs(new ExecutionArgs())
+        .pipelineExecution(
+            aPipelineExecution()
+                .withPipelineStageExecutions(asList(PipelineStageExecution.builder().status(FAILED).build()))
+                .build())
         .build();
   }
 

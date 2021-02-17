@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -20,6 +21,7 @@ import software.wings.service.impl.analysis.MetricsDataCollectionInfo.MetricsDat
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import java.security.SecureRandom;
@@ -33,6 +35,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class AnalysisContextTest extends WingsBaseTest {
+  @Inject private HPersistence persistence;
+
   private static final SecureRandom random = new SecureRandom();
 
   private AnalysisContext analysisContext;
@@ -134,14 +138,14 @@ public class AnalysisContextTest extends WingsBaseTest {
                                                 .controlNodes(nodesWithGroups(controlNodes))
                                                 .testNodes(nodesWithGroups(testNodes))
                                                 .build();
-    final String analysisContextId = wingsPersistence.save(analysisContext);
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "verificationServiceTask");
+    final String analysisContextId = persistence.save(analysisContext);
+    final DBCollection collection = persistence.getCollection(DEFAULT_STORE, "verificationServiceTask");
     final BasicDBObject dbObject = (BasicDBObject) collection.findOne();
     dbObject.get(AnalysisContextKeys.controlNodes);
     verifyDotsReplacedWithUniCode((BasicDBObject) dbObject.get(AnalysisContextKeys.controlNodes), controlNodes);
     verifyDotsReplacedWithUniCode((BasicDBObject) dbObject.get(AnalysisContextKeys.testNodes), testNodes);
 
-    final AnalysisContext savedAnalysisContext = wingsPersistence.get(AnalysisContext.class, analysisContextId);
+    final AnalysisContext savedAnalysisContext = persistence.get(AnalysisContext.class, analysisContextId);
     assertThat(savedAnalysisContext.getControlNodes().keySet()).isEqualTo(controlNodes);
     assertThat(savedAnalysisContext.getTestNodes().keySet()).isEqualTo(testNodes);
   }
@@ -166,8 +170,8 @@ public class AnalysisContextTest extends WingsBaseTest {
     analysisContext.setDataCollectionInfov2(
         NewRelicDataCollectionInfoV2.builder().hostsToGroupNameMap(hostToGroupNameMap).build());
 
-    final String analysisContextId = wingsPersistence.save(analysisContext);
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "verificationServiceTask");
+    final String analysisContextId = persistence.save(analysisContext);
+    final DBCollection collection = persistence.getCollection(DEFAULT_STORE, "verificationServiceTask");
     final BasicDBObject dbObject = (BasicDBObject) collection.findOne();
     dbObject.get(AnalysisContextKeys.controlNodes);
     verifyDotsReplacedWithUniCode((BasicDBObject) dbObject.get(AnalysisContextKeys.controlNodes), controlNodes);
@@ -177,7 +181,7 @@ public class AnalysisContextTest extends WingsBaseTest {
             .get(MetricsDataCollectionInfoKeys.hostsToGroupNameMap),
         hostToGroupNameMap.keySet());
 
-    final AnalysisContext savedAnalysisContext = wingsPersistence.get(AnalysisContext.class, analysisContextId);
+    final AnalysisContext savedAnalysisContext = persistence.get(AnalysisContext.class, analysisContextId);
     assertThat(savedAnalysisContext.getControlNodes().keySet()).isEqualTo(controlNodes);
     assertThat(savedAnalysisContext.getTestNodes().keySet()).isEqualTo(testNodes);
     assertThat(((NewRelicDataCollectionInfoV2) savedAnalysisContext.getDataCollectionInfov2()).getHostsToGroupNameMap())

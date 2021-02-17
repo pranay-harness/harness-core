@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -185,7 +186,10 @@ public class DockerResourceServiceImpl implements DockerResourceService {
 
   private List<EncryptedDataDetail> getEncryptionDetails(
       @Nonnull DockerConnectorDTO dockerConnectorDTO, @Nonnull NGAccess ngAccess) {
-    return secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+    if (dockerConnectorDTO.getAuth() != null && dockerConnectorDTO.getAuth().getCredentials() != null) {
+      return secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+    }
+    return new ArrayList<>();
   }
 
   private ArtifactTaskExecutionResponse executeSyncTask(DockerArtifactDelegateRequest dockerRequest,

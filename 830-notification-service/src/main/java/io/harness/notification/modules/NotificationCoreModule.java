@@ -9,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.core.UserClientModule;
-import io.harness.notification.NotificationClientBackendConfiguration;
 import io.harness.notification.NotificationConfiguration;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
@@ -32,10 +31,8 @@ import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.queue.QueueConsumer;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
@@ -69,14 +66,8 @@ public class NotificationCoreModule extends AbstractModule {
   }
 
   private void bindMessageConsumer() {
-    NotificationClientBackendConfiguration notificationClientBackendConfiguration = getBackendConfig();
-    assert notificationClientBackendConfiguration.getType().equalsIgnoreCase("mongo");
     log.info("Using Mongo as the message broker");
     bind(MessageConsumer.class).to(MongoMessageConsumer.class);
-  }
-
-  private NotificationClientBackendConfiguration getBackendConfig() {
-    return appConfig.getNotificationClientConfiguration().getNotificationClientBackendConfiguration();
   }
 
   @Provides
@@ -87,8 +78,7 @@ public class NotificationCoreModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueueConsumer<MongoNotificationRequest> getQueueConsumer(
-      Injector injector, @Named("notification-channel") MongoTemplate mongoTemplate) {
+  QueueConsumer<MongoNotificationRequest> getQueueConsumer(MongoTemplate mongoTemplate) {
     return new NGMongoQueueConsumer<>(MongoNotificationRequest.class, ofSeconds(5), new ArrayList<>(), mongoTemplate);
   }
 }

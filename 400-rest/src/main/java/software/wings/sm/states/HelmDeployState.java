@@ -22,7 +22,6 @@ import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchEnvFromExecutionContext;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
-import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -342,7 +341,9 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
-            .helmCommandFlag(helmCommandFlag);
+            .helmCommandFlag(helmCommandFlag)
+            .mergeCapabilities(
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -393,8 +394,6 @@ public class HelmDeployState extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    List<String> tags = new ArrayList<>();
-    tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
                                                       .stateExecutionData(stateExecutionDataBuilder.build())
                                                       .adoptDelegateDecryption(true)
@@ -414,7 +413,6 @@ public class HelmDeployState extends State {
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
                                     .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
                                         serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
-                                    .tags(tags)
                                     .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
                                     .build();
 
@@ -902,9 +900,6 @@ public class HelmDeployState extends State {
     commandRequest.setK8SteadyStateCheckEnabled(
         featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));
 
-    List<String> tags = new ArrayList<>();
-    tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
-
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
     HelmDeployStateExecutionData stateExecutionData = stateExecutionDataBuilder.build();
@@ -915,7 +910,6 @@ public class HelmDeployState extends State {
             .accountId(app.getAccountId())
             .description("Helm Command Execution")
             .waitId(activityId)
-            .tags(tags)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
@@ -1005,10 +999,6 @@ public class HelmDeployState extends State {
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
-    List<String> tags = new ArrayList<>();
-    if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
-      tags.addAll(fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
-    }
     final int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
     HelmDeployStateExecutionDataBuilder helmDeployStateExecutionDataBuilder = HelmDeployStateExecutionData.builder()
@@ -1034,7 +1024,6 @@ public class HelmDeployState extends State {
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
             .waitId(waitId)
-            .tags(tags)
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
@@ -1245,11 +1234,6 @@ public class HelmDeployState extends State {
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId, helmOverrideManifestMap);
 
-    List<String> tags = new ArrayList<>();
-    if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
-      tags.addAll(fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
-    }
-
     String waitId = generateUuid();
     final int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
@@ -1279,7 +1263,6 @@ public class HelmDeployState extends State {
                 serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
             .waitId(waitId)
-            .tags(tags)
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.HELM_VALUES_FETCH.name())

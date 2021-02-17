@@ -2,7 +2,6 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
@@ -96,8 +95,7 @@ public class PipelineExecuteHelper {
         ImmutableMap.<String, String>builder()
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
-            .put("expressionFunctorToken", Integer.toString(HashGenerator.generateIntegerHash()));
+            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
     if (executionMetadata.hasTriggerPayload()) {
       abstractionsBuilder.put(

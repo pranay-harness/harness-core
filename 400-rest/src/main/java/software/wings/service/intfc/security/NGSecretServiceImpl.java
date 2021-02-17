@@ -1,6 +1,8 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -15,6 +17,8 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -64,6 +68,7 @@ import org.mongodb.morphia.query.Query;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@TargetModule(Module._950_NG_CORE)
 public class NGSecretServiceImpl implements NGSecretService {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
   private static final String ACCOUNT_IDENTIFIER_KEY =
@@ -140,7 +145,7 @@ public class NGSecretServiceImpl implements NGSecretService {
     // Fetch secret manager with which this secret will be saved
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
@@ -148,7 +153,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       if (isReadOnlySecretManager(secretManagerConfig)
           && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
         throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Cannot create a secret in read only secret manager", USER);
+            SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
       }
 
       // validate format of path as per type of secret manager
@@ -181,11 +186,14 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, SettingVariableTypes type, String page, String size) {
+      String projectIdentifier, List<String> identifiers, SettingVariableTypes type, String page, String size) {
     PageRequest<EncryptedData> pageRequest = new PageRequest<>();
     pageRequest.addFilter(ACCOUNT_IDENTIFIER_KEY, EQ, accountIdentifier);
     pageRequest.addFilter(ORG_IDENTIFIER_KEY, EQ, orgIdentifier);
     pageRequest.addFilter(PROJECT_IDENTIFIER_KEY, EQ, projectIdentifier);
+    if (isNotEmpty(identifiers)) {
+      pageRequest.addFilter(IDENTIFIER_KEY, IN, identifiers);
+    }
     if (Optional.ofNullable(type).isPresent()) {
       pageRequest.addFilter(EncryptedDataKeys.type, EQ, type);
     }
@@ -227,13 +235,13 @@ public class NGSecretServiceImpl implements NGSecretService {
       // get secret manager with which secret text was encrypted
       Optional<SecretManagerConfig> secretManagerConfigOptional =
           ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
             && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
           throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "Cannot update a secret in read only secret manager", USER);
+              SECRET_MANAGEMENT_ERROR, "Cannot update to an Inline secret in read only secret manager", USER);
         }
         validatePath(dto.getPath(), secretManagerConfigOptional.get().getEncryptionType());
 
@@ -286,12 +294,12 @@ public class NGSecretServiceImpl implements NGSecretService {
 
       // Get secret manager with which it was encrypted
       Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
-          accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier());
+          accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier(), true);
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
             && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
           throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "Cannot delete a secret in read only secret manager", USER);
+              SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
         }
         // if  secret text was created inline (not referenced), delete the secret in secret manager also
         if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
@@ -392,7 +400,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
             // get secret manager with which this was secret was encrypted
             Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(accountIdentifier,
-                orgIdentifier, projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier());
+                orgIdentifier, projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier(), true);
             if (secretManagerConfigOptional.isPresent()) {
               SecretManagerConfig encryptionConfig = secretManagerConfigOptional.get();
 

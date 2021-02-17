@@ -111,6 +111,6 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

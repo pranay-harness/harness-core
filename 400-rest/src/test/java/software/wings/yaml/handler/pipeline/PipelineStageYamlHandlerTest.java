@@ -22,6 +22,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.PipelineStage;
+import software.wings.beans.Variable;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
@@ -37,7 +39,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +62,7 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private static final String yamlFilePath = "Setup/Applications/APP_NAME/Pipelines/pipeline.yaml";
-  private static final String resourcePath = "./yaml";
+  private static final String resourcePath = "400-rest/src/test/resources/yaml";
 
   private static final String userGroupName = "USER_GROUP";
   private static final String workflowName = "WORKFLOW_NAME";
@@ -98,14 +99,28 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
     testCRUD(PipelineStageYamlFiles.Stage2);
   }
 
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testEnvStageYamlWithOneVariableWithEmptyValue() throws IOException {
+    Variable emptyVariable = Variable.VariableBuilder.aVariable().name("var1").type(VariableType.TEXT).build();
+    Workflow workflow =
+        aWorkflow()
+            .name(workflowName)
+            .envId(ENV_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(
+                aBasicOrchestrationWorkflow().withUserVariables(Collections.singletonList(emptyVariable)).build())
+            .build();
+    when(workflowService.readWorkflowByName(any(), anyString())).thenReturn(workflow);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    testCRUD(PipelineStageYamlFiles.Stage2);
+  }
+
   private void testCRUD(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
 

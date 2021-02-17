@@ -97,8 +97,6 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   @Inject private SecretGenerator secretGenerator;
   @Inject private TemplateService templateService;
 
-  private static final long TIMEOUT = 1200000; // 20 minutes
-
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
 
@@ -159,7 +157,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
                                  .build());
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
   public void testCustomDeploymentWorkflowSuccess() throws IOException {
@@ -196,7 +194,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
         .isEqualTo("2.2");
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
   public void testEmptyFetchInstanceSciptFail() throws IOException {
@@ -246,7 +244,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getServiceExecutionSummaries().get(0).getInstancesCount()).isEqualTo(0);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = TATHAGAT)
   @Category(FunctionalTests.class)
   public void testTemplateLinkedWithInfraNotGetDeleted() throws IOException {

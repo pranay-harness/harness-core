@@ -1,6 +1,5 @@
 package io.harness.beans.steps;
 
-import io.harness.EntityType;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -15,7 +14,6 @@ import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.yaml.core.StepSpecType;
-import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
@@ -26,7 +24,6 @@ import java.util.List;
               RestoreCacheGCSStepInfo.class, RestoreCacheS3StepInfo.class, RunStepInfo.class,
               SaveCacheGCSStepInfo.class, SaveCacheS3StepInfo.class, UploadToGCSStepInfo.class,
               UploadToS3StepInfo.class, UploadToArtifactoryStepInfo.class})
-@YamlSchemaRoot(EntityType.INTEGRATION_STEPS)
 public interface CIStepInfo extends StepSpecType, GenericStepInfo {
   int MIN_RETRY = 0;
   int MAX_RETRY = 5;

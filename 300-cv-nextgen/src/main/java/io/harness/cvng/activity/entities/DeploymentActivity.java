@@ -55,7 +55,7 @@ public class DeploymentActivity extends Activity {
     setDeploymentTag(deploymentActivityDTO.getDeploymentTag());
     setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
     setType(ActivityType.DEPLOYMENT);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
@@ -87,6 +87,11 @@ public class DeploymentActivity extends Activity {
       Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
           "The verification job identifier is a required parameter for deployment activities");
     });
+  }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return false;
   }
 
   @JsonIgnore

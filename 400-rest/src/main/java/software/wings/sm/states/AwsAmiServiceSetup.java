@@ -56,7 +56,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest.AwsAmiServiceSetupRequestBuilder;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
@@ -77,8 +76,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
 import software.wings.utils.AsgConvention;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +102,7 @@ public class AwsAmiServiceSetup extends State {
   @Inject private SpotInstStateHelper spotinstStateHelper;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
+  @Inject private AwsStateHelper awsStateHelper;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   private String commandName = AMI_SETUP_COMMAND_NAME;
@@ -294,15 +292,8 @@ public class AwsAmiServiceSetup extends State {
               .infraMappingClassisLbs(classicLbs)
               .infraMappingTargetGroupArns(targetGroupARNs)
               .artifactRevision(artifact.getRevision())
-              .blueGreen(blueGreen);
-
-      UserDataSpecification userDataSpecification =
-          serviceResourceService.getUserDataSpecification(app.getUuid(), serviceId);
-      if (userDataSpecification != null && userDataSpecification.getData() != null) {
-        String userData = userDataSpecification.getData();
-        String userDataAfterEvaluation = context.renderExpression(userData);
-        requestBuilder.userData(BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes(Charsets.UTF_8)));
-      }
+              .blueGreen(blueGreen)
+              .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context));
 
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))

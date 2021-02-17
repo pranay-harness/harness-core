@@ -45,11 +45,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.FailureType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -75,8 +79,8 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.StateMachineTest.StateAsync;
-import software.wings.sm.StateMachineTest.StateSync;
+import software.wings.sm.StateMachineTestBase.StateAsync;
+import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.states.ForkState;
 
 import com.google.inject.Inject;
@@ -85,6 +89,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +130,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Mock private StateExecutionInstance stateExecutionInstance;
   @Mock private AlertService alertService;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
+  @InjectMocks private StateMachineExecutor spyExecutor = spy(new StateMachineExecutor());
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
 
@@ -259,13 +265,13 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique(), true);
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique(), true);
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
-    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + StaticMap.getUnique());
+    StateSync stateD = new StateSync("stateD" + StaticMap.getUnique());
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -655,14 +661,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -715,14 +721,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -1212,5 +1218,43 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(persistedStateExecutionInstance.getExpiryTs()).isEqualTo(updatedStateExecutionInstance.getExpiryTs());
     assertThat(persistedStateExecutionInstance.getActionAfterManualInterventionTimeout()).isEqualTo(END_EXECUTION);
     wingsPersistence.delete(updatedStateExecutionInstance);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSkipDelayedStepIfRequired() {
+    StateMachineExecutor executor = mock(StateMachineExecutor.class);
+    State state = mock(State.class);
+    when(executor.skipDelayedStepIfRequired(context, state)).thenCallRealMethod();
+    ExecutionEvent executionEvent =
+        ExecutionEvent.builder().failureTypes(EnumSet.noneOf(FailureType.class)).context(context).state(state).build();
+    ExecutionEventAdvisor executionEventAdvisor = mock(ExecutionEventAdvisor.class);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionEventAdvisors(singletonList(executionEventAdvisor)).build());
+    when(executionEventAdvisor.onExecutionEvent(executionEvent))
+        .thenReturn(anExecutionEventAdvice().withSkipState(true).build());
+    executor.skipDelayedStepIfRequired(context, state);
+
+    verify(executor).handleResponse(any(), any());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotSkipDelayedStep() {
+    StateMachineExecutor executor = mock(StateMachineExecutor.class);
+    State state = mock(State.class);
+    when(executor.skipDelayedStepIfRequired(context, state)).thenCallRealMethod();
+    ExecutionEvent executionEvent =
+        ExecutionEvent.builder().failureTypes(EnumSet.noneOf(FailureType.class)).context(context).state(state).build();
+    ExecutionEventAdvisor executionEventAdvisor = mock(ExecutionEventAdvisor.class);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionEventAdvisors(singletonList(executionEventAdvisor)).build());
+    when(executionEventAdvisor.onExecutionEvent(executionEvent))
+        .thenReturn(anExecutionEventAdvice().withSkipState(false).build());
+    executor.skipDelayedStepIfRequired(context, state);
+
+    verify(executor, never()).handleResponse(any(), any());
   }
 }

@@ -2,6 +2,8 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sVersionTaskHandler extends K8sTaskHandler {
   @Inject private transient ApiClientFactoryImpl apiClientFactory;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

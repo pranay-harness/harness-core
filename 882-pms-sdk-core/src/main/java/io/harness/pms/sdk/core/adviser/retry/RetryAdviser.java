@@ -69,9 +69,11 @@ public class RetryAdviser implements Adviser {
   }
 
   private AdviserResponse handlePostRetry(io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters parameters) {
+    AdviserResponse.Builder adviserResponseBuilder =
+        AdviserResponse.newBuilder().setRepairActionCode(parameters.getRepairActionCodeAfterRetry());
     switch (parameters.getRepairActionCodeAfterRetry()) {
       case MANUAL_INTERVENTION:
-        return AdviserResponse.newBuilder()
+        return adviserResponseBuilder
             .setInterventionWaitAdvise(
                 InterventionWaitAdvise.newBuilder()
                     .setTimeout(Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build())
@@ -79,8 +81,7 @@ public class RetryAdviser implements Adviser {
             .setType(AdviseType.INTERVENTION_WAIT)
             .build();
       case END_EXECUTION:
-        return AdviserResponse.newBuilder()
-            .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
@@ -89,14 +90,13 @@ public class RetryAdviser implements Adviser {
         if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
           builder.setNextNodeId(parameters.getNextNodeId());
         }
-        return AdviserResponse.newBuilder().setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
+        return adviserResponseBuilder.setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
       case MARK_AS_SUCCESS:
         MarkSuccessAdvise.Builder markSuccessBuilder = MarkSuccessAdvise.newBuilder();
         if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
           markSuccessBuilder.setNextNodeId(parameters.getNextNodeId());
         }
-        return AdviserResponse.newBuilder()
-            .setMarkSuccessAdvise(markSuccessBuilder.build())
+        return adviserResponseBuilder.setMarkSuccessAdvise(markSuccessBuilder.build())
             .setType(AdviseType.MARK_SUCCESS)
             .build();
       default:

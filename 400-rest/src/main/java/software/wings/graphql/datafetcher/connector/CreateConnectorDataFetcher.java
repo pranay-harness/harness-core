@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Application;
@@ -24,6 +26,7 @@ import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnectorInput, QLCreateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;

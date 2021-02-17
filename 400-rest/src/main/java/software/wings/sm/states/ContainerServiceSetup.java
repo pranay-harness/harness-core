@@ -168,11 +168,6 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       List<String> allTaskTags = new ArrayList<>();
-      List<String> cloudProviderTags =
-          K8sStateHelper.fetchDelegateNameAsTagFromK8sCloudProvider(settingAttribute.getValue());
-      if (isNotEmpty(cloudProviderTags)) {
-        allTaskTags.addAll(cloudProviderTags);
-      }
 
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
           (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
@@ -213,18 +208,28 @@ public abstract class ContainerServiceSetup extends State {
         }
       }
 
-      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                            .accountId(app.getAccountId())
-                                                            .appId(app.getUuid())
-                                                            .envId(env.getUuid())
-                                                            .deploymentType(deploymentType.name())
-                                                            .containerSetupParams(containerSetupParams)
-                                                            .activityId(activity.getUuid())
-                                                            .cloudProviderSetting(settingAttribute)
-                                                            .cloudProviderCredentials(encryptedDataDetails)
-                                                            .serviceVariables(serviceVariables)
-                                                            .safeDisplayServiceVariables(safeDisplayServiceVariables)
-                                                            .build();
+      List<String> allDelegateSelectors = new ArrayList<>();
+      List<String> delegateSelectorsFromK8sCloudProvider =
+          K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(settingAttribute.getValue());
+      if (isNotEmpty(delegateSelectorsFromK8sCloudProvider)) {
+        allDelegateSelectors.addAll(delegateSelectorsFromK8sCloudProvider);
+      }
+
+      CommandExecutionContext commandExecutionContext =
+          aCommandExecutionContext()
+              .accountId(app.getAccountId())
+              .appId(app.getUuid())
+              .envId(env.getUuid())
+              .deploymentType(deploymentType.name())
+              .containerSetupParams(containerSetupParams)
+              .activityId(activity.getUuid())
+              .cloudProviderSetting(settingAttribute)
+              .cloudProviderCredentials(encryptedDataDetails)
+              .serviceVariables(serviceVariables)
+              .safeDisplayServiceVariables(safeDisplayServiceVariables)
+              .delegateSelectors(isNotEmpty(allDelegateSelectors) ? allDelegateSelectors : null)
+              .build();
+
       List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
       if (isNotEmpty(awsConfigTags)) {
         allTaskTags.addAll(awsConfigTags);

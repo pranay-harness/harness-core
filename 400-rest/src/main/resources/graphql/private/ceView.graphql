@@ -50,6 +50,7 @@ type View {
   id: String
   name: String
   totalCost: Number
+  createdBy: String
   createdAt: Number
   lastUpdatedAt: Number
   chartType: ViewChartType

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
-import static io.harness.network.Http.connectableHttpUrl;
 
 import static java.lang.String.format;
 
@@ -14,7 +13,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -47,52 +45,6 @@ public class K8sValidationHelper {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;
-
-  boolean validateContainerServiceParams(K8sClusterConfig k8sClusterConfig) {
-    SettingValue value = k8sClusterConfig.getCloudProvider();
-
-    // see if we can decrypt from this delegate
-    if (!value.isDecrypted() && isNotEmpty(k8sClusterConfig.getCloudProviderEncryptionDetails())) {
-      try {
-        encryptionService.decrypt(
-            (EncryptableSetting) value, k8sClusterConfig.getCloudProviderEncryptionDetails(), false);
-      } catch (Exception e) {
-        log.info("failed to decrypt " + value, e);
-        return false;
-      }
-    }
-
-    boolean validated;
-    if (value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
-      validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
-    } else {
-      String url;
-      url = getKubernetesMasterUrl(k8sClusterConfig);
-      validated = connectableHttpUrl(url);
-    }
-
-    return validated;
-  }
-
-  public String getCriteria(K8sClusterConfig k8sClusterConfig) {
-    SettingValue value = k8sClusterConfig.getCloudProvider();
-    if (value instanceof KubernetesClusterConfig) {
-      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-      if (kubernetesClusterConfig.isUseKubernetesDelegate()) {
-        return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
-      }
-      return kubernetesClusterConfig.getMasterUrl();
-    } else if (value instanceof GcpConfig) {
-      return "GCP:" + k8sClusterConfig.getGcpKubernetesCluster().getClusterName();
-    } else if (value instanceof AzureConfig) {
-      String subscriptionId = k8sClusterConfig.getAzureKubernetesCluster().getSubscriptionId();
-      String resourceGroup = k8sClusterConfig.getAzureKubernetesCluster().getResourceGroup();
-      return "Azure:" + subscriptionId + resourceGroup + k8sClusterConfig.getAzureKubernetesCluster().getName();
-    } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
-    }
-  }
 
   @Nullable
   public String getKustomizeCriteria(@Nonnull KustomizeConfig kustomizeConfig) {

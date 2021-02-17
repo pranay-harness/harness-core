@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.cloudformation.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -13,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class CloudFormationCommandRequest implements ExecutionCapabilityDemander {
   @NotEmpty private CloudFormationCommandType commandType;
   private String accountId;

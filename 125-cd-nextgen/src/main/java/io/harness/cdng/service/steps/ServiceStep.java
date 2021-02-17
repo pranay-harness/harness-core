@@ -8,7 +8,6 @@ import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFiel
 import static java.util.stream.Collectors.toList;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
@@ -40,6 +39,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -75,7 +75,6 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.groovy.util.Maps;
 
 @Slf4j
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
@@ -168,9 +167,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         : serviceStepParameters.getService();
     serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
 
-    ServiceOutcome serviceOutcome =
-        createServiceOutcome(ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
-            Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance)));
+    ServiceOutcome serviceOutcome = createServiceOutcome(
+        ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken());
     return StepResponse.builder()
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.SERVICE)
@@ -179,7 +177,18 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                          .build())
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(YamlTypes.SERVICE_CONFIG)
-                         .outcome(ServiceConfigOutcome.builder().service(serviceOutcome).build())
+                         .outcome(ServiceConfigOutcome.builder()
+                                      .service(serviceOutcome)
+                                      .variables(serviceOutcome.getVariables())
+                                      .artifacts(serviceOutcome.getArtifacts())
+                                      .manifests(serviceOutcome.getManifests())
+                                      .artifactsResult(serviceOutcome.getArtifactsResult())
+                                      .manifestResults(serviceOutcome.getManifestResults())
+                                      .artifactOverrideSets(serviceOutcome.getArtifactOverrideSets())
+                                      .manifestOverrideSets(serviceOutcome.getManifestOverrideSets())
+                                      .variableOverrideSets(serviceOutcome.getVariableOverrideSets())
+                                      .stageOverrides(serviceOutcome.getStageOverrides())
+                                      .build())
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .status(Status.SUCCEEDED)
@@ -188,7 +197,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   @VisibleForTesting
   ServiceOutcome createServiceOutcome(Ambiance ambiance, ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes,
-      int expressionFunctorToken) throws IOException {
+      long expressionFunctorToken) throws IOException {
     ServiceEntity serviceEntity = getServiceEntity(serviceConfig, ambiance);
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
@@ -224,7 +233,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   }
 
   private void handlePublishingStageOverrides(ServiceOutcomeBuilder outcomeBuilder, ManifestsOutcome manifestsOutcome,
-      ServiceConfig serviceConfig, int expressionFunctorToken) {
+      ServiceConfig serviceConfig, long expressionFunctorToken) {
     if (serviceConfig.getStageOverrides() == null) {
       return;
     }
@@ -270,7 +279,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   }
 
   private void handleVariablesOutcome(
-      ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, int expressionFunctorToken) {
+      ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, long expressionFunctorToken) {
     List<NGVariable> originalVariables = serviceConfig.getServiceDefinition().getServiceSpec().getVariables();
     Map<String, Object> mapOfVariables = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(originalVariables)) {
@@ -358,8 +367,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put(YamlTypes.OUTPUT, RecastOrchestrationUtils.toDocument(artifactOutcome));
-        addValuesToMap(
-            artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
+        Map<String, Object> sidecarsMap = new HashMap<>();
+        sidecarsMap.put(artifactOutcome.getIdentifier(), valueMap);
+        addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, sidecarsMap);
       }
     }
     outcomeBuilder.artifactsResult(artifactsBuilder.build());
@@ -374,8 +384,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
           addValuesToMap(
               artifactsMap, YamlTypes.PRIMARY_ARTIFACT, RecastOrchestrationUtils.toDocument(artifactOutcome));
         } else {
-          addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG,
-              Maps.of(artifactOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(artifactOutcome)));
+          Map<String, Object> sidecarsMap = new HashMap<>();
+          sidecarsMap.put(artifactOutcome.getIdentifier(), RecastOrchestrationUtils.toDocument(artifactOutcome));
+          addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, sidecarsMap);
         }
       }
     }

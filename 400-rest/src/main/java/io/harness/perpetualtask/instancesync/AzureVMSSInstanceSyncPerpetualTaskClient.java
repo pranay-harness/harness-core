@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
@@ -83,6 +85,7 @@ public class AzureVMSSInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .taskType(TaskType.AZURE_VMSS_COMMAND_TASK.name())
                   .parameters(new Object[] {request})
                   .build())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

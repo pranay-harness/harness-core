@@ -3,8 +3,6 @@ package io.harness.delegate.beans;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -35,7 +33,6 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "DelegateKeys")
 @Entity(value = "delegates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(Module._420_DELEGATE_SERVICE)
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, PersistentRegularIterable {
   public static final Duration TTL = ofDays(30);
 

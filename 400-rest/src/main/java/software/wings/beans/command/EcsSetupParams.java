@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import io.harness.k8s.model.ImageDetails;
 
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -41,8 +42,10 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean isDaemonSchedulingStrategy;
   private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
   private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+  private List<AwsElbConfig> awsElbConfigs;
   private boolean blueGreen;
   private String stageListenerPort;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   // Only for ECS BG route 53 DNS swap
   private boolean useRoute53DNSSwap;
@@ -84,6 +87,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private boolean isDaemonSchedulingStrategy;
     private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
     private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+    private List<AwsElbConfig> awsElbConfigs;
+    private boolean isMultipleLoadBalancersFeatureFlagActive;
     private boolean blueGreen;
     private String targetGroupArn2;
     private String prodListenerArn;
@@ -115,6 +120,17 @@ public class EcsSetupParams extends ContainerSetupParams {
 
     public EcsSetupParamsBuilder withServiceName(String serviceName) {
       this.serviceName = serviceName;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withIsMultipleLoadBalancersFeatureFlagActive(
+        boolean isMultipleLoadBalancersFeatureFlagActive) {
+      this.isMultipleLoadBalancersFeatureFlagActive = isMultipleLoadBalancersFeatureFlagActive;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withAwsElbConfigs(List<AwsElbConfig> awsElbConfigs) {
+      this.awsElbConfigs = awsElbConfigs;
       return this;
     }
 
@@ -361,6 +377,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setEcsServiceArn(ecsServiceArn);
       ecsSetupParams.setDaemonSchedulingStrategy(isDaemonSchedulingStrategy);
       ecsSetupParams.setNewAwsAutoScalarConfigList(newAwsAutoScalarConfigList);
+      ecsSetupParams.setAwsElbConfigs(awsElbConfigs);
+      ecsSetupParams.setMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive);
       ecsSetupParams.setPreviousAutoScalarConfigList(previousAutoScalarConfigList);
       ecsSetupParams.setBlueGreen(blueGreen);
       ecsSetupParams.setTargetGroupArn2(targetGroupArn2);

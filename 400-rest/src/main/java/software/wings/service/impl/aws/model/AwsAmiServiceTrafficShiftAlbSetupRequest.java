@@ -2,6 +2,8 @@ package software.wings.service.impl.aws.model;
 
 import static software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType.EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -14,6 +16,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsAmiServiceTrafficShiftAlbSetupRequest extends AwsAmiRequest {
   private String accountId;
   private String appId;
@@ -29,13 +32,14 @@ public class AwsAmiServiceTrafficShiftAlbSetupRequest extends AwsAmiRequest {
   private String artifactRevision;
   private boolean useCurrentRunningCount;
   private List<LbDetailsForAlbTrafficShift> lbDetails;
+  private String userData;
 
   @Builder
   public AwsAmiServiceTrafficShiftAlbSetupRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String infraMappingAsgName, String infraMappingId, String newAsgNamePrefix, Integer maxInstances,
       Integer autoScalingSteadyStateTimeout, String artifactRevision, String accountId, String appId, String activityId,
       String commandName, boolean useCurrentRunningCount, Integer desiredInstances, Integer minInstances,
-      List<LbDetailsForAlbTrafficShift> lbDetails) {
+      List<LbDetailsForAlbTrafficShift> lbDetails, String userData) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_SETUP, region);
     this.appId = appId;
     this.activityId = activityId;
@@ -51,5 +55,6 @@ public class AwsAmiServiceTrafficShiftAlbSetupRequest extends AwsAmiRequest {
     this.minInstances = minInstances;
     this.lbDetails = lbDetails;
     this.accountId = accountId;
+    this.userData = userData;
   }
 }

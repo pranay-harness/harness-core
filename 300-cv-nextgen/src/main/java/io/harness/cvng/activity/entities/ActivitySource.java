@@ -16,6 +16,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -86,4 +87,16 @@ public abstract class ActivitySource
   }
 
   public abstract ActivitySourceDTO toDTO();
+
+  public void validate() {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Preconditions.checkNotNull(identifier);
+    Preconditions.checkNotNull(type);
+    Preconditions.checkNotNull(name);
+    this.validateParams();
+  }
+
+  protected abstract void validateParams();
 }

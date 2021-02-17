@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -324,6 +325,8 @@ public class EcsRunTaskDeploy extends State {
         .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
         .runTaskFamilyName(context.renderExpression(runTaskFamilyName))
         .skipSteadyStateCheck(skipSteadyStateCheck)
+        .ecsRegisterTaskDefinitionTagsEnabled(
+            featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, application.getAccountId()))
         .build();
   }
 

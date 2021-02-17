@@ -15,7 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 
 @Singleton
-public class GcpDTOToEntity extends ConnectorDTOToEntityMapper<GcpConnectorDTO, GcpConfig> {
+public class GcpDTOToEntity implements ConnectorDTOToEntityMapper<GcpConnectorDTO, GcpConfig> {
   @Override
   public GcpConfig toConnectorEntity(GcpConnectorDTO connectorDTO) {
     final GcpConnectorCredentialDTO credential = connectorDTO.getCredential();

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -38,11 +37,7 @@ public class EngineAdviseCallback implements NotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     BinaryResponseData binaryResponseData = (BinaryResponseData) response.values().iterator().next();
     AdviserResponse adviserResponse = AdviserResponse.parseFrom(binaryResponseData.getData());
-    if (adviserResponse.getType() == AdviseType.UNKNOWN) {
-      orchestrationEngine.endNodeExecution(nodeExecutionId, status);
-    } else {
-      orchestrationEngine.handleAdvise(nodeExecutionId, status, adviserResponse);
-    }
+    orchestrationEngine.handleAdvise(nodeExecutionId, status, adviserResponse);
   }
 
   @Override

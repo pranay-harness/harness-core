@@ -96,3 +96,19 @@ fi
 if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE secrets.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE secrets.jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE secrets.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
+if [[ "" != "$GRPC_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcClient.target $GRPC_MANAGER_TARGET
+fi
+
+if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcClient.authority $GRPC_MANAGER_AUTHORITY
+fi

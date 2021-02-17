@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.secretManager;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
@@ -9,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SecretManagerController {
   @Inject UsageScopeController usageScopeController;
   public QLSecretManagerBuilder populateSecretManager(

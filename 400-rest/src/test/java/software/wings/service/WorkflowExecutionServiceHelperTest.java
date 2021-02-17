@@ -355,9 +355,9 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     final String pipelineExecutionId = "3v2FfeZUTvqSnz7djyGMqQ";
 
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
-    Pipeline pipeline = JsonUtils.readResourceFile("./pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
-    Workflow workflow = JsonUtils.readResourceFile("./workflows/k8s_workflow.json", Workflow.class);
+        JsonUtils.readResourceFile("execution/runtime_pipeline_execution_stage2.json", WorkflowExecution.class);
+    Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_runtime_pipeline.json", Pipeline.class);
+    Workflow workflow = JsonUtils.readResourceFile("workflows/k8s_workflow.json", Workflow.class);
 
     when(workflowExecutionService.getWorkflowExecution(eq(appID), eq(pipelineExecutionId)))
         .thenReturn(workflowExecution);
@@ -367,7 +367,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     WorkflowVariablesMetadata actual = workflowExecutionServiceHelper.fetchWorkflowVariablesForRunningExecution(
         appID, pipelineExecutionId, pipelineStageElementId);
     List<Variable> expected =
-        JsonUtils.readResourceFile("./expected_workflow_vars_metada.json", new TypeReference<List<Variable>>() {});
+        JsonUtils.readResourceFile("expected_workflow_vars_metada.json", new TypeReference<List<Variable>>() {});
     assertThat(actual.getWorkflowVariables()).isEqualTo(expected);
   }
 

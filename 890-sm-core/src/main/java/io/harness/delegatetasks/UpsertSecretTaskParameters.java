@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -20,6 +21,7 @@ public class UpsertSecretTaskParameters implements TaskParameters, ExecutionCapa
   private final UpsertSecretTaskType taskType;
   private final EncryptedRecord existingRecord;
   private final EncryptionConfig encryptionConfig;
+  private final AdditionalMetadata additionalMetadata;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

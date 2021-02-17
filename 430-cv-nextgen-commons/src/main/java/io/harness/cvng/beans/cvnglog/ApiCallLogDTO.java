@@ -1,6 +1,5 @@
 package io.harness.cvng.beans.cvnglog;
 
-import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -61,6 +60,15 @@ public class ApiCallLogDTO extends CVNGLogDTO {
             .value(jsonResponse.substring(
                 0, jsonResponse.length() < MAX_JSON_RESPONSE_LENGTH ? jsonResponse.length() : MAX_JSON_RESPONSE_LENGTH))
             .build());
+  }
+
+  public void addFieldToResponse(ApiCallLogDTOField field) {
+    Preconditions.checkNotNull(field, "Api call log response field is null.");
+
+    if (this.responses == null) {
+      this.responses = new ArrayList<>();
+    }
+    responses.add(field);
   }
 
   private String getResponseToLog(Object response, FieldType fieldType) {

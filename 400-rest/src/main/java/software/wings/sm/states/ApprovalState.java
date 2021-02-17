@@ -360,6 +360,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   private boolean isTrueExpression(
       String disableAssertion, ExecutionContext context, ApprovalStateExecutionData executionData) {
+    // rendering expression in order to have it tracked
+    context.renderExpression(disableAssertion);
     if ("true".equals(disableAssertion)) {
       return true;
     }
@@ -802,9 +804,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     StringBuilder artifacts = new StringBuilder();
     StringBuilder infrastructureDefinitions = new StringBuilder();
     WorkflowNotificationDetails infraDetails = null;
-    String appDetails =
-        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp())
-            .getMessage();
+
+    WorkflowNotificationDetails applicationDetails =
+        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp());
+    String appDetails = applicationDetails.getMessage();
+    String appName = applicationDetails.getName();
 
     int tokenValidDuration = getTimeoutMillis();
 
@@ -877,6 +881,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         SlackApprovalParams.builder()
             .appId(context.getAppId())
             .appName(appDetails)
+            .nonFormattedAppName(appName)
             .routingId(accountId)
             .deploymentId(context.getWorkflowExecutionId())
             .workflowId(context.getWorkflowId())
@@ -901,7 +906,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .expiryDate(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_DATE))
             .verb(placeHolderValues.get(SlackApprovalMessageKeys.VERB))
             .build();
-    JSONObject customData = createCustomData(slackApprovalParams, serviceDetails, artifacts, infraDetails);
+    JSONObject customData = createCustomData(slackApprovalParams);
 
     URL notificationTemplateUrl;
     if (slackApprovalParams.isPipeline()) {
@@ -913,25 +918,26 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
 
     String displayText = createSlackApprovalMessage(slackApprovalParams, notificationTemplateUrl);
+    String validatedMessage = validateMessageLength(
+        displayText, slackApprovalParams, notificationTemplateUrl, serviceDetails, artifacts, infraDetails);
     String buttonValue = customData.toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
     placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
-    placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, displayText);
+    placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, validatedMessage);
     placeHolderValues.put(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER, "suppressTraditionalNotificationOnSlack");
   }
 
   @VisibleForTesting
-  JSONObject createCustomData(SlackApprovalParams slackApprovalParams, WorkflowNotificationDetails serviceDetails,
-      StringBuilder artifacts, WorkflowNotificationDetails infraDetails) {
-    JSONObject customData = new JSONObject(slackApprovalParams);
-    if (customData.toString().length() < 2000) {
-      return customData;
+  String validateMessageLength(String displayText, SlackApprovalParams slackApprovalParams, URL notificationTemplateUrl,
+      WorkflowNotificationDetails serviceDetails, StringBuilder artifacts, WorkflowNotificationDetails infraDetails) {
+    if (displayText.length() < 1900) {
+      return displayText;
     } else {
-      int serviceCount = serviceDetails.getName().split(", ").length;
+      int serviceCount = serviceDetails.getName().split(",").length;
       boolean areServicesTrimmed = trimNotificationDetails(serviceDetails, serviceCount);
       int artifactsCount = artifacts.toString().replace("*Artifacts:* ", "").split(", ").length;
       boolean areArtifactsTrimmed = trimArtifacts(artifacts, artifactsCount);
-      int infraCount = infraDetails.getName().split(", ").length;
+      int infraCount = infraDetails.getName().split(",").length;
       boolean areInfrasTrimmed = trimNotificationDetails(infraDetails, infraCount);
       SlackApprovalParams params =
           slackApprovalParams.toBuilder()
@@ -945,7 +951,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                                             infraDetails.getName(), infraCount - 3)
                                                          : slackApprovalParams.getInfraDefinitionsInvolved())
               .build();
-      return new JSONObject(params);
+      return createSlackApprovalMessage(params, notificationTemplateUrl);
     }
   }
 
@@ -966,7 +972,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   private boolean trimNotificationDetails(WorkflowNotificationDetails notificationDetails, int detailCount) {
     if (detailCount > 3) {
-      String[] trimmedDetails = Arrays.copyOfRange(notificationDetails.getName().split(", "), 0, 3);
+      String[] trimmedDetails = Arrays.copyOfRange(notificationDetails.getName().split(","), 0, 3);
       StringJoiner details = new StringJoiner(", ");
       for (String detail : trimmedDetails) {
         details.add(detail);
@@ -975,6 +981,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       return true;
     }
     return false;
+  }
+
+  private JSONObject createCustomData(SlackApprovalParams slackApprovalParams) {
+    return new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
   }
 
   @Override

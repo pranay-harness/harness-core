@@ -32,28 +32,32 @@ public class EntityActivityProtoToRestDTOMapper {
         .activityStatus(NGActivityStatus.valueOf(entityActivityProtoDTO.getStatus()))
         .activityTime(entityActivityProtoDTO.getActivityTime())
         .description(entityActivityProtoDTO.getDescription())
-        .errorMessage(entityActivityProtoDTO.getErrorMessage())
         .referredEntity(entityDetailProtoToRestMapper.createEntityDetailDTO(entityActivityProtoDTO.getReferredEntity()))
         .detail(createEntityActivityDetailDTO(entityActivityProtoDTO.getType(), entityActivityProtoDTO))
         .build();
   }
 
   private ActivityDetail createEntityActivityDetailDTO(String type, EntityActivityCreateDTO entityActivityProtoDTO) {
-    if (NGActivityType.CONNECTIVITY_CHECK.toString().equals(type)) {
-      return ConnectivityCheckActivityDetailDTO.builder()
-          .connectorValidationResult(
-              createConnectivityDetailFromProtoDTOs(entityActivityProtoDTO.getConnectivityDetail()))
-          .build();
-    } else if (NGActivityType.ENTITY_USAGE.toString().equals(type)) {
-      EntityActivityCreateDTO.EntityUsageActivityDetailProtoDTO entityUsageActivityDetailProtoDTO =
-          entityActivityProtoDTO.getEntityUsageDetail();
-      return EntityUsageActivityDetailDTO.builder()
-          .referredByEntity(entityDetailProtoToRestMapper.createEntityDetailDTO(
-              entityUsageActivityDetailProtoDTO.getReferredByEntity()))
-          .activityStatusMessage(entityUsageActivityDetailProtoDTO.getActivityStatusMessage())
-          .build();
-    } else {
-      return null;
+    NGActivityType activityType = NGActivityType.valueOf(type);
+    switch (activityType) {
+      case CONNECTIVITY_CHECK:
+        return ConnectivityCheckActivityDetailDTO.builder()
+            .connectorValidationResult(
+                createConnectivityDetailFromProtoDTOs(entityActivityProtoDTO.getConnectivityDetail()))
+            .build();
+      case ENTITY_USAGE:
+        EntityActivityCreateDTO.EntityUsageActivityDetailProtoDTO entityUsageActivityDetailProtoDTO =
+            entityActivityProtoDTO.getEntityUsageDetail();
+        return EntityUsageActivityDetailDTO.builder()
+            .referredByEntity(entityDetailProtoToRestMapper.createEntityDetailDTO(
+                entityUsageActivityDetailProtoDTO.getReferredByEntity()))
+            .activityStatusMessage(entityUsageActivityDetailProtoDTO.getActivityStatusMessage())
+            .errors(getErrorsList(entityUsageActivityDetailProtoDTO.getErrorsList()))
+            .errorSummary(entityUsageActivityDetailProtoDTO.getErrorSummary())
+            .status(getConnecitivityStatus(entityUsageActivityDetailProtoDTO.getStatus()))
+            .build();
+      default:
+        return null;
     }
   }
 

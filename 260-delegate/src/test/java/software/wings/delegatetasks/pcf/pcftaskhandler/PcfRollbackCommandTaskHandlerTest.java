@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -20,7 +21,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 

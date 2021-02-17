@@ -15,10 +15,12 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.service.intfc.AccountService;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,14 +39,15 @@ public class ManagerVersionsCleanUpJobTest extends WingsBaseTest {
   @Mock private ConfigurationController configurationController;
   @Mock private HPersistence persistence;
   @Mock private AccountService accountService;
+  @Inject private MainConfiguration mainConfiguration;
 
   private ManagerVersionsCleanUpJob managerVersionsCleanUpJob;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    this.managerVersionsCleanUpJob = new ManagerVersionsCleanUpJob(
-        this.configurationController, this.persistence, this.mainConfiguration, this.accountService);
+    managerVersionsCleanUpJob =
+        new ManagerVersionsCleanUpJob(configurationController, persistence, mainConfiguration, accountService);
   }
 
   @Test

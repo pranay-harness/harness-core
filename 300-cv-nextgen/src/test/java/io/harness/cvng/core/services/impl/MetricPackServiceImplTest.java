@@ -9,7 +9,7 @@ import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
@@ -29,7 +29,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class MetricPackServiceImplTest extends CvNextGenTest {
+public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;
@@ -59,8 +58,8 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMetricPackFilesAdded() {
-    final URL metricPackUrl = MetricPackService.class.getResource("/appdynamics/metric-packs");
-    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
+    final String metricPackUrl = getSourceResourceFile(MetricPackService.class, "/appdynamics/metric-packs");
+    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl), null, false);
     assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size() + 1);
   }
 
@@ -226,8 +225,8 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
         accountId, orgIdentifier, projectIdentifier, metricPack.getIdentifier(), DataSourceType.APP_DYNAMICS);
 
-    assertThat(metricPackThresholds.size()).isEqualTo(4);
-    TimeSeriesThreshold timeSeriesThreshold = metricPackThresholds.get(2);
+    assertThat(metricPackThresholds.size()).isEqualTo(timeSeriesThresholds.size());
+    TimeSeriesThreshold timeSeriesThreshold = metricPackThresholds.get(0);
     assertThat(timeSeriesThreshold.getAccountId()).isEqualTo(accountId);
     assertThat(timeSeriesThreshold.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(timeSeriesThreshold.getMetricPackIdentifier()).isEqualTo(metricPack.getIdentifier());
@@ -239,7 +238,7 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     assertThat(timeSeriesThreshold.getCriteria().getOccurrenceCount()).isEqualTo(3);
     assertThat(timeSeriesThreshold.getCriteria().getThresholdType()).isEqualTo(TimeSeriesThresholdType.ACT_WHEN_HIGHER);
 
-    timeSeriesThreshold = metricPackThresholds.get(3);
+    timeSeriesThreshold = metricPackThresholds.get(1);
     assertThat(timeSeriesThreshold.getAccountId()).isEqualTo(accountId);
     assertThat(timeSeriesThreshold.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(timeSeriesThreshold.getMetricPackIdentifier()).isEqualTo(metricPack.getIdentifier());

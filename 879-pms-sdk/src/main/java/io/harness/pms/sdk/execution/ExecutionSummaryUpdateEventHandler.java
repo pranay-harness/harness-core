@@ -1,5 +1,6 @@
 package io.harness.pms.sdk.execution;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
@@ -30,16 +31,22 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
         ExecutionSummaryUpdateRequest.newBuilder()
             .setModuleName(serviceName)
             .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
-            .setPipelineModuleInfoJson(RecastOrchestrationUtils.toDocumentJson(
-                executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto)))
-            .setNodeModuleInfoJson(RecastOrchestrationUtils.toDocumentJson(
-                executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto)))
             .setNodeExecutionId(nodeExecutionProto.getUuid());
     if (nodeExecutionProto.getAmbiance().getLevelsCount() >= 3) {
       executionSummaryUpdateRequest.setNodeUuid(nodeExecutionProto.getAmbiance().getLevels(2).getSetupId());
     }
     if (Objects.equals(nodeExecutionProto.getNode().getGroup(), "STAGE")) {
       executionSummaryUpdateRequest.setNodeUuid(nodeExecutionProto.getNode().getUuid());
+    }
+    String pipelineInfoJson = RecastOrchestrationUtils.toDocumentJson(
+        executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto));
+    if (EmptyPredicate.isNotEmpty(pipelineInfoJson)) {
+      executionSummaryUpdateRequest.setPipelineModuleInfoJson(pipelineInfoJson);
+    }
+    String stageInfoJson = RecastOrchestrationUtils.toDocumentJson(
+        executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto));
+    if (EmptyPredicate.isNotEmpty(stageInfoJson)) {
+      executionSummaryUpdateRequest.setNodeModuleInfoJson(stageInfoJson);
     }
     try {
       pmsClient.updateExecutionSummary(executionSummaryUpdateRequest.build());

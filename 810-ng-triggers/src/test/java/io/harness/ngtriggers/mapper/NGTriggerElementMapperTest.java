@@ -5,8 +5,11 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
-import static io.harness.rule.OwnerRule.*;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -32,7 +35,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +49,7 @@ import org.mockito.MockitoAnnotations;
 public class NGTriggerElementMapperTest extends CategoryTest {
   private String ngTriggerYaml;
   private String ngCustomTriggerYaml;
+  private String ngTriggerGitConnYaml;
 
   @Mock private TriggerEventHistoryRepository triggerEventHistoryRepository;
   @InjectMocks @Inject private NGTriggerElementMapper ngTriggerElementMapper;
@@ -58,10 +64,13 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     String fileNameForCustomPayloadTrigger = "ng-custom-trigger.yaml";
     ngCustomTriggerYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(fileNameForCustomPayloadTrigger)), StandardCharsets.UTF_8);
+    String fileNameForGitRepoPayloadTrigger = "ng-trigger-git-connector.yaml";
+    ngTriggerGitConnYaml = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(fileNameForGitRepoPayloadTrigger)), StandardCharsets.UTF_8);
   }
 
   @Test
-  @Owner(developers = NAMAN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testToTriggerConfig() {
     NGTriggerConfig trigger = ngTriggerElementMapper.toTriggerConfig(ngTriggerYaml);
@@ -77,7 +86,6 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     WebhookTriggerSpec webhookTriggerConfigSpec = webhookTriggerConfig.getSpec();
     assertThat(webhookTriggerConfigSpec.getEvent()).isEqualTo(PULL_REQUEST);
     assertThat(webhookTriggerConfigSpec.getActions()).containsExactlyInAnyOrder(OPENED, CLOSED);
-    assertThat(webhookTriggerConfigSpec.getRepoUrl()).isEqualTo("https://github.com/test/myrepo");
     assertThat(webhookTriggerConfigSpec.getPathFilters()).containsExactlyInAnyOrder("path1", "path2");
     assertThat(webhookTriggerConfigSpec.getPayloadConditions()).isNotNull();
     assertThat(webhookTriggerConfigSpec.getPayloadConditions().size()).isEqualTo(3);
@@ -136,10 +144,13 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(customWebhookTriggerSpec.getAuthToken().getSpec()).isInstanceOfAny(CustomWebhookInlineAuthToken.class);
   }
 
+  /**
+   * Backward compatibility
+   */
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testToTriggerEntityFromYaml() {
+  public void testToTriggerEntityFromOldYamlContainingRepoUrl() {
     NGTriggerEntity ngTriggerEntity =
         ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml).getNgTriggerEntity();
 
@@ -155,7 +166,32 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     NGTriggerMetadata metadata = ngTriggerEntity.getMetadata();
     assertThat(metadata).isNotNull();
     assertThat(metadata.getWebhook()).isNotNull();
-    assertThat(metadata.getWebhook().getRepoURL()).isEqualTo("https://github.com/test/myrepo");
+    assertThat(metadata.getWebhook().getGit()).isNull();
+    assertThat(metadata.getWebhook().getType()).isEqualTo("GITHUB");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testToTriggerEntity() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerGitConnYaml).getNgTriggerEntity();
+
+    assertThat(ngTriggerEntity.getAccountId()).isEqualTo("accId");
+    assertThat(ngTriggerEntity.getOrgIdentifier()).isEqualTo("orgId");
+    assertThat(ngTriggerEntity.getProjectIdentifier()).isEqualTo("projId");
+    assertThat(ngTriggerEntity.getYaml()).isEqualTo(ngTriggerGitConnYaml);
+    assertThat(ngTriggerEntity.getIdentifier()).isEqualTo("triggerWithGitConnector");
+    assertThat(ngTriggerEntity.getName()).isEqualTo("triggerWithGitConnector");
+    assertThat(ngTriggerEntity.getTargetType()).isEqualTo(PIPELINE);
+    assertThat(ngTriggerEntity.getTargetIdentifier()).isEqualTo("secrethttp1");
+
+    NGTriggerMetadata metadata = ngTriggerEntity.getMetadata();
+    assertThat(metadata).isNotNull();
+    assertThat(metadata.getWebhook()).isNotNull();
+    assertThat(metadata.getWebhook().getGit()).isNotNull();
+    assertThat(metadata.getWebhook().getGit().getConnectorIdentifier()).isEqualTo("account.gitAccount");
+    assertThat(metadata.getWebhook().getGit().getRepoName()).isEqualTo("ngtriggerdemo");
     assertThat(metadata.getWebhook().getType()).isEqualTo("GITHUB");
   }
 
@@ -196,18 +232,18 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     String sDate21 = "30-Dec-1998 18:37:50";
 
     SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-    List<TriggerEventHistory> triggerEventHistories = Arrays.asList(
-        generateEventHistoryWithTimestamp(formatter, sDate0), generateEventHistoryWithTimestamp(formatter, sDate1),
-        generateEventHistoryWithTimestamp(formatter, sDate2), generateEventHistoryWithTimestamp(formatter, sDate3),
-        generateEventHistoryWithTimestamp(formatter, sDate4), generateEventHistoryWithTimestamp(formatter, sDate5),
-        generateEventHistoryWithTimestamp(formatter, sDate6), generateEventHistoryWithTimestamp(formatter, sDate7),
-        generateEventHistoryWithTimestamp(formatter, sDate8), generateEventHistoryWithTimestamp(formatter, sDate9),
-        generateEventHistoryWithTimestamp(formatter, sDate10), generateEventHistoryWithTimestamp(formatter, sDate11),
-        generateEventHistoryWithTimestamp(formatter, sDate12), generateEventHistoryWithTimestamp(formatter, sDate13),
-        generateEventHistoryWithTimestamp(formatter, sDate14), generateEventHistoryWithTimestamp(formatter, sDate15),
-        generateEventHistoryWithTimestamp(formatter, sDate16), generateEventHistoryWithTimestamp(formatter, sDate17),
-        generateEventHistoryWithTimestamp(formatter, sDate18), generateEventHistoryWithTimestamp(formatter, sDate19),
-        generateEventHistoryWithTimestamp(formatter, sDate20), generateEventHistoryWithTimestamp(formatter, sDate21));
+    List<TriggerEventHistory> triggerEventHistories = asList(generateEventHistoryWithTimestamp(formatter, sDate0),
+        generateEventHistoryWithTimestamp(formatter, sDate1), generateEventHistoryWithTimestamp(formatter, sDate2),
+        generateEventHistoryWithTimestamp(formatter, sDate3), generateEventHistoryWithTimestamp(formatter, sDate4),
+        generateEventHistoryWithTimestamp(formatter, sDate5), generateEventHistoryWithTimestamp(formatter, sDate6),
+        generateEventHistoryWithTimestamp(formatter, sDate7), generateEventHistoryWithTimestamp(formatter, sDate8),
+        generateEventHistoryWithTimestamp(formatter, sDate9), generateEventHistoryWithTimestamp(formatter, sDate10),
+        generateEventHistoryWithTimestamp(formatter, sDate11), generateEventHistoryWithTimestamp(formatter, sDate12),
+        generateEventHistoryWithTimestamp(formatter, sDate13), generateEventHistoryWithTimestamp(formatter, sDate14),
+        generateEventHistoryWithTimestamp(formatter, sDate15), generateEventHistoryWithTimestamp(formatter, sDate16),
+        generateEventHistoryWithTimestamp(formatter, sDate17), generateEventHistoryWithTimestamp(formatter, sDate18),
+        generateEventHistoryWithTimestamp(formatter, sDate19), generateEventHistoryWithTimestamp(formatter, sDate20),
+        generateEventHistoryWithTimestamp(formatter, sDate21));
 
     Integer[] executionData = ngTriggerElementMapper.prepareExecutionDataArray(
         formatter.parse("30-Dec-1998 21:37:50").getTime(), triggerEventHistories);
@@ -222,7 +258,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testToResponseDTO() {
+  public void testToResponseDTOWithOldYamlWithRepoUrl() {
     NGTriggerEntity ngTriggerEntity =
         ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml).getNgTriggerEntity();
     NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
@@ -236,6 +272,25 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(responseDTO.getName()).isEqualTo(ngTriggerEntity.getName());
     assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
     assertThat(responseDTO.isEnabled()).isEqualTo(ngTriggerEntity.getEnabled());
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerGitConnYaml).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getAccountIdentifier()).isEqualTo(ngTriggerEntity.getAccountId());
+    assertThat(responseDTO.getTargetIdentifier()).isEqualTo(ngTriggerEntity.getTargetIdentifier());
+    assertThat(responseDTO.getOrgIdentifier()).isEqualTo(ngTriggerEntity.getOrgIdentifier());
+    assertThat(responseDTO.getProjectIdentifier()).isEqualTo(ngTriggerEntity.getProjectIdentifier());
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+    assertThat(responseDTO.getName()).isEqualTo(ngTriggerEntity.getName());
+    assertThat(responseDTO.getIdentifier()).isEqualTo(ngTriggerEntity.getIdentifier());
+    assertThat(responseDTO.isEnabled()).isEqualTo(ngTriggerEntity.getEnabled());
+    assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
   }
 
   @Test

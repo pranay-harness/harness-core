@@ -459,7 +459,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       }
     } else {
       log.error("No transition found from {} to {}", issue.getStatus(), status);
-      throw new JiraException("No transition found from [" + issue.getStatus() + "] to [" + status + "]");
+      throw new JiraException("No transition found from [" + issue.getStatus().getName() + "] to [" + status + "]");
     }
   }
 

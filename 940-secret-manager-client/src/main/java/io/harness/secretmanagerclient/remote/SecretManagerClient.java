@@ -124,6 +124,14 @@ public interface SecretManagerClient {
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
+  // list secret managers
+  @GET(SECRET_MANAGERS_API)
+  Call<RestResponse<List<SecretManagerConfigDTO>>> listSecretManagers(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);
+
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")
   Call<RestResponse<SecretManagerConfigDTO>> getSecretManager(@Path("identifier") String identifier,

@@ -4,13 +4,15 @@ import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefa
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.exception.UnexpectedException;
@@ -39,17 +41,20 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 
 @JsonTypeName("KUBERNETES_CLUSTER")
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "KubernetesClusterConfigKeys")
 @Data
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken",
               "oidcClientId", "oidcSecret", "oidcPassword"})
@@ -57,6 +62,7 @@ import org.mongodb.morphia.annotations.Transient;
 public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private boolean useKubernetesDelegate;
   private String delegateName;
+  private Set<String> delegateSelectors;
   private String masterUrl;
   @Encrypted(fieldName = "username", isReference = true) private char[] username;
   @Encrypted(fieldName = "password") private char[] password;
@@ -103,18 +109,19 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   }
 
   @Builder
-  public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, String masterUrl, char[] username,
-      char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
-      char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation, boolean useEncryptedUsername,
-      String encryptedUsername, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
-      String encryptedClientKey, String encryptedClientKeyPassphrase, String encryptedServiceAccountToken,
-      String accountId, CCMConfig ccmConfig, boolean decrypted, KubernetesClusterAuthType authType, char[] oidcClientId,
-      char[] oidcSecret, String oidcIdentityProviderUrl, String oidcUsername, char[] oidcPassword, String oidcScopes,
-      String encryptedOidcSecret, String encryptedOidcPassword, String encryptedOidcClientId,
-      OidcGrantType oidcGrantType) {
+  public KubernetesClusterConfig(boolean useKubernetesDelegate, String delegateName, Set<String> delegateSelectors,
+      String masterUrl, char[] username, char[] password, char[] caCert, char[] clientCert, char[] clientKey,
+      char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
+      boolean useEncryptedUsername, String encryptedUsername, String encryptedPassword, String encryptedCaCert,
+      String encryptedClientCert, String encryptedClientKey, String encryptedClientKeyPassphrase,
+      String encryptedServiceAccountToken, String accountId, CCMConfig ccmConfig, boolean decrypted,
+      KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret, String oidcIdentityProviderUrl,
+      String oidcUsername, char[] oidcPassword, String oidcScopes, String encryptedOidcSecret,
+      String encryptedOidcPassword, String encryptedOidcClientId, OidcGrantType oidcGrantType) {
     this();
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;
+    this.delegateSelectors = delegateSelectors;
     this.masterUrl = masterUrl;
     this.username = username == null ? null : username.clone();
     this.password = password == null ? null : password.clone();
@@ -153,7 +160,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @JsonIgnore
   @SchemaIgnore
   public boolean isDecrypted() {
-    return decrypted || isNotBlank(delegateName);
+    return decrypted || !EmptyPredicate.isEmpty(delegateSelectors);
   }
 
   @Override
@@ -256,9 +263,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (useKubernetesDelegate) {
-      return Collections.singletonList(
-          SystemEnvCheckerCapability.builder().comparate(delegateName).systemPropertyName("DELEGATE_NAME").build());
+      if (!EmptyPredicate.isEmpty(delegateSelectors)) {
+        return singletonList(SelectorCapability.builder().selectors(delegateSelectors).build());
+      }
+      return emptyList();
     }
+
     return Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl, maskingEvaluator));
   }
@@ -269,6 +279,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   public static class Yaml extends CloudProviderYaml {
     private boolean useKubernetesDelegate;
     private String delegateName;
+    private List<String> delegateSelectors;
     private String masterUrl;
     private String username;
     private String usernameSecretId;
@@ -291,15 +302,17 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private CCMConfig.Yaml continuousEfficiencyConfig;
 
     @lombok.Builder
-    public Yaml(boolean useKubernetesDelegate, String delegateName, String type, String harnessApiVersion,
-        String masterUrl, String username, String usernameSecretId, String password, String caCert, String clientCert,
-        String clientKey, String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo,
-        boolean skipValidation, UsageRestrictions.Yaml usageRestrictions, CCMConfig.Yaml ccmConfig,
-        KubernetesClusterAuthType authType, String oidcIdentityProviderUrl, String oidcUsername,
-        OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword, String oidcClientId) {
+    public Yaml(boolean useKubernetesDelegate, String delegateName, List<String> delegateSelectors, String type,
+        String harnessApiVersion, String masterUrl, String username, String usernameSecretId, String password,
+        String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String serviceAccountToken,
+        String clientKeyAlgo, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions,
+        CCMConfig.Yaml ccmConfig, KubernetesClusterAuthType authType, String oidcIdentityProviderUrl,
+        String oidcUsername, OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword,
+        String oidcClientId) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;
+      this.delegateSelectors = delegateSelectors;
       this.masterUrl = masterUrl;
       this.username = username;
       this.usernameSecretId = usernameSecretId;

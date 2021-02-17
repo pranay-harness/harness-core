@@ -1,10 +1,8 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,10 +20,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-
-@CdIndex(name = "configId_time_index",
-    fields = { @Field("cvConfigId")
-               , @Field("analysisStartTime"), @Field("analysisEndTime") })
 
 @Data
 @Builder

@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 public class CD10ActivitySource extends ActivitySource {
+  public static final String HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER = "harness_cd10_activity_source";
   private Set<CD10EnvMappingDTO> envMappings;
   private Set<CD10ServiceMappingDTO> serviceMappings;
 
@@ -50,8 +51,15 @@ public class CD10ActivitySource extends ActivitySource {
         .envMappings(envMappings)
         .serviceMappings(serviceMappings)
         .identifier(getIdentifier())
+        .orgIdentifier(getOrgIdentifier())
+        .projectIdentifier(getProjectIdentifier())
         .name(getName())
         .build();
+  }
+
+  @Override
+  protected void validateParams() {
+    // no op
   }
 
   public static CD10ActivitySource fromDTO(

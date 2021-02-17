@@ -12,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.getName;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.api.DeploymentType.AMI;
@@ -65,6 +66,7 @@ import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.AZURE_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
@@ -113,6 +115,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -252,6 +255,7 @@ public class WorkflowServiceHelper {
   public static final String AZURE_VMSS_SWITCH_ROUTES = "Swap Virtual Machine Scale Set Route";
   public static final String AZURE_VMSS_SWITCH_ROUTES_ROLLBACK = "Rollback Virtual Machine Scale Set Route";
   public static final String AZURE_WEBAPP_SLOT_SETUP = "Slot Setup";
+  public static final String AZURE_WEBAPP_SLOT_DEPLOYMENT = "Slot Deployment";
   public static final String AZURE_WEBAPP_SLOT_RESIZE = "Slot Resize";
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
@@ -313,7 +317,7 @@ public class WorkflowServiceHelper {
   public static final String CF_DELETE_STACK = "CloudFormation Delete Stack";
   public static final String TERRAFORM_APPLY = "Terraform Apply";
   public static final String TERRAFORM_PROVISION = "Terraform Provision";
-  public static final String ARM_PROVISION = "ARM Provision";
+  public static final String ARM_CREATE_RESOURCE = "ARM Create Resource";
   public static final String TERRAFORM_DESTROY = "Terraform Destroy";
   public static final String SERVICENOW = "ServiceNow";
   public static final String EMAIL = "Email";
@@ -987,7 +991,7 @@ public class WorkflowServiceHelper {
                          .addStep(GraphNode.builder()
                                       .id(generateUuid())
                                       .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                      .name(AZURE_WEBAPP_SLOT_SETUP)
+                                      .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                       .build())
                          .build());
 
@@ -1023,7 +1027,7 @@ public class WorkflowServiceHelper {
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
-                                    .name(AZURE_WEBAPP_SLOT_SETUP)
+                                    .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                     .build())
                        .build());
 
@@ -2480,12 +2484,16 @@ public class WorkflowServiceHelper {
         .map(PhaseStep::getSteps)
         .filter(Objects::nonNull)
         .flatMap(Collection::stream)
-        .filter(step -> step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name()))
+        .filter(step
+            -> step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name())
+                || step.getType().equals(AZURE_NODE_SELECT.name()) || step.getType().equals(ROLLING_NODE_SELECT.name()))
         .map(GraphNode::getProperties)
         .filter(properties -> (Boolean) properties.get("specificHosts"))
         .forEach(properties -> {
           properties.put("specificHosts", Boolean.FALSE);
           properties.remove("hostNames");
+          properties.put("instanceCount", 1);
+          properties.put("instanceUnitType", InstanceUnitType.COUNT);
         });
   }
 
@@ -2509,6 +2517,86 @@ public class WorkflowServiceHelper {
     } else {
       return workflow.getServices();
     }
+  }
+
+  /**
+   * Retrieve resolved service id from specific Workflow phase
+   *
+   * @param workflowPhase  specific workflow phase
+   * @param workflowVariables  workflow variables
+   *
+   * @return serviceId
+   */
+  public String getResolvedServiceIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+    if (workflowPhase.isSrvTemplatised()) {
+      if (templateExpressions != null && workflowVariables != null) {
+        List<String> phaseExpressions =
+            templateExpressions.stream()
+                .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+                .map(TemplateExpression::getExpression)
+                .collect(toList());
+
+        return phaseExpressions.stream()
+            .map(phaseExpression -> getWorkflowVariableValue(workflowVariables, phaseExpression))
+            .findFirst()
+            .orElse(null);
+      } else {
+        return null;
+      }
+    } else {
+      return workflowPhase.getServiceId();
+    }
+  }
+
+  /**
+   * Retrieve resolved infra definition id from specific Workflow phase
+   *
+   * @param workflowPhase  specific workflow phase
+   * @param workflowVariables  workflow variables
+   *
+   * @return infraDefinitionId
+   */
+  public String getResolvedInfraDefinitionIdFromPhase(
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    List<TemplateExpression> templateExpressions = workflowPhase.getTemplateExpressions();
+    if (workflowPhase.isInfraTemplatised()) {
+      if (templateExpressions != null && workflowVariables != null) {
+        List<String> phaseExpressions =
+            templateExpressions.stream()
+                .filter(templateExpression -> templateExpression.getFieldName().equals("infraDefinitionId"))
+                .map(TemplateExpression::getExpression)
+                .collect(toList());
+
+        return phaseExpressions.stream()
+            .map(phaseExpression -> getWorkflowVariableValue(workflowVariables, phaseExpression))
+            .findFirst()
+            .orElse(null);
+      } else {
+        return null;
+      }
+    } else {
+      return workflowPhase.getInfraDefinitionId();
+    }
+  }
+
+  /**
+   * Retrieve Workflow execution variable which key match with workflow template expression
+   *
+   * @param workflowVariables  workflow variables
+   * @param templateExpression  template expression
+   *
+   * @return workflowVariableValue
+   */
+  public String getWorkflowVariableValue(Map<String, String> workflowVariables, String templateExpression) {
+    String expression = getName(templateExpression);
+    for (Entry<String, String> entry : workflowVariables.entrySet()) {
+      String variableName = entry.getKey();
+      if (expression.equals(variableName)) {
+        return entry.getValue();
+      }
+    }
+    return null;
   }
 
   private List<String> getTemplatizedIds(Map<String, String> workflowVariables, List<String> entityNames) {
@@ -2691,7 +2779,7 @@ public class WorkflowServiceHelper {
         // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
         // such a pattern, we throw an error.
         if (ExpressionEvaluator.matchesVariablePattern(workflowVariableValue) && !workflowVariableValue.contains(".")) {
-          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
+          String pipelineVariableName = getName(workflowVariableValue);
           finalValue = extractMapValue(pipelineVariables, pipelineVariableName);
         } else {
           finalValue = workflowVariableValue;
@@ -2729,7 +2817,7 @@ public class WorkflowServiceHelper {
         // Non entity variables can contain expressions like `${workflow.variables.var1}`. If entity variables contain
         // such a pattern, we throw an error.
         if (ExpressionEvaluator.matchesVariablePattern(workflowVariableValue) && !workflowVariableValue.contains(".")) {
-          String pipelineVariableName = ExpressionEvaluator.getName(workflowVariableValue);
+          String pipelineVariableName = getName(workflowVariableValue);
           finalValue = extractMapValue(pipelineVariables, pipelineVariableName);
         } else {
           finalValue = workflowVariableValue;
@@ -3000,6 +3088,39 @@ public class WorkflowServiceHelper {
     return new ArrayList<>();
   }
 
+  public static List<FailureStrategy> cleanupFailureStrategies(
+      List<FailureStrategy> failureStrategies, Set<String> validStepNames) {
+    if (isEmpty(failureStrategies)) {
+      return Collections.emptyList();
+    }
+
+    List<FailureStrategy> strategies = cleanupFailureStrategies(failureStrategies);
+    if (isEmpty(strategies)) {
+      return Collections.emptyList();
+    }
+    return strategies.stream()
+        .map(failureStrategy -> {
+          if (!isEmpty(failureStrategy.getSpecificSteps())) {
+            // Validate step names only if this failureStrategy applies to specificSteps.
+
+            List<String> cleanedStepNames = new ArrayList<>(failureStrategy.getSpecificSteps());
+            cleanedStepNames.removeIf(stepName -> !validStepNames.contains(stepName));
+
+            if (isEmpty(cleanedStepNames)) {
+              // If getSpecificSteps list becomes empty. Return false so that this strategy itself is deleted.
+              // Otherwise this FailureStrategy will start applying to all steps.
+              return null;
+            } else if (cleanedStepNames.size() != failureStrategy.getSpecificSteps().size()) {
+              // Some invalid steps were found.
+              return failureStrategy.toBuilder().specificSteps(cleanedStepNames).build();
+            }
+          }
+          return failureStrategy;
+        })
+        .filter(Objects::nonNull)
+        .collect(toList());
+  }
+
   public static List<FailureStrategy> cleanupFailureStrategies(List<FailureStrategy> failureStrategies) {
     if (isEmpty(failureStrategies)) {
       return Collections.emptyList();
@@ -3016,7 +3137,9 @@ public class WorkflowServiceHelper {
     if (phaseStep == null) {
       return;
     }
-
+    Set<String> validStepNames = phaseStep.getSteps() == null
+        ? Collections.emptySet()
+        : phaseStep.getSteps().stream().map(GraphNode::getName).collect(Collectors.toSet());
     Set<String> stepIds = phaseStep.getSteps() == null
         ? Collections.emptySet()
         : phaseStep.getSteps().stream().map(GraphNode::getId).collect(Collectors.toSet());
@@ -3040,7 +3163,7 @@ public class WorkflowServiceHelper {
     }
 
     if (isNotEmpty(phaseStep.getFailureStrategies())) {
-      phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies()));
+      phaseStep.setFailureStrategies(cleanupFailureStrategies(phaseStep.getFailureStrategies(), validStepNames));
     }
   }
 

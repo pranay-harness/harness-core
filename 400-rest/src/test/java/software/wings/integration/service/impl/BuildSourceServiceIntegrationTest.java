@@ -25,6 +25,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
@@ -50,7 +51,6 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.integration.IntegrationTestBase;
@@ -101,7 +101,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
   private Application application;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private JenkinsBuildService jenkinsBuildService;
   @Inject private BambooBuildService bambooBuildService;
   @Inject private NexusBuildService nexusBuildService;
@@ -347,7 +347,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
         return;
       default:
         Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-        wingsPersistence.save(service);
+        persistence.save(service);
         Map<String, String> plans = buildSourceService.getPlans(
             appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
         assertThat(plans.isEmpty()).isFalse();
@@ -406,7 +406,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
             return;
           case "maven":
             Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-            wingsPersistence.save(service);
+            persistence.save(service);
             BuildDetails build =
                 buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
             assertThat(build).isNotNull();
@@ -418,7 +418,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
 
       default:
         Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
-        wingsPersistence.save(service);
+        persistence.save(service);
         BuildDetails build =
             buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
         assertThat(build).isNotNull();

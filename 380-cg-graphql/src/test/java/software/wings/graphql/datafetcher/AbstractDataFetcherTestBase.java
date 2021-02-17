@@ -36,6 +36,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.dl.WingsPersistence;
 import software.wings.events.TestUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -151,6 +152,7 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   @Inject CECloudAccountDao cloudAccountDao;
   @Inject HPersistence hPersistence;
   @Inject protected TestUtils testUtils;
+  @Inject private WingsPersistence wingsPersistence;
 
   public Account createAccount(String accountId, LicenseInfo licenseInfo) {
     return accountService.save(anAccount()

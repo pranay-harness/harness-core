@@ -20,6 +20,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.EnumSet;
@@ -71,6 +72,8 @@ public class DelegateTask
                  .build())
         .build();
   }
+
+  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;

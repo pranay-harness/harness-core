@@ -7,13 +7,17 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationResponseBuilder;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
@@ -40,6 +44,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
   public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
 
+    YamlField variablesField =
+        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
+    }
+
     CdFilterBuilder cdFilter = CdFilter.builder();
     DeploymentStageConfig deploymentStageConfig = (DeploymentStageConfig) yamlField.getStageType();
     Set<EntityDetailProtoDTO> referredEntities = getReferences(filterCreationContext.getSetupMetadata().getAccountId(),
@@ -48,7 +58,7 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     creationResponse.referredEntities(new ArrayList<>(referredEntities));
 
     if (deploymentStageConfig.getExecution() == null) {
-      return creationResponse.build();
+      throw new InvalidRequestException("Execution section missing from Deployment Stage");
     }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
@@ -65,6 +75,11 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     if (infrastructure != null && infrastructure.getEnvironment() != null
         && isNotEmpty(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
+    }
+
+    if (infrastructure != null && infrastructure.getInfrastructureDefinition() != null
+        && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
+      cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }
 
     creationResponse.pipelineFilter(cdFilter.build());

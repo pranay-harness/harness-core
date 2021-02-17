@@ -5,8 +5,12 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import io.harness.NgManagerTest;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
@@ -16,21 +20,37 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
+import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.rule.Owner;
 
-import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class SetupUsageChangeEventMessageListenerTest extends NgManagerTest {
-  final String accountId = "accountId";
-  final String orgId = "orgId";
-  final String projectId = "projectId";
-  @Inject SetupUsageChangeEventMessageListener setupUsageChangeEventMessageListener;
-  @Inject IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+public class SetupUsageChangeEventMessageListenerTest extends CategoryTest {
+  private final String accountId = "accountId";
+  private final String orgId = "orgId";
+  private final String projectId = "projectId";
+  private EntitySetupUsageService entitySetupUsageService;
+  private EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOMapper;
+  private SetupUsageChangeEventMessageListener setupUsageChangeEventMessageListener;
+  private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+
+  @Before
+  public void setUp() {
+    entitySetupUsageService = mock(EntitySetupUsageService.class);
+    entitySetupUsageEventDTOMapper = new EntitySetupUsageEventDTOMapper(new EntityDetailProtoToRestMapper());
+    setupUsageChangeEventMessageListener =
+        new SetupUsageChangeEventMessageListener(entitySetupUsageService, entitySetupUsageEventDTOMapper);
+    identifierRefProtoDTOHelper = new IdentifierRefProtoDTOHelper();
+    when(entitySetupUsageService.delete(any(), any(), any(), any(), any())).thenReturn(Boolean.TRUE);
+    when(entitySetupUsageService.flushSave(any(), any(), anyBoolean(), any())).thenReturn(true);
+  }
 
   @Test
   @Owner(developers = ABHINAV)

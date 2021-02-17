@@ -19,7 +19,7 @@ public class InfrastructureActivity extends Activity {
 
   @Override
   public void fromDTO(ActivityDTO activityDTO) {
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
@@ -35,5 +35,10 @@ public class InfrastructureActivity extends Activity {
   @Override
   public void validateActivityParams() {
     //
+  }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return true;
   }
 }

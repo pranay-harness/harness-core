@@ -14,9 +14,12 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
@@ -43,6 +46,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
@@ -109,6 +113,9 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
             .outputPathKey(PROVISIONER_OUTPUT_PATH_KEY)
             .build();
 
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    renderTaskParameters(context, parameters, expressionFunctorToken);
+
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
@@ -118,6 +125,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
                                               .parameters(new Object[] {parameters})
                                               .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                                              .expressionFunctorToken(expressionFunctorToken)
                                               .build())
                                     .build();
 
@@ -233,5 +241,15 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Override
   public KryoSerializer getKryoSerializer() {
     return kryoSerializer;
+  }
+
+  private void renderTaskParameters(ExecutionContext context, TaskParameters parameters, int expressionFunctorToken) {
+    ExpressionReflectionUtils.applyExpression(parameters,
+        (secretMode, value)
+            -> context.renderExpression(value,
+                StateExecutionContext.builder()
+                    .adoptDelegateDecryption(true)
+                    .expressionFunctorToken(expressionFunctorToken)
+                    .build()));
   }
 }

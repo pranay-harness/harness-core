@@ -18,15 +18,19 @@ import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.google.common.base.Charsets;
+import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -45,6 +49,7 @@ public class AwsStateHelper {
   @Inject private AwsHelperService awsHelperService;
   @Inject private ServiceTemplateService templateService;
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private ServiceResourceService serviceResourceService;
 
   public List<InstanceElement> generateInstanceElements(
       List<Instance> ec2InstancesAded, InfrastructureMapping infraMapping, ExecutionContext context) {
@@ -139,5 +144,18 @@ public class AwsStateHelper {
       log.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
       return null;
     }
+  }
+
+  @Nullable
+  public String getEncodedUserData(String appId, String serviceId, ExecutionContext context) {
+    UserDataSpecification userDataSpecification = serviceResourceService.getUserDataSpecification(appId, serviceId);
+
+    if (userDataSpecification != null && userDataSpecification.getData() != null) {
+      String userData = userDataSpecification.getData();
+      String userDataAfterEvaluation = context.renderExpression(userData);
+      return BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes(Charsets.UTF_8));
+    }
+
+    return null;
   }
 }

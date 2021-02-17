@@ -2,8 +2,10 @@ package io.harness.pms.plan.execution.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -16,6 +18,7 @@ import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,4 +76,23 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
   @Version private Long version;
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_accountId_organizationId_projectId_planExecutionId")
+                 .unique(true)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.planExecutionId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountIdI_organizationId_projectId")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .build())
+        .build();
+  }
 }

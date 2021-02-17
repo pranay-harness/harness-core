@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.persistence.HPersistence;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.template.TemplateGallery;
@@ -40,6 +41,7 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
   @Mock protected YamlPushService yamlPushService;
   @Inject private TemplateGalleryService templateGalleryService;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
+  @Inject private HPersistence persistence;
 
   public static String TEMPLATE_GALLERY_UUID = "uuid";
   protected void setup(String yamlFilePath, String templateName) {
@@ -53,7 +55,7 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
                                           .accountId(GLOBAL_ACCOUNT_ID)
                                           .uuid(TEMPLATE_GALLERY_UUID)
                                           .build();
-    wingsPersistence.save(templateGallery);
+    persistence.save(templateGallery);
   }
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(

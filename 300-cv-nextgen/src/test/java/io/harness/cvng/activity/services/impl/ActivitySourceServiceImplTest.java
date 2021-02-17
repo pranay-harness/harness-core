@@ -4,18 +4,22 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesActivityDetail;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
@@ -27,7 +31,6 @@ import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceServ
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
-import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -42,6 +45,8 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
+import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
@@ -53,11 +58,14 @@ import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +74,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
 
-public class ActivitySourceServiceImplTest extends CvNextGenTest {
+public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private ActivitySourceService activitySourceService;
@@ -80,6 +88,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   private String serviceIdentifier;
   private String envIdentifier;
   private String perpetualTaskId;
+  private String connectorIdentifier;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -89,6 +98,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     perpetualTaskId = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
+    connectorIdentifier = generateUuid();
     when(verificationManagerService.createDataCollectionTask(
              eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(perpetualTaskId);
@@ -101,11 +111,13 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
-  public void testCreateAndGetKubernetesSource() {
+  public void testCreate_GetKubernetesSource() {
     String identifier = generateUuid();
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(identifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name("some-name")
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -115,8 +127,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
 
     KubernetesActivitySource activitySource =
         (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
@@ -185,8 +196,40 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testSaveActivitySource_cd10ActivitySource() {
-    String identifier = generateUuid();
+  public void testDeleteActivitySource_cd10ActivitySource() {
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 10; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(generateUuid())
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    String activitySourceUUID = activitySourceService.create(accountId, cd10ActivitySourceDTO);
+    // delete and test
+    assertThat(activitySourceService.deleteActivitySource(
+                   accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO.getIdentifier()))
+        .isTrue();
+    List<ActivitySourceDTO> activitySourceDTOS =
+        activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
+            .getContent();
+    assertThat(activitySourceDTOS.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testCreate_cd10ActivitySource() {
+    String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();
@@ -198,12 +241,13 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     }
     CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
                                                       .identifier(identifier)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
                                                       .name("some-name")
                                                       .envMappings(cd10EnvMappingDTOS)
                                                       .serviceMappings(cd10ServiceMappingDTOS)
                                                       .build();
-    String activitySourceUUID =
-        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    String activitySourceUUID = activitySourceService.create(accountId, cd10ActivitySourceDTO);
 
     CD10ActivitySource activitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
@@ -219,8 +263,43 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testSaveActivitySource_cd10ActivitySourceUpdate() {
+  public void testCreate_multipleCD10ActivitySource() {
     String identifier = generateUuid();
+    Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
+    Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
+    Set<String> appIds = new HashSet<>();
+    for (int i = 0; i < 2; i++) {
+      String appId = generateUuid();
+      appIds.add(appId);
+      cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
+      cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
+    }
+    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
+                                                      .identifier(identifier)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .name("some-name")
+                                                      .envMappings(cd10EnvMappingDTOS)
+                                                      .serviceMappings(cd10ServiceMappingDTOS)
+                                                      .build();
+    activitySourceService.create(accountId, cd10ActivitySourceDTO);
+    CD10ActivitySourceDTO secondCd10ActivitySource = CD10ActivitySourceDTO.builder()
+                                                         .identifier("second identifier")
+                                                         .orgIdentifier(orgIdentifier)
+                                                         .projectIdentifier(projectIdentifier)
+                                                         .name("some-name")
+                                                         .envMappings(cd10EnvMappingDTOS)
+                                                         .serviceMappings(cd10ServiceMappingDTOS)
+                                                         .build();
+    assertThatThrownBy(() -> activitySourceService.create(accountId, secondCd10ActivitySource))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("There can only be one CD 1.0 activity source per project");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testUpdate_cd10ActivitySource() {
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();
@@ -230,26 +309,28 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
       cd10EnvMappingDTOS.add(createEnvMapping(appId, generateUuid(), generateUuid()));
       cd10ServiceMappingDTOS.add(createServiceMapping(appId, generateUuid(), generateUuid()));
     }
-    CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
-                                                      .identifier(identifier)
-                                                      .name("some-name")
-                                                      .envMappings(cd10EnvMappingDTOS)
-                                                      .serviceMappings(cd10ServiceMappingDTOS)
-                                                      .build();
-    String activitySourceUUID =
-        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    CD10ActivitySourceDTO cd10ActivitySourceDTO =
+        CD10ActivitySourceDTO.builder()
+            .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .name("some-name")
+            .envMappings(cd10EnvMappingDTOS)
+            .serviceMappings(cd10ServiceMappingDTOS)
+            .build();
+    String activitySourceUUID = activitySourceService.create(accountId, cd10ActivitySourceDTO);
     cd10ActivitySourceDTO.setUuid(activitySourceUUID);
     cd10ActivitySourceDTO.setName("updated name");
     cd10ActivitySourceDTO.setEnvMappings(Collections.emptySet());
     cd10ActivitySourceDTO.setServiceMappings(Collections.singleton(cd10ServiceMappingDTOS.iterator().next()));
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    activitySourceService.update(accountId, cd10ActivitySourceDTO.getIdentifier(), cd10ActivitySourceDTO);
     CD10ActivitySource activitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
     assertThat(activitySource.getAccountId()).isEqualTo(accountId);
     assertThat(activitySource.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(activitySource.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(activitySource.getName()).isEqualTo("updated name");
-    assertThat(activitySource.getIdentifier()).isEqualTo(identifier);
+    assertThat(activitySource.getIdentifier()).isEqualTo(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER);
     assertThat(activitySource.getEnvMappings()).isEmpty();
     assertThat(activitySource.getServiceMappings())
         .isEqualTo(Collections.singleton(cd10ServiceMappingDTOS.iterator().next()));
@@ -259,7 +340,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testGetActivitySource() {
-    String identifier = generateUuid();
+    String identifier = CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER;
     Set<CD10EnvMappingDTO> cd10EnvMappingDTOS = new HashSet<>();
     Set<CD10ServiceMappingDTO> cd10ServiceMappingDTOS = new HashSet<>();
     Set<String> appIds = new HashSet<>();
@@ -271,12 +352,13 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     }
     CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
                                                       .identifier(identifier)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
                                                       .name("some-name")
                                                       .envMappings(cd10EnvMappingDTOS)
                                                       .serviceMappings(cd10ServiceMappingDTOS)
                                                       .build();
-    String activitySourceUUID =
-        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    String activitySourceUUID = activitySourceService.create(accountId, cd10ActivitySourceDTO);
 
     CD10ActivitySourceDTO activitySource = (CD10ActivitySourceDTO) activitySourceService.getActivitySource(
         accountId, orgIdentifier, projectIdentifier, identifier);
@@ -294,6 +376,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(identifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name("some-name")
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -303,8 +387,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
 
     activitySourceService.deleteByProjectIdentifier(ActivitySource.class, accountId, orgIdentifier, projectIdentifier);
 
@@ -322,6 +405,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(identifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name("some-name")
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -331,8 +416,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
 
     activitySourceService.deleteByOrgIdentifier(ActivitySource.class, accountId, orgIdentifier);
 
@@ -350,6 +434,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(identifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name("some-name")
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -359,8 +445,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
 
     activitySourceService.deleteByAccountIdentifier(ActivitySource.class, accountId);
 
@@ -377,6 +462,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -386,8 +473,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     kubernetesActivitySourceService.enqueueDataCollectionTask(
         (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId));
     KubernetesActivitySource activitySource =
@@ -401,37 +487,41 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
   public void testSaveKubernetesActivities() {
     createCVConfig();
 
+    String nameSpace = generateUuid();
+    String workLoadName = generateUuid();
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
                                                        .serviceIdentifier(generateUuid())
                                                        .envIdentifier(generateUuid())
-                                                       .namespace(generateUuid())
-                                                       .workloadName(generateUuid())
+                                                       .namespace(nameSpace)
+                                                       .workloadName(workLoadName)
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     int numOfEvents = 10;
-    ArrayList<ActivityType> activityTypes =
-        Lists.newArrayList(ActivityType.DEPLOYMENT, ActivityType.INFRASTRUCTURE, ActivityType.OTHER);
+    List<String> kindTypes = Lists.newArrayList("Deployment", "Replicaset", "Pod");
     ArrayList<KubernetesEventType> kubernetesEventTypes =
         Lists.newArrayList(KubernetesEventType.Normal, KubernetesEventType.Error);
     Instant activityStartTime = Instant.now();
     Instant activityEndTime = Instant.now().plus(1, ChronoUnit.HOURS);
 
     List<KubernetesActivityDTO> activityDTOS = new ArrayList<>();
-    activityTypes.forEach(activityType -> kubernetesEventTypes.forEach(kubernetesEventType -> {
+    kindTypes.forEach(kind -> kubernetesEventTypes.forEach(kubernetesEventType -> {
       for (int i = 0; i < numOfEvents; i++) {
         activityDTOS.add(KubernetesActivityDTO.builder()
                              .message(generateUuid())
                              .activitySourceConfigId(kubernetesSourceId)
-                             .eventDetails(generateUuid())
+                             .eventJson(generateUuid())
                              .eventType(kubernetesEventType)
-                             .kubernetesActivityType(activityType)
+                             .namespace(nameSpace)
+                             .workloadName(workLoadName)
+                             .kind(kind)
                              .activityStartTime(activityStartTime.toEpochMilli())
                              .activityEndTime(activityEndTime.toEpochMilli())
                              .serviceIdentifier(serviceIdentifier)
@@ -443,21 +533,14 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
 
     List<KubernetesActivity> kubernetesActivities =
         hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
-    assertThat(kubernetesActivities.size()).isEqualTo(activityTypes.size() * kubernetesEventTypes.size());
-    activityTypes.forEach(activityType -> {
-      List<KubernetesActivity> activities =
-          kubernetesActivities.stream()
-              .filter(kubernetesActivity -> activityType.equals(kubernetesActivity.getKubernetesActivityType()))
-              .collect(Collectors.toList());
-      assertThat(activities.size()).isEqualTo(kubernetesEventTypes.size());
-      kubernetesEventTypes.forEach(kubernetesEventType -> {
-        List<KubernetesActivity> eventTypeList =
-            activities.stream()
-                .filter(kubernetesActivity -> kubernetesEventType.equals(kubernetesActivity.getEventType()))
-                .collect(Collectors.toList());
-        eventTypeList.forEach(
-            kubernetesActivity -> assertThat(kubernetesActivity.getActivities().size()).isEqualTo(numOfEvents));
-      });
+    assertThat(kubernetesActivities.size()).isEqualTo(kindTypes.size());
+    kindTypes.forEach(kind -> {
+      List<KubernetesActivityDTO> kubernetesActivityDTOS = new ArrayList<>();
+      kubernetesActivities.stream()
+          .filter(kubernetesActivity -> kind.equals(kubernetesActivity.getKind()))
+          .forEach(kubernetesActivity -> {
+            assertThat(kubernetesActivity.getActivities().size()).isEqualTo(kubernetesEventTypes.size() * numOfEvents);
+          });
     });
   }
 
@@ -470,6 +553,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -479,15 +564,16 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     kubernetesActivitySourceService.saveKubernetesActivities(accountId, kubernetesSourceId,
         Lists.newArrayList(KubernetesActivityDTO.builder()
                                .message(generateUuid())
                                .activitySourceConfigId(kubernetesSourceId)
-                               .eventDetails(generateUuid())
+                               .eventJson(generateUuid())
                                .eventType(KubernetesEventType.Normal)
-                               .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
+                               .kind(generateUuid())
+                               .namespace(generateUuid())
+                               .workloadName(generateUuid())
                                .activityStartTime(Instant.now().toEpochMilli())
                                .activityEndTime(Instant.now().toEpochMilli())
                                .serviceIdentifier(serviceIdentifier)
@@ -518,6 +604,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -527,8 +615,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     UpdateOperations<KubernetesActivitySource> updateOperations =
         hPersistence.createUpdateOperations(KubernetesActivitySource.class);
     updateOperations.set(ActivitySourceKeys.dataCollectionTaskId, generateUuid());
@@ -541,7 +628,9 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
 
     kubernetesActivitySourceDTO = KubernetesActivitySourceDTO.builder()
                                       .uuid(kubernetesSourceId)
-                                      .identifier(generateUuid())
+                                      .identifier(kubernetesActivitySourceDTO.getIdentifier())
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
                                       .name(generateUuid())
                                       .connectorIdentifier(generateUuid())
                                       .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -551,7 +640,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                                                  .workloadName(generateUuid())
                                                                                  .build()))
                                       .build();
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    activitySourceService.update(accountId, kubernetesActivitySourceDTO.getIdentifier(), kubernetesActivitySourceDTO);
     verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, dataCollectionTaskId);
     kubernetesActivitySource = hPersistence.get(KubernetesActivitySource.class, kubernetesSourceId);
     dataCollectionTaskId = kubernetesActivitySource.getDataCollectionTaskId();
@@ -575,6 +664,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -584,7 +675,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                                                        .workloadName(generateUuid())
                                                        .build()))
             .build();
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     boolean doesActivitySourceExistsForThisProject =
         kubernetesActivitySourceService.doesAActivitySourceExistsForThisProject(
             accountId, orgIdentifier, projectIdentifier);
@@ -598,6 +689,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO1 =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -616,6 +709,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO2 =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .name(generateUuid())
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
@@ -632,11 +727,197 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
                     .build()))
             .build();
 
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO1);
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO2);
+    activitySourceService.create(accountId, kubernetesActivitySourceDTO1);
+    activitySourceService.create(accountId, kubernetesActivitySourceDTO2);
     int numberOfServicesInActivity =
         kubernetesActivitySourceService.getNumberOfKubernetesServicesSetup(accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServicesInActivity).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_projectScopedConnector() {
+    List<KubernetesActivitySourceDTO> kubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+
+    ActivitySource activitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : kubernetesActivitySourceDTOS) {
+      activitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+    String kubernetesSourceId = activitySourceService.create(accountId, activitySource.toDTO());
+    KubernetesActivitySource kubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceList = Arrays.asList(kubernetesActivitySource);
+
+    List<KubernetesActivitySource> result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, Scope.PROJECT);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceList);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_orgScopedConnector() {
+    List<KubernetesActivitySourceDTO> projectScopedKubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+    ActivitySource projectScopedActivitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : projectScopedKubernetesActivitySourceDTOS) {
+      projectScopedActivitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+
+    String projectScopedConnectorIdentifier = connectorIdentifier;
+    connectorIdentifier = "org.connectorId";
+
+    String projectScopedKubernetesSourceId =
+        activitySourceService.create(accountId, projectScopedActivitySource.toDTO());
+    KubernetesActivitySource projectScopedKubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(projectScopedKubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceListKubernetesActivitySourceList =
+        Arrays.asList(projectScopedKubernetesActivitySource);
+
+    List<KubernetesActivitySourceDTO> kubernetesActivitySourceDTOS = createKubernetesActivitySourceDTOs(5);
+
+    ActivitySource activitySource = null;
+    for (KubernetesActivitySourceDTO kubernetesActivitySourceDTO : kubernetesActivitySourceDTOS) {
+      activitySource =
+          KubernetesActivitySource.fromDTO(accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    }
+    String kubernetesSourceId = activitySourceService.create(accountId, activitySource.toDTO());
+    KubernetesActivitySource kubernetesActivitySource =
+        (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
+    List<KubernetesActivitySource> kubernetesActivitySourceList = Arrays.asList(kubernetesActivitySource);
+
+    List<KubernetesActivitySource> result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, "", "connectorId", Scope.ORG);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceList);
+
+    result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, projectScopedConnectorIdentifier, Scope.PROJECT);
+
+    assertThat(result).isEqualTo(kubernetesActivitySourceListKubernetesActivitySourceList);
+
+    result = kubernetesActivitySourceService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_noActivitySourceExists() {
+    CD10ActivitySourceDTO cd10ActivitySourceDTO =
+        CD10ActivitySourceDTO.builder()
+            .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .name("some-name")
+            .build();
+    String activitySourceUUID = "some-id";
+
+    assertThatThrownBy(() -> activitySourceService.update(accountId, activitySourceUUID, cd10ActivitySourceDTO))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format(
+            "Activity Source with identifier [%s] , orgIdentifier [%s] and projectIdentifier [%s] not found",
+            activitySourceUUID, orgIdentifier, projectIdentifier));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category({UnitTests.class})
+  public void testGetEventDetails() {
+    createCVConfig();
+    String nameSpace = generateUuid();
+    String workLoadName = generateUuid();
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
+        KubernetesActivitySourceDTO.builder()
+            .identifier(generateUuid())
+            .name(generateUuid())
+            .connectorIdentifier(generateUuid())
+            .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                       .serviceIdentifier(generateUuid())
+                                                       .envIdentifier(generateUuid())
+                                                       .namespace(nameSpace)
+                                                       .workloadName(workLoadName)
+                                                       .build()))
+            .build();
+    String kubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    int numOfEvents = 10;
+    ArrayList<KubernetesEventType> kubernetesEventTypes =
+        Lists.newArrayList(KubernetesEventType.Normal, KubernetesEventType.Error);
+    Instant activityStartTime = Instant.now();
+    Instant activityEndTime = Instant.now().plus(1, ChronoUnit.HOURS);
+
+    List<KubernetesActivityDTO> activityDTOS = new ArrayList<>();
+    kubernetesEventTypes.forEach(kubernetesEventType -> {
+      for (int i = 0; i < numOfEvents; i++) {
+        activityDTOS.add(KubernetesActivityDTO.builder()
+                             .message("message" + i)
+                             .eventJson("json" + i)
+                             .reason("reason" + i)
+                             .activitySourceConfigId(kubernetesSourceId)
+                             .eventType(kubernetesEventType)
+                             .namespace(nameSpace)
+                             .workloadName(workLoadName)
+                             .kind("Pod")
+                             .activityStartTime(activityStartTime.toEpochMilli())
+                             .activityEndTime(activityEndTime.toEpochMilli())
+                             .serviceIdentifier(serviceIdentifier)
+                             .environmentIdentifier(envIdentifier)
+                             .build());
+      }
+    });
+    kubernetesActivitySourceService.saveKubernetesActivities(accountId, kubernetesSourceId, activityDTOS);
+
+    List<KubernetesActivity> kubernetesActivities =
+        hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
+    assertThat(kubernetesActivities.size()).isEqualTo(1);
+    KubernetesActivityDetailsDTO eventDetails = kubernetesActivitySourceService.getEventDetails(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivities.get(0).getUuid());
+    assertThat(eventDetails.getSourceName()).isEqualTo(kubernetesActivitySourceDTO.getName());
+    assertThat(eventDetails.getConnectorIdentifier()).isEqualTo(kubernetesActivitySourceDTO.getConnectorIdentifier());
+    assertThat(eventDetails.getNamespace()).isEqualTo(nameSpace);
+    assertThat(eventDetails.getWorkload()).isEqualTo(workLoadName);
+    assertThat(eventDetails.getKind()).isEqualTo("Pod");
+    assertThat(eventDetails.getDetails().size()).isEqualTo(numOfEvents * kubernetesEventTypes.size());
+    kubernetesEventTypes.forEach(kubernetesEventType -> {
+      List<KubernetesActivityDetail> kubernetesActivityDetails =
+          eventDetails.getDetails()
+              .stream()
+              .filter(kubernetesActivityDetail -> kubernetesActivityDetail.getEventType().equals(kubernetesEventType))
+              .collect(Collectors.toList());
+      Collections.sort(kubernetesActivityDetails, Comparator.comparing(KubernetesActivityDetail::getReason));
+      for (int i = 0; i < numOfEvents; i++) {
+        KubernetesActivityDetail kubernetesActivityDetail = kubernetesActivityDetails.get(i);
+        assertThat(kubernetesActivityDetail.getTimeStamp()).isEqualTo(activityStartTime.toEpochMilli());
+        assertThat(kubernetesActivityDetail.getReason()).isEqualTo("reason" + i);
+        assertThat(kubernetesActivityDetail.getMessage()).isEqualTo("message" + i);
+        assertThat(kubernetesActivityDetail.getEventJson()).isEqualTo("json" + i);
+      }
+    });
+  }
+
+  public List<KubernetesActivitySourceDTO> createKubernetesActivitySourceDTOs(int n) {
+    return IntStream.range(0, n).mapToObj(index -> createKubernetesActivitySourceDTO()).collect(Collectors.toList());
+  }
+
+  private KubernetesActivitySourceDTO createKubernetesActivitySourceDTO() {
+    return KubernetesActivitySourceDTO.builder()
+        .identifier(generateUuid())
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .name("some-name")
+        .connectorIdentifier(connectorIdentifier)
+        .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                   .serviceIdentifier(generateUuid())
+                                                   .envIdentifier(generateUuid())
+                                                   .namespace(generateUuid())
+                                                   .workloadName(generateUuid())
+                                                   .build()))
+        .build();
   }
 
   private CVConfig createCVConfig() {

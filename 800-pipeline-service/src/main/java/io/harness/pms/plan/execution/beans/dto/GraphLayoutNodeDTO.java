@@ -26,6 +26,7 @@ public class GraphLayoutNodeDTO {
   ExecutionStatus status;
   String module;
   Map<String, Document> moduleInfo;
-
+  private Long startTs;
+  private Long endTs;
   EdgeLayoutListDTO edgeLayoutList;
 }

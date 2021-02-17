@@ -1,5 +1,8 @@
 package io.harness.delegate.message;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
+@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public interface ManagerMessageConstants {
   // Messages sent from manager to delegate
   String SELF_DESTRUCT = "[SELF_DESTRUCT]";

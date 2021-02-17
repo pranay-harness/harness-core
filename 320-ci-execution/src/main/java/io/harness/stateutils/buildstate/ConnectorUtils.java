@@ -22,6 +22,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -245,7 +246,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       GitlabSshCredentialsDTO gitlabSshCredentialsDTO =
           (GitlabSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitlabSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitlabSshCredentialsDTO.getSshKeyRef());
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
             + gitConfigDTO.getAuthentication().getAuthType());
@@ -281,7 +282,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       GithubSshCredentialsDTO githubSshCredentialsDTO =
           (GithubSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, githubSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, githubSshCredentialsDTO.getSshKeyRef());
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
             + gitConfigDTO.getAuthentication().getAuthType());
@@ -316,7 +317,7 @@ public class ConnectorUtils {
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       BitbucketSshCredentialsDTO bitbucketSshCredentialsDTO =
           (BitbucketSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, bitbucketSshCredentialsDTO.getSpec().getSshKeyRef());
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, bitbucketSshCredentialsDTO.getSshKeyRef());
       connectorDetailsBuilder.sshKeyDetails(sshKey);
       if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
         throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
@@ -338,9 +339,17 @@ public class ConnectorUtils {
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
     DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
-    encryptedDataDetails =
-        secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    DockerAuthType dockerAuthType = dockerConnectorDTO.getAuth().getAuthType();
+    if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
+      encryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (dockerAuthType == DockerAuthType.ANONYMOUS) {
+      return connectorDetailsBuilder.build();
+    } else {
+      throw new InvalidArgumentsException(
+          format("Unsupported docker credential type:[%s] on connector:[%s]", dockerAuthType, dockerConnectorDTO));
+    }
   }
 
   private ConnectorDetails getK8sConnectorDetails(

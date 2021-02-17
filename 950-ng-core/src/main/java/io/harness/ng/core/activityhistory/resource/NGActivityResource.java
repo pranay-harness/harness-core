@@ -8,8 +8,8 @@ import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
-import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+import io.harness.ng.core.activityhistory.service.NGActivitySummaryService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -40,7 +40,7 @@ public class NGActivityResource {
   public static final String INCLUDE_CONNECTIVITY_SUMMARY = "includeConnectivitySummary";
   public static final String TIMEZONE = "timezone";
   NGActivityService activityHistoryService;
-  EntityActivitySummaryService entityActivitySummaryService;
+  NGActivitySummaryService ngActivitySummaryService;
 
   @GET
   @ApiOperation(value = "Get Activities where this resource was used", nickname = "listActivities")
@@ -95,7 +95,7 @@ public class NGActivityResource {
       @NotNull @QueryParam(NGCommonEntityConstants.REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @QueryParam(NGCommonEntityConstants.REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
     return ResponseDTO.newResponse(
-        entityActivitySummaryService.listActivitySummary(accountIdentifier, orgIdentifier, projectIdentifier,
+        ngActivitySummaryService.listActivitySummary(accountIdentifier, orgIdentifier, projectIdentifier,
             referredEntityIdentifier, timeGroupType, startTime, endTime, referredEntityType, referredByEntityType));
   }
 }

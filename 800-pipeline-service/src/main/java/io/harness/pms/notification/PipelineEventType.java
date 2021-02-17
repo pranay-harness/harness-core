@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum PipelineEventType {
   @JsonProperty(PipelineEventTypeConstants.ALL_EVENTS) ALL_EVENTS("Pipeline", PipelineEventTypeConstants.ALL_EVENTS),
+  @JsonProperty(PipelineEventTypeConstants.PIPELINE_START)
+  PIPELINE_START("Pipeline", PipelineEventTypeConstants.PIPELINE_START),
   @JsonProperty(PipelineEventTypeConstants.PIPELINE_SUCCESS)
   PIPELINE_SUCCESS("Pipeline", PipelineEventTypeConstants.PIPELINE_SUCCESS),
   @JsonProperty(PipelineEventTypeConstants.PIPELINE_FAILED)

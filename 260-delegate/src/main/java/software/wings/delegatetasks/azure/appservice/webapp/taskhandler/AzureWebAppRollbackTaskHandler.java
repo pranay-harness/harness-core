@@ -6,6 +6,13 @@ import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 
+import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.SAVE_CONFIGURATION;
+import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.STOP_SLOT;
+import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.UPDATE_SLOT_CONFIGURATIONS;
+import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.UPDATE_SLOT_CONTAINER_SETTINGS;
+
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
@@ -25,6 +32,7 @@ import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppT
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
@@ -43,8 +52,8 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
 
     performRollback(logStreamingTaskClient, rollbackParameters, azureWebClientContext, deploymentContext);
 
-    List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
-        azureWebClientContext, rollbackParameters.getPreDeploymentData().getSlotName());
+    List<AzureAppDeploymentData> azureAppDeploymentData =
+        getAppServiceDeploymentData(rollbackParameters, azureWebClientContext);
 
     markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
     return AzureWebAppSlotSetupResponse.builder()
@@ -53,14 +62,28 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
         .build();
   }
 
+  private List<AzureAppDeploymentData> getAppServiceDeploymentData(
+      AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext) {
+    if (slotDeploymentDidNotHappen(rollbackParameters)) {
+      return Collections.emptyList();
+    }
+    return azureAppServiceDeploymentService.fetchDeploymentData(
+        azureWebClientContext, rollbackParameters.getPreDeploymentData().getSlotName());
+  }
+
+  private boolean slotDeploymentDidNotHappen(AzureWebAppRollbackParameters rollbackParameters) {
+    AppServiceDeploymentProgress progressMarker = getProgressMarker(rollbackParameters);
+    return (progressMarker == SAVE_CONFIGURATION) || (progressMarker == STOP_SLOT)
+        || (progressMarker == UPDATE_SLOT_CONFIGURATIONS) || (progressMarker == UPDATE_SLOT_CONTAINER_SETTINGS);
+  }
+
   private void performRollback(ILogStreamingTaskClient logStreamingTaskClient,
       AzureWebAppRollbackParameters rollbackParameters, AzureWebClientContext azureWebClientContext,
       AzureAppServiceDockerDeploymentContext deploymentContext) {
-    AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
-    String deploymentProgressMarker = preDeploymentData.getDeploymentProgressMarker();
-    AppServiceDeploymentProgress progress = AppServiceDeploymentProgress.valueOf(deploymentProgressMarker);
+    AppServiceDeploymentProgress progressMarker = getProgressMarker(rollbackParameters);
+    log.info(String.format("Starting rollback from previous marker - [%s]", progressMarker.getStepName()));
 
-    switch (progress) {
+    switch (progressMarker) {
       case SAVE_CONFIGURATION:
         rollbackFromSaveConfigurationState(logStreamingTaskClient);
         break;
@@ -87,6 +110,12 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
       default:
         break;
     }
+  }
+
+  private AppServiceDeploymentProgress getProgressMarker(AzureWebAppRollbackParameters rollbackParameters) {
+    AzureAppServicePreDeploymentData preDeploymentData = rollbackParameters.getPreDeploymentData();
+    String deploymentProgressMarker = preDeploymentData.getDeploymentProgressMarker();
+    return AppServiceDeploymentProgress.valueOf(deploymentProgressMarker);
   }
 
   private void rollbackFromSaveConfigurationState(ILogStreamingTaskClient logStreamingTaskClient) {

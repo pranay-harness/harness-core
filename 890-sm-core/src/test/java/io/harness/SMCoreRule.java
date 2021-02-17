@@ -12,6 +12,7 @@ import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
 import io.harness.encryptors.clients.AzureVaultEncryptor;
 import io.harness.encryptors.clients.CyberArkVaultEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.factory.ClosingFactory;
@@ -149,6 +150,11 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
         binder()
             .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.GCP_VAULT_ENCRYPTOR.getName()))
+            .to(GcpSecretsManagerEncryptor.class);
+
+        binder()
+            .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
             .to(CyberArkVaultEncryptor.class);
 
@@ -215,6 +221,6 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

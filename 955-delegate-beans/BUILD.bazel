@@ -1,0 +1,22 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+
+sources()
+
+java_library(
+    name = "module",
+    resource_jars = [
+        "//955-delegate-beans/src/main/proto:955_delegate_beans_java_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":module",
+    ],
+)

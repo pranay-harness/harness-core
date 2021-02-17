@@ -53,6 +53,14 @@ if [[ "" != "$MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE managerAuthority $MANAGER_AUTHORITY
 fi
 
+if [[ "" != "$MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl $MANAGER_BASE_URL
+fi
+
+if [[ "" != "$MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE managerServiceSecret $MANAGER_SERVICE_SECRET
+fi
+
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
 fi
@@ -62,11 +70,19 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE ciManagerClientConfig.baseUrl $CI_MANAGER_BASE_URL
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
 
 if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ciManagerServiceSecret $CI_MANAGER_SERVICE_SECRET
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.secret $CI_MANAGER_SERVICE_SECRET
+fi
+
+if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.secret $NG_MANAGER_SERVICE_SECRET
 fi
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
@@ -112,6 +128,10 @@ if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
 fi
 
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -142,5 +162,9 @@ if [[ "" != "$NOTIFICATION_BASE_URL" ]]; then
 fi
 
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi

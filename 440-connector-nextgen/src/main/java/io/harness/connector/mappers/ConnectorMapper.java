@@ -2,6 +2,7 @@ package io.harness.connector.mappers;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -87,14 +88,24 @@ public class ConnectorMapper {
                                          .tags(TagMapper.convertToMap(connector.getTags()))
                                          .connectorType(connector.getType())
                                          .build();
+    Long timeWhenConnectorIsLastUpdated =
+        getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
     return ConnectorResponseDTO.builder()
         .connector(connectorInfo)
         .status(updateLastTestedAt(connector.getConnectivityDetails()))
         .createdAt(connector.getCreatedAt())
-        .lastModifiedAt(getTimeWhenTheConnectorWasUpdated(
-            connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt()))
+        .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
+        .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
         .build();
+  }
+
+  private ConnectorActivityDetails getConnectorActivity(
+      ConnectorActivityDetails activityDetails, Long timeWhenConnectorIsLastUpdated) {
+    if (activityDetails == null) {
+      return ConnectorActivityDetails.builder().lastActivityTime(timeWhenConnectorIsLastUpdated).build();
+    }
+    return activityDetails;
   }
 
   private ConnectorConnectivityDetails updateLastTestedAt(ConnectorConnectivityDetails connectivityDetails) {

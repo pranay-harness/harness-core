@@ -8,14 +8,18 @@ import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
+import software.wings.beans.Setup;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 
 import lombok.Getter;
 
+@TargetModule(Module._970_API_SERVICES_BEANS)
 public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, AlertData.class),
@@ -42,7 +46,8 @@ public enum AlertType {
   CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error, ContinuousVerificationAlertData.class),
   CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(
       ContinuousVerification, Error, ContinuousVerificationDataCollectionAlert.class),
-  MANIFEST_COLLECTION_FAILED(Setup, Error, ManifestCollectionFailedAlert.class);
+  MANIFEST_COLLECTION_FAILED(Setup, Error, ManifestCollectionFailedAlert.class),
+  DEPLOYMENT_FREEZE_EVENT(Setup, Warning, DeploymentFreezeEventAlert.class);
 
   @Getter private AlertCategory category;
   @Getter private AlertSeverity severity;

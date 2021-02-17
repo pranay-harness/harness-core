@@ -165,7 +165,10 @@ public class IndexManagerSessionTest extends PersistenceTestBase {
     Morphia morphia = new Morphia();
     morphia.map(TestCompositeIndexWithIdEntity.class);
     Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
-    MappedClass mappedClass = mappedClasses.iterator().next();
+    MappedClass mappedClass = mappedClasses.stream()
+                                  .filter(mc -> mc.getClazz().equals(TestCompositeIndexWithIdEntity.class))
+                                  .findFirst()
+                                  .get();
     DBCollection collection = persistence.getCollection(mappedClass.getClazz());
     assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
         .isInstanceOf(IndexManagerInspectException.class)
@@ -180,10 +183,43 @@ public class IndexManagerSessionTest extends PersistenceTestBase {
     Morphia morphia = new Morphia();
     morphia.map(TestTwoFieldIndexesEntity.class);
     Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
-    MappedClass mappedClass = mappedClasses.iterator().next();
+    MappedClass mappedClass =
+        mappedClasses.stream().filter(mc -> mc.getClazz().equals(TestTwoFieldIndexesEntity.class)).findFirst().get();
     DBCollection collection = persistence.getCollection(mappedClass.getClazz());
     assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
         .isInstanceOf(IndexManagerInspectException.class)
         .hasMessageContaining("Only one field index can be used");
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testUniqueFlagIndexEntity() {
+    Morphia morphia = new Morphia();
+    morphia.map(TestUniqueFlagIndexEntity.class);
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    MappedClass mappedClass =
+        mappedClasses.stream().filter(mc -> mc.getClazz().equals(TestUniqueFlagIndexEntity.class)).findFirst().get();
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
+    assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
+        .isInstanceOf(Error.class)
+        .hasMessageContaining("have the same keys and values");
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testTwoSameFieldsEntity() {
+    Morphia morphia = new Morphia();
+    morphia.map(TestTwoSameFieldsEntity.class);
+    Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    MappedClass mappedClass =
+        mappedClasses.stream().filter(mc -> mc.getClazz().equals(TestTwoSameFieldsEntity.class)).findFirst().get();
+    DBCollection collection = persistence.getCollection(mappedClass.getClazz());
+    assertThatThrownBy(() -> IndexManager.indexCreators(mappedClass, collection))
+        .isInstanceOf(Error.class)
+        .hasMessageContaining("Index uniqueName has field name more than once");
   }
 }

@@ -10,6 +10,7 @@ import static software.wings.common.TemplateConstants.SSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -21,7 +22,6 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -39,7 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class YamlGitServiceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private TemplateService templateService;
   @InjectMocks @Inject private YamlGitServiceImpl yamlGitService;
   @Inject protected TemplateGalleryService templateGalleryService;
@@ -88,9 +88,9 @@ public class YamlGitServiceTest extends WingsBaseTest {
                                       .syncMode(YamlGitConfig.SyncMode.BOTH)
                                       .entityType(EntityType.ACCOUNT)
                                       .build();
-    wingsPersistence.save(yamlGitConfig);
+    persistence.save(yamlGitConfig);
     yamlGitService.syncForTemplates(GLOBAL_ACCOUNT_ID, GLOBAL_APP_ID);
-    YamlChangeSet yamlChangeSet = wingsPersistence.createQuery(YamlChangeSet.class).get();
+    YamlChangeSet yamlChangeSet = persistence.createQuery(YamlChangeSet.class).get();
     assertThat(yamlChangeSet).isNotNull();
     boolean isPresent = false;
     String filePath = "Setup/Template Library/" + rootLevelFolder.getName() + "/test folder/test template.yaml";
@@ -116,8 +116,8 @@ public class YamlGitServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .additionalErrorDetails(GitToHarnessErrorDetails.builder().gitCommitId(firstCommitName).build())
             .build();
-    wingsPersistence.save(gitSyncError);
-    wingsPersistence.save(
+    persistence.save(gitSyncError);
+    persistence.save(
         GitSyncError.builder()
             .accountId(ACCOUNT_ID)
             .additionalErrorDetails(GitToHarnessErrorDetails.builder().gitCommitId(secondCommitName).build())
@@ -130,7 +130,7 @@ public class YamlGitServiceTest extends WingsBaseTest {
         .isEqualTo(secondCommitName);
 
     ((GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails()).setGitCommitId(firstCommitUpdatedName);
-    wingsPersistence.save(gitSyncError);
+    persistence.save(gitSyncError);
 
     response = yamlGitService.listGitSyncErrors(ACCOUNT_ID);
     assertThat(((GitToHarnessErrorDetails) response.getResource().get(0).getAdditionalErrorDetails()).getGitCommitId())

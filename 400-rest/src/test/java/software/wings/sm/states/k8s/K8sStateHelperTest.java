@@ -41,6 +41,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -56,10 +57,10 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
+import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -92,7 +94,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
   @Inject KryoSerializer kryoSerializer;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private static final String APPLICATION_MANIFEST_ID = "AppManifestId";
 
@@ -103,8 +105,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     ApplicationManifest applicationManifest = createApplicationManifest();
     ManifestFile manifestFile = createManifestFile();
 
-    wingsPersistence.save(applicationManifest);
-    wingsPersistence.save(manifestFile);
+    persistence.save(applicationManifest);
+    persistence.save(manifestFile);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(createGCPInfraMapping());
 
     // Service K8S_MANIFEST
@@ -112,35 +114,35 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(result).isTrue();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_NO_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     // Service VALUES
     applicationManifest.setKind(AppManifestKind.VALUES);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     manifestFile.setFileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isTrue();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_NO_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     manifestFile.setFileContent(" ");
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
@@ -148,37 +150,37 @@ public class K8sStateHelperTest extends WingsBaseTest {
     applicationManifest.setServiceId(null);
     applicationManifest.setEnvId(ENV_ID);
     applicationManifest.setKind(AppManifestKind.VALUES);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     manifestFile.setFileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isTrue();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_NO_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     // Env Service VALUES
     applicationManifest.setServiceId(SERVICE_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     manifestFile.setFileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isTrue();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_COMMENTED_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
     manifestFile.setFileContent(VALUES_YAML_WITH_NO_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, INFRA_MAPPING_ID);
     assertThat(result).isFalse();
 
@@ -194,7 +196,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
         InfrastructureDefinition.builder().name(INFRA_DEFINITION_NAME).envId(ENV_ID).build();
     when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
     manifestFile.setFileContent(VALUES_YAML_WITH_ARTIFACT_REFERENCE);
-    wingsPersistence.save(manifestFile);
+    persistence.save(manifestFile);
     result = k8sStateHelper.doManifestsUseArtifact(APP_ID, SERVICE_ID, INFRA_DEFINITION_ID);
     assertThat(result).isTrue();
 
@@ -295,8 +297,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
   public void testUpdateManifestsArtifactVariableNamesInfraDefinition() {
     ApplicationManifest applicationManifest = createApplicationManifest();
     ManifestFile manifestFile = createManifestFile();
-    wingsPersistence.save(applicationManifest);
-    wingsPersistence.save(manifestFile);
+    persistence.save(applicationManifest);
+    persistence.save(manifestFile);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(createGCPInfraMapping());
     Set<String> serviceArtifactVariableNames = new HashSet<>();
 
@@ -339,7 +341,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .withValue(AzureConfig.builder().build())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
 
     k8sStateHelper.fetchPodList(infrastructureMapping, "default", "releaseName");
 
@@ -357,7 +359,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     doReturn(K8sClusterConfig.builder().cloudProvider(KubernetesClusterConfig.builder().build()).build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(), any());
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
     k8sStateHelper.fetchPodList(infrastructureMapping, "default", "releaseName");
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).executeTask(captor.capture());
@@ -365,17 +367,24 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).isEmpty();
 
     doReturn(K8sClusterConfig.builder()
-                 .cloudProvider(
-                     KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build())
+                 .cloudProvider(KubernetesClusterConfig.builder()
+                                    .useKubernetesDelegate(true)
+                                    .delegateSelectors(new HashSet<>(Collections.singletonList("delegateSelectors")))
+                                    .build())
                  .build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(), any());
-    wingsPersistence.save(settingAttribute);
+    persistence.save(settingAttribute);
     k8sStateHelper.fetchPodList(infrastructureMapping, "default", "releaseName");
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(4)).executeTask(captor.capture());
     delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).contains("delegateName");
+    K8sInstanceSyncTaskParameters syncTaskParameters =
+        (K8sInstanceSyncTaskParameters) delegateTask.getData().getParameters()[0];
+
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) syncTaskParameters.getK8sClusterConfig().getCloudProvider();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
 
     when(delegateService.executeTask(any()))
         .thenReturn(ErrorNotifyResponseData.builder().errorMessage("ErrorMessage").build());

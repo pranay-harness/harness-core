@@ -50,21 +50,20 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     String planExecutionId = request.getPlanExecutionId();
     ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     Document pipelineInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(request.getPipelineModuleInfoJson());
-    if (pipelineInfoDoc == null) {
-      return;
-    }
 
     Update update = new Update();
 
-    for (Map.Entry<String, Object> entry : pipelineInfoDoc.entrySet()) {
-      String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
-      if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
-        Collection<Object> values = (Collection<Object>) entry.getValue();
-        for (Object value : values) {
-          update.addToSet(key, value);
+    if (pipelineInfoDoc != null) {
+      for (Map.Entry<String, Object> entry : pipelineInfoDoc.entrySet()) {
+        String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
+        if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
+          Collection<Object> values = (Collection<Object>) entry.getValue();
+          for (Object value : values) {
+            update.addToSet(key, value);
+          }
+        } else {
+          update.set(key, entry.getValue());
         }
-      } else {
-        update.set(key, entry.getValue());
       }
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), "PIPELINE")) {
@@ -93,25 +92,30 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
       return;
     }
     Document stageInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(stageInfo);
-    if (stageInfo == null) {
-      return;
-    }
 
     Update update = new Update();
-    for (Map.Entry<String, Object> entry : stageInfoDoc.entrySet()) {
-      String key = String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey());
-      if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
-        Collection<Object> values = (Collection<Object>) entry.getValue();
-        for (Object value : values) {
-          update.addToSet(key, value);
+    if (stageInfoDoc != null) {
+      for (Map.Entry<String, Object> entry : stageInfoDoc.entrySet()) {
+        String key = String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey());
+        if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
+          Collection<Object> values = (Collection<Object>) entry.getValue();
+          for (Object value : values) {
+            update.addToSet(key, value);
+          }
+        } else {
+          update.set(key, entry.getValue());
         }
-      } else {
-        update.set(key, entry.getValue());
       }
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), "STAGE")) {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".startTs",
+          nodeExecution.getStartTs());
+      if (ExecutionStatus.isTerminal(status)) {
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
+            nodeExecution.getEndTs());
+      }
     }
 
     Criteria criteria =

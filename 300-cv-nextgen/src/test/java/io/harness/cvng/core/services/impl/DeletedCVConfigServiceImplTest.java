@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -43,7 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.reflections.Reflections;
 
-public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
+public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Mock private DataCollectionTaskService dataCollectionTaskService;
   @Inject private DeletedCVConfigService deletedCVConfigServiceWithMocks;
@@ -184,7 +184,11 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   }
 
   private DeletedCVConfig createDeletedCVConfig(CVConfig cvConfig) {
-    return DeletedCVConfig.builder().accountId(cvConfig.getAccountId()).cvConfig(cvConfig).build();
+    return DeletedCVConfig.builder()
+        .accountId(cvConfig.getAccountId())
+        .cvConfig(cvConfig)
+        .perpetualTaskId(cvConfig.getPerpetualTaskId())
+        .build();
   }
 
   private void fillCommon(CVConfig cvConfig) {
@@ -199,5 +203,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
+    cvConfig.setPerpetualTaskId(generateUuid());
   }
 }

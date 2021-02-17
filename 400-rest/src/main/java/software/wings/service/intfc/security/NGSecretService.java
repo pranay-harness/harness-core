@@ -1,5 +1,7 @@
 package software.wings.service.intfc.security;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
@@ -15,11 +17,12 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
+@TargetModule(Module._950_NG_CORE)
 public interface NGSecretService {
   EncryptedData createSecretText(SecretTextDTO dto);
 
   PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      SettingVariableTypes settingVariableTypes, String page, String size);
+      List<String> identifiers, SettingVariableTypes settingVariableTypes, String page, String size);
 
   Optional<EncryptedData> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

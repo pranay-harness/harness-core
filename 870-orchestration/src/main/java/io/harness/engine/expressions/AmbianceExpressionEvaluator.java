@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.Getter;
 import org.bson.Document;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -60,6 +61,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
  */
 @OwnedBy(CDC)
+@Getter
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
@@ -97,8 +99,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       addToContext("regex", new RegexFunctor());
       addToContext("json", new JsonFunctor());
       addToContext("xml", new XmlFunctor());
-      addToContext("secrets",
-          new SecretFunctor(Integer.parseInt(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken"))));
+      addToContext("secrets", new SecretFunctor(ambiance.getExpressionFunctorToken()));
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {

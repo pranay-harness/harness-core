@@ -86,7 +86,7 @@ public class InvitesServiceImpl implements InvitesService {
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
     this.transactionTemplate = transactionTemplate;
-    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
+    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountIdentifier=%s";
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }

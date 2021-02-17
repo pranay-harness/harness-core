@@ -30,10 +30,11 @@ public interface NGSecretManagerService {
   ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  List<SecretManagerConfig> list(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  List<SecretManagerConfig> list(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers);
 
   Optional<SecretManagerConfig> get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
 
   SecretManagerConfig update(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretManagerConfigUpdateDTO updateDTO);

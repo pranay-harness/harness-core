@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
+@Slf4j
 public class TaskServiceRule implements MethodRule, InjectorRuleMixin {
   private final ClosingFactory closingFactory;
 
@@ -89,6 +91,6 @@ public class TaskServiceRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

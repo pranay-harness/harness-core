@@ -28,6 +28,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 
 public class NgSecretManagerFunctorTest extends WingsBaseTest {
   @Mock private NGSecretService ngSecretService;
+  @Inject private SecretManager secretManager;
 
   private NgSecretManagerFunctor buildFunctor(int token) {
     return NgSecretManagerFunctor.builder()

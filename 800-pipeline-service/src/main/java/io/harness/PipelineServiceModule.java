@@ -26,6 +26,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.UserClientModule;
+import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -49,15 +50,20 @@ import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -67,7 +73,9 @@ import com.google.inject.name.Names;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -131,14 +139,17 @@ public class PipelineServiceModule extends AbstractModule {
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
+    install(YamlSdkModule.getInstance());
 
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new YamlSchemaClientModule(configuration.getCiManagerClientConfig(),
-        configuration.getCiManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(
+        YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
+        PIPELINE_SERVICE.getServiceId()));
+    install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
 
@@ -199,6 +210,14 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+    return ImmutableList.<YamlSchemaRootClass>builder()
+        .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
+        .build();
+  }
+
+  @Provides
+  @Singleton
   public MongoConfig mongoConfig(PipelineServiceConfiguration configuration) {
     return configuration.getMongoConfig();
   }
@@ -246,5 +265,13 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   RedisConfig redisConfig() {
     return RedisConfig.builder().build();
+  }
+
+  @Provides
+  @Singleton
+  @Named("templateRegistrationExecutorService")
+  public ExecutorService templateRegistrationExecutionServiceThreadPool() {
+    return ThreadPool.create(
+        1, 1, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("TemplateRegistrationService-%d").build());
   }
 }

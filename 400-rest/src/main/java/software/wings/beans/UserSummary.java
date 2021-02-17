@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +18,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class UserSummary {
   @NotEmpty private String name;
   @Email private String email;
-  private List<String> accountIds = new ArrayList<>();
+  private List<String> accountIds;
   private boolean emailVerified;
 }

@@ -24,6 +24,7 @@ import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretService;
@@ -32,6 +33,8 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 import io.harness.testlib.RealMongo;
 
+import software.wings.EncryptTestUtils;
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
@@ -44,14 +47,17 @@ import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.api.PremiumFeature;
 import software.wings.resources.secretsmanagement.CyberArkResource;
+import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
@@ -77,25 +83,31 @@ import org.mockito.Mock;
  */
 @RunWith(Parameterized.class)
 public class CyberArkTest extends WingsBaseTest {
+  @Mock private AccountService accountService;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  @Mock private KmsEncryptor kmsEncryptor;
+  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Mock private PremiumFeature secretsManagementFeature;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private VaultEncryptor vaultEncryptor;
+  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Mock protected AuditServiceHelper auditServiceHelper;
+
+  @Inject @InjectMocks private CyberArkService cyberArkService;
+  @Inject @InjectMocks private KmsService kmsService;
+  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
+  @Inject @InjectMocks private SecretService secretService;
   @Inject private CyberArkResource cyberArkResource;
   @Inject private KryoSerializer kryoSerializer;
-
-  @Mock private AccountService accountService;
-  @Inject private LocalSecretManagerService localSecretManagerService;
-  @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Mock private SecretManagementDelegateService secretManagementDelegateService;
-  @Mock private PremiumFeature secretsManagementFeature;
-  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
-  @Mock protected AuditServiceHelper auditServiceHelper;
-  @Mock private KmsEncryptor kmsEncryptor;
-  @Mock private VaultEncryptor vaultEncryptor;
-  @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
-  @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject private LocalEncryptor localEncryptor;
-  @Inject @InjectMocks private SecretService secretService;
-  @Inject @InjectMocks private KmsService kmsService;
-  @Inject @InjectMocks private CyberArkService cyberArkService;
-  @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
+  @Inject private LocalSecretManagerService localSecretManagerService;
+  @Inject private SecretManagementResource secretManagementResource;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
+  @Inject private SecretManager secretManager;
+  @Inject private HPersistence persistence;
+  @Inject protected EncryptionService encryptionService;
+
   private final int numOfEncryptedValsForCyberArk = 1;
   private final int numOfEncryptedValsForCyberKms = 3;
   private final String userEmail = "mark.lu@harness.io";
@@ -127,7 +139,7 @@ public class CyberArkTest extends WingsBaseTest {
     when(kmsEncryptor.encryptSecret(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
+        return EncryptTestUtils.encrypt((String) args[0], ((String) args[1]).toCharArray(), (KmsConfig) args[2]);
       }
       return localEncryptor.encryptSecret(
           (String) args[0], (String) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
@@ -136,36 +148,36 @@ public class CyberArkTest extends WingsBaseTest {
     when(kmsEncryptor.fetchSecretValue(anyString(), anyObject(), any())).then(invocation -> {
       Object[] args = invocation.getArguments();
       if (args[2] instanceof KmsConfig) {
-        return decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
+        return EncryptTestUtils.decrypt((EncryptedRecord) args[1], (KmsConfig) args[2]);
       }
       return localEncryptor.fetchSecretValue(
           (String) args[0], (EncryptedRecord) args[1], localSecretManagerService.getEncryptionConfig((String) args[0]));
     });
 
-    when(vaultEncryptor.validateReference(anyString(), anyObject(), anyObject())).thenReturn(true);
+    when(vaultEncryptor.validateReference(anyString(), any(SecretText.class), anyObject())).thenReturn(true);
     when(kmsEncryptorsRegistry.getKmsEncryptor(any(KmsConfig.class))).thenReturn(kmsEncryptor);
     when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
         .thenReturn(secretManagementDelegateService);
     when(secretManagementDelegateService.validateCyberArkConfig(any(CyberArkConfig.class))).then(invocation -> {
       Object[] args = invocation.getArguments();
-      return validateCyberArkConfig((CyberArkConfig) args[0]);
+      return secretManagementTestHelper.validateCyberArkConfig((CyberArkConfig) args[0]);
     });
 
     FieldUtils.writeField(cyberArkService, "delegateProxyFactory", delegateProxyFactory, true);
     FieldUtils.writeField(kmsService, "delegateProxyFactory", delegateProxyFactory, true);
-    FieldUtils.writeField(wingsPersistence, "secretManager", secretManager, true);
+    FieldUtils.writeField(persistence, "secretManager", secretManager, true);
     FieldUtils.writeField(cyberArkResource, "cyberArkService", cyberArkService, true);
     FieldUtils.writeField(secretManagementResource, "secretManager", secretManager, true);
     FieldUtils.writeField(secretService, "kmsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(secretService, "vaultRegistry", vaultEncryptorsRegistry, true);
     FieldUtils.writeField(encryptionService, "kmsEncryptorsRegistry", kmsEncryptorsRegistry, true);
     FieldUtils.writeField(encryptionService, "vaultEncryptorsRegistry", vaultEncryptorsRegistry, true);
-    userId = wingsPersistence.save(user);
+    userId = persistence.save(user);
     UserThreadLocal.set(user);
 
     if (isGlobalKmsEnabled) {
-      kmsConfig = getKmsConfig();
+      kmsConfig = secretManagementTestHelper.getKmsConfig();
       kmsConfig.setName("Global KMS");
       kmsConfig.setAccountId(Account.GLOBAL_ACCOUNT_ID);
       kmsId = kmsService.saveGlobalKmsConfig(accountId, kmsConfig);
@@ -179,7 +191,7 @@ public class CyberArkTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void validateConfig() {
-    CyberArkConfig cyberArkConfig = getCyberArkConfig("invalidCertificate");
+    CyberArkConfig cyberArkConfig = secretManagementTestHelper.getCyberArkConfig("invalidCertificate");
     cyberArkConfig.setAccountId(accountId);
 
     try {
@@ -189,7 +201,7 @@ public class CyberArkTest extends WingsBaseTest {
       assertThat(true).isTrue();
     }
 
-    cyberArkConfig = getCyberArkConfig();
+    cyberArkConfig = secretManagementTestHelper.getCyberArkConfig();
     cyberArkConfig.setAccountId(accountId);
     cyberArkConfig.setCyberArkUrl("invalidUrl");
 
@@ -205,7 +217,7 @@ public class CyberArkTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getCyberArkConfigForAccount() {
-    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    CyberArkConfig cyberArkConfig = secretManagementTestHelper.getCyberArkConfig();
     cyberArkConfig.setAccountId(accountId);
 
     cyberArkResource.saveCyberArkConfig(cyberArkConfig.getAccountId(), cyberArkConfig);
@@ -234,8 +246,7 @@ public class CyberArkTest extends WingsBaseTest {
     CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getSecretManager(
         cyberArkConfig.getAccountId(), cyberArkConfig.getUuid());
     assertThat(savedConfig.getName()).isEqualTo(name);
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
+    List<EncryptedData> encryptedDataList = persistence.createQuery(EncryptedData.class, excludeAuthority).asList();
     if (isGlobalKmsEnabled) {
       assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk + numOfEncryptedValsForCyberKms);
     } else {
@@ -248,12 +259,12 @@ public class CyberArkTest extends WingsBaseTest {
     }
 
     name = UUID.randomUUID().toString();
-    CyberArkConfig newConfig = getCyberArkConfig();
+    CyberArkConfig newConfig = secretManagementTestHelper.getCyberArkConfig();
     savedConfig.setClientCertificate(newConfig.getClientCertificate());
     savedConfig.setName(name);
     cyberArkResource.saveCyberArkConfig(accountId, savedConfig);
     encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
+        persistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
     assertThat(encryptedDataList).hasSize(numOfEncryptedValsForCyberArk);
     for (EncryptedData encryptedData : encryptedDataList) {
       assertThat(encryptedData.getParents()).hasSize(1);
@@ -292,7 +303,7 @@ public class CyberArkTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
     String name = UUID.randomUUID().toString();
-    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    CyberArkConfig cyberArkConfig = secretManagementTestHelper.getCyberArkConfig();
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
 
@@ -331,7 +342,7 @@ public class CyberArkTest extends WingsBaseTest {
     }
 
     String name = UUID.randomUUID().toString();
-    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    CyberArkConfig cyberArkConfig = secretManagementTestHelper.getCyberArkConfig();
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
 
@@ -357,7 +368,7 @@ public class CyberArkTest extends WingsBaseTest {
 
   private CyberArkConfig saveCyberArkConfig(String clientCertificate) {
     String name = UUID.randomUUID().toString();
-    CyberArkConfig cyberArkConfig = getCyberArkConfig();
+    CyberArkConfig cyberArkConfig = secretManagementTestHelper.getCyberArkConfig();
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
     cyberArkConfig.setClientCertificate(clientCertificate);

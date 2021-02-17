@@ -21,37 +21,8 @@ import org.junit.jupiter.api.Test;
  * Instrument the target classes
  */
 public class ByteBuddyInstr extends Instr {
-  public static <T extends NamedElement> ElementMatcher.Junction<T> excludes() {
-    return ElementMatchers.not(ElementMatchers.nameStartsWith("java.")
-                                   .or(ElementMatchers.nameStartsWith("sun."))
-                                   .or(ElementMatchers.nameStartsWith("com.sun."))
-                                   .or(ElementMatchers.nameStartsWith("jdk.internal."))
-                                   .or(ElementMatchers.nameStartsWith("org.xml.sax"))
-                                   .or(ElementMatchers.nameStartsWith("harness."))
-                                   .or(ElementMatchers.nameStartsWith("sun."))
-                                   .or(ElementMatchers.nameStartsWith("com.sun."))
-                                   .or(ElementMatchers.nameStartsWith("jdk.internal."))
-                                   .or(ElementMatchers.nameStartsWith("org.apache.maven.surefire."))
-                                   .or(ElementMatchers.nameStartsWith("org.apache.tools."))
-                                   .or(ElementMatchers.nameStartsWith("org.mockito."))
-                                   .or(ElementMatchers.nameStartsWith("org.easymock.internal."))
-                                   .or(ElementMatchers.nameStartsWith("org.junit."))
-                                   .or(ElementMatchers.nameStartsWith("junit.framework."))
-                                   .or(ElementMatchers.nameStartsWith("org.hamcrest."))
-                                   .or(ElementMatchers.nameStartsWith("org.objenesis."))
-                                   .or(ElementMatchers.nameStartsWith("edu.washington.cs.mut.testrunner.Formatter."))
-                                   .or(ElementMatchers.nameStartsWith("com.google."))
-                                   .or(ElementMatchers.nameStartsWith("org.springframework.")));
-  }
-
   public static <T extends NamedElement> ElementMatcher.Junction<T> nameStartsWith(Set<String> prefix) {
-    if (prefix.size() == 1) {
-      return new NameMatcher<T>(new StringSetMatcherStartsWith(prefix));
-    } else {
-      return ElementMatchers.nameStartsWith("software.wings.")
-          .or(ElementMatchers.nameStartsWith("io.harness."))
-          .or(ElementMatchers.nameStartsWith("migrations."));
-    }
+    return new NameMatcher<T>(new StringSetMatcherStartsWith(prefix));
   }
 
   public ByteBuddyInstr(Set<String> includes) {
@@ -66,7 +37,8 @@ public class ByteBuddyInstr extends Instr {
     final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class);
 
     new AgentBuilder.Default()
-        .with(new TracerLogger())
+        .disableClassFormatChanges()
+        //        .with(new TracerLogger())
         .type(nameStartsWith(includes))
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(

@@ -10,6 +10,7 @@ import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resourcegroup.ResourceGroupConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -27,13 +28,13 @@ import org.reflections.Reflections;
 public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
+  public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
   public static final String YAML_PACKAGE = "io.harness.yaml";
   public static final String FILTER_PACKAGE = "io.harness.filter";
-  public static final String CE_NG_SERVICE_PACKAGE = "io.harness.ceng.apis";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -55,6 +56,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("ngManagerPublicBaseUrl") private String ngManagerPublicBaseUrl;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
+  @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -75,7 +77,7 @@ public class NextGenConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, CE_NG_SERVICE_PACKAGE);
+        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, RESOURCEGROUP_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
