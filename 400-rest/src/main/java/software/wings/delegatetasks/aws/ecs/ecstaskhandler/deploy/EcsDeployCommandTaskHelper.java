@@ -344,6 +344,16 @@ public class EcsDeployCommandTaskHelper {
     return ecsRunTaskDefinition;
   }
 
+  public RegisterTaskDefinitionRequest createRunTaskRegisterTaskDefinitionRequest(
+      String taskDefinitionJson, String ecsServiceName) {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
+        JsonUtils.asObject(taskDefinitionJson, RegisterTaskDefinitionRequest.class);
+    if (registerTaskDefinitionRequest.getFamily() == null) {
+      registerTaskDefinitionRequest.setFamily(ecsServiceName);
+    }
+    return registerTaskDefinitionRequest;
+  }
+
   public RunTaskRequest createAwsRunTaskRequest(
       TaskDefinition registeredRunTaskDefinition, EcsRunTaskDeployRequest ecsRunTaskDeployRequest) {
     RunTaskRequest runTaskRequest = new RunTaskRequest();
@@ -399,6 +409,31 @@ public class EcsDeployCommandTaskHelper {
 
     executionLogCallback.saveExecutionLog(
         format("Registering task definition with family => %s", runTaskDefinition.getFamily()), LogLevel.INFO);
+
+    return awsClusterService.createTask(
+        region, cloudProviderSetting, encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  public TaskDefinition registerRunTaskDefinitionWithRegisterTaskDefinitionRequest(
+      SettingAttribute cloudProviderSetting, RegisterTaskDefinitionRequest registerTaskDefinitionRequest,
+      String launchType, String region, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(null);
+    }
+
+    // Add extra parameters for Fargate launch type
+    if (isFargateTaskLauchType(launchType)) {
+      registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
+      registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
+    } else {
+      registerTaskDefinitionRequest.withCpu(null);
+      registerTaskDefinitionRequest.withMemory(null);
+    }
+
+    executionLogCallback.saveExecutionLog(
+        format("Registering task definition with family => %s", registerTaskDefinitionRequest.getFamily()),
+        LogLevel.INFO);
 
     return awsClusterService.createTask(
         region, cloudProviderSetting, encryptedDataDetails, registerTaskDefinitionRequest);
