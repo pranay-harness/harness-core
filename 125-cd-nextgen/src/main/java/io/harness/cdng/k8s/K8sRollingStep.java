@@ -11,6 +11,7 @@ import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -28,6 +29,8 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -103,18 +106,24 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
     }
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
 
+    List<UnitProgress> unitProgressList = k8sTaskExecutionResponse.getCommandUnitsProgress() == null
+            ? Collections.emptyList()
+            : k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses();
+
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
       K8sRollingDeployResponse k8sTaskResponse =
           (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
-      K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder()
+      K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome
+                                                .builder()
                                                 .releaseName(k8sStepHelper.getReleaseName(infrastructure))
                                                 .releaseNumber(k8sTaskResponse.getReleaseNumber())
                                                 .build();
 
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
+          .unitProgressList(unitProgressList)
           .stepOutcome(StepResponse.StepOutcome.builder()
                            .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
                            .outcome(k8sRollingOutcome)
@@ -125,6 +134,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
       StepResponseBuilder stepResponseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
+              .unitProgressList(unitProgressList)
               .failureInfo(FailureInfo.newBuilder()
                                .setErrorMessage(k8sTaskExecutionResponse.getErrorMessage() == null
                                        ? ""
