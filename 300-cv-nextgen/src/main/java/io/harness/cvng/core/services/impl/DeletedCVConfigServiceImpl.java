@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
@@ -66,8 +68,10 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
 
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
-    dataCollectionTaskService.deletePerpetualTasks(
-        deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
+    if (isNotEmpty(deletedCVConfig.getPerpetualTaskId())) {
+      dataCollectionTaskService.deletePerpetualTasks(
+          deletedCVConfig.getAccountId(), deletedCVConfig.getPerpetualTaskId());
+    }
     List<String> verificationTaskIds =
         verificationTaskService.getVerificationTaskIds(deletedCVConfig.getCvConfig().getUuid());
     verificationTaskIds.forEach(verificationTaskId
