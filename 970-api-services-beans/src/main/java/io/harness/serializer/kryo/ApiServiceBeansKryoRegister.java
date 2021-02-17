@@ -262,8 +262,5 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ARMScopeType.class, 1447);
 
     kryo.register(AdditionalMetadata.class, 72101);
-
-    kryo.register(UnitProgress.class, UnitProgressKryoSerializer.getInstance(), 9701);
-    kryo.register(UnitStatus.class, 9702);
   }
 }

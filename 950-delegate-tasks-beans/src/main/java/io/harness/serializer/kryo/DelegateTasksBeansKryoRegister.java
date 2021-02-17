@@ -613,6 +613,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
 
-    kryo.register(UnitProgressData.class, 9501);
+    kryo.register(UnitProgressData.class, 95001);
   }
 }
