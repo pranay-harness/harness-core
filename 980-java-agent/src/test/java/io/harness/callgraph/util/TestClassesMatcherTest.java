@@ -2,8 +2,6 @@ package io.harness.callgraph.util;
 
 import static io.harness.rule.OwnerRule.SHIVAKUMAR;
 
-import static org.hamcrest.CoreMatchers.is;
-
 import io.harness.callgraph.MockitoRule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -11,7 +9,7 @@ import io.harness.rule.Owner;
 import java.security.ProtectionDomain;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.utility.JavaModule;
-import org.hamcrest.MatcherAssert;
+import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,8 +32,7 @@ public class TestClassesMatcherTest {
   @Category(UnitTests.class)
   public void testMatches() throws Exception {
     TestClassesMatcher rawMatcher = new TestClassesMatcher(false);
-    MatcherAssert.assertThat(
-        rawMatcher.matches(typeDescription, classLoader, module, Foo.class, protectionDomain), is(true));
+    Assertions.assertThat(rawMatcher.matches(typeDescription, classLoader, module, Foo.class, protectionDomain)).isTrue();
   }
 
   private static class Foo { /* empty */
