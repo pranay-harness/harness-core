@@ -26,7 +26,6 @@ import org.reflections.Reflections;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessControlConfiguration extends Configuration {
   public static final String SERVICE_ID = "access-control-microservice";
-  public static final String BASE_PACKAGE = "io.harness.accesscontrol";
   public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions";
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
@@ -43,8 +42,7 @@ public class AccessControlConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections =
-        new Reflections(BASE_PACKAGE, PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE);
+    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

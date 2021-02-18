@@ -6,7 +6,6 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.accesscontrol.management.jobs.ManagementJob;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -83,8 +82,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
 
-    ManagementJob managementJob = injector.getInstance(ManagementJob.class);
-    managementJob.run();
+    AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
+    accessControlManagementJob.run();
 
     MaintenanceController.forceMaintenance(false);
   }

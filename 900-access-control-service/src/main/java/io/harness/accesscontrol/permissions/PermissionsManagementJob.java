@@ -1,8 +1,5 @@
-package io.harness.accesscontrol.permissions.jobs;
+package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.permissions.Permission;
-import io.harness.accesscontrol.permissions.PermissionFilter;
-import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
