@@ -2333,6 +2333,20 @@
                             </environmentVariables>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>4.bazel build</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>${basedir}/scripts/bazel/bazel_functional_script.sh</commandlineArgs>
+                            <environmentVariables>
+                                <OVERRIDE_LOCAL_M2>${maven.repo.local}</OVERRIDE_LOCAL_M2>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>

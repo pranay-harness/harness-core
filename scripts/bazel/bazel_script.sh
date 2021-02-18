@@ -30,15 +30,10 @@ then
   GCP=""
 fi
 
-if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]
-then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //200-functional-test/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //200-functional-test/... || true
-fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//200-functional-test/...
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
   bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//200-functional-test/... || true
 fi
 
