@@ -452,6 +452,48 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetRecentDeploymentActivityVerifications_groupByBuildAndServiceIdentifier() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
+    DeploymentActivityVerificationResultDTO deploymentActivityVerificationResultDTO =
+        DeploymentActivityVerificationResultDTO.builder().build();
+    when(verificationJobInstanceService.getAggregatedVerificationResult(anyList()))
+        .thenReturn(deploymentActivityVerificationResultDTO);
+    List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(JOB_IDENTIFIER_KEY, verificationJob.getIdentifier());
+    runtimeParams.put(SERVICE_IDENTIFIER_KEY, "cvngService");
+    runtimeParams.put(ENV_IDENTIFIER_KEY, "production");
+    VerificationJobRuntimeDetails runtimeDetails = VerificationJobRuntimeDetails.builder()
+                                                       .verificationJobIdentifier(verificationJob.getIdentifier())
+                                                       .runtimeValues(runtimeParams)
+                                                       .build();
+    verificationJobDetails.add(runtimeDetails);
+    Instant now = Instant.now();
+    ActivityDTO activityDTOManager =
+        getDeploymentActivityDTO(verificationJobDetails, now, "build#1", generateUuid(), "manager");
+    ActivityDTO activityDTOCVNG1 =
+        getDeploymentActivityDTO(verificationJobDetails, now, "build#1", generateUuid(), "cvng");
+    ActivityDTO activityDTOCVNG2 =
+        getDeploymentActivityDTO(verificationJobDetails, now, "build#2", generateUuid(), "cvng");
+    ActivityDTO activityDTOCVNG3 =
+        getDeploymentActivityDTO(verificationJobDetails, now, "build#2", generateUuid(), "cvng");
+
+    activityService.register(accountId, generateUuid(), activityDTOManager);
+    activityService.register(accountId, generateUuid(), activityDTOCVNG1);
+    activityService.register(accountId, generateUuid(), activityDTOCVNG2);
+    activityService.register(accountId, generateUuid(), activityDTOCVNG3);
+    List<DeploymentActivityVerificationResultDTO> deploymentActivityVerificationResultDTOs =
+        activityService.getRecentDeploymentActivityVerifications(accountId, orgIdentifier, projectIdentifier);
+    assertThat(deploymentActivityVerificationResultDTOs).hasSize(3);
+  }
+
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetRecentDeploymentActivityVerificationsByTag() {
