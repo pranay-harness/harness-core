@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
@@ -42,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -471,7 +473,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
 
     Set<String> verificationTaskIds = new HashSet<>();
     verificationTaskIds.add(taskId);
-    when(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+    when(verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
         .thenReturn(verificationTaskIds);
     when(verificationTaskService.getCVConfigId(taskId)).thenReturn(cvConfigId);
     when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
@@ -494,6 +496,32 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
         }
       });
     });
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetActivityMetrics_withNoVerificationTaskMapping() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String activityId = generateUuid();
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    String taskId = generateUuid();
+    Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    when(activityService.get(activityId)).thenReturn(activity);
+    when(verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
+        .thenReturn(Collections.emptySet());
+    when(verificationTaskService.getCVConfigId(taskId)).thenReturn(cvConfigId);
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(getTimeSeriesRecords(cvConfigId, true));
+
+    PageResponse<TimeSeriesMetricDataDTO> response =
+        timeSeriesDashboardService.getActivityMetrics(activityId, accountId, projectIdentifier, orgIdentifier,
+            envIdentifier, serviceIdentifier, start.toEpochMilli(), end.toEpochMilli(), false, 0, 10);
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isEmpty();
   }
 
   private List<TimeSeriesRecord> getTimeSeriesRecords(String cvConfigId, boolean anomalousOnly) throws Exception {

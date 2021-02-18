@@ -120,6 +120,22 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withNoVerificationTaskMapping() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isEmpty();
+  }
+
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameFilter() {
