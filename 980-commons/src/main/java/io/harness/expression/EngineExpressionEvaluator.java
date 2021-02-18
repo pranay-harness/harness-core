@@ -134,7 +134,6 @@ public class EngineExpressionEvaluator {
   protected List<String> fetchPrefixes() {
     return Collections.singletonList("");
   }
-
   /**
    * This method renders expressions recursively for all String fields inside the given object. If a field is annotated
    * with @NotExpression, it is skipped.
