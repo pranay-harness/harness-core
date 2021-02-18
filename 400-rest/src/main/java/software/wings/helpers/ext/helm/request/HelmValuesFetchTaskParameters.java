@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.Module;
@@ -7,6 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
@@ -18,6 +20,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
@@ -39,6 +42,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   @Expression(ALLOW_SECRETS) private String helmCommandFlags;
 
   private HelmChartConfigParams helmChartConfigTaskParams;
+  private Set<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -69,6 +73,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
       if (containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
       }
+    }
+
+    if (isNotEmpty(delegateSelectors)) {
+      capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
 
     return capabilities;

@@ -6,6 +6,7 @@ import software.wings.beans.TaskType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class K8sContextElement implements ContextElement {
   Integer releaseNumber;
   Integer targetInstances;
   TaskType currentTaskType;
+  List<String> delegateSelectors;
 
   @Override
   public ContextElementType getElementType() {

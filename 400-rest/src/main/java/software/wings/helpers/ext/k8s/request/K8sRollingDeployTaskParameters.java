@@ -9,6 +9,7 @@ import io.harness.expression.Expression;
 import io.harness.k8s.model.HelmVersion;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,9 +30,9 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean isInCanaryWorkflow, boolean skipDryRun, HelmVersion helmVersion, boolean localOverrideFeatureFlag,
-      Boolean skipVersioningForAllK8sObjects) {
+      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.isInCanaryWorkflow = isInCanaryWorkflow;

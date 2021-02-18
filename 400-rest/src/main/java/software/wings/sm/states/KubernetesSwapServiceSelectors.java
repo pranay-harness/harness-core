@@ -64,7 +64,9 @@ import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +92,8 @@ public class KubernetesSwapServiceSelectors extends State {
   @Getter @Setter @Attributes(title = "Service One") private String service1;
 
   @Getter @Setter @Attributes(title = "Service Two") private String service2;
+
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   public static final String KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME = "Kubernetes Swap Service Selectors";
 
@@ -137,7 +141,11 @@ public class KubernetesSwapServiceSelectors extends State {
     if (ExecutionStatus.SUCCESS == executionResponse.getExecutionStatus()) {
       K8sSwapServiceElement k8sSwapServiceElement = getK8sSwapServiceElement(context);
       if (k8sSwapServiceElement == null) {
-        saveK8sSwapServiceElement(context, K8sSwapServiceElement.builder().swapDone(true).build());
+        saveK8sSwapServiceElement(context,
+            K8sSwapServiceElement.builder()
+                .swapDone(true)
+                .delegateSelectors(k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors()))
+                .build());
       }
     }
 
@@ -234,6 +242,7 @@ public class KubernetesSwapServiceSelectors extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
+    Set<String> delegateSelectors;
     if (isRollback()) {
       K8sSwapServiceElement k8sSwapServiceElement = getK8sSwapServiceElement(context);
       if (k8sSwapServiceElement == null || !k8sSwapServiceElement.isSwapDone()) {
@@ -243,7 +252,11 @@ public class KubernetesSwapServiceSelectors extends State {
                                     .withErrorMsg("Services were not swapped in the deployment phase. Skipping.")
                                     .build())
             .build();
+      } else {
+        delegateSelectors = k8sSwapServiceElement.getDelegateSelectors();
       }
+    } else {
+      delegateSelectors = k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors());
     }
 
     ContainerServiceElement containerElement =
@@ -282,6 +295,7 @@ public class KubernetesSwapServiceSelectors extends State {
             .containerServiceParams(containerServiceParams)
             .service1(renderedService1)
             .service2(renderedService2)
+            .delegateSelectors(delegateSelectors)
             .build();
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -298,7 +312,9 @@ public class KubernetesSwapServiceSelectors extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
+    appendDelegateTaskDetails(context, delegateTask);
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
@@ -340,5 +356,10 @@ public class KubernetesSwapServiceSelectors extends State {
                                    .name(K8S_SWAP_SERVICE_ELEMENT)
                                    .output(kryoSerializer.asDeflatedBytes(k8sSwapServiceElement))
                                    .build());
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

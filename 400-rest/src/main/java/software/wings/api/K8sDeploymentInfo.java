@@ -19,15 +19,17 @@ public class K8sDeploymentInfo extends DeploymentInfo {
   private Set<String> namespaces = new HashSet<>();
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
+  private Set<String> delegateSelectors;
 
   @Builder
   public K8sDeploymentInfo(String namespace, String releaseName, Integer releaseNumber, Set<String> namespaces,
-      HelmChartInfo helmChartInfo, String blueGreenStageColor) {
+      HelmChartInfo helmChartInfo, String blueGreenStageColor, Set<String> delegateSelectors) {
     this.namespace = namespace;
     this.releaseName = releaseName;
     this.releaseNumber = releaseNumber;
     this.namespaces = namespaces;
     this.helmChartInfo = helmChartInfo;
     this.blueGreenStageColor = blueGreenStageColor;
+    this.delegateSelectors = delegateSelectors;
   }
 }

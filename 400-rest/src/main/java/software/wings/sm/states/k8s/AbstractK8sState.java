@@ -19,6 +19,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -278,6 +279,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
+    Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
+    fetchFilesTaskParams.setDelegateSelectors(renderedAndTrimmedSelectors);
 
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
@@ -423,6 +426,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
+    Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
+    k8sTaskParameters.setDelegateSelectors(renderedAndTrimmedSelectors);
 
     long taskTimeoutInMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -474,6 +479,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
             .releaseName(k8sTaskParameters.getReleaseName())
             .currentTaskType(TaskType.K8S_COMMAND_TASK)
+            .delegateSelectors(renderedAndTrimmedSelectors)
             .build();
 
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
@@ -593,7 +599,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     return instanceElementList.stream()
         .map(instanceElement
             -> anInstanceStatusSummary().withInstanceElement(instanceElement).withStatus(executionStatus).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   public List<K8sPod> tryGetPodList(
@@ -622,7 +628,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
               .newInstance(treatAllPodsAsNew || podDetails.isNewPod())
               .build();
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private boolean isValuesInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
@@ -756,6 +762,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     Application app = appService.get(context.getAppId());
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         fetchHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis);
+    helmValuesFetchTaskParameters.setDelegateSelectors(getRenderedAndTrimmedSelectors(context));
 
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
@@ -835,7 +842,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   @Nonnull
   public List<K8sPod> fetchNewPods(@Nullable List<K8sPod> k8sPodList) {
-    return emptyIfNull(k8sPodList).stream().filter(K8sPod::isNewPod).collect(Collectors.toList());
+    return emptyIfNull(k8sPodList).stream().filter(K8sPod::isNewPod).collect(toList());
   }
 
   @Nonnull
@@ -849,7 +856,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                    .newInstance(treatAllPodsAsNew || pod.isNewPod())
                    .k8s(K8s.builder().podName(pod.getName()).ip(pod.getPodIP()).build())
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @VisibleForTesting
@@ -920,6 +927,12 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Override public abstract ExecutionResponse execute(ExecutionContext context);
 
   @Override public abstract void handleAbortEvent(ExecutionContext context);
+
+  public abstract List<String> getDelegateSelectors(ExecutionContext context);
+
+  protected Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
+    return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors(context));
+  }
 
   @Override
   public boolean isSelectionLogsTrackingForTasksEnabled() {

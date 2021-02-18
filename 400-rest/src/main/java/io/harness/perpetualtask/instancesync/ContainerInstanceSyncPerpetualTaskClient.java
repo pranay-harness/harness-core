@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
@@ -11,6 +12,7 @@ import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
 import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
 import static software.wings.utils.Utils.emptyIfNull;
 
+import static java.util.Collections.emptySet;
 import static java.util.Objects.nonNull;
 
 import io.harness.beans.DelegateTask;
@@ -24,6 +26,8 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.DeploymentSummary;
+import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -34,11 +38,13 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
+import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
@@ -46,6 +52,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -64,6 +72,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   @Inject SettingsService settingsService;
   @Inject KryoSerializer kryoSerializer;
   @Inject FeatureFlagService featureFlagService;
+  @Inject private DeploymentService deploymentService;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -117,6 +126,20 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                                             : buildNonK8sDelegateTask(clientParams, taskData);
   }
 
+  private Set<String> getK8sDelegateSelectors(Map<String, String> clientParams) {
+    String accountId = clientParams.get(InstanceSyncConstants.HARNESS_ACCOUNT_ID);
+    String inframappingId = clientParams.get(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID);
+    if (isEmpty(accountId) || isEmpty(inframappingId)) {
+      return emptySet();
+    }
+    Optional<DeploymentSummary> deploymentSummaryOptional =
+        deploymentService.getWithInfraMappingId(accountId, inframappingId);
+    if (!deploymentSummaryOptional.isPresent()) {
+      return emptySet();
+    }
+    return ((K8sDeploymentInfo) deploymentSummaryOptional.get().getDeploymentInfo()).getDelegateSelectors();
+  }
+
   private DelegateTask buildNonK8sDelegateTask(
       Map<String, String> clientParams, ContainerInstanceSyncPerpetualTaskData taskData) {
     ContainerServiceParams delegateTaskParams = ContainerServiceParams.builder()
@@ -159,6 +182,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                                                            .k8sClusterConfig(taskData.getK8sClusterConfig())
                                                            .namespace(taskData.getNamespace())
                                                            .releaseName(taskData.getReleaseName())
+                                                           .delegateSelectors(getK8sDelegateSelectors(clientParams))
                                                            .build();
 
     return DelegateTask.builder()

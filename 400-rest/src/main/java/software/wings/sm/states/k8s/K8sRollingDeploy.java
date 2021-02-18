@@ -66,6 +66,12 @@ public class K8sRollingDeploy extends AbstractK8sState {
 
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
 
   @Override
   public Integer getTimeoutMillis() {
@@ -146,6 +152,7 @@ public class K8sRollingDeploy extends AbstractK8sState {
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+    stateExecutionData.setDelegateSelectors(getRenderedAndTrimmedSelectors(context));
 
     if (ExecutionStatus.FAILED == executionStatus) {
       return ExecutionResponse.builder()

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.model.HelmVersion;
 
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,9 +19,10 @@ public class K8sCanaryRollbackTaskParameters extends K8sTaskParameters {
   @Builder
   public K8sCanaryRollbackTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
-      Integer timeoutIntervalInMin, Integer releaseNumber, Integer targetReplicas, HelmVersion helmVersion) {
+      Integer timeoutIntervalInMin, Integer releaseNumber, Integer targetReplicas, HelmVersion helmVersion,
+      Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.releaseNumber = releaseNumber;
     this.targetReplicas = targetReplicas;
   }

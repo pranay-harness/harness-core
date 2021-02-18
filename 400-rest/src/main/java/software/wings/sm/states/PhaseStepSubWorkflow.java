@@ -398,11 +398,13 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
           K8sExecutionSummary k8sExecutionSummary = (K8sExecutionSummary) first.get();
 
-          K8sContextElement k8SContextElement = K8sContextElement.builder()
-                                                    .releaseNumber(k8sExecutionSummary.getReleaseNumber())
-                                                    .releaseName(k8sExecutionSummary.getReleaseName())
-                                                    .targetInstances(k8sExecutionSummary.getTargetInstances())
-                                                    .build();
+          K8sContextElement k8SContextElement =
+              K8sContextElement.builder()
+                  .releaseNumber(k8sExecutionSummary.getReleaseNumber())
+                  .releaseName(k8sExecutionSummary.getReleaseName())
+                  .targetInstances(k8sExecutionSummary.getTargetInstances())
+                  .delegateSelectors(new ArrayList<>(k8sExecutionSummary.getDelegateSelectors()))
+                  .build();
           return asList(k8SContextElement);
         }
       }
