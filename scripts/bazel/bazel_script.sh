@@ -156,6 +156,7 @@ BAZEL_MODULES="\
   //960-persistence:supporter-test \
   //960-recaster:module \
   //960-yaml-sdk:module \
+  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \

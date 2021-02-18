@@ -34,6 +34,9 @@ public class StepResponseMapper {
     if (stepResponse.getFailureInfo() != null) {
       builder.setFailureInfo(stepResponse.getFailureInfo());
     }
+    if (stepResponse.getUnitProgressList() != null) {
+      builder.addAllUnitProgress(stepResponse.getUnitProgressList());
+    }
     return builder.build();
   }
 }
