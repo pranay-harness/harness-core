@@ -14,6 +14,7 @@ shared_dependencies = [
     "//960-persistence:module",
     "//960-yaml-sdk:module",
     "//970-api-services-beans:module",
+    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_service_beans_proto",
     "//970-ng-commons:module",
     "//980-commons:module",
     "//:lombok",

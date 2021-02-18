@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
 ] + [
     "//:lombok",
     "//420-delegate-service:module",
@@ -52,6 +53,7 @@ shared_dependencies = [
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
+    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
@@ -368,7 +370,6 @@ shared_dependencies = [
     "@maven//:io_kubernetes_client_java_api",
     "@maven//:io_kubernetes_client_java_extended",
     "@maven//:io_kubernetes_client_java_proto",
-    "@maven//:io_netty_netty_all",
     "@maven//:io_netty_netty_buffer",
     "@maven//:io_netty_netty_codec",
     "@maven//:io_netty_netty_codec_http",
