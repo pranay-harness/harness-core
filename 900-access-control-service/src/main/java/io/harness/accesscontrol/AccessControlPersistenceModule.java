@@ -12,11 +12,15 @@ import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.springdata.PersistenceModule;
 
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class AccessControlPersistenceModule extends PersistenceModule {
   private static AccessControlPersistenceModule instance;
@@ -26,6 +30,12 @@ public class AccessControlPersistenceModule extends PersistenceModule {
       instance = new AccessControlPersistenceModule();
     }
     return instance;
+  }
+
+  @Provides
+  @Singleton
+  protected TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+    return new TransactionTemplate(mongoTransactionManager);
   }
 
   @Override

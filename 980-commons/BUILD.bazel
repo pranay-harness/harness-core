@@ -75,6 +75,7 @@ java_library(
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
+        "@maven//:net_jodah_failsafe",
         "@maven//:net_sf_json_lib_json_lib_jdk15",
         "@maven//:org_apache_commons_commons_csv",
         "@maven//:org_apache_commons_commons_jexl3",
