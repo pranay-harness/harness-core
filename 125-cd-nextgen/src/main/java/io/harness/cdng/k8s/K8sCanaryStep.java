@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
@@ -86,8 +86,9 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
-              .failureInfo(
-                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
       if (stepParameters.getRollbackInfo() != null) {
         responseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

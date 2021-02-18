@@ -1,5 +1,10 @@
 package software.wings.delegatetasks.azure.arm.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_NAME_PATTERN;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.AzureARMPreDeploymentDataBuilder;
+import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.builder;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.Module;
@@ -8,7 +13,6 @@ import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
@@ -56,10 +60,29 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
   private AzureARMDeploymentResponse deployAtResourceGroupScope(AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
-    String outputs = azureARMDeploymentService.deployAtResourceGroupScope(
-        toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-
-    return populateDeploymentResponse(outputs);
+    DeploymentResourceGroupContext context =
+        toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
+    AzureARMPreDeploymentDataBuilder preDeploymentDataBuilder =
+        builder()
+            .resourceGroup(deploymentParameters.getResourceGroupName())
+            .subscriptionId(deploymentParameters.getSubscriptionId());
+    try {
+      if (!deploymentParameters.isRollback()) {
+        azureARMDeploymentService.validateTemplate(context);
+        String existingResourceGroupTemplate = azureARMDeploymentService.exportExistingResourceGroupTemplate(context);
+        preDeploymentDataBuilder.resourceGroupTemplateJson(existingResourceGroupTemplate);
+      }
+      String outPuts = azureARMDeploymentService.deployAtResourceGroupScope(context);
+      return AzureARMDeploymentResponse.builder()
+          .outputs(outPuts)
+          .preDeploymentData(preDeploymentDataBuilder.build())
+          .build();
+    } catch (Exception exception) {
+      return AzureARMDeploymentResponse.builder()
+          .errorMsg(exception.getMessage())
+          .preDeploymentData(preDeploymentDataBuilder.build())
+          .build();
+    }
   }
 
   private DeploymentResourceGroupContext toDeploymentResourceGroupContext(
@@ -69,7 +92,8 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
     return DeploymentResourceGroupContext.builder()
         .azureClientContext(azureClientContext)
-        .deploymentName(deploymentParameters.getDeploymentName())
+        .deploymentName(
+            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getResourceGroupName()))
         .mode(deploymentParameters.getDeploymentMode())
         .templateJson(deploymentParameters.getTemplateJson())
         .parametersJson(deploymentParameters.getParametersJson())
@@ -97,7 +121,8 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentSubscriptionContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(deploymentParameters.getDeploymentName())
+        .deploymentName(
+            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getSubscriptionId()))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .subscriptionId(deploymentParameters.getSubscriptionId())
         .mode(deploymentParameters.getDeploymentMode())
@@ -120,7 +145,8 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentManagementGroupContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(deploymentParameters.getDeploymentName())
+        .deploymentName(
+            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getManagementGroupId()))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .managementGroupId(deploymentParameters.getManagementGroupId())
         .mode(deploymentParameters.getDeploymentMode())
@@ -142,7 +168,7 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentTenantContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(deploymentParameters.getDeploymentName())
+        .deploymentName(getDeploymentName(deploymentParameters.getDeploymentName(), azureConfig.getTenantId()))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .mode(deploymentParameters.getDeploymentMode())
         .templateJson(deploymentParameters.getTemplateJson())
@@ -153,9 +179,11 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   }
 
   private AzureARMDeploymentResponse populateDeploymentResponse(String outputs) {
-    return AzureARMDeploymentResponse.builder()
-        .outputs(outputs)
-        .preDeploymentData(AzureARMPreDeploymentData.builder().build())
-        .build();
+    return AzureARMDeploymentResponse.builder().outputs(outputs).preDeploymentData(builder().build()).build();
+  }
+
+  private String getDeploymentName(String deploymentName, String entityName) {
+    return isEmpty(deploymentName) ? String.format(ARM_DEPLOYMENT_NAME_PATTERN, entityName, System.currentTimeMillis())
+                                   : deploymentName;
   }
 }

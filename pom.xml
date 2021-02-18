@@ -6,12 +6,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>120-ng-manager</module>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
         <module>250-watcher</module>
         <module>260-delegate</module>
-        <module>280-batch-processing</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

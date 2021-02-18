@@ -75,7 +75,7 @@ public abstract class AbstractAzureAppServiceState extends State {
   protected Integer getTimeout(ExecutionContext context) {
     int timeOut = AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
     SweepingOutput setupElementFromSweepingOutput =
-        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
+        azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (setupElementFromSweepingOutput != null) {
       AzureAppServiceSlotSetupContextElement setupContextElement =
           (AzureAppServiceSlotSetupContextElement) setupElementFromSweepingOutput;
@@ -201,7 +201,7 @@ public abstract class AbstractAzureAppServiceState extends State {
 
   protected boolean verifyIfContextElementExist(ExecutionContext context) {
     SweepingOutput setupElementFromSweepingOutput =
-        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
+        azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (!(setupElementFromSweepingOutput instanceof AzureAppServiceSlotSetupContextElement)) {
       if (isRollback()) {
         return false;
@@ -212,7 +212,7 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   protected AzureAppServiceSlotSetupContextElement readContextElement(ExecutionContext context) {
-    return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
+    return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(
         context, SWEEPING_OUTPUT_APP_SERVICE);
   }
 

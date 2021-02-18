@@ -9,7 +9,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @Slf4j
-public abstract class NgManagerTest extends CategoryTest {
+public abstract class NgManagerTestBase extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public NgManagerRule apiServiceRule = new NgManagerRule(lifecycleRule.getClosingFactory());

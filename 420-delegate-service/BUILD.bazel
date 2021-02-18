@@ -11,6 +11,8 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//460-capability:module",
+    "//470-alert:module",
+    "//480-alert-beans:module",
     "//870-orchestration:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",

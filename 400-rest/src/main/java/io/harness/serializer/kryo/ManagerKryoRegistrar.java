@@ -103,6 +103,8 @@ import software.wings.api.TerraformPlanParam;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
+import software.wings.api.arm.ARMOutputVariables;
+import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -392,7 +394,6 @@ import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -1584,7 +1585,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);
     kryo.register(BasicValidationInfo.class, 7325);
-    kryo.register(SSHHostValidationCapability.class, 7326);
     kryo.register(PcfCommandTaskParameters.class, 7328);
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
@@ -1746,5 +1746,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(AwsElbConfig.class, 8500);
     kryo.register(CVNGStateExecutionData.class, 8501);
+
+    kryo.register(ARMOutputVariables.class, 8121);
+    kryo.register(ARMPreExistingTemplate.class, 8122);
   }
 }

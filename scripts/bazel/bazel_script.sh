@@ -32,8 +32,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//120-ng-manager/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//120-ng-manager/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -54,6 +54,8 @@ ps auxwwwe
 echo end off ps-report
 
 BAZEL_MODULES="\
+  //120-ng-manager:module \
+  //120-ng-manager:module_deploy.jar \
   //125-cd-nextgen:module \
   //130-resource-group:module \
   //160-model-gen-tool:module \
@@ -65,12 +67,15 @@ BAZEL_MODULES="\
   //230-model-test:module \
   //270-verification:module \
   //270-verification:module_deploy.jar \
+  //280-batch-processing:module \
+  //280-batch-processing:module_deploy.jar \
   //300-cv-nextgen:module_deploy.jar \
   //310-ci-manager:module \
   //310-ci-manager:module_deploy.jar \
   //320-ci-execution:module \
   //330-ci-beans:module \
   //340-ce-nextgen:module \
+  //340-ce-nextgen:module_deploy.jar \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
   //360-cg-manager:module \
@@ -294,8 +299,11 @@ build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
 build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
+build_bazel_application 340-ce-nextgen
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
+build_bazel_application 280-batch-processing
+build_bazel_application 120-ng-manager
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
 build_bazel_application 300-cv-nextgen

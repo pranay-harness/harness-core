@@ -16,12 +16,14 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
+import java.io.File;
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -59,7 +61,8 @@ public class NGAppStartupTest extends CategoryTest {
     MONGO_SERVER = startMongoServer();
     //        initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,
-        ResourceHelpers.resourceFilePath("test-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
+        String.valueOf(new File("120-ng-manager/src/test/resources/test-config.yml")),
+        ConfigOverride.config("mongo.uri", getMongoUri()));
     SUPPORT.before();
   }
 
