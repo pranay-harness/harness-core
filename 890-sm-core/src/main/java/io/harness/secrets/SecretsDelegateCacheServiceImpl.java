@@ -8,6 +8,7 @@ import io.harness.security.encryption.SecretUniqueIdentifier;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Weigher;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -20,11 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SecretsDelegateCacheServiceImpl implements SecretsDelegateCacheService {
   private final Cache<SecretUniqueIdentifier, char[]> secretsCache;
+  private SecretsDelegateCacheHelperService secretsDelegateCacheHelperService;
 
-  public SecretsDelegateCacheServiceImpl() {
+  @Inject
+  public SecretsDelegateCacheServiceImpl(SecretsDelegateCacheHelperService secretsDelegateCacheHelperService) {
+    this.secretsDelegateCacheHelperService = secretsDelegateCacheHelperService;
     this.secretsCache = Caffeine.newBuilder()
                             .maximumWeight(2 * 1024 * 1024) // 4MB worth of characters
-                            .expireAfterAccess(1, TimeUnit.HOURS)
+                            .expireAfterAccess(secretsDelegateCacheHelperService.initializeCacheExpiryTTL().toMillis(),
+                                TimeUnit.MILLISECONDS)
                             .weigher(new SecretCacheWeigher())
                             .build();
   }

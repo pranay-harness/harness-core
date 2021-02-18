@@ -40,6 +40,10 @@ import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.managerclient.AccountPreference;
+import io.harness.managerclient.AccountPreferenceQuery;
+import io.harness.managerclient.GetDelegatePropertiesRequest;
+import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.rest.RestResponse;
@@ -47,6 +51,8 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateTaskService;
 
+import software.wings.beans.Account;
+import software.wings.beans.AccountPreferences;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -63,6 +69,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
 
 import com.google.common.collect.Lists;
+import com.google.protobuf.Any;
+import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -493,5 +501,31 @@ public class DelegateAgentResourceTest {
             .request()
             .post(entity(taskResponse, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     verify(connectorHearbeatPublisher, atLeastOnce()).pushConnectivityCheckActivity(ACCOUNT_ID, taskResponse);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateProperties() throws TextFormat.ParseException {
+    GetDelegatePropertiesRequest request = GetDelegatePropertiesRequest.newBuilder()
+                                               .setAccountId(ACCOUNT_ID)
+                                               .addRequestEntry(Any.pack(AccountPreferenceQuery.newBuilder().build()))
+                                               .build();
+
+    Account account =
+        Account.Builder.anAccount()
+            .withUuid(ACCOUNT_ID)
+            .withAccountPreferences(AccountPreferences.builder().delegateSecretsCacheTTLInHours(new Integer(2)).build())
+            .build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    RestResponse<String> restResponse = RESOURCES.client()
+                                            .target("/agent/delegates/properties?accountId=" + ACCOUNT_ID)
+                                            .request()
+                                            .post(entity(request.toByteArray(), MediaType.APPLICATION_OCTET_STREAM),
+                                                new GenericType<RestResponse<String>>() {});
+    GetDelegatePropertiesResponse responseProto =
+        TextFormat.parse(restResponse.getResource(), GetDelegatePropertiesResponse.class);
+    assertThat(responseProto).isNotNull();
+    assertThat(responseProto.getResponseEntryList().get(0).is(AccountPreference.class)).isTrue();
   }
 }
