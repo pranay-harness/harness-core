@@ -60,6 +60,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -178,7 +179,6 @@ public class ActivityServiceImpl implements ActivityService {
           verificationJobInstanceService.getAggregatedVerificationResult(verificationJobInstanceIds);
       deploymentActivityVerificationResultDTO.setTag(deploymentGroupByTag.getDeploymentTag());
       Activity firstActivity = deploymentGroupByTag.deploymentActivities.get(0);
-      // TODO: do we need to implement caching?
       String serviceName = getServiceNameFromActivity(firstActivity);
       deploymentActivityVerificationResultDTO.setServiceName(serviceName);
       deploymentActivityVerificationResultDTO.setServiceIdentifier(firstActivity.getServiceIdentifier());
@@ -338,16 +338,25 @@ public class ActivityServiceImpl implements ActivityService {
             .order(Sort.descending(ActivityKeys.createdAt))
             // assumption is that the latest 5 tags will be part of last 1000 deployments
             .asList(new FindOptions().limit(1000));
-    Map<String, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
+
+    Map<BuildTagServiceIdentifierPair, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
     List<DeploymentGroupByTag> result = new ArrayList<>();
     for (DeploymentActivity activity : activities) {
       DeploymentGroupByTag deploymentGroupByTag;
-      if (groupByTagMap.containsKey(activity.getDeploymentTag())) {
-        deploymentGroupByTag = groupByTagMap.get(activity.getDeploymentTag());
+      BuildTagServiceIdentifierPair buildTagServiceIdentifierPair =
+          BuildTagServiceIdentifierPair.builder()
+              .deploymentTag(activity.getDeploymentTag())
+              .serviceIdentifier(activity.getServiceIdentifier())
+              .build();
+      if (groupByTagMap.containsKey(buildTagServiceIdentifierPair)) {
+        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifierPair);
       } else {
         if (groupByTagMap.size() < RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE) {
-          deploymentGroupByTag = DeploymentGroupByTag.builder().deploymentTag(activity.getDeploymentTag()).build();
-          groupByTagMap.put(activity.getDeploymentTag(), deploymentGroupByTag);
+          deploymentGroupByTag = DeploymentGroupByTag.builder()
+                                     .deploymentTag(activity.getDeploymentTag())
+                                     .serviceIdentifier(activity.getServiceIdentifier())
+                                     .build();
+          groupByTagMap.put(buildTagServiceIdentifierPair, deploymentGroupByTag);
           result.add(deploymentGroupByTag);
         } else {
           // ignore the tag that is not in the latest 5 tags.
@@ -510,6 +519,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Builder
   private static class DeploymentGroupByTag {
     String deploymentTag;
+    String serviceIdentifier;
     List<DeploymentActivity> deploymentActivities;
 
     public void addDeploymentActivity(DeploymentActivity deploymentActivity) {
@@ -611,5 +621,12 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Value
+  @Builder
+  private static class BuildTagServiceIdentifierPair {
+    String deploymentTag;
+    String serviceIdentifier;
   }
 }
