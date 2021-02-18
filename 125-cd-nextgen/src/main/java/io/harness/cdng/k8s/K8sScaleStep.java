@@ -94,8 +94,8 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     } else {
       stepResponseBuilder.status(Status.FAILED)
           .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
+                           .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                           .build());
       if (stepParameters.getRollbackInfo() != null) {
         stepResponseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

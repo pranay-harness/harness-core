@@ -62,8 +62,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      return stepResponseBuilder
-          .status(Status.FAILED)
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();

@@ -71,8 +71,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      return stepResponseBuilder
-          .status(Status.FAILED)
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();

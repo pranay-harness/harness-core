@@ -93,8 +93,8 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
       stepResponseBuilder.status(Status.FAILED)
           .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
           .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
+                           .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                           .build());
       if (k8sApplyStepParameters.getRollbackInfo() != null) {
         stepResponseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()
