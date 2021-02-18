@@ -20,11 +20,12 @@ public class ScmValidationParams implements ConnectorValidationParams, Execution
   List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;
   String connectorName;
+  boolean mergeCapabilities;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return GitCapabilityHelper.fetchRequiredExecutionCapabilities(
-        maskingEvaluator, gitConfigDTO, encryptedDataDetails, sshKeySpecDTO);
+        maskingEvaluator, gitConfigDTO, encryptedDataDetails, sshKeySpecDTO, mergeCapabilities);
   }
 
   @Override

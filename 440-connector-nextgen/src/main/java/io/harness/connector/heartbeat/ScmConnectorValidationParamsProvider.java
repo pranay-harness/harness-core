@@ -1,5 +1,6 @@
 package io.harness.connector.heartbeat;
 
+import io.harness.beans.FeatureName;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
@@ -9,6 +10,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
@@ -22,6 +24,7 @@ import java.util.List;
 public class ScmConnectorValidationParamsProvider implements ConnectorValidationParamsProvider {
   @Inject EncryptionHelper encryptionHelper;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public ConnectorValidationParams getConnectorValidationParams(ConnectorInfoDTO connectorInfoDTO, String connectorName,
@@ -42,6 +45,7 @@ public class ScmConnectorValidationParamsProvider implements ConnectorValidation
         .gitConfigDTO(gitConfigDTO)
         .connectorName(connectorName)
         .sshKeySpecDTO(sshKeySpecDTO)
+        .mergeCapabilities(featureFlagService.isEnabled(FeatureName.GIT_NG_MERGE_CAPABILITIES, accountIdentifier))
         .build();
   }
 }
