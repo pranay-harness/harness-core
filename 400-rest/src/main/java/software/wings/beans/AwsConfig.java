@@ -1,12 +1,19 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
-
+import lombok.*;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -15,21 +22,9 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @JsonTypeName("AWS")
 @Data
@@ -44,8 +39,11 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
+  @Attributes(title = "Use IRSA only applicable for EKS pods") private boolean useIRSA;
   @Attributes(title = "Ec2 Iam role tags") private String tag;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
+  private String irsaRoleArn;
+  private String webIdentityTokenFile;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
