@@ -391,7 +391,6 @@ import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse
 import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
-import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SftpCapability;
@@ -1599,7 +1598,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceArtifactElements.class, 7342);
     kryo.register(ServiceArtifactVariableElements.class, 7343);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesExecutionData.class, 7344);
-    kryo.register(ClusterMasterUrlValidationCapability.class, 7345);
     kryo.register(HelmDeployContextElement.class, 7346);
     kryo.register(NewRelicMetricDataRecord.class, 7347);
     kryo.register(ClusterLevel.class, 7348);

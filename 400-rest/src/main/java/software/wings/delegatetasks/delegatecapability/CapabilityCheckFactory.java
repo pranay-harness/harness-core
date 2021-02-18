@@ -21,7 +21,6 @@ import io.harness.delegate.task.executioncapability.SocketConnectivityCapability
 import io.harness.delegate.task.executioncapability.SystemEnvCapabilityCheck;
 import io.harness.delegate.task.executioncapability.WinrmHostValidationCapabilityCheck;
 
-import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
@@ -48,7 +47,6 @@ public class CapabilityCheckFactory {
   @Inject HelmCommandCapabilityCheck helmCommandCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
-  @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
   @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
   @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
@@ -87,8 +85,6 @@ public class CapabilityCheckFactory {
         return helmInstallationCapabilityCheck;
       case CHART_MUSEUM:
         return chartMuseumCapabilityCheck;
-      case CLUSTER_MASTER_URL:
-        return clusterMasterUrlCapabilityCheck;
       case SHELL_CONNECTION:
         return shellConnectionCapabilityCheck;
       case GIT_CONNECTION:

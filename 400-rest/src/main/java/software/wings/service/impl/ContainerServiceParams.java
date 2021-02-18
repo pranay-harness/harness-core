@@ -16,7 +16,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -76,8 +75,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
             "https://container.googleapis.com/", null));
       } else {
         if (isEmpty(masterUrl)) {
-          executionCapabilities.add(
-              ClusterMasterUrlValidationCapability.builder().containerServiceParams(this).build());
+          log.warn("master URL not provided, this is deprecated");
         } else {
           executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
               masterUrl, maskingEvaluator));

@@ -470,7 +470,6 @@ import software.wings.collect.CollectEvent;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
-import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
@@ -1361,8 +1360,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("delegatetasks.buildsource.BuildSourceCallback", BuildSourceCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCleanupCallback", BuildSourceCleanupCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceExecutionResponse", BuildSourceExecutionResponse.class);
-    w.put("delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability",
-        ClusterMasterUrlValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.HelmCommandCapability", HelmCommandCapability.class);
     w.put("delegatetasks.validation.capabilities.GitConnectionCapability", GitConnectionCapability.class);
     w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);

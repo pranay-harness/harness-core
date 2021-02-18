@@ -14,7 +14,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.Collections;
@@ -33,8 +32,6 @@ public class K8sClusterConfigTest extends WingsBaseTest {
     testAzureConfig();
     testKubernetesConfig();
     testKubernetesConfigWithDelegate();
-    testContainerServiceParamsNoMasterUrl("");
-    testContainerServiceParamsNoMasterUrl(null);
     testContainerServiceParamsWithMasterUrl();
   }
 
@@ -61,19 +58,6 @@ public class K8sClusterConfigTest extends WingsBaseTest {
     assertThat(clusterConfig.fetchRequiredExecutionCapabilities(null))
         .containsExactlyInAnyOrder(
             HttpConnectionExecutionCapability.builder().host("a.b.c").port(-1).scheme("http").build());
-  }
-
-  private void testContainerServiceParamsNoMasterUrl(String masterUrl) {
-    KubernetesClusterConfig clusterConfig = KubernetesClusterConfig.builder().masterUrl("http://localhost").build();
-    ContainerServiceParams params =
-        ContainerServiceParams.builder()
-            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(clusterConfig).build())
-            .masterUrl(masterUrl)
-            .build();
-
-    assertThat(params.fetchRequiredExecutionCapabilities(null))
-        .containsExactlyInAnyOrder(
-            ClusterMasterUrlValidationCapability.builder().containerServiceParams(params).build());
   }
 
   private void testContainerServiceParamsWithMasterUrl() {
