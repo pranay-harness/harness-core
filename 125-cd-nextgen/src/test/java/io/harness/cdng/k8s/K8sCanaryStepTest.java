@@ -3,11 +3,15 @@ package io.harness.cdng.k8s;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -56,6 +60,73 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateMissingInstanceSelection() {
+    K8sCanaryStepParameters canaryStepParameters = K8sCanaryStepParameters.infoBuilder().build();
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Instance selection is mandatory");
+
+    canaryStepParameters.setInstanceSelection(InstanceSelectionWrapper.builder().build());
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Instance selection is mandatory");
+
+    canaryStepParameters.setInstanceSelection(
+        InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).build());
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Instance selection is mandatory");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateMissingInstanceSelectionValue() {
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    InstanceSelectionWrapper instanceSelection =
+        InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(new CountInstanceSelection()).build();
+    K8sCanaryStepParameters canaryStepParameters =
+        K8sCanaryStepParameters.infoBuilder().instanceSelection(instanceSelection).build();
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Instance selection count value is mandatory");
+
+    instanceSelection.setType(K8sInstanceUnitType.Percentage);
+    instanceSelection.setSpec(new PercentageInstanceSelection());
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Instance selection percentage value is mandatory");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateInvalidInstanceSelectionValue() {
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CountInstanceSelection countSpec = new CountInstanceSelection();
+    PercentageInstanceSelection percentageSpec = new PercentageInstanceSelection();
+    countSpec.setCount(ParameterField.createValueField(0));
+    percentageSpec.setPercentage(ParameterField.createValueField(0));
+    InstanceSelectionWrapper instanceSelection =
+        InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(countSpec).build();
+    K8sCanaryStepParameters canaryStepParameters =
+        K8sCanaryStepParameters.infoBuilder().instanceSelection(instanceSelection).build();
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Instance selection count value cannot be less than 1");
+
+    instanceSelection.setType(K8sInstanceUnitType.Percentage);
+    instanceSelection.setSpec(percentageSpec);
+
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Instance selection percentage value cannot be less than 1");
   }
 
   @Override

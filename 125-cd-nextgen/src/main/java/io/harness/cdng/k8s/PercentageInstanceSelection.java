@@ -18,6 +18,10 @@ public class PercentageInstanceSelection implements InstanceSelectionBase {
 
   @Override
   public Integer getInstances() {
+    if (ParameterField.isNull(percentage)) {
+      return null;
+    }
+
     return percentage.getValue();
   }
 }
