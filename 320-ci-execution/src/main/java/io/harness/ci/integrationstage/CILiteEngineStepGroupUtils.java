@@ -148,7 +148,7 @@ public class CILiteEngineStepGroupUtils {
 
   private boolean isCIManagerStep(ExecutionWrapperConfig executionWrapperConfig) {
     if (executionWrapperConfig != null) {
-      if (!executionWrapperConfig.getStep().isNull()) {
+      if (executionWrapperConfig.getStep() != null && !executionWrapperConfig.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapperConfig);
         if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
           CIStepInfo ciStepInfo = (CIStepInfo) stepElementConfig.getStepSpecType();
@@ -156,7 +156,7 @@ public class CILiteEngineStepGroupUtils {
         } else {
           throw new InvalidRequestException("Non CIStepInfo is not supported");
         }
-      } else if (!executionWrapperConfig.getParallel().isNull()) {
+      } else if (executionWrapperConfig.getParallel() != null && !executionWrapperConfig.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig =
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapperConfig);
 
@@ -174,7 +174,7 @@ public class CILiteEngineStepGroupUtils {
 
     if (isNotEmpty(parallel.getSections())) {
       for (ExecutionWrapperConfig executionWrapper : parallel.getSections()) {
-        if (!executionWrapper.getStep().isNull()) {
+        if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
           StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
 
           if (stepElementConfig.getStepSpecType() instanceof CIStepInfo) {
