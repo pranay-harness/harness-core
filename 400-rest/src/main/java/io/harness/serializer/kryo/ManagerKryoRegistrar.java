@@ -394,6 +394,7 @@ import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
+import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -1602,6 +1603,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmDeployContextElement.class, 7346);
     kryo.register(NewRelicMetricDataRecord.class, 7347);
     kryo.register(ClusterLevel.class, 7348);
+    kryo.register(SftpCapability.class, 7351);
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
