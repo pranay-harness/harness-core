@@ -11,7 +11,6 @@
         <module>250-watcher</module>
         <module>260-delegate</module>
         <module>270-verification</module>
-        <module>280-batch-processing</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
