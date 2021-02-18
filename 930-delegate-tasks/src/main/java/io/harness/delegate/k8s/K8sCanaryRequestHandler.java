@@ -60,7 +60,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-                                                  K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sCanaryDeployRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("k8sDeployRequest", "Must be instance of K8sCanaryDeployRequestK8sCanaryDeployRequest"));
@@ -74,8 +75,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList()), commandUnitsProgress),
         timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -93,9 +94,9 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    success =
-        k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-            k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
+    success = k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(),
+        k8sCanaryHandlerConfig.getResources(), k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
     if (!success) {
       k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
           k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());

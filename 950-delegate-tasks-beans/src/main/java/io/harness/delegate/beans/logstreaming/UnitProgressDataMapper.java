@@ -9,6 +9,9 @@ import java.util.Map;
 
 public class UnitProgressDataMapper {
   public static UnitProgressData toUnitProgressData(CommandUnitsProgress commandUnitsProgress) {
+    if (commandUnitsProgress == null || commandUnitsProgress.getCommandUnitProgressMap() == null) {
+      return null;
+    }
     LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
         commandUnitsProgress.getCommandUnitProgressMap();
 

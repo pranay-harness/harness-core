@@ -78,11 +78,12 @@ public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
     ResponseData responseData = responseDataMap.values().iterator().next();
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
 
+    StepResponse.StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse)).build())
           .build();

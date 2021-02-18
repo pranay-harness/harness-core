@@ -91,7 +91,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-                                                  K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sBGDeployRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sBGDeployRequest"));
     }
@@ -104,8 +105,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sBGDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sBGDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sBGDeployRequest.getValuesYamlList()), commandUnitsProgress),
         timeoutInMillis, k8sBGDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -117,8 +118,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    success = prepareForBlueGreen(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
+    success = prepareForBlueGreen(k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
@@ -150,8 +151,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    k8sBGBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
+    k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
 
     final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
         timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);

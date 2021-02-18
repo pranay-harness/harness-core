@@ -66,10 +66,12 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     K8sDeployResponse executionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
+    StepResponse.StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      return StepResponse.builder()
+      return stepResponseBuilder
           .status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())

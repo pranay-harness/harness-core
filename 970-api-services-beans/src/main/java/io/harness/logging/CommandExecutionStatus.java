@@ -1,6 +1,5 @@
 package io.harness.logging;
 
-
 /**
  * The Enum CommandExecutionStatus.
  */

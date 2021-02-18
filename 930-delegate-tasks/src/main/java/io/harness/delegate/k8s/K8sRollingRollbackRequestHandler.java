@@ -36,7 +36,8 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-                                                  K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sRollingRollbackDeployRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("k8sDeployRequest", "Must be instance of K8sRollingRollbackDeployRequest"));

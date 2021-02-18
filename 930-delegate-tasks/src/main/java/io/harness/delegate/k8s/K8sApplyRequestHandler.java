@@ -58,7 +58,8 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-                                                  K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sApplyRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sRollingDeployRequest"));
     }
@@ -71,40 +72,44 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sApplyRequest.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList()), commandUnitsProgress),
         timeoutInMillis, k8sApplyRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
-    success = init(
-        k8sApplyRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
+    success = init(k8sApplyRequest, k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
-    success = k8sApplyBaseHandler.prepare(k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
+    success = k8sApplyBaseHandler.prepare(
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
         k8sApplyRequest.isSkipSteadyStateCheck(), k8sApplyHandlerConfig);
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
     success = k8sTaskHelperBase.applyManifests(k8sApplyHandlerConfig.getClient(), k8sApplyHandlerConfig.getResources(),
-        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
+        k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
     success = k8sApplyBaseHandler.steadyStateCheck(k8sApplyRequest.isSkipSteadyStateCheck(),
         k8sApplyRequest.getK8sInfraDelegateConfig().getNamespace(), k8sDelegateTaskParams, timeoutInMillis,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress), k8sApplyHandlerConfig);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress),
+        k8sApplyHandlerConfig);
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
     k8sApplyBaseHandler.wrapUp(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), k8sApplyHandlerConfig.getClient());
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress),
+        k8sApplyHandlerConfig.getClient());
 
     return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }

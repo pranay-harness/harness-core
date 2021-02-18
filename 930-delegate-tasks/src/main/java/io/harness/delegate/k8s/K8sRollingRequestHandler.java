@@ -79,7 +79,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-                                                  K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sRollingDeployRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sRollingDeployRequest"));
     }
@@ -92,8 +93,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sRollingDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sRollingDeployRequest.getValuesYamlList()), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -134,7 +135,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
       success = k8sTaskHelperBase.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
           k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
-          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress), true);
+          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress),
+          true);
 
       // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
       // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
@@ -149,8 +151,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       }
     }
 
-    k8sRollingBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
+    k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistoryInConfigMap(

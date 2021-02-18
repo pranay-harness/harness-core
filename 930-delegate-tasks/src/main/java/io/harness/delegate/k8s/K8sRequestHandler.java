@@ -19,7 +19,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 @Slf4j
 public abstract class K8sRequestHandler {
   public K8sDeployResponse executeTask(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8SDelegateTaskParams,
-                                       ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
     K8sDeployResponse result;
     try {
       result =
