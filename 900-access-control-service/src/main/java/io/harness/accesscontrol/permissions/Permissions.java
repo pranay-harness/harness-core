@@ -1,6 +1,4 @@
-package io.harness.accesscontrol.permissions.jobs;
-
-import io.harness.accesscontrol.permissions.Permission;
+package io.harness.accesscontrol.permissions;
 
 import java.util.Set;
 import javax.validation.constraints.NotNull;

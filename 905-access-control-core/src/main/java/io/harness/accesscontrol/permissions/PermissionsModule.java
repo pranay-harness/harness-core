@@ -10,6 +10,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class PermissionsModule extends AbstractModule {
@@ -37,5 +38,6 @@ public class PermissionsModule extends AbstractModule {
     requireBinding(ScopeService.class);
     requireBinding(RoleService.class);
     requireBinding(TransactionTemplate.class);
+    requireBinding(MongoTemplate.class);
   }
 }
