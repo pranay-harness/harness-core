@@ -5,6 +5,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -20,7 +21,7 @@ public class LiteEngineTaskStepGenerator {
 
   LiteEngineTaskStepInfo createLiteEngineTaskStepInfo(ExecutionElementConfig executionElement, CodeBase ciCodebase,
       StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, String podName, Integer liteEngineCounter,
-      boolean usePVC) {
+      boolean usePVC, Infrastructure infrastructure) {
     boolean isFirstPod = isFirstPod(liteEngineCounter);
     String liteEnginePodName = podName;
     if (!isFirstPod) {
@@ -36,6 +37,7 @@ public class LiteEngineTaskStepGenerator {
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .infrastructure(infrastructure)
           .ciCodebase(ciCodebase)
           .skipGitClone(!gitClone)
           .usePVC(usePVC)
@@ -47,6 +49,7 @@ public class LiteEngineTaskStepGenerator {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
           .buildJobEnvInfo(buildJobEnvInfo)
+          .infrastructure(infrastructure)
           .usePVC(usePVC)
           .steps(null)
           .executionElementConfig(executionElement)
