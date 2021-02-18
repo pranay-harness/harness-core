@@ -32,7 +32,7 @@ public class DockerAuthenticationDTODeserializer extends StdDeserializer<DockerA
     if (type == DockerAuthType.USER_PASSWORD) {
       dockerAuthCredentials = mapper.readValue(authSpec.toString(), DockerUserNamePasswordDTO.class);
     } else if (type == DockerAuthType.ANONYMOUS) {
-      if (authSpec != null) {
+      if (authSpec != null && !authSpec.isNull()) {
         throw new InvalidRequestException("No spec should be provided with the anonymous type");
       }
     }

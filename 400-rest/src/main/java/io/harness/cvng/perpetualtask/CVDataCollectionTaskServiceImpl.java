@@ -1,5 +1,6 @@
 package io.harness.cvng.perpetualtask;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -141,8 +142,8 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     switch (bundle.getDataCollectionType()) {
       case CV:
         return ngSecretService.getEncryptionDetails(basicNGAccessObject,
-            bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntity() != null
-                ? bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntity()
+            isNotEmpty(bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities())
+                ? bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities().get(0)
                 : null);
       case KUBERNETES:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
@@ -171,9 +172,9 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                        .projectIdentifier(projectIdentifier)
                                        .build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    if (dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity() != null) {
+    if (isNotEmpty(dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities())) {
       encryptedDataDetails = ngSecretService.getEncryptionDetails(
-          basicNGAccessObject, dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity());
+          basicNGAccessObject, dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities().get(0));
     }
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(CVNGDataCollectionDelegateService.class, taskContext)

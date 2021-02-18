@@ -7,6 +7,8 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -22,10 +24,10 @@ public class AwsConnectorDTO extends ConnectorConfigDTO {
   @Valid @NotNull AwsCredentialDTO credential;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     if (credential.getAwsCredentialType() == MANUAL_CREDENTIALS) {
       AwsManualConfigSpecDTO awsManualCredentials = (AwsManualConfigSpecDTO) credential.getConfig();
-      return awsManualCredentials;
+      return Collections.singletonList(awsManualCredentials);
     }
     return null;
   }

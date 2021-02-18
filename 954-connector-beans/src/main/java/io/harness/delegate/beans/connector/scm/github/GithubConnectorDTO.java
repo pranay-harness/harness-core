@@ -9,6 +9,8 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -41,11 +43,23 @@ public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnect
   }
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
+    List<DecryptableEntity> decryptableEntities = new ArrayList<>();
     if (authentication.getAuthType() == GitAuthType.HTTP) {
-      return ((GithubHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
+      GithubHttpCredentialsSpecDTO httpCredentialsSpec =
+          ((GithubHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
+      if (httpCredentialsSpec != null) {
+        decryptableEntities.add(httpCredentialsSpec);
+      }
     } else {
-      return (GithubSshCredentialsDTO) authentication.getCredentials();
+      GithubSshCredentialsDTO sshCredential = (GithubSshCredentialsDTO) authentication.getCredentials();
+      if (sshCredential != null) {
+        decryptableEntities.add(sshCredential);
+      }
     }
+    if (apiAccess != null && apiAccess.getSpec() != null) {
+      decryptableEntities.add(apiAccess.getSpec());
+    }
+    return decryptableEntities;
   }
 }
