@@ -77,7 +77,7 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(System.getProperty("/home/jenkins") + "/.bazel-dirs/bin/360-rest/module_deploy.jar");
+    final Path jar = Paths.get("/home/jenkins" + "/.bazel-dirs/bin/360-rest/module_deploy.jar");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
