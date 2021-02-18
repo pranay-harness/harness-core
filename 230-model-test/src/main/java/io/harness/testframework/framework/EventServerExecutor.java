@@ -70,7 +70,7 @@ public class EventServerExecutor {
         final Path jar =
             Paths.get("/home/jenkins" + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
         final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
+        String alpn = "/home/jenkins" + "/.m2/repository/" + alpnJarPath;
 
         if (!new File(alpn).exists()) {
           // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.

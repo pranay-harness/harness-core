@@ -77,11 +77,11 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get("/home/jenkins" + "/.bazel-dirs/bin/360-rest/module_deploy.jar");
+    final Path jar = Paths.get("/home/jenkins" + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
-    String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
+    String alpn = "/home/jenkins" + "/.m2/repository/" + alpnJarPath;
 
     if (!new File(alpn).exists()) {
       // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
