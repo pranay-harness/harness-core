@@ -12,6 +12,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/http"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -22,6 +23,15 @@ const (
 	diffPath = "/step-exec/.harness/vcs/diff.txt"
 	srcDir   = "/step-exec/.harness/test-intelligence/callgraph"             //directory where callgraph will be created
 	archPath = "/step-exec/.harness/test-intelligence/archive/callgraph.tar" //directory where tar file of callgraph will be created
+)
+
+var (
+	remoteTiClient = external.GetTiHTTPClient
+	getOrgId       = external.GetOrgId
+	getProjectId   = external.GetProjectId
+	getPipelineId  = external.GetPipelineId
+	getBuildId     = external.GetBuildId
+	getStageId     = external.GetStageId
 )
 
 // RunTestsStep represents interface to execute a run step
@@ -88,14 +98,46 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	client := http.NewHTTPClient(e.tiSrvEP, e.acctID, e.token, e.log)
-	testsToExecute, err := client.GetTestsToRun(changedFiles)
-
+	org, err := getOrgId()
+	if err != nil {
+		return nil, int32(1), err
+	}
+	project, err := getProjectId()
+	if err != nil {
+		return nil, int32(1), err
+	}
+	pipeline, err := getPipelineId()
+	if err != nil {
+		return nil, int32(1), err
+	}
+	build, err := getBuildId()
+	if err != nil {
+		return nil, int32(1), err
+	}
+	stage, err := getStageId()
 	if err != nil {
 		return nil, int32(1), err
 	}
 
-	executionCommand, err := e.getRunTestsCommand(testsToExecute)
+	// client := http.NewHTTPClient(e.tiSrvEP, e.acctID, e.token, e.log)
+	tc, err := remoteTiClient()
+	if err != nil {
+		e.log.Errorw("could not create a client to the TI service", zap.Error(err))
+		return nil, int32(1), err
+	}
+	// testsToExecute, err := client.GetTestsToRun(changedFiles)
+	_, err = tc.GetTests(org, project, pipeline, build, stage, e.id, []string{changedFiles})
+
+	// e.log.Errorw(fmt.Sprintf("%s", testsToE), zap.Error(err))
+
+	testsToExecute := "dummy"
+
+	runAll := false
+	if err != nil {
+		runAll = true
+	}
+
+	executionCommand, err := e.getRunTestsCommand(testsToExecute, runAll)
 	if err != nil {
 		return nil, int32(1), err
 	}
@@ -103,29 +145,38 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	return e.execute(ctx, executionCommand)
 }
 
-func (e *runTestsStep) getRunTestsCommand(testsToExecute string) (string, error) {
+func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (string, error) {
 	e.log.Infow(
 		"running tests with intelligence",
 		"testsToExecute", testsToExecute,
 	)
+
+	testsFlag := ""
+
+	if runAll == false {
+		testsFlag = fmt.Sprintf("-Dtest=%s", testsToExecute)
+	}
 
 	switch e.buildTool {
 	case "maven":
 		// Eg. of goals: "-T 2C -DskipTests"
 		// command will finally be like:
 		// mvn -T 2C -DskipTests -Dtest=TestSquare,TestCirle test
-		return fmt.Sprintf("mvn test %s -Dtest=%s -am", e.goals, testsToExecute), nil
+		return fmt.Sprintf("mvn test %s %s -am", e.goals, testsFlag), nil
 	default:
-		e.log.Errorw(fmt.Sprintf("Only maven build tool is supported. Received build tool is: %s", e.buildTool), "step_id", e.id)
-		return "", fmt.Errorf("Build tool %s is not suported", e.buildTool)
+		e.log.Errorw(fmt.Sprintf("only maven build tool is supported, build tool is: %s", e.buildTool), "step_id", e.id)
+		return "", fmt.Errorf("build tool %s is not suported", e.buildTool)
 	}
 }
 
 func (e *runTestsStep) readVCSDiffFromFile() (string, error) {
 	file, err := os.Open(diffPath)
 
+	defer file.Close()
+
 	if err != nil {
 		e.log.Errorw(fmt.Sprintf("could not open %s file", diffPath), "step_id", e.id, zap.Error(err))
+		return "", err
 	}
 
 	scanner := bufio.NewScanner(file)
@@ -135,9 +186,6 @@ func (e *runTestsStep) readVCSDiffFromFile() (string, error) {
 	for scanner.Scan() {
 		txtlines += scanner.Text()
 	}
-
-	file.Close()
-
 	return txtlines, nil
 }
 

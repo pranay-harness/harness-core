@@ -71,6 +71,14 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 	return err
 }
 
+// GetTests returns list of tests which should be run intelligently
+func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step string, change []string) ([]*types.TestCase, error) {
+	path := "new"
+	var tests []*types.TestCase
+	_, err := c.do(nil, c.Endpoint+path, "POST", &change, &tests)
+	return tests, err
+}
+
 func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {
 	for {
 		var res *http.Response
@@ -126,7 +134,14 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		r = buf
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, path, r)
+	var req *http.Request
+	var err error
+	if ctx != nil {
+		req, err = http.NewRequestWithContext(ctx, method, path, r)
+	} else {
+		req, err = http.NewRequest(method, path, r)
+	}
+
 	if err != nil {
 		return nil, err
 	}
