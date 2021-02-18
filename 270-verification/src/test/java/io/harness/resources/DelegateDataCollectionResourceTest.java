@@ -22,9 +22,11 @@ import java.util.stream.IntStream;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@Ignore
 public class DelegateDataCollectionResourceTest extends VerificationIntegrationBase {
   @Inject CVActivityLogService cvActivityLogService;
   @Override

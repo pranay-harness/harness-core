@@ -42,8 +42,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+@Ignore
 @Slf4j
 public class ServiceGuardAlertTest extends VerificationIntegrationBase {
   @Override

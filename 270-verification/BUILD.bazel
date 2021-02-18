@@ -63,7 +63,7 @@ java_library(
         "//270-verification/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = test_dependencies
+    deps = test_dependencies,
 )
 
 run_tests()
