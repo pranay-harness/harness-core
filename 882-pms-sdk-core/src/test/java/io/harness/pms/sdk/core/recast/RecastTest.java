@@ -21,8 +21,17 @@ import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BigIntegerNode;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ShortNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -31,6 +40,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
@@ -192,16 +202,40 @@ public class RecastTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldRecastWithYamlNodeWrapperConfigList() throws IOException {
+  public void shouldRecastWithYamlNodeWrapperConfigList() {
     ObjectMapper objectMapper = new ObjectMapper();
 
-    YamlNodeWrapperConfig yamlNodeWrapperConfig = new YamlNodeWrapperConfig();
-    yamlNodeWrapperConfig.setStep(objectMapper.createArrayNode());
-    yamlNodeWrapperConfig.setParallel(objectMapper.createObjectNode());
+    YamlNodeWrapperConfig yamlNodeWrapperConfig = YamlNodeWrapperConfig.builder()
+                                                      .step(objectMapper.createArrayNode())
+                                                      .parallel(objectMapper.createObjectNode())
+                                                      .nullNode(NullNode.getInstance())
+                                                      .stepGroup(NullNode.getInstance())
+                                                      .booleanNode(BooleanNode.getTrue())
+                                                      .bigIntegerNode(BigIntegerNode.valueOf(BigInteger.TEN))
+                                                      .binaryNode(BinaryNode.valueOf(ALEXEI.getBytes()))
+                                                      .doubleNode(DoubleNode.valueOf(Double.MAX_VALUE))
+                                                      .intNode(IntNode.valueOf(Integer.MAX_VALUE))
+                                                      .longNode(LongNode.valueOf(Long.MAX_VALUE))
+                                                      .objectNode(objectMapper.createObjectNode())
+                                                      .shortNode(ShortNode.valueOf((short) 1))
+                                                      .textNode(TextNode.valueOf(ALEXEI))
+                                                      .build();
 
-    YamlNodeWrapperConfig yamlNodeWrapperConfig1 = new YamlNodeWrapperConfig();
-    yamlNodeWrapperConfig1.setStep(objectMapper.createObjectNode());
-    yamlNodeWrapperConfig1.setParallel(objectMapper.createArrayNode());
+    YamlNodeWrapperConfig yamlNodeWrapperConfig1 = YamlNodeWrapperConfig.builder()
+                                                       .step(objectMapper.createArrayNode())
+                                                       .parallel(objectMapper.createObjectNode())
+                                                       .nullNode(NullNode.getInstance())
+                                                       .stepGroup(NullNode.getInstance())
+                                                       .booleanNode(BooleanNode.getTrue())
+                                                       .bigIntegerNode(BigIntegerNode.valueOf(BigInteger.TEN))
+                                                       .binaryNode(BinaryNode.valueOf(ALEXEI.getBytes()))
+                                                       .doubleNode(DoubleNode.valueOf(Double.MAX_VALUE))
+                                                       .intNode(IntNode.valueOf(Integer.MAX_VALUE))
+                                                       .longNode(LongNode.valueOf(Long.MAX_VALUE))
+                                                       .objectNode(objectMapper.createObjectNode())
+                                                       .shortNode(ShortNode.valueOf((short) 1))
+                                                       .textNode(TextNode.valueOf(ALEXEI))
+                                                       .build();
 
     YamlNodeWrapperConfigList wrapperConfigListi = new YamlNodeWrapperConfigList();
     wrapperConfigListi.setList(ImmutableList.of(yamlNodeWrapperConfig, yamlNodeWrapperConfig1));
@@ -220,7 +254,17 @@ public class RecastTest extends PmsSdkCoreTestBase {
     String uuid;
     @Setter JsonNode step;
     @Setter JsonNode parallel;
-    JsonNode stepGroup;
+    @Setter JsonNode stepGroup;
+    @Setter JsonNode nullNode;
+    @Setter JsonNode booleanNode;
+    @Setter JsonNode bigIntegerNode;
+    @Setter JsonNode binaryNode;
+    @Setter JsonNode doubleNode;
+    @Setter JsonNode intNode;
+    @Setter JsonNode longNode;
+    @Setter JsonNode objectNode;
+    @Setter JsonNode shortNode;
+    @Setter JsonNode textNode;
   }
 
   @Builder
