@@ -297,7 +297,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
 
     // behavior under test
     verificationJobInstanceService.processVerificationJobInstance(verificationJobInstance);
-
+    VerificationJobInstance saved =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(saved.getCvConfigMap()).isEqualTo(Collections.singletonMap(cvConfig.getUuid(), cvConfig));
     // validate that state machine is created since this is health
     Set<String> verTaskIds = verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
@@ -307,6 +309,33 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     assertThat(orchestrator).isNotNull();
     assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
     assertThat(orchestrator.getAnalysisStateMachineQueue().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testProcessVerificationJobInstance_getEmbaddedCVConfig() {
+    VerificationJob job = verificationJobService.fromDto(newHealthVerificationJobDTO());
+    job.setAccountId(accountId);
+    job.setIdentifier(verificationJobIdentifier);
+    hPersistence.save(job);
+    CVConfig cvConfig = cvConfigService.save(newCVConfig());
+    String verificationTaskId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, newVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
+    String verificationJobInstanceId = generateUuid();
+    verificationJobInstance.setUuid(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(job);
+    verificationJobInstance.setStartTime(Instant.now());
+    verificationJobInstance.setPreActivityVerificationStartTime(
+        verificationJobInstance.getStartTime().minus(job.getDuration()));
+    verificationJobInstance.setPostActivityVerificationStartTime(Instant.now());
+    hPersistence.save(verificationJobInstance);
+
+    verificationJobInstanceService.processVerificationJobInstance(verificationJobInstance);
+    assertThat(verificationJobInstanceService.getEmbeddedCVConfig(cvConfig.getUuid(), verificationJobInstanceId))
+        .isEqualTo(cvConfig);
   }
 
   @Test
@@ -334,6 +363,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class));
     VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
     assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
+    assertThat(saved.getCvConfigMap()).isEqualTo(Collections.singletonMap(cvConfig.getUuid(), cvConfig));
   }
 
   @Test
@@ -1107,7 +1137,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.perpetualTaskIds,
         VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, VerificationJobInstanceKeys.oldVersionHosts,
         VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
-        VerificationJobInstanceKeys.progressLogs);
+        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap);
     verificationJobInstances.forEach(verificationJobInstance -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {

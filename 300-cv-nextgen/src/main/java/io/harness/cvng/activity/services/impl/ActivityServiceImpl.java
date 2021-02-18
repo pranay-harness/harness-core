@@ -339,24 +339,23 @@ public class ActivityServiceImpl implements ActivityService {
             // assumption is that the latest 5 tags will be part of last 1000 deployments
             .asList(new FindOptions().limit(1000));
 
-    Map<BuildTagServiceIdentifierPair, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
+    Map<BuildTagServiceIdentifier, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
     List<DeploymentGroupByTag> result = new ArrayList<>();
     for (DeploymentActivity activity : activities) {
       DeploymentGroupByTag deploymentGroupByTag;
-      BuildTagServiceIdentifierPair buildTagServiceIdentifierPair =
-          BuildTagServiceIdentifierPair.builder()
-              .deploymentTag(activity.getDeploymentTag())
-              .serviceIdentifier(activity.getServiceIdentifier())
-              .build();
-      if (groupByTagMap.containsKey(buildTagServiceIdentifierPair)) {
-        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifierPair);
+      BuildTagServiceIdentifier buildTagServiceIdentifier = BuildTagServiceIdentifier.builder()
+                                                                .deploymentTag(activity.getDeploymentTag())
+                                                                .serviceIdentifier(activity.getServiceIdentifier())
+                                                                .build();
+      if (groupByTagMap.containsKey(buildTagServiceIdentifier)) {
+        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifier);
       } else {
         if (groupByTagMap.size() < RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE) {
           deploymentGroupByTag = DeploymentGroupByTag.builder()
                                      .deploymentTag(activity.getDeploymentTag())
                                      .serviceIdentifier(activity.getServiceIdentifier())
                                      .build();
-          groupByTagMap.put(buildTagServiceIdentifierPair, deploymentGroupByTag);
+          groupByTagMap.put(buildTagServiceIdentifier, deploymentGroupByTag);
           result.add(deploymentGroupByTag);
         } else {
           // ignore the tag that is not in the latest 5 tags.
@@ -625,7 +624,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Value
   @Builder
-  private static class BuildTagServiceIdentifierPair {
+  private static class BuildTagServiceIdentifier {
     String deploymentTag;
     String serviceIdentifier;
   }
