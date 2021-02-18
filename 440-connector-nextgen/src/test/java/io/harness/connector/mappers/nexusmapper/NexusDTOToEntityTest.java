@@ -1,6 +1,7 @@
 package io.harness.connector.mappers.nexusmapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -13,6 +14,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordA
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -20,10 +22,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class NexusDTOToEntityTest extends CategoryTest {
   @InjectMocks NexusDTOToEntity nexusDTOToEntity;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
@@ -39,8 +43,11 @@ public class NexusDTOToEntityTest extends CategoryTest {
     String passwordRefIdentifier = "passwordRefIdentifier";
     final String version = "1.2";
 
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
     SecretRefData passwordSecretRef =
-        SecretRefData.builder().identifier(passwordRefIdentifier).scope(Scope.ACCOUNT).build();
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRefIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
 
     NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO =
         NexusUsernamePasswordAuthDTO.builder().username(userName).passwordRef(passwordSecretRef).build();

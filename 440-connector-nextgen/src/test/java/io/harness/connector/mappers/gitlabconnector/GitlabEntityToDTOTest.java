@@ -4,6 +4,8 @@ import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
@@ -23,6 +25,8 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,14 +35,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class GitlabEntityToDTOTest {
   @InjectMocks GitlabEntityToDTO gitlabEntityToDTO;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(secretRefService.createSecretRef(any())).thenCallRealMethod();
   }
 
   @Test

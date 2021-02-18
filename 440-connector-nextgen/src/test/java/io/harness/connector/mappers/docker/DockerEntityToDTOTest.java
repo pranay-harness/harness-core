@@ -3,6 +3,8 @@ package io.harness.connector.mappers.docker;
 import static io.harness.encryption.Scope.ACCOUNT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,6 +16,8 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -21,14 +25,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class DockerEntityToDTOTest extends CategoryTest {
   @InjectMocks DockerEntityToDTO dockerEntityToDTO;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(secretRefService.createSecretRef(any())).thenCallRealMethod();
   }
 
   @Test

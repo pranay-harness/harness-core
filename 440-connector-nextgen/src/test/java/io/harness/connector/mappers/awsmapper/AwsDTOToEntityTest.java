@@ -3,6 +3,7 @@ package io.harness.connector.mappers.awsmapper;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,18 +16,22 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class AwsDTOToEntityTest extends CategoryTest {
   @InjectMocks AwsDTOToEntity awsDTOToEntity;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
@@ -49,27 +54,26 @@ public class AwsDTOToEntityTest extends CategoryTest {
             .config(AwsInheritFromDelegateSpecDTO.builder().delegateSelector(delegateSelector).build())
             .build();
     final AwsConnectorDTO awsConnectorDTO = AwsConnectorDTO.builder().credential(awsCredentialDTO).build();
-    final AwsConfig awsConfig = awsDTOToEntity.toConnectorEntity(
-        awsConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
+    BaseNGAccess baseNGAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    final AwsConfig awsConfig = awsDTOToEntity.toConnectorEntity(awsConnectorDTO, baseNGAccess);
 
     assertThat(awsConfig).isNotNull();
     assertThat(awsConfig.getCredentialType()).isEqualTo(AwsCredentialType.INHERIT_FROM_DELEGATE);
     assertThat(awsConfig.getCrossAccountAccess()).isEqualTo(crossAccountAccess);
     assertThat(awsConfig.getCredential()).isNotNull();
     assertThat(((AwsIamCredential) awsConfig.getCredential()).getDelegateSelector()).isEqualTo(delegateSelector);
-
+    SecretRefData passwordSecretRef = SecretRefData.builder().identifier("passwordRef").scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, baseNGAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
     final String accessKey = "accessKey";
-    final AwsCredentialDTO awsCredentialDTO1 = AwsCredentialDTO.builder()
-                                                   .awsCredentialType(AwsCredentialType.MANUAL_CREDENTIALS)
-                                                   .crossAccountAccess(crossAccountAccess)
-                                                   .config(AwsManualConfigSpecDTO.builder()
-                                                               .accessKey(accessKey)
-                                                               .secretKeyRef(SecretRefData.builder().build())
-                                                               .build())
-                                                   .build();
+    final AwsCredentialDTO awsCredentialDTO1 =
+        AwsCredentialDTO.builder()
+            .awsCredentialType(AwsCredentialType.MANUAL_CREDENTIALS)
+            .crossAccountAccess(crossAccountAccess)
+            .config(AwsManualConfigSpecDTO.builder().accessKey(accessKey).secretKeyRef(passwordSecretRef).build())
+            .build();
     final AwsConnectorDTO awsConnectorDTO1 = AwsConnectorDTO.builder().credential(awsCredentialDTO1).build();
-    final AwsConfig awsConfig1 = awsDTOToEntity.toConnectorEntity(
-        awsConnectorDTO1, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
+    final AwsConfig awsConfig1 = awsDTOToEntity.toConnectorEntity(awsConnectorDTO1, baseNGAccess);
 
     assertThat(awsConfig1).isNotNull();
     assertThat(awsConfig1.getCredentialType()).isEqualTo(AwsCredentialType.MANUAL_CREDENTIALS);

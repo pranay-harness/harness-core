@@ -30,6 +30,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -43,12 +45,14 @@ import org.mockito.MockitoAnnotations;
 public class KubernetesEntityToDTOTest extends CategoryTest {
   @InjectMocks KubernetesEntityToDTO kubernetesEntityToDTO;
   @Mock KubernetesConfigCastHelper kubernetesConfigCastHelper;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
+    when(secretRefService.createSecretRef(any())).thenCallRealMethod();
   }
 
   @Test
@@ -157,7 +161,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     SecretRefData clientCertSecret = SecretRefData.builder().identifier(clientCertIdentifer).scope(ACCOUNT).build();
     SecretRefData clientKeyPassPhraseSecret =
         SecretRefData.builder().identifier(clientKeyPhraseIdenfiter).scope(ACCOUNT).build();
-    SecretRefData caCertSecretRef = SecretRefData.builder().identifier(caCertRef).scope(ACCOUNT).build();
+
     K8sClientKeyCert k8sClientKeyCert = K8sClientKeyCert.builder()
                                             .caCertRef(caCertRef)
                                             .clientKeyRef(clientKeyRef)

@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -33,6 +34,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -40,10 +42,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class KubernetesDTOToEntityTest extends CategoryTest {
   @InjectMocks KubernetesDTOToEntity kubernetesDTOToEntity;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
@@ -54,7 +58,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForDelegateCredentials() {
-    String delegateName = "testDeleagete";
+    String delegateName = "testDelegate";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
@@ -75,6 +79,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForManualWhenWrongCredTypeGiven() {
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
@@ -82,8 +87,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
-        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds, ngAccess);
   }
 
   @Test(expected = UnexpectedException.class)
@@ -107,16 +111,19 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   public void testToKubernetesClusterConfigForUserNamePasswordCredential() {
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifer";
-    String cacert = "caCertRef";
-    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
-    SecretRefData passwordSecretRefData =
-        SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+
+    SecretRefData passwordSecretRef =
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
+
     String masterUrl = "https://abc.com";
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
             .credentials(
-                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRefData).build())
+                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
         KubernetesClusterConfigDTO.builder()
@@ -126,8 +133,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                     .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
                     .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
-        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds, ngAccess);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -136,7 +142,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     assertThat(kubernetesClusterDetails.getAuthType()).isEqualTo(USER_PASSWORD);
     K8sUserNamePassword kubernetesCredential = (K8sUserNamePassword) kubernetesClusterDetails.getAuth();
     assertThat(kubernetesCredential.getUserName()).isEqualTo(userName);
-    assertThat(kubernetesCredential.getPasswordRef()).isEqualTo(passwordSecretRefData.toSecretRefStringValue());
+    assertThat(kubernetesCredential.getPasswordRef()).isEqualTo(passwordSecretRef.toSecretRefStringValue());
   }
 
   @Test
@@ -148,12 +154,23 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     String clientKeyPhraseIdentifier = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+
     SecretRefData clientKeySecret =
         SecretRefData.builder().identifier(clientKeyIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(clientKeySecret, ngAccess))
+        .thenReturn(clientKeySecret.toSecretRefStringValue());
+
     SecretRefData clientCertSecret =
         SecretRefData.builder().identifier(clientCertIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(clientCertSecret, ngAccess))
+        .thenReturn(clientCertSecret.toSecretRefStringValue());
+
     SecretRefData clientKeyPassPhraseSecret =
         SecretRefData.builder().identifier(clientKeyPhraseIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(clientKeyPassPhraseSecret, ngAccess))
+        .thenReturn(clientKeyPassPhraseSecret.toSecretRefStringValue());
+
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(KubernetesClientKeyCertDTO.builder()
@@ -198,10 +215,21 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     String oidcSecretIdentifier = "oidcSecretRef";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+
     SecretRefData oidcCleintId = SecretRefData.builder().identifier(oidClientIdIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(oidcCleintId, ngAccess))
+        .thenReturn(oidcCleintId.toSecretRefStringValue());
+
     SecretRefData oidcPassword =
         SecretRefData.builder().identifier(oidcPasswordIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(oidcPassword, ngAccess))
+        .thenReturn(oidcPassword.toSecretRefStringValue());
+
     SecretRefData oidcSecret = SecretRefData.builder().identifier(oidcSecretIdentifier).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(oidcSecret, ngAccess))
+        .thenReturn(oidcSecret.toSecretRefStringValue());
+
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(OPEN_ID_CONNECT)
                                               .credentials(KubernetesOpenIdConnectDTO.builder()
@@ -244,8 +272,13 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   public void testToKubernetesClusterConfigForServiceAccount() {
     String serviceAccountKey = "serviceAccountKey";
     String masterUrl = "https://abc.com";
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+
     SecretRefData serviceAccountTokenRef =
         SecretRefData.builder().identifier(serviceAccountKey).scope(Scope.ACCOUNT).build();
+    when(secretRefService.validateAndGetSecretConfigString(serviceAccountTokenRef, ngAccess))
+        .thenReturn(serviceAccountTokenRef.toSecretRefStringValue());
+
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(SERVICE_ACCOUNT)
@@ -276,6 +309,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToManualConfigWhenUserGaveWrongTypeForServiceAccountAuth() {
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(USER_PASSWORD)
                                               .credentials(KubernetesServiceAccountDTO.builder().build())
@@ -287,8 +321,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
                             .config(KubernetesClusterDetailsDTO.builder().auth(kubernetesAuthDTO).build())
                             .build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toConnectorEntity(
-        connectorDTOWithUserNamePasswordCreds, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build());
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds, ngAccess);
   }
 
   @Test(expected = UnexpectedException.class)

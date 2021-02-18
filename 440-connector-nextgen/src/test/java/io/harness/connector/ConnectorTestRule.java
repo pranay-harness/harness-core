@@ -20,6 +20,8 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -81,6 +83,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(SecretRefService.class).to(SecretRefServiceImpl.class);
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
             .toInstance(mock(NoOpProducer.class));

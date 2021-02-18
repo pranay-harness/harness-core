@@ -3,25 +3,31 @@ package io.harness.connector.mappers.splunkconnectormapper;
 import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SplunkEntityToDTOTest extends CategoryTest {
   @InjectMocks SplunkEntityToDTO splunkEntityToDTO;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(secretRefService.createSecretRef(any())).thenCallRealMethod();
   }
 
   @Test

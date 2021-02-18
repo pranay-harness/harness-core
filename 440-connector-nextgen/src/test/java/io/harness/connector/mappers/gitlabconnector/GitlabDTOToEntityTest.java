@@ -4,6 +4,7 @@ import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -30,16 +31,19 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class GitlabDTOToEntityTest extends CategoryTest {
   @InjectMocks GitlabDTOToEntity gitlabDTOToEntity;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
@@ -51,11 +55,21 @@ public class GitlabDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToConnectorEntity_0() {
     final String url = "url";
-    final String passwordRef = "passwordRef";
+    final String passwordIdentifier = "passwordRef";
     final String username = "username";
     final String appId = "appId";
     final String insId = "insId";
-    final String privateKeyRef = "privateKeyRef";
+    final String privateIdentifier = "privateKeyRef";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    SecretRefData passwordSecretRef =
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
+
+    SecretRefData privateSecretRef = SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(privateSecretRef, ngAccess))
+        .thenReturn(privateSecretRef.toSecretRefStringValue());
 
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
@@ -64,10 +78,7 @@ public class GitlabDTOToEntityTest extends CategoryTest {
                 GitlabHttpCredentialsDTO.builder()
                     .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
                     .httpCredentialsSpec(
-                        GitlabUsernamePasswordDTO.builder()
-                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
-                            .username(username)
-                            .build())
+                        GitlabUsernamePasswordDTO.builder().passwordRef(passwordSecretRef).username(username).build())
                     .build())
             .build();
 
@@ -76,15 +87,17 @@ public class GitlabDTOToEntityTest extends CategoryTest {
                                                       .connectionType(GitConnectionType.REPO)
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .build();
-    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(
-        gitlabConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountId").build());
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO, ngAccess);
     assertThat(gitlabConnector).isNotNull();
     assertThat(gitlabConnector.getUrl()).isEqualTo(url);
     assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(gitlabConnector.getAuthenticationDetails())
         .isEqualTo(GitlabHttpAuthentication.builder()
                        .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                       .auth(GitlabUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                       .auth(GitlabUsernamePassword.builder()
+                                 .username(username)
+                                 .passwordRef(passwordSecretRef.toSecretRefStringValue())
+                                 .build())
                        .build());
   }
 
@@ -93,100 +106,32 @@ public class GitlabDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToConnectorEntity_1() {
     final String url = "url";
-    final String passwordRef = "passwordRef";
-    final String usernameRef = "usernameRef";
+    final String passwordIdentifier = "passwordRef";
+    final String usernameIdentifier = "usernameRef";
     final String appId = "appId";
     final String insId = "insId";
-    final String privateKeyRef = "privateKeyRef";
+    final String privateIdentifier = "privateKeyRef";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    SecretRefData passwordSecretRef =
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
+
+    SecretRefData usernameSecretRef =
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(privateIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(usernameSecretRef, ngAccess))
+        .thenReturn(usernameSecretRef.toSecretRefStringValue());
 
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(
-                GitlabHttpCredentialsDTO.builder()
-                    .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                    .httpCredentialsSpec(
-                        GitlabUsernamePasswordDTO.builder()
-                            .passwordRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRef).build())
-                            .usernameRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(usernameRef).build())
-                            .build())
-                    .build())
-            .build();
-
-    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                      .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
-                                                      .authentication(gitlabAuthenticationDTO)
-                                                      .build();
-    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(
-        gitlabConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountId").build());
-    assertThat(gitlabConnector).isNotNull();
-    assertThat(gitlabConnector.getUrl()).isEqualTo(url);
-    assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
-    assertThat(gitlabConnector.getAuthenticationDetails())
-        .isEqualTo(GitlabHttpAuthentication.builder()
-                       .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
-                       .auth(GitlabUsernamePassword.builder().usernameRef(usernameRef).passwordRef(passwordRef).build())
-                       .build());
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testToConnectorEntity_2() {
-    final String url = "url";
-    final String tokenRef = "tokenRef";
-    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
-            .authType(HTTP)
-            .credentials(
-                GitlabHttpCredentialsDTO.builder()
-                    .type(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN)
-                    .httpCredentialsSpec(
-                        GitlabUsernameTokenDTO.builder()
-                            .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenRef).build())
-                            .build())
-                    .build())
-            .build();
-
-    final GitlabApiAccessDTO gitlabApiAccessDTO =
-        GitlabApiAccessDTO.builder()
-            .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder()
-                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenRef).build())
-                      .build())
-            .build();
-    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
-                                                      .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
-                                                      .authentication(gitlabAuthenticationDTO)
-                                                      .apiAccess(gitlabApiAccessDTO)
-                                                      .build();
-    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(
-        gitlabConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountId").build());
-    assertThat(gitlabConnector).isNotNull();
-    assertThat(gitlabConnector.getUrl()).isEqualTo(url);
-    assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
-    assertThat(gitlabConnector.getAuthenticationDetails())
-        .isEqualTo(GitlabHttpAuthentication.builder()
-                       .type(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN)
-                       .auth(GitlabUsernameToken.builder().tokenRef(tokenRef).build())
-                       .build());
-    assertThat(gitlabConnector.getGitlabApiAccess())
-        .isEqualTo(GitlabTokenApiAccess.builder().tokenRef(tokenRef).build());
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testToConnectorEntity_3() {
-    final String url = "url";
-    final String sshKeyRef = "sshKeyRef";
-    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
-        GitlabAuthenticationDTO.builder()
-            .authType(GitAuthType.SSH)
-            .credentials(GitlabSshCredentialsDTO.builder()
-                             .sshKeyRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(sshKeyRef).build())
+            .credentials(GitlabHttpCredentialsDTO.builder()
+                             .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                             .httpCredentialsSpec(GitlabUsernamePasswordDTO.builder()
+                                                      .passwordRef(passwordSecretRef)
+                                                      .usernameRef(usernameSecretRef)
+                                                      .build())
                              .build())
             .build();
 
@@ -195,13 +140,94 @@ public class GitlabDTOToEntityTest extends CategoryTest {
                                                       .connectionType(GitConnectionType.REPO)
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .build();
-    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(
-        gitlabConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountId").build());
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO, ngAccess);
+    assertThat(gitlabConnector).isNotNull();
+    assertThat(gitlabConnector.getUrl()).isEqualTo(url);
+    assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
+    assertThat(gitlabConnector.getAuthenticationDetails())
+        .isEqualTo(GitlabHttpAuthentication.builder()
+                       .type(GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                       .auth(GitlabUsernamePassword.builder()
+                                 .usernameRef(usernameSecretRef.toSecretRefStringValue())
+                                 .passwordRef(passwordSecretRef.toSecretRefStringValue())
+                                 .build())
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testToConnectorEntity_2() {
+    final String url = "url";
+    final String tokenIdentifier = "tokenRef";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    SecretRefData tokenSecretRef = SecretRefData.builder().scope(Scope.ACCOUNT).identifier(tokenIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(tokenSecretRef, ngAccess))
+        .thenReturn(tokenSecretRef.toSecretRefStringValue());
+
+    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
+        GitlabAuthenticationDTO.builder()
+            .authType(HTTP)
+            .credentials(GitlabHttpCredentialsDTO.builder()
+                             .type(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN)
+                             .httpCredentialsSpec(GitlabUsernameTokenDTO.builder().tokenRef(tokenSecretRef).build())
+                             .build())
+            .build();
+
+    final GitlabApiAccessDTO gitlabApiAccessDTO =
+        GitlabApiAccessDTO.builder()
+            .type(GitlabApiAccessType.TOKEN)
+            .spec(GitlabTokenSpecDTO.builder().tokenRef(tokenSecretRef).build())
+            .build();
+    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
+                                                      .url(url)
+                                                      .connectionType(GitConnectionType.REPO)
+                                                      .authentication(gitlabAuthenticationDTO)
+                                                      .apiAccess(gitlabApiAccessDTO)
+                                                      .build();
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO, ngAccess);
+    assertThat(gitlabConnector).isNotNull();
+    assertThat(gitlabConnector.getUrl()).isEqualTo(url);
+    assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
+    assertThat(gitlabConnector.getAuthenticationDetails())
+        .isEqualTo(GitlabHttpAuthentication.builder()
+                       .type(GitlabHttpAuthenticationType.USERNAME_AND_TOKEN)
+                       .auth(GitlabUsernameToken.builder().tokenRef(tokenSecretRef.toSecretRefStringValue()).build())
+                       .build());
+    assertThat(gitlabConnector.getGitlabApiAccess())
+        .isEqualTo(GitlabTokenApiAccess.builder().tokenRef(tokenSecretRef.toSecretRefStringValue()).build());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testToConnectorEntity_3() {
+    final String url = "url";
+    final String sshKeyIdentifier = "sshKeyRef";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    SecretRefData sshSecretRef = SecretRefData.builder().scope(Scope.ACCOUNT).identifier(sshKeyIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(sshSecretRef, ngAccess))
+        .thenReturn(sshSecretRef.toSecretRefStringValue());
+
+    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
+        GitlabAuthenticationDTO.builder()
+            .authType(GitAuthType.SSH)
+            .credentials(GitlabSshCredentialsDTO.builder().sshKeyRef(sshSecretRef).build())
+            .build();
+
+    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
+                                                      .url(url)
+                                                      .connectionType(GitConnectionType.REPO)
+                                                      .authentication(gitlabAuthenticationDTO)
+                                                      .build();
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO, ngAccess);
     assertThat(gitlabConnector).isNotNull();
     assertThat(gitlabConnector.getUrl()).isEqualTo(url);
     assertThat(gitlabConnector.getAuthType()).isEqualTo(GitAuthType.SSH);
     assertThat(gitlabConnector.getAuthenticationDetails())
-        .isEqualTo(GitlabSshAuthentication.builder().sshKeyRef(sshKeyRef).build());
+        .isEqualTo(GitlabSshAuthentication.builder().sshKeyRef(sshSecretRef.toSecretRefStringValue()).build());
     assertThat(gitlabConnector.getGitlabApiAccess()).isNull();
   }
 
@@ -210,27 +236,27 @@ public class GitlabDTOToEntityTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToConnectorEntity_4() {
     final String url = "url";
-    final String kerberosKeyRef = "tokenRef";
+    final String kerberosKeyIdentifier = "tokenRef";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
+    SecretRefData kerberosSecretRef =
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(kerberosKeyIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(kerberosSecretRef, ngAccess))
+        .thenReturn(kerberosSecretRef.toSecretRefStringValue());
+
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
             .authType(HTTP)
-            .credentials(
-                GitlabHttpCredentialsDTO.builder()
-                    .type(GitlabHttpAuthenticationType.KERBEROS)
-                    .httpCredentialsSpec(
-                        GitlabKerberosDTO.builder()
-                            .kerberosKeyRef(
-                                SecretRefData.builder().scope(Scope.ACCOUNT).identifier(kerberosKeyRef).build())
-                            .build())
-                    .build())
+            .credentials(GitlabHttpCredentialsDTO.builder()
+                             .type(GitlabHttpAuthenticationType.KERBEROS)
+                             .httpCredentialsSpec(GitlabKerberosDTO.builder().kerberosKeyRef(kerberosSecretRef).build())
+                             .build())
             .build();
 
     final GitlabApiAccessDTO gitlabApiAccessDTO =
         GitlabApiAccessDTO.builder()
             .type(GitlabApiAccessType.TOKEN)
-            .spec(GitlabTokenSpecDTO.builder()
-                      .tokenRef(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(kerberosKeyRef).build())
-                      .build())
+            .spec(GitlabTokenSpecDTO.builder().tokenRef(kerberosSecretRef).build())
             .build();
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)
@@ -238,17 +264,17 @@ public class GitlabDTOToEntityTest extends CategoryTest {
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .apiAccess(gitlabApiAccessDTO)
                                                       .build();
-    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(
-        gitlabConnectorDTO, BaseNGAccess.builder().accountIdentifier("accountId").build());
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO, ngAccess);
     assertThat(gitlabConnector).isNotNull();
     assertThat(gitlabConnector.getUrl()).isEqualTo(url);
     assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(gitlabConnector.getAuthenticationDetails())
-        .isEqualTo(GitlabHttpAuthentication.builder()
-                       .type(GitlabHttpAuthenticationType.KERBEROS)
-                       .auth(GitlabKerberos.builder().kerberosKeyRef(kerberosKeyRef).build())
-                       .build());
+        .isEqualTo(
+            GitlabHttpAuthentication.builder()
+                .type(GitlabHttpAuthenticationType.KERBEROS)
+                .auth(GitlabKerberos.builder().kerberosKeyRef(kerberosSecretRef.toSecretRefStringValue()).build())
+                .build());
     assertThat(gitlabConnector.getGitlabApiAccess())
-        .isEqualTo(GitlabTokenApiAccess.builder().tokenRef(kerberosKeyRef).build());
+        .isEqualTo(GitlabTokenApiAccess.builder().tokenRef(kerberosSecretRef.toSecretRefStringValue()).build());
   }
 }

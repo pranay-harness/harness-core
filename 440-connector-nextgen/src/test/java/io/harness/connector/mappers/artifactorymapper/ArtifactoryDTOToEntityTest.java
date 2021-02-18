@@ -1,6 +1,8 @@
 package io.harness.connector.mappers.artifactorymapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -13,6 +15,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsern
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -20,10 +23,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class ArtifactoryDTOToEntityTest extends CategoryTest {
   @InjectMocks ArtifactoryDTOToEntity artifactoryDTOToEntity;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
@@ -39,7 +44,8 @@ public class ArtifactoryDTOToEntityTest extends CategoryTest {
     String passwordRefIdentifier = "passwordRefIdentifier";
     SecretRefData passwordSecretRef =
         SecretRefData.builder().identifier(passwordRefIdentifier).scope(Scope.ACCOUNT).build();
-
+    when(secretRefService.validateAndGetSecretConfigString(any(), any()))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
     ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
         ArtifactoryUsernamePasswordAuthDTO.builder().username(userName).passwordRef(passwordSecretRef).build();
 

@@ -3,6 +3,8 @@ package io.harness.connector.mappers.awsmapper;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -14,20 +16,25 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.ng.impl.SecretRefServiceImpl;
+import io.harness.ng.service.SecretRefService;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class AwsEntityToDTOTest extends CategoryTest {
   @InjectMocks AwsEntityToDTO awsEntityToDTO;
+  @Mock SecretRefService secretRefService;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    when(secretRefService.createSecretRef(any())).thenCallRealMethod();
   }
 
   @Test

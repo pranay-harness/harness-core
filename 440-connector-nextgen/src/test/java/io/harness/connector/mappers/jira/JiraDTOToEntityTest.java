@@ -1,7 +1,6 @@
 package io.harness.connector.mappers.jira;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
@@ -29,9 +28,6 @@ public class JiraDTOToEntityTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    when(secretRefService.validateAndGetSecretConfigString(
-             any(), BaseNGAccess.builder().accountIdentifier("accountIdentifier").build()))
-        .thenCallRealMethod();
   }
 
   @Test
@@ -41,8 +37,12 @@ public class JiraDTOToEntityTest extends CategoryTest {
     String jiraUrl = "url";
     String userName = "userName";
     String passwordRefIdentifier = "passwordRefIdentifier";
+
+    final BaseNGAccess ngAccess = BaseNGAccess.builder().accountIdentifier("accountIdentifier").build();
     SecretRefData passwordSecretRef =
-        SecretRefData.builder().identifier(passwordRefIdentifier).scope(Scope.ACCOUNT).build();
+        SecretRefData.builder().scope(Scope.ACCOUNT).identifier(passwordRefIdentifier).build();
+    when(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess))
+        .thenReturn(passwordSecretRef.toSecretRefStringValue());
 
     JiraConnectorDTO dto =
         JiraConnectorDTO.builder().jiraUrl(jiraUrl).passwordRef(passwordSecretRef).username(userName).build();
@@ -52,7 +52,6 @@ public class JiraDTOToEntityTest extends CategoryTest {
     assertThat(jiraConnector.getJiraUrl()).isEqualTo(jiraUrl);
     assertThat(jiraConnector.getUsername()).isEqualTo(userName);
     assertThat(jiraConnector.getPasswordRef())
-        .isEqualTo(secretRefService.validateAndGetSecretConfigString(
-            passwordSecretRef, BaseNGAccess.builder().accountIdentifier("accountIdentifier").build()));
+        .isEqualTo(secretRefService.validateAndGetSecretConfigString(passwordSecretRef, ngAccess));
   }
 }
