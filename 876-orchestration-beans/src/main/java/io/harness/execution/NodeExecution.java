@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -93,6 +94,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   List<StepOutcomeRef> outcomeRefs;
 
   Map<String, List<ProgressData>> progressDataMap;
+
+  @Singular List<UnitProgress> unitProgresses;
 
   AdviserResponse adviserResponse;
 
