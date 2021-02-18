@@ -15,11 +15,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -60,6 +62,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   private static final String INVALID_IP_ADDRESS = "invalidIp";
 
   @Mock private AccountService accountService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private Account account;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private MainConfiguration mainConfig;
@@ -412,6 +415,32 @@ public class WhitelistServiceTest extends WingsBaseTest {
     assertThat(whitelistAfterDelete).isNull();
     whitelist.setStatus(WhitelistStatus.ACTIVE);
     verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(accountId, whitelist);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testCheckIfFeatureIsEnabledAndWhitelisting() {
+    createWhitelists();
+    when(featureFlagService.isEnabled(FeatureName.WHITELIST_PUBLIC_API, accountId)).thenReturn(true);
+    boolean valid = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(
+        accountId, IP_ADDRESS_1, FeatureName.WHITELIST_PUBLIC_API);
+    assertThat(valid).isTrue();
+
+    valid = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(
+        accountId, IP_ADDRESS_2, FeatureName.WHITELIST_PUBLIC_API);
+    assertThat(valid).isTrue();
+
+    valid = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(
+        accountId, IP_ADDRESS_7, FeatureName.WHITELIST_PUBLIC_API);
+    assertThat(valid).isFalse();
+
+    valid =
+        whitelistService.checkIfFeatureIsEnabledAndWhitelisting(accountId, IP_ADDRESS_7, FeatureName.WHITELIST_GRAPHQL);
+    assertThat(valid).isTrue();
+
+    valid = whitelistService.isValidIPAddress(accountId, INVALID_IP_ADDRESS);
+    assertThat(valid).isFalse();
   }
 
   private void compare(Whitelist lhs, Whitelist rhs) {

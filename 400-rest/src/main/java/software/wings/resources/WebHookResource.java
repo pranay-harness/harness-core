@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import io.harness.security.annotations.PublicApi;
+import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.WebHookRequest;
 import software.wings.service.intfc.WebHookService;
@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 @Api("webhooks")
 @Path("/webhooks")
 @Produces("application/json")
-@PublicApi
+@PublicApiWithWhitelist
 public class WebHookResource {
   @Inject private WebHookService webHookService;
 
