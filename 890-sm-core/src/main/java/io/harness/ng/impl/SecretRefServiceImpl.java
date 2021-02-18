@@ -15,10 +15,14 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Singleton
+@NoArgsConstructor
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretRefServiceImpl implements SecretRefService {
-  @Inject SecretCrudService secretCrudService;
+  SecretCrudService secretCrudService;
 
   @Override
   public SecretRefData createSecretRef(String secretConfigString) {
@@ -56,7 +60,7 @@ public class SecretRefServiceImpl implements SecretRefService {
   private void validateTheSecretIsPresent(SecretRefData secretRefData, NGAccess ngAccess) {
     Optional<SecretResponseWrapper> secretResponseWrapper = secretCrudService.get(ngAccess.getAccountIdentifier(),
         ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier(), secretRefData.getIdentifier());
-    if (!secretResponseWrapper.isPresent()) {
+    if (secretResponseWrapper == null || !secretResponseWrapper.isPresent()) {
       String projectScopeString =
           isNotBlank(ngAccess.getProjectIdentifier()) ? " in project " + ngAccess.getProjectIdentifier() : "";
       String orgScopeString =

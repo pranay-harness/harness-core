@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
 
@@ -29,6 +30,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -38,10 +41,10 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,7 +72,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
-  String cacertIdentifier = "cacertIdentifier";
   String masterUrl = "https://abc.com";
   String identifier = "identifier";
   String name = "name";
@@ -78,7 +80,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   String passwordIdentifier = "passwordIdentifier";
   @Rule public ExpectedException expectedEx = ExpectedException.none();
   SecretRefData passwordSecretRef;
-  SecretRefData secretRefDataCACert;
   String updatedName = "updatedName";
   String updatedUserName = "updatedUserName";
   String updatedMasterUrl = "updatedMasterUrl";
@@ -87,21 +88,16 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    secretRefDataCACert = SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     passwordSecretRef = SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
   }
 
   private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier, String name) {
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                KubernetesUserNamePasswordDTO.builder().username(userName).passwordRef(passwordSecretRef).build())
-            .build();
     KubernetesCredentialDTO connectorDTOWithDelegateCreds =
         KubernetesCredentialDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+            .config(KubernetesDelegateDetailsDTO.builder()
+                        .delegateSelectors(Collections.singleton("delegateSelector"))
+                        .build())
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
         KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
@@ -146,21 +142,15 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   }
 
   private ConnectorDTO getUpdatedConnector(String identifier) {
-    SecretRefData passwordRefData =
-        SecretRefData.builder().identifier(updatedPasswordIdentifier).scope(Scope.ACCOUNT).build();
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                KubernetesUserNamePasswordDTO.builder().username(updatedUserName).passwordRef(passwordRefData).build())
-            .build();
-    KubernetesCredentialDTO connectorDTOWithUserNamePwdCreds =
+    KubernetesCredentialDTO connectorDTOWithDelegateCreds =
         KubernetesCredentialDTO.builder()
-            .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder().masterUrl(updatedMasterUrl).auth(kubernetesAuthDTO).build())
+            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+            .config(KubernetesDelegateDetailsDTO.builder()
+                        .delegateSelectors(Collections.singleton("delegateSelectorUpdated"))
+                        .build())
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
-        KubernetesClusterConfigDTO.builder().credential(connectorDTOWithUserNamePwdCreds).build();
+        KubernetesClusterConfigDTO.builder().credential(connectorDTOWithDelegateCreds).build();
     return ConnectorDTO.builder()
         .connectorInfo(ConnectorInfoDTO.builder()
                            .name(updatedName)
@@ -175,8 +165,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testUpdate() {
-    SecretRefData passwordRefData =
-        SecretRefData.builder().identifier(updatedPasswordIdentifier).scope(Scope.ACCOUNT).build();
     createConnector(identifier, name);
     ConnectorResponseDTO connectorResponse =
         connectorService.update(getUpdatedConnector(identifier), accountIdentifier);
@@ -188,17 +176,11 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorInfo.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
     assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
-    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO =
-        (KubernetesClusterDetailsDTO) kubernetesCluster.getCredential().getConfig();
+    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
+    KubernetesDelegateDetailsDTO credentialDTO =
+        (KubernetesDelegateDetailsDTO) kubernetesCluster.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
-    assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    assertThat(credentialDTO.getMasterUrl()).isEqualTo(updatedMasterUrl);
-    assertThat(credentialDTO.getAuth()).isNotNull();
-    KubernetesUserNamePasswordDTO userNamePasswordDTO =
-        (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(userNamePasswordDTO.getUsername()).isEqualTo(updatedUserName);
-    assertThat(userNamePasswordDTO.getPasswordRef()).isEqualTo(passwordRefData);
+    assertThat(credentialDTO.getDelegateSelectors()).isEqualTo(Collections.singleton("delegateSelectorUpdated"));
   }
 
   @Test
@@ -252,15 +234,11 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     KubernetesClusterConfigDTO kubernetesCluster = (KubernetesClusterConfigDTO) connectorInfo.getConnectorConfig();
     assertThat(kubernetesCluster).isNotNull();
     assertThat(kubernetesCluster.getCredential().getConfig()).isNotNull();
-    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
-    KubernetesClusterDetailsDTO credentialDTO =
-        (KubernetesClusterDetailsDTO) kubernetesCluster.getCredential().getConfig();
+    assertThat(kubernetesCluster.getCredential().getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
+    KubernetesDelegateDetailsDTO credentialDTO =
+        (KubernetesDelegateDetailsDTO) kubernetesCluster.getCredential().getConfig();
     assertThat(credentialDTO).isNotNull();
-    assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
-        (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
-    assertThat(kubernetesUserNamePasswordDTO.getPasswordRef()).isEqualTo(passwordSecretRef);
+    assertThat(credentialDTO.getDelegateSelectors()).isEqualTo(Collections.singleton("delegateSelector"));
   }
 
   @Test
@@ -297,7 +275,6 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     String masterUrl = "https://abc.com";
     String identifier = "identifier";
     String name = "name";
-    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(cacert).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
