@@ -82,6 +82,11 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
+  public boolean removePermissionFromRoles(String permissionIdentifier) {
+    return roleDao.removePermissionFromRoles(permissionIdentifier);
+  }
+
+  @Override
   public Optional<Role> delete(String identifier, String scopeIdentifier, boolean removeManagedRole) {
     Optional<Role> currentRoleOptional = get(identifier, scopeIdentifier);
     if (!currentRoleOptional.isPresent()) {

@@ -159,7 +159,7 @@ fn populate_module_dependencies(name: &str, modules: &HashSet<String>) -> HashSe
         name.replace("/", "").replace(":", "!")
     );
 
-    let depedencies = fs::read_to_string(filename).expect("");
+    let depedencies = fs::read_to_string(filename).expect(&format!("{} is missing.", filename));
 
     depedencies
         .lines()

@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 public interface DeleteResourcesBaseSpec {
   DeleteResourcesType getType();
-  @JsonInclude(JsonInclude.Include.NON_NULL) String getResources();
+  @JsonInclude(JsonInclude.Include.NON_EMPTY) String getResourceNames();
+  @JsonInclude(JsonInclude.Include.NON_EMPTY) String getManifestPaths();
   @JsonInclude(JsonInclude.Include.NON_NULL) Boolean getDeleteNamespace();
   @JsonInclude(JsonInclude.Include.NON_NULL) Boolean getAllManifestPaths();
 }

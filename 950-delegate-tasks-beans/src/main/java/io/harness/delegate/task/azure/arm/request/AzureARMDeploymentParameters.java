@@ -20,12 +20,13 @@ public class AzureARMDeploymentParameters extends AzureARMTaskParameters {
   private String deploymentDataLocation;
   private String templateJson;
   private String parametersJson;
+  private boolean rollback;
 
   @Builder
   public AzureARMDeploymentParameters(String appId, String accountId, String activityId, ARMScopeType deploymentScope,
       AzureDeploymentMode deploymentMode, String deploymentName, String managementGroupId, String subscriptionId,
       String resourceGroupName, String deploymentDataLocation, String templateJson, String parametersJson,
-      String commandName, Integer timeoutIntervalInMin) {
+      String commandName, Integer timeoutIntervalInMin, boolean rollback) {
     super(appId, accountId, activityId, subscriptionId, commandName, timeoutIntervalInMin,
         AzureARMTaskType.ARM_DEPLOYMENT);
     this.deploymentScope = deploymentScope;
@@ -37,5 +38,6 @@ public class AzureARMDeploymentParameters extends AzureARMTaskParameters {
     this.deploymentDataLocation = deploymentDataLocation;
     this.templateJson = templateJson;
     this.parametersJson = parametersJson;
+    this.rollback = rollback;
   }
 }

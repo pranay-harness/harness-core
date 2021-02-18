@@ -57,7 +57,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       boolean anomalousMetricsOnly, String hostName, int pageNumber) {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
-
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
 
@@ -211,7 +210,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   public List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+        verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
     List<DeploymentTimeSeriesAnalysis> timeSeriesAnalyses = new ArrayList<>();
     verificationTaskIds.forEach(taskId -> {
       DeploymentTimeSeriesAnalysis analysis = hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)

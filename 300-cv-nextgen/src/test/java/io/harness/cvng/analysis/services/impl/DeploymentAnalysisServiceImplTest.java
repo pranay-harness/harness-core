@@ -1,6 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
@@ -184,6 +185,31 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetCanaryDeploymentAdditionalInfo_withVerificationJobInstanceInQueuedState() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    VerificationJob verificationJob =
+        verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    verificationJobInstance.setResolvedJob(verificationJob);
+    hPersistence.save(verificationJobInstance);
+
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
+
+    assertThat(canaryBlueGreenAdditionalInfo).isNotNull();
+    assertThat(canaryBlueGreenAdditionalInfo.getType()).isEqualTo(VerificationJobType.CANARY);
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimaryInstancesLabel()).isEqualTo("before");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanaryInstancesLabel()).isEqualTo("after");
+    assertThat(canaryBlueGreenAdditionalInfo.getCanary()).isEmpty();
+    assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEmpty();
   }
 
   @Test

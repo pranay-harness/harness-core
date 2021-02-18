@@ -73,7 +73,6 @@ import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
-import java.util.LinkedHashSet;
 
 /**
  * Class will register all kryo classes
@@ -111,7 +110,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PodSetupInfo.PodSetupParams.class, 100027);
     kryo.register(ContainerDefinitionInfo.class, 100028);
     kryo.register(ContainerImageDetails.class, 100029);
-    kryo.register(LinkedHashSet.class, 100030);
     kryo.register(DockerFileArtifact.class, 100031);
     kryo.register(DockerhubConnector.class, 100032);
     kryo.register(EcrConnector.class, 100033);

@@ -17,12 +17,12 @@ import org.apache.commons.io.FileUtils;
 public class StackDriverUtils {
   public static StackDriverMetricCVConfiguration createStackDriverConfig(String accountId) throws Exception {
     String paramsForStackDriver = null;
-    if (System.getProperty("user.dir").contains("bin")) {
-      paramsForStackDriver =
-          Resources.toString(StackDriverUtils.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
-    } else {
+    if (!System.getProperty("user.dir").contains("bin")) {
       paramsForStackDriver = FileUtils.readFileToString(
           new File("../400-rest/src/test/resources/apm/stackdriverpayload.json"), Charsets.UTF_8);
+    } else {
+      paramsForStackDriver = FileUtils.readFileToString(
+          new File("400-rest/src/test/resources/apm/stackdriverpayload.json"), Charsets.UTF_8);
     }
     StackDriverMetricDefinition definition = StackDriverMetricDefinition.builder()
                                                  .filterJson(paramsForStackDriver)

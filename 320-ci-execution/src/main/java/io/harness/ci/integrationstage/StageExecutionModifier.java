@@ -1,5 +1,6 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -18,5 +19,5 @@ public interface StageExecutionModifier {
    * @return modified execution
    */
   ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution, StageElementConfig stageType,
-      PlanCreationContext context, String podName, CodeBase ciCodeBase);
+      PlanCreationContext context, String podName, CodeBase ciCodeBase, Infrastructure infrastructure);
 }

@@ -1,16 +1,19 @@
 package io.harness.accesscontrol;
 
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
+import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
+
 import io.harness.DecisionModule;
-import io.harness.accesscontrol.management.ManagementModule;
-import io.harness.accesscontrol.permissions.PermissionsModule;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
-import io.harness.accesscontrol.roles.RoleModule;
-import io.harness.accesscontrol.scopes.ScopeModule;
+import io.harness.accesscontrol.scopes.core.ScopeLevel;
+import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.mongo.MongoConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -46,12 +49,15 @@ public class AccessControlModule extends AbstractModule {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
     install(new ValidationModule(validatorFactory));
-    install(ScopeModule.getInstance());
-    install(PermissionsModule.getInstance());
-    install(RoleModule.getInstance());
-    install(RoleAssignmentModule.getInstance());
-    install(ManagementModule.getInstance());
+    install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(accessControlConfiguration.getDecisionModuleConfiguration()));
+
+    MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
+    scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
+    scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
+    scopesByKey.addBinding(PROJECT.toString()).toInstance(PROJECT);
+
+    bind(ScopeParamsFactory.class).to(HarnessScopeParamsFactory.class);
     registerRequiredBindings();
   }
 

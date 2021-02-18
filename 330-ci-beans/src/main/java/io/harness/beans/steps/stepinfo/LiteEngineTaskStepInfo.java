@@ -4,6 +4,7 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.steps.StepType;
@@ -52,13 +53,14 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull ExecutionElementConfig executionElementConfig;
   CodeBase ciCodebase;
   @NotNull boolean skipGitClone;
+  @NotNull Infrastructure infrastructure;
 
   @Builder
   @ConstructorProperties({"accountId", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
-      "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone"})
+      "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure"})
   public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
-      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
+      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
@@ -70,6 +72,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
     this.steps = steps;
     this.ciCodebase = ciCodebase;
     this.skipGitClone = skipGitClone;
+    this.infrastructure = infrastructure;
   }
 
   @Override
