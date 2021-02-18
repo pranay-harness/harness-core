@@ -96,7 +96,8 @@
       "type": "object",
       "properties": {
         "instances": {
-          "type": "string"
+          "type": "integer",
+          "format": "int32"
         },
         "type": {
           "type": "string",
