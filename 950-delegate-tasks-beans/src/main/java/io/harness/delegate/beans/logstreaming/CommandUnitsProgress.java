@@ -10,5 +10,4 @@ import lombok.Value;
 @Builder
 public class CommandUnitsProgress implements DelegateProgressData {
   @Builder.Default LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap = new LinkedHashMap<>();
-
 }

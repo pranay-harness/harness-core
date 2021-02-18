@@ -27,7 +27,6 @@ public enum CommandExecutionStatus {
    * */
   SKIPPED(UnitStatus.SKIPPED);
 
-
   private UnitStatus unitStatus;
 
   CommandExecutionStatus(UnitStatus unitStatus) {

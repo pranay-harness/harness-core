@@ -237,8 +237,8 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .when(k8sCanaryBaseHandler)
         .getAllPods(k8sCanaryHandlerConfig, releaseName, timeoutIntervalInMillis);
 
-    K8sDeployResponse k8sDeployResponse = spyRequestHandler.executeTask(
-        canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    K8sDeployResponse k8sDeployResponse =
+        spyRequestHandler.executeTask(canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(1)).wrapUp(any(Kubectl.class), eq(delegateTaskParams), eq(logCallback));
     verify(k8sTaskHelperBase, times(1))
         .saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistory.getAsYaml());
@@ -254,8 +254,8 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), eq(k8sCanaryHandlerConfig.getCanaryWorkload().getResourceId()),
             eq(delegateTaskParams), eq(logCallback));
-    K8sDeployResponse failureResponse = spyRequestHandler.executeTask(
-        canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    K8sDeployResponse failureResponse =
+        spyRequestHandler.executeTask(canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(1)).failAndSaveKubernetesRelease(k8sCanaryHandlerConfig, releaseName);
     assertThat(failureResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
 
@@ -263,8 +263,8 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     doReturn(false)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), eq(emptyList()), eq(delegateTaskParams), eq(logCallback), eq(false));
-    failureResponse = spyRequestHandler.executeTask(
-        canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    failureResponse =
+        spyRequestHandler.executeTask(canaryDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(2)).failAndSaveKubernetesRelease(k8sCanaryHandlerConfig, releaseName);
     assertThat(failureResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
   }
@@ -422,8 +422,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     handlerConfig.setCurrentRelease(releaseHist.getLatestRelease());
     handlerConfig.setTargetInstances(3);
 
-    spyCanaryRequestHandler.executeTask(
-        successDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    spyCanaryRequestHandler.executeTask(successDeployRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sTaskHelperBase, times(1))
         .saveReleaseHistoryInConfigMap(kubernetesConfig, "success", releaseHist.getAsYaml());
 
@@ -431,16 +430,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .doStatusCheck(any(Kubectl.class), eq(deployment.getResourceId()), eq(delegateTaskParams), eq(logCallback));
     K8sCanaryDeployRequest statusCheckFailRequest = deployRequestBase.releaseName("failStatusCheck").build();
-    spyCanaryRequestHandler.executeTask(
-        statusCheckFailRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    spyCanaryRequestHandler.executeTask(statusCheckFailRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(1)).failAndSaveKubernetesRelease(handlerConfig, "failStatusCheck");
 
     doReturn(false)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), eq(emptyList()), eq(delegateTaskParams), eq(logCallback), eq(false));
     K8sCanaryDeployRequest applyManifestFailRequest = deployRequestBase.releaseName("failApplyManifest").build();
-    spyCanaryRequestHandler.executeTask(
-        applyManifestFailRequest, delegateTaskParams, iLogStreamingTaskClient, null);
+    spyCanaryRequestHandler.executeTask(applyManifestFailRequest, delegateTaskParams, iLogStreamingTaskClient, null);
     verify(k8sCanaryBaseHandler, times(1)).failAndSaveKubernetesRelease(handlerConfig, "failApplyManifest");
   }
 }
