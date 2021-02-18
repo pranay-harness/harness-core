@@ -96,10 +96,10 @@ public class ConfigTest {
   @Category(UnitTests.class)
   public void testLogConsole() throws IOException {
     ConfigUtils.replace(true, "logConsole: true");
-    assertThat(Config.getInst().logConsole()).isEqualTo(true);
+    assertThat(Config.getInst().logConsole()).isTrue();
 
     ConfigUtils.replace(true, "logConsole: false");
-    assertThat(Config.getInst().logConsole()).isEqualTo(false);
+    assertThat(Config.getInst().logConsole()).isFalse();
   }
 
   @Test
