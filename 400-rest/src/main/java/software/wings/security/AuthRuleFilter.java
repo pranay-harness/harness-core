@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -24,6 +25,7 @@ import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
+import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -102,6 +104,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
+  private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
@@ -216,12 +219,23 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       accountId = appService.get(appIdsFromRequest.get(0)).getAccountId();
     }
 
+    User user = UserThreadLocal.get();
+
+    if (isPublicApiWithWhitelist()) {
+      checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
+      return;
+    }
+
     String uriPath = requestContext.getUriInfo().getPath();
 
-    if (isInternalGraphQLRequest(uriPath)) {
-      graphQLUtils.validateGraphQLCall(accountId, true);
-    } else if (isExternalGraphQLRequest(uriPath)) {
-      graphQLUtils.validateGraphQLCall(accountId, false);
+    boolean graphQLRequest = isGraphQLRequest(uriPath);
+    if (graphQLRequest) {
+      checkForWhitelisting(accountId, FeatureName.WHITELIST_GRAPHQL, requestContext, user);
+      if (isInternalGraphQLRequest(uriPath)) {
+        graphQLUtils.validateGraphQLCall(accountId, true);
+      } else if (isExternalGraphQLRequest(uriPath)) {
+        graphQLUtils.validateGraphQLCall(accountId, false);
+      }
     }
 
     boolean isHarnessUserExemptedRequest = isHarnessUserExemptedRequest(uriPath);
@@ -231,7 +245,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    User user = UserThreadLocal.get();
     if (user == null) {
       if (isExternalApi) {
         return;
@@ -262,17 +275,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       harnessSupportUser = true;
     }
 
-    if (servletRequest != null) {
-      String forwardedFor = servletRequest.getHeader("X-Forwarded-For");
-      String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
-      if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
-        String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
-        log.warn(msg);
-        if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled")) {
-          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
-        }
-        throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
-      }
+    // For graphql requests, whitelisting check is already done earlier
+    if (servletRequest != null && !graphQLRequest) {
+      checkForWhitelisting(accountId, null, requestContext, user);
     }
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
@@ -314,6 +319,33 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           }
         }
       }
+    }
+  }
+
+  private boolean isPublicApiWithWhitelist() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
+        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
+  }
+
+  private void checkForWhitelisting(
+      String accountId, FeatureName featureName, ContainerRequestContext requestContext, User user) {
+    String forwardedFor = servletRequest.getHeader(X_FORWARDED_FOR);
+    String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
+    boolean isWhitelisted;
+    if (featureName == null) {
+      isWhitelisted = whitelistService.isValidIPAddress(accountId, remoteHost);
+    } else {
+      isWhitelisted = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(accountId, remoteHost, featureName);
+    }
+    if (!isWhitelisted) {
+      String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
+      log.warn(msg);
+      if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
+      }
+      throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
     }
   }
 
