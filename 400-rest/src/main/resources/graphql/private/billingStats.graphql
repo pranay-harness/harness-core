@@ -92,19 +92,6 @@ extend type Query {
   ): PodCountTimeSeriesData @dataFetcher(name: ceActivePodCount)
 }
 
-input CCMAggregationFunction {
-  operationType: CCMAggregateOperation
-  columnName: String
-}
-
-enum CCMAggregateOperation {
-  SUM
-  MAX
-  MIN
-  AVG
-  COUNT
-}
-
 input CCMGroupBy {
   entityGroupBy: CCMEntityGroupBy
   timeTruncGroupby: CETimeTruncGroupby
@@ -134,10 +121,6 @@ enum CCMEntityGroupBy {
   Node
   Pod
   PV
-}
-
-input CETimeTruncGroupby {
-  resolution: TimeGroupType
 }
 
 input CCMTimeSeriesAggregation {
@@ -288,12 +271,6 @@ type Tags {
   values: [String]
 }
 
-type EntityData {
-  name: String
-  id: String
-  type: String
-}
-
 type BillingFilterData {
   data: [BillingFilterDataPoint]
   isHourlyDataPresent: Boolean
@@ -349,11 +326,6 @@ type GcpBillingTimeSeriesStats {
   stats: [TimeSeriesDataPoints]
 }
 
-type TimeSeriesDataPoints {
-  values: [DataPoint]
-  time: DateTime
-}
-
 type BillingStackedTimeSeriesDataPoint {
   values: [BillingDataPoint]
   time: DateTime
@@ -361,14 +333,6 @@ type BillingStackedTimeSeriesDataPoint {
 
 type BillingDataPoint {
   key: Reference # Key refers to the label
-  value: Number
-}
-
-type BillingStatsInfo {
-  statsLabel: String
-  statsDescription: String
-  statsValue: String
-  statsTrend: String
   value: Number
 }
 

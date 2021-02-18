@@ -1,0 +1,35 @@
+type TimeSeriesDataPoints {
+  values: [DataPoint]
+  time: DateTime
+}
+
+input CCMAggregationFunction {
+  operationType: CCMAggregateOperation
+  columnName: String
+}
+
+enum CCMAggregateOperation {
+  SUM
+  MAX
+  MIN
+  AVG
+  COUNT
+}
+
+type BillingStatsInfo {
+  statsLabel: String
+  statsDescription: String
+  statsValue: String
+  statsTrend: String
+  value: Number
+}
+
+type EntityData {
+  name: String
+  id: String
+  type: String
+}
+
+input CETimeTruncGroupby {
+  resolution: TimeGroupType
+}
