@@ -9,6 +9,8 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -51,7 +53,7 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector {
   }
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
-    return gitAuth;
+  public List<DecryptableEntity> getDecryptableEntities() {
+    return Collections.singletonList(gitAuth);
   }
 }
