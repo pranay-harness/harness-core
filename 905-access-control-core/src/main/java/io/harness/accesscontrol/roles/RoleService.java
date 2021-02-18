@@ -17,5 +17,7 @@ public interface RoleService {
 
   Role update(@Valid Role role);
 
+  boolean removePermissionFromRoles(@NotEmpty String permissionIdentifier);
+
   Optional<Role> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier, boolean removeManagedRole);
 }

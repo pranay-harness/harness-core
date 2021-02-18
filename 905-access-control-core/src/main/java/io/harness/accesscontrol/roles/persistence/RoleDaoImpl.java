@@ -4,7 +4,7 @@ import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.toDBO;
 
 import io.harness.accesscontrol.roles.Role;
-import io.harness.accesscontrol.roles.persistence.RoleDBO.RoleKeys;
+import io.harness.accesscontrol.roles.persistence.RoleDBO.RoleDBOKeys;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -13,11 +13,13 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 public class RoleDaoImpl implements RoleDao {
   private final RoleRepository roleRepository;
@@ -42,8 +44,8 @@ public class RoleDaoImpl implements RoleDao {
   public PageResponse<Role> getAll(PageRequest pageRequest, String scopeIdentifier, boolean includeManaged) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = new Criteria();
-    criteria.orOperator(Criteria.where(RoleKeys.scopeIdentifier).is(scopeIdentifier),
-        Criteria.where(RoleKeys.managed).is(includeManaged));
+    criteria.orOperator(Criteria.where(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier),
+        Criteria.where(RoleDBOKeys.managed).is(includeManaged));
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
     return PageUtils.getNGPageResponse(rolePages.map(RoleDBOMapper::fromDBO));
   }
@@ -73,5 +75,14 @@ public class RoleDaoImpl implements RoleDao {
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
+  }
+
+  @Override
+  public boolean removePermissionFromRoles(String permissionIdentifier) {
+    Criteria criteria = new Criteria();
+    criteria.and(RoleDBOKeys.permissions).is(permissionIdentifier);
+    Update update = new Update().pull(RoleDBOKeys.permissions, permissionIdentifier);
+    UpdateResult updateResult = roleRepository.updateMulti(criteria, update);
+    return updateResult.getMatchedCount() == updateResult.getModifiedCount();
   }
 }
