@@ -4,7 +4,6 @@ import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
-import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
@@ -22,7 +21,6 @@ public class GitCapabilityHelper {
       boolean mergeCapabilities) {
     if (mergeCapabilities) {
       List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-      executionCapabilities.add(GitInstallationCapability.builder().build());
       executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(gitConfig.getUrl()).build());
       return executionCapabilities;
     }
