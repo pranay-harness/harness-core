@@ -20,6 +20,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -60,7 +61,7 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
   }
 
   private GcpValidationRequest buildGcpValidationRequest() {
-    return GcpValidationRequest.builder().delegateSelector("foo").build();
+    return GcpValidationRequest.builder().delegateSelectors(Collections.singleton("foo")).build();
   }
 
   @Test

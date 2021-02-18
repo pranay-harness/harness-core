@@ -97,6 +97,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
+import java.util.LinkedHashSet;
 
 public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
   @Override
@@ -195,5 +196,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CEAzureConnectorDTO.class, 19540);
     kryo.register(CEAzureFeatures.class, 19541);
     kryo.register(BillingExportSpecDTO.class, 19542);
+    kryo.register(LinkedHashSet.class, 100030);
   }
 }

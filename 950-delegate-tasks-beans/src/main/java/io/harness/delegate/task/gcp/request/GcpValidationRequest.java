@@ -5,14 +5,15 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 public class GcpValidationRequest extends GcpRequest implements TaskParameters {
   @Builder
-  public GcpValidationRequest(String delegateSelector, List<EncryptedDataDetail> encryptedDataDetailList,
+  public GcpValidationRequest(Set<String> delegateSelectors, List<EncryptedDataDetail> encryptedDataDetailList,
       GcpManualDetailsDTO gcpManualDetailsDTO) {
-    super(delegateSelector, RequestType.VALIDATE, encryptedDataDetailList, gcpManualDetailsDTO);
+    super(delegateSelectors, RequestType.VALIDATE, encryptedDataDetailList, gcpManualDetailsDTO);
   }
 }

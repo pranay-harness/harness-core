@@ -161,7 +161,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   public List<DeploymentLogAnalysis> getLatestDeploymentLogAnalysis(
       String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+        verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
     List<DeploymentLogAnalysis> deploymentLogAnalyses = new ArrayList<>();
     for (String taskId : verificationTaskIds) {
       DeploymentLogAnalysis logAnalysis = hPersistence.createQuery(DeploymentLogAnalysis.class)

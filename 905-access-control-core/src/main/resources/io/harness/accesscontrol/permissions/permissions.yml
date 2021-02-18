@@ -37,12 +37,6 @@ permissions:
     allowedScopeLevels:
       - account
       - organization
-  - identifier: core.organization.view
-    name: View Organization
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-      - organization
   - identifier: core.organization.edit
     name: Edit Organization
     status: ACTIVE

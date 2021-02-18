@@ -432,13 +432,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         getPostDeploymentVerificationJobInstances(verificationJobInstances);
     Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
         getPreAndProductionDeploymentGroup(verificationJobInstances);
-    addDeploymentVerificationJobInstanceSummaries(accountId,
-        preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
         deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(accountId,
-        preAndProductionDeploymentGroup.get(EnvironmentType.Production),
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
         deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(accountId, postDeploymentVerificationJobInstances,
+    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
         deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
   }
 
@@ -510,7 +508,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private Map<EnvironmentType, List<VerificationJobInstance>> getPreAndProductionDeploymentGroup(
       List<VerificationJobInstance> verificationJobInstances) {
-    // TODO: use cache to avoid duplicate calls and refactor the getEnv API
     return verificationJobInstances.stream()
         .filter(
             verificationJobInstance -> verificationJobInstance.getResolvedJob().getType() != VerificationJobType.HEALTH)
@@ -521,8 +518,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         }));
   }
 
-  private void addDeploymentVerificationJobInstanceSummaries(String accountId,
-      List<VerificationJobInstance> verificationJobInstances,
+  private void addDeploymentVerificationJobInstanceSummaries(List<VerificationJobInstance> verificationJobInstances,
       List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
     if (!isEmpty(verificationJobInstances)) {
       verificationJobInstances.forEach(verificationJobInstance -> {
@@ -533,6 +529,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   //  TODO find the right place for this switch case
+  @Nullable
   private AdditionalInfo getAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getResolvedJob().getType()) {
       case CANARY:
@@ -573,7 +570,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private Optional<Risk> getLatestRisk(VerificationJobInstance verificationJobInstance) {
-    if (verificationJobInstance.getExecutionStatus() == ExecutionStatus.QUEUED) {
+    if (ExecutionStatus.noAnalysisStatuses().contains(verificationJobInstance.getExecutionStatus())) {
       return Optional.empty();
     }
     if (verificationJobInstance != null
