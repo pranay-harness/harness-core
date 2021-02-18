@@ -50,4 +50,5 @@ public interface VerificationJobInstanceService {
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
   void resetVerificationJobPerpetualTasks(CVConfig cvConfig);
   void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
+  CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
 }
