@@ -7,6 +7,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -33,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class EnvLoopStateTest extends WingsBaseTest {
+  private static final String DISABLE_ASSERTION = "${expr}";
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService workflowService;
   @Mock private StateExecutionInstanceHelper stateExecutionInstanceHelper;
@@ -47,10 +49,11 @@ public class EnvLoopStateTest extends WingsBaseTest {
     envLoopState.setPipelineStageParallelIndex(0);
     envLoopState.setStageName("STAGE_1");
     envLoopState.setWorkflowId("WORKFLOW_ID");
+    envLoopState.setDisableAssertion(DISABLE_ASSERTION);
     Map<String, String> workflowVariables = new HashMap<>();
     workflowVariables.put("infra1", "infraVal1,infralVal2");
     envLoopState.setWorkflowVariables(workflowVariables);
-
+    when(context.renderExpression(DISABLE_ASSERTION)).thenReturn("expr");
     when(context.getAppId()).thenReturn(APP_ID);
   }
 
@@ -65,6 +68,7 @@ public class EnvLoopStateTest extends WingsBaseTest {
     stencilMap.put(StateType.ENV_STATE.getType(), StateType.ENV_LOOP_STATE);
     when(workflowService.stencilMap(anyString())).thenReturn(stencilMap);
     ExecutionResponse executionResponse = envLoopState.execute(context);
+    verify(context).renderExpression(DISABLE_ASSERTION);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.isAsync()).isTrue();
     assertThat(executionResponse.getCorrelationIds().size()).isEqualTo(2);
