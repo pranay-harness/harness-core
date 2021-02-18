@@ -135,7 +135,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         orchestrationGraph);
   }
 
-  private OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {
+  public OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
     if (isEmpty(nodeExecutions)) {
