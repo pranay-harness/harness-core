@@ -181,11 +181,10 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
     final String accountId = ambiance.getSetupAbstractionsMap().get("accountId");
 
     if (executionWrapper != null) {
-      if (!executionWrapper.getStep().isNull()) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
-
         createStepCallbackIds(ambiance, stepElementConfig, accountId, taskIds);
-      } else if (!executionWrapper.getParallel().isNull()) {
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig =
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
         parallelStepElementConfig.getSections().forEach(section -> addCallBackId(section, ambiance, taskIds));
