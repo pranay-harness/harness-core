@@ -3,6 +3,7 @@ package io.harness.cvng.activity.source.resources;
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
@@ -101,5 +102,19 @@ public class KubernetesActivityResource {
       @QueryParam("dataCollectionWorkerId") @NotNull String dataCollectionWorkerId) {
     return new RestResponse<>(
         (KubernetesActivitySourceDTO) activitySourceService.getActivitySource(dataCollectionWorkerId).toDTO());
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @NextGenManagerAuth
+  @Path("/event-details")
+  @ApiOperation(value = "gets details of kubernetes events", nickname = "getEventDetails")
+  public ResponseDTO<KubernetesActivityDetailsDTO> getEventDetails(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("activityId") @NotNull String activityId) {
+    return ResponseDTO.newResponse(
+        kubernetesActivitySourceService.getEventDetails(accountId, orgIdentifier, projectIdentifier, activityId));
   }
 }

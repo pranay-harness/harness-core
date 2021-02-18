@@ -69,6 +69,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -378,11 +379,20 @@ public class DelegateSetupResource {
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response generateKubernetesYaml(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails)
-      throws IOException {
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails,
+      @QueryParam("fileFormat") MediaType fileFormat) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       File delegateFile = delegateService.generateKubernetesYaml(accountId, delegateSetupDetails,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request));
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), fileFormat);
+
+      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
+        return Response.ok(delegateFile)
+            .header(CONTENT_TRANSFER_ENCODING, BINARY)
+            .type("text/plain; charset=UTF-8")
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + YAML)
+            .build();
+      }
+
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)

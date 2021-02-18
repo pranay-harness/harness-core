@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@FieldNameConstants(innerTypeName = "RoleKeys")
+@FieldNameConstants(innerTypeName = "RoleDBOKeys")
 @Entity(value = "roles", noClassnameStored = true)
 @Document("roles")
 @TypeAlias("roles")
@@ -47,7 +48,7 @@ public class RoleDBO implements PersistentEntity {
   final String scopeIdentifier;
   @NGEntityName final String name;
   @NotEmpty final Set<String> allowedScopeLevels;
-  @NotEmpty final Set<String> permissions;
+  @NotNull final Set<String> permissions;
   final boolean managed;
   final String description;
   final Map<String, String> tags;
@@ -63,8 +64,8 @@ public class RoleDBO implements PersistentEntity {
         .add(CompoundMongoIndex.builder()
                  .name("uniqueIndex")
                  .unique(true)
-                 .field(RoleKeys.identifier)
-                 .field(RoleKeys.scopeIdentifier)
+                 .field(RoleDBOKeys.identifier)
+                 .field(RoleDBOKeys.scopeIdentifier)
                  .build())
         .build();
   }

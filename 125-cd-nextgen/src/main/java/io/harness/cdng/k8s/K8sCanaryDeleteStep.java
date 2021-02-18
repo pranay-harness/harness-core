@@ -66,7 +66,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
     } else {
       responseBuilder.status(Status.FAILED);
       responseBuilder.failureInfo(
-          FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+          FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse)).build());
       if (stepParameters.getRollbackInfo() != null) {
         responseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

@@ -43,6 +43,7 @@ import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
+import software.wings.alerts.AlertModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.IndexMigratorModule;
@@ -178,6 +179,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new AlertModule());
     modules.add(new WingsModule(configuration));
     modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {

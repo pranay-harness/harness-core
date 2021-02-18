@@ -207,7 +207,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       YamlType.ENVIRONMENT, YamlType.PROVISIONER, YamlType.WORKFLOW, YamlType.PIPELINE);
   private static final Set<YamlType> rbacUpdateYamlTypes =
       Sets.newHashSet(YamlType.ENVIRONMENT, YamlType.WORKFLOW, YamlType.PIPELINE);
-  private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
+  private static final Set<YamlType> rbacDeleteYamlTypes = rbacCreateYamlTypes;
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
   private static final String AMI_FILTERS = "amiFilters";

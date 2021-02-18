@@ -16,7 +16,6 @@ import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
@@ -49,10 +48,9 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
     if (gcpConnectorDTO.getCredential() != null) {
       if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
         GcpDelegateDetailsDTO delegateDetailsDTO = (GcpDelegateDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
-        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelector())) {
-          return singletonList(SelectorCapability.builder()
-                                   .selectors(ImmutableSet.of(delegateDetailsDTO.getDelegateSelector()))
-                                   .build());
+        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelectors())) {
+          return singletonList(
+              SelectorCapability.builder().selectors(delegateDetailsDTO.getDelegateSelectors()).build());
         }
         return emptyList();
       } else if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {

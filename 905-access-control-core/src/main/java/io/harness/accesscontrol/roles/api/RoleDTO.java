@@ -7,22 +7,29 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import java.util.Set;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
 
-@Value
+@Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@EqualsAndHashCode
 @FieldNameConstants(innerTypeName = "RoleDTOKeys")
 @ApiModel(value = RoleDTO.MODEL_NAME)
 public class RoleDTO {
   public static final String MODEL_NAME = "Role";
 
-  @ApiModelProperty(required = true) @EntityIdentifier String identifier;
-  @ApiModelProperty(required = true) @NGEntityName String name;
-  @ApiModelProperty(required = true) @NotEmpty Set<String> permissions;
-  @NotEmpty Set<String> allowedScopeLevels;
-  String description;
-  Map<String, String> tags;
+  @ApiModelProperty(required = true) @EntityIdentifier final String identifier;
+  @ApiModelProperty(required = true) @NGEntityName final String name;
+  final Set<String> permissions;
+  @Setter Set<String> allowedScopeLevels;
+  final String description;
+  final Map<String, String> tags;
 }

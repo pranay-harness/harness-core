@@ -31,8 +31,8 @@ public interface CIStepInfo extends StepSpecType, GenericStepInfo {
 
   @JsonIgnore TypeInfo getNonYamlInfo();
   @JsonIgnore int getRetry();
-  String getName();
-  String getIdentifier();
+  @JsonIgnore String getName();
+  @JsonIgnore String getIdentifier();
   @JsonIgnore
   default long getDefaultTimeout() {
     return DEFAULT_TIMEOUT;

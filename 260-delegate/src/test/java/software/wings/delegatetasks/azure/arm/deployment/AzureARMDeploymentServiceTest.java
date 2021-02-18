@@ -67,7 +67,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
-  public void testDeployAtResourceGroupScopeWithValidationError() {
+  public void testValidateTemplate() {
     String deploymentName = "DEPLOYMENT_NAME";
     AzureDeploymentMode mode = AzureDeploymentMode.INCREMENTAL;
     DeploymentResourceGroupContext context = DeploymentResourceGroupContext.builder()
@@ -76,6 +76,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                  .mode(mode)
                                                  .templateJson(basicTemplateJson)
                                                  .parametersJson(basicParametersJson)
+                                                 .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                  .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -86,7 +87,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .when(azureManagementClient)
         .validateDeploymentAtResourceGroupScope(any(AzureClientContext.class), any(AzureARMTemplate.class));
 
-    assertThatThrownBy(() -> azureARMDeploymentService.deployAtResourceGroupScope(context))
+    assertThatThrownBy(() -> azureARMDeploymentService.validateTemplate(context))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at resource group scope, deployment validation failed: Code: InvalidTemplate, Message: "
@@ -141,6 +142,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                 .mode(mode)
                                                 .templateJson(basicTemplateJson)
                                                 .parametersJson(basicParametersJson)
+                                                .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                 .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -210,6 +212,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                                    .mode(mode)
                                                    .templateJson(basicTemplateJson)
                                                    .parametersJson(basicParametersJson)
+                                                   .logStreamingTaskClient(mockLogStreamingTaskClient)
                                                    .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);
@@ -277,6 +280,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
                                           .mode(mode)
                                           .templateJson(basicTemplateJson)
                                           .parametersJson(basicParametersJson)
+                                          .logStreamingTaskClient(mockLogStreamingTaskClient)
                                           .build();
 
     DeploymentValidateResultInner mockDeploymentValidateResultInner = mock(DeploymentValidateResultInner.class);

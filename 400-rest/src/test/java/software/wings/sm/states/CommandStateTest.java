@@ -261,6 +261,18 @@ public class CommandStateTest extends WingsBaseTest {
                                     aVariable().name("var2").value("var2Value").build()))
                                 .build();
 
+  private AbstractCommandUnit execCommandUnitRenderTemplateVariables =
+      anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("echo ${var1}").build();
+
+  private Command commandWithTemplateVariableRender =
+      aCommand()
+          .withName("commandWithTemplateVariableRender")
+          .addCommandUnits(execCommandUnitRenderTemplateVariables)
+          .withTemplateVariables(asList(aVariable().name("var1").value("value").build()))
+          .withTemplateReference(
+              TemplateReference.builder().templateUuid("TEMPLATE_ID").templateVersion(Long.valueOf(2)).build())
+          .build();
+
   private Command commandWithTemplateReference =
       aCommand()
           .withName(COMMAND_NAME)
@@ -1493,6 +1505,62 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(context, times(5)).renderExpression(anyString());
 
+    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(2)).get(anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
+        workflowExecutionService, artifactStreamService);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void executeLinkedServiceCommandWithRenderedCommandString() {
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(commandWithTemplateVariableRender).build());
+    when(context.renderExpression(eq("echo ${var1}"), (StateExecutionContext) any())).thenReturn("echo val");
+
+    commandState.setTemplateUuid(TEMPLATE_ID);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    commandState.setTemplateVariables(singletonList(aVariable().name("var1").value("val1").build()));
+
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(execCommandUnitRenderTemplateVariables))
+                                            .build())
+                        .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
+    commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
+
+    verify(serviceResourceService).getWithDetails(APP_ID, null);
+
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+
+    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context).getStateExecutionData();
+
+    verify(context, times(5)).renderExpression(anyString());
+    verify(context).renderExpression(eq("echo ${var1}"), (StateExecutionContext) any());
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
 

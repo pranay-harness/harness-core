@@ -12,11 +12,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface RoleDao {
   Role create(@Valid Role role);
 
-  PageResponse<Role> getAll(@NotNull PageRequest pageRequest, String parentIdentifier, boolean includeManaged);
+  PageResponse<Role> getAll(@NotNull PageRequest pageRequest, String scopeIdentifier, boolean includeManaged);
 
-  Optional<Role> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<Role> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   Role update(@Valid Role role);
 
-  Optional<Role> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<Role> delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+
+  boolean removePermissionFromRoles(String permissionIdentifier);
 }

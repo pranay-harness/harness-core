@@ -19,6 +19,8 @@ message ExecutableResponse {
 
 message AsyncExecutableResponse {
   repeated string callbackIds = 1;
+  repeated string logKeys = 2;
+  repeated string units = 3;
 }
 
 message ChildExecutableResponse {

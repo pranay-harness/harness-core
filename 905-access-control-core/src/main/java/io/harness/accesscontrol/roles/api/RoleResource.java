@@ -3,9 +3,11 @@ package io.harness.accesscontrol.roles.api;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toDTO;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.ng.beans.PageRequest;
@@ -14,6 +16,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -86,8 +89,11 @@ public class RoleResource {
   @POST
   @ApiOperation(value = "Create Role", nickname = "createRole")
   public ResponseDTO<RoleResponseDTO> create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(scopeIdentifier, roleDTO))));
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    if (isEmpty(roleDTO.getAllowedScopeLevels())) {
+      roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
+    }
+    return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));
   }
 
   @DELETE
@@ -97,7 +103,7 @@ public class RoleResource {
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(
-        toDTO(roleService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
+        toDTO(roleService.delete(identifier, scopeIdentifier, false).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
         })));
   }

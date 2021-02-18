@@ -1,33 +1,11 @@
 {
   "type": "object",
-  "required": [
-    "identifier"
-  ],
   "discriminator": "type",
-  "properties": {
-    "identifier": {
-      "type": "string"
-    },
-    "name": {
-      "type": "string"
-    }
-  },
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "CIStepInfo": {
       "type": "object",
-      "required": [
-        "identifier"
-      ],
       "discriminator": "type",
-      "properties": {
-        "identifier": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ContainerResource": {

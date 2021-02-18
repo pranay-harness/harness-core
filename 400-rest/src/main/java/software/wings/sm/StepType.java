@@ -117,6 +117,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
+import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
@@ -225,6 +226,7 @@ import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -566,6 +568,11 @@ public enum StepType {
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
       Collections.singletonList(PhaseType.NON_ROLLBACK)),
+  ARM_ROLLBACK(ARMRollbackState.class, ProvisionerConstants.ARM_ROLLBACK, asList(INFRASTRUCTURE_PROVISIONER),
+      singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
+      asList(PhaseType.ROLLBACK)),
 
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),

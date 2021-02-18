@@ -177,10 +177,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sBGDeployResponse)
-        .build();
+    return getGenericFailureResponse(k8sBGDeployResponse);
   }
 
   @VisibleForTesting

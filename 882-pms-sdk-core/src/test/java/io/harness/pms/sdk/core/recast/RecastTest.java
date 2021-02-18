@@ -196,12 +196,12 @@ public class RecastTest extends PmsSdkCoreTestBase {
     ObjectMapper objectMapper = new ObjectMapper();
 
     YamlNodeWrapperConfig yamlNodeWrapperConfig = new YamlNodeWrapperConfig();
-    yamlNodeWrapperConfig.setStep(objectMapper.createObjectNode());
+    yamlNodeWrapperConfig.setStep(objectMapper.createArrayNode());
     yamlNodeWrapperConfig.setParallel(objectMapper.createObjectNode());
 
     YamlNodeWrapperConfig yamlNodeWrapperConfig1 = new YamlNodeWrapperConfig();
     yamlNodeWrapperConfig1.setStep(objectMapper.createObjectNode());
-    yamlNodeWrapperConfig1.setParallel(objectMapper.createObjectNode());
+    yamlNodeWrapperConfig1.setParallel(objectMapper.createArrayNode());
 
     YamlNodeWrapperConfigList wrapperConfigListi = new YamlNodeWrapperConfigList();
     wrapperConfigListi.setList(ImmutableList.of(yamlNodeWrapperConfig, yamlNodeWrapperConfig1));

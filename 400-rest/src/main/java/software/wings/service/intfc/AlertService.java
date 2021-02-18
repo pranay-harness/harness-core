@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 import javax.ws.rs.QueryParam;
 
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(Module._470_ALERT)
 public interface AlertService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 

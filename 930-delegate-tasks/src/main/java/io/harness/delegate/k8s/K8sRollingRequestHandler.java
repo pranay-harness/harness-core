@@ -172,10 +172,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sRollingDeployResponse rollingSetupResponse = K8sRollingDeployResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(rollingSetupResponse)
-        .build();
+    return getGenericFailureResponse(rollingSetupResponse);
   }
 
   @VisibleForTesting

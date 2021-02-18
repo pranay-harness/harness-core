@@ -642,6 +642,45 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testSetDeploymentJobSummaries_noVerificationTaskMappingExists() {
+    verificationJobService.upsert(accountId, createVerificationJobDTO(verificationJobIdentifier, "dev", CANARY));
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier);
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .accountId(accountId)
+            .executionStatus(ExecutionStatus.QUEUED)
+            .verificationJobIdentifier(verificationJobIdentifier)
+            .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
+            .resolvedJob(verificationJob)
+            .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
+            .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
+            .build();
+    verificationJobInstanceService.create(verificationJobInstance);
+    createVerificationJobInstance("devVerificationJobInstance", "dev");
+    DeploymentResultSummary deploymentResultSummary =
+        DeploymentResultSummary.builder()
+            .preProductionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .productionDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .postDeploymentVerificationJobInstanceSummaries(new ArrayList<>())
+            .build();
+
+    verificationJobInstanceService.addResultsToDeploymentResultSummary(
+        accountId, Arrays.asList(verificationJobInstance.getUuid()), deploymentResultSummary);
+
+    assertThat(deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries()).hasSize(1);
+    DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary pre =
+        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries().get(0);
+    assertThat(pre.getEnvironmentName()).isEqualTo("Harness dev");
+    assertThat(pre.getAdditionalInfo().getType()).isEqualTo(CANARY);
+    assertThat(((CanaryAdditionalInfo) pre.getAdditionalInfo()).getCanary()).isEmpty();
+    assertThat(((CanaryAdditionalInfo) pre.getAdditionalInfo()).getPrimary()).isEmpty();
+    assertThat(deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetDeploymentVerificationPopoverResult_verificationJobInstanceDoesNotExist() {
     String verificationJobInstanceId = generateUuid();
     assertThatThrownBy(()

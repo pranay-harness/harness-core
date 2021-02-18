@@ -5,12 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.command.AzureARMCommandUnit.ExcuteDeployment;
-import static software.wings.beans.command.AzureARMCommandUnit.FetchFiles;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_ARM_DEPLOYMENT;
 
 import static java.lang.String.format;
 
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
@@ -85,9 +84,11 @@ public class ARMStateHelper {
   private List<CommandUnit> getCommandUnits(boolean executeGitTask) {
     List<CommandUnit> commandUnits = new ArrayList<>();
     if (executeGitTask) {
-      commandUnits.add(new AzureARMCommandUnit(FetchFiles));
+      commandUnits.add(new AzureARMCommandUnit(AzureConstants.FETCH_FILES));
     }
-    commandUnits.add(new AzureARMCommandUnit(ExcuteDeployment));
+    commandUnits.add(new AzureARMCommandUnit(AzureConstants.EXECUTE_ARM_DEPLOYMENT));
+    commandUnits.add(new AzureARMCommandUnit(AzureConstants.ARM_DEPLOYMENT_STEADY_STATE));
+    commandUnits.add(new AzureARMCommandUnit(AzureConstants.ARM_DEPLOYMENT_OUTPUTS));
     return commandUnits;
   }
 

@@ -175,6 +175,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
+import software.wings.alerts.AlertModule;
 import software.wings.backgroundjobs.AccountBackgroundJobService;
 import software.wings.backgroundjobs.AccountBackgroundJobServiceImpl;
 import software.wings.beans.AwsConfig;
@@ -846,6 +847,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
+    install(AlertModule.getInstance());
+
     install(new AbstractModule() {
       @Override
       protected void configure() {

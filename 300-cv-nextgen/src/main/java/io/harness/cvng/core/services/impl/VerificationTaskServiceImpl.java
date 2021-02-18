@@ -93,16 +93,21 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId) {
-    Set<String> results = hPersistence.createQuery(VerificationTask.class)
-                              .filter(VerificationTaskKeys.accountId, accountId)
-                              .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
-                              .asList()
-                              .stream()
-                              .map(VerificationTask::getUuid)
-                              .collect(Collectors.toSet());
+    Set<String> results = maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
     Preconditions.checkState(!results.isEmpty(), "No verification task mapping exist for verificationJobInstanceId %s",
         verificationJobInstanceId);
     return results;
+  }
+
+  @Override
+  public Set<String> maybeGetVerificationTaskIds(String accountId, String verificationJobInstanceId) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.accountId, accountId)
+        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+        .asList()
+        .stream()
+        .map(VerificationTask::getUuid)
+        .collect(Collectors.toSet());
   }
 
   @Override

@@ -109,6 +109,7 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
+import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
@@ -127,6 +128,7 @@ import io.harness.delegate.beans.gitapi.GitApiTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
 import io.harness.delegate.beans.gitapi.GitRepoType;
 import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
@@ -367,6 +369,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SmtpCapability.class, 19121);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
+    kryo.register(SSHHostValidationCapability.class, 19125);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
     kryo.register(SpotInstGetElastigroupJsonParameters.class, 19025);
@@ -611,5 +614,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SocketConnectivityParameters.class, 10011);
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
+
+    kryo.register(UnitProgressData.class, 95001);
   }
 }
