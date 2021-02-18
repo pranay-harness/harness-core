@@ -242,11 +242,17 @@
         {
           "type": "object",
           "required": [
-            "delegateSelector"
+            "delegateSelectors"
           ],
           "properties": {
-            "delegateSelector": {
-              "type": "string"
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
             }
           }
         }
@@ -1224,9 +1230,18 @@
         },
         {
           "type": "object",
+          "required": [
+            "delegateSelectors"
+          ],
           "properties": {
-            "delegateSelector": {
-              "type": "string"
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
             }
           }
         }
@@ -2347,11 +2362,17 @@
         {
           "type": "object",
           "required": [
-            "delegateName"
+            "delegateSelectors"
           ],
           "properties": {
-            "delegateName": {
-              "type": "string"
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
             }
           }
         }

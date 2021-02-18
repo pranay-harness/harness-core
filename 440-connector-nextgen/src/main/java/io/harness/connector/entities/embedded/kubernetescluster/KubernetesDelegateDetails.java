@@ -1,5 +1,6 @@
 package io.harness.connector.entities.embedded.kubernetescluster;
 
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
@@ -8,5 +9,5 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails")
 public class KubernetesDelegateDetails implements KubernetesCredential {
-  String delegateName;
+  Set<String> delegateSelectors;
 }

@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 
 import io.harness.beans.DelegateTask;
 import io.harness.connector.ConnectivityStatus;
@@ -34,6 +33,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,9 @@ public class GcpHelperServiceManager {
     if (gcpConfig.isUseDelegate()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
-          GcpValidationRequest.builder().delegateSelector(gcpConfig.getDelegateSelector()).build());
+          GcpValidationRequest.builder()
+              .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+              .build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
       if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {
@@ -78,12 +80,12 @@ public class GcpHelperServiceManager {
   }
 
   private GcpResponse executeSyncTask(String accountId, GcpRequest request) {
+    List<String> tags = isNotEmpty(request.getDelegateSelectors()) ? new ArrayList<>(request.getDelegateSelectors())
+                                                                   : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                                    .tags(StringUtils.isNotBlank(request.getDelegateSelector())
-                                            ? Collections.singletonList(request.getDelegateSelector())
-                                            : emptyList())
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.GCP_TASK.name())

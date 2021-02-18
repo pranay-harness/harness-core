@@ -18,6 +18,7 @@ import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,7 +46,9 @@ public class AwsDTOToEntityTest extends CategoryTest {
         AwsCredentialDTO.builder()
             .awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
             .crossAccountAccess(crossAccountAccess)
-            .config(AwsInheritFromDelegateSpecDTO.builder().delegateSelector(delegateSelector).build())
+            .config(AwsInheritFromDelegateSpecDTO.builder()
+                        .delegateSelectors(Collections.singleton(delegateSelector))
+                        .build())
             .build();
     final AwsConnectorDTO awsConnectorDTO = AwsConnectorDTO.builder().credential(awsCredentialDTO).build();
     final AwsConfig awsConfig = awsDTOToEntity.toConnectorEntity(awsConnectorDTO);
@@ -54,7 +57,8 @@ public class AwsDTOToEntityTest extends CategoryTest {
     assertThat(awsConfig.getCredentialType()).isEqualTo(AwsCredentialType.INHERIT_FROM_DELEGATE);
     assertThat(awsConfig.getCrossAccountAccess()).isEqualTo(crossAccountAccess);
     assertThat(awsConfig.getCredential()).isNotNull();
-    assertThat(((AwsIamCredential) awsConfig.getCredential()).getDelegateSelector()).isEqualTo(delegateSelector);
+    assertThat(((AwsIamCredential) awsConfig.getCredential()).getDelegateSelectors())
+        .isEqualTo(Collections.singleton(delegateSelector));
 
     final String accessKey = "accessKey";
     final AwsCredentialDTO awsCredentialDTO1 = AwsCredentialDTO.builder()
