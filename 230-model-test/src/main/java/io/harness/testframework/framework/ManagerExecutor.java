@@ -77,8 +77,7 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(System.getProperty("user.home") + "/.m2/repository/"
-        + "software/wings/360-cg-manager/0.0.1-SNAPSHOT/360-cg-manager-0.0.1-SNAPSHOT-capsule.jar");
+    final Path jar = Paths.get(System.getProperty("user.home") + "/.bazel-dirs/bin/360-rest/module_deploy.jar");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
