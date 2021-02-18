@@ -7,6 +7,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
@@ -50,6 +51,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
         stepIdentifier);
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(stepTaskDetails.getTaskIds().get(stepIdentifier))
+        .addAllLogKeys(CollectionUtils.emptyIfNull(stepLogKeyDetails.getLogKeys().get(stepIdentifier)))
         .build();
   }
 

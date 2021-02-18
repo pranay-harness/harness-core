@@ -1,6 +1,11 @@
 package io.harness.states;
 
-import com.google.inject.Inject;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.lang.String.format;
+
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
@@ -39,19 +44,17 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.TimeoutUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.LogHelper;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This state will setup the build environment, clone the git repository for running CI job.
@@ -102,7 +105,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
     DependencyOutcome dependencyOutcome =
-        getDependencyOutcome(stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
+        getDependencyOutcome(ambiance, stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
     StepResponse.StepOutcome stepOutcome =
         StepResponse.StepOutcome.builder().name(DEPENDENCY_OUTCOME).outcome(dependencyOutcome).build();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
@@ -124,7 +127,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   }
 
   private DependencyOutcome getDependencyOutcome(
-      LiteEngineTaskStepInfo stepParameters, CiK8sTaskResponse ciK8sTaskResponse) {
+      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, CiK8sTaskResponse ciK8sTaskResponse) {
     List<ContainerDefinitionInfo> serviceContainers = buildSetupUtils.getBuildServiceContainers(stepParameters);
     List<ServiceDependency> serviceDependencyList = new ArrayList<>();
     if (serviceContainers == null) {
@@ -139,7 +142,9 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
     }
 
+    String logPrefix = getLogPrefix(ambiance);
     for (ContainerDefinitionInfo serviceContainer : serviceContainers) {
+      String logKey = format("%s/service:%s", logPrefix, serviceContainer.getStepIdentifier());
       String containerName = serviceContainer.getName();
       if (containerStatusMap.containsKey(containerName)) {
         CIContainerStatus containerStatus = containerStatusMap.get(containerName);
@@ -156,12 +161,13 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
                                       .endTime(containerStatus.getEndTime())
                                       .errorMessage(containerStatus.getErrorMsg())
                                       .status(status)
+                                      .logKeys(Collections.singletonList(logKey))
                                       .build());
       } else {
         ImageDetails imageDetails = serviceContainer.getContainerImageDetails().getImageDetails();
         String image = imageDetails.getName();
         if (isEmpty(imageDetails.getTag())) {
-          image += String.format(":%s", imageDetails.getTag());
+          image += format(":%s", imageDetails.getTag());
         }
         serviceDependencyList.add(ServiceDependency.builder()
                                       .identifier(serviceContainer.getStepIdentifier())
@@ -169,6 +175,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
                                       .image(image)
                                       .errorMessage("Unknown")
                                       .status(ServiceDependency.Status.ERROR)
+                                      .logKeys(Collections.singletonList(logKey))
                                       .build());
       }
     }
@@ -201,6 +208,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
     }
   }
+
   private void createStepCallbackIds(
       Ambiance ambiance, StepElementConfig stepElement, String accountId, Map<String, String> taskIds) {
     // TODO replace identifier as key in case two steps can have same identifier
@@ -254,21 +262,13 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
     }
   }
+
   private String getStepLogKey(StepElementConfig stepElement, String logPrefix) {
-    return String.format("%s/stepId:%s", logPrefix, stepElement.getIdentifier());
+    return format("%s/stepId:%s", logPrefix, stepElement.getIdentifier());
   }
 
   private String getLogPrefix(Ambiance ambiance) {
-    LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
-    logAbstractions.put("accountId", AmbianceHelper.getAccountId(ambiance));
-    logAbstractions.put("orgId", AmbianceHelper.getOrgIdentifier(ambiance));
-    logAbstractions.put("projectId", AmbianceHelper.getProjectIdentifier(ambiance));
-    logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
-    ambiance.getLevelsList()
-        .stream()
-        .filter(level -> level.getGroup().equals("stage"))
-        .findFirst()
-        .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    LinkedHashMap<String, String> logAbstractions = StepUtils.generateStageLogAbstractions(ambiance);
     return LogHelper.generateLogBaseKey(logAbstractions);
   }
 }
