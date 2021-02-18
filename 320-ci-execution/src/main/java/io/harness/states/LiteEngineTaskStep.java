@@ -24,7 +24,6 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -249,11 +248,11 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   private void addLogKey(
       ExecutionWrapperConfig executionWrapper, String logPrefix, Map<String, String> logKeyByStepId) {
     if (executionWrapper != null) {
-      if (!executionWrapper.getStep().isNull()) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
 
         logKeyByStepId.put(stepElementConfig.getIdentifier(), getStepLogKey(stepElementConfig, logPrefix));
-      } else if (!executionWrapper.getParallel().isNull()) {
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig =
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
         parallelStepElementConfig.getSections().forEach(section -> addLogKey(section, logPrefix, logKeyByStepId));
