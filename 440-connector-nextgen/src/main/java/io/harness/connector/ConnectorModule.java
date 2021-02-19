@@ -16,6 +16,7 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
@@ -39,6 +40,7 @@ public class ConnectorModule extends AbstractModule {
   protected void configure() {
     registerRequiredBindings();
     install(FiltersModule.getInstance());
+    install(FeatureFlagModule.getInstance());
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
