@@ -20,6 +20,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
+import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
@@ -102,6 +103,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private NextGenService nextGenService;
+  @Inject private AlertRuleService alertRuleService;
+
   // TODO: this is only used in test. Get rid of this API
   @Override
   public String create(String accountId, String orgIdentifier, String projectIdentifier,
@@ -395,6 +398,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           .update(hPersistence.createQuery(VerificationJobInstance.class)
                       .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
               verificationJobInstanceUpdateOperations, new UpdateOptions());
+
+      alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
   }
 

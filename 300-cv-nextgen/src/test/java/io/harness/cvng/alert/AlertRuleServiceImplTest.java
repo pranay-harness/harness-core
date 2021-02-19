@@ -3,10 +3,14 @@ package io.harness.cvng.alert;
 import static io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
 import static io.harness.cvng.alert.beans.AlertRuleDTO.builder;
 import static io.harness.cvng.alert.entities.AlertRuleAnomaly.AlertRuleAnomalyStatus.OPEN;
-import static io.harness.cvng.alert.util.ActivityType.DURING_DEPLOYMENT;
-import static io.harness.cvng.alert.util.ActivityType.POST_DEPLOYMENT;
 import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_FAILED;
 import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_PASSED;
+import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
+import static io.harness.cvng.beans.activity.ActivityType.CUSTOM;
+import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
+import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
+import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
+import static io.harness.cvng.beans.activity.ActivityType.OTHER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.VUK;
@@ -28,9 +32,9 @@ import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.ng.core.dto.NotificationSettingType;
 import io.harness.notification.channeldetails.SlackChannel;
 import io.harness.notification.notificationclient.NotificationClient;
@@ -112,7 +116,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setVerificationStatuses(
         Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(
-        Lists.newArrayList(POST_DEPLOYMENT, DURING_DEPLOYMENT));
+        Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
 
     alertRuleDTO.validate();
 
@@ -136,7 +140,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setAllActivityTpe(false);
     alertRuleDTO.getAlertCondition().getVerificationsNotify().setActivityTypes(
-        Lists.newArrayList(POST_DEPLOYMENT, DURING_DEPLOYMENT));
+        Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
 
     assertThat(alertRuleDTO.getAlertCondition().isAllServices()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().isAllEnvironments()).isFalse();
@@ -146,7 +150,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().isAllActivityTpe()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().isAllVerificationStatuses()).isFalse();
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().getActivityTypes())
-        .isEqualTo(Lists.newArrayList(POST_DEPLOYMENT, DURING_DEPLOYMENT));
+        .isEqualTo(Lists.newArrayList(DEPLOYMENT, INFRASTRUCTURE));
     assertThat(alertRuleDTO.getAlertCondition().getVerificationsNotify().getVerificationStatuses())
         .isEqualTo(Lists.newArrayList(VERIFICATION_PASSED, VERIFICATION_FAILED));
   }
@@ -186,9 +190,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     List<ActivityType> activityTypes = alertRuleService.getActivityTypes(accountId, orgIdentifier, projectIdentifier);
 
     assertThat(activityTypes).isNotNull();
-    assertThat(activityTypes)
-        .containsExactly(ActivityType.PRE_DEPLOYMENT, DURING_DEPLOYMENT, POST_DEPLOYMENT,
-            ActivityType.INFRASTRUCTURE_CHANGE, ActivityType.CONFIG_CHANGE);
+    assertThat(activityTypes).containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES);
   }
 
   @Test
@@ -202,8 +204,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(alertRule).isNotNull();
     assertThat(alertRule.getIdentifier()).isEqualTo(identifier);
     assertThat(alertRule.getName()).isEqualTo("testName");
-    assertThat(alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0))
-        .isEqualTo(DURING_DEPLOYMENT);
+    assertThat(alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0)).isEqualTo(DEPLOYMENT);
     assertThat(alertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0))
         .isEqualTo(VERIFICATION_FAILED);
     assertThat(alertRule.getAlertCondition().getEnvironments().get(0)).isEqualTo("qa");
@@ -271,7 +272,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(alertRuleFromDB.getAlertCondition().getServices().get(1)).isEqualTo("serDTO2");
     assertThat(alertRuleFromDB.getAlertCondition().getEnvironments().get(0)).isEqualTo("qa");
     assertThat(alertRuleFromDB.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0))
-        .isEqualTo(DURING_DEPLOYMENT);
+        .isEqualTo(DEPLOYMENT);
     assertThat(alertRuleFromDB.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0))
         .isEqualTo(VERIFICATION_FAILED);
     assertThat(alertRuleFromDB.getAlertCondition().getNotify().getThreshold()).isEqualTo(50);
@@ -283,7 +284,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_ChannelIsNotNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -328,7 +329,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_ChannelIsNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -388,7 +389,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_riskScoreAndThresholdIsZeroChannelIsNotNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -439,7 +440,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_ChannelIsNotNotified_EnabledFalse() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -489,7 +490,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testProcessRiskScore_ServicesEnvironmentsNull_ChannelIsNotified() {
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -546,7 +547,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testProcessRiskScore_ServicesEnvironmentsEmptyList_ChannelIsNotified() {
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -606,7 +607,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_EnabledRiskFalse_ChannelIsNotNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -650,7 +651,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_AllServicesDifferentEnvName_ChannelIsNotNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -694,7 +695,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_AllEnvironmentsDifferentServiceName_ChannelIsNotNotified() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod", "qa");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -738,7 +739,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_ChannelIsNotified() {
     VerificationsNotify verificationsNotify = VerificationsNotify.builder()
-                                                  .activityTypes(Arrays.asList(POST_DEPLOYMENT))
+                                                  .activityTypes(Arrays.asList(DEPLOYMENT))
                                                   .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
                                                   .build();
 
@@ -780,7 +781,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         retrievedAlertRule.getAlertCondition().getServices().get(0),
         retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
         retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
-        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0), 123456L,
+        123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
 
@@ -798,7 +800,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_ChannelIsNotNotified_EnabledFalse() {
     VerificationsNotify verificationsNotify = VerificationsNotify.builder()
-                                                  .activityTypes(Arrays.asList(POST_DEPLOYMENT))
+                                                  .activityTypes(Arrays.asList(DEPLOYMENT))
                                                   .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
                                                   .build();
 
@@ -838,7 +840,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         retrievedAlertRule.getAlertCondition().getServices().get(0),
         retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
         retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
-        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0), 123456L,
+        123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
 
@@ -850,7 +853,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_EnabledVerificationFalse_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify = VerificationsNotify.builder()
-                                                  .activityTypes(Arrays.asList(POST_DEPLOYMENT))
+                                                  .activityTypes(Arrays.asList(DEPLOYMENT))
                                                   .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
                                                   .build();
 
@@ -883,7 +886,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         retrievedAlertRule.getAlertCondition().getServices().get(0),
         retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
         retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
-        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0), 123456L,
+        123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -894,7 +898,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testProcessDeploymentVerification_ActivityTypeAndVerificationStatusNull_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify = VerificationsNotify.builder()
-                                                  .activityTypes(Arrays.asList(DURING_DEPLOYMENT, POST_DEPLOYMENT))
+                                                  .activityTypes(Arrays.asList(INFRASTRUCTURE, DEPLOYMENT))
                                                   .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
                                                   .build();
 
@@ -925,7 +929,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     alertRuleService.processDeploymentVerification(retrievedAlertRule.getAccountId(),
         retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
         retrievedAlertRule.getAlertCondition().getServices().get(0),
-        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), null, null);
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), null, null, 123456L, 123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -937,8 +941,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessDeploymentVerification_AllActivityTypesDifferentVerificationStatus_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify =
         VerificationsNotify.builder()
-            .activityTypes(Arrays.asList(POST_DEPLOYMENT, DURING_DEPLOYMENT, ActivityType.INFRASTRUCTURE_CHANGE,
-                ActivityType.CONFIG_CHANGE, ActivityType.PRE_DEPLOYMENT))
+            .activityTypes(Arrays.asList(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, KUBERNETES))
             .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
             .build();
 
@@ -970,7 +973,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
         retrievedAlertRule.getAlertCondition().getServices().get(0),
         retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
-        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0), VERIFICATION_FAILED);
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0), VERIFICATION_FAILED,
+        123456L, 123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -982,7 +986,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessDeploymentVerification_AllVerificationStatusesDifferentActivityType_ChannelIsNotNotified() {
     VerificationsNotify verificationsNotify =
         VerificationsNotify.builder()
-            .activityTypes(Arrays.asList(POST_DEPLOYMENT))
+            .activityTypes(Arrays.asList(DEPLOYMENT))
             .verificationStatuses(Arrays.asList(VERIFICATION_PASSED, VERIFICATION_PASSED))
             .build();
 
@@ -1013,8 +1017,9 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     alertRuleService.processDeploymentVerification(retrievedAlertRule.getAccountId(),
         retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
         retrievedAlertRule.getAlertCondition().getServices().get(0),
-        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), DURING_DEPLOYMENT,
-        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), DEPLOYMENT,
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0), 123456L,
+        123456L, "tag");
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -1026,7 +1031,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_ChannelIsNotified_currentTimeMinusOneHour() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -1104,7 +1109,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   public void testProcessRiskScore_ChannelIsNotNotified_currentTimePlusOneHour() {
     List<String> services = Arrays.asList("ser1", "ser2", "ser3");
     List<String> environments = Arrays.asList("prod");
-    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<ActivityType> activityTypes = Arrays.asList(DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
 
     VerificationsNotify verificationsNotify =
@@ -1186,7 +1191,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     environmentsDTO.add("qa");
 
     List<ActivityType> activityTypesDTO = new ArrayList();
-    activityTypesDTO.add(DURING_DEPLOYMENT);
+    activityTypesDTO.add(DEPLOYMENT);
 
     List<VerificationStatus> verificationStatusesDTO = new ArrayList<>();
     verificationStatusesDTO.add(VERIFICATION_FAILED);
@@ -1215,7 +1220,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     environments.add("prod");
 
     List<ActivityType> activityTypes = new ArrayList();
-    activityTypes.add(POST_DEPLOYMENT);
+    activityTypes.add(DEPLOYMENT);
 
     List<VerificationStatus> verificationStatuses = new ArrayList<>();
     verificationStatuses.add(VERIFICATION_PASSED);

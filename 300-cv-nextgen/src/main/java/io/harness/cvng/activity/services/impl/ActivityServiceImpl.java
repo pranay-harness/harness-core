@@ -22,6 +22,8 @@ import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKe
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
+import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -79,6 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
+  @Inject private AlertRuleService alertRuleService;
 
   @Override
   public Activity get(String activityId) {
@@ -159,6 +162,14 @@ public class ActivityServiceImpl implements ActivityService {
       hPersistence.update(activityQuery, activityUpdateOperations);
 
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
+    }
+
+    if (ActivityVerificationStatus.getFinalStates().contains(summary.getAggregatedStatus())) {
+      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
+      alertRuleService.processDeploymentVerification(activity.getAccountId(), activity.getOrgIdentifier(),
+          activity.getProjectIdentifier(), activity.getServiceIdentifier(), activity.getEnvironmentIdentifier(),
+          activity.getType(), VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()),
+          summary.getStartTime(), summary.getDurationMs(), deploymentActivity.getDeploymentTag());
     }
   }
 
