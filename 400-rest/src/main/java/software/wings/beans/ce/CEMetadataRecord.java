@@ -28,6 +28,7 @@ public class CEMetadataRecord implements PersistentEntity, UuidAware, AccountAcc
   private Boolean awsDataPresent;
   private Boolean gcpConnectorConfigured;
   private Boolean gcpDataPresent;
-
+  private Boolean azureConnectorConfigured;
+  private Boolean azureDataPresent;
   private long lastUpdatedAt;
 }

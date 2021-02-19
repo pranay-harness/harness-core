@@ -110,7 +110,8 @@ def main(event, context):
     preAggragatedTableTableName = "%s.BillingReport_%s.%s" % (jsonData["projectName"], jsonData["accountId"], "preAggregated")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.BillingReport_%s.%s" % (jsonData["projectName"], jsonData["accountId"], "unifiedTable")
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     if not if_tbl_exists(client, preAggragatedTableRef):
         print("%s table does not exists, creating table..." % preAggragatedTableRef)
         createTable(client, preAggragatedTableTableName)

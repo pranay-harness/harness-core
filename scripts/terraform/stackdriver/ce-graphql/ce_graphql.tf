@@ -3,7 +3,7 @@ resource "google_logging_metric" "ce_graphQL_errors" {
   description = "Number of Errors in graphQL requests received. Owner: CE"
   filter = join("\n", [
     local.filter_prefix,
-    "jsonPayload.logger:(\"software.wings.graphql.datafetcher.billing\" OR \"software.wings.graphql.datafetcher.budget\" OR \"software.wings.graphql.datafetcher.ce\" OR \"software.wings.graphql.datafetcher.budget\" OR \"software.wings.graphql.datafetcher.cloudefficiencyevents\" OR \"software.wings.graphql.datafetcher.k8sLabel\")",
+    "jsonPayload.logger:(\"software.wings.graphql.datafetcher.billing\" OR \"software.wings.graphql.datafetcher.budget\" OR \"software.wings.graphql.datafetcher.ce\" OR \"software.wings.graphql.datafetcher.budget\" OR \"software.wings.graphql.datafetcher.cloudefficiencyevents\" OR \"software.wings.graphql.datafetcher.k8sLabel\" OR \"io.harness.ccm.setup.graphql.OverviewPageStatsDataFetcher\")",
     "severity>WARNING"
   ])
   metric_descriptor {

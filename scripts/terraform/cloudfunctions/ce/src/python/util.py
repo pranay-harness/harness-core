@@ -4,10 +4,11 @@ from clusterdata_schema import clusterDataTableFields
 from unified_schema import unifiedTableTableSchema
 from preaggregated_schema import preAggreagtedTableSchema
 
-def create_dataset(client, jsonData):
-    dataset_id = "{}.{}".format(client.project, jsonData["datasetName"])
+def create_dataset(client, datasetName, accountIdOrig=""):
+    dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
+    dataset.description = "Data set for [ AccountId: %s ]" % (accountIdOrig)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already

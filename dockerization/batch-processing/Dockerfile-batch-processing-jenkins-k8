@@ -12,6 +12,9 @@ RUN mv yq /usr/local/bin
 
 RUN pip3 install awscli
 
+#AzCopy installation
+RUN curl -LO https://aka.ms/downloadazcopy-v10-linux && tar -xvf downloadazcopy-v10-linux && cp ./azcopy_linux_amd64_*/azcopy /usr/local/bin/
+
 COPY scripts /opt/harness
 
 RUN chmod +x /opt/harness/*.sh

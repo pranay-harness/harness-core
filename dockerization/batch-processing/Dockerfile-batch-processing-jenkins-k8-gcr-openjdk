@@ -7,6 +7,9 @@ COPY batch-processing-capsule.jar batch-processing-config.yml /opt/harness/
 RUN wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq
 RUN chmod +x /usr/bin/yq
 
+#Download AzCopy
+RUN curl -LO https://aka.ms/downloadazcopy-v10-linux && tar -xvf downloadazcopy-v10-linux && cp ./azcopy_linux_amd64_*/azcopy /usr/local/bin/
+
 COPY scripts /opt/harness
 
 RUN chmod +x /opt/harness/*.sh

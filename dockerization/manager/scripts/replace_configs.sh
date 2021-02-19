@@ -337,6 +337,14 @@ if [[ "" != "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.linkedAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientSecret "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientId "$CE_SETUP_CONFIG_AZURE_CLIENTID"
+fi
+
 if [[ "" != "$DATADOG_ENABLED" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
 fi

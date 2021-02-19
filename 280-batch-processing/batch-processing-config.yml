@@ -37,6 +37,15 @@ awsS3SyncConfig:
   awsSecretKey: awsS3SyncSecretKeyPlaceHolder
   region: awsS3SyncRegionPlaceHolder
 
+azureStorageSyncConfig:
+  azureStorageAccountName: PlaceHolder
+  azureStorageContainerName: PlaceHolder
+  azureAppClientId: PlaceHolder
+  azureAppClientSecret: PlaceHolder
+  azureTenantId: PlaceHolder
+  azureSasToken: PlaceHolder
+  syncJobDisabled: true
+
 billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
