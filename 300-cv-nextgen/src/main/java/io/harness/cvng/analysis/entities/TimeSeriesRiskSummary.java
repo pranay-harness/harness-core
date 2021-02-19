@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeseriesRiskSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
+public final class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

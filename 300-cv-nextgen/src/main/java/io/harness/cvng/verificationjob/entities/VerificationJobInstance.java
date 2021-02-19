@@ -52,7 +52,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class VerificationJobInstance
+public final class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
