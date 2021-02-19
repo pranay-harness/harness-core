@@ -134,9 +134,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		r = buf
 	}
 
-	var req *http.Request
-	var err error
-	req, err = http.NewRequestWithContext(ctx, method, path, r)
+	req, err := http.NewRequestWithContext(ctx, method, path, r)
 
 	if err != nil {
 		return nil, err

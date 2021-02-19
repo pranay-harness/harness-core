@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	diffPath = "/step-exec/.harness/vcs/diff.txt"
+	diffPath = "/step-exec/.harness/vcs/diff.txt"                            // path to read the changed files
 	srcDir   = "/step-exec/.harness/test-intelligence/callgraph"             //directory where callgraph will be created
 	archPath = "/step-exec/.harness/test-intelligence/archive/callgraph.tar" //directory where tar file of callgraph will be created
 )
@@ -117,24 +117,23 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 
 	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, changedFiles)
 
+	runAll := false
+	if err != nil {
+		e.log.Errorw("Failed to fetch tests from ti server. Running all tests", zap.Error(err))
+		runAll = true
+	}
+
 	var testExecList string
 	for _, test := range tests {
 		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
 	}
 
-	fmt.Println(testExecList)
-
-	runAll := false
-	if err != nil {
-		runAll = true
-	}
-
-	executionCommand, err := e.getRunTestsCommand(testExecList, runAll)
+	e.executionCommand, err = e.getRunTestsCommand(testExecList, runAll)
 	if err != nil {
 		return nil, int32(1), err
 	}
 
-	return e.execute(ctx, executionCommand)
+	return e.execute(ctx)
 }
 
 // getRunTestsCommand makes call to ti client to fetch the tests to be run
@@ -219,7 +218,7 @@ func (e *runTestsStep) resolveJEXL(ctx context.Context) error {
 }
 
 // execute step and sent the rpc call to addOn server for running the commands
-func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*output.StepOutput, int32, error) {
+func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, error) {
 	st := time.Now()
 
 	addonClient, err := newAddonClient(uint(e.cntrPort), e.log)
@@ -231,7 +230,6 @@ func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*o
 	defer addonClient.CloseConn()
 
 	c := addonClient.Client()
-	e.executionCommand = executionCommand
 	arg := e.getExecuteStepArg()
 	ret, err := c.ExecuteStep(ctx, arg)
 	if err != nil {
