@@ -37,7 +37,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HeatMapKeys")
 @Entity(value = "heatMaps", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
+public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

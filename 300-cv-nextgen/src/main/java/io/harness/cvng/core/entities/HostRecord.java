@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HostRecordKeys")
 @Entity(value = "hostRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class HostRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class HostRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -48,7 +48,7 @@ public class HostRecord implements PersistentEntity, UuidAware, CreatedAtAware, 
 
   @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   @NotEmpty private Instant startTime;
   private Instant endTime;
   private Set<String> hosts;
