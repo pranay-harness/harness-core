@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/archive"
-	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/common/external"
@@ -267,23 +266,6 @@ func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 		},
 		TmpFilePath: e.tempPath,
 	}
-}
-
-func (e *runTestsStep) uploadCallGraph() error {
-	fs := filesystem.NewOSFileSystem(e.log)
-	e.archiver = archive.NewArchiver(archiveFormat, fs, e.log)
-
-	err := e.archiveFiles()
-
-	if err != nil {
-		return errors.Wrap(err, "Step failed while archiving callgraph")
-	}
-	client := http.NewHTTPClient(e.tiSrvEP, e.acctID, e.token, e.log)
-	err = client.UploadCallGraph(archPath)
-	if err != nil {
-		return errors.Wrap(err, "Step failed while uploading callgraph")
-	}
-	return nil
 }
 
 // Archive the files
