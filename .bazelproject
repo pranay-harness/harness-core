@@ -91,6 +91,7 @@ directories:
   980-commons
   980-java-agent
   990-commons-test
+  200-functional-test
   tools
   scripts
 
