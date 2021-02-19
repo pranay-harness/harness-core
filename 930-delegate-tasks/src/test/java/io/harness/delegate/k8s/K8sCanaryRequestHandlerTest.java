@@ -92,7 +92,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
         .createKubernetesConfig(k8sInfraDelegateConfig);
     doReturn(logCallback)
         .when(k8sTaskHelperBase)
-        .getLogCallback(eq(iLogStreamingTaskClient), anyString(), anyBoolean(), null);
+        .getLogCallback(eq(iLogStreamingTaskClient), anyString(), anyBoolean(), any());
     doReturn(true)
         .when(k8sTaskHelperBase)
         .fetchManifestFilesAndWriteToDirectory(
