@@ -61,7 +61,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     doReturn(logCallback)
         .when(k8sTaskHelperBase)
-        .getLogCallback(eq(logStreamingTaskClient), anyString(), anyBoolean(), null);
+        .getLogCallback(eq(logStreamingTaskClient), anyString(), anyBoolean(), any());
     doReturn(kubernetesConfig)
         .when(containerDeploymentDelegateBaseHelper)
         .createKubernetesConfig(k8sInfraDelegateConfig);
