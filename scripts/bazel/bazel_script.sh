@@ -312,7 +312,6 @@ build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
-build_bazel_module 340-ce-nextgen
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
 build_bazel_module 420-delegate-agent
