@@ -34,6 +34,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(FeatureFlagRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
           .build();
 
