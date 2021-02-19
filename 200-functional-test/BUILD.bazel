@@ -38,18 +38,6 @@ test_dependencies = shared_dependencies + [
     "@com_github_tomakehurst_wiremock//jar",
     ":module",
      "//990-commons-test:module",
-            "@maven//:com_bertramlabs_plugins_hcl4j",
-            "@maven//:com_icegreen_greenmail",
-            "@maven//:com_openpojo_openpojo",
-            "@maven//:io_github_benas_random_beans",
-            "@maven//:junit_junit",
-            "@maven//:org_assertj_assertj_core",
-            "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-            "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
-            "@maven//:org_mockito_mockito_core",
-            "@maven//:org_powermock_powermock_module_junit4",
-            "@maven//:pl_pragmatists_JUnitParams",
-    "//990-commons-test:module",
     "@maven//:com_bertramlabs_plugins_hcl4j",
     "@maven//:com_icegreen_greenmail",
     "@maven//:com_openpojo_openpojo",
@@ -61,6 +49,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
+
 ]
 
 run_package_tests(
