@@ -46,10 +46,12 @@ public class NGLogCallback implements LogCallback {
     }
 
     ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
-    CommandUnitStatusProgress commandUnitStatusProgress = CommandUnitStatusProgress.builder()
-                                                              .commandUnitName(commandUnitName)
-                                                              .commandExecutionStatus(commandExecutionStatus)
-                                                              .build();
-    taskProgressClient.sendTaskProgressUpdate(commandUnitStatusProgress);
+    if (taskProgressClient != null) {
+      CommandUnitStatusProgress commandUnitStatusProgress = CommandUnitStatusProgress.builder()
+                                                                .commandUnitName(commandUnitName)
+                                                                .commandExecutionStatus(commandExecutionStatus)
+                                                                .build();
+      taskProgressClient.sendTaskProgressUpdate(commandUnitStatusProgress);
+    }
   }
 }
