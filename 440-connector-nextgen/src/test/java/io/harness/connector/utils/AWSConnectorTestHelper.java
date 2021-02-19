@@ -83,25 +83,7 @@ public class AWSConnectorTestHelper {
   }
 
   public ConnectorDTO createConnectorDTOOfCEAws() {
-    final String connectorIdentifier = "identifier_ph";
-    final String name = "name_ph";
-    final String description = "description_ph";
-    final String projectIdentifier = "projectIdentifier_ph";
-    final String orgIdentifier = "orgIdentifier_ph";
-    Map<String, String> tags = ImmutableMap.of("company", "Harness", "env", "dev");
-
-    return ConnectorDTO.builder()
-        .connectorInfo(ConnectorInfoDTO.builder()
-                           .name(name)
-                           .identifier(connectorIdentifier)
-                           .description(description)
-                           .projectIdentifier(projectIdentifier)
-                           .orgIdentifier(orgIdentifier)
-                           .tags(tags)
-                           .connectorType(CE_AWS)
-                           .connectorConfig(createCEAwsConnectorDTO())
-                           .build())
-        .build();
+    return CommonTestHelper.createConnectorDTO(ConnectorType.CE_AWS, createCEAwsConnectorDTO());
   }
 
   public CEAwsConfig createCEAwsConfigEntity() {

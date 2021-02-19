@@ -287,7 +287,8 @@ public enum TaskType {
   HTTP_TASK_NG(TaskGroup.HTTP_NG),
   SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG),
   NG_NEXUS_TASK(TaskGroup.NEXUS),
-  NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY);
+  NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY),
+  CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CONTAINER);
 
   private final TaskGroup taskGroup;
 
