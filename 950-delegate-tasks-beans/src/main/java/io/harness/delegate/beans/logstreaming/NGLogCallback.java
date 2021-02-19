@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitProgress.CommandUnitProgressBuilder;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -55,7 +56,7 @@ public class NGLogCallback implements LogCallback {
     LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
         commandUnitsProgress.getCommandUnitProgressMap();
 
-    CommandUnitProgress.CommandUnitProgressBuilder commandUnitProgressBuilder =
+    CommandUnitProgressBuilder commandUnitProgressBuilder =
         CommandUnitProgress.builder().status(commandExecutionStatus);
     if (!commandUnitProgressMap.containsKey(commandUnitName)) {
       commandUnitProgressBuilder.startTime(now.toEpochMilli());
