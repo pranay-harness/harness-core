@@ -59,6 +59,7 @@ import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.ccm.setup.service.support.intfc.AzureCEConfigValidationService;
 import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -109,6 +110,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.config.NexusConfig;
@@ -228,6 +230,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ApmVerificationService apmVerificationService;
   @Inject private AWSCEConfigValidationService awsCeConfigService;
+  @Inject private AzureCEConfigValidationService azureCEConfigValidationService;
   @Inject @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
@@ -786,6 +789,7 @@ public class SettingsServiceImpl implements SettingsService {
           ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId());
       boolean isAwsConnectorPresent = false;
       boolean isGCPConnectorPresent = false;
+      boolean isAzureConnectorPresent = false;
 
       for (SettingAttribute attribute : settingAttributesList) {
         if (attribute.getValue() instanceof CEAwsConfig) {
@@ -794,6 +798,9 @@ public class SettingsServiceImpl implements SettingsService {
         if (attribute.getValue() instanceof CEGcpConfig) {
           isGCPConnectorPresent = true;
         }
+        if (attribute.getValue() instanceof CEAzureConfig) {
+          isAzureConnectorPresent = true;
+        }
       }
 
       ceMetadataRecordDao.upsert(
@@ -801,6 +808,8 @@ public class SettingsServiceImpl implements SettingsService {
               .accountId(settingAttribute.getAccountId())
               .awsConnectorConfigured(isAwsConnectorPresent || (settingAttribute.getValue() instanceof CEAwsConfig))
               .gcpConnectorConfigured(isGCPConnectorPresent || (settingAttribute.getValue() instanceof CEGcpConfig))
+              .azureConnectorConfigured(
+                  isAzureConnectorPresent || (settingAttribute.getValue() instanceof CEAzureConfig))
               .build());
 
       int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
@@ -847,6 +856,18 @@ public class SettingsServiceImpl implements SettingsService {
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
           throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
         }
+      }
+
+      // Azure
+      if (settingAttribute.getValue() instanceof CEAzureConfig) {
+        // Throw Exception if Azure connector Exists already
+        if (isAzureConnectorPresent && isSave) {
+          log.info("Did not save Setting Attribute of type {} for account ID {} because Azure connector exists already",
+              settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 Azure cloud account");
+        }
+        CEAzureConfig azureConfig = (CEAzureConfig) settingAttribute.getValue();
+        azureCEConfigValidationService.verifyCrossAccountAttributes(azureConfig);
       }
     }
   }

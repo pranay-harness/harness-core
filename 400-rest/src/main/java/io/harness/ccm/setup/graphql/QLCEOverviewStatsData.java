@@ -17,6 +17,7 @@ public class QLCEOverviewStatsData {
   Boolean cloudConnectorsPresent;
   Boolean awsConnectorsPresent;
   Boolean gcpConnectorsPresent;
+  Boolean azureConnectorsPresent;
   Boolean applicationDataPresent;
   Boolean clusterDataPresent;
   @Builder.Default Boolean isSampleClusterPresent = false;
