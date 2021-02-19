@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/wings-software/portal/commons/go/lib/archive"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/common/external"
@@ -34,22 +33,18 @@ var (
 
 // RunTestsStep represents interface to execute a run step
 type runTestsStep struct {
-	id               string
-	name             string
-	tempPath         string   // File path to store generated temporary files
-	lang             string   // language of codebase
-	buildTool        string   // buildTool used for codebase
-	goals            string   // custom flags to
-	executionCommand string   // final command which will be executed by addon
-	envVarOutputs    []string // Environment variables to be exported to the step
-	cntrPort         uint32
-	tiSrvEP          string // base url where the tiServer would be running
-	acctID           string
-	token            string
-	archiver         archive.Archiver
-	stepCtx          *pb.StepContext
-	so               output.StageOutput
-	log              *zap.SugaredLogger
+	id               string             // Id of the step
+	name             string             // Name of the step
+	tempPath         string             // File path to store generated temporary files
+	lang             string             // language of codebase
+	buildTool        string             // buildTool used for codebase
+	goals            string             // custom flags to
+	executionCommand string             // final command which will be executed by addon
+	envVarOutputs    []string           // Environment variables to be exported to the step
+	cntrPort         uint32             // Container for running ti port
+	stepCtx          *pb.StepContext    // Step context
+	so               output.StageOutput // Output variables of the stage
+	log              *zap.SugaredLogger // Logger
 }
 
 // RunTestsStep represents interface to execute a run step
@@ -70,9 +65,6 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 		cntrPort:  r.GetContainerPort(),
 		stepCtx:   r.GetContext(),
 		tempPath:  tempPath,
-		tiSrvEP:   os.Getenv("TI_SERVER_URL"),
-		acctID:    os.Getenv("HARNESS_ACCOUNT_ID"),
-		token:     os.Getenv("AUTH_TOKEN"),
 		so:        so,
 		log:       log,
 	}
@@ -117,7 +109,6 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	// client := http.NewHTTPClient(e.tiSrvEP, e.acctID, e.token, e.log)
 	tc, err := remoteTiClient()
 	if err != nil {
 		e.log.Errorw("could not create a client to the TI service", zap.Error(err))
@@ -146,6 +137,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	return e.execute(ctx, executionCommand)
 }
 
+// getRunTestsCommand makes call to ti client to fetch the tests to be run
 func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (string, error) {
 
 	e.log.Infow(
@@ -172,6 +164,7 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 	}
 }
 
+// readVCSDiffFromFile will read the vcs diff and return list of chnaged files
 func (e *runTestsStep) readVCSDiffFromFile() ([]string, error) {
 	file, err := os.Open(diffPath)
 
@@ -192,6 +185,7 @@ func (e *runTestsStep) readVCSDiffFromFile() ([]string, error) {
 	return txtlines, nil
 }
 
+// validate the container port and language
 func (e *runTestsStep) validate() error {
 	if e.cntrPort == 0 {
 		return fmt.Errorf("runTestsStep container port is not set")
@@ -224,6 +218,7 @@ func (e *runTestsStep) resolveJEXL(ctx context.Context) error {
 	return nil
 }
 
+// execute step and sent the rpc call to addOn server for running the commands
 func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*output.StepOutput, int32, error) {
 	st := time.Now()
 
@@ -266,18 +261,4 @@ func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 		},
 		TmpFilePath: e.tempPath,
 	}
-}
-
-// Archive the files
-func (e *runTestsStep) archiveFiles() error {
-	e.log.Infow(
-		"Archiving callgraphs for uploading",
-		"srcDir", srcDir,
-		"archPath", archPath,
-	)
-	err := e.archiver.Archive([]string{srcDir}, archPath)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Failed to archive files: %s", srcDir))
-	}
-	return nil
 }

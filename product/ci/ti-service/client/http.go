@@ -103,7 +103,6 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// responses to allow the server time to recover, as
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
-			fmt.Println("debug1", res.StatusCode)
 			if res.StatusCode >= 500 {
 				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
 				if duration == backoff.Stop {
@@ -137,11 +136,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 
 	var req *http.Request
 	var err error
-	if ctx != nil {
-		req, err = http.NewRequestWithContext(ctx, method, path, r)
-	} else {
-		req, err = http.NewRequest(method, path, r)
-	}
+	req, err = http.NewRequestWithContext(ctx, method, path, r)
 
 	if err != nil {
 		return nil, err
@@ -151,7 +146,6 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	// the agent and server for authorization.
 	req.Header.Add("X-Harness-Token", c.Token)
 	res, err := c.client().Do(req)
-	fmt.Println("debug2", res.StatusCode)
 	if res != nil {
 		defer func() {
 			// drain the response body so we can reuse
