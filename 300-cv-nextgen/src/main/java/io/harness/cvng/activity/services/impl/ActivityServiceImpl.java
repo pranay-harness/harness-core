@@ -385,7 +385,8 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
-      String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
+      String projectIdentifier, String environmentIdentifier, String serviceIdentifier, Instant startTime,
+      Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
                                         .filter(ActivityKeys.accountId, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
@@ -397,6 +398,9 @@ public class ActivityServiceImpl implements ActivityService {
 
     if (isNotEmpty(environmentIdentifier)) {
       activityQuery = activityQuery.filter(ActivityKeys.environmentIdentifier, environmentIdentifier);
+    }
+    if (isNotEmpty(serviceIdentifier)) {
+      activityQuery = activityQuery.filter(ActivityKeys.serviceIdentifier, serviceIdentifier);
     }
     List<Activity> activities = activityQuery.asList();
 
