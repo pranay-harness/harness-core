@@ -1,5 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
@@ -52,15 +53,17 @@ test_dependencies = shared_dependencies + [
 
 ]
 
-run_package_tests(
-    data = [
-        "//200-functional-test/src/test/resources:resource",
-    ],
-    resources = [
-        "//200-functional-test/src/test/resources:resource",
-    ],
-    deps = test_dependencies,
-)
+#run_package_tests(
+#    data = [
+#        "//200-functional-test/src/test/resources:resource",
+#    ],
+#    resources = [
+#        "//200-functional-test/src/test/resources:resource",
+#    ],
+#    deps = test_dependencies,
+#)
+
+run_tests()
 
 java_library(
     name = "tests",
@@ -69,6 +72,12 @@ java_library(
         "aeriform",
         "manual",
     ],
+    data = [
+            "//200-functional-test/src/test/resources:resource",
+        ],
+        resources = [
+            "//200-functional-test/src/test/resources:resource",
+        ],
     visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
