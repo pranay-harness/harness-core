@@ -9,6 +9,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -155,7 +156,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) throws ProducerShutdownException {
     log.info("Deleting pipeline");
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
