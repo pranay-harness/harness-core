@@ -1654,6 +1654,12 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public void pruneByApplication(String appId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.appId, appId));
+  }
+
+  @Override
   public GitConfig fetchGitConfigFromConnectorId(String gitConnectorId) {
     if (isBlank(gitConnectorId)) {
       return null;
