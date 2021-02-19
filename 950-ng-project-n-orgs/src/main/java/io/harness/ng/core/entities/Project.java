@@ -4,11 +4,13 @@ import static io.harness.mongo.CollationLocale.ENGLISH;
 import static io.harness.mongo.CollationStrength.PRIMARY;
 
 import io.harness.ModuleType;
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
+import io.harness.ng.DbAliases;
 import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
@@ -48,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
+@StoreIn(DbAliases.NG_MANAGER)
 public class Project implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
