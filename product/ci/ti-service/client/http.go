@@ -21,7 +21,8 @@ import (
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
+	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
+	testEndpoint = "tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=tst"
 )
 
 // defaultClient is the default http.Client.
@@ -72,10 +73,10 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 }
 
 // GetTests returns list of tests which should be run intelligently
-func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step string, change []string) ([]*types.TestCase, error) {
-	path := "new"
-	var tests []*types.TestCase
-	_, err := c.do(nil, c.Endpoint+path, "POST", &change, &tests)
+func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step string, change []string) ([]types.Test, error) {
+	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step)
+	var tests []types.Test
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
 	return tests, err
 }
 
@@ -102,7 +103,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// responses to allow the server time to recover, as
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
-
+			fmt.Println("debug1", res.StatusCode)
 			if res.StatusCode >= 500 {
 				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
 				if duration == backoff.Stop {
@@ -150,6 +151,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	// the agent and server for authorization.
 	req.Header.Add("X-Harness-Token", c.Token)
 	res, err := c.client().Do(req)
+	fmt.Println("debug2", res.StatusCode)
 	if res != nil {
 		defer func() {
 			// drain the response body so we can reuse

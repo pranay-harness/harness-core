@@ -13,7 +13,6 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/common/external"
-	"github.com/wings-software/portal/product/ci/engine/http"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -125,19 +124,22 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		e.log.Errorw("could not create a client to the TI service", zap.Error(err))
 		return nil, int32(1), err
 	}
-	// testsToExecute, err := client.GetTestsToRun(changedFiles)
-	_, err = tc.GetTests(org, project, pipeline, build, stage, e.id, []string{changedFiles})
 
-	// e.log.Errorw(fmt.Sprintf("%s", testsToE), zap.Error(err))
+	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, changedFiles)
 
-	testsToExecute := "dummy"
+	var testExecList string
+	for _, test := range tests {
+		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
+	}
+
+	fmt.Println(testExecList)
 
 	runAll := false
 	if err != nil {
 		runAll = true
 	}
 
-	executionCommand, err := e.getRunTestsCommand(testsToExecute, runAll)
+	executionCommand, err := e.getRunTestsCommand(testExecList, runAll)
 	if err != nil {
 		return nil, int32(1), err
 	}
@@ -146,9 +148,11 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 }
 
 func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (string, error) {
+
 	e.log.Infow(
 		"running tests with intelligence",
 		"testsToExecute", testsToExecute,
+		"goals", e.goals,
 	)
 
 	testsFlag := ""
@@ -169,22 +173,22 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 	}
 }
 
-func (e *runTestsStep) readVCSDiffFromFile() (string, error) {
+func (e *runTestsStep) readVCSDiffFromFile() ([]string, error) {
 	file, err := os.Open(diffPath)
 
 	defer file.Close()
 
 	if err != nil {
 		e.log.Errorw(fmt.Sprintf("could not open %s file", diffPath), "step_id", e.id, zap.Error(err))
-		return "", err
+		return nil, err
 	}
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	var txtlines string
+	var txtlines []string
 	for scanner.Scan() {
-		txtlines += scanner.Text()
+		txtlines = append(txtlines, scanner.Text())
 	}
 	return txtlines, nil
 }
@@ -205,14 +209,19 @@ func (e *runTestsStep) validate() error {
 // resolveJEXL resolves JEXL expressions present in run step input
 func (e *runTestsStep) resolveJEXL(ctx context.Context) error {
 	// JEXL expressions are only present in goals
-	s := e.goals
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{s}, e.so, false, e.log)
+	g := e.goals
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{g}, e.so, false, e.log)
 
 	if err != nil {
 		return err
 	}
 
-	e.goals = resolvedExprs[s]
+	// Updating step command with the resolved value of JEXL expressions
+	resolvedG := g
+	if val, ok := resolvedExprs[g]; ok {
+		resolvedG = val
+	}
+	e.goals = resolvedG
 	return nil
 }
 
@@ -227,13 +236,8 @@ func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*o
 	}
 	defer addonClient.CloseConn()
 
-	// temp solution as mvn is not present by default in image
-	// discuss with Shiv as well if we need this option in the runTests command.
-	executionCommand = "source /etc/profile.d/maven.sh; " + executionCommand
-	e.log.Infow(
-		fmt.Sprintf("Final command created by test intelligence is: %s", executionCommand), "step_id", e.id)
-
 	c := addonClient.Client()
+	e.executionCommand = executionCommand
 	arg := e.getExecuteStepArg()
 	ret, err := c.ExecuteStep(ctx, arg)
 	if err != nil {
@@ -244,15 +248,8 @@ func (e *runTestsStep) execute(ctx context.Context, executionCommand string) (*o
 	stepOutput := &output.StepOutput{}
 	stepOutput.Output.Variables = ret.GetOutput()
 
-	err = e.uploadCallGraph()
-
-	if err != nil {
-		return nil, 0, errors.Wrap(err, fmt.Sprintf("Failed while uploading callgraph to the xxxxxxxx %s", diffPath))
-	}
-
 	e.log.Infow("Successfully executed ti step", "elapsed_time_ms", utils.TimeSince(st))
 	return stepOutput, ret.GetNumRetries(), nil
-
 }
 
 func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
