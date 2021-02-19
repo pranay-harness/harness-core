@@ -29,7 +29,7 @@ public class CEAzureConnectorDTO extends ConnectorConfigDTO {
   @Valid BillingExportSpecDTO billingExportSpec;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     return null;
   }
 }

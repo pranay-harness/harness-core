@@ -45,6 +45,7 @@ public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventH
           orchestrationAdjacencyListGenerator.removeVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
         }
         graphVertex.setProgressDataMap(nodeExecution.getProgressDataMap());
+        graphVertex.setUnitProgresses(nodeExecution.getUnitProgresses());
         graphVertexMap.put(nodeExecutionId, graphVertex);
         graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
       }

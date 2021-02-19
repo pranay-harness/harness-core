@@ -1,8 +1,5 @@
-package io.harness.accesscontrol.permissions.jobs;
+package io.harness.accesscontrol.permissions;
 
-import io.harness.accesscontrol.permissions.Permission;
-import io.harness.accesscontrol.permissions.PermissionFilter;
-import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +13,9 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class PermissionsManagementJob {
   private static final String PERMISSIONS_YAML_PATH = "io/harness/accesscontrol/permissions/permissions.yml";
@@ -64,5 +63,6 @@ public class PermissionsManagementJob {
 
     addedPermissions.forEach(permissionService::create);
     updatedPermissions.forEach(permissionService::update);
+    removedIdentifiers.forEach(permissionService::delete);
   }
 }

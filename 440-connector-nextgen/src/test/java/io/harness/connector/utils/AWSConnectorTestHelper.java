@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -50,11 +51,12 @@ public class AWSConnectorTestHelper {
   public Connector createAWSConnector(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, Scope scope) {
     final String delegateSelector = "delegateSelector";
-    final AwsConfig awsConfig = AwsConfig.builder()
-                                    .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
-                                    .crossAccountAccess(createCrossAccountAccessDTO())
-                                    .credential(AwsIamCredential.builder().delegateSelector(delegateSelector).build())
-                                    .build();
+    final AwsConfig awsConfig =
+        AwsConfig.builder()
+            .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
+            .crossAccountAccess(createCrossAccountAccessDTO())
+            .credential(AwsIamCredential.builder().delegateSelectors(Collections.singleton(delegateSelector)).build())
+            .build();
 
     awsConfig.setAccountIdentifier(accountIdentifier);
     awsConfig.setOrgIdentifier(orgIdentifier);

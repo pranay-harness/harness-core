@@ -23,6 +23,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
@@ -46,7 +47,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
       @JsonSubTypes.Type(value = CEAzureConnectorDTO.class, name = "CEAzure"),
 })
 public abstract class ConnectorConfigDTO implements DecryptableEntity {
-  @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();
+  @JsonIgnore public abstract List<DecryptableEntity> getDecryptableEntities();
 
   public void validate() {
     // no op implementation which base classes can override

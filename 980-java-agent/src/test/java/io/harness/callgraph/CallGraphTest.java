@@ -70,7 +70,7 @@ public class CallGraphTest {
       graph.calls.push(node);
     }
     graph.returned(Mockito.mock(StackNode.class));
-    assertThat(graph.calls.isEmpty()).isEqualTo(true);
+    assertThat(graph.calls.isEmpty()).isTrue();
     Mockito.verify(writer).end();
 
     // It should stop removing when the equal item was found
@@ -89,7 +89,7 @@ public class CallGraphTest {
       graph.calls.push(node);
     }
     graph.returned(nodes[0]);
-    assertThat(graph.calls.isEmpty()).isEqualTo(true);
+    assertThat(graph.calls.isEmpty()).isTrue();
     Mockito.verify(writer, Mockito.times(2)).end();
   }
 }

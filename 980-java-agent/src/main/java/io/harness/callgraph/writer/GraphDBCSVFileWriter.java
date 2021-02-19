@@ -13,14 +13,33 @@ public class GraphDBCSVFileWriter implements GraphWriter {
     }
   }
 
+  // formatting for GraphDB CSV
+  private String toGraphDBCSV(StackNode node) {
+    StringBuffer result = new StringBuffer();
+
+    String parameters = node.getSignature();
+    //    if (isEmpty(parameters)) { //TODO
+    if (parameters.isEmpty()) {
+      parameters = "void";
+    }
+
+    String codeType = node.isTestMethod() ? "Test" : "Source";
+    result.append(codeType);
+    result.append("|").append(node.getPackageName());
+    result.append("|").append(node.getClassName());
+    result.append("|").append(node.getMethodName());
+    result.append("|").append(parameters);
+
+    return result.toString();
+  }
   @Override
   public void node(StackNode method) {}
 
   @Override
   public void edge(StackNode from, StackNode to) throws IOException {
     StringBuilder line = new StringBuilder();
-    String fromString = from.toGraphDBCSV();
-    String toString = to.toGraphDBCSV();
+    String fromString = toGraphDBCSV(from);
+    String toString = toGraphDBCSV(to);
 
     line.append(fromString.hashCode()).append('|');
     line.append(fromString).append('|');

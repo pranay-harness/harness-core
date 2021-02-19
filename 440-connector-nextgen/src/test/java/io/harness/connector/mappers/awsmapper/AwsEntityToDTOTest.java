@@ -16,6 +16,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,18 +40,19 @@ public class AwsEntityToDTOTest extends CategoryTest {
     final String delegateSelector = "delegateSelector";
     final CrossAccountAccessDTO crossAccountAccess =
         CrossAccountAccessDTO.builder().crossAccountRoleArn(crossAccountRoleArn).externalId(externalRoleArn).build();
-    final AwsConfig awsConfig = AwsConfig.builder()
-                                    .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
-                                    .crossAccountAccess(crossAccountAccess)
-                                    .credential(AwsIamCredential.builder().delegateSelector(delegateSelector).build())
-                                    .build();
+    final AwsConfig awsConfig =
+        AwsConfig.builder()
+            .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
+            .crossAccountAccess(crossAccountAccess)
+            .credential(AwsIamCredential.builder().delegateSelectors(Collections.singleton(delegateSelector)).build())
+            .build();
     final AwsConnectorDTO connectorDTO = awsEntityToDTO.createConnectorDTO(awsConfig);
 
     assertThat(connectorDTO).isNotNull();
     assertThat(connectorDTO.getCredential()).isNotNull();
     assertThat(connectorDTO.getCredential().getAwsCredentialType()).isEqualTo(AwsCredentialType.INHERIT_FROM_DELEGATE);
-    assertThat(((AwsInheritFromDelegateSpecDTO) connectorDTO.getCredential().getConfig()).getDelegateSelector())
-        .isEqualTo(delegateSelector);
+    assertThat(((AwsInheritFromDelegateSpecDTO) connectorDTO.getCredential().getConfig()).getDelegateSelectors())
+        .isEqualTo(Collections.singleton(delegateSelector));
     assertThat(connectorDTO.getCredential().getCrossAccountAccess()).isEqualTo(crossAccountAccess);
 
     final String accessKey = "accessKey";

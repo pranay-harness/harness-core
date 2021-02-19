@@ -35,7 +35,8 @@ def main(event, context):
     jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
 
     client = bigquery.Client(jsonData["projectName"])
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     dataset = client.dataset(jsonData["datasetName"])
     awsCurTableref = dataset.table(jsonData["tableName"])
     awsCurTableName =  TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], jsonData["tableName"])

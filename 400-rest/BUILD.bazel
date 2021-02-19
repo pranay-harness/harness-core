@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
 ] + [
     "//:lombok",
     "//420-delegate-service:module",
@@ -52,6 +53,7 @@ shared_dependencies = [
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
+    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
@@ -90,6 +92,9 @@ shared_dependencies = [
     "@maven//:com_amazonaws_aws_java_sdk_sts",
     "@maven//:com_amazonaws_jmespath_java",
     "@maven//:com_auth0_java_jwt",
+    "@maven//:com_azure_azure_identity",
+    "@maven//:com_azure_azure_storage_blob",
+    "@maven//:com_azure_azure_storage_common",
     "@maven//:com_bettercloud_vault_java_driver",
     "@maven//:com_bugsnag_bugsnag",
     "@maven//:com_carrotsearch_hppc",
@@ -214,6 +219,7 @@ shared_dependencies = [
     "@maven//:com_mchange_c3p0",
     "@maven//:com_mchange_mchange_commons_java",
     "@maven//:com_microsoft_azure_adal4j",
+    "@maven//:com_microsoft_azure_msal4j",
     "@maven//:com_microsoft_azure_azure",
     "@maven//:com_microsoft_azure_azure_annotations",
     "@maven//:com_microsoft_azure_azure_client_authentication",
@@ -368,7 +374,6 @@ shared_dependencies = [
     "@maven//:io_kubernetes_client_java_api",
     "@maven//:io_kubernetes_client_java_extended",
     "@maven//:io_kubernetes_client_java_proto",
-    "@maven//:io_netty_netty_all",
     "@maven//:io_netty_netty_buffer",
     "@maven//:io_netty_netty_codec",
     "@maven//:io_netty_netty_codec_http",

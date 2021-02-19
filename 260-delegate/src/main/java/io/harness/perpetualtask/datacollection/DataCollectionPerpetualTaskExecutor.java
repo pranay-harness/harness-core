@@ -3,6 +3,7 @@ package io.harness.perpetualtask.datacollection;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.Module;
@@ -74,8 +75,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     log.info("DataCollectionInfo {} ", dataCollectionInfo);
     try (DataCollectionLogContext ignored = new DataCollectionLogContext(
              taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
-      secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity() != null
-              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity()
+      secretDecryptionService.decrypt(isNotEmpty(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities())
+              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities().get(0)
               : null,
           dataCollectionInfo.getEncryptedDataDetails());
       dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);

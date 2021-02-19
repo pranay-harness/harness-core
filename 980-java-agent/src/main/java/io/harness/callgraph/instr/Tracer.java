@@ -40,8 +40,16 @@ public class Tracer {
     ShutdownHook.init();
 
     Set<String> includes = new HashSet<>(Arrays.asList(Config.getInst().instrPackages()));
+
+    // Read user provided test annotations in addition to default test annotations
+    Set<String> defaultTestAnnotations =
+        new HashSet<>(Arrays.asList("org.junit.Test", "org.junit.jupiter.api.Test", "org.testng.annotations.Test"));
+
+    Set<String> testAnnotations = new HashSet<>(Arrays.asList(Config.getInst().testAnnotations()));
+    testAnnotations.addAll(defaultTestAnnotations);
+
     System.setProperty("net.bytebuddy.raw", "true"); // don't resolve generics as it causes JVM crashes in some cases in
                                                      // jdk1.8. for later versions beyond 1.8, we can enable
-    new ByteBuddyInstr(includes).instrument(instrumentation);
+    new ByteBuddyInstr(includes, testAnnotations).instrument(instrumentation);
   }
 }

@@ -250,6 +250,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                  .filter(SettingAttributeKeys.category, category)
                                  .filter(SettingAttributeKeys.value_type, valueType)
                                  .fetch())) {
+      log.info("Fetching settingAttributes query: ", query.toString());
       for (SettingAttribute settingAttribute : query) {
         settingAttributes.add(settingAttribute);
       }

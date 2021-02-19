@@ -234,7 +234,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           verificationJobInstance.getPreActivityVerificationStartTime().plus(verificationJob.getDuration()));
     });
 
-    markRunning(verificationJobInstance.getUuid());
+    markRunning(verificationJobInstance.getUuid(), cvConfigs);
   }
 
   public List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob) {
@@ -312,6 +312,16 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
+  public CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
+    if (verificationJobInstance.getCvConfigMap()
+        != null) { // TODO: this is just migration logic. Remove this check once VerificationJobInstances expires.
+      return verificationJobInstance.getCvConfigMap().get(cvConfigId);
+    }
+    return cvConfigService.get(cvConfigId);
+  }
+
+  @Override
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
@@ -334,8 +344,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       connectorToPerpetualTaskIdsMap.put(connectorIdentifier, perpetualTaskId);
     });
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
-    markRunning(verificationJobInstance.getUuid());
-    setPerpetualTaskIds(verificationJobInstance, connectorToPerpetualTaskIdsMap);
+    markRunning(verificationJobInstance.getUuid(), cvConfigs, connectorToPerpetualTaskIdsMap);
   }
 
   @Override
@@ -432,13 +441,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         getPostDeploymentVerificationJobInstances(verificationJobInstances);
     Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
         getPreAndProductionDeploymentGroup(verificationJobInstances);
-    addDeploymentVerificationJobInstanceSummaries(accountId,
-        preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
         deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(accountId,
-        preAndProductionDeploymentGroup.get(EnvironmentType.Production),
+    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
         deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(accountId, postDeploymentVerificationJobInstances,
+    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
         deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
   }
 
@@ -510,7 +517,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private Map<EnvironmentType, List<VerificationJobInstance>> getPreAndProductionDeploymentGroup(
       List<VerificationJobInstance> verificationJobInstances) {
-    // TODO: use cache to avoid duplicate calls and refactor the getEnv API
     return verificationJobInstances.stream()
         .filter(
             verificationJobInstance -> verificationJobInstance.getResolvedJob().getType() != VerificationJobType.HEALTH)
@@ -521,8 +527,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         }));
   }
 
-  private void addDeploymentVerificationJobInstanceSummaries(String accountId,
-      List<VerificationJobInstance> verificationJobInstances,
+  private void addDeploymentVerificationJobInstanceSummaries(List<VerificationJobInstance> verificationJobInstances,
       List<DeploymentVerificationJobInstanceSummary> deploymentVerificationJobInstanceSummaries) {
     if (!isEmpty(verificationJobInstances)) {
       verificationJobInstances.forEach(verificationJobInstance -> {
@@ -533,6 +538,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   //  TODO find the right place for this switch case
+  @Nullable
   private AdditionalInfo getAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getResolvedJob().getType()) {
       case CANARY:
@@ -573,7 +579,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private Optional<Risk> getLatestRisk(VerificationJobInstance verificationJobInstance) {
-    if (verificationJobInstance.getExecutionStatus() == ExecutionStatus.QUEUED) {
+    if (ExecutionStatus.noAnalysisStatuses().contains(verificationJobInstance.getExecutionStatus())) {
       return Optional.empty();
     }
     if (verificationJobInstance != null
@@ -816,20 +822,24 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private void setPerpetualTaskIds(
-      VerificationJobInstance verificationJobInstance, Map<String, String> connectorToPerpetualTaskIdsMap) {
-    hPersistence.update(verificationJobInstance,
-        hPersistence.createUpdateOperations(VerificationJobInstance.class)
-            .set(VerificationJobInstanceKeys.perpetualTaskIds, connectorToPerpetualTaskIdsMap.values())
-            .set(VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, connectorToPerpetualTaskIdsMap));
+  private void markRunning(String verificationTaskId, List<CVConfig> cvConfigs) {
+    markRunning(verificationTaskId, cvConfigs, null);
   }
-
-  private void markRunning(String verificationTaskId) {
+  private void markRunning(String verificationJobInstanceId, List<CVConfig> cvConfigs,
+      @Nullable Map<String, String> connectorToPerpetualTaskIdsMap) {
+    Map<String, CVConfig> cvConfigMap =
+        cvConfigs.stream().collect(Collectors.toMap(CVConfig::getUuid, cvConfig -> cvConfig));
     UpdateOperations<VerificationJobInstance> updateOperations =
         hPersistence.createUpdateOperations(VerificationJobInstance.class)
-            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.RUNNING);
+            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.RUNNING)
+            .set(VerificationJobInstanceKeys.cvConfigMap, cvConfigMap);
+    if (connectorToPerpetualTaskIdsMap != null) {
+      updateOperations =
+          updateOperations.set(VerificationJobInstanceKeys.perpetualTaskIds, connectorToPerpetualTaskIdsMap.values())
+              .set(VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, connectorToPerpetualTaskIdsMap);
+    }
     Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
-                                               .filter(VerificationJobInstanceKeys.uuid, verificationTaskId);
+                                               .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId);
     hPersistence.update(query, updateOperations);
   }
 }

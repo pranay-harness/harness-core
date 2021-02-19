@@ -1,16 +1,16 @@
-package io.harness.accesscontrol.management.jobs;
+package io.harness.accesscontrol;
 
-import io.harness.accesscontrol.permissions.jobs.PermissionsManagementJob;
+import io.harness.accesscontrol.permissions.PermissionsManagementJob;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class ManagementJob {
+public class AccessControlManagementJob {
   private final PermissionsManagementJob permissionsManagementJob;
 
   @Inject
-  public ManagementJob(PermissionsManagementJob permissionsManagementJob) {
+  public AccessControlManagementJob(PermissionsManagementJob permissionsManagementJob) {
     this.permissionsManagementJob = permissionsManagementJob;
   }
 

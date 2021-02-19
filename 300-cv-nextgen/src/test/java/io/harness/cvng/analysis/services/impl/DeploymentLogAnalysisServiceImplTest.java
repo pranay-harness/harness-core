@@ -265,10 +265,9 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetLogAnalysisResult_withWrongVerificationJobInstanceId() {
-    assertThatThrownBy(
-        () -> deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("No verification task mapping exist for verificationJobInstanceId");
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, null);
+    assertThat(pageResponse.getContent()).isEmpty();
   }
 
   @Test

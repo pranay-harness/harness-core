@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
@@ -107,6 +108,7 @@ public class VerificationJobInstance
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;
+  private Map<String, CVConfig> cvConfigMap;
 
   @Builder.Default
   @FdTtlIndex
@@ -242,6 +244,9 @@ public class VerificationJobInstance
     TIMEOUT;
     public static List<ExecutionStatus> nonFinalStatuses() {
       return Lists.newArrayList(QUEUED, RUNNING);
+    }
+    public static List<ExecutionStatus> noAnalysisStatuses() {
+      return Lists.newArrayList(QUEUED, TIMEOUT);
     }
     public static List<ExecutionStatus> finalStatuses() {
       return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);

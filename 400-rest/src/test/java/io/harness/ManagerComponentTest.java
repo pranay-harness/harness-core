@@ -14,12 +14,10 @@ import com.google.inject.Inject;
 import java.util.Map;
 import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class ManagerComponentTest extends WingsBaseTest {
   @Inject private Map<String, TestExecution> tests;
 
