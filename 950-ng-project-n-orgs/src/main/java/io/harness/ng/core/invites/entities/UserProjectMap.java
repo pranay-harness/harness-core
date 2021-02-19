@@ -2,10 +2,12 @@ package io.harness.ng.core.invites.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.invites.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.persistence.PersistentEntity;
 
@@ -34,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "userProjectMaps", noClassnameStored = true)
 @Document("userProjectMaps")
 @TypeAlias("userProjectMaps")
+@StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
 public class UserProjectMap implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String uuid;

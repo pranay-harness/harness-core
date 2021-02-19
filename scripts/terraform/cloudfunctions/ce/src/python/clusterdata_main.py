@@ -78,7 +78,8 @@ def main(jsonData, context):
     clusterDataTableRef = dataset.table("clusterData")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.%s.%s" % (jsonData["projectName"], jsonData["datasetName"], "unifiedTable")
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     if not if_tbl_exists(client, clusterDataTableRef):
         print("%s table does not exists, creating table..." % clusterDataTableRef)
         createTable(client, clusterDataTableName)

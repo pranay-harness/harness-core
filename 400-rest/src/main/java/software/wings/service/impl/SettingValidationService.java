@@ -73,6 +73,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -326,6 +327,8 @@ public class SettingValidationService {
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof CEAwsConfig) {
       validateCEAwsConfig(settingAttribute);
+    } else if (settingValue instanceof CEAzureConfig) {
+      validateCEAzureConfig(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -355,6 +358,10 @@ public class SettingValidationService {
 
   private void validateCEAwsConfig(SettingAttribute settingAttribute) {
     awsceConfigValidationService.verifyCrossAccountAttributes(settingAttribute);
+  }
+
+  private void validateCEAzureConfig(SettingAttribute settingAttribute) {
+    // TODO: Implement validation
   }
 
   private void validateSpotInstConfig(

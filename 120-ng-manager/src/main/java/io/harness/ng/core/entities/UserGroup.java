@@ -1,9 +1,14 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
@@ -30,6 +35,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "user-groups", noClassnameStored = true)
 @Document("user-groups")
 @TypeAlias("user-groups")
+@StoreIn(DbAliases.NG_MANAGER)
+@OwnedBy(PL)
 public class UserGroup implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

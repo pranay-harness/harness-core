@@ -107,9 +107,10 @@ public class ActivityResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
-      @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
+      @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTime,
+      @NotNull @QueryParam("endTime") Long endTime) {
     return new RestResponse(activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier,
-        environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+        environmentIdentifier, serviceIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET
