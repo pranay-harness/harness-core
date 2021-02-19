@@ -3,10 +3,12 @@ package io.harness.ng.core.entities;
 import static io.harness.mongo.CollationLocale.ENGLISH;
 import static io.harness.mongo.CollationStrength.PRIMARY;
 
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CdUniqueIndexWithCollation;
 import io.harness.mongo.index.Field;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
     fields = { @Field(OrganizationKeys.accountIdentifier)
                , @Field(OrganizationKeys.identifier) }, locale = ENGLISH,
     strength = PRIMARY)
+@StoreIn(DbAliases.NG_MANAGER)
 public class Organization implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
