@@ -14,23 +14,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.transport.URIish;
 
+@Slf4j
 @UtilityClass
 public class GitCapabilityHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator,
       GitConfigDTO gitConfig, List<EncryptedDataDetail> encryptionDetails, SSHKeySpecDTO sshKeySpecDTO,
       boolean mergeCapabilities) {
     if (mergeCapabilities) {
-      List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-      URIish uri = gitConfig.getUrl();
-      if (uri.getScheme() == "http" || uri.getScheme() == "https") {
-        executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(gitConfig.getUrl()).build());
-      } else {
-        executionCapabilities.add(
-            SSHHostValidationCapability.builder().host(uri.getHost()).port(uri.getPort()).build());
+      try {
+        List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+        URIish uri = new URIish(gitConfig.getUrl());
+        if (uri.getScheme() == "http" || uri.getScheme() == "https") {
+          executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(gitConfig.getUrl()).build());
+        } else {
+          executionCapabilities.add(
+              SSHHostValidationCapability.builder().host(uri.getHost()).port(uri.getPort()).build());
+        }
+        return executionCapabilities;
+      } catch (Exception e) {
+        log.error("malformed git capability url: " + gitConfig.getUrl());
+        return new ArrayList<>();
       }
-      return executionCapabilities;
     }
     return Collections.singletonList(GitConnectionNGCapability.builder()
                                          .encryptedDataDetails(encryptionDetails)
