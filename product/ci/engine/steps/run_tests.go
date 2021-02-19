@@ -17,9 +17,7 @@ import (
 )
 
 const (
-	diffPath = "/step-exec/.harness/vcs/diff.txt"                            // path to read the changed files
-	srcDir   = "/step-exec/.harness/test-intelligence/callgraph"             //directory where callgraph will be created
-	archPath = "/step-exec/.harness/test-intelligence/archive/callgraph.tar" //directory where tar file of callgraph will be created
+	diffPath = "/step-exec/.harness/vcs/diff.txt" // path to read the changed files
 )
 
 var (
