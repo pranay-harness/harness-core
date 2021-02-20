@@ -2,9 +2,6 @@
 
 set -ex
 
-ps auxwwwe
-echo end off ps-report
-
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]
@@ -49,9 +46,6 @@ then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
-
-ps auxwwwe
-echo end off ps-report
 
 BAZEL_MODULES="\
   //120-ng-manager:module \
@@ -312,7 +306,6 @@ build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
-build_bazel_module 340-ce-nextgen
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
 build_bazel_module 420-delegate-agent
@@ -386,6 +379,3 @@ build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
-
-ps auxwwwe
-echo end off ps-report
