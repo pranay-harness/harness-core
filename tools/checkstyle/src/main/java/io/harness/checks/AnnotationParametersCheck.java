@@ -89,7 +89,7 @@ public class AnnotationParametersCheck extends AbstractCheck {
 
   private static final List<Expectation> execpectations =
       asList(new Expectation("FieldNameConstants", "innerTypeName", false, EXISTS, ""),
-          new Expectation("Ignore", "value", true, EXISTS_REGEX_MATCH, ".{30,120}"));
+          new Expectation("Ignore", "value", true, EXISTS_REGEX_MATCH, ".{25,110}"));
 
   @Override
   public int[] getDefaultTokens() {

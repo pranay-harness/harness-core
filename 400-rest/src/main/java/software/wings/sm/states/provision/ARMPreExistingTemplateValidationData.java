@@ -5,8 +5,8 @@ import software.wings.api.arm.ARMPreExistingTemplate;
 import lombok.Builder;
 import lombok.Data;
 
-@Builder
 @Data
+@Builder
 public class ARMPreExistingTemplateValidationData {
   private boolean isValidData;
   private String errorMessage;

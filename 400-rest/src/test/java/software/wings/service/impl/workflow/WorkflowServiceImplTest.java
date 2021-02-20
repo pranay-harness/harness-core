@@ -79,6 +79,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachine.StateMachineBuilder;
 import software.wings.sm.StateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
@@ -675,7 +676,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
-    when(stateMachineQuery.get()).thenReturn(StateMachine.StateMachineBuilder.aStateMachine().build());
+    when(stateMachineQuery.get()).thenReturn(StateMachineBuilder.aStateMachine().build());
 
     when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
     workflowService.updateWorkflow(newWorkflow, null, false, false, false);
@@ -711,7 +712,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
-    when(stateMachineQuery.get()).thenReturn(StateMachine.StateMachineBuilder.aStateMachine().build());
+    when(stateMachineQuery.get()).thenReturn(StateMachineBuilder.aStateMachine().build());
 
     when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
     workflowService.updateWorkflow(newWorkflow, null, false, false, false);

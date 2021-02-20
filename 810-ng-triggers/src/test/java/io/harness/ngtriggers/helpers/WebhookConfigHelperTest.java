@@ -28,8 +28,8 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLA
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;

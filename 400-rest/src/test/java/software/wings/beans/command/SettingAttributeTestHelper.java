@@ -24,8 +24,6 @@ import io.harness.shell.AccessType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.beans.command.ContainerResizeParams;
-import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.utils.WingsTestConstants;
 

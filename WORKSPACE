@@ -1985,6 +1985,7 @@ maven_install(
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "com.github.heremaps:oksse:0.9.0",
         "com.slack.api:slack-api-client:1.5.3",
+        "com.slack.api:slack-api-model:1.5.3",
         "org.springframework.batch:spring-batch-core:4.2.2.RELEASE",
         "org.springframework.boot:spring-boot-starter-batch:2.1.6.RELEASE",
         "software.amazon.awssdk:athena:2.10.18",

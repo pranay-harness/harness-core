@@ -1,15 +1,21 @@
 package io.harness.annotation;
 
+import static io.harness.rule.OwnerRule.PIYUSH;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.annotations.retry.IMethodWrapper;
 import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
 
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 import org.mockito.invocation.Invocation;
 
@@ -25,34 +31,38 @@ public class RetryOnExceptionAnnotationTest {
 
   @SneakyThrows
   @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
   public void test_IfRetryIsAttemptedForConfiguredTimesInCaseOfException() throws Exception {
     Mockito.when(methodWrapper.execute()).thenThrow(SQLException.class);
     try {
       methodExecutionHelper.execute(methodWrapper, 2, 10, SQLException.class);
     } catch (Exception exception) {
-      Assert.assertTrue(exception.getClass().isAssignableFrom(SQLException.class));
+      assertThat(exception.getClass().isAssignableFrom(SQLException.class)).isTrue();
     }
     Collection<Invocation> invocations = Mockito.mockingDetails(methodWrapper).getInvocations();
-    int numberOfCalls = invocations.size();
-    Assert.assertEquals(2, numberOfCalls);
+    assertThat(invocations).hasSize(2);
   }
 
   @SneakyThrows
   @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
   public void test_IfRetryIsAttemptedOnlyForConfiguredException() throws Exception {
     Mockito.when(methodWrapper.execute()).thenThrow(NullPointerException.class);
     try {
       methodExecutionHelper.execute(methodWrapper, 2, 10, SQLException.class);
     } catch (Exception exception) {
-      Assert.assertTrue(exception.getClass().isAssignableFrom(NullPointerException.class));
+      assertThat(exception.getClass().isAssignableFrom(NullPointerException.class)).isTrue();
     }
     Collection<Invocation> invocations = Mockito.mockingDetails(methodWrapper).getInvocations();
-    int numberOfCalls = invocations.size();
-    Assert.assertEquals(1, numberOfCalls);
+    assertThat(invocations).hasSize(1);
   }
 
   @SneakyThrows
   @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
   public void test_IfRetriesAreAttemptedByConfiguredDelay() throws Exception {
     Mockito.when(methodWrapper.execute()).thenThrow(SQLException.class);
     int numberOfRetries = 5;
@@ -63,8 +73,8 @@ public class RetryOnExceptionAnnotationTest {
       methodExecutionHelper.execute(methodWrapper, numberOfRetries, delayBetweenRetries, SQLException.class);
     } catch (Exception exception) {
       long actualDelayInMilliSeconds = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
-      Assert.assertTrue(actualDelayInMilliSeconds >= expectedDelayInMilliSeconds);
-      Assert.assertTrue(exception.getClass().isAssignableFrom(SQLException.class));
+      assertThat(actualDelayInMilliSeconds >= expectedDelayInMilliSeconds).isTrue();
+      assertThat(exception.getClass().isAssignableFrom(SQLException.class)).isTrue();
     }
   }
 }
