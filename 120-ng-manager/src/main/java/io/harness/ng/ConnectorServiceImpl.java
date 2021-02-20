@@ -31,6 +31,8 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -39,6 +41,7 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
+import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -97,18 +100,56 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    PerpetualTaskId connectorHeartbeatTaskId = null;
     try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-      ConnectorResponseDTO connectorResponse =
-          getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
-      ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
-      createConnectorCreationActivity(accountIdentifier, savedConnector);
-      connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, savedConnector);
-      runTestConnectionAsync(connector, accountIdentifier);
-      return connectorResponse;
+      Boolean isHarnessManagedSecretManager = isHarnessManagedSecretManager(connectorInfo);
+      if (!isHarnessManagedSecretManager) {
+        connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
+            connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+      }
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager) {
+        ConnectorResponseDTO connectorResponse =
+            getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
+        if (connectorResponse != null) {
+          ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
+          createConnectorCreationActivity(accountIdentifier, savedConnector);
+          runTestConnectionAsync(connector, accountIdentifier);
+          if (connectorHeartbeatTaskId != null) {
+            defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier,
+                connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(),
+                connectorHeartbeatTaskId.getId());
+          }
+        }
+        return connectorResponse;
+      } else {
+        throw new InvalidRequestException("Connector could not be created because we could not create the heartbeat");
+      }
+    } catch (Exception ex) {
+      if (connectorHeartbeatTaskId != null) {
+        ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+        String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+            connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+        deleteConnectorHeartbeatTask(accountIdentifier, fullyQualifiedIdentifier, connectorHeartbeatTaskId.getId());
+      }
+      throw ex;
+    }
+  }
+
+  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
+    if (connector == null) {
+      return false;
+    }
+    switch (connector.getConnectorType()) {
+      case GCP_KMS:
+        return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
+      case LOCAL:
+        return ((LocalConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
+      default:
+        return false;
     }
   }
 
@@ -191,13 +232,21 @@ public class ConnectorServiceImpl implements ConnectorService {
           connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
       if (connectorOptional.isPresent()) {
         Connector connector = connectorOptional.get();
-        boolean isConnectorDeleted =
-            getConnectorService(connector.getType())
-                .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-        deleteConnectorHeartbeatTask(
+        boolean isConnectorHeartbeatDeleted = deleteConnectorHeartbeatTask(
             accountIdentifier, fullyQualifiedIdentifier, connector.getHeartbeatPerpetualTaskId());
-        deleteConnectorActivities(accountIdentifier, fullyQualifiedIdentifier);
-        return isConnectorDeleted;
+        if (isConnectorHeartbeatDeleted || connector.getHeartbeatPerpetualTaskId() == null) {
+          boolean isConnectorDeleted =
+              getConnectorService(connector.getType())
+                  .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+          if (isConnectorDeleted) {
+            return true;
+          } else {
+            connectorHeartbeatService.createConnectorHeatbeatTask(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+            return false;
+          }
+        }
+        throw new InvalidRequestException("Could not delete connector because heartbeat could not be deleted", USER);
       }
       throw new InvalidRequestException("No such connector found", USER);
     }
@@ -211,14 +260,21 @@ public class ConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private void deleteConnectorHeartbeatTask(String accountIdentifier, String connectorFQN, String heartbeatTaskId) {
+  private boolean deleteConnectorHeartbeatTask(String accountIdentifier, String connectorFQN, String heartbeatTaskId) {
     if (isNotBlank(heartbeatTaskId)) {
-      connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+      boolean perpetualTaskIsDeleted =
+          connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+      if (perpetualTaskIsDeleted == false) {
+        log.info("{} The perpetual task could not be deleted {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+        return false;
+      }
     } else {
       log.info("{} The perpetual task id is empty for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+      return false;
     }
     log.info(
         "{} Deleted the heartbeat perpetual task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+    return true;
   }
 
   @Override
@@ -324,12 +380,13 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
     try (AutoLogContext ignore1 = new NgAutoLogContext(
-             connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new ConnectorLogContext(connector.getIdentifier(), OVERRIDE_ERROR);) {
-      defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+             connectorProjectIdentifier, connectorOrgIdentifier, accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR);) {
+      defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(
+          accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier, perpetualTaskId);
     }
   }
 
