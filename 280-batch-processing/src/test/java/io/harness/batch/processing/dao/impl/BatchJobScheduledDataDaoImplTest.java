@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -19,7 +19,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BatchJobScheduledDataDaoImplTest extends BatchProcessingBaseTest {
+public class BatchJobScheduledDataDaoImplTest extends BatchProcessingTestBase {
   @Inject private BatchJobScheduledDataDaoImpl batchJobScheduledDataDao;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

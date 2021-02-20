@@ -764,7 +764,7 @@ java_library(
     deps = test_dependencies,
 )
 
-#checkstyle()
+checkstyle()
 
 sonarqube_test(
     name = "sq_mycomponent",

@@ -57,10 +57,10 @@ public class AzureCEConfigValidationServiceImpl implements AzureCEConfigValidati
       validateIfContainerIsPresent(blobContainerClient, directoryName);
     } catch (BlobStorageException ex) {
       log.error("Exception while validating storage account details", ex);
-      if (ex.getErrorCode().toString() == "ContainerNotFound") {
+      if (ex.getErrorCode().toString().equals("ContainerNotFound")) {
         throw new InvalidArgumentsException(
             ImmutablePair.of(validationFailureKey, "The specified container does not exist"));
-      } else if (ex.getErrorCode().toString() == "AuthorizationPermissionMismatch") {
+      } else if (ex.getErrorCode().toString().equals("AuthorizationPermissionMismatch")) {
         throw new InvalidArgumentsException(
             ImmutablePair.of(validationFailureKey, "Authorization permission mismatch"));
       } else {
