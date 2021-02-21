@@ -1,4 +1,14 @@
 permissions:
+  - identifier: core.account.edit
+    name: Edit Account Settings
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.account.delete
+    name: Delete Account
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
   - identifier: core.project.create
     name: Create Project
     status: ACTIVE

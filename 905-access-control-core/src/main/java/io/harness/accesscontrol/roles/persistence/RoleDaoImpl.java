@@ -13,14 +13,19 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
+import java.util.Set;
+import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+@Singleton
+@ValidateOnExecution
 public class RoleDaoImpl implements RoleDao {
   private final RoleRepository roleRepository;
 
@@ -41,25 +46,44 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
-  public PageResponse<Role> getAll(PageRequest pageRequest, String scopeIdentifier, boolean includeManaged) {
+  public PageResponse<Role> list(
+      PageRequest pageRequest, String scopeIdentifier, boolean includeManaged, Set<String> allowedScopeLevels) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = new Criteria();
-    criteria.orOperator(Criteria.where(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier),
-        Criteria.where(RoleDBOKeys.managed).is(includeManaged));
+    if (includeManaged) {
+      criteria.orOperator(Criteria.where(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier),
+          Criteria.where(RoleDBOKeys.managed).is(true));
+    } else {
+      criteria.and(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+    }
+    if (!allowedScopeLevels.isEmpty()) {
+      criteria.and(RoleDBOKeys.allowedScopeLevels).in(allowedScopeLevels);
+    }
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
     return PageUtils.getNGPageResponse(rolePages.map(RoleDBOMapper::fromDBO));
   }
 
   @Override
-  public Optional<Role> get(String identifier, String scopeIdentifier) {
-    Optional<RoleDBO> role = roleRepository.findByIdentifierAndScopeIdentifier(identifier, scopeIdentifier);
-    return role.flatMap(r -> Optional.of(fromDBO(r)));
+  public Optional<Role> get(String identifier, String scopeIdentifier, boolean isManaged) {
+    return getInternal(identifier, scopeIdentifier, isManaged).flatMap(r -> Optional.of(fromDBO(r)));
+  }
+
+  private Optional<RoleDBO> getInternal(String identifier, String scopeIdentifier, boolean isManaged) {
+    Criteria criteria = new Criteria();
+    if (isManaged) {
+      criteria.orOperator(Criteria.where(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier),
+          Criteria.where(RoleDBOKeys.managed).is(true));
+    } else {
+      criteria.and(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+    }
+    criteria.and(RoleDBOKeys.identifier).is(identifier);
+    return roleRepository.find(criteria);
   }
 
   @Override
   public Role update(Role roleUpdate) {
     Optional<RoleDBO> roleDBOOptional =
-        roleRepository.findByIdentifierAndScopeIdentifier(roleUpdate.getIdentifier(), roleUpdate.getScopeIdentifier());
+        getInternal(roleUpdate.getIdentifier(), roleUpdate.getScopeIdentifier(), roleUpdate.isManaged());
     if (roleDBOOptional.isPresent()) {
       RoleDBO roleUpdateDBO = toDBO(roleUpdate);
       roleUpdateDBO.setId(roleDBOOptional.get().getId());
