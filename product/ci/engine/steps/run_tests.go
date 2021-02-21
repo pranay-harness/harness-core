@@ -109,7 +109,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 
 	tc, err := remoteTiClient()
 	if err != nil {
-		e.log.Errorw("could not create a client to the TI service", zap.Error(err))
+		e.log.Errorw("failed to create ti service client", zap.Error(err))
 		return nil, int32(1), err
 	}
 
@@ -140,7 +140,6 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 	e.log.Infow(
 		"running tests with intelligence",
 		"testsToExecute", testsToExecute,
-		"goals", e.goals,
 	)
 
 	testsFlag := ""
