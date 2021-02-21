@@ -38,6 +38,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -82,22 +83,28 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Override
   public PageResponse<AppDynamicsApplication> getApplications(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter) {
-    DataCollectionRequest request =
-        AppDynamicsFetchAppRequest.builder().type(DataCollectionRequestType.APPDYNAMICS_FETCH_APPS).build();
+    List<AppDynamicsApplication> applications = null;
+    if (isDemoPath(accountId)) {
+      applications = getApplicationsForDemo();
+    } else {
+      DataCollectionRequest request =
+          AppDynamicsFetchAppRequest.builder().type(DataCollectionRequestType.APPDYNAMICS_FETCH_APPS).build();
 
-    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
-                                                    .dataCollectionRequest(request)
-                                                    .connectorIdentifier(connectorIdentifier)
-                                                    .accountId(accountId)
-                                                    .orgIdentifier(orgIdentifier)
-                                                    .projectIdentifier(projectIdentifier)
-                                                    .build();
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(accountId)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .build();
 
-    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+      OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
 
-    final Gson gson = new Gson();
-    Type type = new TypeToken<List<AppDynamicsApplication>>() {}.getType();
-    List<AppDynamicsApplication> applications = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+      final Gson gson = new Gson();
+      Type type = new TypeToken<List<AppDynamicsApplication>>() {}.getType();
+      applications = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    }
+
     if (isNotEmpty(filter)) {
       applications = applications.stream()
                          .filter(appDynamicsApplication
@@ -109,27 +116,54 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     return PageUtils.offsetAndLimit(applications, offset, pageSize);
   }
 
+  private boolean isDemoPath(String accountId) {
+    if (accountId.equals("AQ8xhfNCRtGIUjq5bSM8Fg") || accountId.equals("kmpySmUISimoRrJL6NL73w")) {
+      return true;
+    }
+    return false;
+  }
+
+  private List<AppDynamicsApplication> getApplicationsForDemo() {
+    List<AppDynamicsApplication> applications = new ArrayList<>();
+    applications.add(AppDynamicsApplication.builder().id(501677).name("Ecommerce-Banking-Prod").build());
+
+    applications.add(AppDynamicsApplication.builder().id(501675).name("Ecommerce-Banking-QA").build());
+
+    applications.add(AppDynamicsApplication.builder().id(339310).name("Harness-CI-Manager").build());
+
+    applications.add(AppDynamicsApplication.builder().id(15588).name("Harness-Dev").build());
+    applications.add(AppDynamicsApplication.builder().id(7596).name("cv-app").build());
+
+    return applications;
+  }
+
   @Override
   public PageResponse<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String appName, int offset, int pageSize, String filter) {
-    DataCollectionRequest request = AppDynamicsFetchTiersRequest.builder()
-                                        .appName(appName)
-                                        .type(DataCollectionRequestType.APPDYNAMICS_FETCH_TIERS)
-                                        .build();
+    List<AppDynamicsTier> tiers = null;
+    if (isDemoPath(accountId)) {
+      tiers = getTiersForDemo(appName);
+    } else {
+      DataCollectionRequest request = AppDynamicsFetchTiersRequest.builder()
+                                          .appName(appName)
+                                          .type(DataCollectionRequestType.APPDYNAMICS_FETCH_TIERS)
+                                          .build();
 
-    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
-                                                    .dataCollectionRequest(request)
-                                                    .connectorIdentifier(connectorIdentifier)
-                                                    .accountId(accountId)
-                                                    .orgIdentifier(orgIdentifier)
-                                                    .projectIdentifier(projectIdentifier)
-                                                    .build();
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(accountId)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .build();
 
-    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+      OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
 
-    final Gson gson = new Gson();
-    Type type = new TypeToken<List<AppDynamicsTier>>() {}.getType();
-    List<AppDynamicsTier> tiers = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+      final Gson gson = new Gson();
+      Type type = new TypeToken<List<AppDynamicsTier>>() {}.getType();
+      tiers = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    }
+
     List<AppDynamicsTier> appDynamicsTiers = new ArrayList<>();
     tiers.forEach(appDynamicsTier -> {
       if (isEmpty(filter) || appDynamicsTier.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
@@ -138,6 +172,16 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     });
     Collections.sort(appDynamicsTiers);
     return PageUtils.offsetAndLimit(appDynamicsTiers, offset, pageSize);
+  }
+
+  private List<AppDynamicsTier> getTiersForDemo(String appName) {
+    AppDynamicsTier tier = null;
+    if (appName.equals("Ecommerce-Banking-QA")) {
+      tier = AppDynamicsTier.builder().id(962171).name("banking-webapp").build();
+    } else if (appName.equals("Ecommerce-Banking-Prod")) {
+      tier = AppDynamicsTier.builder().id(962173).name("banking-webapp").build();
+    }
+    return Arrays.asList(tier);
   }
 
   @Override
