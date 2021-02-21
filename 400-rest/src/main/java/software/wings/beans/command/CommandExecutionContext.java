@@ -36,7 +36,6 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
-import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

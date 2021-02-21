@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
 import io.harness.connector.ConnectivityStatus;
@@ -31,7 +32,7 @@ public class GcpValidationTaskHandler implements TaskHandler {
   @Override
   public GcpResponse executeRequest(GcpRequest gcpRequest) {
     try {
-      if (isNotBlank(gcpRequest.getDelegateSelector())) {
+      if (isNotEmpty(gcpRequest.getDelegateSelectors())) {
         gcpClient.validateDefaultCredentials();
         ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
                                                                   .status(ConnectivityStatus.SUCCESS)

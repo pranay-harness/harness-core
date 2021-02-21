@@ -15,5 +15,5 @@ public interface PermissionService {
 
   Permission update(@Valid Permission permission);
 
-  void delete(@NotEmpty String identifier);
+  Permission delete(@NotEmpty String identifier);
 }

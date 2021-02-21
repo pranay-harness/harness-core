@@ -6,7 +6,6 @@ import io.harness.pms.yaml.ParameterField;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 
 @Data
 @JsonTypeName("ReleaseName")
@@ -18,8 +17,13 @@ public class DeleteReleaseNameSpec implements DeleteResourcesBaseSpec {
   }
 
   @Override
-  public String getResources() {
-    return StringUtils.EMPTY;
+  public String getResourceNames() {
+    return "";
+  }
+
+  @Override
+  public String getManifestPaths() {
+    return "";
   }
 
   @Override

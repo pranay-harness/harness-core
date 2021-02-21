@@ -1,7 +1,7 @@
 package io.harness.delegate.beans.connector.k8Connector;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
@@ -17,10 +17,8 @@ public class K8sTaskCapabilityHelper {
     KubernetesCredentialDTO credential = kubernetesClusterConfigDTO.getCredential();
     if (credential.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO k8sDetails = (KubernetesDelegateDetailsDTO) credential.getConfig();
-      return Collections.singletonList(SystemEnvCheckerCapability.builder()
-                                           .comparate(k8sDetails.getDelegateName())
-                                           .systemPropertyName("DELEGATE_NAME")
-                                           .build());
+      return Collections.singletonList(
+          SelectorCapability.builder().selectors(k8sDetails.getDelegateSelectors()).build());
     } else if (credential.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO k8sManualCreds = (KubernetesClusterDetailsDTO) credential.getConfig();
       return Collections.singletonList(

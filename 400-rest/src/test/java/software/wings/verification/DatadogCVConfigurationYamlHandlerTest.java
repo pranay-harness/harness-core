@@ -25,10 +25,8 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration.Datadog
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

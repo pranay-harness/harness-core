@@ -1,12 +1,16 @@
 package io.harness.notification.entities;
 
 import static io.harness.Team.OTHER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.Team;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -28,6 +32,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "notificationsNg", noClassnameStored = true)
 @Document("notificationsNg")
 @TypeAlias("notificationsNg")
+@StoreIn(DbAliases.NOTIFICATION)
+@OwnedBy(PL)
 public class Notification implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

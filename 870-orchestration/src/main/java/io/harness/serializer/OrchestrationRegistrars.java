@@ -51,6 +51,8 @@ import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoReadCon
 import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.logging.UnitProgressReadConverter;
+import io.harness.serializer.spring.converters.logging.UnitProgressWriteConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
@@ -143,5 +145,5 @@ public class OrchestrationRegistrars {
       ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
       TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
       TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
-      AdviserResponseWriteConverter.class);
+      AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class);
 }

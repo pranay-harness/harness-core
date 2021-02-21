@@ -772,7 +772,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               }
               if (stateExecutionData instanceof ForkStateExecutionData) {
                 handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
-                    stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement);
+                    stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement,
+                    stateExecutionInstance.getUuid());
               } else if (stateExecutionData instanceof EnvStateExecutionData) {
                 EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
                 stageExecution.setMessage(envStateExecutionData.getErrorMsg());
@@ -836,7 +837,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
-      PipelineStageElement pipelineStageElement) {
+      PipelineStageElement pipelineStageElement, String stateExecutionInstanceId) {
     if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
       for (String element : envStateExecutionData.getForkStateNames()) {
         StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
@@ -869,6 +870,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           }
           stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
         }
+        appendSkipCondition(pipelineStageElement, stageExecution, stateExecutionInstanceId);
         stageExecutionDataList.add(stageExecution);
       }
     }

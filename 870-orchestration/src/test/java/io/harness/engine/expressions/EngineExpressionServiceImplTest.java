@@ -49,8 +49,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestRenderExpressionOutcome() {
     String resolvedExpression =
         engineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
@@ -61,8 +61,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestRenderExpressionOutput() {
     String resolvedExpression =
         engineExpressionService.renderExpression(ambiance, "${dummyOutput.test} == \"harness\"");
@@ -73,8 +73,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestEvaluateExpression() {
     Object value = engineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
     assertThat(value).isNotNull();

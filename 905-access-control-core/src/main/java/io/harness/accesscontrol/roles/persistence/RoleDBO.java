@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@FieldNameConstants(innerTypeName = "RoleKeys")
+@FieldNameConstants(innerTypeName = "RoleDBOKeys")
 @Entity(value = "roles", noClassnameStored = true)
 @Document("roles")
 @TypeAlias("roles")
@@ -64,8 +64,8 @@ public class RoleDBO implements PersistentEntity {
         .add(CompoundMongoIndex.builder()
                  .name("uniqueIndex")
                  .unique(true)
-                 .field(RoleKeys.identifier)
-                 .field(RoleKeys.scopeIdentifier)
+                 .field(RoleDBOKeys.identifier)
+                 .field(RoleDBOKeys.scopeIdentifier)
                  .build())
         .build();
   }

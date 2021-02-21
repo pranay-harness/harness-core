@@ -11,7 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -35,7 +35,7 @@ import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceBillingAggregationDataTaskletTest extends BatchProcessingBaseTest {
+public class InstanceBillingAggregationDataTaskletTest extends BatchProcessingTestBase {
   @InjectMocks private InstanceBillingAggregationDataTasklet instanceBillingAggregationDataTasklet;
   @Mock private BillingDataServiceImpl billingDataService;
 

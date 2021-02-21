@@ -31,13 +31,13 @@ import net.bytebuddy.asm.Advice;
 public class TestConstructorTracer {
   public static final Logger LOG = new Logger(TestConstructorTracer.class);
 
-  @Advice.OnMethodEnter(inline = false)
+  @Advice.OnMethodEnter(inline = false, suppress = Throwable.class)
   public static StackNode enter(
       @Advice.Origin("#t") String type, @Advice.Origin("#m") String method, @Advice.Origin("#s") String signature) {
     return CallableTracer.enter(type, method, signature, true);
   }
 
-  @Advice.OnMethodExit(inline = false)
+  @Advice.OnMethodExit(inline = false, suppress = Throwable.class)
   public static void exit(@Advice.Enter StackNode node) {
     CallableTracer.exit(node);
   }

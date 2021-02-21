@@ -32,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class GcrApiServiceTest extends WingsBaseTest {
   GcrApiServiceImpl gcrService = spy(new GcrApiServiceImpl());
   @Rule public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(9881));
@@ -52,6 +51,7 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuilds() {
     List<BuildDetailsInternal> actual = gcrService.getBuilds(gcpInternalConfig, "someImage", 100);
     assertThat(actual).hasSize(3);
@@ -66,6 +66,7 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testVerifyImageName() {
     assertThat(gcrService.verifyImageName(gcpInternalConfig, "someImage")).isTrue();
     assertThatThrownBy(() -> gcrService.verifyImageName(gcpInternalConfig, "doesNotExist"))
@@ -75,6 +76,7 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testValidateCredentials() {
     assertThat(gcrService.validateCredentials(gcpInternalConfig, "someImage")).isTrue();
     assertThat(gcrService.validateCredentials(gcpInternalConfig, "doesNotExist")).isFalse();

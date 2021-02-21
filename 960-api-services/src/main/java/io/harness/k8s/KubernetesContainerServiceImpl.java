@@ -498,7 +498,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       log.error("validateMetricsServer:ApiException ", ex);
       return CEK8sDelegatePrerequisite.MetricsServerCheck.builder()
           .isInstalled(false)
-          .message(ex.getCode() + ":" + ex.getResponseBody())
+          .message(ex.getCode() + ":" + ex.getMessage())
           .build();
     }
   }

@@ -98,7 +98,7 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
     Set<String> oldHosts = new HashSet<>();
     if (preDeploymentTimeRange.isPresent()) {
       Set<String> verificationTaskIds =
-          verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstance.getUuid());
+          verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstance.getUuid());
       oldHosts = hostRecordService.get(
           verificationTaskIds, preDeploymentTimeRange.get().getStartTime(), preDeploymentTimeRange.get().getEndTime());
     }

@@ -48,6 +48,8 @@ import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -88,6 +90,7 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.tiserviceclient.TIServiceUtils;
+import io.harness.util.LiteEngineSecretEvaluator;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
@@ -125,8 +128,15 @@ public class K8BuildSetupUtils {
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
 
-    final String clusterName = k8PodDetails.getClusterName();
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
+
+    final String clusterName = k8sDirectInfraYaml.getSpec().getConnectorRef();
 
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
@@ -175,9 +185,17 @@ public class K8BuildSetupUtils {
     if (usePVC) {
       pvcParamsList = podSetupInfo.getPvcParamsList();
     }
+
+    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+    K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
+
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
-        .namespace(k8PodDetails.getNamespace())
+        .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
         .labels(getBuildLabels(ambiance, k8PodDetails))
         .gitConnector(gitConnector)
         .stepExecVolumeName(STEP_EXEC)
@@ -201,7 +219,10 @@ public class K8BuildSetupUtils {
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
     Set<String> publishArtifactStepIds =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishArtifactStepIds();
-
+    LiteEngineSecretEvaluator liteEngineSecretEvaluator =
+        LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
+    List<SecretVariableDetails> secretVariableDetails =
+        liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess);
     CIK8ContainerParams liteEngineContainerParams =
         createLiteEngineContainerParams(ngAccess, harnessInternalImageRegistryConnectorDetails, stepConnectors,
             publishArtifactStepIds, liteEngineTaskStepInfo, k8PodDetails, podSetupInfo.getStageCpuRequest(),
@@ -213,8 +234,9 @@ public class K8BuildSetupUtils {
     // user input containers with custom entry point
     for (ContainerDefinitionInfo containerDefinitionInfo :
         podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
-      CIK8ContainerParams cik8ContainerParams = createCIK8ContainerParams(ngAccess, containerDefinitionInfo,
-          commonEnvVars, stepConnectors, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
+      CIK8ContainerParams cik8ContainerParams =
+          createCIK8ContainerParams(ngAccess, containerDefinitionInfo, commonEnvVars, stepConnectors,
+              podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), secretVariableDetails);
       containerParams.add(cik8ContainerParams);
     }
     return containerParams;
@@ -222,7 +244,8 @@ public class K8BuildSetupUtils {
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,
       ContainerDefinitionInfo containerDefinitionInfo, Map<String, String> commonEnvVars,
-      Map<String, ConnectorConversionInfo> connectorRefs, Map<String, String> volumeToMountPath, String workDirPath) {
+      Map<String, ConnectorConversionInfo> connectorRefs, Map<String, String> volumeToMountPath, String workDirPath,
+      List<SecretVariableDetails> secretVariableDetails) {
     Map<String, String> envVars = new HashMap<>(commonEnvVars);
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
@@ -254,7 +277,8 @@ public class K8BuildSetupUtils {
         .containerType(containerDefinitionInfo.getContainerType())
         .envVars(envVars)
         .containerSecrets(ContainerSecrets.builder()
-                              .secretVariableDetails(getSecretVariableDetails(ngAccess, containerDefinitionInfo))
+                              .secretVariableDetails(
+                                  getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails))
                               .connectorDetailsMap(stepConnectorDetails)
                               .build())
         .commands(containerDefinitionInfo.getCommands())
@@ -308,9 +332,10 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private List<SecretVariableDetails> getSecretVariableDetails(
-      NGAccess ngAccess, ContainerDefinitionInfo containerDefinitionInfo) {
+  private List<SecretVariableDetails> getSecretVariableDetails(NGAccess ngAccess,
+      ContainerDefinitionInfo containerDefinitionInfo, List<SecretVariableDetails> scriptsSecretVariableDetails) {
     List<SecretVariableDetails> secretVariableDetails = new ArrayList<>();
+    secretVariableDetails.addAll(scriptsSecretVariableDetails);
     if (isNotEmpty(containerDefinitionInfo.getSecretVariables())) {
       containerDefinitionInfo.getSecretVariables().forEach(
           secretVariable -> secretVariableDetails.add(secretUtils.getSecretVariableDetails(ngAccess, secretVariable)));

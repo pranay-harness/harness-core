@@ -50,5 +50,5 @@ public class PermissionDBO implements PersistentEntity {
   @Setter @LastModifiedDate Long lastModifiedAt;
   @Setter @CreatedBy EmbeddedUser createdBy;
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
-  @Setter @Version long version;
+  @Setter @Version Long version;
 }

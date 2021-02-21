@@ -24,6 +24,7 @@ import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
+import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -97,6 +98,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
+import java.util.LinkedHashSet;
 
 public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
   @Override
@@ -195,5 +197,7 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CEAzureConnectorDTO.class, 19540);
     kryo.register(CEAzureFeatures.class, 19541);
     kryo.register(BillingExportSpecDTO.class, 19542);
+    kryo.register(LinkedHashSet.class, 100030);
+    kryo.register(CEKubernetesClusterConfigDTO.class, 19543);
   }
 }

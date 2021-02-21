@@ -61,6 +61,7 @@ import io.harness.rule.OwnerRule;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -404,7 +405,9 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
         GcpConnectorDTO.builder()
             .credential(GcpConnectorCredentialDTO.builder()
                             .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-                            .config(GcpDelegateDetailsDTO.builder().delegateSelector(delegateSelector).build())
+                            .config(GcpDelegateDetailsDTO.builder()
+                                        .delegateSelectors(Collections.singleton(delegateSelector))
+                                        .build())
                             .build())
             .build();
     ConnectorDTO connectorDTO = createConnectorDTO(identifier, GCP, gcpConnectorDTO);
@@ -431,7 +434,9 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
             .credential(AwsCredentialDTO.builder()
                             .awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
                             .crossAccountAccess(null)
-                            .config(AwsInheritFromDelegateSpecDTO.builder().delegateSelector(delegateSelector).build())
+                            .config(AwsInheritFromDelegateSpecDTO.builder()
+                                        .delegateSelectors(Collections.singleton(delegateSelector))
+                                        .build())
                             .build())
             .build();
     ConnectorDTO connectorDTO = createConnectorDTO(identifier, AWS, awsCredentialDTO);
@@ -444,7 +449,9 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+                            .config(KubernetesDelegateDetailsDTO.builder()
+                                        .delegateSelectors(Collections.singleton(delegateName))
+                                        .build())
                             .build())
             .build();
     ConnectorDTO connectorDTO = createConnectorDTO(identifier, KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);

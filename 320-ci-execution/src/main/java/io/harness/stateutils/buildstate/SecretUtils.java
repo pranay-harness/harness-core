@@ -82,6 +82,45 @@ public class SecretUtils {
     return SecretVariableDetails.builder().encryptedDataDetailList(encryptionDetails).secretVariableDTO(secret).build();
   }
 
+  public SecretVariableDetails getSecretVariableDetailsWithScope(NGAccess ngAccess, SecretNGVariable secretVariable) {
+    SecretRefData secretRefData =
+        resolveSecretRefWithDefaultValue("Variables", "stage", "stageIdentifier", secretVariable.getValue(), false);
+    String secretIdentifier = null;
+    if (secretRefData != null) {
+      secretIdentifier = secretRefData.getIdentifier();
+    }
+
+    if (secretRefData == null && secretVariable.getDefaultValue() != null) {
+      secretIdentifier = secretVariable.getDefaultValue();
+    }
+
+    if (secretIdentifier == null || secretRefData == null) {
+      log.warn("Failed to resolve secret variable " + secretVariable.getName());
+      return null;
+    }
+
+    log.info("Getting secret variable details for secret ref [{}]", secretIdentifier);
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
+        ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+
+    SecretVariableDTO.Type secretType = getSecretType(getSecret(identifierRef).getType());
+    SecretVariableDTO secret =
+        SecretVariableDTO.builder()
+            .name("HARNESS"
+                + "_" + identifierRef.getScope().getYamlRepresentation() + "_" + secretVariable.getName())
+            .secret(secretRefData)
+            .type(secretType)
+            .build();
+
+    log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
+    List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
+    if (isEmpty(encryptionDetails)) {
+      throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
+    }
+
+    return SecretVariableDetails.builder().encryptedDataDetailList(encryptionDetails).secretVariableDTO(secret).build();
+  }
+
   private SecretVariableDTO.Type getSecretType(SecretType type) {
     switch (type) {
       case SecretFile:

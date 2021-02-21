@@ -82,7 +82,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     Set<String> verificationTaskIds =
         verificationJobInstanceIds.stream()
             .map(verificationJobInstanceId
-                -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+                -> verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 

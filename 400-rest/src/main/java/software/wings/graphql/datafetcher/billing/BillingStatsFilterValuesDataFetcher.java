@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -377,6 +378,7 @@ public class BillingStatsFilterValuesDataFetcher
 
   private List<QLEntityData> getEntity(BillingDataMetaDataFields field, Set<String> entityIds) {
     List<QLEntityData> entityData = new ArrayList<>();
+    entityIds = entityIds.stream().filter(entityId -> !entityId.equals("")).collect(Collectors.toSet());
     for (String entityId : entityIds) {
       entityData.add(QLEntityData.builder()
                          .name(statsHelper.getEntityName(field, entityId))

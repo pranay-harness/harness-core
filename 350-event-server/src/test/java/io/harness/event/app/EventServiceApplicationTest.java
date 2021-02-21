@@ -10,7 +10,7 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.EventServerTest;
+import io.harness.EventServerTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
@@ -40,7 +40,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class EventServiceApplicationTest extends EventServerTest {
+public class EventServiceApplicationTest extends EventServerTestBase {
   @Inject private HPersistence hPersistence;
 
   @Inject private EventPublisher eventPublisher;

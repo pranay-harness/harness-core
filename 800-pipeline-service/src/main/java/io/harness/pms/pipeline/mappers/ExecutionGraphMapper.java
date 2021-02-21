@@ -38,6 +38,7 @@ public class ExecutionGraphMapper {
         .uuid(graphVertex.getUuid())
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
+        .unitProgresses(graphVertex.getUnitProgresses())
         .build();
   }
 

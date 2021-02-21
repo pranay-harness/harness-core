@@ -1,9 +1,6 @@
 package io.harness.connector.utils;
 
-import static io.harness.delegate.beans.connector.ConnectorType.CE_AWS;
-
 import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
@@ -22,11 +19,10 @@ import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -50,11 +46,12 @@ public class AWSConnectorTestHelper {
   public Connector createAWSConnector(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, Scope scope) {
     final String delegateSelector = "delegateSelector";
-    final AwsConfig awsConfig = AwsConfig.builder()
-                                    .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
-                                    .crossAccountAccess(createCrossAccountAccessDTO())
-                                    .credential(AwsIamCredential.builder().delegateSelector(delegateSelector).build())
-                                    .build();
+    final AwsConfig awsConfig =
+        AwsConfig.builder()
+            .credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
+            .crossAccountAccess(createCrossAccountAccessDTO())
+            .credential(AwsIamCredential.builder().delegateSelectors(Collections.singleton(delegateSelector)).build())
+            .build();
 
     awsConfig.setAccountIdentifier(accountIdentifier);
     awsConfig.setOrgIdentifier(orgIdentifier);
@@ -81,25 +78,7 @@ public class AWSConnectorTestHelper {
   }
 
   public ConnectorDTO createConnectorDTOOfCEAws() {
-    final String connectorIdentifier = "identifier_ph";
-    final String name = "name_ph";
-    final String description = "description_ph";
-    final String projectIdentifier = "projectIdentifier_ph";
-    final String orgIdentifier = "orgIdentifier_ph";
-    Map<String, String> tags = ImmutableMap.of("company", "Harness", "env", "dev");
-
-    return ConnectorDTO.builder()
-        .connectorInfo(ConnectorInfoDTO.builder()
-                           .name(name)
-                           .identifier(connectorIdentifier)
-                           .description(description)
-                           .projectIdentifier(projectIdentifier)
-                           .orgIdentifier(orgIdentifier)
-                           .tags(tags)
-                           .connectorType(CE_AWS)
-                           .connectorConfig(createCEAwsConnectorDTO())
-                           .build())
-        .build();
+    return CommonTestHelper.createConnectorDTO(ConnectorType.CE_AWS, createCEAwsConnectorDTO());
   }
 
   public CEAwsConfig createCEAwsConfigEntity() {
@@ -131,13 +110,6 @@ public class AWSConnectorTestHelper {
         .withS3Region(DEFAULT_REGION);
   }
 
-  /**
-   * ObjectListing.class has no setter for modifying private field, 'List<S3ObjectSummary> objectSummaries = new
-   * ArrayList();'
-   * @return ObjectListing
-   * @throws NoSuchFieldException declaredField "objectSummaries" doesn't exist
-   * @throws IllegalAccessException field not accessible
-   */
   public static ObjectListing createNonEmptyObjectListing() throws NoSuchFieldException, IllegalAccessException {
     ObjectListing objectListing = new ObjectListing();
     Field field = objectListing.getClass().getDeclaredField("objectSummaries");

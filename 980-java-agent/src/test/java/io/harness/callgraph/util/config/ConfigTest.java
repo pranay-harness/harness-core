@@ -96,10 +96,10 @@ public class ConfigTest {
   @Category(UnitTests.class)
   public void testLogConsole() throws IOException {
     ConfigUtils.replace(true, "logConsole: true");
-    assertThat(Config.getInst().logConsole()).isEqualTo(true);
+    assertThat(Config.getInst().logConsole()).isTrue();
 
     ConfigUtils.replace(true, "logConsole: false");
-    assertThat(Config.getInst().logConsole()).isEqualTo(false);
+    assertThat(Config.getInst().logConsole()).isFalse();
   }
 
   @Test
@@ -129,6 +129,22 @@ public class ConfigTest {
     ConfigUtils.replace(true, "instrPackages: " + pkgs[0] + "," + pkgs[1] + "," + pkgs[2]);
     for (int i = 0; i < pkgs.length; i++) {
       assertThat(Config.getInst().instrPackages()[i]).isEqualTo(pkgs[i]);
+    }
+  }
+
+  @Test
+  @Owner(developers = SHIVAKUMAR)
+  @Category(UnitTests.class)
+  public void testTestAnnotations() throws IOException {
+    String[] annotations = {"io.harness.Test1", "io.harness.Test2", "io.harness.Test3"};
+    for (String annotation : annotations) {
+      ConfigUtils.replace(true, "testAnnotations: " + annotation);
+      assertThat(Config.getInst().testAnnotations()[0]).isEqualTo(annotation);
+    }
+
+    ConfigUtils.replace(true, "testAnnotations: " + annotations[0] + "," + annotations[1] + "," + annotations[2]);
+    for (int i = 0; i < annotations.length; i++) {
+      assertThat(Config.getInst().testAnnotations()[i]).isEqualTo(annotations[i]);
     }
   }
 }
