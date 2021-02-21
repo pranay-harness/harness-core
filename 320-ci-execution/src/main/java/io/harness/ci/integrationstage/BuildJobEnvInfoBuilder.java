@@ -269,7 +269,7 @@ public class BuildJobEnvInfoBuilder {
       case PLUGIN:
         return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
             stepElement.getIdentifier(), stepElement.getName());
-      case TEST_INTELLIGENCE:
+      case RUN_TESTS:
         return createRunTestsStepContainerDefinition((RunTestsStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
             portFinder, stepIndex, stepElement.getIdentifier());
       default:
@@ -701,7 +701,7 @@ public class BuildJobEnvInfoBuilder {
       case PLUGIN:
         return getContainerMemoryLimit(
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
-      case TEST_INTELLIGENCE:
+      case RUN_TESTS:
         return getContainerMemoryLimit(
             ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
@@ -765,7 +765,7 @@ public class BuildJobEnvInfoBuilder {
       case PLUGIN:
         return getContainerCpuLimit(
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
-      case TEST_INTELLIGENCE:
+      case RUN_TESTS:
         return getContainerCpuLimit(
             ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
