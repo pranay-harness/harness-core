@@ -36,7 +36,7 @@ public interface ActivityService {
   String createActivity(Activity activity);
 
   List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Instant startTime, Instant endTime);
+      String environmentIdentifier, String serviceIdentifier, Instant startTime, Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
       String accountId, String orgIdentifier, String projectIdentifier, int size);

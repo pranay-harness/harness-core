@@ -199,4 +199,11 @@ public interface AzureConstants {
 
   String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/managementGroups/";
   String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
+
+  String FETCH_FILES = "Download Files";
+  String EXECUTE_ARM_DEPLOYMENT = "Execute ARM Deployment";
+  String ARM_DEPLOYMENT_STEADY_STATE = "ARM Deployment Steady state";
+  String ARM_DEPLOYMENT_OUTPUTS = "ARM Deployment Outputs";
+
+  String ARM_DEPLOYMENT_NAME_PATTERN = "%s-%s";
 }

@@ -8,11 +8,17 @@ load("//:macros.bzl", "sources")
 sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//954-connector-beans/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//960-yaml-sdk:module",
         "//970-api-services-beans:module",
+        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
@@ -33,26 +39,12 @@ java_library(
     ],
 )
 
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//954-connector-beans/src/main/resources:resource",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
 checkstyle()
 
 sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

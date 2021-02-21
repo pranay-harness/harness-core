@@ -92,8 +92,9 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       throw new InvalidRequestException("Invalid yaml", e);
     }
     YamlNode parentNode = executionField.getNode().getParentNode();
-    ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
-        executionElementConfig, stageElementConfig, ctx, podName, ciCodeBase);
+    ExecutionElementConfig modifiedExecutionPlan =
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
+            podName, ciCodeBase, IntegrationStageStepParametersPMS.getInfrastructure(stageElementConfig, ctx));
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);

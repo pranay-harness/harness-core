@@ -43,6 +43,11 @@ type ceConnector {
   crossAccountRoleArn: String
   infraType: infraTypesEnum
   ceHealthStatus: CEHealthStatus
+  azureStorageAccountName: String
+  azureStorageContainerName: String
+  azureStorageDirectoryName: String
+  azureSubscriptionId: String
+  azureTenantId: String
 }
 
 type countStats {
@@ -82,6 +87,7 @@ type OverviewStatsData {
   applicationDataPresent: Boolean
   clusterDataPresent: Boolean
   isSampleClusterPresent: Boolean
+  azureConnectorsPresent: Boolean
 }
 
 input CESetupFilter {
@@ -94,6 +100,7 @@ input CESetupFilter {
 enum infraTypesEnum {
   AWS
   GCP
+  AZURE
 }
 
 enum accountStatusEnum {

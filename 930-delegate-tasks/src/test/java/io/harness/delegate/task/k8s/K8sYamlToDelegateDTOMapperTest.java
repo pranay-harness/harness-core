@@ -26,6 +26,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -240,7 +241,9 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+                            .config(KubernetesDelegateDetailsDTO.builder()
+                                        .delegateSelectors(Collections.singleton(delegateName))
+                                        .build())
                             .build())
             .build();
     KubernetesConfig config =

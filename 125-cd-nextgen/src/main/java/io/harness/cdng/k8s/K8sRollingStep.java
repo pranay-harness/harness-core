@@ -126,9 +126,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
           StepResponse.builder()
               .status(Status.FAILED)
               .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(k8sTaskExecutionResponse.getErrorMessage() == null
-                                       ? ""
-                                       : k8sTaskExecutionResponse.getErrorMessage())
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
                                .build());
       if (k8sRollingStepParameters.getRollbackInfo() != null) {
         stepResponseBuilder.stepOutcome(

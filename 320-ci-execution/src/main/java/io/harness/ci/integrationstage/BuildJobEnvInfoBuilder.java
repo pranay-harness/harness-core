@@ -205,7 +205,7 @@ public class BuildJobEnvInfoBuilder {
 
     int stepIndex = 0;
     for (ExecutionWrapperConfig executionWrapper : steps) {
-      if (!executionWrapper.getStep().isNull()) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
         stepIndex++;
         if (stepElementConfig.getTimeout() != null && stepElementConfig.getTimeout().isExpression()) {
@@ -218,12 +218,12 @@ public class BuildJobEnvInfoBuilder {
         if (containerDefinitionInfo != null) {
           containerDefinitionInfos.add(containerDefinitionInfo);
         }
-      } else if (!executionWrapper.getParallel().isNull()) {
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig =
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
         if (isNotEmpty(parallelStepElementConfig.getSections())) {
           for (ExecutionWrapperConfig executionWrapperInParallel : parallelStepElementConfig.getSections()) {
-            if (executionWrapperInParallel.getStep().isNull()) {
+            if (executionWrapperInParallel.getStep() == null || executionWrapperInParallel.getStep().isNull()) {
               continue;
             }
 
@@ -433,11 +433,11 @@ public class BuildJobEnvInfoBuilder {
 
     Set<String> set = new HashSet<>();
     for (ExecutionWrapperConfig executionWrapperConfig : executionWrappers) {
-      if (!executionWrapperConfig.getParallel().isNull()) {
+      if (executionWrapperConfig.getParallel() != null && !executionWrapperConfig.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapperConfig);
 
         for (ExecutionWrapperConfig executionWrapper : parallelStepElementConfig.getSections()) {
-          if (!executionWrapper.getStep().isNull()) {
+          if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
             StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
 
             if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
@@ -445,7 +445,7 @@ public class BuildJobEnvInfoBuilder {
             }
           }
         }
-      } else if (!executionWrapperConfig.getStep().isNull()) {
+      } else if (executionWrapperConfig.getStep() != null && !executionWrapperConfig.getStep().isNull()) {
         StepElementConfig stepElementConfig = getStepElementConfig(executionWrapperConfig);
         if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
           set.add(stageElementConfig.getIdentifier());
@@ -481,15 +481,15 @@ public class BuildJobEnvInfoBuilder {
 
     Map<String, ConnectorConversionInfo> map = new HashMap<>();
     for (ExecutionWrapperConfig executionWrapperConfig : executionWrappers) {
-      if (!executionWrapperConfig.getParallel().isNull()) {
+      if (executionWrapperConfig.getParallel() != null && !executionWrapperConfig.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapperConfig);
         for (ExecutionWrapperConfig executionWrapper : parallelStepElementConfig.getSections()) {
-          if (!executionWrapper.getStep().isNull()) {
+          if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
             StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
             map.putAll(getStepConnectorConversionInfo(stepElementConfig));
           }
         }
-      } else if (!executionWrapperConfig.getStep().isNull()) {
+      } else if (executionWrapperConfig.getStep() != null && !executionWrapperConfig.getStep().isNull()) {
         StepElementConfig stepElementConfig = getStepElementConfig(executionWrapperConfig);
         map.putAll(getStepConnectorConversionInfo(stepElementConfig));
       }
@@ -673,10 +673,10 @@ public class BuildJobEnvInfoBuilder {
     }
 
     Integer executionWrapperMemoryRequest = 0;
-    if (!executionWrapper.getStep().isNull()) {
+    if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
       StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
       executionWrapperMemoryRequest = getStepMemoryLimit(stepElementConfig);
-    } else if (!executionWrapper.getParallel().isNull()) {
+    } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
       ParallelStepElementConfig parallel = IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
       if (isNotEmpty(parallel.getSections())) {
         for (ExecutionWrapperConfig wrapper : parallel.getSections()) {
@@ -736,10 +736,10 @@ public class BuildJobEnvInfoBuilder {
     }
 
     Integer executionWrapperCpuRequest = 0;
-    if (!executionWrapper.getStep().isNull()) {
+    if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
       StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
       executionWrapperCpuRequest = getStepCpuLimit(stepElementConfig);
-    } else if (!executionWrapper.getParallel().isNull()) {
+    } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
       ParallelStepElementConfig parallelStepElement =
           IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
       if (isNotEmpty(parallelStepElement.getSections())) {

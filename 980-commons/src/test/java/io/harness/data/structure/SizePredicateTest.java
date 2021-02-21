@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
 import io.harness.data.structure.SizeFunction.Size;
 import io.harness.rule.Owner;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class SizePredicateTest extends CategoryTest {
   @Builder
@@ -30,6 +32,7 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
   public void testNull() {
     Custom custom = null;
     assertThat(size(custom)).isEqualTo(0);
@@ -79,6 +82,7 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
   public void testEmpty() {
     Custom custom = Custom.builder().size(0).build();
     assertThat(size(custom)).isEqualTo(0);
@@ -128,6 +132,7 @@ public class SizePredicateTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
   public void testNotEmpty() {
     Custom custom = Custom.builder().size(1).build();
     assertThat(size(custom)).isEqualTo(1);

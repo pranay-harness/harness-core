@@ -27,11 +27,10 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.LinkedList;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 
 public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
   @Inject private OutcomeService outcomeService;
@@ -61,11 +60,9 @@ public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
             .accountId(accountId)
             .releaseName(releaseName)
             .commandName(K8S_DELETE_COMMAND_NAME)
-            .resources(
-                isResourceName ? stepParameters.getDeleteResources().getSpec().getResources() : StringUtils.EMPTY)
+            .resources(isResourceName ? stepParameters.getDeleteResources().getSpec().getResourceNames() : "")
             .deleteNamespacesForRelease(stepParameters.deleteResources.getSpec().getDeleteNamespace())
-            .filePaths(
-                isManifestFiles ? stepParameters.getDeleteResources().getSpec().getResources() : StringUtils.EMPTY)
+            .filePaths(isManifestFiles ? stepParameters.getDeleteResources().getSpec().getManifestPaths() : "")
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
@@ -86,7 +83,8 @@ public class K8sDeleteStep implements TaskExecutable<K8sDeleteStepParameters> {
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
+          .failureInfo(
+              FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse)).build())
           .build();
     }
   }

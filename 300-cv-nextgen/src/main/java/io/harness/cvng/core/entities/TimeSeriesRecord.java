@@ -36,7 +36,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TimeSeriesRecordKeys")
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
+public final class TimeSeriesRecord
+    implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

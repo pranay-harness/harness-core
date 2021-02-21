@@ -2,7 +2,7 @@ package io.harness.cvng.alert.resources;
 
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.ActivityType;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;

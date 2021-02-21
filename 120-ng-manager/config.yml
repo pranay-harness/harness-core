@@ -57,6 +57,7 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  aliasDBName: ng-harness
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
@@ -134,7 +135,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
 baseUrls:
   ngManager: http://localhost:7457/

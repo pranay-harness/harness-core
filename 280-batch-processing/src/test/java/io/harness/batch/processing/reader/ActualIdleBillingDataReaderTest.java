@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.billing.timeseries.service.impl.ActualIdleBillingDataServiceImpl;
 import io.harness.batch.processing.ccm.ActualIdleCostBatchJobData;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
@@ -31,7 +31,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ActualIdleBillingDataReaderTest extends BatchProcessingBaseTest {
+public class ActualIdleBillingDataReaderTest extends BatchProcessingTestBase {
   @Inject @InjectMocks private ActualIdleBillingDataReader actualIdleBillingDataReader;
   @Mock private ActualIdleBillingDataServiceImpl actualIdleBillingDataService;
   @Mock private JobParameters parameters;

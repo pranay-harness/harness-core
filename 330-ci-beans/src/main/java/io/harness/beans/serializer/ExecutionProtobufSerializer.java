@@ -47,19 +47,20 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
     }
 
     executionElement.getSteps().forEach(executionWrapper -> {
-      if (!executionWrapper.getStep().isNull()) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
 
         UnitStep serialisedStep = serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds);
         if (serialisedStep != null) {
           protoSteps.add(Step.newBuilder().setUnit(serialisedStep).build());
         }
-      } else if (!executionWrapper.getParallel().isNull()) {
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapper);
         List<UnitStep> unitStepsList =
             parallelStepElementConfig.getSections()
                 .stream()
-                .filter(executionWrapperInParallel -> !executionWrapperInParallel.getStep().isNull())
+                .filter(executionWrapperInParallel
+                    -> executionWrapperInParallel.getStep() != null && !executionWrapperInParallel.getStep().isNull())
                 .map(executionWrapperInParallel -> getStepElementConfig(executionWrapperInParallel))
                 .map(stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds))
                 .filter(Objects::nonNull)

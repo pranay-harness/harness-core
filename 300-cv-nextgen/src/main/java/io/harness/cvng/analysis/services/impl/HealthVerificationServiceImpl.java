@@ -32,10 +32,13 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
   @Override
   public Instant aggregateActivityAnalysis(String verificationTaskId, Instant startTime, Instant endTime,
       Instant latestTimeOfAnalysis, HealthVerificationPeriod healthVerificationPeriod) {
-    String cvConfigId = verificationTaskService.getCVConfigId(verificationTaskId);
-    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
+    Preconditions.checkNotNull(
+        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+    CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
+        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
     String serviceGuardVerificationTaskId =
-        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
     Double overallRisk = null;
     Instant updatedLatestTime = latestTimeOfAnalysis;
     switch (cvConfig.getVerificationType()) {

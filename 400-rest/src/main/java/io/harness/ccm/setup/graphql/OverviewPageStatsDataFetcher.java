@@ -26,6 +26,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Table;
@@ -69,6 +70,7 @@ public class OverviewPageStatsDataFetcher
   protected QLCEOverviewStatsData fetch(QLNoOpQueryParameters parameters, String accountId) {
     boolean isAWSConnectorPresent = false;
     boolean isGCPConnectorPresent = false;
+    boolean isAzureConnectorPresent = false;
     boolean isApplicationDataPresent = false;
     boolean isClusterDataPresent = false;
     List<SettingAttribute> ceConnectorsList = getCEConnectors(accountId);
@@ -82,8 +84,12 @@ public class OverviewPageStatsDataFetcher
       if (settingAttribute.getValue().getType().equals(SettingVariableTypes.CE_GCP.toString())) {
         isGCPConnectorPresent = true;
       }
+      if (settingAttribute.getValue().getType().equals(SettingVariableTypes.CE_AZURE.toString())) {
+        isAzureConnectorPresent = true;
+      }
     }
-    overviewStatsDataBuilder.cloudConnectorsPresent(isAWSConnectorPresent || isGCPConnectorPresent);
+    overviewStatsDataBuilder.cloudConnectorsPresent(
+        isAWSConnectorPresent || isGCPConnectorPresent || isAzureConnectorPresent);
 
     // Cluster, Application Data Present
     Instant sevenDaysPriorInstant =
@@ -131,13 +137,15 @@ public class OverviewPageStatsDataFetcher
           modifyOverviewStatsBuilder(row, overviewStatsDataBuilder);
         }
       } else {
-        overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE).gcpConnectorsPresent(Boolean.FALSE);
+        overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE)
+            .gcpConnectorsPresent(Boolean.FALSE)
+            .azureConnectorsPresent(Boolean.FALSE);
       }
-    } catch (InterruptedException e) {
+    } catch (BigQueryException | InterruptedException e) {
       log.error("Failed to get OverviewPageStatsDataFetcher {}", e);
       Thread.currentThread().interrupt();
     }
-
+    log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }
 
@@ -149,6 +157,9 @@ public class OverviewPageStatsDataFetcher
         break;
       case "GCP":
         overviewStatsDataBuilder.gcpConnectorsPresent(row.get(countStringValueConstant).getDoubleValue() > 0);
+        break;
+      case "AZURE":
+        overviewStatsDataBuilder.azureConnectorsPresent(row.get(countStringValueConstant).getDoubleValue() > 0);
         break;
       default:
         break;

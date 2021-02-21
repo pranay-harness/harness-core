@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.category.element.UnitTests;
@@ -28,7 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8sGranularUtilizationMetricsReaderTest extends BatchProcessingBaseTest {
+public class K8sGranularUtilizationMetricsReaderTest extends BatchProcessingTestBase {
   @Inject @InjectMocks private K8sGranularUtilizationMetricsReader k8sGranularUtilizationMetricsReader;
   @Mock private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private JobParameters parameters;

@@ -1,6 +1,7 @@
 package io.harness.dto;
 
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -46,6 +47,8 @@ public class GraphVertexDTO {
   List<String> retryIds;
 
   Map<String, List<ProgressData>> progressDataMap;
+
+  List<UnitProgress> unitProgresses;
 
   // skip
   SkipType skipType;

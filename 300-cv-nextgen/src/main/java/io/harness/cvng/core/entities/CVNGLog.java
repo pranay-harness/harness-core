@@ -7,7 +7,6 @@ import io.harness.cvng.beans.cvnglog.TraceableType;
 import io.harness.cvng.core.entities.cvnglogs.ApiCallLogRecord;
 import io.harness.cvng.core.entities.cvnglogs.CVNGLogRecord;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -43,7 +42,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvngLogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @SuperBuilder
-public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
+public final class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -60,7 +59,7 @@ public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, Upda
   List<CVNGLogRecord> logRecords;
 
   @Id private String uuid;
-  @FdIndex private String accountId;
+  private String accountId;
   private String traceableId;
   private Instant startTime;
   private Instant endTime;

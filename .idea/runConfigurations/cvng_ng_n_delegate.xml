@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="cvng-ng-n-delegate" type="Multirun" factoryName="Multirun" separateTabs="true" reuseTabsWithFailures="false" startOneByOne="false" markFailedProcess="true" hideSuccessProcess="false" delayTime="0.0">
-    <runConfiguration name="CVNextGenApp" type="Application" />
-    <runConfiguration name="DelegateApp" type="Application" />
-    <runConfiguration name="NextGenApp" type="Application" />
-    <method v="2" />
-  </configuration>
-</component>

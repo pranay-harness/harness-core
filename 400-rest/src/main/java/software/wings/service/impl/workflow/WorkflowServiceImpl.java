@@ -1418,6 +1418,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private PhaseStep generateRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    if (isARMProvisionState(preDeploymentSteps)) {
+      return generateARMRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
+    }
+
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
                                            .stream()
                                            .filter(step -> {
@@ -1452,6 +1456,49 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                          .properties(propertiesMap)
                                          .build());
       }
+    });
+    rollbackProvisionerStep.setRollback(true);
+    rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
+    return rollbackProvisionerStep;
+  }
+
+  private boolean isARMProvisionState(PhaseStep preDeploymentSteps) {
+    List<GraphNode> graphNodes = preDeploymentSteps.getSteps()
+                                     .stream()
+                                     .filter(step -> StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()))
+                                     .collect(toList());
+    return isNotEmpty(graphNodes);
+  }
+
+  private PhaseStep generateARMRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    List<GraphNode> provisionerSteps =
+        preDeploymentSteps.getSteps()
+            .stream()
+            .filter(step -> { return StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()); })
+            .collect(Collectors.toList());
+
+    if (isEmpty(provisionerSteps)) {
+      return null;
+    }
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    PhaseStep rollbackProvisionerStep = new PhaseStep(phaseStepType, phaseStepName);
+    rollbackProvisionerStep.setUuid(generateUuid());
+    provisionerSteps.forEach(step -> {
+      StateType stateType = StateType.ARM_ROLLBACK;
+      Map<String, Object> propertiesMap = new HashMap<>();
+      propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+      propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+      propertiesMap.put("timeoutExpression", step.getProperties().get("timeoutExpression"));
+      propertiesMap.put("cloudProviderId", step.getProperties().get("cloudProviderId"));
+      propertiesMap.put("resourceGroupExpression", step.getProperties().get("resourceGroupExpression"));
+      propertiesMap.put("subscriptionExpression", step.getProperties().get("subscriptionExpression"));
+      rollbackProvisionerNodes.add(GraphNode.builder()
+                                       .type(stateType.name())
+                                       .rollback(true)
+                                       .name("Rollback " + step.getName())
+                                       .properties(propertiesMap)
+                                       .build());
     });
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);

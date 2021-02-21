@@ -20,10 +20,15 @@ public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   }
 
   @Override
-  public String getResources() {
+  public String getResourceNames() {
     List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
     String resourceNames = resourceNamesList.stream().collect(Collectors.joining(","));
     return resourceNames;
+  }
+
+  @Override
+  public String getManifestPaths() {
+    return "";
   }
 
   @Override

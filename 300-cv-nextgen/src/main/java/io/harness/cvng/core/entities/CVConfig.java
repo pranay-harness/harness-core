@@ -68,7 +68,7 @@ public abstract class CVConfig
   private long lastUpdatedAt;
   @NotNull private VerificationType verificationType;
 
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @NotNull @FdIndex private String connectorIdentifier;
 
   @NotNull private String serviceIdentifier;

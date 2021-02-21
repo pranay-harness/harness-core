@@ -23,6 +23,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(DelegateAgentBeansRegistrars.kryoRegistrars)
           .add(ConnectorNextGenKryoRegistrar.class)
           .build();
 

@@ -88,6 +88,10 @@ aeriform("//460-capability:module")
 
 aeriform("//460-capability:tests")
 
+aeriform("//470-alert:module")
+
+aeriform("//480-alert-beans:module")
+
 aeriform("//490-ce-commons:module")
 
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")

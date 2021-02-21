@@ -113,11 +113,29 @@ cd ../..
 
 mkdir -p dist/batch-processing ;
 cd dist/batch-processing
-cp ../../280-batch-processing/target/batch-processing-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
 cp ../../280-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp -r ../../dockerization/batch-processing/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
+MODULE_NAME="340-ce-nextgen";
+FOLDER_NAME="ce-nextgen";
+mkdir -p dist/${FOLDER_NAME} ;
+cd dist/${FOLDER_NAME}
+cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
+cp ../../${MODULE_NAME}/keystore.jks .
+cp ../../${MODULE_NAME}/config.yml .
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
+cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
@@ -174,7 +192,8 @@ cd ../..
 
 mkdir -p dist/ng-manager
 cd dist/ng-manager
-cp ../../120-ng-manager/target/ng-manager-capsule.jar .
+
+cp ${HOME}/.bazel-dirs/bin/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
 cp ../../120-ng-manager/config.yml .
 cp ../../keystore.jks .
 cp ../../120-ng-manager/key.pem .
@@ -272,9 +291,9 @@ cd ../..
 mkdir -p dist/accesscontrol-service
 cd dist/accesscontrol-service
 
-cp ${HOME}/.bazel-dirs/bin/905-access-control-core/module_deploy.jar accesscontrol-service-capsule.jar
-cp ../../905-access-control-core/config.yml .
-cp ../../905-access-control-core/keystore.jks .
+cp ${HOME}/.bazel-dirs/bin/900-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
+cp ../../900-access-control-service/config.yml .
+cp ../../900-access-control-service/keystore.jks .
 cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/accesscontrol-service/scripts/ .

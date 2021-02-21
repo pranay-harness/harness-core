@@ -28,7 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>, K8sStepExecutor {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.K8S_APPLY.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_APPLY.getYamlType()).build();
   private final String K8S_APPLY_COMMAND_NAME = "K8s Apply";
 
   @Inject private K8sStepHelper k8sStepHelper;
@@ -89,8 +90,9 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
-              .failureInfo(
-                  FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
       if (k8sApplyStepParameters.getRollbackInfo() != null) {
         responseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

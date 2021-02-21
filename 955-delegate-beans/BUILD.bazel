@@ -7,10 +7,14 @@ sources()
 
 java_library(
     name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         "//955-delegate-beans/src/main/proto:955_delegate_beans_java_proto",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//980-commons:module",
+    ],
 )
 
 sonarqube_test(

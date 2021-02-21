@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HealthVerificationHeatMapKeys")
 @Entity(value = "healthVerificationHeatMaps", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class HealthVerificationHeatMap implements UuidAware, PersistentEntity, CreatedAtAware, UpdatedAtAware {
+public final class HealthVerificationHeatMap implements UuidAware, PersistentEntity, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

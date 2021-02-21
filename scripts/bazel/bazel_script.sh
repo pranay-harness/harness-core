@@ -2,9 +2,6 @@
 
 set -ex
 
-ps auxwwwe
-echo end off ps-report
-
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]
@@ -32,8 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...  -//120-ng-manager/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... -//120-ng-manager/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -50,10 +47,9 @@ then
   exit 0
 fi
 
-ps auxwwwe
-echo end off ps-report
-
 BAZEL_MODULES="\
+  //120-ng-manager:module \
+  //120-ng-manager:module_deploy.jar \
   //125-cd-nextgen:module \
   //130-resource-group:module \
   //160-model-gen-tool:module \
@@ -63,12 +59,15 @@ BAZEL_MODULES="\
   //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //280-batch-processing:module \
+  //280-batch-processing:module_deploy.jar \
   //300-cv-nextgen:module_deploy.jar \
   //310-ci-manager:module \
   //310-ci-manager:module_deploy.jar \
   //320-ci-execution:module \
   //330-ci-beans:module \
   //340-ce-nextgen:module \
+  //340-ce-nextgen:module_deploy.jar \
   //350-event-xxxxxxxxmodule \
   //350-event-xxxxxxxxmodule_deploy.jar \
   //360-cg-manager:module \
@@ -151,12 +150,12 @@ BAZEL_MODULES="\
   //960-persistence:supporter-test \
   //960-recaster:module \
   //960-yaml-sdk:module \
+  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
   //970-rbac-core:module \
   //980-commons:module \
-  //980-java-agent:module \
   //990-commons-test:module \
   //product/ci/engine/proto:all \
   //product/ci/scm/proto:all \
@@ -292,8 +291,11 @@ build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
 build_bazel_application 900-access-control-service
 build_bazel_application 940-notification-client
+build_bazel_application 340-ce-nextgen
 build_bazel_application 350-event-server
 build_bazel_application 360-cg-manager
+build_bazel_application 280-batch-processing
+build_bazel_application 120-ng-manager
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
 build_bazel_application 300-cv-nextgen
@@ -304,7 +306,6 @@ build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
-build_bazel_module 340-ce-nextgen
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
 build_bazel_module 420-delegate-agent
@@ -366,7 +367,6 @@ build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
-build_bazel_module 980-java-agent
 build_bazel_module 990-commons-test
 build_bazel_module 230-model-test
 
@@ -379,6 +379,3 @@ build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
-
-ps auxwwwe
-echo end off ps-report

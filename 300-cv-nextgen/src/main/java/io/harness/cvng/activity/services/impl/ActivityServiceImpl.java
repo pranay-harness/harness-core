@@ -22,6 +22,8 @@ import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKe
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
+import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -60,6 +62,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -78,6 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
+  @Inject private AlertRuleService alertRuleService;
 
   @Override
   public Activity get(String activityId) {
@@ -159,6 +163,14 @@ public class ActivityServiceImpl implements ActivityService {
 
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
     }
+
+    if (ActivityVerificationStatus.getFinalStates().contains(summary.getAggregatedStatus())) {
+      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
+      alertRuleService.processDeploymentVerification(activity.getAccountId(), activity.getOrgIdentifier(),
+          activity.getProjectIdentifier(), activity.getServiceIdentifier(), activity.getEnvironmentIdentifier(),
+          activity.getType(), VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()),
+          summary.getStartTime(), summary.getDurationMs(), deploymentActivity.getDeploymentTag());
+    }
   }
 
   public String createActivity(Activity activity) {
@@ -178,7 +190,6 @@ public class ActivityServiceImpl implements ActivityService {
           verificationJobInstanceService.getAggregatedVerificationResult(verificationJobInstanceIds);
       deploymentActivityVerificationResultDTO.setTag(deploymentGroupByTag.getDeploymentTag());
       Activity firstActivity = deploymentGroupByTag.deploymentActivities.get(0);
-      // TODO: do we need to implement caching?
       String serviceName = getServiceNameFromActivity(firstActivity);
       deploymentActivityVerificationResultDTO.setServiceName(serviceName);
       deploymentActivityVerificationResultDTO.setServiceIdentifier(firstActivity.getServiceIdentifier());
@@ -338,16 +349,24 @@ public class ActivityServiceImpl implements ActivityService {
             .order(Sort.descending(ActivityKeys.createdAt))
             // assumption is that the latest 5 tags will be part of last 1000 deployments
             .asList(new FindOptions().limit(1000));
-    Map<String, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
+
+    Map<BuildTagServiceIdentifier, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
     List<DeploymentGroupByTag> result = new ArrayList<>();
     for (DeploymentActivity activity : activities) {
       DeploymentGroupByTag deploymentGroupByTag;
-      if (groupByTagMap.containsKey(activity.getDeploymentTag())) {
-        deploymentGroupByTag = groupByTagMap.get(activity.getDeploymentTag());
+      BuildTagServiceIdentifier buildTagServiceIdentifier = BuildTagServiceIdentifier.builder()
+                                                                .deploymentTag(activity.getDeploymentTag())
+                                                                .serviceIdentifier(activity.getServiceIdentifier())
+                                                                .build();
+      if (groupByTagMap.containsKey(buildTagServiceIdentifier)) {
+        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifier);
       } else {
         if (groupByTagMap.size() < RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE) {
-          deploymentGroupByTag = DeploymentGroupByTag.builder().deploymentTag(activity.getDeploymentTag()).build();
-          groupByTagMap.put(activity.getDeploymentTag(), deploymentGroupByTag);
+          deploymentGroupByTag = DeploymentGroupByTag.builder()
+                                     .deploymentTag(activity.getDeploymentTag())
+                                     .serviceIdentifier(activity.getServiceIdentifier())
+                                     .build();
+          groupByTagMap.put(buildTagServiceIdentifier, deploymentGroupByTag);
           result.add(deploymentGroupByTag);
         } else {
           // ignore the tag that is not in the latest 5 tags.
@@ -377,7 +396,8 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
-      String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
+      String projectIdentifier, String environmentIdentifier, String serviceIdentifier, Instant startTime,
+      Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
                                         .filter(ActivityKeys.accountId, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
@@ -389,6 +409,9 @@ public class ActivityServiceImpl implements ActivityService {
 
     if (isNotEmpty(environmentIdentifier)) {
       activityQuery = activityQuery.filter(ActivityKeys.environmentIdentifier, environmentIdentifier);
+    }
+    if (isNotEmpty(serviceIdentifier)) {
+      activityQuery = activityQuery.filter(ActivityKeys.serviceIdentifier, serviceIdentifier);
     }
     List<Activity> activities = activityQuery.asList();
 
@@ -510,6 +533,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Builder
   private static class DeploymentGroupByTag {
     String deploymentTag;
+    String serviceIdentifier;
     List<DeploymentActivity> deploymentActivities;
 
     public void addDeploymentActivity(DeploymentActivity deploymentActivity) {
@@ -611,5 +635,12 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Value
+  @Builder
+  private static class BuildTagServiceIdentifier {
+    String deploymentTag;
+    String serviceIdentifier;
   }
 }

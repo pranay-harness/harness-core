@@ -9,6 +9,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class RoleAssignmentModule extends AbstractModule {
   private static RoleAssignmentModule instance;
@@ -33,5 +34,6 @@ public class RoleAssignmentModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(ScopeService.class);
+    requireBinding(MongoTemplate.class);
   }
 }
