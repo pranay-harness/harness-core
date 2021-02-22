@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
@@ -119,9 +120,8 @@ public class NGGitServiceImpl implements NGGitService {
   }
 
   @Override
-  public FetchFilesResult fetchFilesByPath(
-      GitStoreDelegateConfig gitStoreDelegateConfig, String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+  public FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId,
+      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     FetchFilesByPathRequest fetchFilesByPathRequest = FetchFilesByPathRequest.builder()
                                                           .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                           .filePaths(gitStoreDelegateConfig.getPaths())
@@ -138,8 +138,7 @@ public class NGGitServiceImpl implements NGGitService {
 
   @Override
   public void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory,
-      String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      String accountId, SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     DownloadFilesRequest downloadFilesRequest = DownloadFilesRequest.builder()
                                                     .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                     .filePaths(gitStoreDelegateConfig.getPaths())
