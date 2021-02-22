@@ -1,5 +1,9 @@
 package io.harness.delegate.beans.ci.pod;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
+import io.harness.expression.Expression;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.k8s.model.ImageDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageDetailsWithConnector {
+public class ImageDetailsWithConnector implements NestedAnnotationResolver {
   @NotNull private ConnectorDetails imageConnectorDetails;
-  @NotNull private ImageDetails imageDetails;
+  @Expression(ALLOW_SECRETS) @NotNull private ImageDetails imageDetails;
 }
