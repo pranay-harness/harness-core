@@ -42,6 +42,7 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
   private static final String SESSION_TOKEN = "AWS_SESSION_TOKEN";
 
   @Override
+  @SuppressWarnings("PMD")
   public void syncBuckets(S3SyncRecord s3SyncRecord) {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
 
@@ -93,7 +94,6 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       try {
         retryingAwsS3Sync.apply();
       } catch (Throwable throwable) {
-        log.error("Retries are exhausted");
         throw new BatchProcessingException("S3 sync failed", throwable);
       }
       log.info("sync completed");

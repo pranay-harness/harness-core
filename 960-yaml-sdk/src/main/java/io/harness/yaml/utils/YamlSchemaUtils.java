@@ -58,6 +58,7 @@ public class YamlSchemaUtils {
    * @param clazz The class.
    * @return Name of the class in the swagger doc.
    */
+  @SuppressWarnings("PMD")
   public String getSwaggerName(Class<?> clazz) {
     try {
       ApiModel declaredAnnotation = clazz.getDeclaredAnnotation(ApiModel.class);

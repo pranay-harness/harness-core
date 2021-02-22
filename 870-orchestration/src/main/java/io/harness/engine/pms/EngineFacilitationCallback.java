@@ -38,9 +38,8 @@ public class EngineFacilitationCallback implements NotifyCallback {
         FacilitatorResponseProto.parseFrom(binaryResponseData.getData());
     if (facilitatorResponseProto.getIsSuccessful()) {
       orchestrationEngine.facilitateExecution(nodeExecutionId, facilitatorResponseProto);
-    } else {
-      // TODO => Handle Error
     }
+    // TODO: Handle Error
   }
 
   @Override

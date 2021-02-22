@@ -86,8 +86,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
       updatePipelineInfo(pipelineEntity);
 
-      PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
-      return createdEntity;
+      return pmsPipelineRepository.save(pipelineEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),

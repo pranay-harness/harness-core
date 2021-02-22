@@ -417,9 +417,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
-      Long activityTime) {
-    return;
-  }
+      Long activityTime) {}
 
   private Connector getConnectorWithIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {

@@ -4,6 +4,7 @@ import java.net.URLClassLoader;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -20,6 +21,6 @@ public class YamlSchemaConfiguration {
    */
   @Nullable URLClassLoader classLoader;
 
-  @Builder.Default boolean generateFiles = false;
-  @Builder.Default boolean generateOnlyRootFile = true;
+  boolean generateFiles;
+  @Default boolean generateOnlyRootFile = true;
 }

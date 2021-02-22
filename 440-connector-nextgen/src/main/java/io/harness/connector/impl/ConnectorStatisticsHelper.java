@@ -46,9 +46,7 @@ public class ConnectorStatisticsHelper {
                                         .and(groupByStatus, projectStatus)
                                         .as(ConnectorStatisticsKeys.statusStats);
     Aggregation aggregation = Aggregation.newAggregation(matchStage, facetOperation);
-    ConnectorStatistics connectorStatistics =
-        connectorRepository.aggregate(aggregation, ConnectorStatistics.class).getUniqueMappedResult();
-    return connectorStatistics;
+    return connectorRepository.aggregate(aggregation, ConnectorStatistics.class).getUniqueMappedResult();
   }
 
   private Criteria createCriteriaObjectForConnectorScope(

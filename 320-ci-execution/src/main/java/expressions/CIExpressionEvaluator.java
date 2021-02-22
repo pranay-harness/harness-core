@@ -12,9 +12,4 @@ public class CIExpressionEvaluator extends AmbianceExpressionEvaluator {
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker, ambiance, entityTypes, refObjectSpecific);
   }
-
-  @Override
-  protected void initialize() {
-    super.initialize();
-  }
 }

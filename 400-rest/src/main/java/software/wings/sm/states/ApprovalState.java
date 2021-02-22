@@ -798,11 +798,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   void updatePlaceholderValuesForSlackApproval(
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
-    StringBuilder environments = new StringBuilder();
-    StringBuilder services = new StringBuilder();
+    StringBuilder environments = new StringBuilder(128);
+    StringBuilder services = new StringBuilder(128);
     WorkflowNotificationDetails serviceDetails = null;
-    StringBuilder artifacts = new StringBuilder();
-    StringBuilder infrastructureDefinitions = new StringBuilder();
+    StringBuilder artifacts = new StringBuilder(128);
+    StringBuilder infrastructureDefinitions = new StringBuilder(128);
     WorkflowNotificationDetails infraDetails = null;
 
     WorkflowNotificationDetails applicationDetails =

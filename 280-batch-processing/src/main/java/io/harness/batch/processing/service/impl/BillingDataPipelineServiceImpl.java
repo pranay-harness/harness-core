@@ -282,8 +282,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   public String createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
     if (mainConfig.getBillingDataPipelineConfig().isGcpUseNewPipeline()) {
       log.info("Using new pipeline. Not creating preaggregated scheduled query for GCP");
-      final String s = "";
-      return s;
+      return "";
     }
     log.info("Using old pipeline. creating preaggregated scheduled query for GCP");
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();

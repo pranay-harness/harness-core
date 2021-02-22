@@ -293,14 +293,12 @@ public class ActivityServiceImpl implements ActivityService {
   public ActivityStatusDTO getActivityStatus(String accountId, String activityId) {
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         getDeploymentSummary(activityId);
-    ActivityStatusDTO activityStatusDTO =
-        ActivityStatusDTO.builder()
-            .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
-            .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
-            .activityId(activityId)
-            .status(deploymentVerificationJobInstanceSummary.getStatus())
-            .build();
-    return activityStatusDTO;
+    return ActivityStatusDTO.builder()
+        .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+        .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
+        .activityId(activityId)
+        .status(deploymentVerificationJobInstanceSummary.getStatus())
+        .build();
   }
 
   @Override
