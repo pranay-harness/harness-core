@@ -13,5 +13,4 @@ build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
 build --experimental_inmemory_dotd_files
 build --experimental_inmemory_jdeps_files
-build --experimental_remote_download_outputs=toplevel
 build --nobuild_runfile_links
