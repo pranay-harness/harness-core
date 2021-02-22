@@ -17,7 +17,7 @@ public enum CIStepInfoType {
   GIT_CLONE(CI_LITE_ENGINE, "GitClone"),
   LITE_ENGINE_TASK(CI_LITE_ENGINE, "liteEngineTask"),
   SAVE_CACHE(CI_LITE_ENGINE, "SaveCache"),
-  TEST_INTELLIGENCE(CI_LITE_ENGINE, "RunTests"),
+  RUN_TESTS(CI_LITE_ENGINE, "RunTests"),
   RESTORE_CACHE(CI_LITE_ENGINE, "restoreCacheStepInfo"),
   ECR(CI_LITE_ENGINE, "BuildAndPushECR"),
   GCR(CI_LITE_ENGINE, "BuildAndPushGCR"),
