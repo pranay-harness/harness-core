@@ -106,7 +106,7 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-      Boolean isHarnessManagedSecretManager = isHarnessManagedSecretManager(connectorInfo);
+      boolean isHarnessManagedSecretManager = connectorHeartbeatService.isHarnessManagedSecretManager(connectorInfo);
       if (!isHarnessManagedSecretManager) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
@@ -136,20 +136,6 @@ public class ConnectorServiceImpl implements ConnectorService {
         deleteConnectorHeartbeatTask(accountIdentifier, fullyQualifiedIdentifier, connectorHeartbeatTaskId.getId());
       }
       throw ex;
-    }
-  }
-
-  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
-    if (connector == null) {
-      return false;
-    }
-    switch (connector.getConnectorType()) {
-      case GCP_KMS:
-        return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      case LOCAL:
-        return ((LocalConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      default:
-        return false;
     }
   }
 
@@ -241,8 +227,10 @@ public class ConnectorServiceImpl implements ConnectorService {
           if (isConnectorDeleted) {
             return true;
           } else {
-            connectorHeartbeatService.createConnectorHeatbeatTask(
+            PerpetualTaskId perpetualTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
                 accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+            updateConnectorEntityWithPerpetualtaskId(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, perpetualTaskId.getId());
             return false;
           }
         }

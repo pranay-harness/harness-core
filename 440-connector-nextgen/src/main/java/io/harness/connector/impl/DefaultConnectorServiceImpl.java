@@ -31,6 +31,7 @@ import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorFilterService;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
@@ -52,6 +53,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
@@ -92,6 +94,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private NGErrorHelper ngErrorHelper;
   private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private SecretRefInputValidationHelper secretRefInputValidationHelper;
+  ConnectorHeartbeatService connectorHeartbeatService;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -267,7 +270,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    Connector updatedConnector = null;
+    if (existingConnector.getHeartbeatPerpetualTaskId() == null) {
+      PerpetualTaskId connectorHeartbeatTaskId =
+          connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
+              existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
+      newConnector.setHeartbeatPerpetualTaskId(connectorHeartbeatTaskId.getId());
+    }
+    Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector);
     } catch (DuplicateKeyException ex) {

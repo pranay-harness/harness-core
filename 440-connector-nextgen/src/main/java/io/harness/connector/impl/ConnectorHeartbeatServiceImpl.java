@@ -100,7 +100,8 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
     return perpetualTaskId;
   }
 
-  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
+  @Override
+  public boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
     if (connector == null) {
       return false;
     }
