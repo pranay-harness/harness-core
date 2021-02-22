@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 @Slf4j
 public class CINgSecretManagerFunctor implements ExpressionFunctor {
-  private int expressionFunctorToken;
+  private long expressionFunctorToken;
   private SecretUtils secretUtils;
   private NGAccess ngAccess;
 
@@ -37,7 +37,7 @@ public class CINgSecretManagerFunctor implements ExpressionFunctor {
                                               .build();
 
       secretVariableDetails.add(secretUtils.getSecretVariableDetailsWithScope(ngAccess, secretNGVariable));
-      return secretIdentifier;
+      return "${ngSecretManager.obtain(\"" + secretIdentifier + "\", " + expressionFunctorToken + ")}";
     } catch (Exception ex) {
       throw new FunctorException("Error occurred while evaluating the secret [" + secretIdentifier + "]", ex);
     }
