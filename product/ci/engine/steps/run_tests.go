@@ -122,6 +122,11 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 
 	var testExecList string
 	for _, test := range tests {
+		// In case we don't get malformed information, we should run all tests.
+		if test.Class == "" {
+			runAll = true
+			break
+		}
 		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
 	}
 
