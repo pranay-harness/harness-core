@@ -57,7 +57,6 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 12/8/16.
  */
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class BambooServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9095);
   @Inject @InjectMocks DelegateFileManager delegateFileManager;
@@ -81,6 +80,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPlanKeys() {
     assertThat(bambooService.getPlanKeys(bambooConfig, null))
         .contains(entry("TES-PLAN", "plan-1"), entry("TES-PLN10", "plan-10"), entry("TES-PLN100", "plan-100"),
@@ -90,6 +90,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test(expected = ArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPlanKeysExceptionWithInvalidCreds() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic&max-results=1000"))
                              .willReturn(aResponse().withStatus(401).withHeader("Content-Type", "application/json")));
@@ -99,6 +100,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test(expected = ArtifactServerException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetPlanKeysException() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic&max-results=1000"))
                              .willReturn(aResponse().withStatus(500).withHeader("Content-Type", "application/json")));
@@ -108,6 +110,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLastSuccessfulBuild() {
     BuildDetails buildDetails = bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TODIR");
     assertThat(buildDetails).isNotNull();
@@ -117,6 +120,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLastSuccessfulBuildWithArtifactFileMetadata() {
     BuildDetails buildDetails =
         bambooService.getLastSuccessfulBuild(bambooConfig, null, "TP-PLAN", asList("myartifacts/todolist.war"));
@@ -132,6 +136,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldNotGetLastSuccessfulBuild() {
     BuildDetails buildDetails = bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD");
     assertThat(buildDetails).isNull();
@@ -140,6 +145,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuildsForJobWithEmptyArtifactPaths() {
     // backward compatibility - with artifact paths as ""
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, null, "TP-PLAN2", asList(""), 50);
@@ -151,6 +157,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuildsForJobWithCustomArtifactPaths() {
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(
         bambooConfig, null, "TP-PLAN3", asList("myartifacts/todolist.war", "myartifacts/todolist.zip"), 50);
@@ -167,6 +174,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test(expected = ArtifactServerException.class)
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuildsForJobError() {
     wireMockRule.stubFor(get(
         urlEqualTo(
@@ -178,6 +186,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactPath() {
     List<String> artifactPaths = bambooService.getArtifactPath(bambooConfig, null, "TP-PLAN");
     assertThat(artifactPaths).isNotEmpty();
@@ -188,6 +197,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldDownloadArtifact() throws FileNotFoundException {
     wireMockRule.stubFor(get(urlEqualTo("/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
@@ -214,6 +224,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetArtifactFileSize() {
     wireMockRule.stubFor(get(urlEqualTo("/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
@@ -225,6 +236,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetJobKeys() {
     List<String> actual = bambooService.getJobKeys(bambooConfig, null, "planKey");
     assertThat(actual).hasSize(1).isEqualTo(Lists.newArrayList("TP-PLAN2"));
@@ -233,6 +245,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetJobKeysFails() {
     wireMockRule.stubFor(
         get(urlEqualTo(
@@ -245,6 +258,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetTriggerPlan() {
     wireMockRule.stubFor(
         post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
@@ -256,6 +270,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldFailGetTriggerPlan() {
     wireMockRule.stubFor(post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
                              .withRequestBody(matching(".*"))
@@ -289,6 +304,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuildResult() {
     Result actual = bambooService.getBuildResult(bambooConfig, null, "TOD-TODIR");
     Result expected =
@@ -299,6 +315,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldFailGetBuildResult() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/result/TOD-TODIR.json?authType=basic"))
                              .willReturn(aResponse().withStatus(401)));
@@ -310,6 +327,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuildResultStatus() {
     wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/result/status/TOD-TODIR.json?authType=basic"))
                              .willReturn(aResponse().withStatus(200).withBody(

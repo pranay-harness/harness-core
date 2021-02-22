@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
@@ -19,8 +20,8 @@ public interface PMSPipelineService {
 
   PipelineEntity update(PipelineEntity pipelineEntity);
 
-  boolean delete(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
+  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
+      Long version) throws ProducerShutdownException;
 
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
 

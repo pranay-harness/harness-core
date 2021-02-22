@@ -61,7 +61,8 @@ public class HACLAggregatorServiceImpl implements ACLAggregatorService {
     List<RoleAssignment> roleBindings = roleAssignmentService.get(principalIdentifier, principalType);
 
     for (RoleAssignment roleAssignment : roleBindings) {
-      Optional<Role> role = roleService.get(roleAssignment.getRoleIdentifier(), roleAssignment.getScopeIdentifier());
+      Optional<Role> role =
+          roleService.get(roleAssignment.getRoleIdentifier(), roleAssignment.getScopeIdentifier(), true);
       if (role.isPresent()) {
         Set<String> permissions = role.get().getPermissions();
         String resourceIdentifier = roleAssignment.getResourceGroupIdentifier();

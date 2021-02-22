@@ -62,8 +62,8 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTestBas
   @Test
   @RealMongo
   @Owner(developers = GARVIT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void testSaveWithLevelsToKeepAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
     Ambiance ambiancePhase = AmbianceUtils.cloneForFinish(ambianceSection);

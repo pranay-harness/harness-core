@@ -484,11 +484,11 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
     try {
       String fqn = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+          accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier);
       Criteria criteria = new Criteria();
       criteria.and(ConnectorKeys.fullyQualifiedIdentifier).is(fqn);
       Update update = new Update();
@@ -496,8 +496,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       connectorRepository.update(new Query(criteria), update);
     } catch (Exception ex) {
       log.info("{} Exception while saving perpetual task id for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
-          String.format(CONNECTOR_STRING, connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
-              connector.getProjectIdentifier()),
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,
+              connectorProjectIdentifier),
           ex);
     }
   }

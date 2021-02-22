@@ -29,7 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "monitoringSourcePerpetualTasks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class MonitoringSourcePerpetualTask
+public final class MonitoringSourcePerpetualTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -45,7 +45,7 @@ public class MonitoringSourcePerpetualTask
   }
 
   @Id private String uuid;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @FdIndex private long createdAt;
   private long lastUpdatedAt;
 

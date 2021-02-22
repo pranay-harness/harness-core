@@ -122,6 +122,7 @@ shared_dependencies = [
     "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
     "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_base",
     "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_json_provider",
+    "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
     "@maven//:com_fasterxml_jackson_module_jackson_module_afterburner",
     "@maven//:com_fasterxml_jackson_module_jackson_module_jaxb_annotations",
     "@maven//:com_fasterxml_jackson_module_jackson_module_jsonSchema",
