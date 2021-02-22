@@ -15,4 +15,6 @@ public interface CEViewService {
   boolean delete(String uuid, String accountId);
   List<QLCEView> getAllViews(String accountId);
   List<CEView> getViewByState(String accountId, ViewState viewState);
+  void createDefaultAzureView(String accountId);
+  String getDefaultAzureViewId(String accountId);
 }

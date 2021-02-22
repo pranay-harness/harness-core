@@ -8,6 +8,7 @@ import io.harness.beans.FeatureName;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -52,6 +53,7 @@ public class OverviewPageStatsDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject protected DataFetcherUtils utils;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject private CEViewService ceViewService;
 
   private static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
@@ -73,6 +75,7 @@ public class OverviewPageStatsDataFetcher
     boolean isAzureConnectorPresent = false;
     boolean isApplicationDataPresent = false;
     boolean isClusterDataPresent = false;
+    boolean isAzureDataPresent = false;
     List<SettingAttribute> ceConnectorsList = getCEConnectors(accountId);
     QLCEOverviewStatsDataBuilder overviewStatsDataBuilder = QLCEOverviewStatsData.builder();
 
@@ -118,7 +121,7 @@ public class OverviewPageStatsDataFetcher
         .applicationDataPresent(isApplicationDataPresent)
         .ceEnabledClusterPresent(isCeEnabledCloudProviderPresent);
 
-    // AWS, GCP Data Present
+    // AWS, GCP, AZURE Data Present
     String dataSetId = String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
     TableId tableId = TableId.of(dataSetId, PRE_AGG_TABLE_NAME_VALUE);
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
@@ -145,6 +148,9 @@ public class OverviewPageStatsDataFetcher
       log.error("Failed to get OverviewPageStatsDataFetcher {}", e);
       Thread.currentThread().interrupt();
     }
+
+    QLCEOverviewStatsData data = overviewStatsDataBuilder.build();
+
     log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }
