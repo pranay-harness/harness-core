@@ -7,7 +7,6 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -23,18 +22,15 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonTypeName("RunTests")
 @TypeAlias("runTestsStepInfo")
-@YamlSchemaIgnoreSubtype
 public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 24; // 24 hour;
 
-  @JsonIgnore
-  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.TEST_INTELLIGENCE).build();
+  @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN_TESTS).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

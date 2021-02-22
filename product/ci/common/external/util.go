@@ -20,6 +20,9 @@ const (
 	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
 	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
 	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
+	dSourceBranch = "DRONE_SOURCE_BRANCH"
+	dRemoteUrl    = "DRONE_REMOTE_URL"
+	dCommitSha    = "DRONE_COMMIT_SHA"
 )
 
 func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
@@ -150,6 +153,30 @@ func GetStageId() (string, error) {
 	stage, ok := os.LookupEnv(stageIDEnv)
 	if !ok {
 		return "", fmt.Errorf("stage ID environment variable not set %s", stageIDEnv)
+	}
+	return stage, nil
+}
+
+func GetSourceBranch() (string, error) {
+	stage, ok := os.LookupEnv(dSourceBranch)
+	if !ok {
+		return "", fmt.Errorf("source branch variable not set %s", stageIDEnv)
+	}
+	return stage, nil
+}
+
+func GetRepo() (string, error) {
+	stage, ok := os.LookupEnv(dRemoteUrl)
+	if !ok {
+		return "", fmt.Errorf("remote url variable not set %s", dRemoteUrl)
+	}
+	return stage, nil
+}
+
+func GetSha() (string, error) {
+	stage, ok := os.LookupEnv(dCommitSha)
+	if !ok {
+		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
 	}
 	return stage, nil
 }
