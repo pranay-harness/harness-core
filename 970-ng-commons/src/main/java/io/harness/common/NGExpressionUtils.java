@@ -39,4 +39,8 @@ public class NGExpressionUtils {
   public String getInputSetValidatorPattern(String validatorName) {
     return "\\." + validatorName + "\\(";
   }
+
+  public boolean isRuntimeOrExpressionField(String fieldValue) {
+    return matchesInputSetPattern(fieldValue) || EngineExpressionEvaluator.matchesVariablePattern(fieldValue);
+  }
 }
