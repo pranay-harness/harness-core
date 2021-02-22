@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.OrchestrationStepsModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -291,6 +292,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(OrchestrationStepsModule.getInstance());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());

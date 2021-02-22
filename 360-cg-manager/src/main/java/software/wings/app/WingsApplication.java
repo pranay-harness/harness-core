@@ -23,6 +23,9 @@ import static java.util.Arrays.asList;
 
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
+import io.harness.capability.service.CapabilityService;
+import io.harness.capability.service.CapabilityServiceImpl;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.KubernetesClusterHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
@@ -44,6 +47,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.resources.DelegateTaskResource;
+import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
@@ -446,6 +450,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
     modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
@@ -923,6 +928,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
+    delegateServiceImpl.getSubject().register(
+        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
 
     ApplicationManifestServiceImpl applicationManifestService =
         (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
@@ -934,6 +941,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(DelegateProfileEventHandler.class));
     delegateService.getDelegateProfileSubject().register(delegateProfileEventHandler);
     delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
+
+    CapabilityServiceImpl capabilityService =
+        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
+    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
+        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
 
     ObserversHelper.registerSharedObservers(injector);
   }
@@ -971,6 +983,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
+    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

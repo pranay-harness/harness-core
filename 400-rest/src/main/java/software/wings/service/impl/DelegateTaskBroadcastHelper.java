@@ -1,8 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateTaskBroadcast;
@@ -25,6 +30,7 @@ public class DelegateTaskBroadcastHelper {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private HPersistence persistence;
   @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
 
   // "broadcastCount: nextExecutionInterval for async tasks{0:0, 1:30 Sec, 2:1 Min, 3:2 Min, 4: 4 Min, 5:8 Min,
   // afterwards : every 10 min}
@@ -47,6 +53,12 @@ public class DelegateTaskBroadcastHelper {
     if (delegateTask == null) {
       return;
     }
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
+        && isBlank(delegateTask.getPreAssignedDelegateId())) {
+      return;
+    }
+
     DelegateTaskBroadcast delegateTaskBroadcast = DelegateTaskBroadcast.builder()
                                                       .version(delegateTask.getVersion())
                                                       .accountId(delegateTask.getAccountId())

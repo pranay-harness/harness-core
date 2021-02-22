@@ -1,4 +1,4 @@
-package io.harness.delegate.task.executioncapability;
+package io.harness.delegate.beans;
 
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
