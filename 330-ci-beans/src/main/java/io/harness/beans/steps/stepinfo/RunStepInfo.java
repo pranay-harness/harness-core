@@ -68,7 +68,6 @@ public class RunStepInfo implements CIStepInfo {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-
     this.command = command;
     this.envVariables = envVariables;
     this.reports = reports;

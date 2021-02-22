@@ -4,6 +4,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -39,16 +40,21 @@ public class RunTestsStepInfo implements CIStepInfo {
   @NotNull private String goals;
   @NotNull private String language;
   @NotNull private String buildTool;
+  @NotNull private String packages;
+  private String testAnnotations;
+  private UnitTestReport reports;
+  @NotNull private Boolean runOnlySelectedTests = false;
 
   @NotNull private String image;
   private String connector;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector", "resources"})
+  @ConstructorProperties({"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector",
+      "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests"})
   public RunTestsStepInfo(String identifier, String name, Integer retry, String goals, String language,
-      String buildTool, String image, String connector, ContainerResource resources) {
+      String buildTool, String image, String connector, ContainerResource resources, UnitTestReport reports,
+      String testAnnotations, String packages, Boolean runOnlySelectedTests) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -58,6 +64,10 @@ public class RunTestsStepInfo implements CIStepInfo {
     this.image = image;
     this.connector = connector;
     this.resources = resources;
+    this.reports = reports;
+    this.testAnnotations = testAnnotations;
+    this.packages = packages;
+    this.runOnlySelectedTests = runOnlySelectedTests;
   }
 
   @Override
