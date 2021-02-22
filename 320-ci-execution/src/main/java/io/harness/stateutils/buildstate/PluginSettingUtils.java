@@ -409,7 +409,7 @@ public class PluginSettingUtils {
     }
     StringBuilder mapAsString = new StringBuilder();
     for (Map.Entry<String, String> entry : map.entrySet()) {
-      mapAsString.append(entry.getKey()).append("=").append(entry.getValue()).append(",");
+      mapAsString.append(entry.getKey()).append('=').append(entry.getValue()).append(',');
     }
     mapAsString.deleteCharAt(mapAsString.length() - 1);
     return mapAsString.toString();
@@ -422,7 +422,7 @@ public class PluginSettingUtils {
     }
     StringBuilder listAsString = new StringBuilder();
     for (String value : stringList) {
-      listAsString.append(value).append(",");
+      listAsString.append(value).append(',');
     }
     listAsString.deleteCharAt(listAsString.length() - 1);
     return listAsString.toString();

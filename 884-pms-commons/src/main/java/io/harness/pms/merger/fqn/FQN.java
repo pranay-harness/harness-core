@@ -22,18 +22,18 @@ public class FQN {
     StringBuilder res = new StringBuilder();
     for (FQNNode node : fqnList) {
       if (node.getNodeType() == FQNNode.NodeType.KEY) {
-        res.append(node.getKey()).append(".");
+        res.append(node.getKey()).append('.');
       } else if (node.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
         res.append(node.getKey())
-            .append("[")
+            .append('[')
             .append(node.getUuidKey())
-            .append(":")
+            .append(':')
             .append(node.getUuidValue())
             .append("].");
       } else if (node.getNodeType() == FQNNode.NodeType.PARALLEL) {
         res.append("PARALLEL.");
       } else if (node.getNodeType() == FQNNode.NodeType.UUID) {
-        res.append("[").append(node.getUuidKey()).append(":").append(node.getUuidValue()).append("].");
+        res.append('[').append(node.getUuidKey()).append(':').append(node.getUuidValue()).append("].");
       }
     }
     return res.toString();

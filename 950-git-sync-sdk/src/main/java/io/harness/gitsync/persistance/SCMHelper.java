@@ -17,7 +17,6 @@ public class SCMHelper<Y, B extends GitSyncableEntity> {
 
   String pushToGitAndReturnSuccessPayLoad(Y yaml) {
     // push to git and lets say return is s
-    String s = "";
-    return s;
+    return "";
   }
 }

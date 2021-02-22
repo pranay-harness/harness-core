@@ -39,10 +39,11 @@ public abstract class InstanceAggregator {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("InstanceAggregator{");
-    sb.append("aggregatorName='").append(aggregatorName).append('\'');
-    sb.append("eventInfo=").append(eventInfo.getLog());
-    sb.append('}');
+    final StringBuilder sb = new StringBuilder("InstanceAggregator{aggregatorName='")
+                                 .append(aggregatorName)
+                                 .append("'eventInfo=")
+                                 .append(eventInfo.getLog())
+                                 .append('}');
     return sb.toString();
   }
 }

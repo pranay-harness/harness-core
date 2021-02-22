@@ -38,8 +38,7 @@ public class AzureCEConfigValidationServiceImpl implements AzureCEConfigValidati
 
     // Create a BlobServiceClient object which will be used to create a container client
     String endpoint = String.format(AZURE_STORAGE_URL_FORMAT, storageAccountName, AZURE_STORAGE_SUFFIX);
-    System.out.println("Verifying cross account attributes");
-    log.info(endpoint);
+    log.info("Verifying cross account attributes: {}", endpoint);
 
     ClientSecretCredential clientSecretCredential =
         new ClientSecretCredentialBuilder()
@@ -83,10 +82,8 @@ public class AzureCEConfigValidationServiceImpl implements AzureCEConfigValidati
 
   public void validateIfContainerIsPresent(BlobContainerClient blobContainerClient, String directoryName)
       throws Exception {
-    System.out.println("\nListing blobs...");
     // List the blob(s) in the container.
     for (BlobItem blobItem : blobContainerClient.listBlobsByHierarchy(directoryName)) {
-      System.out.println("\t" + blobItem.getName());
       return;
     }
     throw new Exception("The specified directory does not exist");

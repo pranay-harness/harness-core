@@ -125,11 +125,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private Optional<YamlGitFolderConfig> findDefaultIfPresent(
       String projectIdentifier, String orgIdentifier, String accountId) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    Optional<YamlGitFolderConfig> defaultConfig =
-        yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
-            accountId, orgIdentifier, projectIdentifier, scope, true);
-    // assuming uuid = identifier
-    return defaultConfig;
+    return yamlGitConfigFolderRepository.findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(
+        accountId, orgIdentifier, projectIdentifier, scope, true);
   }
 
   @Override
@@ -231,9 +228,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, boolean performFullSync) {
-    YamlGitConfigDTO yamlGitConfigDTO = saveInternal(ygs);
     // TODO(abhinav): add full sync logic.
-    return yamlGitConfigDTO;
+    return saveInternal(ygs);
   }
 
   private YamlGitConfigDTO saveInternal(YamlGitConfigDTO ygs) {

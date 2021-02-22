@@ -40,7 +40,7 @@ public class NotificationSetting {
   }
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String accountId;
-  @Builder.Default boolean sendNotificationViaDelegate = false;
+  boolean sendNotificationViaDelegate;
   SmtpConfig smtpConfig;
   @Version Long version;
 }

@@ -17,9 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LiteEngineSecretEvaluator extends ExpressionEvaluator {
   private SecretUtils secretUtils;
-  public List<SecretVariableDetails> resolve(Object o, NGAccess ngAccess) {
-    CINgSecretManagerFunctor ciNgSecretManagerFunctor =
-        CINgSecretManagerFunctor.builder().secretUtils(secretUtils).ngAccess(ngAccess).build();
+  public List<SecretVariableDetails> resolve(Object o, NGAccess ngAccess, long token) {
+    CINgSecretManagerFunctor ciNgSecretManagerFunctor = CINgSecretManagerFunctor.builder()
+                                                            .expressionFunctorToken(token)
+                                                            .secretUtils(secretUtils)
+                                                            .ngAccess(ngAccess)
+                                                            .build();
 
     ResolveFunctorImpl resolveFunctor = new ResolveFunctorImpl(new ExpressionEvaluator(), ciNgSecretManagerFunctor);
 
