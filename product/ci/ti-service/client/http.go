@@ -22,7 +22,7 @@ var _ Client = (*HTTPClient)(nil)
 
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
-	testEndpoint = "tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=tst"
+	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=tst"
 )
 
 // defaultClient is the default http.Client.
@@ -135,7 +135,6 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, path, r)
-
 	if err != nil {
 		return nil, err
 	}

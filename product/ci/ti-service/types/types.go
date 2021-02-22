@@ -77,7 +77,7 @@ type TestSuite struct {
 
 // Test contains information about a unit test
 type Test struct {
-	Pkg    string `json:"Pkg"`
-	Class  string `json:"Class"`
-	Method string `json:"Method"`
+	Pkg    string `json:"pkg"`
+	Class  string `json:"class"`
+	Method string `json:"method"`
 }

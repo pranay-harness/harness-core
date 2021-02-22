@@ -31,18 +31,18 @@ var (
 
 // RunTestsStep represents interface to execute a run step
 type runTestsStep struct {
-	id               string             // Id of the step
-	name             string             // Name of the step
-	tempPath         string             // File path to store generated temporary files
-	lang             string             // language of codebase
-	buildTool        string             // buildTool used for codebase
-	goals            string             // custom flags to
-	executionCommand string             // final command which will be executed by addon
-	envVarOutputs    []string           // Environment variables to be exported to the step
-	cntrPort         uint32             // Container for running ti port
-	stepCtx          *pb.StepContext    // Step context
-	so               output.StageOutput // Output variables of the stage
-	log              *zap.SugaredLogger // Logger
+	id            string             // Id of the step
+	name          string             // Name of the step
+	tempPath      string             // File path to store generated temporary files
+	lang          string             // language of codebase
+	buildTool     string             // buildTool used for codebase
+	goals         string             // custom flags to
+	execCommand   string             // final command which will be executed by addon
+	envVarOutputs []string           // Environment variables to be exported to the step
+	cntrPort      uint32             // Container for running ti port
+	stepCtx       *pb.StepContext    // Step context
+	so            output.StageOutput // Output variables of the stage
+	log           *zap.SugaredLogger // Logger
 }
 
 // RunTestsStep represents interface to execute a run step
@@ -74,13 +74,12 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
-
-	if err := e.resolveJEXL(ctx); err != nil {
+	var err error
+	if e.goals, err = e.resolveJEXL(ctx); err != nil {
 		return nil, int32(1), err
 	}
 
 	changedFiles, err := e.readVCSDiffFromFile()
-
 	if err != nil {
 		e.log.Errorw("failed to read vcs diff in runTests step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
@@ -117,7 +116,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 
 	runAll := false
 	if err != nil {
-		e.log.Errorw("Failed to fetch tests from ti server. Running all tests", zap.Error(err))
+		e.log.Errorw("failed to fetch tests from ti server. Running all tests", zap.Error(err))
 		runAll = true
 	}
 
@@ -126,7 +125,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
 	}
 
-	e.executionCommand, err = e.getRunTestsCommand(testExecList, runAll)
+	e.execCommand, err = e.getRunTestsCommand(testExecList, runAll)
 	if err != nil {
 		return nil, int32(1), err
 	}
@@ -148,6 +147,10 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 		testsFlag = fmt.Sprintf("-Dtest=%s", testsToExecute)
 	}
 
+	if len(testsToExecute) == 0 {
+		return fmt.Sprintf("echo \"Skipping test run as there are no changes to tests\""), nil
+	}
+
 	switch e.buildTool {
 	case "maven":
 		// Eg. of goals: "-T 2C -DskipTests"
@@ -165,7 +168,6 @@ func (e *runTestsStep) readVCSDiffFromFile() ([]string, error) {
 	file, err := os.Open(diffPath)
 
 	defer file.Close()
-
 	if err != nil {
 		e.log.Errorw(fmt.Sprintf("could not open %s file", diffPath), "step_id", e.id, zap.Error(err))
 		return nil, err
@@ -188,7 +190,7 @@ func (e *runTestsStep) validate() error {
 	}
 
 	if e.lang != "java" {
-		e.log.Errorw(fmt.Sprintf("Only java is supported as the codebase language. Received language is: %s", e.lang), "step_id", e.id)
+		e.log.Errorw(fmt.Sprintf("only java is supported as the codebase language. Received language is: %s", e.lang), "step_id", e.id)
 		return fmt.Errorf("unsupported language in test intelligence step")
 	}
 
@@ -196,22 +198,18 @@ func (e *runTestsStep) validate() error {
 }
 
 // resolveJEXL resolves JEXL expressions present in run step input
-func (e *runTestsStep) resolveJEXL(ctx context.Context) error {
+func (e *runTestsStep) resolveJEXL(ctx context.Context) (string, error) {
 	// JEXL expressions are only present in goals
-	g := e.goals
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{g}, e.so, false, e.log)
-
+	goals := e.goals
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{goals}, e.so, false, e.log)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	// Updating step command with the resolved value of JEXL expressions
-	resolvedG := g
-	if val, ok := resolvedExprs[g]; ok {
-		resolvedG = val
+	if val, ok := resolvedExprs[goals]; ok {
+		return val, nil
 	}
-	e.goals = resolvedG
-	return nil
+	return goals, nil
 }
 
 // execute step and sent the rpc call to addOn server for running the commands
@@ -219,7 +217,6 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 	st := time.Now()
 
 	addonClient, err := newAddonClient(uint(e.cntrPort), e.log)
-
 	if err != nil {
 		e.log.Errorw("Unable to create CI addon client", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), errors.Wrap(err, "Could not create CI Addon client")
@@ -248,7 +245,7 @@ func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 			DisplayName: e.name,
 			Step: &pb.UnitStep_Run{
 				Run: &pb.RunStep{
-					Command:       e.executionCommand,
+					Command:       e.execCommand,
 					Context:       e.stepCtx,
 					EnvVarOutputs: e.envVarOutputs,
 				},
