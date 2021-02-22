@@ -161,7 +161,7 @@ BAZEL_MODULES="\
   //product/ci/scm/proto:all \
 "
 
-bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
+bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
 
 build_bazel_module() {
   module=$1
