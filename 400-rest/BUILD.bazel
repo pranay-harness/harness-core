@@ -15,6 +15,7 @@ shared_dependencies = [
     "//420-delegate-service:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
+    "//460-capability:module",
     "//470-alert:module",
     "//480-alert-beans:module",
     "//490-ce-commons:module",

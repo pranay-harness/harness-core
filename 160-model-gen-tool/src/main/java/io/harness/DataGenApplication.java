@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
@@ -180,6 +181,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
     modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {

@@ -9,6 +9,7 @@ import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
+import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
@@ -614,7 +615,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SocketConnectivityParameters.class, 10011);
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
-
+    kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
   }
 }
