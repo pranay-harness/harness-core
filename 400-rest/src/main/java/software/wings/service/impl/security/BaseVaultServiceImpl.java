@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -143,6 +144,9 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   public VaultConfig getVaultConfig(String accountId, String entityId) {
+    if (isEmpty(accountId) || isEmpty(entityId)){
+      return new VaultConfig();
+    }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
         .filter(SecretManagerConfigKeys.accountId, accountId)
         .filter(ID_KEY, entityId);

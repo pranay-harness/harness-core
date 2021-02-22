@@ -1,0 +1,4 @@
+name: test
+type: type2
+spec:
+  type2String: test

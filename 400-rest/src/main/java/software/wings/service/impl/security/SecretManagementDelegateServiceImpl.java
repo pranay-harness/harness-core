@@ -94,7 +94,6 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         log.error(message);
         throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
       }
-
     } catch (IOException ioe) {
       String message = String.format(
           "Failed to sign public key with SSH secret engine %s , due to unexpected network error. Please try again.",

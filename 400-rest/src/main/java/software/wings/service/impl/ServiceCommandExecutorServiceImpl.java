@@ -2,14 +2,17 @@ package software.wings.service.impl;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SKIPPED;
-
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
-import static java.util.stream.Collectors.toList;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.ScriptType;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.HostConnectionAttributes;
@@ -26,18 +29,13 @@ import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 /**
  * Created by anubhaw on 6/2/16.
@@ -162,6 +160,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     if (context.getHostConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
           context.getHostConnectionCredentials(), false);
+      if (context.getHostConnectionAttributes().getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).isVaultSSH()) {
+        secretManagementDelegateService.signPublicKey(
+            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(), context.getSshVaultConfig());
+      }
     }
     if (context.getBastionConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getBastionConnectionAttributes().getValue(),
@@ -174,10 +177,6 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     if (context.getCloudProviderSetting() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getCloudProviderSetting().getValue(),
           context.getCloudProviderCredentials(), false);
-    }
-    if (((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).isVaultSSH()) {
-        secretManagementDelegateService.signPublicKey(
-            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(), context.getSshVaultConfig());
     }
   }
 }

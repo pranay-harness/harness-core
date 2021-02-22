@@ -11,15 +11,15 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.threading.Morpheus.sleep;
-
+import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT_SSH;
 
-import static java.time.Duration.ofMillis;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
-import software.wings.beans.BaseVaultConfig;
-import software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.data.structure.EmptyPredicate;
@@ -33,7 +33,12 @@ import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.BaseVaultConfig;
+import software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -41,17 +46,10 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(PL)
 @Singleton
@@ -91,6 +89,9 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
 
   @Override
   public SSHVaultConfig getSSHVaultConfig(String accountId, String entityId) {
+    if (isEmpty(accountId) || isEmpty(entityId)){
+      return new SSHVaultConfig();
+    }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
         .filter(SecretManagerConfigKeys.accountId, accountId)
         .filter(ID_KEY, entityId);

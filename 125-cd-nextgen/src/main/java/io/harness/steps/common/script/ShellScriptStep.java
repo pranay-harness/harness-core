@@ -3,7 +3,6 @@ package io.harness.steps.common.script;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -166,7 +165,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
 
   private Map<String, String> getEnvironmentVariables(List<NGVariable> inputVariables) {
     if (EmptyPredicate.isEmpty(inputVariables)) {
-      return emptyMap();
+      return new HashMap<>();
     }
 
     // TODO: handle for secret type later

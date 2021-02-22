@@ -75,7 +75,6 @@ public class HostValidationTaskTest extends WingsBaseTest {
   public void testRunWithObjectParameters() {
     Object[] objectParams = {any(), any(), Arrays.asList("host1"), any(), Collections.emptyList(), any()};
     Object methodReturnValue = hostValidationTask.run(objectParams);
-    verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
 

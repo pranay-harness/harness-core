@@ -7,9 +7,9 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretUsageLog;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpSecretsManagerConfig;
@@ -36,6 +36,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SecretUsageLog.class);
     set.add(VaultConfig.class);
     set.add(SSHVaultConfig.class);
+    set.add(BaseVaultConfig.class);
     set.add(MigrateSecretTask.class);
   }
 
@@ -51,5 +52,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.SecretManagerConfig", SecretManagerConfig.class);
     w.put("beans.VaultConfig", VaultConfig.class);
     w.put("beans.SSHVaultConfig", SSHVaultConfig.class);
+    w.put("beans.BaseVaultConfig", BaseVaultConfig.class);
+
   }
 }

@@ -48,6 +48,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -59,6 +60,8 @@ import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestBuilder;
@@ -975,5 +978,23 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestNullPollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestFalsePollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestTruePollForChanges)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmCommandFlags() {
+    HelmCommandFlagConfig withNullValueMap = HelmCommandFlagConfig.builder().build();
+    HelmCommandFlagConfig withEmptyValueMap = HelmCommandFlagConfig.builder().valueMap(ImmutableMap.of()).build();
+    HelmCommandFlagConfig withValues =
+        HelmCommandFlagConfig.builder()
+            .valueMap(ImmutableMap.of(HelmSubCommand.INSTALL, "flag-1", HelmSubCommand.DELETE, "flag-2"))
+            .build();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(null)).isNull();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(withNullValueMap).getValueMap()).isEmpty();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(withEmptyValueMap).getValueMap()).isEmpty();
+    Map<HelmSubCommandType, String> result = ApplicationManifestUtils.getHelmCommandFlags(withValues).getValueMap();
+    assertThat(result).containsKeys(HelmSubCommandType.INSTALL, HelmSubCommandType.DELETE);
+    assertThat(result).containsValues("flag-1", "flag-2");
   }
 }

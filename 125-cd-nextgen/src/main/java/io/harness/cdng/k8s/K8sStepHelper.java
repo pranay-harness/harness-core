@@ -16,6 +16,7 @@ import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -37,11 +38,13 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
@@ -74,6 +77,7 @@ import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -83,12 +87,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 public class K8sStepHelper {
+  private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES =
+      ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
+
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private EngineExpressionService engineExpressionService;
@@ -119,7 +127,28 @@ public class K8sStepHelper {
     return connectorDTO.get().getConnector();
   }
 
-  public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
+  public ManifestDelegateConfig getManifestDelegateConfig(ManifestOutcome manifestOutcome, Ambiance ambiance) {
+    switch (manifestOutcome.getType()) {
+      case ManifestType.K8Manifest:
+        K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
+        return K8sManifestDelegateConfig.builder()
+            .storeDelegateConfig(getStoreDelegateConfig(k8sManifestOutcome.getStore(), ambiance))
+            .build();
+
+      case ManifestType.HelmChart:
+        HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
+        return HelmChartManifestDelegateConfig.builder()
+            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance))
+            .skipResourceVersioning(helmChartManifestOutcome.isSkipResourceVersioning())
+            .helmVersion(helmChartManifestOutcome.getHelmVersion())
+            .build();
+
+      default:
+        throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestOutcome.getType()));
+    }
+  }
+
+  public StoreDelegateConfig getStoreDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       GitStore gitStore = (GitStore) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStore.getConnectorRef()), ambiance);
@@ -128,9 +157,7 @@ public class K8sStepHelper {
       SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-      return K8sManifestDelegateConfig.builder()
-          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO))
-          .build();
+      return getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO);
     } else {
       throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
     }
@@ -230,7 +257,7 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse executeValuesFetchTask(Ambiance ambiance, K8sStepParameters k8sStepParameters,
-      InfrastructureOutcome infrastructure, K8sManifestOutcome k8sManifestOutcome,
+      InfrastructureOutcome infrastructure, ManifestOutcome k8sManifestOutcome,
       List<ValuesManifestOutcome> aggregatedValuesManifests) {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
@@ -295,7 +322,7 @@ public class K8sStepHelper {
       throw new InvalidRequestException("Manifests can't be empty");
     }
 
-    K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
+    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
     List<ValuesManifestOutcome> aggregatedValuesManifests =
         getAggregatedValuesManifests(new LinkedList<>(manifestOutcomeMap.values()));
 
@@ -315,10 +342,10 @@ public class K8sStepHelper {
   }
 
   @VisibleForTesting
-  public K8sManifestOutcome getK8sManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
+  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
     List<ManifestOutcome> k8sManifests =
         manifestOutcomes.stream()
-            .filter(manifestOutcome -> ManifestType.K8Manifest.equals(manifestOutcome.getType()))
+            .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
             .collect(Collectors.toList());
     if (isEmpty(k8sManifests)) {
       throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", WingsException.USER);
@@ -327,7 +354,7 @@ public class K8sStepHelper {
     if (k8sManifests.size() > 1) {
       throw new InvalidRequestException("There can be only a single K8s manifest", WingsException.USER);
     }
-    return (K8sManifestOutcome) k8sManifests.get(0);
+    return k8sManifests.get(0);
   }
 
   @VisibleForTesting
@@ -372,7 +399,7 @@ public class K8sStepHelper {
 
     K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
 
-    K8sManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
+    ManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
     List<ValuesManifestOutcome> valuesManifests = k8sStepPassThroughData.getValuesManifestOutcomes();
 
     List<String> valuesFileContents = getFileContents(gitFetchFilesResultMap, valuesManifests);

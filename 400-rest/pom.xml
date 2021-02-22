@@ -312,10 +312,6 @@
             <artifactId>two-factor-auth</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
         </dependency>
@@ -338,6 +334,11 @@
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-common</artifactId>
             <version>12.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jcraft.harness</groupId>
+            <artifactId>jsch-0-1-54-harness-patch</artifactId>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -774,6 +775,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>860-orchestration-visualization</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>870-cg-yaml-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

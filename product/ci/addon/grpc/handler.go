@@ -47,7 +47,7 @@ func (h *handler) SignalStop(ctx context.Context, in *pb.SignalStopRequest) (*pb
 
 // ExecuteStep executes a unit step.
 func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	rl, err := newGrpcRemoteLogger(in.GetStep().GetId())
+	rl, err := newGrpcRemoteLogger(in.GetStep().GetLogKey())
 	if err != nil {
 		return &pb.ExecuteStepResponse{}, err
 	}

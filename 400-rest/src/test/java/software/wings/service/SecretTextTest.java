@@ -8,17 +8,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
-
-import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.LocalEncryptionConfig.HARNESS_DEFAULT_SECRET_MANAGER;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
-import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
-import static software.wings.utils.ArtifactType.JAR;
-
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -32,6 +21,18 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.beans.AppContainer.Builder.anAppContainer;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.LocalEncryptionConfig.HARNESS_DEFAULT_SECRET_MANAGER;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.utils.ArtifactType.JAR;
+
+import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -59,7 +60,20 @@ import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 import io.harness.testlib.RealMongo;
-
+import lombok.extern.slf4j.Slf4j;
+import net.openhft.chronicle.core.util.Time;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 import software.wings.EncryptTestUtils;
 import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
@@ -98,14 +112,13 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
 
-import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -124,20 +137,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import net.openhft.chronicle.core.util.Time;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mongodb.morphia.query.Query;
 
 /**
  * Created by rsingh on 11/3/17.
@@ -166,6 +165,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private SecretManagementTestHelper secretManagementTestHelper;
   @Inject private LocalSecretManagerService localSecretManagerService;
 
+  @Mock private SSHVaultService sshVaultService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ConfigFileAuthHandler configFileAuthHandler;

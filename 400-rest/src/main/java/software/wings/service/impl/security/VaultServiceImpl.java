@@ -10,12 +10,9 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -23,7 +20,6 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
-import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
@@ -31,8 +27,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
-import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
@@ -49,12 +43,10 @@ import software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +67,9 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
   @Override
   public VaultConfig getVaultConfigByName(String accountId, String name) {
+    if (isEmpty(accountId) || isEmpty(name)){
+      return new VaultConfig();
+    }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
                                    .filter(SecretManagerConfigKeys.accountId, accountId)
                                    .filter(EncryptedDataKeys.name, name);

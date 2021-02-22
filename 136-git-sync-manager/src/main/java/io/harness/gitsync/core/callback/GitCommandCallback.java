@@ -164,7 +164,7 @@ public class GitCommandCallback implements NotifyCallback {
       }
       yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.get().getOrganizationId(),
           yamlChangeSet.get().getProjectId(),
-          getAllFilesSuccessFullyProccessed(yamlChangeSet.get().getGitFileChanges(), filesCommited), false);
+          getAllFilesSuccessFullyProccessed(yamlChangeSet.get().getGitFileChanges(), filesCommited));
     }
   }
 
