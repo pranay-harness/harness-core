@@ -71,6 +71,9 @@ segmentConfig:
 
 baseUrl: https://localhost:8000
 
+cfConfig:
+  apiKey: ""
+
 reportScheduleConfig:
   enabled: true
   templateName: "ce_scheduled_report"
