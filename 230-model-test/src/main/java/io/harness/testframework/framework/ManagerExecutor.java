@@ -81,7 +81,7 @@ public class ManagerExecutor {
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
-    String alpn = "/home/jenkins" + "/.m2/repository/" + alpnJarPath;
+    String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
     if (!new File(alpn).exists()) {
       // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
