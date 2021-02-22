@@ -69,8 +69,7 @@ public class UserRestUtils {
     RestResponse<User> userRestResponse =
         Setup.portal().body(loginRequest).post("/users/login").as(genericType.getType());
     assertThat(userRestResponse).isNotNull();
-    User user = userRestResponse.getResource();
-    return user;
+    return userRestResponse.getResource();
   }
 
   public static void sendResetPasswordMail(String emailId) {

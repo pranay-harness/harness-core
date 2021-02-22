@@ -19,12 +19,12 @@ public class RoleValidator implements ConstraintValidator<ValidRole, Role> {
 
   @Override
   public boolean isValid(Role value, ConstraintValidatorContext context) {
-    if (!value.isManaged() && value.getIdentifier().startsWith("_")) {
+    if (!value.isManaged() && value.getIdentifier().charAt(0) == '_') {
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("custom roles cannot start with _").addConstraintViolation();
       return false;
     }
-    if (value.isManaged() && !value.getIdentifier().startsWith("_")) {
+    if (value.isManaged() && value.getIdentifier().charAt(0) != '_') {
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("managed roles should start with _").addConstraintViolation();
       return false;

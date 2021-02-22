@@ -113,9 +113,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
 
-    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(perpetualTaskPack, bundle.fetchRequiredExecutionCapabilities(null));
-    return perpetualTaskExecutionBundle;
+    return createPerpetualTaskExecutionBundle(perpetualTaskPack, bundle.fetchRequiredExecutionCapabilities(null));
   }
 
   @NotNull

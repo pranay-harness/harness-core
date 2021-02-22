@@ -102,6 +102,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
+  @SuppressWarnings("PMD")
   public Optional<ResourceGroupResponse> find(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     accountIdentifier = StringUtils.stripToNull(accountIdentifier);

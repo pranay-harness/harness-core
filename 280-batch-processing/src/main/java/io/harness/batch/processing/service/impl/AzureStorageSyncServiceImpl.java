@@ -44,7 +44,9 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
   private static final int SYNC_TIMEOUT_MINUTES = 5;
   private static final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
   private static final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
+
   @Override
+  @SuppressWarnings("PMD")
   public void syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
     AzureStorageSyncConfig azureStorageSyncConfig = configuration.getAzureStorageSyncConfig();
     String sourcePath = null;
@@ -151,8 +153,7 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     OffsetDateTime keyExpiry = OffsetDateTime.now().plusHours(1);
     UserDelegationKey userDelegationKey = blobServiceClient.getUserDelegationKey(keyStart, keyExpiry);
 
-    String sas = blobContainerClient.generateUserDelegationSas(builder, userDelegationKey);
-    return sas;
+    return blobContainerClient.generateUserDelegationSas(builder, userDelegationKey);
   }
 
   public ProcessResult trySyncStorage(ArrayList<String> cmd)

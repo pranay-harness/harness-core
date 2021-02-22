@@ -60,7 +60,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @NGEntityName String name;
   @NotNull @Singular List<String> users;
   @NotNull List<NotificationSettingConfig> notificationConfigs;
-  @Builder.Default boolean harnessManaged = false;
+  boolean harnessManaged;
 
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
@@ -68,5 +68,5 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @CreatedDate long createdAt;
   @LastModifiedDate long lastModifiedAt;
   @Version long version;
-  @Builder.Default boolean deleted = false;
+  boolean deleted;
 }

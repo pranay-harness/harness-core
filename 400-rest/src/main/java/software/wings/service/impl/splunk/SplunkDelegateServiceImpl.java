@@ -413,7 +413,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       final URL url = new URL(trimmedUrl);
 
       Service splunkService = new Service(url.getHost(), url.getPort(), uri.getScheme());
-      String credentials = username + ":" + String.valueOf(password);
+      String credentials = username + ":" + password;
       String basicAuthHeader = Base64.encode(credentials.getBytes());
       splunkService.setToken("Basic " + basicAuthHeader);
 

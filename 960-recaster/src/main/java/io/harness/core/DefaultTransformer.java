@@ -50,11 +50,6 @@ public class DefaultTransformer extends Transformer {
   }
 
   @Override
-  protected RecastTransformer getTransformer(final Class<?> c) {
-    return super.getTransformer(c);
-  }
-
-  @Override
   protected RecastTransformer getTransformer(final Object val, final CastedField cf) {
     return super.getTransformer(val, cf);
   }

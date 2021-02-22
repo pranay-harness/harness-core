@@ -32,8 +32,6 @@ import java.util.Set;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-;
-
 @Slf4j
 @Singleton
 public class DelegateProfileEventHandler implements DelegateProfileObserver {

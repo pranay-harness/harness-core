@@ -169,7 +169,7 @@ public class EncryptedData
 
   @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
-  @Default private boolean hideFromListing = false;
+  private boolean hideFromListing;
 
   public String getKmsId() {
     if (encryptionType == LOCAL) {

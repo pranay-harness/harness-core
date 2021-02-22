@@ -19,6 +19,6 @@ public class WebhookEventMappingResponse {
   WebhookEventResponse webhookEventResponse;
   ParseWebhookResponse parseWebhookResponse;
   @Default boolean failedToFindTrigger = true;
-  @Default boolean isCustomTrigger = false;
+  boolean isCustomTrigger;
   @Singular List<TriggerDetails> triggers;
 }

@@ -159,8 +159,8 @@ public class MorphiaModule extends AbstractModule {
             // }}
           } while (filePath == null);
 
-          if (filePath.indexOf("!") > 0 && filePath.indexOf(".jar") > 0) {
-            String jarPath = filePath.substring(0, filePath.indexOf("!")).substring(filePath.indexOf(":") + 1);
+          if (filePath.indexOf('!') > 0 && filePath.indexOf(".jar") > 0) {
+            String jarPath = filePath.substring(0, filePath.indexOf('!')).substring(filePath.indexOf(':') + 1);
             if (jarPath.contains(":")) {
               jarPath = jarPath.substring(1);
             }

@@ -23,6 +23,7 @@ public class MethodExecutionHelper {
    * @return
    */
   @SafeVarargs
+  @SuppressWarnings("PMD")
   public final <T> T execute(IMethodWrapper<T> method, int noOfRetryAttempts, long sleepInterval,
       Class<? extends Throwable>... retryOnExceptions) throws Throwable {
     // if someone calls this method directly instead of going via @RetryOnException rout
@@ -33,12 +34,16 @@ public class MethodExecutionHelper {
     Set<Class<? extends Throwable>> retryOnExceptionSet = new HashSet<>();
     populateRetryableExceptionSet(retryOnExceptionSet, retryOnExceptions);
 
-    log.debug("noOfRetryAttempts = " + noOfRetryAttempts);
-    log.debug("retryOnExceptionsSet = " + retryOnExceptionSet);
+    if (log.isDebugEnabled()) {
+      log.debug("noOfRetryAttempts = " + noOfRetryAttempts);
+      log.debug("retryOnExceptionsSet = " + retryOnExceptionSet);
+    }
 
     T result = null;
     for (int retryCount = 1; retryCount <= noOfRetryAttempts; retryCount++) {
-      log.debug("Executing the method. Attempt #" + retryCount);
+      if (log.isDebugEnabled()) {
+        log.debug("Executing the method. Attempt #" + retryCount);
+      }
       try {
         result = method.execute();
         break;
