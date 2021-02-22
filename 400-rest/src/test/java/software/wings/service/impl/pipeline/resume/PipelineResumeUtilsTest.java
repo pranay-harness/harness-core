@@ -61,6 +61,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.PipelineStageExecution.PipelineStageExecutionBuilder;
 import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -942,7 +943,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
                               .pipelineStageElements(asList(prepareEnvStatePipelineStageElement(1),
                                   prepareApprovalPipelineStageElement(), prepareEnvStatePipelineStageElement(2)))
                               .build();
-    PipelineStageExecution.PipelineStageExecutionBuilder stageExecution = PipelineStageExecution.builder();
+    PipelineStageExecutionBuilder stageExecution = PipelineStageExecution.builder();
     //.workflowExecutions() // Null workflow;
     for (ExecutionStatus executionStatus : resumableStatuses) {
       // Check should pass for all Resumeble Statuses.
