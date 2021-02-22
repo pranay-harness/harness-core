@@ -9,6 +9,7 @@ import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.beans.Cd10ValidateMappingParams;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
@@ -119,32 +120,53 @@ public class ActivityServiceImpl implements ActivityService {
     Preconditions.checkNotNull(activityDTO);
     Preconditions.checkState(
         activityDTO.getVerificationJobRuntimeDetails().size() == 1, "RuntimeDetails should be of size 1");
-    if (activityDTO.getServiceIdentifier() == null || activityDTO.getEnvironmentIdentifier() == null) {
-      Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
-      String harness10CdAppId = runtimeValues.get("harnessCdAppId");
-      String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
-      String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
-      Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
-      Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
-      Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
-      if (activityDTO.getEnvironmentIdentifier() == null) {
-        activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
-            activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
-        runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
-      }
-      if (activityDTO.getServiceIdentifier() == null) {
-        activityDTO.setServiceIdentifier(
-            cd10ActivitySourceService.getNextGenServiceIdentifier(accountId, activityDTO.getOrgIdentifier(),
-                activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
-        runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
-      }
-    }
+    Preconditions.checkState(
+        activityDTO.getServiceIdentifier() == null && activityDTO.getEnvironmentIdentifier() == null,
+        "service and env identifiers should be null");
+    Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
+    String harness10CdAppId = runtimeValues.get("harnessCdAppId");
+    String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
+    String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
+    Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
+    Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
+    Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
+    activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
+    runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
+    activityDTO.setServiceIdentifier(cd10ActivitySourceService.getNextGenServiceIdentifier(accountId,
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
+    runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
+    validateCD10Mappings(activityDTO, harness10CdAppId, harness10CdServiceId, harness10CdEnvId);
     String activityId = register(accountId, activityDTO);
     return CD10RegisterActivityDTO.builder()
         .activityId(activityId)
         .serviceIdentifier(activityDTO.getServiceIdentifier())
         .envIdentifier(activityDTO.getEnvironmentIdentifier())
         .build();
+  }
+
+  private void validateCD10Mappings(ActivityDTO activityDTO, String cd10AppId, String cd10ServiceId, String cd10EnvId) {
+    Preconditions.checkState(activityDTO.getVerificationJobRuntimeDetails().size() == 1,
+        "VerificationJobRuntimeDetails should be of size 1");
+    String verificationJobIdentifier =
+        activityDTO.getVerificationJobRuntimeDetails().get(0).getVerificationJobIdentifier();
+    Preconditions.checkNotNull(verificationJobIdentifier, "verificationJobIdentifier can not be null");
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(activityDTO.getAccountIdentifier(),
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), verificationJobIdentifier);
+    Preconditions.checkNotNull(
+        verificationJob, "VerificationJob with identifier %s does not exists", verificationJobIdentifier);
+    cd10ActivitySourceService.validateMapping(
+        Cd10ValidateMappingParams.builder()
+            .accountId(activityDTO.getAccountIdentifier())
+            .orgIdentifier(activityDTO.getOrgIdentifier())
+            .projectIdentifier(activityDTO.getProjectIdentifier())
+            .activitySourceIdentifier(verificationJob.getActivitySourceIdentifier())
+            .cd10AppId(cd10AppId)
+            .cd10ServiceId(cd10ServiceId)
+            .cd10EnvId(cd10EnvId)
+            .serviceIdentifier(verificationJob.getServiceIdentifierRuntimeParam())
+            .environmentIdentifier(verificationJob.getEnvIdentifierRuntimeParam())
+            .build());
   }
 
   @Override
