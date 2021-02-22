@@ -21,12 +21,15 @@ const (
 )
 
 var (
-	remoteTiClient = external.GetTiHTTPClient
-	getOrgId       = external.GetOrgId
-	getProjectId   = external.GetProjectId
-	getPipelineId  = external.GetPipelineId
-	getBuildId     = external.GetBuildId
-	getStageId     = external.GetStageId
+	remoteTiClient  = external.GetTiHTTPClient
+	getOrgId        = external.GetOrgId
+	getProjectId    = external.GetProjectId
+	getPipelineId   = external.GetPipelineId
+	getBuildId      = external.GetBuildId
+	getStageId      = external.GetStageId
+	getRepo         = external.GetRepo
+	getSha          = external.GetSha
+	getSourceBranch = external.GetSourceBranch
 )
 
 // RunTestsStep represents interface to execute a run step
@@ -106,13 +109,28 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
+	repo, err := getRepo()
+	if err != nil {
+		return nil, int32(1), err
+	}
+
+	sha, err := getSha()
+	if err != nil {
+		return nil, int32(1), err
+	}
+
+	branch, err := getSourceBranch()
+	if err != nil {
+		return nil, int32(1), err
+	}
+
 	tc, err := remoteTiClient()
 	if err != nil {
 		e.log.Errorw("failed to create ti service client", zap.Error(err))
 		return nil, int32(1), err
 	}
 
-	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, changedFiles)
+	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, repo, sha, branch, changedFiles)
 
 	runAll := false
 	if err != nil {
