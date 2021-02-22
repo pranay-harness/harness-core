@@ -112,7 +112,6 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
     SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
         gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
     String fetchTypeInfo = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH
@@ -129,7 +128,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     }
 
     FetchFilesResult gitFetchFilesResult =
-        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig);
+        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 
