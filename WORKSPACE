@@ -1326,6 +1326,7 @@ maven_install(
         "com.google.apis:google-api-services-cloudcommerceprocurement:v1-rev20190531-1.25.0",
         "com.google.apis:google-api-services-cloudresourcemanager:v1-rev20200210-1.30.9",
         "com.google.apis:google-api-services-compute:v1-rev213-1.25.0",
+        "org.apache.httpcomponents:httpmime:4.2.5",
         maven.artifact(
             group = "com.google.apis",
             artifact = "google-api-services-container",

@@ -50,12 +50,9 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
 
   private Response setupTestData(final String appName) {
     File file = null;
-    try {
-      file = ResourceUtils.getFile("classpath:io/harness/yaml/" + appName + ".zip");
-    } catch (FileNotFoundException ex) {
-      log.error(ExceptionUtils.getMessage(ex));
-      assertThat(false).isTrue();
-    }
+
+    file = new File("200-functional-test/src/test/resources/io/harness/yaml/"+appName+".zip");
+
     return Setup.portal()
         .auth()
         .oauth2(bearerToken)
