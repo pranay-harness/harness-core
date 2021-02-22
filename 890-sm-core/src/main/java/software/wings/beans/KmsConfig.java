@@ -9,6 +9,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
+import com.amazonaws.auth.STSSessionCredentialsProvider;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -55,6 +56,12 @@ public class KmsConfig extends SecretManagerConfig {
   @Attributes(title = "AWS key ARN", required = true) @Encrypted(fieldName = "aws_key_arn") private String kmsArn;
 
   @Attributes(title = "AWS Region", required = true) private String region;
+
+  @Attributes(title = "AWS AssumeIamRole") private boolean assumeIamRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRole") private boolean assumeStsRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRoleDuration") private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
+  @Attributes(title = "AWS RoleARN") private String roleArn;
+  @Attributes(title = "AWS ExternalName") private String externalName;
 
   @JsonIgnore
   @SchemaIgnore

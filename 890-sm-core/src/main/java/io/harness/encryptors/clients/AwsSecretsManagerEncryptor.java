@@ -5,14 +5,24 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.helpers.ext.vault.VaultRestClientFactory.getFullPath;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
+import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
+import com.google.common.base.Preconditions;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
+import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptedRecordData.EncryptedRecordDataBuilder;
@@ -54,6 +64,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   private final int NUM_OF_RETRIES = 3;
   private static final String KEY_SEPARATOR = "#";
   private static final JsonParser JSON_PARSER = new JsonParser();
+  private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
 
   private static class ParsedSecretRef {
     String secretPath;
@@ -173,6 +184,32 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     }
   }
 
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    AwsSecretsManagerConfig secretsManagerConfig=(AwsSecretsManagerConfig) encryptionConfig;
+    try {
+      AWSSecretsManager client =
+              AWSSecretsManagerClientBuilder.standard()
+                      .withCredentials(new AWSStaticCredentialsProvider(
+                              new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey())))
+                      .withRegion(secretsManagerConfig.getRegion() == null ? Regions.US_EAST_1
+                              : Regions.fromName(secretsManagerConfig.getRegion()))
+                      .build();
+      GetSecretValueRequest request =
+              new GetSecretValueRequest().withSecretId(AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis());
+      client.getSecretValue(request);
+    } catch (ResourceNotFoundException e) {
+      // this exception is expected. It means the credentials are correct, but can't find the resource
+      // which means the connectivity to AWS Secrets Manger is ok.
+    } catch (AWSSecretsManagerException e) {
+      String message =
+              "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
+    }
+    log.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
+    return true;
+  }
+
   private EncryptedRecord renameSecretInternal(
       String name, EncryptedRecord existingRecord, AwsSecretsManagerConfig secretsManagerConfig) {
     char[] value = fetchSecretValueInternal(existingRecord, secretsManagerConfig);
@@ -264,11 +301,39 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   @VisibleForTesting
   public AWSSecretsManager getAwsSecretsManagerClient(AwsSecretsManagerConfig secretsManagerConfig) {
     return AWSSecretsManagerClientBuilder.standard()
-        .withCredentials(new AWSStaticCredentialsProvider(
-            new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey())))
+        .withCredentials(getAwsCredentialsProvider(secretsManagerConfig))
         .withRegion(secretsManagerConfig.getRegion() == null ? Regions.US_EAST_1
                                                              : Regions.fromName(secretsManagerConfig.getRegion()))
         .build();
+  }
+
+  public AWSCredentialsProvider getAwsCredentialsProvider(AwsSecretsManagerConfig secretsManagerConfig){
+    System.out.println("");
+    if(!secretsManagerConfig.isAssumeIamRoleOnDelegate()) {
+      Preconditions.checkNotNull(secretsManagerConfig.getAccessKey(), "You must provide an AccessKey if AssumeIAMRole is not selected");
+      Preconditions.checkNotNull(secretsManagerConfig.getSecretKey(), "You must provide a SecretKey if AssumeIAMRole is not selected");
+      log.info("Instantiating STSAssumeRoleSessionCredentialsProvider with config:" + secretsManagerConfig);
+      return new AWSStaticCredentialsProvider(
+              new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey()));
+    }else {
+      System.out.println("");
+      if(secretsManagerConfig.isAssumeStsRoleOnDelegate()){
+        log.info("Instantiating STSAssumeRoleSessionCredentialsProvider with config:" + secretsManagerConfig);
+        Preconditions.checkNotNull(secretsManagerConfig.getRoleArn(), "You must provide RoleARN if AssumeStsRole is selected");
+        STSAssumeRoleSessionCredentialsProvider.Builder sessionCredentialsProviderBuilder=
+                new STSAssumeRoleSessionCredentialsProvider.Builder(secretsManagerConfig.getRoleArn(), UUIDGenerator.generateUuid());
+        sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(secretsManagerConfig.getAssumeStsRoleDuration());
+        sessionCredentialsProviderBuilder.withExternalId(secretsManagerConfig.getExternalName());
+        return sessionCredentialsProviderBuilder.build();
+      }else{
+        log.info("Instantiating DefaultCredentialProviderChain to resolve credential");
+        try {
+          return new DefaultAWSCredentialsProviderChain();
+        }catch(SdkClientException exception){
+          throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR,exception.getMessage(),USER_SRE);
+        }
+      }
+    }
   }
 
   private ParsedSecretRef parsedSecretRef(String path) {

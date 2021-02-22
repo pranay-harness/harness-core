@@ -11,9 +11,12 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import com.amazonaws.auth.STSSessionCredentials;
+import com.amazonaws.auth.STSSessionCredentialsProvider;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -47,14 +50,20 @@ import lombok.experimental.SuperBuilder;
 public class AwsSecretsManagerConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true) private String accessKey;
-  @Attributes(title = "AWS Secret Key", required = true)
+  @Attributes(title = "AWS Access Key") private String accessKey;
+  @Attributes(title = "AWS Secret Key")
   @Encrypted(fieldName = "aws_secret_key")
   private String secretKey;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 
   @Attributes(title = "Secret Name Prefix") private String secretNamePrefix;
+
+  @Attributes(title = "AWS AssumeIamRole") private boolean assumeIamRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRole") private boolean assumeStsRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRoleDuration") private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
+  @Attributes(title = "AWS RoleARN") private String roleArn;
+  @Attributes(title = "AWS ExternalName") private String externalName;
 
   @JsonIgnore
   @SchemaIgnore

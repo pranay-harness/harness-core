@@ -3,6 +3,7 @@ package io.harness.encryptors;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
@@ -39,6 +40,11 @@ public interface VaultEncryptor {
   default boolean validateReference(
       @NotEmpty String accountId, @NotNull SecretText secretText, @NotNull EncryptionConfig encryptionConfig) {
     return validateReference(accountId, secretText.getPath(), encryptionConfig);
+  }
+
+  default boolean validateSecretManagerConfiguration(
+          @NotEmpty String accountId, @NotNull EncryptionConfig encryptionConfig) {
+    throw new UnsupportedOperationException("Validating SecretManager Configuration on Delegate in not available yet for:"+encryptionConfig);
   }
 
   boolean deleteSecret(
