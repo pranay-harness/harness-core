@@ -84,10 +84,11 @@ type OverviewStatsData {
   cloudConnectorsPresent: Boolean
   awsConnectorsPresent: Boolean
   gcpConnectorsPresent: Boolean
+  azureConnectorsPresent: Boolean
   applicationDataPresent: Boolean
   clusterDataPresent: Boolean
   isSampleClusterPresent: Boolean
-  azureConnectorsPresent: Boolean
+  defaultAzurePerspectiveId: String
 }
 
 input CESetupFilter {

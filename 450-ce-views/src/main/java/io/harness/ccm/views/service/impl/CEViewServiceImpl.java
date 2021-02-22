@@ -10,11 +10,13 @@ import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewIdOperator;
 import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.ccm.views.entities.ViewTimeRange;
 import io.harness.ccm.views.entities.ViewTimeRangeType;
+import io.harness.ccm.views.entities.ViewType;
 import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEView;
 import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
@@ -53,6 +55,9 @@ public class CEViewServiceImpl implements CEViewService {
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(50) has been reached";
+  private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
+  private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
+  private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
   private static final int VIEW_COUNT = 50;
   @Override
   public CEView save(CEView ceView) {
@@ -106,6 +111,9 @@ public class CEViewServiceImpl implements CEViewService {
           }
           if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.GCP) {
             viewFieldIdentifierSet.add(ViewFieldIdentifier.GCP);
+          }
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.AZURE) {
+            viewFieldIdentifierSet.add(ViewFieldIdentifier.AZURE);
           }
           if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CUSTOM) {
             String viewId = ((ViewIdCondition) condition).getViewField().getFieldId();
@@ -210,5 +218,45 @@ public class CEViewServiceImpl implements CEViewService {
   @Override
   public List<CEView> getViewByState(String accountId, ViewState viewState) {
     return ceViewDao.findByAccountIdAndState(accountId, viewState);
+  }
+
+  @Override
+  public void createDefaultAzureView(String accountId) {
+    ViewIdCondition condition = ViewIdCondition.builder()
+                                    .viewField(ViewField.builder()
+                                                   .fieldId(DEFAULT_AZURE_FIELD_ID)
+                                                   .fieldName(DEFAULT_AZURE_FIELD_NAME)
+                                                   .identifier(ViewFieldIdentifier.AZURE)
+                                                   .build())
+                                    .viewOperator(ViewIdOperator.NOT_NULL)
+                                    .values(Collections.emptyList())
+                                    .build();
+
+    ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();
+
+    CEView defaultAzureView = CEView.builder()
+                                  .accountId(accountId)
+                                  .name(DEFAULT_AZURE_VIEW_NAME)
+                                  .viewVersion("v1")
+                                  .viewType(ViewType.DEFAULT_AZURE)
+                                  .viewState(ViewState.COMPLETED)
+                                  .viewRules(Collections.singletonList(rule))
+                                  .build();
+
+    modifyCEViewAndSetDefaults(defaultAzureView);
+    ceViewDao.save(defaultAzureView);
+  }
+
+  @Override
+  public String getDefaultAzureViewId(String accountId) {
+    List<CEView> views = ceViewDao.findByAccountIdAndType(accountId, ViewType.DEFAULT_AZURE);
+    if (views != null && views.size() > 1) {
+      log.error("More than 1 default azure perspectives present");
+      return null;
+    }
+    if (views != null) {
+      return views.get(0).getUuid();
+    }
+    return null;
   }
 }
