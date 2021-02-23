@@ -267,7 +267,8 @@ public class NextGenModule extends AbstractModule {
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
 
-    install(new ResourceGroupModule(appConfig.getResoureGroupConfig()));
+    install(new ResourceGroupModule(
+        appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);

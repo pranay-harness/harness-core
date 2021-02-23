@@ -1,10 +1,10 @@
 package io.harness.resourcegroup.framework.service.impl;
 
-import io.harness.resourcegroup.framework.remote.dto.ResourceTypeDTO;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceTypeMapper;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
+import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.Scope;
-import io.harness.resourcegroup.resourceclient.api.ResourceValidator;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

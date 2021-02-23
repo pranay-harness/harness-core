@@ -21,5 +21,6 @@ public class NGCoreClientRegistrars {
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(SetupUsageRegistrars.morphiaRegistrars)
           .add(ResourceGroupBeansMorphiaRegistrar.class)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 }

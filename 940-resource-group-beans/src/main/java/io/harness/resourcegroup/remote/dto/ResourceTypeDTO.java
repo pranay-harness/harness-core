@@ -1,4 +1,4 @@
-package io.harness.resourcegroup.framework.remote.dto;
+package io.harness.resourcegroup.remote.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
