@@ -4521,7 +4521,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<Artifact> obtainLastGoodDeployedArtifacts(
       WorkflowExecution workflowExecution, List<String> infraMappingList) {
     WorkflowExecution lastGoodWorkflowExecution = fetchLastSuccessDeployment(workflowExecution, infraMappingList);
-    if (lastGoodWorkflowExecution != null) {
+    if (lastGoodWorkflowExecution != null && lastGoodWorkflowExecution.getArtifacts() != null) {
       return lastGoodWorkflowExecution.getArtifacts();
     }
     return new ArrayList<>();

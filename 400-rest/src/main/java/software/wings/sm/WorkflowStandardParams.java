@@ -322,6 +322,15 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   }
 
   /**
+   * Gets rollback artifact ids.
+   *
+   * @return  the rollback artifact ids
+   */
+  public List<String> getRollbackArtifactIds() {
+    return rollbackArtifactIds;
+  }
+
+  /**
    * Gets helm chart ids.
    *
    * @return the helm chart ids
