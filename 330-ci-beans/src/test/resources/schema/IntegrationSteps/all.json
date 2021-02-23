@@ -492,21 +492,21 @@
         {
           "type": "object",
           "required": [
+            "args",
             "buildTool",
-            "goals",
             "image",
             "language",
             "packages",
             "runOnlySelectedTests"
           ],
           "properties": {
+            "args": {
+              "type": "string"
+            },
             "buildTool": {
               "type": "string"
             },
             "connector": {
-              "type": "string"
-            },
-            "goals": {
               "type": "string"
             },
             "image": {
