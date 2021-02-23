@@ -2023,6 +2023,7 @@ maven_install(
     name = "delegate",
     artifacts = [
         "org.apache.httpcomponents:httpmime:4.5.1",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

@@ -36,8 +36,7 @@ java_library(
     deps = shared_dependencies,
 )
 
-test_dependencies = ["@delegate//:org_apache_httpcomponents_httpmime"] + shared_dependencies + [
-    "@com_github_tomakehurst_wiremock//jar",
+test_dependencies = ["@delegate//:com_github_tomakehurst_wiremock_jre8_standalone","@delegate//:org_apache_httpcomponents_httpmime"] + shared_dependencies + [
     ":module",
      "//990-commons-test:module",
     "@maven//:com_bertramlabs_plugins_hcl4j",

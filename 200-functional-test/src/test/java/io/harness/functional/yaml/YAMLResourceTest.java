@@ -51,7 +51,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   private Response setupTestData(final String appName) {
     File file = null;
 
-    file = new File("200-functional-test/src/test/resources/io/harness/yaml/"+appName+".zip");
+    file = new File("200-functional-test/src/test/resources/io/harness/yaml/" + appName + ".zip");
 
     return Setup.portal()
         .auth()
