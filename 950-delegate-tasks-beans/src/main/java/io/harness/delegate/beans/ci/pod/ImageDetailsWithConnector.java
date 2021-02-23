@@ -1,8 +1,5 @@
 package io.harness.delegate.beans.ci.pod;
 
-import static io.harness.expression.Expression.ALLOW_SECRETS;
-
-import io.harness.expression.Expression;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.k8s.model.ImageDetails;
 
@@ -20,5 +17,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ImageDetailsWithConnector implements NestedAnnotationResolver {
   @NotNull private ConnectorDetails imageConnectorDetails;
-  @Expression(ALLOW_SECRETS) @NotNull private ImageDetails imageDetails;
+  @NotNull private ImageDetails imageDetails;
 }
