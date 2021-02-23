@@ -6,7 +6,6 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
-import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 
@@ -76,7 +75,6 @@ public class EncryptedDataLocalToGcpKmsMigrationHandler implements Handler<Encry
     this.secretTypes = new ArrayList<>();
     secretTypes.add(SECRET_TEXT);
     secretTypes.add(CONFIG_FILE);
-    secretTypes.add(APM_VERIFICATION);
   }
 
   public void registerIterators() {
