@@ -86,15 +86,16 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     ResponseData responseData = responseDataMap.values().iterator().next();
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
     // do we need to include the newPods with instance details + summaries
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+    stepResponseBuilder.unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      StepResponseBuilder stepResponseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
+      stepResponseBuilder.status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                           .build());
       if (stepParameters.getRollbackInfo() != null) {
         stepResponseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()

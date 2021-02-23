@@ -20,6 +20,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -211,8 +212,11 @@ public class K8sDeleteStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.of("activity", K8sDeployResponse.builder().commandExecutionStatus(SUCCESS).build());
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+        K8sDeployResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .build());
 
     StepResponse response = deleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
@@ -224,7 +228,11 @@ public class K8sDeleteStepTest extends CategoryTest {
   public void testHandleTaskResultFailed() {
     K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
     Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder().errorMessage("Execution failed.").commandExecutionStatus(FAILURE).build());
+        K8sDeployResponse.builder()
+            .errorMessage("Execution failed.")
+            .commandExecutionStatus(FAILURE)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .build());
 
     StepResponse response = deleteStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);

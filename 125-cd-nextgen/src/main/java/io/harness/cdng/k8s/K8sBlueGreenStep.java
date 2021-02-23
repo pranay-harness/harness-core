@@ -87,6 +87,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
+              .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
               .failureInfo(FailureInfo.newBuilder()
                                .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
                                .build());
@@ -119,6 +120,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
                          .outcome(k8sBlueGreenOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
+        .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
         .build();
   }
 }

@@ -19,6 +19,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import io.harness.beans.FileData;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -59,7 +60,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sCanaryDeployRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("k8sDeployRequest", "Must be instance of K8sCanaryDeployRequestK8sCanaryDeployRequest"));
@@ -73,28 +75,28 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList())),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList()), commandUnitsProgress),
         timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
     success = prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
-    success =
-        k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-            k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true), true);
+    success = k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(),
+        k8sCanaryHandlerConfig.getResources(), k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
     if (!success) {
       k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
           k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
@@ -102,7 +104,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     LogCallback steadyStateLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
     KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
     success = k8sTaskHelperBase.doStatusCheck(k8sCanaryHandlerConfig.getClient(), canaryWorkload.getResourceId(),
         k8sDelegateTaskParams, steadyStateLogCallback);
@@ -116,7 +118,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName(), timeoutInMillis);
 
     k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress));
 
     ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
     k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),

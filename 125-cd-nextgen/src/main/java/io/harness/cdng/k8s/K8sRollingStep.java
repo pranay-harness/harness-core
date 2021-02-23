@@ -115,6 +115,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
 
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
+          .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
           .stepOutcome(StepResponse.StepOutcome.builder()
                            .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
                            .outcome(k8sRollingOutcome)
@@ -125,6 +126,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
       StepResponseBuilder stepResponseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
+              .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
               .failureInfo(FailureInfo.newBuilder()
                                .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
                                .build());
