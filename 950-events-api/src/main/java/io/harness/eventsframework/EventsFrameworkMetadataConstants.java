@@ -1,5 +1,8 @@
 package io.harness.eventsframework;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class EventsFrameworkMetadataConstants {
   public static final String ENTITY_TYPE = "entityType";
 
@@ -15,6 +18,8 @@ public final class EventsFrameworkMetadataConstants {
   public static final String CONNECTOR_ENTITY = "connector";
   public static final String SECRET_ENTITY = "secret";
 
+  public static final String RESOURCE_GROUP = "resourcegroup";
+  public static final String SECRET_ENTITY = "secret";
   // deprecated, use setupusage and entityActivity channel.
   public static final String SETUP_USAGE_ENTITY = "setupUsage";
   public static final String ACCOUNT_ENTITY = "account";

@@ -1,9 +1,14 @@
 package io.harness.resourcegroup.model;
 
+import static io.harness.ng.DbAliases.NG_MANAGER;
+
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
@@ -33,7 +38,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("resourceGroup")
 @Entity("resourceGroup")
 @TypeAlias("resourceGroup")
-public class ResourceGroup implements PersistentEntity {
+@StoreIn(NG_MANAGER)
+public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -42,6 +48,7 @@ public class ResourceGroup implements PersistentEntity {
                  .field(ResourceGroupKeys.orgIdentifier)
                  .field(ResourceGroupKeys.projectIdentifier)
                  .field(ResourceGroupKeys.identifier)
+                 .field(ResourceGroupKeys.resourceSelectors)
                  .unique(true)
                  .collation(CompoundMongoIndex.Collation.builder()
                                 .locale(CollationLocale.ENGLISH)
@@ -61,11 +68,29 @@ public class ResourceGroup implements PersistentEntity {
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;
   @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
-  @NotEmpty @Size(max = 256) @Singular List<io.harness.resourcegroup.model.ResourceSelector> resourceSelectors;
+  @NotEmpty @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
 
+  @Builder.Default Boolean deleted = Boolean.FALSE;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @CreatedBy EmbeddedUser createdBy;
   @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Version Long version;
+
+  @FdIndex private long nextIteration;
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return this.nextIteration;
+  }
+
+  @Override
+  public String getUuid() {
+    return this.id;
+  }
 }

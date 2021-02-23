@@ -25,6 +25,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-events-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-ng-core-beans</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>

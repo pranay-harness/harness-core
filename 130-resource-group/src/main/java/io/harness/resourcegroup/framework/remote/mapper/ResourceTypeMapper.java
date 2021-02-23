@@ -1,6 +1,6 @@
 package io.harness.resourcegroup.framework.remote.mapper;
 
-import io.harness.resourcegroup.framework.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;

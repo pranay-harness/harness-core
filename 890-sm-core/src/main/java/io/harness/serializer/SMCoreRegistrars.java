@@ -21,5 +21,6 @@ public class SMCoreRegistrars {
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 }
