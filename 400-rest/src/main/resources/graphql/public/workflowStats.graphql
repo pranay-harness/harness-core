@@ -3,10 +3,13 @@ enum WorkflowEntityAggregation {
 }
 
 input WorkflowAggregation {
+  # Aggregate by entity
   entityAggregation: WorkflowEntityAggregation
+  # Aggregate by tag
   tagAggregation: WorkflowTagAggregation
 }
 
+# Aggregate by workflow tag
 input WorkflowTagAggregation {
   entityType: WorkflowTagType
   tagName: String

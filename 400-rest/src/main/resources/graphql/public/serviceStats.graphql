@@ -4,10 +4,13 @@ enum ServiceEntityAggregation {
 }
 
 input ServiceAggregation {
+  # Aggregate by entity
   entityAggregation: ServiceEntityAggregation
+  # Aggregate by tag
   tagAggregation: ServiceTagAggregation
 }
 
+# Aggregate by service tag
 input ServiceTagAggregation {
   entityType: ServiceTagType
   tagName: String

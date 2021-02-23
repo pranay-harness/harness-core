@@ -3,6 +3,7 @@ enum CloudProviderTypeAggregation {
 }
 
 input CloudProviderAggregation {
+  # Aggregate by cloud provider type
   typeAggregation: CloudProviderTypeAggregation
 }
 

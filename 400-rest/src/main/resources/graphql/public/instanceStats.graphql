@@ -7,11 +7,15 @@ enum InstanceEntityAggregation {
 }
 
 input InstanceAggregation {
+  # Aggregate by entity
   entityAggregation: InstanceEntityAggregation
+  # Aggregate by time aggregators
   timeAggregation: TimeSeriesAggregation
+  # Aggregate by tag
   tagAggregation: InstanceTagAggregation
 }
 
+# Aggregate by instance tag
 input InstanceTagAggregation {
   entityType: InstanceTagType
   tagName: String

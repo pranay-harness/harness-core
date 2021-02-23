@@ -3,10 +3,13 @@ enum PipelineEntityAggregation {
 }
 
 input PipelineAggregation {
+  # Aggregate by entity
   entityAggregation: PipelineEntityAggregation
+  # Aggregate by tag
   tagAggregation: PipelineTagAggregation
 }
 
+# Aggregate by pipeline tag
 input PipelineTagAggregation {
   entityType: PipelineTagType
   tagName: String

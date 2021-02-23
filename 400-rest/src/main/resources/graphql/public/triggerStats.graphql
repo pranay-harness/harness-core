@@ -3,10 +3,13 @@ enum TriggerEntityAggregation {
 }
 
 input TriggerAggregation {
+  # Aggregate by entity
   entityAggregation: TriggerEntityAggregation
+  # Aggregate by tag
   tagAggregation: TriggerTagAggregation
 }
 
+# Aggregate by trigger tag
 input TriggerTagAggregation {
   entityType: TriggerTagType
   tagName: String

@@ -53,11 +53,15 @@ enum DurationAggregateOperation {
 }
 
 input DeploymentAggregation {
+  # Aggregate by entity
   entityAggregation: DeploymentEntityAggregation
+  # Aggregate by time aggregators
   timeAggregation: TimeSeriesAggregation
+  # Aggregate by tag
   tagAggregation: DeploymentTagAggregation
 }
 
+# Aggregate by deployment tag
 input DeploymentTagAggregation {
   entityType: DeploymentTagType
   tagName: String

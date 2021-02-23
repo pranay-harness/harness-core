@@ -3,6 +3,7 @@ enum ConnectorTypeAggregation {
 }
 
 input ConnectorAggregation {
+  # Aggregate by connectory type
   typeAggregation: ConnectorTypeAggregation
 }
 
