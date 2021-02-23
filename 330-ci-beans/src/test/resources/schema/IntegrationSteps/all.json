@@ -496,8 +496,7 @@
             "buildTool",
             "image",
             "language",
-            "packages",
-            "runOnlySelectedTests"
+            "packages"
           ],
           "properties": {
             "args": {

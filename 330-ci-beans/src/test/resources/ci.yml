@@ -63,6 +63,9 @@ pipeline:
                       args: echo "Running test"
                       buildTool: maven
                       language: java
+                      packages: "*.harness, *.wings"
+                      testAnnotaions: "harnessTest"
+                      runOnlySelectedTests: true
             - step:
                 identifier: generateReport
                 type: Run

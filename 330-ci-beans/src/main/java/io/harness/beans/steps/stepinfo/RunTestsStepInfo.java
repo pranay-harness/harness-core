@@ -43,7 +43,7 @@ public class RunTestsStepInfo implements CIStepInfo {
   @NotNull private String packages;
   private String testAnnotations;
   private UnitTestReport reports;
-  private boolean runOnlySelectedTests = false;
+  private boolean runOnlySelectedTests;
 
   @NotNull private String image;
   private String connector;
@@ -54,7 +54,7 @@ public class RunTestsStepInfo implements CIStepInfo {
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests"})
   public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
       String image, String connector, ContainerResource resources, UnitTestReport reports, String testAnnotations,
-      String packages, Boolean runOnlySelectedTests) {
+      String packages, boolean runOnlySelectedTests) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
