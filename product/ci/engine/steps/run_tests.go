@@ -34,18 +34,21 @@ var (
 
 // RunTestsStep represents interface to execute a run step
 type runTestsStep struct {
-	id            string             // Id of the step
-	name          string             // Name of the step
-	tempPath      string             // File path to store generated temporary files
-	lang          string             // language of codebase
-	buildTool     string             // buildTool used for codebase
-	goals         string             // custom flags to
-	execCommand   string             // final command which will be executed by addon
-	envVarOutputs []string           // Environment variables to be exported to the step
-	cntrPort      uint32             // Container for running ti port
-	stepCtx       *pb.StepContext    // Step context
-	so            output.StageOutput // Output variables of the stage
-	log           *zap.SugaredLogger // Logger
+	id                   string             // Id of the step
+	name                 string             // Name of the step
+	tempPath             string             // File path to store generated temporary files
+	lang                 string             // language of codebase
+	buildTool            string             // buildTool used for codebase
+	args                 string             // custom flags to
+	execCommand          string             // final command which will be executed by addon
+	envVarOutputs        []string           // Environment variables to be exported to the step
+	runOnlySelectedTests bool               // Flag to be used for disabling testIntelligence and running all tests
+	packages             string             // Packages ti will generate callgraph for
+	annotations          string             // Annotations to identify tests for instrumentation
+	cntrPort             uint32             // Container for running ti port
+	stepCtx              *pb.StepContext    // Step context
+	so                   output.StageOutput // Output variables of the stage
+	log                  *zap.SugaredLogger // Logger
 }
 
 // RunTestsStep represents interface to execute a run step
@@ -58,27 +61,30 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 	log *zap.SugaredLogger) RunTestsStep {
 	r := step.GetRunTests()
 	return &runTestsStep{
-		id:        step.GetId(),
-		name:      step.GetDisplayName(),
-		goals:     r.GetGoals(),
-		buildTool: r.GetBuildTool(),
-		lang:      r.GetLanguage(),
-		cntrPort:  r.GetContainerPort(),
-		stepCtx:   r.GetContext(),
-		tempPath:  tempPath,
-		so:        so,
-		log:       log,
+		id:                   step.GetId(),
+		name:                 step.GetDisplayName(),
+		args:                 r.GetArgs(),
+		buildTool:            r.GetBuildTool(),
+		lang:                 r.GetLanguage(),
+		cntrPort:             r.GetContainerPort(),
+		stepCtx:              r.GetContext(),
+		runOnlySelectedTests: r.GetRunOnlySelectedTests(),
+		packages:             r.GetPackages(),
+		annotations:          r.GetTestAnnotations(),
+		tempPath:             tempPath,
+		so:                   so,
+		log:                  log,
 	}
 }
 
-// Run execute tests with provided goals with retries and timeout handling
+// Run execute tests with provided args with retries and timeout handling
 func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
 		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
 	var err error
-	if e.goals, err = e.resolveJEXL(ctx); err != nil {
+	if e.args, err = e.resolveJEXL(ctx); err != nil {
 		return nil, int32(1), err
 	}
 
@@ -132,23 +138,23 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 
 	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, repo, sha, branch, changedFiles)
 
-	runAll := false
+	runSelectedTests := e.runOnlySelectedTests
 	if err != nil {
 		e.log.Errorw("failed to fetch tests from ti server. Running all tests", zap.Error(err))
-		runAll = true
+		runSelectedTests = false
 	}
 
 	var testExecList string
 	for _, test := range tests {
 		// In case we don't get malformed information, we should run all tests.
 		if test.Class == "" {
-			runAll = true
+			runSelectedTests = false
 			break
 		}
 		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
 	}
 
-	e.execCommand, err = e.getRunTestsCommand(testExecList, runAll)
+	e.execCommand, err = e.getRunTestsCommand(testExecList, runSelectedTests)
 	if err != nil {
 		return nil, int32(1), err
 	}
@@ -157,7 +163,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 }
 
 // getRunTestsCommand makes call to ti client to fetch the tests to be run
-func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (string, error) {
+func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runSelectedTests bool) (string, error) {
 
 	e.log.Infow(
 		"running tests with intelligence",
@@ -166,7 +172,7 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 
 	testsFlag := ""
 
-	if runAll == false {
+	if runSelectedTests == true {
 		testsFlag = fmt.Sprintf("-Dtest=%s", testsToExecute)
 	}
 
@@ -179,7 +185,7 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 		// Eg. of goals: "-T 2C -DskipTests"
 		// command will finally be like:
 		// mvn -T 2C -DskipTests -Dtest=TestSquare,TestCirle test
-		return fmt.Sprintf("mvn test %s %s -am", e.goals, testsFlag), nil
+		return fmt.Sprintf("mvn test %s %s -am", e.args, testsFlag), nil
 	default:
 		e.log.Errorw(fmt.Sprintf("only maven build tool is supported, build tool is: %s", e.buildTool), "step_id", e.id)
 		return "", fmt.Errorf("build tool %s is not suported", e.buildTool)
@@ -223,16 +229,16 @@ func (e *runTestsStep) validate() error {
 // resolveJEXL resolves JEXL expressions present in run step input
 func (e *runTestsStep) resolveJEXL(ctx context.Context) (string, error) {
 	// JEXL expressions are only present in goals
-	goals := e.goals
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{goals}, e.so, false, e.log)
+	args := e.args
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{args}, e.so, false, e.log)
 	if err != nil {
 		return "", err
 	}
 
-	if val, ok := resolvedExprs[goals]; ok {
+	if val, ok := resolvedExprs[args]; ok {
 		return val, nil
 	}
-	return goals, nil
+	return args, nil
 }
 
 // execute step and sent the rpc call to addOn server for running the commands
