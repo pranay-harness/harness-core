@@ -27,40 +27,40 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_package(
-    index = 3,
-    package = "io.harness.logstreaming",
-    deps = shared_dependencies,
-)
-
-java_package(
-    index = 3,
-    package = "io.harness.perpetualtask",
-    deps = shared_dependencies,
-)
-
-java_package(
-    index = 2,
-    package = "io.harness.delegate",
-    deps = shared_dependencies,
-)
-
-java_package(
-    index = 1,
-    package = "io.harness.managerclient",
-    deps = shared_dependencies + [":2-io_harness_delegate"],
-)
+#java_package(
+#    index = 3,
+#    package = "io.harness.logstreaming",
+#    deps = shared_dependencies,
+#)
+#
+#java_package(
+#    index = 3,
+#    package = "io.harness.perpetualtask",
+#    deps = shared_dependencies,
+#)
+#
+#java_package(
+#    index = 2,
+#    package = "io.harness.delegate",
+#    deps = shared_dependencies,
+#)
+#
+#java_package(
+#    index = 1,
+#    package = "io.harness.managerclient",
+#    deps = shared_dependencies + [":2-io_harness_delegate"],
+#)
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
-        ":1-io_harness_managerclient",
-        ":2-io_harness_delegate",
-        ":3-io_harness_logstreaming",
-        ":3-io_harness_perpetualtask",
-    ],
+    deps = shared_dependencies,  # + [
+    #        ":1-io_harness_managerclient",
+    #        ":2-io_harness_delegate",
+    #        ":3-io_harness_logstreaming",
+    #        ":3-io_harness_perpetualtask",
+    #    ],
 )
 
 checkstyle()
