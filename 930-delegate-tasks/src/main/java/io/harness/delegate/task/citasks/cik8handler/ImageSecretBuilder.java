@@ -67,9 +67,12 @@ public class ImageSecretBuilder {
   private String getJSONEncodedDockerCredentials(ConnectorDetails connectorDetails) {
     DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
     if (dockerConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
+      log.info("Decrypting docker username and password for  connector id:[{}], type:[{}]",
+          connectorDetails.getIdentifier(), connectorDetails.getConnectorType());
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO = (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
           dockerConfig.getAuth().getCredentials(), connectorDetails.getEncryptedDataDetails());
-
+      log.info("Decrypted docker username and password for id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+          connectorDetails.getConnectorType());
       String registryUrl = dockerConfig.getDockerRegistryUrl();
       String username = dockerUserNamePasswordDTO.getUsername();
       if (dockerUserNamePasswordDTO == null || dockerUserNamePasswordDTO.getPasswordRef() == null
@@ -112,11 +115,13 @@ public class ImageSecretBuilder {
               gcpConnectorConfig.getCredential().getGcpCredentialType().toString(), connectorDetails.getIdentifier()),
           WingsException.USER);
     }
-
+    log.info("Decrypting GCP config for connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+        connectorDetails.getConnectorType());
     GcpManualDetailsDTO credentialConfig = (GcpManualDetailsDTO) secretDecryptionService.decrypt(
         (GcpManualDetailsDTO) gcpConnectorConfig.getCredential().getConfig(),
         connectorDetails.getEncryptedDataDetails());
-
+    log.info("Decrypted GCP config for connector id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+        connectorDetails.getConnectorType());
     if (credentialConfig == null || credentialConfig.getSecretKeyRef() == null
         || credentialConfig.getSecretKeyRef().getDecryptedValue() == null) {
       throw new InvalidArgumentsException(
