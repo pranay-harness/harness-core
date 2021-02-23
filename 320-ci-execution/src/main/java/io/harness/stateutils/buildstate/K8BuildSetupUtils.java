@@ -11,6 +11,7 @@ import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_SECRETS_LIST;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
@@ -271,14 +272,17 @@ public class K8BuildSetupUtils {
     ImageDetailsWithConnector imageDetailsWithConnector =
         ImageDetailsWithConnector.builder().imageConnectorDetails(connectorDetails).imageDetails(imageDetails).build();
 
+    List<SecretVariableDetails> containerSecretVariableDetails =
+        getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
+
+    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails));
     return CIK8ContainerParams.builder()
         .name(containerDefinitionInfo.getName())
         .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
         .containerType(containerDefinitionInfo.getContainerType())
         .envVars(envVars)
         .containerSecrets(ContainerSecrets.builder()
-                              .secretVariableDetails(
-                                  getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails))
+                              .secretVariableDetails(containerSecretVariableDetails)
                               .connectorDetailsMap(stepConnectorDetails)
                               .build())
         .commands(containerDefinitionInfo.getCommands())
@@ -288,6 +292,19 @@ public class K8BuildSetupUtils {
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();
+  }
+
+  private Map<String, String> createEnvVariableForSecret(List<SecretVariableDetails> secretVariableDetails) {
+    Map<String, String> envVars = new HashMap<>();
+
+    if (isNotEmpty(secretVariableDetails)) {
+      List<String> secretEnvNames =
+          secretVariableDetails.stream()
+              .map(secretVariableDetail -> { return secretVariableDetail.getSecretVariableDTO().getName(); })
+              .collect(Collectors.toList());
+      envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
+    }
+    return envVars;
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(NGAccess ngAccess, ConnectorDetails connectorDetails,
