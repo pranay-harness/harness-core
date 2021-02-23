@@ -1,10 +1,7 @@
 package io.harness.beans.yaml.extended.reports;
 
-import io.harness.beans.serializer.RunTimeInputHandler;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -21,7 +21,7 @@ public class JUnitTestReport implements UnitTestReportSpec {
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   ParameterField<List<String>> paths;
 
-  public List<String> resolve(String identifier) {
-    return RunTimeInputHandler.resolveListParameter("paths", "run", identifier, paths, false);
+  public List<String> resolve(String identifier, String stepType) {
+    return RunTimeInputHandler.resolveListParameter("paths", stepType, identifier, paths, false);
   }
 }

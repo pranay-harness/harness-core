@@ -46,7 +46,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     if (reports != null) {
       if (reports.getType() == UnitTestReportType.JUNIT) {
         JUnitTestReport junitTestReport = (JUnitTestReport) reports.getSpec();
-        List<String> resolvedReport = junitTestReport.resolve(step.getIdentifier());
+        List<String> resolvedReport = junitTestReport.resolve(step.getIdentifier(), "run");
 
         Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolvedReport).build();
         runStepBuilder.addReports(report);
