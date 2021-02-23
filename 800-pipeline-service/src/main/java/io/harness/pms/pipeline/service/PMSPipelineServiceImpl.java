@@ -24,6 +24,7 @@ import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -64,6 +65,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private FilterService filterService;
+  @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -84,8 +86,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
       updatePipelineInfo(pipelineEntity);
 
-      PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
-      return createdEntity;
+      return pmsPipelineRepository.save(pipelineEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
@@ -159,15 +160,23 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public boolean delete(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
+  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
+      Long version) throws ProducerShutdownException {
     Criteria criteria =
         getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
+
     UpdateResult updateResult = pmsPipelineRepository.delete(criteria);
     if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
               projectIdentifier, orgIdentifier));
+    }
+
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (pipelineEntity.isPresent()) {
+      pipelineSetupUsageHelper.deleteSetupUsagesForGivenPipeline(pipelineEntity.get());
     }
     return true;
   }

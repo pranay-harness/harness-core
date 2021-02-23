@@ -1,9 +1,6 @@
 package io.harness.engine.interrupts;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.interrupts.Interrupt.State.REGISTERED;
@@ -14,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -31,13 +29,13 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestSave() {
     String planExecutionId = generateUuid();
-    Interrupt interrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
+    Interrupt interrupt = Interrupt.builder().planExecutionId(planExecutionId).type(InterruptType.ABORT_ALL).build();
 
     Interrupt savedInterrupt = interruptService.save(interrupt);
     assertThat(savedInterrupt).isNotNull();
     assertThat(savedInterrupt.getUuid()).isNotNull();
     assertThat(savedInterrupt.getPlanExecutionId()).isEqualTo(planExecutionId);
-    assertThat(savedInterrupt.getType()).isEqualTo(ABORT_ALL);
+    assertThat(savedInterrupt.getType()).isEqualTo(InterruptType.ABORT_ALL);
     assertThat(savedInterrupt.getState()).isEqualTo(REGISTERED);
   }
 
@@ -60,7 +58,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestMarkProcessed() {
     String planExecutionId = generateUuid();
-    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
+    Interrupt abortAllInterrupt =
+        Interrupt.builder().planExecutionId(planExecutionId).type(InterruptType.ABORT_ALL).build();
     Interrupt savedInterrupt = interruptService.save(abortAllInterrupt);
     Interrupt processed = interruptService.markProcessed(savedInterrupt.getUuid(), DISCARDED);
     assertThat(processed).isNotNull();
@@ -72,7 +71,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void markProcessing() {
     String planExecutionId = generateUuid();
-    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
+    Interrupt abortAllInterrupt =
+        Interrupt.builder().planExecutionId(planExecutionId).type(InterruptType.ABORT_ALL).build();
     Interrupt savedInterrupt = interruptService.save(abortAllInterrupt);
     Interrupt processing = interruptService.markProcessing(savedInterrupt.getUuid());
     assertThat(processing).isNotNull();
@@ -103,11 +103,13 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
   }
 
   private void saveInterruptList(String planExecutionId, boolean retryDiscarded) {
-    Interrupt abortAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(ABORT_ALL).build();
-    Interrupt pauseAllInterrupt = Interrupt.builder().planExecutionId(planExecutionId).type(PAUSE_ALL).build();
+    Interrupt abortAllInterrupt =
+        Interrupt.builder().planExecutionId(planExecutionId).type(InterruptType.ABORT_ALL).build();
+    Interrupt pauseAllInterrupt =
+        Interrupt.builder().planExecutionId(planExecutionId).type(InterruptType.PAUSE_ALL).build();
     Interrupt retryInterrupt = Interrupt.builder()
                                    .planExecutionId(planExecutionId)
-                                   .type(RETRY)
+                                   .type(InterruptType.RETRY)
                                    .nodeExecutionId(generateUuid())
                                    .state(retryDiscarded ? DISCARDED : REGISTERED)
                                    .build();

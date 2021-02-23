@@ -4,9 +4,9 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.resourcegroup.framework.remote.dto.ResourceTypeDTO;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.model.Scope;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;

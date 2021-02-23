@@ -86,22 +86,24 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+    stepResponseBuilder.unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      StepResponseBuilder responseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
+      stepResponseBuilder.status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                           .build());
       if (k8sApplyStepParameters.getRollbackInfo() != null) {
-        responseBuilder.stepOutcome(
+        stepResponseBuilder.stepOutcome(
             StepResponse.StepOutcome.builder()
                 .name("RollbackOutcome")
                 .outcome(RollbackOutcome.builder().rollbackInfo(k8sApplyStepParameters.getRollbackInfo()).build())
                 .build());
       }
+      return stepResponseBuilder.build();
     }
 
-    return StepResponse.builder().status(Status.SUCCEEDED).build();
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 }

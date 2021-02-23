@@ -59,20 +59,21 @@ public class RoleResource {
   @GET
   @ApiOperation(value = "Get Roles", nickname = "getRoleList")
   public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
-      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("includeManaged") boolean includeManaged) {
+      @BeanParam HarnessScopeParams harnessScopeParams,
+      @QueryParam("includeHarnessManaged") boolean includeHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    PageResponse<Role> pageResponse = roleService.getAll(pageRequest, scopeIdentifier, includeManaged);
+    PageResponse<Role> pageResponse = roleService.list(pageRequest, scopeIdentifier, includeHarnessManaged);
     return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toDTO));
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Role", nickname = "getRole")
-  public ResponseDTO<RoleResponseDTO> get(
-      @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+  public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
+      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(
-        toDTO(roleService.get(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
+        toDTO(roleService.get(identifier, scopeIdentifier, isHarnessManaged).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role not found with the given scope and identifier");
         })));
   }
@@ -102,9 +103,6 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> delete(
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(
-        toDTO(roleService.delete(identifier, scopeIdentifier, false).<NotFoundException>orElseThrow(() -> {
-          throw new NotFoundException("Role not found with the given scope and identifier");
-        })));
+    return ResponseDTO.newResponse(toDTO(roleService.delete(identifier, scopeIdentifier, false)));
   }
 }

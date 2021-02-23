@@ -78,6 +78,7 @@ enum ViewChartType {
 enum ViewType {
   SAMPLE
   CUSTOMER
+  DEFAULT_AZURE
 }
 
 enum ViewState {
@@ -181,6 +182,7 @@ enum ViewFieldIdentifier {
   CLUSTER
   AWS
   GCP
+  AZURE
   CUSTOM
   COMMON
   LABEL
@@ -190,6 +192,7 @@ enum ViewFieldIdentifierName {
   Cluster
   AWS
   GCP
+  Azure
   Custom
   Common
   Label

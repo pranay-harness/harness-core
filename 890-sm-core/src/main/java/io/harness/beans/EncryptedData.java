@@ -155,6 +155,8 @@ public class EncryptedData
 
   @FdIndex private Long nextAwsToGcpKmsMigrationIteration;
 
+  @FdIndex private Long nextLocalToGcpKmsMigrationIteration;
+
   @SchemaIgnore private boolean base64Encoded;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
@@ -169,7 +171,7 @@ public class EncryptedData
 
   @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
-  @Default private boolean hideFromListing = false;
+  private boolean hideFromListing;
 
   public String getKmsId() {
     if (encryptionType == LOCAL) {
@@ -199,6 +201,9 @@ public class EncryptedData
     } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
       this.nextAwsToGcpKmsMigrationIteration = nextIteration;
       return;
+    } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
+      this.nextLocalToGcpKmsMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -209,6 +214,8 @@ public class EncryptedData
       return nextMigrationIteration;
     } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
       return nextAwsToGcpKmsMigrationIteration;
+    } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
+      return nextLocalToGcpKmsMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

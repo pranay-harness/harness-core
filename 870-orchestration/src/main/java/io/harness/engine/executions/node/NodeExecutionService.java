@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -50,7 +50,7 @@ public interface NodeExecutionService {
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
 
   boolean markLeavesDiscontinuingOnAbort(
-      String interruptId, ExecutionInterruptType interruptType, String planExecutionId, List<String> leafInstanceIds);
+      String interruptId, InterruptType interruptType, String planExecutionId, List<String> leafInstanceIds);
 
   boolean markRetried(String nodeExecutionId);
 

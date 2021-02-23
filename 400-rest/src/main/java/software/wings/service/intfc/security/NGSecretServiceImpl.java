@@ -1,8 +1,6 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -186,14 +184,11 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<String> identifiers, SettingVariableTypes type, String page, String size) {
+      String projectIdentifier, SettingVariableTypes type, String page, String size) {
     PageRequest<EncryptedData> pageRequest = new PageRequest<>();
     pageRequest.addFilter(ACCOUNT_IDENTIFIER_KEY, EQ, accountIdentifier);
     pageRequest.addFilter(ORG_IDENTIFIER_KEY, EQ, orgIdentifier);
     pageRequest.addFilter(PROJECT_IDENTIFIER_KEY, EQ, projectIdentifier);
-    if (isNotEmpty(identifiers)) {
-      pageRequest.addFilter(IDENTIFIER_KEY, IN, identifiers);
-    }
     if (Optional.ofNullable(type).isPresent()) {
       pageRequest.addFilter(EncryptedDataKeys.type, EQ, type);
     }

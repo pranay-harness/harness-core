@@ -16,6 +16,7 @@ public class DelegateTasksBeansRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
+          .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .add(DelegateTasksBeansKryoRegister.class)
           .build();
@@ -25,6 +26,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(ApiServiceBeansRegistrars.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(DelegateTasksBeansMorphiaRegistrar.class)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

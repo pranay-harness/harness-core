@@ -330,9 +330,7 @@ public class YamlSchemaGenerator {
                       })
                       .collect(Collectors.toList());
 
-              if (mapping.isNullable()) {
-                // not handled.
-              }
+              //  mapping isNullable not handled.
               return requiredNodes;
             })
             .map(oneOfMapContent -> {

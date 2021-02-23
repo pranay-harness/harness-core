@@ -9,7 +9,7 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.REGEX_OP
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_WITH_OPERATOR;
 import static io.harness.rule.OwnerRule.NAMAN;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;

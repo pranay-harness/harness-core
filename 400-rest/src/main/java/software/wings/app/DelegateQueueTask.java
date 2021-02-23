@@ -2,17 +2,20 @@ package software.wings.app;
 
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
@@ -22,6 +25,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
@@ -68,6 +72,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateTaskService delegateTaskService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void run() {
@@ -198,7 +203,8 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
-  private void rebroadcastUnassignedTasks() {
+  @VisibleForTesting
+  protected void rebroadcastUnassignedTasks() {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
 
@@ -227,8 +233,22 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
 
-        if (delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
+        // Old way with rebroadcasting
+        if (featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
+            && delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
+        }
+
+        // New way with per agent capabilities. Batch capabilities check task is using mustExecuteOnDelegateIs and we
+        // must respect it
+        if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
+            && isBlank(delegateTask.getMustExecuteOnDelegateId())) {
+          if (delegateTask.getPreAssignedDelegateId() != null) {
+            updateOperations.addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateTask.getPreAssignedDelegateId());
+          }
+
+          setUnset(updateOperations, DelegateTaskKeys.preAssignedDelegateId,
+              delegateService.obtainCapableDelegateId(delegateTask, delegateTask.getAlreadyTriedDelegates()));
         }
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);

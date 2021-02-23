@@ -22,8 +22,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
-import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.registries.StepRegistry;
 
 import com.google.inject.Inject;
 import java.util.EnumSet;
@@ -35,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class AbortHelper {
-  @Inject private StepRegistry stepRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
   @Inject private OrchestrationEngine engine;
@@ -43,7 +40,6 @@ public class AbortHelper {
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     try {
       Ambiance ambiance = nodeExecution.getAmbiance();
-      PlanNodeProto node = nodeExecution.getNode();
       // Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {

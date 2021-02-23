@@ -61,7 +61,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
               .collect(Collectors.toList()),
           artifactStreamAttributes, gcpConfig);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("", e);
     }
     return null;
   }

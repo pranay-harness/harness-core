@@ -1,9 +1,12 @@
 package io.harness.connector;
 
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
+import io.harness.connector.heartbeat.AwsValidationParamsProvider;
+import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.GcpValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
@@ -23,6 +26,8 @@ import io.harness.connector.mappers.ceawsmapper.CEAwsDTOToEntity;
 import io.harness.connector.mappers.ceawsmapper.CEAwsEntityToDTO;
 import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
+import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
+import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
@@ -51,6 +56,7 @@ import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
 import io.harness.connector.validator.CEAzureConnectorValidator;
+import io.harness.connector.validator.CEKubernetesConnectionValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
@@ -75,6 +81,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.KUBERNETES_CLUSTER,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, KubernetesConnectionValidator.class,
             K8sConnectorValidationParamsProvider.class, KubernetesDTOToEntity.class, KubernetesEntityToDTO.class));
+    registrar.put(ConnectorType.CE_KUBERNETES_CLUSTER,
+        new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEKubernetesConnectionValidator.class,
+            CEK8sConnectorValidationParamsProvider.class, CEKubernetesDTOToEntity.class,
+            CEKubernetesEntityToDTO.class));
     registrar.put(ConnectorType.GIT,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class));
@@ -98,10 +108,10 @@ public class ConnectorRegistryFactory {
             DockerConnectorValidationParamsProvider.class, DockerDTOToEntity.class, DockerEntityToDTO.class));
     registrar.put(ConnectorType.GCP,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, GcpConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
+            GcpValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
     registrar.put(ConnectorType.AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, AwsConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
+            AwsValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
     registrar.put(ConnectorType.CE_AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAwsConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));

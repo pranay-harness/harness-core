@@ -16,5 +16,10 @@ public class QLCEConnector implements QLObject {
   private String curReportName;
   private String crossAccountRoleArn;
   private CEHealthStatus ceHealthStatus;
+  private String azureStorageAccountName;
+  private String azureStorageContainerName;
+  private String azureStorageDirectoryName;
+  private String azureSubscriptionId;
+  private String azureTenantId;
   private QLInfraTypesEnum infraType;
 }

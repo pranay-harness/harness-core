@@ -2,6 +2,7 @@ package software.wings.helpers.ext.artifactory;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -57,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -663,8 +665,18 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
     try {
       ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
-      if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
-        throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
+      if (!artifactoryResponse.isSuccessResponse()) {
+        if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
+          throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
+        }
+        ArtifactoryErrorResponse errorResponse = artifactoryResponse.parseBody(ArtifactoryErrorResponse.class);
+        String errorMessage =
+            "Request to server failed with status code: " + artifactoryResponse.getStatusLine().getStatusCode();
+        if (isNotEmpty(errorResponse.getErrors())) {
+          errorMessage += " with message - "
+              + errorResponse.getErrors().stream().map(ArtifactoryError::getMessage).findFirst().get();
+        }
+        throw new ArtifactoryServerException(errorMessage, ErrorCode.INVALID_ARTIFACT_SERVER, USER);
       }
       log.info("Validating artifactory server success");
     } catch (RuntimeException e) {
@@ -693,5 +705,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        "Build# " + constructBuildNumber(artifactPath, path.substring(path.indexOf('/') + 1)))
                    .build())
         .collect(toList());
+  }
+
+  @Data
+  public static class ArtifactoryErrorResponse {
+    List<ArtifactoryError> errors;
+  }
+
+  @Data
+  public static class ArtifactoryError {
+    String message;
+    int status;
   }
 }

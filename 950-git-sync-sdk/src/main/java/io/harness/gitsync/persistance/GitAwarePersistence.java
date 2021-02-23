@@ -42,18 +42,11 @@ public class GitAwarePersistence extends MongoTemplate {
     return super.findDistinct(query, field, entityClass, resultClass);
   }
 
-  public <B> B save(B objectToSave) {
-    return super.save(objectToSave);
-  }
   public UpdateResult upsert(Query query, Update update, Class<?> entityClass) {
     return super.upsert(query, update, entityClass);
   }
   public UpdateResult updateFirst(Query query, Update update, Class<?> entityClass) {
     return super.updateFirst(query, update, entityClass);
-  }
-
-  public DeleteResult remove(Object object) {
-    return super.remove(object);
   }
 
   public DeleteResult remove(Object object, String collectionName) {

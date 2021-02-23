@@ -143,3 +143,31 @@ fi
 if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
   yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientId "$HARNESS_CE_AZURE_CLIENTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientSecret "$HARNESS_CE_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_TENANTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureTenantId "$HARNESS_CE_AZURE_TENANTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CONTAINER_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageContainerName "$HARNESS_CE_AZURE_CONTAINER_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_STORAGE_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageAccountName "$HARNESS_CE_AZURE_STORAGE_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_SAS" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureSasToken "$HARNESS_CE_AZURE_SAS"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.syncJobDisabled "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED"
+fi

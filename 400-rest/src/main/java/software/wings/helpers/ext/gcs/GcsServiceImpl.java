@@ -279,6 +279,7 @@ public class GcsServiceImpl implements GcsService {
   }
 
   @Override
+  @SuppressWarnings("PMD")
   public String getProjectId(GcpConfig gcpConfig) {
     OkHttpClient client = new OkHttpClient();
     Request request = new Request.Builder()
@@ -289,8 +290,7 @@ public class GcsServiceImpl implements GcsService {
       okhttp3.Response response = client.newCall(request).execute();
       return response.body().string();
     } catch (IOException | NullPointerException e) {
-      log.error("GCS_TASK - Failed to get projectId due to: ", e);
-      throw new ArtifactServerException("Can not retrieve project-id from from cluster meta");
+      throw new ArtifactServerException("Can not retrieve project-id from from cluster meta", e);
     }
   }
 

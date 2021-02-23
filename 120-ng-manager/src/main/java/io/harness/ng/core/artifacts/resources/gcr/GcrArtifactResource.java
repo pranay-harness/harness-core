@@ -6,7 +6,10 @@ import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrRequestDTO;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrResponseDTO;
 import io.harness.cdng.artifact.resources.gcr.service.GcrResourceService;
+import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.artifacts.resources.util.ArtifactResourceUtils;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -114,11 +117,22 @@ public class GcrArtifactResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, GcrRequestDTO requestDTO) {
+    if (NGExpressionUtils.isRuntimeOrExpressionField(gcrConnectorIdentifier)) {
+      throw new InvalidRequestException("ConnectorRef is an expression/runtime input, please send fixed value.");
+    }
+    if (NGExpressionUtils.isRuntimeOrExpressionField(imagePath)) {
+      throw new InvalidRequestException("ImagePath is an expression/runtime input, please send fixed value.");
+    }
+    if (NGExpressionUtils.isRuntimeOrExpressionField(registryHostname)) {
+      throw new InvalidRequestException("RegistryHostName is an expression/runtime input, please send fixed value.");
+    }
+
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(gcrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
 
     boolean isValidArtifact = false;
-    if (EmptyPredicate.isEmpty(requestDTO.getTag()) && EmptyPredicate.isEmpty(requestDTO.getTagRegex())) {
+    if (!ArtifactResourceUtils.isFieldFixedValue(requestDTO.getTag())
+        && !ArtifactResourceUtils.isFieldFixedValue(requestDTO.getTagRegex())) {
       isValidArtifact = gcrResourceService.validateArtifactSource(
           imagePath, connectorRef, registryHostname, orgIdentifier, projectIdentifier);
     } else {

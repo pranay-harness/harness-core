@@ -5,6 +5,7 @@ import io.harness.annotation.HarnessRepo;
 
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
+import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,12 @@ public class RoleCustomRepositoryImpl implements RoleCustomRepository {
     List<RoleDBO> roleDBOS = mongoTemplate.find(query, RoleDBO.class);
     return PageableExecutionUtils.getPage(
         roleDBOS, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), RoleDBO.class));
+  }
+
+  @Override
+  public Optional<RoleDBO> find(Criteria criteria) {
+    Query query = new Query(criteria);
+    return Optional.ofNullable(mongoTemplate.findOne(query, RoleDBO.class));
   }
 
   @Override

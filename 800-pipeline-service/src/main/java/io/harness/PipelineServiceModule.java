@@ -29,6 +29,8 @@ import io.harness.ng.core.UserClientModule;
 import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.barriers.service.PMSBarrierService;
+import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
@@ -174,6 +176,8 @@ public class PipelineServiceModule extends AbstractModule {
     filterPropertiesMapper.addBinding(FilterType.PIPELINESETUP.toString()).to(PipelineFilterPropertiesMapper.class);
     filterPropertiesMapper.addBinding(FilterType.PIPELINEEXECUTION.toString())
         .to(PipelineExecutionFilterPropertiesMapper.class);
+
+    bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
   }
 
   @Provides

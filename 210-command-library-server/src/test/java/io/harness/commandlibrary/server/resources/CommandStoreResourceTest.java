@@ -30,7 +30,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
-import io.dropwizard.testing.ResourceHelpers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

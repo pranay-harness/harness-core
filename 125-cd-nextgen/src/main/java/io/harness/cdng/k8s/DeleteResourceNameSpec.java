@@ -22,8 +22,7 @@ public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   @Override
   public String getResourceNames() {
     List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
-    String resourceNames = resourceNamesList.stream().collect(Collectors.joining(","));
-    return resourceNames;
+    return resourceNamesList.stream().collect(Collectors.joining(","));
   }
 
   @Override

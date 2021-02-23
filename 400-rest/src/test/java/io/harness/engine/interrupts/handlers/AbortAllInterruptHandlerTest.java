@@ -1,7 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
@@ -18,6 +17,7 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -69,7 +69,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     Interrupt handledInterrupt = orchestrationService.registerInterrupt(
-        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(ABORT_ALL).build());
+        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(InterruptType.ABORT_ALL).build());
     assertThat(handledInterrupt).isNotNull();
     assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
 

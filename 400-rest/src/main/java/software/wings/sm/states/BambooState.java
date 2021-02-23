@@ -198,6 +198,7 @@ public class BambooState extends State {
             .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .description("Trigger Bamboo plan")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(getTaskType().name())
@@ -211,10 +212,11 @@ public class BambooState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
-
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(BambooExecutionData.builder()
@@ -319,6 +321,11 @@ public class BambooState extends State {
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   @Data

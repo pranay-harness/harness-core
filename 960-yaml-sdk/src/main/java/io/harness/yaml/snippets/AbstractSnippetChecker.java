@@ -102,7 +102,6 @@ public class AbstractSnippetChecker {
 
           } catch (IOException e) {
             log.info("No Yaml Snippets found for {}", clazz.getEntityType());
-            e.printStackTrace();
           }
           return null;
         })

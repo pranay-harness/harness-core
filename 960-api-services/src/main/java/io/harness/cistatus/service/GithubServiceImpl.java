@@ -143,8 +143,7 @@ public class GithubServiceImpl implements GithubService {
     byte[] encoded = Base64.decodeBase64(privateKeyPEM);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-    RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
-    return privKey;
+    return (RSAPrivateKey) kf.generatePrivate(keySpec);
   }
 
   private String generateTokenFromPrivateKey(GithubAppConfig githubAppConfig) throws Exception {
