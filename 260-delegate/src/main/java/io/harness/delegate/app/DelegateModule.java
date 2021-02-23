@@ -85,6 +85,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsDelegateTask;
+import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.cek8s.CEKubernetesTestConnectionDelegateTask;
@@ -1366,5 +1367,9 @@ public class DelegateModule extends AbstractModule {
         .to(ArtifactoryValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.NEXUS.getDisplayName())
         .to(NexusValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.GCP.getDisplayName())
+        .to(GcpValidationTaskHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.AWS.getDisplayName())
+        .to(AwsValidationHandler.class);
   }
 }
