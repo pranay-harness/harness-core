@@ -42,7 +42,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     runTestsStepBuilder.setContainerPort(port);
     runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
     runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());
-    runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.getRunOnlySelectedTests());
+    runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.isRunOnlySelectedTests());
     runTestsStepBuilder.setPackages(runTestsStepInfo.getPackages());
 
     if (runTestsStepInfo.getTestAnnotations() != null) {
