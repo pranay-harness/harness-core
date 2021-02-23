@@ -52,9 +52,9 @@ public class RunTestsStepInfo implements CIStepInfo {
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests"})
-  public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language,
-                          String buildTool, String image, String connector, ContainerResource resources, UnitTestReport reports,
-                          String testAnnotations, String packages, Boolean runOnlySelectedTests) {
+  public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
+      String image, String connector, ContainerResource resources, UnitTestReport reports, String testAnnotations,
+      String packages, Boolean runOnlySelectedTests) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
