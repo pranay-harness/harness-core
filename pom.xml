@@ -8,7 +8,6 @@
     <modules>
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
-        <module>260-delegate</module>
         <module>270-verification</module>
         <module>980-java-agent</module>
     </modules>
