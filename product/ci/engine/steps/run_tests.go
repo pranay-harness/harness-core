@@ -1,23 +1,18 @@
 package steps
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/common/external"
+	"github.com/wings-software/portal/product/ci/engine/gitutil"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-)
-
-const (
-	diffPath = "/step-exec/.harness/vcs/diff.txt" // path to read the changed files
 )
 
 var (
@@ -30,6 +25,9 @@ var (
 	getRepo         = external.GetRepo
 	getSha          = external.GetSha
 	getSourceBranch = external.GetSourceBranch
+	getGitBinPath   = external.GetGitBinPath
+	getWrkspcPath   = external.GetWrkspcPath
+	getChFiles      = gitutil.GetChangedFiles
 )
 
 // RunTestsStep represents interface to execute a run step
@@ -82,12 +80,20 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	changedFiles, err := e.readVCSDiffFromFile()
+	gitPath, err := getGitBinPath()
 	if err != nil {
-		e.log.Errorw("failed to read vcs diff in runTests step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
-
+	workspace, err := getWrkspcPath()
+	if err != nil {
+		return nil, int32(1), err
+	}
+	chFiles, err := getChFiles(gitPath, workspace)
+	if err != nil {
+		e.log.Errorw("failed to read changed filed in runTests step", "step_id", e.id, zap.Error(err))
+		return nil, int32(1), err
+	}
+	e.log.Infow(fmt.Sprintf("changed files list is: %s", chFiles), "step_id", e.id, zap.Error(err))
 	org, err := getOrgId()
 	if err != nil {
 		return nil, int32(1), err
@@ -130,7 +136,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, repo, sha, branch, changedFiles)
+	tests, err := tc.GetTests(org, project, pipeline, build, stage, e.id, repo, sha, branch, chFiles)
 
 	runAll := false
 	if err != nil {
@@ -184,26 +190,6 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runAll bool) (s
 		e.log.Errorw(fmt.Sprintf("only maven build tool is supported, build tool is: %s", e.buildTool), "step_id", e.id)
 		return "", fmt.Errorf("build tool %s is not suported", e.buildTool)
 	}
-}
-
-// readVCSDiffFromFile will read the vcs diff and return list of chnaged files
-func (e *runTestsStep) readVCSDiffFromFile() ([]string, error) {
-	file, err := os.Open(diffPath)
-
-	defer file.Close()
-	if err != nil {
-		e.log.Errorw(fmt.Sprintf("could not open %s file", diffPath), "step_id", e.id, zap.Error(err))
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-
-	var txtlines []string
-	for scanner.Scan() {
-		txtlines = append(txtlines, scanner.Text())
-	}
-	return txtlines, nil
 }
 
 // validate the container port and language

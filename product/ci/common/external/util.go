@@ -23,6 +23,8 @@ const (
 	dSourceBranch = "DRONE_SOURCE_BRANCH"
 	dRemoteUrl    = "DRONE_REMOTE_URL"
 	dCommitSha    = "DRONE_COMMIT_SHA"
+	wrkspcPath    = "HARNESS_WORKSPACE"
+	gitBinPath    = "GIT_BINARY_PATH"
 )
 
 func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
@@ -179,4 +181,20 @@ func GetSha() (string, error) {
 		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
 	}
 	return stage, nil
+}
+
+func GetWrkspcPath() (string, error) {
+	path, ok := os.LookupEnv(wrkspcPath)
+	if !ok {
+		return "", fmt.Errorf("workspace path variable not set %s", dCommitSha)
+	}
+	return path, nil
+}
+
+func GetGitBinPath() (string, error) {
+	path, ok := os.LookupEnv(gitBinPath)
+	if !ok {
+		return "", fmt.Errorf("git binary path variable not set %s", dCommitSha)
+	}
+	return path, nil
 }
