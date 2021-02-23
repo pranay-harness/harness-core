@@ -4,10 +4,13 @@ enum EnvironmentEntityAggregation {
 }
 
 input EnvironmentAggregation {
+  # Aggregate by entity
   entityAggregation: EnvironmentEntityAggregation
+  # Aggregate by tag
   tagAggregation: EnvironmentTagAggregation
 }
 
+# Aggregate by environment tag
 input EnvironmentTagAggregation {
   entityType: EnvironmentTagType
   tagName: String
