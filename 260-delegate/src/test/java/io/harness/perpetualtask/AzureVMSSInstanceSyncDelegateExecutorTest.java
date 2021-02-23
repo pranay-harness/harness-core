@@ -13,7 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.azure.model.AzureVMData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -47,7 +47,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AzureVMSSInstanceSyncDelegateExecutorTest extends DelegateTest {
+public class AzureVMSSInstanceSyncDelegateExecutorTest extends DelegateTestBase {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AzureVMSSSyncTaskHandler mockAzureVMSSSyncTaskHandler;
   @Mock private DelegateAgentManagerClient mockDelegateAgentManagerClient;

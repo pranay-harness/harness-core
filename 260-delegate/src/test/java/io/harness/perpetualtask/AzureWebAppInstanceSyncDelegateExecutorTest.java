@@ -14,7 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -50,7 +50,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AzureWebAppInstanceSyncDelegateExecutorTest extends DelegateTest {
+public class AzureWebAppInstanceSyncDelegateExecutorTest extends DelegateTestBase {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AzureWebAppListWebAppInstancesTaskHandler mockListDeploymentDataTaskHandler;
   @Mock private DelegateAgentManagerClient mockDelegateAgentManagerClient;
