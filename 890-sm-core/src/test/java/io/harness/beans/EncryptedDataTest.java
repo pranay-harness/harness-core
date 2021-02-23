@@ -1,6 +1,7 @@
 package io.harness.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 
@@ -136,6 +137,31 @@ public class EncryptedDataTest extends SMCoreTestBase {
     Whitebox.setInternalState(
         encryptedData, EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration, nextMigrationIterationValue);
     assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration))
+        .isEqualTo(nextMigrationIterationValue);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testUpdateNextIterationForLocalToGcpKmsMigrationField() {
+    long oldNextMigrationIterationValue = random.nextLong();
+    Whitebox.setInternalState(
+        encryptedData, EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration, oldNextMigrationIterationValue);
+    long newNextMigrationIterationValue = random.nextLong();
+    encryptedData.updateNextIteration(
+        EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration, newNextMigrationIterationValue);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration))
+        .isEqualTo(newNextMigrationIterationValue);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testObtainNextIterationForLocalToGcpKmsMigrationField() {
+    long nextMigrationIterationValue = random.nextLong();
+    Whitebox.setInternalState(
+        encryptedData, EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration, nextMigrationIterationValue);
+    assertThat(encryptedData.obtainNextIteration(EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration))
         .isEqualTo(nextMigrationIterationValue);
   }
 }
