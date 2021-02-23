@@ -108,7 +108,6 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     FieldUtils.writeField(timeSeriesRecordService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
         .thenReturn(Lists.newArrayList(TimeSeriesMetricDefinition.builder()
