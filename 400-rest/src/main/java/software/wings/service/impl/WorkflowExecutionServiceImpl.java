@@ -2317,24 +2317,45 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
          AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
           getStateExecutionInstanceMap(prevWorkflowExecution);
-      Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
-          appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
 
-      PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-          new DeploymentCtx(appId,
-              featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
-                  ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, parallelIndexToResume)
-                  : pipeline.getEnvIds()),
-          environmentService, featureFlagService);
-      deploymentFreezeChecker.check(accountId);
-
-      WorkflowExecution currWorkflowExecution =
-          triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
-              prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
-                                                                  : prevWorkflowExecution.getUuid());
-      pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
-      return currWorkflowExecution;
+      return triggerPipelineResumeExecution(
+          appId, parallelIndexToResume, prevWorkflowExecution, accountId, stateExecutionInstanceMap);
     }
+  }
+  @Override
+  public WorkflowExecution triggerPipelineResumeExecution(
+      String appId, String stageName, WorkflowExecution prevWorkflowExecution) {
+    String accountId = prevWorkflowExecution.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
+          getStateExecutionInstanceMap(prevWorkflowExecution);
+      Pipeline pipeline = pipelineResumeUtils.getPipelineFromWorkflowExecution(prevWorkflowExecution, appId);
+      int parallelIndexToResume = pipelineResumeUtils.getParallelIndexFromPipelineStageName(stageName, pipeline);
+      return triggerPipelineResumeExecution(
+          appId, parallelIndexToResume, prevWorkflowExecution, accountId, stateExecutionInstanceMap);
+    }
+  }
+
+  private WorkflowExecution triggerPipelineResumeExecution(String appId, int parallelIndexToResume,
+      WorkflowExecution prevWorkflowExecution, String accountId,
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
+    Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
+        appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId,
+            featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
+                ? software.wings.service.impl.pipeline.PipelineServiceHelper.getEnvironmentIdsForParallelIndex(
+                    pipeline, parallelIndexToResume)
+                : pipeline.getEnvIds()),
+        environmentService, featureFlagService);
+    deploymentFreezeChecker.check(accountId);
+    WorkflowExecution currWorkflowExecution =
+        triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
+            prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
+                                                                : prevWorkflowExecution.getUuid());
+    pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
+    return currWorkflowExecution;
   }
 
   @Override

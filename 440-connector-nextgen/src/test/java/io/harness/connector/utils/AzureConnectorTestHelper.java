@@ -1,7 +1,6 @@
 package io.harness.connector.utils;
 
 import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -10,10 +9,8 @@ import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
@@ -30,25 +27,7 @@ public class AzureConnectorTestHelper {
   String STORAGE_ACCOUNT_NAME = "storageAccountName";
 
   public ConnectorDTO createConnectorDTO() {
-    final String connectorIdentifier = "identifier_ph";
-    final String name = "name_ph";
-    final String description = "description_ph";
-    final String projectIdentifier = "projectIdentifier_ph";
-    final String orgIdentifier = "orgIdentifier_ph";
-    final Map<String, String> tags = ImmutableMap.of("company", "Harness", "env", "dev");
-
-    final ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
-                                                  .connectorConfig(createCEAzureConnectorDTO())
-                                                  .connectorType(ConnectorType.CE_AZURE)
-                                                  .description(description)
-                                                  .identifier(connectorIdentifier)
-                                                  .name(name)
-                                                  .orgIdentifier(orgIdentifier)
-                                                  .projectIdentifier(projectIdentifier)
-                                                  .tags(tags)
-                                                  .build();
-
-    return ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build();
+    return CommonTestHelper.createConnectorDTO(ConnectorType.CE_AZURE, createCEAzureConnectorDTO());
   }
 
   public CEAzureConfig createCEAzureConfig() {

@@ -13,6 +13,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String PROJECT_ENTITY = "project";
   public static final String ORGANIZATION_ENTITY = "organization";
   public static final String CONNECTOR_ENTITY = "connector";
+  public static final String SECRET_ENTITY = "secret";
 
   // deprecated, use setupusage and entityActivity channel.
   public static final String SETUP_USAGE_ENTITY = "setupUsage";

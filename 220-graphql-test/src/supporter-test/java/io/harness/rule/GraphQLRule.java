@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.event.EventsModule;
@@ -234,6 +235,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

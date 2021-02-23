@@ -314,7 +314,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", secret.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.PROJECT_ENTITY,
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SECRET_ENTITY,
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(secretEntityChangeDTOBuilder.build().toByteString())
               .build());

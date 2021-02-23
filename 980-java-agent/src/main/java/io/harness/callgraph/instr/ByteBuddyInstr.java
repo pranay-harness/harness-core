@@ -15,7 +15,6 @@ import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.matcher.NameMatcher;
-import org.junit.jupiter.api.Test;
 
 /**
  * Instrument the target classes
@@ -25,16 +24,16 @@ public class ByteBuddyInstr extends Instr {
     return new NameMatcher<T>(new StringSetMatcherStartsWith(prefix));
   }
 
-  public ByteBuddyInstr(Set<String> includes) {
-    super(includes);
+  public ByteBuddyInstr(Set<String> includes, Set<String> testAnnotations) {
+    super(includes, testAnnotations);
   }
 
   @Override
   public void instrument(Instrumentation instrumentation) {
-    final Advice methodAdvice = Advice.to(MethodTracer.class);
-    final Advice testMethodAdvice = Advice.to(TestMethodTracer.class);
-    final Advice constructorAdvice = Advice.to(ConstructorTracer.class);
-    final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class);
+    final Advice methodAdvice = Advice.to(MethodTracer.class).withExceptionPrinting();
+    final Advice testMethodAdvice = Advice.to(TestMethodTracer.class).withExceptionPrinting();
+    final Advice constructorAdvice = Advice.to(ConstructorTracer.class).withExceptionPrinting();
+    final Advice testConstructorAdvice = Advice.to(TestConstructorTracer.class).withExceptionPrinting();
 
     new AgentBuilder.Default()
         .disableClassFormatChanges()
@@ -43,32 +42,29 @@ public class ByteBuddyInstr extends Instr {
         .transform((builder, typeDescription, classLoader, module) -> {
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
               ElementMatchers.isMethod().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
+
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName()))),
               testMethodAdvice));
 
+          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
+              ElementMatchers.isConstructor().and(ElementMatchers.declaresAnnotation(
+                  annotation -> testAnnotations.contains(annotation.getAnnotationType().getName()))),
+              testConstructorAdvice));
+
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
-              ElementMatchers.isMethod().and(
-                  ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                                          .or(ElementMatchers.isAnnotatedWith(Test.class))
-                                          .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
+              ElementMatchers.isMethod().and(ElementMatchers.not(
+
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName())))),
               methodAdvice));
 
           builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
-                  ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                      .or(ElementMatchers.isAnnotatedWith(Test.class))
-                      .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class))),
-              testConstructorAdvice));
+              ElementMatchers.isConstructor().and(ElementMatchers.not(
 
-          builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-              ElementMatchers.isConstructor().and(
-                  ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
-                                          .or(ElementMatchers.isAnnotatedWith(Test.class))
-                                          .or(ElementMatchers.isAnnotatedWith(org.testng.annotations.Test.class)))),
+                  ElementMatchers.declaresAnnotation(
+                      annotation -> testAnnotations.contains(annotation.getAnnotationType().getName())))),
               constructorAdvice));
-
           return builder;
         })
         .installOn(instrumentation);

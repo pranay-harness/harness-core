@@ -114,23 +114,20 @@ public class GitBuildStatusUtility {
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
 
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
-    CIBuildStatusPushParameters ciBuildPushStatusParameters =
-        CIBuildStatusPushParameters.builder()
-            .detailsUrl(getBuildDetailsUrl(
-                ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
-            .desc(generateDesc(
-                buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
-            .sha(buildStatusUpdateParameter.getSha())
-            .gitSCMType(gitSCMType)
-            .connectorDetails(gitConnector)
-            .userName(connectorUtils.fetchUserName(gitConnector))
-            .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
-            .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
-            .identifier(buildStatusUpdateParameter.getIdentifier())
-            .state(retrieveBuildStatusState(gitSCMType, status))
-            .build();
-
-    return ciBuildPushStatusParameters;
+    return CIBuildStatusPushParameters.builder()
+        .detailsUrl(getBuildDetailsUrl(
+            ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
+        .desc(generateDesc(
+            buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
+        .sha(buildStatusUpdateParameter.getSha())
+        .gitSCMType(gitSCMType)
+        .connectorDetails(gitConnector)
+        .userName(connectorUtils.fetchUserName(gitConnector))
+        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+        .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
+        .identifier(buildStatusUpdateParameter.getIdentifier())
+        .state(retrieveBuildStatusState(gitSCMType, status))
+        .build();
   }
 
   private String generateDesc(String identifier, String name, String status) {

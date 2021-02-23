@@ -80,7 +80,7 @@ public abstract class Activity
   private long lastUpdatedAt;
 
   @NotNull private ActivityType type;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   private String serviceIdentifier;
   @NotNull private String environmentIdentifier;
   @NotNull private String projectIdentifier;

@@ -69,7 +69,7 @@ public class NotificationHelper {
       notificationRules = getNotificationRulesFromYaml(yaml);
     } catch (IOException exception) {
       // Todo: throw Execution exception over here.
-      exception.printStackTrace();
+      log.error("", exception);
     }
     if (EmptyPredicate.isEmpty(notificationRules)) {
       return;
@@ -131,9 +131,8 @@ public class NotificationHelper {
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
     StringBuilder sb =
-        new StringBuilder()
-            .append("Pipeline Status Update")
-            .append("\nEventType: ")
+        new StringBuilder(128)
+            .append("Pipeline Status Update\nEventType: ")
             .append(pipelineEventType.getDisplayName())
             .append("\nProject Id: ")
             .append(projectId)

@@ -484,6 +484,43 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "RunTestsStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "buildTool",
+            "goals",
+            "image",
+            "language"
+          ],
+          "properties": {
+            "buildTool": {
+              "type": "string"
+            },
+            "connector": {
+              "type": "string"
+            },
+            "goals": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SaveCacheGCSStepInfo": {
       "allOf": [
         {

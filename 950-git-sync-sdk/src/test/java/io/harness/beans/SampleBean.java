@@ -11,8 +11,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Entity(value = "sampleBean", noClassnameStored = true)
 @Builder
+@Entity(value = "sampleBean", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("sampleBean")
 public class SampleBean implements UuidAware, PersistentEntity {

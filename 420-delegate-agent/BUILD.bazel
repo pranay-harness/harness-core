@@ -9,6 +9,7 @@ load("//:macros.bzl", "sources")
 sources()
 
 shared_dependencies = [
+    "//890-sm-core:module",
     "//930-delegate-tasks:module",
     "//920-delegate-agent-beans:module",
     "//955-delegate-beans:module",

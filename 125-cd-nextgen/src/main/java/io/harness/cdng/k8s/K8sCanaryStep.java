@@ -8,6 +8,8 @@ import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -40,6 +42,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, K8sCanaryStepParameters stepParameters, StepInputPackage inputPackage) {
+    validate(stepParameters);
     return k8sStepHelper.startChainLink(this, ambiance, stepParameters);
   }
 
@@ -123,5 +126,22 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   @Override
   public Class<K8sCanaryStepParameters> getStepParametersClass() {
     return K8sCanaryStepParameters.class;
+  }
+
+  private void validate(K8sCanaryStepParameters stepParameters) {
+    if (stepParameters.getInstanceSelection() == null || stepParameters.getInstanceSelection().getType() == null
+        || stepParameters.getInstanceSelection().getSpec() == null) {
+      throw new InvalidRequestException("Instance selection is mandatory");
+    }
+
+    String valueType = stepParameters.getInstanceSelection().getType().name().toLowerCase();
+    if (stepParameters.getInstanceSelection().getSpec().getInstances() == null) {
+      throw new InvalidArgumentsException(String.format("Instance selection %s value is mandatory", valueType));
+    }
+
+    if (stepParameters.getInstanceSelection().getSpec().getInstances() <= 0) {
+      throw new InvalidArgumentsException(
+          String.format("Instance selection %s value cannot be less than 1", valueType));
+    }
   }
 }

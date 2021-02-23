@@ -1,11 +1,13 @@
 package io.harness.ng.core.service.entity;
 
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.persistence.PersistentEntity;
@@ -40,6 +42,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "servicesNG", noClassnameStored = true)
 @Document("servicesNG")
 @TypeAlias("io.harness.ng.core.service.entity.ServiceEntity")
+@StoreIn(DbAliases.NG_MANAGER)
 public class ServiceEntity implements PersistentEntity {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed @NotEmpty String accountId;

@@ -9,6 +9,7 @@ import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
+import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
@@ -109,7 +110,6 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
-import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
@@ -369,7 +369,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SmtpCapability.class, 19121);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
-    kryo.register(SSHHostValidationCapability.class, 19125);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
     kryo.register(SpotInstGetElastigroupJsonParameters.class, 19025);
@@ -614,7 +613,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SocketConnectivityParameters.class, 10011);
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
-
+    kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
   }
 }

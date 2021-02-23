@@ -40,15 +40,19 @@ public class CEMetaDataRecordUpdateService {
       boolean isGCPConnectorPresent = ceConnectors.stream().anyMatch(
           connector -> connector.getValue().getType().equals(SettingVariableTypes.CE_GCP.toString()));
 
+      boolean isAzureConnectorPresent = ceConnectors.stream().anyMatch(
+          connector -> connector.getValue().getType().equals(SettingVariableTypes.CE_AZURE.toString()));
+
       CEMetadataRecordBuilder ceMetadataRecordBuilder = CEMetadataRecord.builder().accountId(accountId);
 
-      if (isAwsConnectorPresent || isGCPConnectorPresent) {
+      if (isAwsConnectorPresent || isGCPConnectorPresent || isAzureConnectorPresent) {
         bigQueryHelperService.updateCloudProviderMetaData(accountId, ceMetadataRecordBuilder);
       }
 
       cloudToHarnessMappingService.upsertCEMetaDataRecord(
           ceMetadataRecordBuilder.awsConnectorConfigured(isAwsConnectorPresent)
               .gcpConnectorConfigured(isGCPConnectorPresent)
+              .azureConnectorConfigured(isAzureConnectorPresent)
               .build());
     } catch (Exception ex) {
       log.error("Exception while updateCloudProviderMetadata", ex);

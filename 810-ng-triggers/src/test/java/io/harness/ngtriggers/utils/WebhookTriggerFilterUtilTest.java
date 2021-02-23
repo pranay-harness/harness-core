@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.utils;
 
-import static io.harness.ngtriggers.Constants.*;
+import static io.harness.ngtriggers.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
@@ -23,7 +23,12 @@ import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes.WebhookBaseAttribut
 import io.harness.ngtriggers.beans.scm.WebhookEvent.Type;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
-import io.harness.ngtriggers.beans.source.webhook.*;
+import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.GitlabTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
+import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.rule.Owner;
 

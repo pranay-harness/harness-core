@@ -5,6 +5,7 @@ import static io.harness.morphia.MorphiaRegistrar.putClass;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
+import io.harness.govern.Switch;
 import io.harness.reflection.CodeUtils;
 import io.harness.testing.TestExecution;
 
@@ -18,19 +19,27 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappingException;
+import org.mongodb.morphia.utils.ReflectionUtils;
 
 @Slf4j
 public class MorphiaModule extends AbstractModule {
@@ -117,24 +126,91 @@ public class MorphiaModule extends AbstractModule {
     return morphia;
   }
 
+  // This is a copy of the morphia method that has a bug and does not unescape '%' in the path of the jar file
+  private static Set<Class<?>> getClasses(String packageName, boolean mapSubPackages)
+      throws IOException, ClassNotFoundException {
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
+    Set<Class<?>> classes = new HashSet();
+    String path = packageName.replace('.', '/');
+    Enumeration<URL> resources = loader.getResources(path);
+    if (resources != null) {
+      while (true) {
+        while (true) {
+          String filePath;
+          do {
+            if (!resources.hasMoreElements()) {
+              return classes;
+            }
+
+            filePath = ((URL) resources.nextElement()).getFile();
+            if (filePath.indexOf("%20") > 0) {
+              filePath = filePath.replaceAll("%20", " ");
+            }
+
+            if (filePath.indexOf("%23") > 0) {
+              filePath = filePath.replaceAll("%23", "#");
+            }
+
+            // {{ This is the code that was injected
+            if (filePath.indexOf("%25") > 0) {
+              filePath = filePath.replaceAll("%25", "%");
+            }
+            // }}
+          } while (filePath == null);
+
+          if (filePath.indexOf('!') > 0 && filePath.indexOf(".jar") > 0) {
+            String jarPath = filePath.substring(0, filePath.indexOf('!')).substring(filePath.indexOf(':') + 1);
+            if (jarPath.contains(":")) {
+              jarPath = jarPath.substring(1);
+            }
+
+            classes.addAll(ReflectionUtils.getFromJARFile(loader, jarPath, path, mapSubPackages));
+          } else {
+            classes.addAll(ReflectionUtils.getFromDirectory(loader, new File(filePath), packageName, mapSubPackages));
+          }
+        }
+      }
+    } else {
+      return classes;
+    }
+  }
+
+  // This is a copy of the morphia method that calls method with a bug
+  private void mapPackage(Morphia morphia, String packageName) {
+    try {
+      Iterator classes = getClasses(packageName, morphia.getMapper().getOptions().isMapSubPackages()).iterator();
+
+      while (classes.hasNext()) {
+        Class clazz = (Class) classes.next();
+
+        try {
+          Entity entityAnn = ReflectionUtils.getClassEntityAnnotation(clazz);
+          boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+          if (entityAnn != null && !isAbstract) {
+            morphia.map(clazz);
+          }
+        } catch (MappingException exception) {
+          Switch.unhandled(exception);
+        }
+      }
+    } catch (IOException exception) {
+      throw new MappingException("Could not get map classes from package " + packageName, exception);
+    } catch (ClassNotFoundException exception) {
+      throw new MappingException("Could not get map classes from package " + packageName, exception);
+    }
+  }
+
   public void testAutomaticSearch(Provider<Set<Class>> classesProvider) {
-    Morphia morphia = null;
+    Morphia morphia;
     try {
       morphia = new Morphia();
       morphia.getMapper().getOptions().setMapSubPackages(true);
-      morphia.mapPackage("software.wings");
-      morphia.mapPackage("io.harness");
+      mapPackage(morphia, "software.wings");
+      mapPackage(morphia, "io.harness");
     } catch (NoClassDefFoundError error) {
       ignoredOnPurpose(error);
       return;
-    } catch (MappingException e) {
-      // todo george: find and fix incorrect path for sdk while running test.
-      if (e.getCause().toString().contains("cf-client-sdk-java")) {
-        log.info("Ignored cf client sdk exception.");
-        ignoredOnPurpose(e);
-      } else {
-        throw e;
-      }
     }
 
     log.info("Checking {} classes", morphia.getMapper().getMappedClasses().size());

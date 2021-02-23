@@ -792,8 +792,7 @@ public class HelmTaskHelper {
         .redirectOutput(new LogOutputStream() {
           @Override
           protected void processLine(String line) {
-            sb.append(line);
-            sb.append("\n");
+            sb.append(line).append('\n');
           }
         });
   }

@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -429,7 +428,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
 
   private String readResourceFile(String fileName) throws IOException {
     File yamlFile = null;
-    yamlFile = new File((resourcePath + PATH_DELIMITER + fileName));
+    yamlFile = new File(resourcePath + PATH_DELIMITER + fileName);
 
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

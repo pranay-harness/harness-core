@@ -472,4 +472,21 @@ public class AccountResource {
     authService.validateDelegateToken(accountId, substringAfter(delegateToken, "Delegate "));
     return new RestResponse<>(true);
   }
+
+  @POST
+  @Path("updateAccountPreference")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateAccountPreference(@QueryParam("accountId") String accountId,
+      @QueryParam("preferenceKey") String preferenceKey, @Body @NotNull Object value) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      log.info("Attempting to set AccountPreference: {} to Value {}", preferenceKey, value);
+      RestResponse<Boolean> response =
+          accountPermissionUtils.checkIfHarnessUser("User not allowed to set the cache Value");
+      if (response == null) {
+        response = new RestResponse<>(accountService.updateAccountPreference(accountId, preferenceKey, value));
+      }
+      return response;
+    }
+  }
 }

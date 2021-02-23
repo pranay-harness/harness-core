@@ -6,6 +6,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConne
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
+import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -23,6 +24,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
@@ -44,9 +46,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
       @JsonSubTypes.Type(value = GitlabConnectorDTO.class, name = "Gitlab"),
       @JsonSubTypes.Type(value = BitbucketConnectorDTO.class, name = "Bitbucket"),
       @JsonSubTypes.Type(value = CEAzureConnectorDTO.class, name = "CEAzure"),
+      @JsonSubTypes.Type(value = CEKubernetesClusterConfigDTO.class, name = "CEK8sCluster"),
 })
 public abstract class ConnectorConfigDTO implements DecryptableEntity {
-  @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();
+  @JsonIgnore public abstract List<DecryptableEntity> getDecryptableEntities();
 
   public void validate() {
     // no op implementation which base classes can override

@@ -25,7 +25,6 @@ public class GitDecryptionHelper {
     if (sshKeySpecDTO == null) {
       return null;
     }
-    SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(sshKeySpecDTO, encryptionDetails);
-    return sshSessionConfig;
+    return sshSessionConfigMapper.getSSHSessionConfig(sshKeySpecDTO, encryptionDetails);
   }
 }

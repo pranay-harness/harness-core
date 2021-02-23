@@ -2,9 +2,6 @@
 
 set -ex
 
-ps auxwwwe
-echo end off ps-report
-
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]
@@ -49,9 +46,6 @@ then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
-
-ps auxwwwe
-echo end off ps-report
 
 BAZEL_MODULES="\
   //120-ng-manager:module \
@@ -164,13 +158,12 @@ BAZEL_MODULES="\
   //970-ng-commons:module \
   //970-rbac-core:module \
   //980-commons:module \
-  //980-java-agent:module \
   //990-commons-test:module \
   //product/ci/engine/proto:all \
   //product/ci/scm/proto:all \
 "
 
-bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
+bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
 
 build_bazel_module() {
   module=$1
@@ -316,7 +309,6 @@ build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
-build_bazel_module 340-ce-nextgen
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
 build_bazel_module 420-delegate-agent
@@ -378,7 +370,6 @@ build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
-build_bazel_module 980-java-agent
 build_bazel_module 990-commons-test
 build_bazel_module 230-model-test
 
@@ -391,6 +382,3 @@ build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
-
-ps auxwwwe
-echo end off ps-report

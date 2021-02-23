@@ -7,7 +7,6 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import java.io.File;
 import java.util.Arrays;
 import lombok.experimental.UtilityClass;

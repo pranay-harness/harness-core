@@ -18,6 +18,10 @@ public class CountInstanceSelection implements InstanceSelectionBase {
 
   @Override
   public Integer getInstances() {
+    if (ParameterField.isNull(this.count)) {
+      return null;
+    }
+
     return count.getValue();
   }
 }

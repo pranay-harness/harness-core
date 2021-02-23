@@ -1,7 +1,12 @@
 package io.harness.notification.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.notification.SmtpConfig;
 
 import com.google.common.collect.ImmutableList;
@@ -21,6 +26,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "notificationSettings")
 @Document("notificationSettings")
 @TypeAlias("notificationSettings")
+@StoreIn(DbAliases.NOTIFICATION)
+@OwnedBy(PL)
 public class NotificationSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -33,7 +40,7 @@ public class NotificationSetting {
   }
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String accountId;
-  @Builder.Default boolean sendNotificationViaDelegate = false;
+  boolean sendNotificationViaDelegate;
   SmtpConfig smtpConfig;
   @Version Long version;
 }

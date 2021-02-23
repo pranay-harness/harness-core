@@ -210,7 +210,7 @@ public class YamlUtils {
     StringBuilder response = new StringBuilder();
     for (String qualifiedName : qualifiedNames) {
       if (qualifiedName.equals(from)) {
-        response.append(qualifiedName).append(".");
+        response.append(qualifiedName).append('.');
       }
       if (qualifiedName.equals(to)) {
         response.append(qualifiedName);

@@ -46,7 +46,7 @@ public class NotificationTemplateRegistrar implements Runnable {
         templates = unprocessedTemplate;
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      log.error("", e);
     }
   }
 }

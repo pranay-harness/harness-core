@@ -10,6 +10,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.PersistenceModule;
 
 import com.google.inject.Provides;
@@ -34,8 +35,9 @@ public class AccessControlPersistenceModule extends PersistenceModule {
 
   @Provides
   @Singleton
-  protected TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
-    return new TransactionTemplate(mongoTransactionManager);
+  protected TransactionTemplate getTransactionTemplate(
+      MongoTransactionManager mongoTransactionManager, MongoConfig mongoConfig) {
+    return new HTransactionTemplate(mongoTransactionManager, mongoConfig.isTransactionsEnabled());
   }
 
   @Override

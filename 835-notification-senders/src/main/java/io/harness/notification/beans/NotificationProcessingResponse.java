@@ -34,5 +34,5 @@ public class NotificationProcessingResponse {
   }
 
   List<Boolean> result;
-  @Builder.Default boolean shouldRetry = false;
+  boolean shouldRetry;
 }

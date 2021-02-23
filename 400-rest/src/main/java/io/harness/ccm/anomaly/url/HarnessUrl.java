@@ -27,8 +27,8 @@ public class HarnessUrl {
       addBaseParams(uriBuilder);
       addDateParams(uriBuilder, date);
       return addHash(uriBuilder.build()).toString();
-    } catch (URISyntaxException | UnsupportedEncodingException e) {
-      e.printStackTrace();
+    } catch (URISyntaxException | UnsupportedEncodingException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -40,8 +40,8 @@ public class HarnessUrl {
       addToQuery(uriBuilder, UrlParams.FILTER, "all");
       addToQuery(uriBuilder, UrlParams.SELECTED_VIEW, "COMMUNICATION");
       return addHash(uriBuilder.build()).toString();
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
+    } catch (URISyntaxException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -54,8 +54,8 @@ public class HarnessUrl {
       addEntityParams(uriBuilder, anomaly);
       addGroupBY(uriBuilder, anomaly);
       return addHash(uriBuilder.build()).toString();
-    } catch (UnsupportedEncodingException | URISyntaxException e) {
-      e.printStackTrace();
+    } catch (UnsupportedEncodingException | URISyntaxException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -87,7 +87,7 @@ public class HarnessUrl {
         addToQuery(uriBuilder, UrlParams.GROUP_BY, UrlGroupBys.AWS_SERVICE.getValue());
         break;
       default:
-        log.error("Groupby not supported in harnessUrl");
+        log.error("Group by not supported in harnessUrl");
         break;
     }
   }

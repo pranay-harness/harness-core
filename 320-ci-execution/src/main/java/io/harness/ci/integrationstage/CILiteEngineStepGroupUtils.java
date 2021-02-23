@@ -19,6 +19,7 @@ import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -51,8 +52,8 @@ public class CILiteEngineStepGroupUtils {
   private static final SecureRandom random = new SecureRandom();
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
-  public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(
-      StageElementConfig stageElementConfig, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName) {
+  public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
+      CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName, Infrastructure infrastructure) {
     List<ExecutionWrapperConfig> mainEngineExecutionSections = new ArrayList<>();
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
@@ -84,7 +85,7 @@ public class CILiteEngineStepGroupUtils {
           liteEngineCounter++;
           ExecutionWrapperConfig liteEngineStepExecutionWrapper =
               fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
-                  ciExecutionArgs, ciCodebase, podName, usePVC);
+                  ciExecutionArgs, ciCodebase, podName, usePVC, infrastructure);
 
           mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
           // Also execute each lite engine step individually on main engine
@@ -101,7 +102,7 @@ public class CILiteEngineStepGroupUtils {
       liteEngineCounter++;
       ExecutionWrapperConfig liteEngineStepExecutionWrapper =
           fetchLiteEngineStepExecutionWrapper(liteEngineExecutionSections, liteEngineCounter, stageElementConfig,
-              ciExecutionArgs, ciCodebase, podName, usePVC);
+              ciExecutionArgs, ciCodebase, podName, usePVC, infrastructure);
 
       mainEngineExecutionSections.add(liteEngineStepExecutionWrapper);
       // Also execute each lite engine step individually on main engine
@@ -117,11 +118,11 @@ public class CILiteEngineStepGroupUtils {
   private ExecutionWrapperConfig fetchLiteEngineStepExecutionWrapper(
       List<ExecutionWrapperConfig> liteEngineExecutionSections, Integer liteEngineCounter,
       StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase, String podName,
-      boolean usePVC) {
+      boolean usePVC, Infrastructure infrastructure) {
     // TODO Do not generate new id
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = liteEngineTaskStepGenerator.createLiteEngineTaskStepInfo(
         ExecutionElementConfig.builder().uuid(generateUuid()).steps(liteEngineExecutionSections).build(), ciCodebase,
-        integrationStage, ciExecutionArgs, podName, liteEngineCounter, usePVC);
+        integrationStage, ciExecutionArgs, podName, liteEngineCounter, usePVC, infrastructure);
 
     try {
       String uuid = generateUuid();
