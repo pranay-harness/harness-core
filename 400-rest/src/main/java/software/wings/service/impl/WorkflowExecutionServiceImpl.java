@@ -1439,7 +1439,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, app.getAccountId());
     List<String> infraMappingList =
         workflowExecutionServiceHelper.getInfraMappings(workflow, executionArgs.getWorkflowVariables());
-    populateRollbackArtifacts(workflowExecution, infraMappingList);
+    populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
 
     populatePipelineSummary(workflowExecution, keywords, executionArgs);
 
@@ -2025,9 +2025,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setServices(services);
   }
 
-  public void populateRollbackArtifacts(WorkflowExecution workflowExecution, List<String> infraMappingList) {
+  public void populateRollbackArtifacts(
+      WorkflowExecution workflowExecution, List<String> infraMappingList, WorkflowStandardParams stdParams) {
     if (EmptyPredicate.isNotEmpty(infraMappingList)) {
       List<Artifact> rollbackArtifacts = obtainLastGoodDeployedArtifacts(workflowExecution, infraMappingList);
+      stdParams.setRollbackArtifactIds(rollbackArtifacts.stream().map(Artifact::getUuid).collect(toList()));
       workflowExecution.setRollbackArtifacts(rollbackArtifacts);
     }
   }
