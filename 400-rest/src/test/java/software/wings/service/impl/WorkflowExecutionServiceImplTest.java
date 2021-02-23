@@ -2898,4 +2898,22 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasMessage(
             "Deployment Freeze Window [freeze1] is active for the environment. No deployments are allowed to proceed.");
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyListIfNoArtifactInPreviousSuccessfulExecution() {
+    List<String> infraMappingList = Collections.singletonList(INFRA_MAPPING_ID);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .status(SUCCESS)
+                                              .uuid(WORKFLOW_EXECUTION_ID)
+                                              .infraMappingIds(infraMappingList)
+                                              .build();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
+    assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
+    assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
+  }
 }
