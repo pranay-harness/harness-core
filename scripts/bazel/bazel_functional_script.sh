@@ -33,7 +33,7 @@ fi
 if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]
 then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //200-functional-test/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS}   --jobs=3 -- //200-functional-test/... || true
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS}   --jobs=6 -- //200-functional-test/... || true
 fi
 
 ps auxwwwe
