@@ -28,7 +28,7 @@ message Report {
 }
 
 message RunTestsStep {
-  string goals = 1;
+  string args = 1;
   string language = 2;   // repo language for running tests. Java | Python | Go etc.
   string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
   string testAnnotations = 4;

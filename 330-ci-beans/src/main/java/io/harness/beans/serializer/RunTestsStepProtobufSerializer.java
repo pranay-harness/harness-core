@@ -37,7 +37,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     }
 
     RunTestsStep.Builder runTestsStepBuilder = RunTestsStep.newBuilder();
-    runTestsStepBuilder.setGoals(runTestsStepInfo.getGoals());
+    runTestsStepBuilder.setGoals(runTestsStepInfo.getArgs());
     runTestsStepBuilder.setContainerPort(port);
     runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
     runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());

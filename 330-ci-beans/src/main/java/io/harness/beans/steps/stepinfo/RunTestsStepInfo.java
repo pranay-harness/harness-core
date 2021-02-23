@@ -37,7 +37,7 @@ public class RunTestsStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String goals;
+  @NotNull private String args;
   @NotNull private String language;
   @NotNull private String buildTool;
   @NotNull private String packages;
@@ -50,15 +50,15 @@ public class RunTestsStepInfo implements CIStepInfo {
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector",
+  @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests"})
-  public RunTestsStepInfo(String identifier, String name, Integer retry, String goals, String language,
-      String buildTool, String image, String connector, ContainerResource resources, UnitTestReport reports,
-      String testAnnotations, String packages, Boolean runOnlySelectedTests) {
+  public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language,
+                          String buildTool, String image, String connector, ContainerResource resources, UnitTestReport reports,
+                          String testAnnotations, String packages, Boolean runOnlySelectedTests) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.goals = goals;
+    this.args = args;
     this.language = language;
     this.buildTool = buildTool;
     this.image = image;

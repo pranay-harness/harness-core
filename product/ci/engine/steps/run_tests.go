@@ -39,7 +39,7 @@ type runTestsStep struct {
 	tempPath             string             // File path to store generated temporary files
 	lang                 string             // language of codebase
 	buildTool            string             // buildTool used for codebase
-	goals                string             // custom flags to
+	args                 string             // custom flags to
 	execCommand          string             // final command which will be executed by addon
 	envVarOutputs        []string           // Environment variables to be exported to the step
 	runOnlySelectedTests bool               // Flag to be used for disabling testIntelligence and running all tests
@@ -63,7 +63,7 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 	return &runTestsStep{
 		id:                   step.GetId(),
 		name:                 step.GetDisplayName(),
-		goals:                r.GetGoals(),
+		args:                 r.GetArgs(),
 		buildTool:            r.GetBuildTool(),
 		lang:                 r.GetLanguage(),
 		cntrPort:             r.GetContainerPort(),
@@ -77,14 +77,14 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 	}
 }
 
-// Run execute tests with provided goals with retries and timeout handling
+// Run execute tests with provided args with retries and timeout handling
 func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
 		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
 	var err error
-	if e.goals, err = e.resolveJEXL(ctx); err != nil {
+	if e.args, err = e.resolveJEXL(ctx); err != nil {
 		return nil, int32(1), err
 	}
 
@@ -185,7 +185,7 @@ func (e *runTestsStep) getRunTestsCommand(testsToExecute string, runSelectedTest
 		// Eg. of goals: "-T 2C -DskipTests"
 		// command will finally be like:
 		// mvn -T 2C -DskipTests -Dtest=TestSquare,TestCirle test
-		return fmt.Sprintf("mvn test %s %s -am", e.goals, testsFlag), nil
+		return fmt.Sprintf("mvn test %s %s -am", e.args, testsFlag), nil
 	default:
 		e.log.Errorw(fmt.Sprintf("only maven build tool is supported, build tool is: %s", e.buildTool), "step_id", e.id)
 		return "", fmt.Errorf("build tool %s is not suported", e.buildTool)
@@ -229,16 +229,16 @@ func (e *runTestsStep) validate() error {
 // resolveJEXL resolves JEXL expressions present in run step input
 func (e *runTestsStep) resolveJEXL(ctx context.Context) (string, error) {
 	// JEXL expressions are only present in goals
-	goals := e.goals
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{goals}, e.so, false, e.log)
+	args := e.args
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{args}, e.so, false, e.log)
 	if err != nil {
 		return "", err
 	}
 
-	if val, ok := resolvedExprs[goals]; ok {
+	if val, ok := resolvedExprs[args]; ok {
 		return val, nil
 	}
-	return goals, nil
+	return args, nil
 }
 
 // execute step and sent the rpc call to addOn server for running the commands
