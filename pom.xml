@@ -10,11 +10,6 @@
         <module>200-functional-test</module>
         <module>250-watcher</module>
         <module>260-delegate</module>
-<<<<<<< HEAD
-=======
-        <module>270-verification</module>
-        <module>980-java-agent</module>
->>>>>>> master
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
