@@ -1326,7 +1326,6 @@ maven_install(
         "com.google.apis:google-api-services-cloudcommerceprocurement:v1-rev20190531-1.25.0",
         "com.google.apis:google-api-services-cloudresourcemanager:v1-rev20200210-1.30.9",
         "com.google.apis:google-api-services-compute:v1-rev213-1.25.0",
-        "org.apache.httpcomponents:httpmime:4.2.5",
         maven.artifact(
             group = "com.google.apis",
             artifact = "google-api-services-container",
@@ -2003,6 +2002,28 @@ maven_install(
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
     },
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+
+maven_install(
+    name = "delegate",
+    artifacts = [
+        "org.apache.httpcomponents:httpmime:4.5.1",
+    ],
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",

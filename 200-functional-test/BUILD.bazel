@@ -36,7 +36,7 @@ java_library(
     deps = shared_dependencies,
 )
 
-test_dependencies = shared_dependencies + [
+test_dependencies = ["@delegate//:org_apache_httpcomponents_httpmime"] + shared_dependencies + [
     "@com_github_tomakehurst_wiremock//jar",
     ":module",
      "//990-commons-test:module",
@@ -51,7 +51,8 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
-    "@maven//:org_apache_httpcomponents_httpmime",
+
+
 
 ]
 
