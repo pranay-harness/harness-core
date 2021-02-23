@@ -5,11 +5,13 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.serializer.CENextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
@@ -68,8 +70,14 @@ public class CENextGenModule extends AbstractModule {
         return configuration.getMongoConfig();
       }
     });
+
     install(ExecutorModule.getInstance());
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     install(new ConnectorResourceClientModule(
         configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
     install(VersionModule.getInstance());

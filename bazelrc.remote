@@ -14,3 +14,6 @@ build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
 build --experimental_inmemory_dotd_files
 build --experimental_inmemory_jdeps_files
 build --nobuild_runfile_links
+
+# This value is to reset the cache if we suspect that the cache got poisoned
+build --action_env=CACHE_RESET=1

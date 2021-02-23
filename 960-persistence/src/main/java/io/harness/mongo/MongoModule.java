@@ -32,7 +32,7 @@ import org.mongodb.morphia.ObjectFactory;
 public class MongoModule extends AbstractModule {
   private static volatile MongoModule instance;
 
-  public static MongoModule getInstance() {
+  static MongoModule getInstance() {
     if (instance == null) {
       instance = new MongoModule();
     }
