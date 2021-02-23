@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 
+import static software.wings.beans.TaskType.JIRA;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -18,10 +19,14 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +47,7 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -61,6 +67,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -71,6 +78,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks JiraCreateUpdate jiraCreateUpdateState = new JiraCreateUpdate("Jira");
   private static JiraCreateMetaResponse createMetaResponse;
   private static JSONArray projects;
@@ -565,6 +573,13 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
             .stateExecutionData(JiraExecutionData.builder().activityId(ACTIVITY_ID).build())
             .build();
     ExecutionResponse executionResponse = jiraCreateUpdateState.execute(context);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("data.taskType", JIRA.name());
+    assertThat(delegateTaskArgumentCaptor.getValue().isSelectionLogsTrackingEnabled()).isTrue();
+    verify(stateExecutionService).appendDelegateTaskDetails(eq(null), any(DelegateTaskDetails.class));
     assertThat(executionResponse).isEqualTo(expectedExecutionResponse);
   }
 
