@@ -47,6 +47,11 @@ public class InfraAccountConnectionDataFetcher
           .linkedAccountLaunchTemplateLink(stackSetBaseUrl)
           .build();
     }
+    if (parameters.getInfraType() == QLInfraTypesEnum.AZURE) {
+      return QLInfraAccountConnectionData.builder()
+          .azureHarnessAppClientId(mainConfiguration.getCeSetUpConfig().getAzureAppClientId())
+          .build();
+    }
     return QLInfraAccountConnectionData.builder().build();
   }
 }

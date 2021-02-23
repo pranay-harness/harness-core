@@ -3,6 +3,8 @@ import re
 import json
 from google.cloud import bigquery
 from google.cloud import scheduler
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_
 import datetime
 
 """
@@ -44,7 +46,7 @@ def main(event, context):
 
     projectName = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
     path = file.split("/")
-    accountIdOrig = path[0]
+    util.ACCOUNTID_LOG = accountIdOrig = path[0]
     accountId = re.sub('[^0-9a-z]', '_', accountIdOrig.lower())
     datasetName = "BillingReport_%s" % (accountId)
     # -2 should always be the month folder
@@ -58,9 +60,9 @@ def main(event, context):
     jsonData["datasetName"] = datasetName
     jsonData["tableSuffix"] = tableSuffix
     jsonData["accountIdOrig"] = accountIdOrig
-    print(jsonData)
+    print_(jsonData)
     client = bigquery.Client(projectName)
-    create_dataset(client, jsonData)
+    create_dataset(client, datasetName)
     create_scheduler_job(jsonData)
 
 
@@ -72,7 +74,7 @@ def create_scheduler_job(jsonData):
     parent = f"projects/{projectName}/locations/us-central1"
     name = f"{parent}/jobs/ce-azuredata-{jsonData['accountIdOrig']}-{jsonData['tableSuffix']}"
     now = datetime.datetime.utcnow()
-    triggerTime = now + datetime.timedelta(minutes = 10)
+    triggerTime = now + datetime.timedelta(minutes=10)
     schedule = "%d %d %d %d *" % (triggerTime.minute, triggerTime.hour, triggerTime.day, triggerTime.month)
     topic = "projects/%s/topics/ce-azuredata-scheduler" % jsonData["projectName"]
 
@@ -87,33 +89,17 @@ def create_scheduler_job(jsonData):
     }
 
     try:
-        # Delete existing jobs for the same name if any.
-        client.delete_job(name=name)
-        print("Job deleted.")
+        # Update existing jobs with the same name if any.
+        client.update_job(job=job)
+        print_("Job updated.")
     except Exception as e:
-        print("Error: %s. This can be ignored" % e)
-
-    # Use the client to send the job creation request.
-    response = client.create_job(
-        request={
-            "parent": parent,
-            "job": job
-        }
-    )
-    print('Created job: {}'.format(response.name))
-    return response
-
-def create_dataset(client, jsonData):
-    dataset_id = "{}.{}".format(client.project, jsonData["datasetName"])
-    dataset = bigquery.Dataset(dataset_id)
-    dataset.location = "US"
-    dataset.description = "Data set for [ AccountId: %s ]" % (jsonData.get("accountIdOrig"))
-
-    # Send the dataset to the API for creation, with an explicit timeout.
-    # Raises google.api_core.exceptions.Conflict if the Dataset already
-    # exists within the project.
-    try:
-        dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
-        print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
-    except Exception as e:
-        print("Dataset {} already exists {}".format(dataset_id, e))
+        print_("%s. This can be ignored" % e, "WARN")
+        # Use the client to send the job creation request.
+        response = client.create_job(
+            request={
+                "parent": parent,
+                "job": job
+            }
+        )
+        print_('Created job: {}'.format(response.name))
+    return
