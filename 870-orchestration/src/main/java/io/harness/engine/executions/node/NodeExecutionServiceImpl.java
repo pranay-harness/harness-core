@@ -13,11 +13,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
@@ -195,7 +195,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public boolean markLeavesDiscontinuingOnAbort(
-      String interruptId, ExecutionInterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
+      String interruptId, InterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     ops.addToSet(NodeExecutionKeys.interruptHistories,

@@ -5,15 +5,12 @@ import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -27,6 +24,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -41,7 +39,6 @@ public class PauseAllInterruptHandler implements InterruptHandler {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private PausedStepStatusUpdate pausedStepStatusUpdate;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
-  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -50,7 +47,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
 
   private Interrupt validateAndSave(Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == PAUSE_ALL)) {
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.PAUSE_ALL)) {
       throw new InvalidRequestException("Execution already has PAUSE_ALL interrupt", PAUSE_ALL_ALREADY, USER);
     }
 
@@ -62,7 +59,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
       return interruptService.save(interrupt);
     }
     interrupts.stream()
-        .filter(presentInterrupt -> presentInterrupt.getType() == RESUME_ALL)
+        .filter(presentInterrupt -> presentInterrupt.getType() == InterruptType.RESUME_ALL)
         .findFirst()
         .ifPresent(resumeAllInterrupt
             -> interruptService.markProcessed(resumeAllInterrupt.getUuid(),

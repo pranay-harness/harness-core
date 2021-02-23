@@ -10,7 +10,7 @@ import io.harness.engine.interrupts.handlers.MarkSuccessInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.RetryInterruptHandler;
-import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import com.google.inject.Inject;
 
@@ -24,7 +24,7 @@ public class InterruptHandlerFactory {
   @Inject private MarkSuccessInterruptHandler markSuccessInterruptHandler;
   @Inject private MarkFailedInterruptHandler markFailedInterruptHandler;
 
-  public InterruptHandler obtainHandler(ExecutionInterruptType interruptType) {
+  public InterruptHandler obtainHandler(InterruptType interruptType) {
     switch (interruptType) {
       case ABORT_ALL:
         return abortAllInterruptHandler;
