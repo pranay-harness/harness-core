@@ -43,7 +43,7 @@ public class RunTestsStepInfo implements CIStepInfo {
   @NotNull private String packages;
   private String testAnnotations;
   private UnitTestReport reports;
-  @NotNull private Boolean runOnlySelectedTests = false;
+  private boolean runOnlySelectedTests = false;
 
   @NotNull private String image;
   private String connector;
