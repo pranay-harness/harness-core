@@ -39,6 +39,7 @@ import lombok.EqualsAndHashCode;
 import org.reflections.Reflections;
 
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @Singleton
 public class PipelineServiceConfiguration extends Configuration {
