@@ -9,7 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class WorkflowCVTaskCreationHandlerTest extends VerificationBaseTest {
+public class WorkflowCVTaskCreationHandlerTest extends VerificationBase {
   @Mock CVTaskService cvTaskService;
   @Inject WingsPersistence wingsPersistence;
   @Inject WorkflowCVTaskCreationHandler workflowCVTaskCreationHandler;

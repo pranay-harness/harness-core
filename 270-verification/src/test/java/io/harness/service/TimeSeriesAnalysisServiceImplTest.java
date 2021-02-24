@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -105,7 +105,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
-public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
+public class TimeSeriesAnalysisServiceImplTest extends VerificationBase {
   private String cvConfigId;
   private String serviceId;
   private String accountId;
@@ -1824,7 +1824,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveAndGetMetrics() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./new_relic_metric_records.json").getFile());
+    File file = new File("270-verification/src/test/resources/new_relic_metric_records.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
