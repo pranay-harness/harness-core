@@ -17,6 +17,7 @@ import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutInstance;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -55,7 +56,9 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
         return interruptPackageBuilder.interruptType(InterruptType.RETRY).build();
       case IGNORE:
       case ON_FAIL:
-        return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP).build();
+        return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP)
+            .metadata(Collections.singletonMap(InterruptType.NEXT_STEP.name(), interventionWaitAdvise.getNextNodeId()))
+            .build();
       case END_EXECUTION:
         return interruptPackageBuilder.interruptType(InterruptType.ABORT_ALL).build();
       default:

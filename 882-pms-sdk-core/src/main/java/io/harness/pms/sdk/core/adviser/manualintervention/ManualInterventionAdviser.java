@@ -38,7 +38,7 @@ public class ManualInterventionAdviser implements Adviser {
         .setInterventionWaitAdvise(InterventionWaitAdvise.newBuilder()
                                        .setTimeout(timeout)
                                        .setRepairActionCode(repairActionCode)
-                                       .setNextNodeId(nextNodeId)
+                                       .setNextNodeId(nextNodeId == null ? "" : nextNodeId)
                                        .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();

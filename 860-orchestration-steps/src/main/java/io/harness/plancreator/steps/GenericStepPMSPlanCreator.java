@@ -269,7 +269,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(ManualInterventionAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                      ManualInterventionAdviserParameters.builder().applicableFailureTypes(failureTypes).build())))
+                      ManualInterventionAdviserParameters.builder()
+                          .applicableFailureTypes(failureTypes)
+                          .timeoutAction(toRepairAction(actionConfig.getSpecConfig().getOnTimeout().getAction()))
+                          .timeout((int) TimeoutUtils.getTimeoutInSeconds(actionConfig.getSpecConfig().getTimeout(), 0))
+                          .build())))
                   .build());
           break;
         default:
