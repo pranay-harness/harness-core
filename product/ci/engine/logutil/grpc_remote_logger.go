@@ -2,6 +2,7 @@ package logutil
 
 import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/product/ci/common/external"
 )
 
 // GetGrpcRemoteLogger is a helper method that returns a logger than can communicate with the
