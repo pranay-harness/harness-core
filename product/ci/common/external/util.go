@@ -230,10 +230,10 @@ func GetWrkspcPath() (string, error) {
 }
 
 func GetGitBinPath() (string, error) {
-	path, ok := os.LookupEnv(gitBinPath)
+	path, _ := os.LookupEnv(gitBinPath)
 	path = "git"
-	if !ok {
-		return "", fmt.Errorf("git binary path variable not set %s", gitBinPath)
-	}
+	// if !ok {
+	// 	return "", fmt.Errorf("git binary path variable not set %s", gitBinPath)
+	// }
 	return path, nil
 }
