@@ -56,8 +56,8 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -226,12 +226,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                           .repairActionCodeAfterRetry(
                               toRepairAction(retryAction.getSpecConfig().getOnRetryFailure().getAction()))
                           .retryCount(retryAction.getSpecConfig().getRetryCount())
-                          .waitIntervalList(
-                              retryAction.getSpecConfig()
-                                  .getRetryInterval()
-                                  .stream()
-                                  .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(Timeout.fromString(s), 0))
-                                  .collect(Collectors.toList()))
+                          .waitIntervalList(retryAction.getSpecConfig()
+                                                .getRetryInterval()
+                                                .stream()
+                                                .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
+                                                .collect(Collectors.toList()))
                           .build())))
                   .build());
 
@@ -266,6 +265,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           }
           break;
         case MANUAL_INTERVENTION:
+          ManualInterventionFailureActionConfig actionConfig = (ManualInterventionFailureActionConfig) action;
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(ManualInterventionAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
@@ -368,7 +368,9 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
       default:
-        throw new InvalidRequestException("Invalid yaml");
+        throw new InvalidRequestException(
+
+            action.toString() + " Failure action doesn't have corresponding RepairAction Code.");
     }
   }
 
