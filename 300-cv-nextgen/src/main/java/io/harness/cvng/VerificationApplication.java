@@ -356,7 +356,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleWithFixedDelay(
-        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+        () -> analysisOrchestrationIterator.process(), 0, 5, TimeUnit.SECONDS);
   }
 
   private void registerVerificationJobInstanceTimeoutIterator(Injector injector) {

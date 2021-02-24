@@ -192,7 +192,7 @@ public final class VerificationJobInstance
       Preconditions.checkNotNull(createdAt);
     }
     public abstract ExecutionStatus getVerificationJobExecutionStatus();
-    public boolean shouldUpdateJobStatus(VerificationJobInstance verificationJobInstance) {
+    public boolean shouldUpdateJobStatus() {
       return isFailedStatus();
     }
     public boolean isLastProgressLog(VerificationJobInstance verificationJobInstance) {
