@@ -16,6 +16,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -177,9 +178,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
+    registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
