@@ -132,7 +132,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
 
-  @Getter private boolean cloudCostEnabled;
+  private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
   @Getter @Setter private TrialSignupOptions trialSignupOptions;
