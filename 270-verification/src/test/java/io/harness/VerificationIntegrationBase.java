@@ -74,8 +74,7 @@ import org.junit.BeforeClass;
  * Created by rsingh on 9/25/18.
  */
 @Slf4j
-public abstract class VerificationBaseIntegrationTest
-    extends VerificationBaseTest implements WingsIntegrationTestConstants {
+public abstract class VerificationIntegrationBase extends VerificationBase implements WingsIntegrationTestConstants {
   public static String VERIFICATION_API_BASE = "https://localhost:7070/verification";
 
   protected static Client client;

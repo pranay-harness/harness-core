@@ -13,7 +13,7 @@ import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TI
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -54,7 +54,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 
-public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest {
+public class LearningEngineAnalysisServiceImplTest extends VerificationBase {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
   @Mock private VerificationManagerClientHelper managerClientHelper;

@@ -12,7 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -33,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
+public class LearningEngineQueuedTasksMetricTests extends VerificationBase {
   @Inject private ServiceGuardAccountPoller serviceGuardAccountPoller;
   @Inject private WingsPersistence wingsPersistence;
   @Mock private HarnessMetricRegistry harnessMetricRegistry;

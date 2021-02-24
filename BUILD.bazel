@@ -59,6 +59,7 @@ modules = [
     "//230-model-test",
     "//250-watcher",
     "//260-delegate",
+    "//270-verification",
     "//310-ci-manager",
     "//320-ci-execution",
     "//330-ci-beans",
