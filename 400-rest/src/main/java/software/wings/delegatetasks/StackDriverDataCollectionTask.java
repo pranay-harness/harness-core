@@ -379,7 +379,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           if (isPredictiveAnalysis) {
             collectionStartTime = startTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
           } else {
-            return dataCollectionMinute;
+            return (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
           }
           collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
         }
@@ -403,8 +403,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      long endTime = collectionStartTime;
-      long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
+      long startTime = collectionStartTime;
+      long endTime = startTime + TimeUnit.MINUTES.toMillis(1);
 
       if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect())) {
         Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -428,9 +428,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getPerSeriesAligner()));
               dataFetchParameters.setCrossSeriesReducer(
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getCrossSeriesReducer()));
-              dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
-              dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
-                  + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              if (is24X7Task()) {
+                dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
+                dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
+                    + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              }
               callables.add(() -> getMetricDataRecords(dataFetchParameters));
             }));
       }
