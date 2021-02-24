@@ -39,6 +39,7 @@ import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.utils.JsonUtils;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -60,7 +61,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.joor.Reflect;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -76,7 +76,9 @@ public class JenkinsTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8089));
   private Jenkins jenkins = new JenkinsImpl(JENKINS_URL, USERNAME, PASSWORD.toCharArray());
 
   public JenkinsTest() throws URISyntaxException {}
@@ -96,7 +98,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetJobFromJenkins() throws IOException {
     assertThat(jenkins.getJobWithDetails("scheduler")).isNotNull();
   }
@@ -110,7 +111,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetJobsFromJenkins() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
@@ -134,7 +134,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetJobsFromJenkinsForDifferentHost() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/job/parentJob/api/json"))
@@ -160,7 +159,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnNullWhenJobDoesNotExist() throws URISyntaxException, IOException {
     assertThat(jenkins.getJobWithDetails("scheduler1")).isNull();
   }
@@ -174,7 +172,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
@@ -191,7 +188,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
     assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
@@ -207,7 +203,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler1", "57", "build/libs/docker-scheduler-*.jar");
@@ -223,7 +218,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "-1", "build/libs/docker-scheduler-*.jar");
@@ -239,7 +233,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
     assertThat(fileInfo).isNull();
@@ -253,7 +246,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob(
         "scheduler", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar", "todolist.war"), 5);
@@ -278,7 +270,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
     BuildDetails buildDetails =
         jenkins.getLastSuccessfulBuildForJob("scheduler", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"));
@@ -295,7 +286,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetNullLastSuccessfulBuildForNonExistingGitJob() throws IOException {
     BuildDetails buildDetails =
         jenkins.getLastSuccessfulBuildForJob("scheduler1", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"));
@@ -305,7 +295,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
     List<BuildDetails> buildDetails =
         jenkins.getBuildsForJob("scheduler-svn", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"), 5);
@@ -341,7 +330,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldTriggerJobWithParameters() throws IOException {
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
                                               .parameters(ImmutableMap.of("Test", "Test"))
@@ -354,7 +342,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldFetchBuildFromQueueItem() throws IOException {
     Build build =
         jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"), JenkinsConfig.builder().build());
@@ -364,7 +351,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldTriggerJobWithoutParameters() throws IOException {
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
                                               .parameters(Collections.emptyMap())
@@ -377,7 +363,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testJobNormalizedNames() throws Exception {
     JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
     assertThat(jenkins.getNormalizedName("TestJob")).isEqualTo("TestJob");
@@ -388,7 +373,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldTestGetJobParameters() {
     JobWithDetails jobWithDetails = jenkins.getJobWithDetails("todolist_promot");
     assertThat(jobWithDetails).isNotNull();
@@ -415,7 +399,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldTestGetFileSize() {
     long size = jenkins.getFileSize("scheduler", "57", "build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
     assertThat(size).isGreaterThan(0);
@@ -424,7 +407,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void triggerJobWithParametersWithConnectorUrl() throws IOException {
     JenkinsTaskParams jenkinsTaskParams =
         JenkinsTaskParams.builder()
@@ -438,7 +420,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void triggerJobWithoutParametersWithConnectorUrl() throws IOException {
     JenkinsTaskParams jenkinsTaskParams =
         JenkinsTaskParams.builder()
@@ -452,7 +433,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void fetchBuildFromQueueItemWithConnectorURL() throws IOException {
     Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"),
         JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build());
@@ -462,7 +442,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldThrowException() throws IOException {
     CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
 
@@ -492,7 +471,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldRetryOnFailures() throws IOException {
     CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
     Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
@@ -521,7 +499,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetAllJobsFromJenkins() throws IOException {
     wireMockRule.stubFor(
         get(urlEqualTo("/api/json"))
@@ -539,7 +516,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void triggerThrowErrorJobNotFound() throws IOException {
     CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
     Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
@@ -552,7 +528,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testGetJobsReturnsEmptyArrayWhenException() throws IOException {
     CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
     Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
@@ -564,7 +539,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testIsRunning() throws IOException {
     CustomJenkinsHttpClient jenkinsHttpClient = mock(CustomJenkinsHttpClient.class);
     Reflect.on(jenkins).set("jenkinsHttpClient", jenkinsHttpClient);
@@ -596,7 +570,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void checkGetEnvVarsReturnsEnvMapCorrectly() throws IOException {
     // In case of blank we get empty response
     assertThat(jenkins.getEnvVars("     ")).isEmpty();
@@ -630,7 +603,6 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void checkGetEnvVarsReturnsEnvMapThrowsError() throws IOException {
     CustomJenkinsHttpClient jenkinsHttpClient = mock(CustomJenkinsHttpClient.class);
     Reflect.on(jenkins).set("jenkinsHttpClient", jenkinsHttpClient);

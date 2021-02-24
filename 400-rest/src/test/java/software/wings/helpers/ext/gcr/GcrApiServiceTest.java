@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -22,19 +21,21 @@ import software.wings.WingsBaseTest;
 import software.wings.service.mappers.artifact.GcrConfigToInternalMapper;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class GcrApiServiceTest extends WingsBaseTest {
   GcrApiServiceImpl gcrService = spy(new GcrApiServiceImpl());
-  @Rule public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(9881));
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(9881));
   private static final String url = "localhost:9881";
   String basicAuthHeader = "auth";
   GcrInternalConfig gcpInternalConfig = GcrConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader);
@@ -51,7 +52,6 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void shouldGetBuilds() {
     List<BuildDetailsInternal> actual = gcrService.getBuilds(gcpInternalConfig, "someImage", 100);
     assertThat(actual).hasSize(3);
@@ -66,7 +66,6 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testVerifyImageName() {
     assertThat(gcrService.verifyImageName(gcpInternalConfig, "someImage")).isTrue();
     assertThatThrownBy(() -> gcrService.verifyImageName(gcpInternalConfig, "doesNotExist"))
@@ -76,7 +75,6 @@ public class GcrApiServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testValidateCredentials() {
     assertThat(gcrService.validateCredentials(gcpInternalConfig, "someImage")).isTrue();
     assertThat(gcrService.validateCredentials(gcpInternalConfig, "doesNotExist")).isFalse();
