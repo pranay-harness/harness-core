@@ -156,7 +156,6 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		return res, err
 	}
 
-	fmt.Println("debug1", res.StatusCode)
 	// if the response body return no content we exit
 	// immediately. We do not read or unmarshal the response
 	// and we do not return an error.
