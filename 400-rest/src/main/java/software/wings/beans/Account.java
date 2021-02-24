@@ -132,7 +132,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
 
-  private boolean cloudCostEnabled;
+  @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
 
   @Getter @Setter private TrialSignupOptions trialSignupOptions;
@@ -327,10 +327,6 @@ public class Account extends Base implements PersistentRegularIterable {
 
   public void setOauthEnabled(boolean oauthEnabled) {
     this.oauthEnabled = oauthEnabled;
-  }
-
-  public boolean isCloudCostEnabled() {
-    return this.cloudCostEnabled;
   }
 
   public void setCloudCostEnabled(boolean cloudCostEnabled) {
