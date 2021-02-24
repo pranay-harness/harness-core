@@ -31,8 +31,6 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
-import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
