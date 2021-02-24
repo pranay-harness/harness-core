@@ -176,9 +176,12 @@ rm -f -- *.bak
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
+curl https://repo1.maven.org/maven2/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+JAVA_OPTS=" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
+
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
-  $JRE_BINARY $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $PROXY_SYS_PROPS $JAVA_OPTS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar delegate.jar config-delegate.yml watched $1
 fi
 
 sleep 3
