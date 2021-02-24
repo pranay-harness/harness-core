@@ -276,6 +276,13 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
     }
 
+    List<String> delegatesForProfile =
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
+    if (isNotEmpty(delegatesForProfile)) {
+      delegateProfileGrpcBuilder.setNumberOfDelegates(delegatesForProfile.size());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 

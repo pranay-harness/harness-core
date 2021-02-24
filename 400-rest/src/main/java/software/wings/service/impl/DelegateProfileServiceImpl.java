@@ -262,6 +262,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     // Do nothing
   }
 
+  @Override
+  public List<String> getDelegatesForProfile(String accountId, String profileId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.delegateProfileId, profileId)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .collect(toList());
+  }
+
   private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
