@@ -649,7 +649,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("timeoutExecutor")
   public ExecutorService timeoutExecutor() {
-    ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+    ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 7, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("timeout-%d").setPriority(Thread.NORM_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { timeoutExecutor.shutdownNow(); }));
     return timeoutExecutor;
