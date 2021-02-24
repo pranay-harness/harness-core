@@ -152,11 +152,12 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 */4 ? * *")
+  @Scheduled(cron = "0 0 */4 ? * *") //  0 */10 * * * ? for testing
   public void runConnectorsHealthStatusJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
       try {
+        log.info("running billing data pipeline health status service job");
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
         log.error("Exception while running runConnectorsHealthStatusJob {}", ex);
