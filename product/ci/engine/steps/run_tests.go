@@ -101,7 +101,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	e.log.Infow(fmt.Sprintf("changed files list is: %s", chFiles), "step_id", e.id)
 	org, err := getOrgId()
 	if err != nil {
-		return nil, int32(1), err
+		// return nil, int32(1), err
 	}
 	project, err := getProjectId()
 	if err != nil {
@@ -120,20 +120,11 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		return nil, int32(1), err
 	}
 
-	repo, err := getRepo()
-	if err != nil {
-		return nil, int32(1), err
-	}
+	repo, _ := getRepo()
 
-	sha, err := getSha()
-	if err != nil {
-		return nil, int32(1), err
-	}
+	sha, _ := getSha()
 
-	branch, err := getSourceBranch()
-	if err != nil {
-		return nil, int32(1), err
-	}
+	branch, _ := getSourceBranch()
 
 	tc, err := remoteTiClient()
 	if err != nil {
