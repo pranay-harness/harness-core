@@ -1,4 +1,4 @@
-package io.harness.serializer.spring.converters.steps;
+package io.harness.serializer.spring.converters.steptype;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
