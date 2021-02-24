@@ -1,8 +1,10 @@
 package io.harness.accesscontrol.acl.resources;
 
-import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
-import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -14,9 +16,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 
 @Path("/acl")
@@ -30,12 +33,14 @@ import lombok.AllArgsConstructor;
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
-public class ACLResource {
-  private final ACLService aclService;
-
-  @POST
-  @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
-  public ResponseDTO<AccessCheckResponseDTO> get(AccessCheckRequestDTO dto) {
-    return ResponseDTO.newResponse(aclService.get(dto));
+public class ACLTestResource {
+  @GET
+  @Path("/acl-test")
+  @ApiOperation(value = "Test ACL", nickname = "testACL")
+  @NGAccessControlCheck(resourceType = "SECRET_MANAGER", permissionIdentifier = "core.secretManager.create")
+  public ResponseDTO<String> get(@QueryParam("account") @AccountIdentifier String account,
+      @QueryParam("org") @OrgIdentifier String org, @QueryParam("project") @ProjectIdentifier String project,
+      @QueryParam("resourceIdentifier") @ResourceIdentifier String resourceIdentifier) {
+    return ResponseDTO.newResponse("accessible");
   }
 }

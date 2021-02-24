@@ -1,12 +1,12 @@
 package io.harness.accesscontrol.acl.services;
 
 import io.harness.accesscontrol.acl.daos.ACLDAO;
-import io.harness.accesscontrol.acl.dtos.AccessCheckRequestDTO;
-import io.harness.accesscontrol.acl.dtos.AccessCheckResponseDTO;
-import io.harness.accesscontrol.acl.dtos.AccessControlDTO;
-import io.harness.accesscontrol.acl.dtos.HAccessControlDTO;
-import io.harness.accesscontrol.acl.dtos.PermissionCheckDTO;
 import io.harness.accesscontrol.acl.models.ACL;
+import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.HAccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.aggregator.services.apis.ACLAggregatorService;
 
 import com.google.inject.Inject;
@@ -39,7 +39,8 @@ public class HACLServiceImpl implements ACLService {
                                    .orgIdentifier(permissionCheckDTO.getOrgIdentifier())
                                    .projectIdentifier(permissionCheckDTO.getProjectIdentifier())
                                    .resourceIdentifier(permissionCheckDTO.getResourceIdentifier())
-                                   .hasAccess(accessControlList.get(i) != null)
+                                   .resourceType(permissionCheckDTO.getResourceType())
+                                   .accessible(accessControlList.get(i) != null)
                                    .build());
     }
     return AccessCheckResponseDTO.builder()
