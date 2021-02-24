@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.cli;
+package io.harness.cli;
 
 import io.harness.logging.CommandExecutionStatus;
 

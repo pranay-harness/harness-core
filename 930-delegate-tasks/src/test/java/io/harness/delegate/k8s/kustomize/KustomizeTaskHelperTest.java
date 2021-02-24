@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.kustomize;
+package io.harness.delegate.k8s.kustomize;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
@@ -9,34 +9,40 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
+import io.harness.CategoryTest;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.kustomize.KustomizeClient;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
-import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliResponse;
-
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class KustomizeTaskHelperTest extends WingsBaseTest {
+public class KustomizeTaskHelperTest extends CategoryTest {
   @Mock KustomizeClient kustomizeClient;
+  @Mock LogCallback logCallback;
 
-  @InjectMocks @Inject KustomizeTaskHelper kustomizeTaskHelper;
+  @InjectMocks KustomizeTaskHelper kustomizeTaskHelper;
   KustomizeTaskHelper spyKustomizeTaskHelper = spy(new KustomizeTaskHelper());
+
+  @Before
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -52,72 +58,60 @@ public class KustomizeTaskHelperTest extends WingsBaseTest {
 
   private void shouldHandleClientBuildFailure() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
     CliResponse cliResponse =
         CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).output(RANDOM).build();
-    doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback))
+    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(RANDOM);
   }
 
   private void shouldHandleInterrupedException() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
-    doThrow(InterruptedException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doThrow(InterruptedException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback))
+    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Kustomize build interrupted");
   }
 
   private void shouldHandleIOException() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
-    doThrow(IOException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doThrow(IOException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback))
+    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("IO Failure occurred while running kustomize build");
   }
 
   private void shouldHandleTimeoutException() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
-    doThrow(TimeoutException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doThrow(TimeoutException.class).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
 
-    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback))
+    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Kustomize build timed out");
   }
 
   private void shouldCallClientBuildWithPlugins() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).pluginRootDir(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
     CliResponse cliResponse =
         CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).output(RANDOM).build();
-    doReturn(cliResponse).when(kustomizeClient).buildWithPlugins(RANDOM, RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doReturn(cliResponse).when(kustomizeClient).buildWithPlugins(RANDOM, RANDOM, RANDOM, RANDOM, logCallback);
 
-    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
+    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, RANDOM, RANDOM, logCallback);
     assertThat(manifestFiles).hasSize(1);
     assertThat(manifestFiles.get(0).getFileContent()).isEqualTo(RANDOM);
   }
 
   private void shouldCallClientBuild() throws InterruptedException, IOException, TimeoutException {
     final String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().kustomizeDirPath(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
     CliResponse cliResponse =
         CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).output(RANDOM).build();
-    doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, executionLogCallback);
+    doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
 
-    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, kustomizeConfig, executionLogCallback);
+    List<FileData> manifestFiles = kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback);
     assertThat(manifestFiles).hasSize(1);
     assertThat(manifestFiles.get(0).getFileContent()).isEqualTo(RANDOM);
   }
@@ -132,23 +126,21 @@ public class KustomizeTaskHelperTest extends WingsBaseTest {
 
   private void shouldCallKustomizeBuild() {
     String RANDOM = "RANDOM";
-    KustomizeConfig kustomizeConfig = KustomizeConfig.builder().pluginRootDir(RANDOM).build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
     List<String> file = Collections.singletonList("file");
-    ManifestFile manifestFile = ManifestFile.builder().build();
-    List<ManifestFile> manifestFiles = Collections.singletonList(manifestFile);
-    ArgumentCaptor<KustomizeConfig> captor = ArgumentCaptor.forClass(KustomizeConfig.class);
+    FileData manifestFile = FileData.builder().build();
+    List<FileData> manifestFiles = Collections.singletonList(manifestFile);
+    ArgumentCaptor<String> pluginRootCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> kustomizeDirPathCaptor = ArgumentCaptor.forClass(String.class);
     doReturn(manifestFiles)
         .when(spyKustomizeTaskHelper)
-        .build(eq(RANDOM), eq(RANDOM), captor.capture(), eq(executionLogCallback));
+        .build(eq(RANDOM), eq(RANDOM), pluginRootCaptor.capture(), kustomizeDirPathCaptor.capture(), eq(logCallback));
 
     List<FileData> actualManifestFiles =
-        spyKustomizeTaskHelper.buildForApply(RANDOM, kustomizeConfig, RANDOM, file, executionLogCallback);
+        spyKustomizeTaskHelper.buildForApply(RANDOM, RANDOM, RANDOM, file, logCallback);
 
     assertThat(actualManifestFiles).isEqualTo(manifestFiles);
-    KustomizeConfig configPassed = captor.getValue();
-    assertThat(configPassed.getKustomizeDirPath()).isEqualTo("file");
-    assertThat(configPassed.getPluginRootDir()).isEqualTo(RANDOM);
+    assertThat(kustomizeDirPathCaptor.getValue()).isEqualTo("file");
+    assertThat(pluginRootCaptor.getValue()).isEqualTo(RANDOM);
   }
 
   private void applyFilesSizeShouldBeOne() {

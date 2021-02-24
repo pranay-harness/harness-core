@@ -1,19 +1,17 @@
-package software.wings.helpers.ext.kustomize;
+package io.harness.delegate.k8s.kustomize;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.kustomize.KustomizeClient;
 import io.harness.logging.CommandExecutionStatus;
-
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliResponse;
+import io.harness.logging.LogCallback;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,22 +24,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class KustomizeTaskHelper {
   @Inject private KustomizeClient kustomizeClient;
 
   @Nonnull
   public List<FileData> build(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeBinaryPath,
-      @Nonnull KustomizeConfig kustomizeConfig, ExecutionLogCallback executionLogCallback) {
+      String pluginRootDir, String kustomizeDirPath, LogCallback executionLogCallback) {
     CliResponse cliResponse;
     try {
-      if (isBlank(kustomizeConfig.getPluginRootDir())) {
-        cliResponse = kustomizeClient.build(
-            manifestFilesDirectory, kustomizeConfig.getKustomizeDirPath(), kustomizeBinaryPath, executionLogCallback);
+      if (isBlank(pluginRootDir)) {
+        cliResponse =
+            kustomizeClient.build(manifestFilesDirectory, kustomizeDirPath, kustomizeBinaryPath, executionLogCallback);
 
       } else {
-        cliResponse = kustomizeClient.buildWithPlugins(manifestFilesDirectory, kustomizeConfig.getKustomizeDirPath(),
-            kustomizeBinaryPath, kustomizeConfig.getPluginRootDir(), executionLogCallback);
+        cliResponse = kustomizeClient.buildWithPlugins(
+            manifestFilesDirectory, kustomizeDirPath, kustomizeBinaryPath, pluginRootDir, executionLogCallback);
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -61,19 +58,15 @@ public class KustomizeTaskHelper {
   }
 
   @NotNull
-  public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, @Nonnull KustomizeConfig kustomizeConfig,
-      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply,
-      ExecutionLogCallback executionLogCallback) {
+  public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, String pluginRootDir,
+      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, LogCallback executionLogCallback) {
     if (isEmpty(filesToApply)) {
       throw new InvalidRequestException("Apply files can't be empty", USER);
     }
     if (filesToApply.size() > 1) {
       throw new InvalidRequestException("Apply with Kustomize is supported for single file only", USER);
     }
-    KustomizeConfig kustomizeConfigForApply = KustomizeConfig.builder()
-                                                  .kustomizeDirPath(filesToApply.get(0))
-                                                  .pluginRootDir(kustomizeConfig.getPluginRootDir())
-                                                  .build();
-    return build(manifestFilesDirectory, kustomizeBinaryPath, kustomizeConfigForApply, executionLogCallback);
+    String kustomizeDirPath = filesToApply.get(0);
+    return build(manifestFilesDirectory, kustomizeBinaryPath, pluginRootDir, kustomizeDirPath, executionLogCallback);
   }
 }

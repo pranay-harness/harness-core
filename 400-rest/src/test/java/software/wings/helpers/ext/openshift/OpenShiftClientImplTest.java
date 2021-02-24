@@ -10,13 +10,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cli.CliHelper;
+import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliHelper;
-import software.wings.helpers.ext.cli.CliResponse;
 
 import com.google.inject.Inject;
 import java.io.IOException;

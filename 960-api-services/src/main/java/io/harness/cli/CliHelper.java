@@ -1,13 +1,12 @@
-package software.wings.helpers.ext.cli;
+package io.harness.cli;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-
-import software.wings.beans.command.ExecutionLogCallback;
 
 import com.google.inject.Singleton;
 import java.io.File;
@@ -26,8 +25,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 public class CliHelper {
   @Nonnull
   public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
-      String directory, ExecutionLogCallback executionLogCallback)
-      throws IOException, InterruptedException, TimeoutException {
+      String directory, LogCallback executionLogCallback) throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog(command, LogLevel.INFO, RUNNING);
     ProcessExecutor processExecutor =
         new ProcessExecutor()

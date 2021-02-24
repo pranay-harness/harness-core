@@ -7,13 +7,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliResponse;
 
 import com.google.inject.Inject;
 import java.io.File;

@@ -62,6 +62,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
@@ -115,7 +116,6 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
-import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
 import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -1540,11 +1540,11 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     K8sDelegateTaskParams k8sDelegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
-    when(kustomizeTaskHelper.build(any(), any(), any(), any())).thenReturn(new ArrayList<>());
+    when(kustomizeTaskHelper.build(any(), any(), any(), any(), any())).thenReturn(new ArrayList<>());
     final List<FileData> manifestFiles = spyHelper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(KustomizeSourceRepo).build(), ".", new ArrayList<>(),
         "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
-    verify(kustomizeTaskHelper).build(any(), any(), any(), any());
+    verify(kustomizeTaskHelper).build(any(), any(), any(), any(), any());
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
 
