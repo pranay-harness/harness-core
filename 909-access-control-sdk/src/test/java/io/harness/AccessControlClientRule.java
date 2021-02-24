@@ -41,7 +41,6 @@ public class AccessControlClientRule implements MethodRule, InjectorRuleMixin, M
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(AccessControlClientModule.getInstance());
     return modules;
   }
 

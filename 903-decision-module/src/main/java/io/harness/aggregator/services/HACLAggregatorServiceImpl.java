@@ -1,6 +1,6 @@
 package io.harness.aggregator.services;
 
-import io.harness.accesscontrol.HPrincipal;
+import io.harness.accesscontrol.HUserPrincipal;
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.daos.ACLDAO;
 import io.harness.accesscontrol.acl.models.HACL;
@@ -54,7 +54,10 @@ public class HACLAggregatorServiceImpl implements ACLAggregatorService {
 
   @Override
   public boolean aggregate(Principal principal) {
-    HPrincipal hPrincipal = (HPrincipal) principal;
+    // first delete all ACLs for the user, and then repopulate
+    acldao.deleteByPrincipal(principal);
+
+    HUserPrincipal hPrincipal = (HUserPrincipal) principal;
     String principalIdentifier = hPrincipal.getPrincipalIdentifier();
     PrincipalType principalType = hPrincipal.getPrincipalType();
 

@@ -58,15 +58,20 @@ public class StaticResourceGroupValidatorServiceImpl implements ResourceGroupVal
 
   private boolean areResourcesLegalAtScope(
       String resourceType, List<String> resourceIds, Scope scope, ResourceGroup resourcegroup) {
-    boolean valid = resourceValidators.get(resourceType).getScopes().contains(scope);
-    if (resourceType.equals(ResourceGroupConstants.ACCOUNT)) {
-      valid = valid && resourceIds.stream().allMatch(resourcegroup.getAccountIdentifier()::equals);
-    }
-    if (resourceType.equals(ResourceGroupConstants.ORGANIZATION)) {
-      valid = valid && resourceIds.stream().allMatch(resourcegroup.getOrgIdentifier()::equals);
-    }
-    if (resourceType.equals(ResourceGroupConstants.PROJECT)) {
-      valid = valid && resourceIds.stream().allMatch(resourcegroup.getProjectIdentifier()::equals);
+    boolean valid;
+    switch (resourceType) {
+      case ResourceGroupConstants.ACCOUNT:
+        valid = resourceIds.stream().allMatch(resourcegroup.getAccountIdentifier()::equals);
+        break;
+      case ResourceGroupConstants.ORGANIZATION:
+        valid = resourceIds.stream().allMatch(resourcegroup.getOrgIdentifier()::equals);
+        break;
+      case ResourceGroupConstants.PROJECT:
+        valid = resourceIds.stream().allMatch(resourcegroup.getProjectIdentifier()::equals);
+        break;
+      default:
+        valid = resourceValidators.get(resourceType).getScopes().contains(scope);
+        break;
     }
     return valid;
   }

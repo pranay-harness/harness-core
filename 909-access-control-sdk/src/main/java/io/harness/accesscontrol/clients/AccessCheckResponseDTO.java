@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.acl.dtos;
+package io.harness.accesscontrol.clients;
 
 import io.harness.accesscontrol.Principal;
 

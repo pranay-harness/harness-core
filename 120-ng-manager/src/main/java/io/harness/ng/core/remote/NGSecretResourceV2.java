@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.SecretCrudService;
@@ -55,8 +56,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
+  public static final String RESOURCE_TYPE = "SECRET";
+  public static final String CREATE_SECRET_PERMISSION = "core.secret.create";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
+  private final AccessControlClient accessControlClient;
 
   @GET
   @Path("/validateUniqueIdentifier/{identifier}")
@@ -76,6 +80,9 @@ public class NGSecretResourceV2 {
   public ResponseDTO<SecretResponseWrapper> create(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @Valid @NotNull SecretRequestWrapper dto) {
+    accessControlClient.checkAccessOrThrow(accountIdentifier, dto.getSecret().getOrgIdentifier(),
+        dto.getSecret().getProjectIdentifier(), RESOURCE_TYPE, dto.getSecret().getIdentifier(),
+        CREATE_SECRET_PERMISSION);
     return ResponseDTO.newResponse(ngSecretService.create(accountIdentifier, dto.getSecret()));
   }
 

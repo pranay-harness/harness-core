@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.acl.dtos;
+package io.harness.accesscontrol.clients;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 

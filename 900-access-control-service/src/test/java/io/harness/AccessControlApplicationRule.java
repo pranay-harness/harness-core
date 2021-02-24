@@ -41,7 +41,6 @@ public class AccessControlApplicationRule implements MethodRule, InjectorRuleMix
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(AccessControlClientModule.getInstance());
     return modules;
   }
 

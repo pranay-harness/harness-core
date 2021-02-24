@@ -30,6 +30,7 @@ java_library(
         ":module",
         "//:lombok",
         "//960-persistence:supporter-test",
+        "//980-commons:module",
         "//990-commons-test:module",
         "@maven//:junit_junit",
     ],

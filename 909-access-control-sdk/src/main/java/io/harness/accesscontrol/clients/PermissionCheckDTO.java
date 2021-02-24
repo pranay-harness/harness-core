@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.acl.dtos;
+package io.harness.accesscontrol.clients;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -17,7 +17,6 @@ public class PermissionCheckDTO {
   @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-
   @NotEmpty String resourceType;
   @NotEmpty String resourceIdentifier;
   @NotEmpty String permission;

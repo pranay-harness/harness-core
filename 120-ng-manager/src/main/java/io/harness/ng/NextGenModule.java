@@ -8,6 +8,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 
+import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -299,6 +300,8 @@ public class NextGenModule extends AbstractModule {
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
+
+    install(new AccessControlClientModule(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
 
     registerEventsFrameworkMessageListeners();
   }

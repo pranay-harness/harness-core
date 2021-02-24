@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.acl.dtos;
+package io.harness.accesscontrol.clients;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -15,6 +15,7 @@ public class HAccessControlDTO implements AccessControlDTO {
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+  String resourceType;
   String resourceIdentifier;
-  boolean hasAccess;
+  boolean accessible;
 }

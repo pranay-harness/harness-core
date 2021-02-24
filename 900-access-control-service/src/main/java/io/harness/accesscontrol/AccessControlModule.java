@@ -4,6 +4,7 @@ import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
 
+import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
@@ -51,6 +52,8 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(accessControlConfiguration.getDecisionModuleConfiguration()));
+    install(AccessControlClientModule.getInstance(
+        accessControlConfiguration.getAccessControlClientConfiguration(), "Access Control Service"));
 
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
