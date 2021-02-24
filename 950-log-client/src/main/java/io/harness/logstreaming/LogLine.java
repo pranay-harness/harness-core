@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.logstreaming;
+package io.harness.logstreaming;
 
 import io.harness.logging.LogLevel;
 

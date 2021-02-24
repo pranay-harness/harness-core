@@ -11,7 +11,6 @@ public class LogStreamingModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(DelegateAgentLogStreamingClient.class)
-        .toProvider(new DelegateAgentLogStreamingClientFactory(logStreamingServiceBaseUrl));
+    bind(LogStreamingClient.class).toProvider(new LogStreamingClientFactory(logStreamingServiceBaseUrl));
   }
 }

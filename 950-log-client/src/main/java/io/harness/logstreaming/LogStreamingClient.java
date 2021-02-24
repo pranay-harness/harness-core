@@ -1,7 +1,5 @@
 package io.harness.logstreaming;
 
-import io.harness.delegate.beans.logstreaming.LogLine;
-
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -11,7 +9,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
-public interface DelegateAgentLogStreamingClient {
+public interface LogStreamingClient {
   @POST("stream")
   Call<Void> openLogStream(
       @Header("X-Harness-Token") String authToken, @Query("accountID") String accountId, @Query("key") String logKey);
