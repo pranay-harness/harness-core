@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -36,6 +37,7 @@ func HandleSelect(tidb tidb.TiDB, config config.Config, log *zap.SugaredLogger) 
 		}
 
 		var tests []types.Test
+		log.Infow(fmt.Sprintf("tests received are: %s", tests))
 		if tests, err = tidb.GetTestsToRun(ctx, files); err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
