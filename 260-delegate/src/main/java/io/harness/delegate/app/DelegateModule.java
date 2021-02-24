@@ -1269,6 +1269,7 @@ public class DelegateModule extends AbstractModule {
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8_FETCH_EVENTS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.HTTP_TASK_NG).toInstance(HttpTaskNG.class);
     mapBinder.addBinding(TaskType.NOTIFY_MAIL).toInstance(MailSenderDelegateTask.class);
     mapBinder.addBinding(TaskType.NOTIFY_SLACK).toInstance(SlackSenderDelegateTask.class);

@@ -141,6 +141,12 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
+  }
+
+  @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     Preconditions.checkState(
