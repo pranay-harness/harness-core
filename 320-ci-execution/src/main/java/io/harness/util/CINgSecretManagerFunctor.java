@@ -35,9 +35,11 @@ public class CINgSecretManagerFunctor implements ExpressionFunctor {
                                               .name(secretRefData.getIdentifier())
                                               .value(ParameterField.createValueField(secretRefData))
                                               .build();
+      SecretVariableDetails secretVariableDetail =
+          secretUtils.getSecretVariableDetailsWithScope(ngAccess, secretNGVariable);
+      secretVariableDetails.add(secretVariableDetail);
 
-      secretVariableDetails.add(secretUtils.getSecretVariableDetailsWithScope(ngAccess, secretNGVariable));
-      return "${ngSecretManager.obtain(\"" + secretIdentifier + "\", " + expressionFunctorToken + ")}";
+      return "${" + secretVariableDetail.getSecretVariableDTO().getName() + "}";
     } catch (Exception ex) {
       throw new FunctorException("Error occurred while evaluating the secret [" + secretIdentifier + "]", ex);
     }
