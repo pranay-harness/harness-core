@@ -59,6 +59,7 @@ import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
@@ -294,6 +295,13 @@ public class CVServiceModule extends AbstractModule {
       bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
       bind(MonitoringTaskPerpetualTaskService.class).to(MonitoringTaskPerpetualTaskServiceImpl.class);
+
+      MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
+          MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
 
       MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
           MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
