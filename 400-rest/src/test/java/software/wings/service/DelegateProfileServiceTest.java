@@ -531,4 +531,24 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     assertThat(delegateProfileService.isValidIdentifier(ACCOUNT_ID, TEST_IDENTIFIER)).isFalse();
   }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void getDelegatesForProfile() {
+    String accountId = generateUuid();
+    String uuid = generateUuid();
+    DelegateProfile delegateProfile = createDelegateProfileBuilder().accountId(accountId).uuid(uuid).build();
+    persistence.save(delegateProfile);
+
+    DelegateBuilder delegateBuilder = createDelegateBuilder();
+    Delegate delegate = delegateBuilder.delegateProfileId(delegateProfile.getUuid()).accountId(accountId).build();
+    persistence.save(delegate);
+
+    List<String> delegatesForProfile =
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
+    assertThat(delegatesForProfile).isNotNull();
+    assertThat(delegatesForProfile.size()).isEqualTo(1);
+  }
 }

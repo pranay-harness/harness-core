@@ -25,4 +25,6 @@ public class DelegateProfileDetailsNg {
   private EmbeddedUserDetails lastUpdatedBy;
 
   private String identifier;
+
+  private long numberOfDelegates;
 }

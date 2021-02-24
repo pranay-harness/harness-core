@@ -49,6 +49,7 @@ message DelegateProfileGrpc {
   EmbeddedUserDetails createdBy = 10;
   EmbeddedUserDetails lastUpdatedBy = 11;
   string identifier = 12;
+  int64 numberOfDelegates = 13;
 }
 
 message DelegateProfilePageResponseGrpc {
