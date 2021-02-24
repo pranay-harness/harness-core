@@ -86,6 +86,8 @@ public abstract class CVConfig
 
   @FdIndex private Long analysisOrchestrationIteration;
 
+  @FdIndex private Long createNextTaskIteration;
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
@@ -94,6 +96,10 @@ public abstract class CVConfig
     }
     if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
       this.analysisOrchestrationIteration = nextIteration;
+      return;
+    }
+    if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
+      this.createNextTaskIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -106,6 +112,9 @@ public abstract class CVConfig
     }
     if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
       return analysisOrchestrationIteration;
+    }
+    if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
+      return createNextTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
