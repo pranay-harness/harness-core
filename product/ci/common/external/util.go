@@ -1,13 +1,16 @@
 package external
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	"github.com/wings-software/portal/product/log-service/client"
+	"go.uber.org/zap"
 )
 
 const (
@@ -25,7 +28,22 @@ const (
 	dSourceBranch = "DRONE_SOURCE_BRANCH"
 	dRemoteUrl    = "DRONE_REMOTE_URL"
 	dCommitSha    = "DRONE_COMMIT_SHA"
+	wrkspcPath    = "HARNESS_WORKSPACE"
+	gitBinPath    = "HARNESS_GIT_BINARY_PATH"
+	diffFilesCmd  = "%s diff --name-only HEAD HEAD@{1} -1"
 )
+
+// GetChangedFiles executes a shell command and retuns list of files changed in PR
+func GetChangedFiles(ctx context.Context, gitPath, workspace string, log *zap.SugaredLogger) ([]string, error) {
+	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitPath)).WithDir(workspace)
+	out, err := cmd.Output()
+
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(out), "\n"), nil
+}
 
 func GetSecrets() []logs.Secret {
 	res := []logs.Secret{}
@@ -182,7 +200,7 @@ func GetStageId() (string, error) {
 func GetSourceBranch() (string, error) {
 	stage, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
-		return "", fmt.Errorf("source branch variable not set %s", stageIDEnv)
+		return "", fmt.Errorf("source branch variable not set %s", dSourceBranch)
 	}
 	return stage, nil
 }
@@ -201,4 +219,20 @@ func GetSha() (string, error) {
 		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
 	}
 	return stage, nil
+}
+
+func GetWrkspcPath() (string, error) {
+	path, ok := os.LookupEnv(wrkspcPath)
+	if !ok {
+		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
+	}
+	return path, nil
+}
+
+func GetGitBinPath() (string, error) {
+	path, ok := os.LookupEnv(gitBinPath)
+	if !ok {
+		return "", fmt.Errorf("git binary path variable not set %s", gitBinPath)
+	}
+	return path, nil
 }
