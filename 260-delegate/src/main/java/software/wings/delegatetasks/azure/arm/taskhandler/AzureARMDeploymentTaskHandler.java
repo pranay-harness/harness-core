@@ -60,13 +60,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
   private AzureARMDeploymentResponse deployAtResourceGroupScope(AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
-    DeploymentResourceGroupContext context =
-        toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
     AzureARMPreDeploymentDataBuilder preDeploymentDataBuilder =
         builder()
             .resourceGroup(deploymentParameters.getResourceGroupName())
             .subscriptionId(deploymentParameters.getSubscriptionId());
     try {
+      DeploymentResourceGroupContext context =
+          toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
       if (!deploymentParameters.isRollback()) {
         azureARMDeploymentService.validateTemplate(context);
         String existingResourceGroupTemplate = azureARMDeploymentService.exportExistingResourceGroupTemplate(context);

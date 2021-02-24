@@ -18,6 +18,7 @@ import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -1755,5 +1756,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(ARMOutputVariables.class, 8121);
     kryo.register(ARMPreExistingTemplate.class, 8122);
+    kryo.register(ARMStateExecutionData.class, 8123);
   }
 }

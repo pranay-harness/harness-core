@@ -118,6 +118,7 @@ import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
+import software.wings.api.arm.ARMOutputVariables;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -1648,6 +1649,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
     w.put("api.AwsAmiInfoVariables", AwsAmiInfoVariables.class);
     w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
+    w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

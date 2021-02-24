@@ -39,9 +39,14 @@ public class ARMDeploymentSteadyStateChecker {
     try {
       Callable<Object> objectCallable = () -> {
         while (true) {
-          sleep(ofSeconds(context.getStatusCheckIntervalInSeconds()));
-
           String provisioningState = azureManagementClient.getARMDeploymentStatus(context);
+          logCallback.saveExecutionLog(
+              String.format("%nDeployment Status for - [%s] is [%s]", context.getDeploymentName(), provisioningState));
+
+          PagedList<DeploymentOperationInner> deploymentOperations =
+              azureManagementClient.getDeploymentOperations(context);
+          deploymentOperations.forEach(operation -> logDeploymentOperationStatus(operation, logCallback));
+
           if (isDeploymentComplete(provisioningState)) {
             if (ARMDeploymentStatus.isSuccess(provisioningState)) {
               logCallback.saveExecutionLog(
@@ -54,13 +59,7 @@ public class ARMDeploymentSteadyStateChecker {
               throw new InvalidRequestException(message);
             }
           }
-
-          logCallback.saveExecutionLog(
-              String.format("Deployment Status for - [%s] is [%s]", context.getDeploymentName(), provisioningState));
-
-          PagedList<DeploymentOperationInner> deploymentOperations =
-              azureManagementClient.getDeploymentOperations(context);
-          deploymentOperations.forEach(operation -> logDeploymentOperationStatus(operation, logCallback));
+          sleep(ofSeconds(context.getStatusCheckIntervalInSeconds()));
         }
       };
 
