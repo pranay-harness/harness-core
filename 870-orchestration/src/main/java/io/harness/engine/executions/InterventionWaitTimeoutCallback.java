@@ -9,9 +9,9 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptPackage.InterruptPackageBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.commons.RepairActionCode;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutInstance;
@@ -50,14 +50,14 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
         InterruptPackage.builder().planExecutionId(planExecutionId).nodeExecutionId(nodeExecutionId);
     switch (repairActionCode) {
       case MARK_AS_SUCCESS:
-        return interruptPackageBuilder.interruptType(ExecutionInterruptType.MARK_SUCCESS).build();
+        return interruptPackageBuilder.interruptType(InterruptType.MARK_SUCCESS).build();
       case RETRY:
-        return interruptPackageBuilder.interruptType(ExecutionInterruptType.RETRY).build();
+        return interruptPackageBuilder.interruptType(InterruptType.RETRY).build();
       case IGNORE:
       case ON_FAIL:
-        return interruptPackageBuilder.interruptType(ExecutionInterruptType.NEXT_STEP).build();
+        return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP).build();
       case END_EXECUTION:
-        return interruptPackageBuilder.interruptType(ExecutionInterruptType.ABORT_ALL).build();
+        return interruptPackageBuilder.interruptType(InterruptType.ABORT_ALL).build();
       default:
         throw new InvalidRequestException("No Execution Type Available for RepairAction Code: " + repairActionCode);
     }
