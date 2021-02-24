@@ -4,7 +4,7 @@ xxxxxxxx
       port: 7090
       keyStorePath: keystore.jks
       keyStorePassword: password
-      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      trustStorePath: /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/jre/lib/security/cacerts
       certAlias: localhost
       validateCerts: false
       maxRequestHeaderSize: 100KiB
@@ -16,7 +16,7 @@ xxxxxxxx
       port: 7091
       keyStorePath: keystore.jks
       keyStorePassword: password
-      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      trustStorePath: /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/jre/lib/security/cacerts
       certAlias: localhost
       validateCerts: false
   requestLog:
@@ -139,7 +139,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
 baseUrls:
   ngManager: http://localhost:7457/
@@ -162,3 +162,8 @@ ResoureGroupConfig:
   manager:
     baseUrl: http://localhost:3457/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+

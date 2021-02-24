@@ -37,6 +37,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.logStreaming.ILogStreamingStepClient;
+import io.harness.logStreaming.LogStreamingStepClientFactory;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -46,6 +50,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -69,6 +74,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
@@ -83,6 +89,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @Inject private ServiceEntityService serviceEntityService;
   @Inject private ArtifactStep artifactStep;
   @Inject private ManifestStep manifestStep;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   @Override
   public Class<ServiceStepParameters> getStepParametersClass() {
@@ -92,8 +99,18 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, ServiceStepParameters stepParameters, StepInputPackage inputPackage) {
-    StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService());
+    try {
+      ILogStreamingStepClient logStreamingStepClient =
+          logStreamingStepClientFactory.getLogStreamingStepClient(ambiance);
+      logStreamingStepClient.openStream("Execute");
 
+      NGManagerLogCallback ngManagerLogCallback = new NGManagerLogCallback(logStreamingStepClient, "Execute");
+      ngManagerLogCallback.saveExecutionLog("I am in service step");
+    } catch (ExecutionException e) {
+      throw new InvalidRequestException("Is log service running");
+    }
+
+    StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService());
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         artifactStep.getArtifactsWithCorrespondingOverrides(stepParameters.getService());
     ServiceStepPassThroughData passThroughData =
@@ -146,6 +163,13 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
 
+    try {
+      ILogStreamingStepClient logStreamingStepClient =
+          logStreamingStepClientFactory.getLogStreamingStepClient(ambiance);
+      logStreamingStepClient.closeStream("Execute");
+    } catch (ExecutionException e) {
+      throw new InvalidRequestException("Is log service running");
+    }
     if (!isEmpty(responseDataMap)) {
       // Artifact task executed
       DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
@@ -170,12 +194,12 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     ServiceOutcome serviceOutcome = createServiceOutcome(
         ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken());
     return StepResponse.builder()
-        .stepOutcome(StepResponse.StepOutcome.builder()
+        .stepOutcome(StepOutcome.builder()
                          .name(OutcomeExpressionConstants.SERVICE)
                          .outcome(serviceOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
-        .stepOutcome(StepResponse.StepOutcome.builder()
+        .stepOutcome(StepOutcome.builder()
                          .name(YamlTypes.SERVICE_CONFIG)
                          .outcome(ServiceConfigOutcome.builder()
                                       .service(serviceOutcome)
@@ -192,6 +216,12 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .status(Status.SUCCEEDED)
+        .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                        .setEndTime(System.currentTimeMillis())
+                                                        .setStartTime(System.currentTimeMillis())
+                                                        .setStatus(UnitStatus.SUCCESS)
+                                                        .setUnitName("Execute")
+                                                        .build()))
         .build();
   }
 

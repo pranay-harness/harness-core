@@ -32,6 +32,8 @@ import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -141,6 +143,12 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
+  LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
+    return appConfig.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
   Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
       DelegateServiceGrpcClient delegateServiceGrpcClient) {
     return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, appConfig));
@@ -186,6 +194,8 @@ public class NextGenModule extends AbstractModule {
        }
      });*/
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
+    bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
+
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
