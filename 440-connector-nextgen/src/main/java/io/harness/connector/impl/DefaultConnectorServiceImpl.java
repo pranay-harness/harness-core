@@ -275,8 +275,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
               existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
       newConnector.setHeartbeatPerpetualTaskId(connectorHeartbeatTaskId.getId());
-    } else
+    } else {
       newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+    }
     Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector);
