@@ -57,6 +57,8 @@ modules = [
     "//210-command-library-server",
     "//220-graphql-test",
     "//230-model-test",
+    "//250-watcher",
+    "//260-delegate",
     "//310-ci-manager",
     "//320-ci-execution",
     "//330-ci-beans",

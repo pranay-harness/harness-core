@@ -78,6 +78,7 @@ import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
+import io.harness.version.VersionInfoManager;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
 import io.harness.watcher.logging.WatcherStackdriverLogAppender;
@@ -1394,7 +1395,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private String getVersion() {
-    return System.getProperty("version", "1.0.0-DEV");
+    return (new VersionInfoManager()).getVersionInfo().getVersion();
   }
 
   private void migrate(String newUrl) {

@@ -20,12 +20,13 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -62,6 +63,8 @@ import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+
+import software.wings.security.ThreadLocalUserProvider;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -217,7 +220,13 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
+
     modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));

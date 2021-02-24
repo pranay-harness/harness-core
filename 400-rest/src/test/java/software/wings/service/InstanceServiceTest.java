@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.RAMA;
 
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
@@ -22,6 +21,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.infrastructure.instance.InstanceType;
@@ -33,6 +33,7 @@ import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +54,7 @@ import org.mongodb.morphia.query.Query;
  */
 @Slf4j
 public class InstanceServiceTest extends WingsBaseTest {
-  @Mock private AccountService accountService;
+  @Inject private AccountService accountService;
   @Mock private AppService appService;
   @Mock private Account account;
 
@@ -73,7 +74,10 @@ public class InstanceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    when(accountService.get(anyString())).thenReturn(account);
+    account = getAccount(AccountType.PAID);
+    account.setAccountName("HARNESS_ACCOUNT_NAME");
+    account.setCompanyName("HARNESS");
+    accountService.save(account, false);
     when(appService.exist(anyString())).thenReturn(true);
   }
 
@@ -104,7 +108,7 @@ public class InstanceServiceTest extends WingsBaseTest {
                           .serviceName(serviceName)
                           .build())
         .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
-        .accountId(GLOBAL_ACCOUNT_ID)
+        .accountId(account.getUuid())
         .appId(GLOBAL_APP_ID)
         .infraMappingId(INFRA_MAPPING_ID)
         .containerInstanceKey(ContainerInstanceKey.builder().containerId(containerId).build())
@@ -132,7 +136,7 @@ public class InstanceServiceTest extends WingsBaseTest {
                                                .serviceName(serviceName)
                                                .build())
                              .instanceType(InstanceType.KUBERNETES_CONTAINER_INSTANCE)
-                             .accountId(GLOBAL_ACCOUNT_ID)
+                             .accountId(account.getUuid())
                              .appId(GLOBAL_APP_ID)
                              .infraMappingId(INFRA_MAPPING_ID)
                              .containerInstanceKey(ContainerInstanceKey.builder().containerId(containerId).build())
@@ -140,7 +144,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     Instance savedInstance2 = instanceService.save(instance2);
 
     PageResponse<Instance> pageResponse =
-        instanceService.list(aPageRequest().addFilter("accountId", Operator.EQ, GLOBAL_ACCOUNT_ID).build());
+        instanceService.list(aPageRequest().addFilter("accountId", Operator.EQ, account.getUuid()).build());
     assertThat(pageResponse).isNotNull();
     List<Instance> instanceList = pageResponse.getResponse();
     assertThat(instanceList).isNotNull();
@@ -271,12 +275,35 @@ public class InstanceServiceTest extends WingsBaseTest {
         buildInstance(instanceId, true, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10), false));
     instanceService.save(buildInstance(instanceId, true, 0L, false));
 
-    Query<Instance> query = persistence.createQuery(Instance.class).filter(InstanceKeys.accountId, GLOBAL_ACCOUNT_ID);
+    Query<Instance> query = persistence.createQuery(Instance.class).filter(InstanceKeys.accountId, account.getUuid());
     final List<Instance> instances1 = instanceService.listInstancesNotRemovedFully(query);
     final List<String> uuidsInResponse =
         instances1.stream().map(Instance::getUuid).sorted().collect(Collectors.toList());
     final List<String> uuidsExpected = instances.stream().map(Instance::getUuid).sorted().collect(Collectors.toList());
     assertThat(uuidsInResponse.size()).isEqualTo(600);
     assertThat(uuidsInResponse).isEqualTo(uuidsExpected);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testPurgeForInstances() {
+    List<Instance> instancesToBeDeleted = new ArrayList<>();
+    List<Instance> instancesNotToBeDeleted = new ArrayList<>();
+    int a = 0;
+    while (a < 1000) {
+      instancesToBeDeleted.add(
+          instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, (long) (12345 + a), false)));
+
+      instancesNotToBeDeleted.add(
+          instanceService.save(buildInstance(UUIDGenerator.generateUuid(), true, 9999999L, true)));
+      a += 2;
+    }
+    final boolean b = instanceService.purgeDeletedUpTo(Instant.ofEpochMilli(12346 + a));
+    assertThat(b).isTrue();
+    final Instance instance = instanceService.get(instancesToBeDeleted.get(0).getUuid(), true);
+    assertThat(instance).isNull();
+    final Instance instance_1 = instanceService.get(instancesNotToBeDeleted.get(0).getUuid(), true);
+    assertThat(instance_1).isNotNull();
   }
 }

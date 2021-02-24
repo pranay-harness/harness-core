@@ -5,6 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -178,4 +179,11 @@ public interface DelegateService extends OwnedByAccount {
   List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
 
   List<DelegateInitializationDetails> obtainDelegateInitializationDetails(String accountID, List<String> delegateIds);
+
+  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
+      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
+
+  void regenerateCapabilityPermissions(String accountId, String delegateId);
+
+  String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 }

@@ -9,6 +9,7 @@ import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
+import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
@@ -79,12 +80,14 @@ import io.harness.delegate.beans.connector.awsconnector.AwsDelegateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
+import io.harness.delegate.beans.connector.awsconnector.AwsValidationParams;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
+import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
@@ -109,13 +112,11 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
-import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
@@ -369,7 +370,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SmtpCapability.class, 19121);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
-    kryo.register(SSHHostValidationCapability.class, 19125);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
     kryo.register(SpotInstGetElastigroupJsonParameters.class, 19025);
@@ -391,7 +391,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbSetupResponse.class, 19040);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesParameters.class, 19043);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
-    kryo.register(WinrmHostValidationCapability.class, 19124);
     kryo.register(TaskData.class, 19002);
     kryo.register(YamlGitConfigDTO.class, 19087);
     kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
@@ -565,6 +564,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ConnectorValidationParams.class, 19537);
     kryo.register(NexusValidationParams.class, 19538);
     kryo.register(ArtifactoryValidationParams.class, 19539);
+    kryo.register(AwsValidationParams.class, 19544);
+    kryo.register(GcpValidationParams.class, 19545);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -614,7 +615,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SocketConnectivityParameters.class, 10011);
     kryo.register(SystemEnvParameters.class, 10012);
     kryo.register(HelmInstallationParameters.class, 10013);
-
+    kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
   }
 }

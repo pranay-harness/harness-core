@@ -16,6 +16,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//955-filters-sdk:module",
         "//960-yaml-sdk:module",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",

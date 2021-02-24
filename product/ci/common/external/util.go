@@ -3,6 +3,7 @@ package external
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
@@ -20,7 +21,30 @@ const (
 	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
 	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
 	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
+	secretList    = "HARNESS_SECRETS_LIST"
+	dSourceBranch = "DRONE_SOURCE_BRANCH"
+	dRemoteUrl    = "DRONE_REMOTE_URL"
+	dCommitSha    = "DRONE_COMMIT_SHA"
 )
+
+func GetSecrets() []logs.Secret {
+	res := []logs.Secret{}
+	secrets := os.Getenv(secretList)
+	if secrets == "" {
+		return res
+	}
+	secretList := strings.Split(secrets, ",")
+	for _, skey := range secretList {
+		sval := os.Getenv(skey)
+		if sval == "" {
+			fmt.Printf("could not find secret env variable for: %s\n", skey)
+			continue
+		}
+		// Mask all the secrets for now
+		res = append(res, logs.NewSecret(skey, sval, true))
+	}
+	return res
+}
 
 func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	key, err := GetLogKey(stepID)
@@ -31,11 +55,12 @@ func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer, err := logs.NewRemoteWriter(client, key)
+	rw, err := logs.NewRemoteWriter(client, key)
 	if err != nil {
 		return nil, err
 	}
-	rl, err := logs.NewRemoteLogger(writer)
+	rws := logs.NewReplacer(rw, GetSecrets()) // Remote writer with secrets masked
+	rl, err := logs.NewRemoteLogger(rws)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +175,30 @@ func GetStageId() (string, error) {
 	stage, ok := os.LookupEnv(stageIDEnv)
 	if !ok {
 		return "", fmt.Errorf("stage ID environment variable not set %s", stageIDEnv)
+	}
+	return stage, nil
+}
+
+func GetSourceBranch() (string, error) {
+	stage, ok := os.LookupEnv(dSourceBranch)
+	if !ok {
+		return "", fmt.Errorf("source branch variable not set %s", stageIDEnv)
+	}
+	return stage, nil
+}
+
+func GetRepo() (string, error) {
+	stage, ok := os.LookupEnv(dRemoteUrl)
+	if !ok {
+		return "", fmt.Errorf("remote url variable not set %s", dRemoteUrl)
+	}
+	return stage, nil
+}
+
+func GetSha() (string, error) {
+	stage, ok := os.LookupEnv(dCommitSha)
+	if !ok {
+		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
 	}
 	return stage, nil
 }

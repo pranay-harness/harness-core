@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.OrchestrationStepsModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -33,7 +34,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -79,7 +81,6 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.search.framework.ElasticsearchConfig;
-import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
 import com.codahale.metrics.MetricRegistry;
@@ -109,6 +110,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
@@ -268,6 +270,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         datastore.setQueryFactory(new QueryFactory());
         return datastore;
       }
+
+      @Provides
+      @Singleton
+      @Nullable
+      UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
     });
 
     CacheModule cacheModule = new CacheModule(CacheConfig.builder()
@@ -291,6 +300,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(OrchestrationStepsModule.getInstance());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());
@@ -380,9 +390,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getPrivateGraphQL();
-
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   @Override

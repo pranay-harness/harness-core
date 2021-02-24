@@ -20,6 +20,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
@@ -168,8 +169,11 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.of("activity", K8sDeployResponse.builder().commandExecutionStatus(SUCCESS).build());
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+        K8sDeployResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .build());
 
     StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
@@ -181,7 +185,11 @@ public class K8sScaleStepTest extends CategoryTest {
   public void testHandleTaskResultFailed() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
     Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder().errorMessage("Execution failed.").commandExecutionStatus(FAILURE).build());
+        K8sDeployResponse.builder()
+            .errorMessage("Execution failed.")
+            .commandExecutionStatus(FAILURE)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .build());
 
     StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);

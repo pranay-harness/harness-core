@@ -60,6 +60,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
       Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
     StepResponseBuilder responseBuilder = StepResponse.builder();
+    responseBuilder.unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       responseBuilder.status(Status.SUCCEEDED);

@@ -181,34 +181,34 @@ public class ConnectorServiceImpl implements ConnectorService {
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
       ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
       createConnectorUpdateActivity(accountIdentifier, savedConnector);
-      publishEventForConnectorUpdate(accountIdentifier, savedConnector);
+      publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
+          savedConnector.getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return connectorResponse;
     }
   }
 
-  private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
     try {
-      EntityChangeDTO.Builder connectorUpdateDTOBuilder =
-          EntityChangeDTO.newBuilder()
-              .setAccountIdentifier(StringValue.of(accountIdentifier))
-              .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
-      if (isNotBlank(savedConnector.getOrgIdentifier())) {
-        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()));
+      EntityChangeDTO.Builder connectorUpdateDTOBuilder = EntityChangeDTO.newBuilder()
+                                                              .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                              .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
       }
-      if (isNotBlank(savedConnector.getProjectIdentifier())) {
-        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
+      if (isNotBlank(projectIdentifier)) {
+        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
       }
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
                   EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.UPDATE_ACTION))
+                  EventsFrameworkMetadataConstants.ACTION, action))
               .setData(connectorUpdateDTOBuilder.build().toByteString())
               .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
-          String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,
-              savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier()));
+          String.format(CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
   }
 
@@ -239,6 +239,8 @@ public class ConnectorServiceImpl implements ConnectorService {
               getConnectorService(connector.getType())
                   .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
           if (isConnectorDeleted) {
+            publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier,
+                EventsFrameworkMetadataConstants.DELETE_ACTION);
             return true;
           } else {
             connectorHeartbeatService.createConnectorHeatbeatTask(

@@ -16,7 +16,5 @@ public class CapabilityCheckDetails {
   private String delegateId;
   private CapabilityType capabilityType;
   private CapabilityParameters capabilityParameters;
-  private long maxValidityPeriod;
-  private long revalidateAfterPeriod;
   private PermissionResult permissionResult;
 }

@@ -9,6 +9,7 @@ directories:
   210-command-library-server
   220-graphql-test
   230-model-test
+  250-watcher
   260-delegate
   280-batch-processing
   300-cv-nextgen
@@ -90,20 +91,22 @@ directories:
   970-rbac-core
   980-commons
   990-commons-test
+  run-configurations
   tools
   scripts
 
 import_run_configurations:
-  run-configurations/DelegateApp.xml
-  run-configurations/WingsApp.xml
-  run-configurations/Notification Microservice.xml
-  run-configurations/Notification Client.xml
-  run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
-  run-configurations/NextGen_Manager.xml
+  run-configurations/CENextGenApp.xml
+  run-configurations/CIManagerApplication.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml
-  run-configurations/CIManagerApplication.xml
+  run-configurations/DelegateApp.xml
+  run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
-  run-configurations/CENextGenApp.xml
+  run-configurations/NextGen_Manager.xml
+  run-configurations/Notification Client.xml
+  run-configurations/Notification Microservice.xml
+  run-configurations/Watcher.xml
+  run-configurations/WingsApp.xml

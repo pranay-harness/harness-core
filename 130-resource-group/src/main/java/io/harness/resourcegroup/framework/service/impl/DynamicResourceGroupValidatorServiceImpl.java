@@ -3,10 +3,10 @@ package io.harness.resourcegroup.framework.service.impl;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
+import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.Scope;
-import io.harness.resourcegroup.resourceclient.api.ResourceValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

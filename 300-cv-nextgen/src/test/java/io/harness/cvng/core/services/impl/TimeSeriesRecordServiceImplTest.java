@@ -24,6 +24,7 @@ import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
@@ -108,7 +109,6 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     FieldUtils.writeField(timeSeriesRecordService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
         .thenReturn(Lists.newArrayList(TimeSeriesMetricDefinition.builder()
@@ -460,6 +460,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder()
             .identifier(PERFORMANCE_PACK_IDENTIFIER)
@@ -525,6 +526,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder()
             .identifier(PERFORMANCE_PACK_IDENTIFIER)
@@ -576,6 +578,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");
     appDynamicsCVConfig.setApplicationName("applicationName");
+    appDynamicsCVConfig.setCategory(CVMonitoringCategory.INFRASTRUCTURE);
     appDynamicsCVConfig.setMetricPack(
         MetricPack.builder().identifier(PERFORMANCE_PACK_IDENTIFIER).metrics(new HashSet<>()).build());
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);

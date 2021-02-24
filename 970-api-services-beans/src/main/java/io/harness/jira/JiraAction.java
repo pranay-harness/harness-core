@@ -14,7 +14,12 @@ public enum JiraAction {
   CHECK_APPROVAL("Check Jira Approval");
 
   private String displayName;
+
   JiraAction(String s) {
     displayName = s;
+  }
+
+  public String getDisplayName() {
+    return displayName;
   }
 }

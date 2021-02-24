@@ -13,4 +13,8 @@ public enum ServiceNowAction {
   ServiceNowAction(String s) {
     displayName = s;
   }
+
+  public String getDisplayName() {
+    return displayName;
+  }
 }

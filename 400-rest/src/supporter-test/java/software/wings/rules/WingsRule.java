@@ -21,6 +21,7 @@ import io.harness.NoopStatement;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
@@ -40,7 +41,6 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -95,7 +95,6 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.integration.IntegrationTestBase;
-import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
@@ -245,7 +244,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     log.info("Creating guice injector took: {}ms", diff);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
-    registerProviders();
     registerObservers();
 
     for (Module module : modules) {
@@ -290,11 +288,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         .addAll(ManagerRegistrars.morphiaRegistrars)
         .add(ManagerTestMorphiaRegistrar.class)
         .build();
-  }
-
-  protected void registerProviders() {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   protected void registerObservers() {
@@ -405,6 +398,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

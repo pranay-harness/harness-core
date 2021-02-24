@@ -108,6 +108,12 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
           BillingDataPipelineRecordKeys.lastSuccessfulS3Sync, billingDataPipelineRecord.getLastSuccessfulS3Sync());
     }
 
+    Instant lastSuccessfulStorageSync = billingDataPipelineRecord.getLastSuccessfulStorageSync();
+    if (!isNull(lastSuccessfulStorageSync) && lastSuccessfulStorageSync.isAfter(Instant.EPOCH)) {
+      updateOperations.set(BillingDataPipelineRecordKeys.lastSuccessfulStorageSync,
+          billingDataPipelineRecord.getLastSuccessfulStorageSync());
+    }
+
     return hPersistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 

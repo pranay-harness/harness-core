@@ -178,7 +178,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private K8sTaskHelperBase mockK8sTaskHelperBase;
   @Mock private HelmHelper helmHelper;
 
-  private String resourcePath = "./k8s";
+  private String resourcePath = "k8s";
   private String deploymentYaml = "deployment.yaml";
   private String deploymentConfigYaml = "deployment-config.yaml";
   private String configMapYaml = "configMap.yaml";

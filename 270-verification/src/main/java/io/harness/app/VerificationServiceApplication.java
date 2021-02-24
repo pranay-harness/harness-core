@@ -41,8 +41,8 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
@@ -51,6 +51,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UserProvider;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
@@ -237,7 +238,12 @@ public class VerificationServiceApplication extends Application<VerificationServ
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -264,8 +270,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
 
     initMetrics();
-
-    registerStores(configuration, injector);
 
     registerResources(environment, injector);
 
@@ -315,11 +319,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
       env = env.replaceAll("-", "_").toLowerCase();
       harnessMetricRegistry.registerGaugeMetric(env + "_" + metricName, labels, getDataAnalysisMetricHelpDocument());
     }
-  }
-
-  private void registerStores(VerificationServiceConfiguration configuration, Injector injector) {
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerResources(Environment environment, Injector injector) {
