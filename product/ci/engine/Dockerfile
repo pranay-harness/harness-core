@@ -7,6 +7,7 @@
 FROM alpine:3.12
 RUN apk add --update \
     curl \
+    git \
     && rm -rf /var/cache/apk/*
 COPY linux_amd64_pure_stripped/engine /usr/local/bin/ci-lite-engine
 RUN chmod +x /usr/local/bin/ci-lite-engine
