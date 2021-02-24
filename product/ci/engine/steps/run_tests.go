@@ -9,7 +9,6 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/common/external"
-	"github.com/wings-software/portal/product/ci/engine/gitutil"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -27,7 +26,7 @@ var (
 	getSourceBranch = external.GetSourceBranch
 	getGitBinPath   = external.GetGitBinPath
 	getWrkspcPath   = external.GetWrkspcPath
-	getChFiles      = gitutil.GetChangedFiles
+	getChFiles      = external.GetChangedFiles
 )
 
 // RunTestsStep represents interface to execute a run step
@@ -88,12 +87,12 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	if err != nil {
 		return nil, int32(1), err
 	}
-	chFiles, err := getChFiles(gitPath, workspace)
+	chFiles, err := getChFiles(ctx, gitPath, workspace, e.log)
 	if err != nil {
 		e.log.Errorw("failed to read changed filed in runTests step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
-	e.log.Infow(fmt.Sprintf("changed files list is: %s", chFiles), "step_id", e.id, zap.Error(err))
+	e.log.Infow(fmt.Sprintf("changed files list is: %s", chFiles), "step_id", e.id)
 	org, err := getOrgId()
 	if err != nil {
 		return nil, int32(1), err
