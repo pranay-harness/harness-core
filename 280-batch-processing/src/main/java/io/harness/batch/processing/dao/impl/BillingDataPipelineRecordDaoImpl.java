@@ -113,7 +113,7 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
       updateOperations.set(BillingDataPipelineRecordKeys.lastSuccessfulStorageSync,
           billingDataPipelineRecord.getLastSuccessfulStorageSync());
     }
-
+    log.info("query.toString(): {} updateOperations.toString(): {}", query.toString(), updateOperations.toString());
     return hPersistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 
