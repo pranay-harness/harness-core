@@ -271,10 +271,12 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         }
       }
 
+      log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+          podParams.getName());
+      secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
       if (containerParams.getContainerType() == LITE_ENGINE) {
-        log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+        log.info("Creating delegate service token for container {} present on pod: {}", containerParams.getName(),
             podParams.getName());
-        secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
         secretData.putAll(getAndUpdateDelegateServiceToken(containerParams, k8SecretName));
       }
     }
