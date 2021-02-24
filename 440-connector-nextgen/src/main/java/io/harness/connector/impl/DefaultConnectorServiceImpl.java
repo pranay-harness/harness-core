@@ -18,13 +18,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.connector.ConnectorCatalogueResponseDTO;
-import io.harness.connector.ConnectorCategory;
-import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorFilterPropertiesDTO;
-import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.*;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
@@ -62,12 +56,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -270,7 +259,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    if (existingConnector.getHeartbeatPerpetualTaskId() == null) {
+    if (existingConnector.getHeartbeatPerpetualTaskId().equals(null)) {
       PerpetualTaskId connectorHeartbeatTaskId =
           connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
               existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
