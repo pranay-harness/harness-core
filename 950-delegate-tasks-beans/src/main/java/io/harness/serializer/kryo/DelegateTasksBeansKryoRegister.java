@@ -117,7 +117,6 @@ import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
@@ -392,7 +391,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbSetupResponse.class, 19040);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesParameters.class, 19043);
     kryo.register(SystemEnvCheckerCapability.class, 19022);
-    kryo.register(WinrmHostValidationCapability.class, 19124);
     kryo.register(TaskData.class, 19002);
     kryo.register(YamlGitConfigDTO.class, 19087);
     kryo.register(YamlGitConfigDTO.RootFolder.class, 19095);
