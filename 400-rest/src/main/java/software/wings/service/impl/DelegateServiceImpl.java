@@ -97,6 +97,8 @@ import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -3770,6 +3772,19 @@ public class DelegateServiceImpl implements DelegateService {
                                    .filter(DelegateTaskKeys.accountId, accountId)
                                    .filter(DelegateTaskKeys.uuid, taskId)
                                    .get());
+  }
+
+  @Override
+  public DelegateGroup upsertDelegateGroup(String name, String accountId) {
+    Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
+                                     .filter(DelegateGroupKeys.name, name)
+                                     .filter(DelegateGroupKeys.accountId, accountId);
+    UpdateOperations<DelegateGroup> updateOperations = this.persistence.createUpdateOperations(DelegateGroup.class)
+                                                           .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
+                                                           .set(DelegateGroupKeys.name, name)
+                                                           .set(DelegateGroupKeys.accountId, accountId);
+
+    return persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
   }
 
   public void registerHeartbeat(
