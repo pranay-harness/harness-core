@@ -75,7 +75,6 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 // GetTests returns list of tests which should be run intelligently
 func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.Test, error) {
 	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
-	fmt.Println("debug2: ", c.Endpoint+path)
 	var tests []types.Test
 	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
 	return tests, err
