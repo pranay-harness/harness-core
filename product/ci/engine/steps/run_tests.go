@@ -150,16 +150,21 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	}
 
 	var testExecList string
-	for _, test := range tests {
+	e.log.Infow(fmt.Sprintf("tests received from ti server are: %s", tests))
+	for index, test := range tests {
 		// In case we don't get malformed information, we should run all tests.
 		if test.Class == "" {
 			runSelectedTests = false
 			break
 		}
-		testExecList = testExecList + fmt.Sprintf(" %s", test.Class)
+		testExecList += test.Class
+		if index < (len(tests) - 1) {
+			testExecList += ","
+		}
 	}
 
 	e.execCommand, err = e.getRunTestsCommand(testExecList, runSelectedTests)
+	e.log.Infow(fmt.Sprintf("final execCommand is: %s", e.execCommand))
 	if err != nil {
 		return nil, int32(1), err
 	}

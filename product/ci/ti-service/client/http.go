@@ -22,7 +22,7 @@ var _ Client = (*HTTPClient)(nil)
 
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
-	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
+	testEndpoint = "tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -75,6 +75,7 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 // GetTests returns list of tests which should be run intelligently
 func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.Test, error) {
 	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
+	fmt.Println("debug2: ", c.Endpoint+path)
 	var tests []types.Test
 	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
 	return tests, err
@@ -155,6 +156,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 		return res, err
 	}
 
+	fmt.Println("debug1", res.StatusCode)
 	// if the response body return no content we exit
 	// immediately. We do not read or unmarshal the response
 	// and we do not return an error.

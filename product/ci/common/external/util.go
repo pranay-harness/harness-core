@@ -200,7 +200,7 @@ func GetStageId() (string, error) {
 func GetSourceBranch() (string, error) {
 	stage, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
-		return "", fmt.Errorf("source branch variable not set %s", stageIDEnv)
+		return "", fmt.Errorf("source branch variable not set %s", dSourceBranch)
 	}
 	return stage, nil
 }
