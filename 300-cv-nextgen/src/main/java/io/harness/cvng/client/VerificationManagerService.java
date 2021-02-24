@@ -20,4 +20,6 @@ public interface VerificationManagerService {
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String filter);
   List<String> getKubernetesWorkloads(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String namespace, String filter);
+  List<String> checkCapabilityToGetKubernetesEvents(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 }

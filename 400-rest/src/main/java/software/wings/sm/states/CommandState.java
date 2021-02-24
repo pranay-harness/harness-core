@@ -555,7 +555,6 @@ public class CommandState extends State {
     } catch (WingsException ex) {
       return handleException(context, executionDataBuilder, activityId, appId, ex);
     }
-
     return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
   }
 
@@ -689,6 +688,7 @@ public class CommandState extends State {
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+            .description("Command state Execution")
             .waitId(activityId)
             .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
             .workflowExecutionId(context.getWorkflowExecutionId())
@@ -703,8 +703,10 @@ public class CommandState extends State {
 
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
     delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return delegateTaskId;
   }
 
@@ -1418,6 +1420,11 @@ public class CommandState extends State {
   @SchemaIgnore
   public void setExecutorService(ExecutorService executorService) {
     this.executorService = executorService;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   /**

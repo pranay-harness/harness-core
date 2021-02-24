@@ -24,6 +24,7 @@ const (
 	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
 	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
 	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
+	secretList    = "HARNESS_SECRETS_LIST"
 	dSourceBranch = "DRONE_SOURCE_BRANCH"
 	dRemoteUrl    = "DRONE_REMOTE_URL"
 	dCommitSha    = "DRONE_COMMIT_SHA"
@@ -44,6 +45,25 @@ func GetChangedFiles(ctx context.Context, gitPath, workspace string, log *zap.Su
 	return strings.Split(string(out), "\n"), nil
 }
 
+func GetSecrets() []logs.Secret {
+	res := []logs.Secret{}
+	secrets := os.Getenv(secretList)
+	if secrets == "" {
+		return res
+	}
+	secretList := strings.Split(secrets, ",")
+	for _, skey := range secretList {
+		sval := os.Getenv(skey)
+		if sval == "" {
+			fmt.Printf("could not find secret env variable for: %s\n", skey)
+			continue
+		}
+		// Mask all the secrets for now
+		res = append(res, logs.NewSecret(skey, sval, true))
+	}
+	return res
+}
+
 func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	key, err := GetLogKey(stepID)
 	if err != nil {
@@ -53,11 +73,12 @@ func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer, err := logs.NewRemoteWriter(client, key)
+	rw, err := logs.NewRemoteWriter(client, key)
 	if err != nil {
 		return nil, err
 	}
-	rl, err := logs.NewRemoteLogger(writer)
+	rws := logs.NewReplacer(rw, GetSecrets()) // Remote writer with secrets masked
+	rl, err := logs.NewRemoteLogger(rws)
 	if err != nil {
 		return nil, err
 	}

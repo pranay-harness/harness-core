@@ -492,19 +492,20 @@
         {
           "type": "object",
           "required": [
+            "args",
             "buildTool",
-            "goals",
             "image",
-            "language"
+            "language",
+            "packages"
           ],
           "properties": {
+            "args": {
+              "type": "string"
+            },
             "buildTool": {
               "type": "string"
             },
             "connector": {
-              "type": "string"
-            },
-            "goals": {
               "type": "string"
             },
             "image": {
@@ -513,8 +514,20 @@
             "language": {
               "type": "string"
             },
+            "packages": {
+              "type": "string"
+            },
+            "reports": {
+              "$ref": "#/definitions/UnitTestReport"
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
+            },
+            "runOnlySelectedTests": {
+              "type": "boolean"
+            },
+            "testAnnotations": {
+              "type": "string"
             }
           }
         }

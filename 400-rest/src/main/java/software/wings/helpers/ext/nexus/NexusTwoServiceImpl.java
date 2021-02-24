@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -106,6 +107,9 @@ public class NexusTwoServiceImpl {
     }
 
     final Response<RepositoryListResourceResponse> response = request.execute();
+    if (response.code() == 404) {
+      throw new InvalidArtifactServerException("Invalid Artifact server", USER);
+    }
     if (isSuccessful(response)) {
       log.info("Retrieving repositories success");
       if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
@@ -334,8 +338,7 @@ public class NexusTwoServiceImpl {
                 }
               }
             }
-            throw new ArtifactServerException(
-                "No versions found with specified extension/ classifier", null, WingsException.USER);
+            throw new ArtifactServerException("No versions found with specified extension/ classifier", null, USER);
           }
         }
       }
@@ -388,7 +391,7 @@ public class NexusTwoServiceImpl {
       case "npm":
         return getVersionsForNPM(nexusConfig, encryptionDetails, repositoryId, packageName);
       default:
-        throw new WingsException("Unsupported format for Nexus 3.x", WingsException.USER);
+        throw new WingsException("Unsupported format for Nexus 3.x", USER);
     }
   }
 

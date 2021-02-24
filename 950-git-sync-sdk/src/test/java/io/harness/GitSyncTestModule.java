@@ -2,11 +2,13 @@ package io.harness;
 
 import io.harness.gitsync.persistance.SpringPersistenceModule;
 import io.harness.govern.ProviderModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -31,7 +33,12 @@ public class GitSyncTestModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     bind(HPersistence.class).to(MongoPersistence.class);
     install(new SpringPersistenceModule());
 

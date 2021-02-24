@@ -109,6 +109,7 @@ public class CIExecutionConstants {
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
+  public static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));

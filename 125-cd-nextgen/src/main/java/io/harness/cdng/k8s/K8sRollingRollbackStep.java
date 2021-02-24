@@ -18,6 +18,7 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.ResponseData;
 
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
@@ -66,11 +67,12 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     K8sDeployResponse executionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();

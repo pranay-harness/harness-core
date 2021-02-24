@@ -20,4 +20,6 @@ public interface CVDataCollectionTaskService {
       DataCollectionConnectorBundle bundle) throws ApiException;
   List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
       String filter, DataCollectionConnectorBundle bundle) throws ApiException;
+  List<String> checkCapabilityToGetEvents(String accountId, String orgIdentifier, String projectIdentifier,
+      DataCollectionConnectorBundle bundle) throws ApiException;
 }

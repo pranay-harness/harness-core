@@ -3,7 +3,6 @@ package io.harness.rule;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
-import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -96,8 +95,6 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
         }
       }
     });
-
-    injector.getInstance(HPersistence.class).registerUserProvider(testUserProvider);
   }
 
   @Override

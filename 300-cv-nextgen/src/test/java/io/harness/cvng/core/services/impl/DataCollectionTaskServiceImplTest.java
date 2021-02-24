@@ -340,7 +340,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    cvConfigService.update(getCVConfig());
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(updated.getStatus()).isEqualTo(DataCollectionExecutionStatus.SUCCESS);
@@ -356,7 +355,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    cvConfigService.update(getCVConfig());
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTaskResult failure = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
                                            .status(DataCollectionExecutionStatus.FAILED)
@@ -377,8 +375,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    AppDynamicsCVConfig cvConfig = getCVConfig();
-    cvConfigService.update(cvConfig);
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
                                       .filter(DataCollectionTaskKeys.accountId, accountId)
@@ -406,8 +403,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
                                           .status(DataCollectionExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
-    AppDynamicsCVConfig cvConfig = getCVConfig();
-    cvConfigService.update(cvConfig);
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+
     Clock clock = Clock.fixed(this.clock.instant().plus(Duration.ofHours(3)), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
     dataCollectionTaskService.updateTaskStatus(result);

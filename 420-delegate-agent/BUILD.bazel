@@ -53,7 +53,7 @@ java_package(
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = ["src/main/java/io/harness/Dummy.java"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         ":1-io_harness_managerclient",

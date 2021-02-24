@@ -1,10 +1,12 @@
 package io.harness.connector;
 
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
+import io.harness.connector.heartbeat.AwsValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.GcpValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
@@ -106,10 +108,10 @@ public class ConnectorRegistryFactory {
             DockerConnectorValidationParamsProvider.class, DockerDTOToEntity.class, DockerEntityToDTO.class));
     registrar.put(ConnectorType.GCP,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, GcpConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
+            GcpValidationParamsProvider.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
     registrar.put(ConnectorType.AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, AwsConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
+            AwsValidationParamsProvider.class, AwsDTOToEntity.class, AwsEntityToDTO.class));
     registrar.put(ConnectorType.CE_AWS,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAwsConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));

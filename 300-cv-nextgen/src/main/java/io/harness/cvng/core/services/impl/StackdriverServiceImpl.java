@@ -138,6 +138,12 @@ public class StackdriverServiceImpl implements StackdriverService {
   }
 
   @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    listDashboards(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 1, 0, null, tracingId);
+  }
+
+  @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     return StackdriverImportStatus.builder().build();

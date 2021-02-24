@@ -71,7 +71,9 @@ public class DelegateExecutor {
           return;
         }
 
-        final Path jar = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
+        final Path jar = Paths.get("/home/jenkins"
+            + "/.bazel-dirs/bin/260-delegate/module_deploy.jar");
+
         final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");
 
         List<String> command = new ArrayList<>();

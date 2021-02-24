@@ -31,11 +31,14 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
 import com.google.inject.Inject;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity> {
+  public static final Duration TARGET_INTERVAL = ofMinutes(1);
+  public static final Duration PUMP_INTERVAL = ofSeconds(10);
   @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private JiraHelperService jiraHelperService;
@@ -47,12 +50,12 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("ApprovalPolling").poolSize(5).interval(ofSeconds(10)).build(),
+        PumpExecutorOptions.builder().name("ApprovalPolling").poolSize(5).interval(PUMP_INTERVAL).build(),
         ApprovalPollingHandler.class,
         MongoPersistenceIterator.<ApprovalPollingJobEntity, MorphiaFilterExpander<ApprovalPollingJobEntity>>builder()
             .clazz(ApprovalPollingJobEntity.class)
             .fieldName(ApprovalPollingJobEntityKeys.nextIteration)
-            .targetInterval(ofMinutes(1))
+            .targetInterval(TARGET_INTERVAL)
             .acceptableNoAlertDelay(ofMinutes(1))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))

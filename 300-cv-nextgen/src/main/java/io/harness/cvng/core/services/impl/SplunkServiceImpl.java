@@ -57,4 +57,10 @@ public class SplunkServiceImpl implements SplunkService {
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     throw new UnsupportedOperationException("Not Implemented yet");
   }
+
+  @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    getSavedSearches(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId);
+  }
 }

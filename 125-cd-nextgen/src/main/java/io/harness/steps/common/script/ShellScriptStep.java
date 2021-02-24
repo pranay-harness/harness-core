@@ -23,6 +23,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.UnitProgress;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
@@ -196,6 +197,10 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     ResponseData responseData = response.values().iterator().next();
     if (responseData instanceof ShellScriptTaskResponseNG) {
       ShellScriptTaskResponseNG taskResponse = (ShellScriptTaskResponseNG) responseData;
+      List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
+          ? emptyList()
+          : taskResponse.getUnitProgressData().getUnitProgresses();
+      stepResponseBuilder.unitProgressList(unitProgresses);
 
       switch (taskResponse.getExecuteCommandResponse().getStatus()) {
         case SUCCESS:
