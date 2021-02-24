@@ -68,6 +68,7 @@ public class ARMDeploymentSteadyStateCheckerTest extends CategoryTest {
                                                   .build();
 
     doReturn("Succeeded").when(azureManagementClient).getARMDeploymentStatus(eq(context));
+    doReturn(getPageList()).when(azureManagementClient).getDeploymentOperations(eq(context));
     armSteadyStateChecker.waitUntilCompleteWithTimeout(context, azureManagementClient, mockLogCallback);
     verify(azureManagementClient).getARMDeploymentStatus(eq(context));
 

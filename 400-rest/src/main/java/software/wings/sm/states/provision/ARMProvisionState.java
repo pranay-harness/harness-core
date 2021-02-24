@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -48,7 +49,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import com.google.inject.Inject;
@@ -82,7 +82,6 @@ public class ARMProvisionState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
-  @Inject protected AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   public ARMProvisionState(String name) {
     super(name, StateType.ARM_CREATE_RESOURCE.name());
@@ -226,6 +225,7 @@ public class ARMProvisionState extends State {
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
         .stateExecutionData(builder.build())
+        .executionStatus(ExecutionStatus.SUCCESS)
         .build();
   }
 
@@ -294,22 +294,32 @@ public class ARMProvisionState extends State {
           .executionStatus(executionStatus)
           .build();
     }
-    saveARMOutputs(context, executionResponse);
+    if (!isRollback()) {
+      saveARMOutputs(context, executionResponse);
+    }
     return ExecutionResponse.builder().stateExecutionData(stateExecutionData).executionStatus(executionStatus).build();
   }
 
   private void savePreDeploymentData(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    if (preDeploymentDataDoesNotExist(executionResponse)) {
+      return;
+    }
     AzureARMDeploymentResponse azureTaskResponse =
         (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
     AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
     ARMPreExistingTemplate armPreExistingTemplate =
         ARMPreExistingTemplate.builder().preDeploymentData(preDeploymentData).build();
 
-    String prefix = String.format(
+    String key = String.format(
         "%s-%s-%s", provisionerId, preDeploymentData.getSubscriptionId(), preDeploymentData.getResourceGroup());
-    if (!azureSweepingOutputServiceHelper.dataExist(context, prefix)) {
-      azureSweepingOutputServiceHelper.saveToSweepingOutPut(armPreExistingTemplate, prefix, context);
-    }
+    helper.savePreExistingTemplate(armPreExistingTemplate, key, context);
+  }
+
+  private boolean preDeploymentDataDoesNotExist(AzureTaskExecutionResponse executionResponse) {
+    AzureARMDeploymentResponse azureTaskResponse =
+        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+    AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
+    return preDeploymentData == null || isEmpty(preDeploymentData.getResourceGroupTemplateJson());
   }
 
   private void saveARMOutputs(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {

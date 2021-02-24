@@ -207,4 +207,15 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
   }
+
+  @Override
+  public List<String> checkCapabilityToGetEvents(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
+        .checkCapabilityToGetEvents(bundle, encryptedDataDetails);
+  }
 }

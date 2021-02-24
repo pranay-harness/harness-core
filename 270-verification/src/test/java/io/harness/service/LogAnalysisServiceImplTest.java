@@ -14,7 +14,7 @@ import static software.wings.service.intfc.analysis.ClusterLevel.L2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.LogAnalysisService;
@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class LogAnalysisServiceImplTest extends VerificationBaseTest {
+public class LogAnalysisServiceImplTest extends VerificationBase {
   @Inject private LogAnalysisService logAnalysisService;
   @Inject private WingsPersistence wingsPersistence;
 

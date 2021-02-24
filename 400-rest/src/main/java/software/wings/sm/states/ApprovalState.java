@@ -474,6 +474,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .activityId(activityId)
             .scriptString(parameters.getScriptString())
             .approvalType(approvalStateType)
+            .retryInterval(parameters.getRetryInterval())
             .build();
 
     try {

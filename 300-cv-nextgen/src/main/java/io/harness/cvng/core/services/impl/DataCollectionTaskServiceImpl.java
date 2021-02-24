@@ -26,11 +26,13 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataColl
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -149,6 +151,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       log.info("Task is not in running state. Skipping the update {}", result);
       return;
     }
+
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
@@ -173,6 +176,29 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       }
     } else {
       retry(dataCollectionTask);
+    }
+  }
+
+  @Override
+  public void handleRecoverNextTask(CVConfig cvConfig) {
+    String serviceGuardVerificationTaskId =
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
+
+    DataCollectionTask dataCollectionTask =
+        hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .order(Sort.descending(DataCollectionTaskKeys.startTime))
+            .get();
+
+    Preconditions.checkNotNull(dataCollectionTask, "dataCollectionTask can not be null");
+    if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
+            .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
+        && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
+      createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+      log.warn(
+          "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
+          dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
+          cvConfig.getOrgIdentifier());
     }
   }
 

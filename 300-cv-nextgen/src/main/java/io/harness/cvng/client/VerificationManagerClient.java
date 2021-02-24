@@ -92,4 +92,9 @@ public interface VerificationManagerClient {
   Call<RestResponse<List<String>>> getKubernetesWorkloads(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("namespace") String namespace, @Query("filter") String filter, @Body DataCollectionConnectorBundle bundle);
+
+  @POST(KUBERNETES_RESOURCE + "/events")
+  Call<RestResponse<List<String>>> checkCapabilityToGetEvents(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionConnectorBundle bundle);
 }

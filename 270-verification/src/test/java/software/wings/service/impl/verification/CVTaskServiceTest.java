@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
@@ -62,7 +62,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class CVTaskServiceTest extends VerificationBaseTest {
+public class CVTaskServiceTest extends VerificationBase {
   @Inject CVTaskService cvTaskService;
   @Inject WingsPersistence wingsPersistence;
   private String stateExecutionId;

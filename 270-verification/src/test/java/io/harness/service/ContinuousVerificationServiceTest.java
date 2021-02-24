@@ -46,7 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.alert.AlertData;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -179,7 +179,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class ContinuousVerificationServiceTest extends VerificationBaseTest {
+public class ContinuousVerificationServiceTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String envId;
@@ -1451,7 +1451,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setStateType(StateType.NEW_RELIC);
     String configId = wingsPersistence.save(cvConfiguration);
 
-    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
+    File file = new File("270-verification/src/test/resources/metric_records.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();

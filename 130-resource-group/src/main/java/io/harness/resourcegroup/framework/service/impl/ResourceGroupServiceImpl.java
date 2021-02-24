@@ -285,7 +285,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getOrgIdentifier());
     }
     if (isNotBlank(resourcePrimaryKey.getProjectIdentifer())) {
-      criteria.and(ResourceGroupKeys.orgIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
+      criteria.and(ResourceGroupKeys.projectIdentifier).is(resourcePrimaryKey.getProjectIdentifer());
     }
 
     if (resourceType.equals(ResourceGroupConstants.ACCOUNT) || resourceType.equals(ResourceGroupConstants.ORGANIZATION)

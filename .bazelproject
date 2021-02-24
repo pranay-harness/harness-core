@@ -11,6 +11,7 @@ directories:
   230-model-test
   250-watcher
   260-delegate
+  270-verification
   280-batch-processing
   300-cv-nextgen
   310-ci-manager
@@ -110,3 +111,4 @@ import_run_configurations:
   run-configurations/Notification Microservice.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
+  run-configurations/VerificationServiceApp.xml
