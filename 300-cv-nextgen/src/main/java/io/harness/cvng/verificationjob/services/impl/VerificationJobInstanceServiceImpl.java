@@ -356,12 +356,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     progressLog.validate();
     String verificationJobInstanceId =
         verificationTaskService.getVerificationJobInstanceId(progressLog.getVerificationTaskId());
-    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
-
     UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
         hPersistence.createUpdateOperations(VerificationJobInstance.class)
             .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
-    if (progressLog.shouldUpdateJobStatus(verificationJobInstance)) {
+    if (progressLog.shouldUpdateJobStatus()) {
       verificationJobInstanceUpdateOperations.set(
           VerificationJobInstanceKeys.executionStatus, progressLog.getVerificationJobExecutionStatus());
     }
