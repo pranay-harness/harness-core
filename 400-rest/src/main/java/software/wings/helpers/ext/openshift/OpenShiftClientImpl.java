@@ -9,12 +9,12 @@ import static software.wings.helpers.ext.openshift.OpenShiftConstants.TEMPLATE_F
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cli.CliHelper;
+import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliHelper;
-import software.wings.helpers.ext.cli.CliResponse;
 
 import com.google.inject.Inject;
 import java.io.IOException;

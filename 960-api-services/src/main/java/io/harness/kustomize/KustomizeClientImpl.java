@@ -1,18 +1,15 @@
-package software.wings.helpers.ext.kustomize;
+package io.harness.kustomize;
 
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_BINARY_PATH;
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND;
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND_WITH_PLUGINS;
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_COMMAND_TIMEOUT;
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.KUSTOMIZE_DIR_PATH;
-import static software.wings.helpers.ext.kustomize.KustomizeConstants.XDG_CONFIG_HOME;
+import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BINARY_PATH;
+import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND;
+import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND_WITH_PLUGINS;
+import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_COMMAND_TIMEOUT;
+import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_DIR_PATH;
+import static io.harness.kustomize.KustomizeConstants.XDG_CONFIG_HOME;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliHelper;
-import software.wings.helpers.ext.cli.CliResponse;
+import io.harness.cli.CliHelper;
+import io.harness.cli.CliResponse;
+import io.harness.logging.LogCallback;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,13 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._960_API_SERVICES)
 public class KustomizeClientImpl implements KustomizeClient {
   @Inject CliHelper cliHelper;
 
   @Override
   public CliResponse build(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeDirPath,
-      @Nonnull String kustomizeBinaryPath, @Nonnull ExecutionLogCallback executionLogCallback)
+      @Nonnull String kustomizeBinaryPath, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
     String kustomizeBuildCommand = KUSTOMIZE_BUILD_COMMAND.replace(KUSTOMIZE_BINARY_PATH, kustomizeBinaryPath)
                                        .replace(KUSTOMIZE_DIR_PATH, kustomizeDirPath);
@@ -40,8 +36,8 @@ public class KustomizeClientImpl implements KustomizeClient {
 
   @Override
   public CliResponse buildWithPlugins(@Nonnull String manifestFilesDirectory, @Nonnull String kustomizeDirPath,
-      @Nonnull String kustomizeBinaryPath, @Nonnull String pluginPath,
-      @Nonnull ExecutionLogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
+      @Nonnull String kustomizeBinaryPath, @Nonnull String pluginPath, @Nonnull LogCallback executionLogCallback)
+      throws InterruptedException, TimeoutException, IOException {
     String kustomizeBuildCommand =
         KUSTOMIZE_BUILD_COMMAND_WITH_PLUGINS.replace(KUSTOMIZE_BINARY_PATH, kustomizeBinaryPath)
             .replace(KUSTOMIZE_DIR_PATH, kustomizeDirPath)

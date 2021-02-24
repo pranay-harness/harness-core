@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.kustomize;
+package io.harness.kustomize;
 
 import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
@@ -12,5 +12,4 @@ public final class KustomizeConstants {
   static final String KUSTOMIZE_BUILD_COMMAND_WITH_PLUGINS = "XDG_CONFIG_HOME=" + XDG_CONFIG_HOME + " "
       + KUSTOMIZE_BINARY_PATH + " build --enable_alpha_plugins " + KUSTOMIZE_DIR_PATH;
   static final long KUSTOMIZE_COMMAND_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
-  public static final String KUSTOMIZE_PLUGIN_DIR_SUFFIX = "kustomize/plugin";
 }

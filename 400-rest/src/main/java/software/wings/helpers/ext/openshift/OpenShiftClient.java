@@ -2,9 +2,9 @@ package software.wings.helpers.ext.openshift;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cli.CliResponse;
 
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.cli.CliResponse;
 
 import java.util.List;
 import javax.annotation.Nonnull;
