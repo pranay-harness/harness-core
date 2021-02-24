@@ -107,8 +107,12 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
               || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId(), CloudProvider.AZURE.name())) {
             // Set SUCCEEDED in first 24 hours
             billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.SUCCEEDED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
           } else {
             billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.FAILED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
           }
           billingDataPipelineRecordBuilder.lastSuccessfulStorageSync(fetchLastSuccessfulS3RunInstant(
               billingDataPipelineRecord.getAccountId(), BatchJobType.SYNC_BILLING_REPORT_AZURE));

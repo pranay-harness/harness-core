@@ -138,7 +138,7 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
     for blob in blobs:
         if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):
             blob.delete()
-            print("Blob {} deleted.".format(blob.name))
+            print_("Blob {} deleted.".format(blob.name))
 
 
 def ingestDataToPreaggregatedTable(client, jsonData):
