@@ -11,10 +11,9 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
-import com.amazonaws.auth.STSSessionCredentials;
-import com.amazonaws.auth.STSSessionCredentialsProvider;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -24,13 +23,19 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
+import software.wings.service.impl.DelegateServiceImpl;
+
+import com.amazonaws.auth.STSSessionCredentials;
+import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,9 +56,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key") private String accessKey;
-  @Attributes(title = "AWS Secret Key")
-  @Encrypted(fieldName = "aws_secret_key")
-  private String secretKey;
+  @Attributes(title = "AWS Secret Key") @Encrypted(fieldName = "aws_secret_key") private String secretKey;
 
   @Attributes(title = "AWS Region", required = true) private String region;
 
@@ -61,9 +64,11 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
 
   @Attributes(title = "AWS AssumeIamRole") private boolean assumeIamRoleOnDelegate;
   @Attributes(title = "AWS AssumeStsRole") private boolean assumeStsRoleOnDelegate;
-  @Attributes(title = "AWS AssumeStsRoleDuration") private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
-  @Attributes(title = "AWS RoleARN") private String roleArn;
-  @Attributes(title = "AWS ExternalName") private String externalName;
+  @Attributes(title = "AWS AssumeStsRoleDuration")
+  private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
+  @Attributes(title = "AWS AssumeStsRoleARN") private String roleArn;
+  @Attributes(title = "AWS AssumeStsExternalName") private String externalName;
+  @Attributes(title = "AWS DelegateSelectors") private Set<String> delegateSelectors;
 
   @JsonIgnore
   @SchemaIgnore
@@ -86,8 +91,16 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        getEncryptionServiceUrl(), maskingEvaluator));
+    List<ExecutionCapability> executionCapabilities =
+        Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            getEncryptionServiceUrl(), maskingEvaluator));
+    if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
+      executionCapabilities.add(SelectorCapability.builder()
+                                    .selectors(delegateSelectors)
+                                    .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
+                                    .build());
+    }
+    return executionCapabilities;
   }
 
   @Override
