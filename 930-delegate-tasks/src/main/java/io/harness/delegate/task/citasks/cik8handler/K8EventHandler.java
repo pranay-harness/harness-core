@@ -3,10 +3,10 @@ package io.harness.delegate.task.citasks.cik8handler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogLine;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogLevel;
+import io.harness.logstreaming.LogLine;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;

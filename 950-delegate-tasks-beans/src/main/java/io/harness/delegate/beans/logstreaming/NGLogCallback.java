@@ -6,6 +6,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.logstreaming.LogLine;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
