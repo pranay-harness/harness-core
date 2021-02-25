@@ -12,12 +12,9 @@ import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.yaml.core.StepSpecType;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(
     subTypes = {K8sApplyStepInfo.class, K8sBlueGreenStepInfo.class, K8sCanaryStepInfo.class, K8sRollingStepInfo.class,
         K8sRollingRollbackStepInfo.class, K8sScaleStepInfo.class, HttpStepInfo.class, ShellScriptStepInfo.class})
-public interface CDStepInfo extends GenericStepInfo, StepSpecType, WithRollbackInfo {
-  @JsonIgnore String getIdentifier();
-}
+public interface CDStepInfo extends GenericStepInfo, StepSpecType, WithRollbackInfo {}
