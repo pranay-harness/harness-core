@@ -28,6 +28,7 @@ var (
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newIntegrationSvc   = services.NewIntegrationSvc
 	getLogKey           = external.GetLogKey
+	getServiceLogKey    = external.GetServiceLogKey
 )
 
 // schema for running functional test service
@@ -81,8 +82,13 @@ func main() {
 	if args.Service != nil {
 		svc := args.Service
 
+		logKey, err := getServiceLogKey()
+		if err != nil {
+			panic(err)
+		}
+
 		// create logger for service logs
-		serviceLogger = getRemoteLogger(fmt.Sprintf("service:%s", svc.ID))
+		serviceLogger = getRemoteLogger(logKey)
 		pendingLogs <- serviceLogger
 
 		go func() {

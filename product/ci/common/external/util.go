@@ -14,24 +14,25 @@ import (
 )
 
 const (
-	accountIDEnv  = "HARNESS_ACCOUNT_ID"
-	orgIDEnv      = "HARNESS_ORG_ID"
-	projectIDEnv  = "HARNESS_PROJECT_ID"
-	buildIDEnv    = "HARNESS_BUILD_ID"
-	stageIDEnv    = "HARNESS_STAGE_ID"
-	pipelineIDEnv = "HARNESS_PIPELINE_ID"
-	tiSvcEp       = "HARNESS_TI_SERVICE_ENDPOINT"
-	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
-	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
-	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
-	logPrefixEnv  = "HARNESS_LOG_PREFIX"
-	secretList    = "HARNESS_SECRETS_LIST"
-	dSourceBranch = "DRONE_SOURCE_BRANCH"
-	dRemoteUrl    = "DRONE_REMOTE_URL"
-	dCommitSha    = "DRONE_COMMIT_SHA"
-	wrkspcPath    = "HARNESS_WORKSPACE"
-	gitBinPath    = "HARNESS_GIT_BINARY_PATH"
-	diffFilesCmd  = "%s diff --name-only HEAD HEAD@{1} -1"
+	accountIDEnv     = "HARNESS_ACCOUNT_ID"
+	orgIDEnv         = "HARNESS_ORG_ID"
+	projectIDEnv     = "HARNESS_PROJECT_ID"
+	buildIDEnv       = "HARNESS_BUILD_ID"
+	stageIDEnv       = "HARNESS_STAGE_ID"
+	pipelineIDEnv    = "HARNESS_PIPELINE_ID"
+	tiSvcEp          = "HARNESS_TI_SERVICE_ENDPOINT"
+	tiSvcToken       = "HARNESS_TI_SERVICE_TOKEN"
+	logSvcEp         = "HARNESS_LOG_SERVICE_ENDPOINT"
+	logSvcToken      = "HARNESS_LOG_SERVICE_TOKEN"
+	logPrefixEnv     = "HARNESS_LOG_PREFIX"
+	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
+	secretList       = "HARNESS_SECRETS_LIST"
+	dSourceBranch    = "DRONE_SOURCE_BRANCH"
+	dRemoteUrl       = "DRONE_REMOTE_URL"
+	dCommitSha       = "DRONE_COMMIT_SHA"
+	wrkspcPath       = "HARNESS_WORKSPACE"
+	gitBinPath       = "HARNESS_GIT_BINARY_PATH"
+	diffFilesCmd     = "%s diff --name-only HEAD HEAD@{1} -1"
 )
 
 // GetChangedFiles executes a shell command and retuns list of files changed in PR
@@ -108,6 +109,16 @@ func GetLogKey(id string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", logPrefix, id), nil
+}
+
+// GetServiceLogKey returns log key for service
+func GetServiceLogKey() (string, error) {
+	logKey, ok := os.LookupEnv(serviceLogKeyEnv)
+	if !ok {
+		return "", fmt.Errorf("service log key variable not set %s", serviceLogKeyEnv)
+	}
+
+	return logKey, nil
 }
 
 // GetTiHTTPClient returns a client to talk to the TI service

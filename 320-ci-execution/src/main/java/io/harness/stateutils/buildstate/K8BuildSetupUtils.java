@@ -13,6 +13,7 @@ import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_SECRETS_LIST;
+import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_LOG_KEY_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
@@ -242,7 +243,7 @@ public class K8BuildSetupUtils {
         podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
       CIK8ContainerParams cik8ContainerParams =
           createCIK8ContainerParams(ngAccess, containerDefinitionInfo, commonEnvVars, stepConnectors,
-              podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), secretVariableDetails);
+              podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), logPrefix, secretVariableDetails);
       containerParams.add(cik8ContainerParams);
     }
     return containerParams;
@@ -251,7 +252,7 @@ public class K8BuildSetupUtils {
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,
       ContainerDefinitionInfo containerDefinitionInfo, Map<String, String> commonEnvVars,
       Map<String, ConnectorConversionInfo> connectorRefs, Map<String, String> volumeToMountPath, String workDirPath,
-      List<SecretVariableDetails> secretVariableDetails) {
+      String logPrefix, List<SecretVariableDetails> secretVariableDetails) {
     Map<String, String> envVars = new HashMap<>(commonEnvVars);
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
@@ -281,6 +282,10 @@ public class K8BuildSetupUtils {
         getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
 
     envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails));
+    if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
+      envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
+          format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
+    }
     return CIK8ContainerParams.builder()
         .name(containerDefinitionInfo.getName())
         .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
