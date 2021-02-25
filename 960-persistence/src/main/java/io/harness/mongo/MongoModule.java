@@ -104,7 +104,7 @@ public class MongoModule extends AbstractModule {
 
     Store store = null;
     if (Objects.nonNull(mongoConfig.getAliasDBName())) {
-      Store.builder().name(mongoConfig.getAliasDBName()).build();
+      store = Store.builder().name(mongoConfig.getAliasDBName()).build();
     }
 
     indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia, store);

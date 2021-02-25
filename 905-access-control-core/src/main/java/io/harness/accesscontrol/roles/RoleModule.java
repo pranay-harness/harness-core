@@ -2,6 +2,7 @@ package io.harness.accesscontrol.roles;
 
 import io.harness.accesscontrol.roles.persistence.RoleDao;
 import io.harness.accesscontrol.roles.persistence.RoleDaoImpl;
+import io.harness.accesscontrol.roles.persistence.RoleMorphiaRegistrar;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
 

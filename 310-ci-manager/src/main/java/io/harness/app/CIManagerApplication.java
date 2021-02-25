@@ -23,6 +23,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
@@ -261,6 +262,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
     registerQueueListeners(injector, configuration);
+    registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
     scheduleJobs(injector);
@@ -405,6 +407,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
       environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void registerYamlSdk(Injector injector) {

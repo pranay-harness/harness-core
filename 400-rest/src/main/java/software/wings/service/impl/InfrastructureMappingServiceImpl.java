@@ -2523,4 +2523,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .value(InfraMappingSweepingOutput.builder().infraMappingId(infrastructureMappingId).build())
             .build());
   }
+
+  /**
+   * Prune if belongs to infrastructure definition.
+   *
+   * @param appId             the app id
+   * @param infraDefinitionId the infrastructure definition id
+   */
+  @Override
+  public void pruneByInfrastructureDefinition(String appId, String infraDefinitionId) {
+    List<Key<InfrastructureMapping>> keys =
+        wingsPersistence.createQuery(InfrastructureMapping.class)
+            .filter(InfrastructureMapping.APP_ID_KEY, appId)
+            .filter(InfrastructureMappingKeys.infrastructureDefinitionId, infraDefinitionId)
+            .asKeyList();
+    for (Key<InfrastructureMapping> key : keys) {
+      prune(appId, (String) key.getId());
+    }
+  }
 }

@@ -18,7 +18,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_REF;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_SHA;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_GIT_HTTP_URL;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_GIT_SSH_URL;
-import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_BRANCH;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_LINK;
@@ -96,7 +95,6 @@ public class BuildEnvironmentUtils {
     setEnvironmentVariable(envVarMap, DRONE_REPO_NAME, repository.getName());
     setEnvironmentVariable(envVarMap, DRONE_REPO_LINK, repository.getLink());
     setEnvironmentVariable(envVarMap, DRONE_REPO_BRANCH, repository.getBranch());
-    setEnvironmentVariable(envVarMap, DRONE_REMOTE_URL, repository.getHttpURL());
     setEnvironmentVariable(envVarMap, DRONE_GIT_HTTP_URL, repository.getHttpURL());
     setEnvironmentVariable(envVarMap, DRONE_GIT_SSH_URL, repository.getSshURL());
     setEnvironmentVariable(envVarMap, DRONE_REPO_PRIVATE, String.valueOf(repository.isPrivate()));

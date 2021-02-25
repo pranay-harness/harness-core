@@ -28,6 +28,7 @@ message NodeExecutionProto {
   google.protobuf.Duration initialWaitDuration = 7;
 
   string resolvedStepParameters = 8;
+  string resolvedStepInputs = 21;
 
   string notifyId = 9;
 

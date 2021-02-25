@@ -328,10 +328,16 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   private void updateTheConnectorValidationResultInTheEntity(ConnectorValidationResult connectorValidationResult,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    Connector connector =
-        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
-    connectorRepository.save(connector);
+    try {
+      Connector connector =
+          getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
+      connectorRepository.save(connector);
+    } catch (Exception ex) {
+      log.error("Error saving the connector status for the connector {}",
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
+          ex);
+    }
   }
 
   private Connector getConnectorWithIdentifier(

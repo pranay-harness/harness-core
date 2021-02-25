@@ -13,6 +13,8 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class StepOutcomeMapper {
+  public static String GRAPH_KEY = "_graphOutcome_";
+
   public StepOutcome fromStepOutcomeProto(StepOutcomeProto proto) {
     return StepOutcome.builder()
         .group(proto.getGroup())
@@ -28,6 +30,19 @@ public class StepOutcomeMapper {
     }
     if (stepOutcome.getOutcome() != null) {
       builder.setOutcome(RecastOrchestrationUtils.toDocumentJson(stepOutcome.getOutcome()));
+    }
+    return builder.build();
+  }
+
+  public StepOutcomeProto toGraphOutcomeProto(StepOutcome stepOutcome) {
+    StepOutcomeProto.Builder builder = StepOutcomeProto.newBuilder().setName(stepOutcome.getName() + GRAPH_KEY);
+    if (stepOutcome.getGroup() != null) {
+      builder.setGroup(stepOutcome.getGroup());
+    }
+    if (stepOutcome.getOutcome() != null && stepOutcome.getOutcome().toViewJson() != null) {
+      builder.setOutcome(stepOutcome.getOutcome().toViewJson());
+    } else {
+      return null;
     }
     return builder.build();
   }

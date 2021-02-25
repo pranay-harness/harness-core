@@ -1,0 +1,32 @@
+package io.harness.accesscontrol.resources.resourcegroups;
+
+import java.util.Set;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotEmpty;
+
+@Getter
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+public class ResourceGroup {
+  public static final String ALL_RESOURCES_IDENTIFIER = "*";
+
+  @NotEmpty final String scopeIdentifier;
+  @NotEmpty final String identifier;
+  @NotEmpty final String name;
+  @NotNull final Set<String> resourceSelectors;
+  final boolean managed;
+  @EqualsAndHashCode.Exclude @Setter Long createdAt;
+  @EqualsAndHashCode.Exclude @Setter Long lastModifiedAt;
+  @EqualsAndHashCode.Exclude @Setter Long version;
+}

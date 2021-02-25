@@ -1,7 +1,8 @@
 package io.harness.accesscontrol;
 
-import io.harness.DecisionModuleConfiguration;
+import io.harness.AccessControlClientConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -29,10 +30,13 @@ public class AccessControlConfiguration extends Configuration {
   public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions";
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
+  public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
-  @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("resourceGroupServiceConfig") private ServiceHttpClientConfig resourceGroupServiceConfig;
+  @JsonProperty("resourceGroupServiceSecret") private String resourceGroupServiceSecret;
 
   public AccessControlConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
@@ -42,7 +46,7 @@ public class AccessControlConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE);
+    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

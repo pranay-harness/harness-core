@@ -124,6 +124,14 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+if [[ "" != "$CF_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.apiKey "$CF_API_KEY"
+fi
+
+if [[ "" != "$CF_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.baseUrl "$CF_BASE_URL"
+fi
+
 if [[ "" != "$POD_NAME" ]]; then
   yq write -i $CONFIG_FILE podInfo.name "$POD_NAME"
 fi

@@ -23,6 +23,6 @@ public class PermissionDTO {
   @ApiModelProperty(required = true) @NGEntityName String name;
   @ApiModelProperty(required = true) PermissionStatus status;
   @ApiModelProperty(required = true) @NotEmpty Set<String> allowedScopeLevels;
-  String resourceType;
-  String action;
+  @ApiModelProperty(required = true) String resourceType;
+  @ApiModelProperty(required = true) String action;
 }

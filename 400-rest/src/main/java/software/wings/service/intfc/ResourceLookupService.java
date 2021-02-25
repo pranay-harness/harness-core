@@ -8,6 +8,8 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ResourceLookup;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface ResourceLookupService {
   /**
@@ -50,4 +52,6 @@ public interface ResourceLookupService {
 
   <T> PageResponse<T> listWithTagFilters(
       PageRequest<T> request, String filter, EntityType entityType, boolean withTags);
+
+  Map<String, ResourceLookup> getResourceLookupMapWithResourceIds(String accountId, Set<String> resourceIds);
 }

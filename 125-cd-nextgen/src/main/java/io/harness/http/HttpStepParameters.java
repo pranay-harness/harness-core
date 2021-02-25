@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -45,5 +46,23 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
     this.identifier = identifier;
     this.description = description;
     this.skipCondition = skipCondition;
+  }
+
+  @Override
+  public String toViewJson() {
+    HttpStepParameters httpStepParameters = HttpStepParameters.infoBuilder()
+                                                .assertion(getAssertion())
+                                                .headers(getHeaders())
+                                                .method(getMethod())
+                                                .outputVariables(getOutputVariables())
+                                                .requestBody(getRequestBody())
+                                                .timeout(timeout)
+                                                .url(getUrl())
+                                                .name(name)
+                                                .identifier(identifier)
+                                                .skipCondition(skipCondition)
+                                                .description(description)
+                                                .build();
+    return RecastOrchestrationUtils.toDocumentJson(httpStepParameters);
   }
 }

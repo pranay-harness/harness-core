@@ -939,7 +939,7 @@
             <dependency>
                 <groupId>io.harness.cf</groupId>
                 <artifactId>cf-client-sdk-java</artifactId>
-                <version>1.0.0-20210126.200034-12</version>
+                <version>0.0.2</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>

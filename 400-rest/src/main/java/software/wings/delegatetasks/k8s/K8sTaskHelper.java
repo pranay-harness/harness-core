@@ -25,6 +25,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -59,8 +61,7 @@ import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
-import software.wings.helpers.ext.kustomize.KustomizeTaskHelper;
-import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
+import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.CommandFlagUtils;
@@ -192,8 +193,11 @@ public class K8sTaskHelper {
             helmCommandFlag);
 
       case KustomizeSourceRepo:
+        KustomizeConfig kustomizeConfig = k8sDelegateManifestConfig.getKustomizeConfig();
+        String pluginRootDir = kustomizeConfig != null ? kustomizeConfig.getPluginRootDir() : null;
+        String kustomizeDirPath = kustomizeConfig != null ? kustomizeConfig.getKustomizeDirPath() : null;
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            k8sDelegateManifestConfig.getKustomizeConfig(), executionLogCallback);
+            pluginRootDir, kustomizeDirPath, executionLogCallback);
       case OC_TEMPLATES:
         return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
             k8sDelegateManifestConfig.getGitFileConfig().getFilePath(), executionLogCallback, valuesFiles);
@@ -234,8 +238,10 @@ public class K8sTaskHelper {
             releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
             helmCommandFlag);
       case KustomizeSourceRepo:
-        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
-            k8sDelegateManifestConfig.getKustomizeConfig(), manifestFilesDirectory, filesList, executionLogCallback);
+        KustomizeConfig kustomizeConfig = k8sDelegateManifestConfig.getKustomizeConfig();
+        String pluginRootDir = kustomizeConfig != null ? kustomizeConfig.getPluginRootDir() : null;
+        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(), pluginRootDir,
+            manifestFilesDirectory, filesList, executionLogCallback);
 
       default:
         unhandled(storeType);

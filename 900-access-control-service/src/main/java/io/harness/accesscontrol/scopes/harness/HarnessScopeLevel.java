@@ -6,55 +6,28 @@ import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT
 
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 
+import lombok.Getter;
+
+@Getter
 public enum HarnessScopeLevel implements ScopeLevel {
-  ACCOUNT {
-    @Override
-    public String toString() {
-      return "account";
-    }
+  ACCOUNT("account", 0, ACCOUNT_LEVEL_PARAM_NAME, "ACCOUNT"),
+  ORGANIZATION("organization", 1, ORG_LEVEL_PARAM_NAME, "ORGANIZATION"),
+  PROJECT("project", 2, PROJECT_LEVEL_PARAM_NAME, "PROJECT");
 
-    @Override
-    public int getRank() {
-      return 0;
-    }
+  private final String name;
+  private final int rank;
+  private final String paramName;
+  private final String resourceType;
 
-    @Override
-    public String getParamName() {
-      return ACCOUNT_LEVEL_PARAM_NAME;
-    }
-  },
+  HarnessScopeLevel(String name, int rank, String paramName, String resourceType) {
+    this.name = name;
+    this.rank = rank;
+    this.paramName = paramName;
+    this.resourceType = resourceType;
+  }
 
-  ORGANIZATION {
-    @Override
-    public String toString() {
-      return "organization";
-    }
-
-    @Override
-    public int getRank() {
-      return 1;
-    }
-
-    @Override
-    public String getParamName() {
-      return ORG_LEVEL_PARAM_NAME;
-    }
-  },
-
-  PROJECT {
-    @Override
-    public String toString() {
-      return "project";
-    }
-
-    @Override
-    public int getRank() {
-      return 2;
-    }
-
-    @Override
-    public String getParamName() {
-      return PROJECT_LEVEL_PARAM_NAME;
-    }
+  @Override
+  public String toString() {
+    return name;
   }
 }

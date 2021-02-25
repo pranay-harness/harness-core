@@ -47,17 +47,24 @@ public class PermissionResource {
 
   @GET
   @ApiOperation(value = "Get All Permissions in a Scope", nickname = "getPermissionList")
-  public ResponseDTO<List<PermissionResponseDTO>> get(
-      @BeanParam HarnessScopeParams scopeParams, @QueryParam("resourceType") String resourceType) {
-    Scope scope = scopeService.buildScopeFromParams(scopeParams);
+  public ResponseDTO<List<PermissionResponseDTO>> get(@BeanParam HarnessScopeParams scopeParams,
+      @QueryParam("resourceType") String resourceType, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
     Set<String> scopeFilter = new HashSet<>();
-    scopeFilter.add(scope.getLevel().toString());
+    if (!scopeFilterDisabled) {
+      Scope scope = scopeService.buildScopeFromParams(scopeParams);
+      scopeFilter.add(scope.getLevel().toString());
+    }
     PermissionFilter query = PermissionFilter.builder()
                                  .allowedScopeLevelsFilter(scopeFilter)
                                  .identifierFilter(new HashSet<>())
                                  .statusFilter(new HashSet<>())
                                  .build();
     List<Permission> permissions = permissionService.list(query);
-    return ResponseDTO.newResponse(permissions.stream().map(PermissionDTOMapper::toDTO).collect(Collectors.toList()));
+    return ResponseDTO.newResponse(
+        permissions.stream()
+            .map(permission
+                -> PermissionDTOMapper.toDTO(
+                    permission, permissionService.getResourceTypeFromPermission(permission).orElse(null)))
+            .collect(Collectors.toList()));
   }
 }

@@ -152,6 +152,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         cloudProvider.getAccountId(), billingPipelineRecordSettingId);
 
     if (billingDataPipelineRecord == null) {
+      // Case just after creating the connector.
       return serialiseHealthStatusToPOJO(
           true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), lastS3SyncTimestamp);
     }
@@ -187,11 +188,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       messages.add(BILLING_PIPELINE_CREATION_FAILED.getMessage());
       if (isAWSConnector) {
         messages.add(s3SyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
       }
       if (isAzureConnector) {
         messages.add(storageSyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastStorageSyncTimestamp);
       }
-      return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
     }
 
     dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
@@ -205,9 +207,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     messages.add(healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage());
     if (isAWSConnector) {
       messages.add(s3SyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
     }
     if (isAzureConnector) {
       messages.add(storageSyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastStorageSyncTimestamp);
     }
     return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
   }
