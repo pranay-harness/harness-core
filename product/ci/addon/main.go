@@ -80,17 +80,11 @@ func main() {
 	var serviceLogger *logs.RemoteLogger
 	// Start integration test service in a separate goroutine
 	if args.Service != nil {
-		svc := args.Service
-
-		logKey, err := getServiceLogKey()
-		if err != nil {
-			panic(err)
-		}
-
 		// create logger for service logs
-		serviceLogger = getRemoteLogger(logKey)
+		serviceLogger = getSvcRemoteLogger()
 		pendingLogs <- serviceLogger
 
+		svc := args.Service
 		go func() {
 			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger,
 				serviceLogger.Writer, args.LogMetrics, log).Run()
@@ -121,6 +115,20 @@ func getRemoteLogger(keyID string) *logs.RemoteLogger {
 	remoteLogger, err := newGrpcRemoteLogger(key)
 	if err != nil {
 		// Could not create a logger
+		panic(err)
+	}
+
+	return remoteLogger
+}
+
+func getSvcRemoteLogger() *logs.RemoteLogger {
+	key, err := getServiceLogKey()
+	if err != nil {
+		panic(err)
+	}
+
+	remoteLogger, err := newGrpcRemoteLogger(key)
+	if err != nil {
 		panic(err)
 	}
 
