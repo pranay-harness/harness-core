@@ -30,20 +30,8 @@ public class Permission {
   @NotEmpty Set<String> allowedScopeLevels;
   @EqualsAndHashCode.Exclude @Setter Long version;
 
-  private String getPermissionMetadata(int index) {
+  public String getPermissionMetadata(int index) {
     List<String> permissionMetadata = Arrays.asList(identifier.split("\\."));
     return permissionMetadata.get(index);
-  }
-
-  public String getAction() {
-    return getPermissionMetadata(2);
-  }
-
-  public String getResourceType() {
-    return getPermissionMetadata(1);
-  }
-
-  public String getModule() {
-    return getPermissionMetadata(0);
   }
 }

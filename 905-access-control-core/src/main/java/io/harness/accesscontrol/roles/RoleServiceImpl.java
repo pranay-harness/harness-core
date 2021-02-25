@@ -18,6 +18,7 @@ import io.harness.ng.beans.PageResponse;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 @ValidateOnExecution
 public class RoleServiceImpl implements RoleService {
   private final RoleDao roleDao;
