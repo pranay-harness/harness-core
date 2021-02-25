@@ -11,7 +11,7 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketTriggerSpec implements WebhookTriggerSpec {
-  GitRepoSpec repoSpec;
+  GitRepoSpec gitRepoSpec;
   WebhookEvent event;
   List<WebhookAction> actions;
   List<WebhookCondition> payloadConditions;
@@ -20,5 +20,10 @@ public class BitbucketTriggerSpec implements WebhookTriggerSpec {
   @Override
   public WebhookSourceRepo getType() {
     return BITBUCKET;
+  }
+
+  @Override
+  public RepoSpec getRepoSpec() {
+    return gitRepoSpec;
   }
 }
