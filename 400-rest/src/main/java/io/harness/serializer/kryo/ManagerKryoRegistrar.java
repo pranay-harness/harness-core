@@ -150,6 +150,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
+import software.wings.beans.AccountPreferences;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
@@ -1757,5 +1758,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ARMOutputVariables.class, 8121);
     kryo.register(ARMPreExistingTemplate.class, 8122);
     kryo.register(ARMStateExecutionData.class, 8123);
+    kryo.register(AccountPreferences.class, 8124);
   }
 }
