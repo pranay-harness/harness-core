@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -44,6 +45,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
     K8sDeleteRequest request =
         K8sDeleteRequest.builder()
             .resources(canaryOutcome.getCanaryWorkload())
+            .deleteResourcesType(DeleteResourcesType.ResourceName)
             .commandName(K8S_CANARY_DELETE_COMMAND_NAME)
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .deleteNamespacesForRelease(false)

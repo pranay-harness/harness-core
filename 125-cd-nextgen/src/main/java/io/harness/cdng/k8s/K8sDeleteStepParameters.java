@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.yaml.ParameterField;
@@ -45,6 +46,10 @@ public class K8sDeleteStepParameters extends K8sDeleteBaseStepInfo implements K8
   @Override
   @JsonIgnore
   public List<String> getCommandUnits() {
+    if (deleteResources != null && deleteResources.getType() == DeleteResourcesType.ManifestPath) {
+      return Arrays.asList(
+          K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Delete);
+    }
     return Arrays.asList(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Delete);
   }
 }

@@ -232,6 +232,7 @@ import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
@@ -601,6 +602,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sSwapServiceSelectorsRequest.class, 543254);
     kryo.register(K8sDeleteRequest.class, 543255);
     kryo.register(ManagementGroupData.class, 543256);
+    kryo.register(DeleteResourcesType.class, 543257);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);
