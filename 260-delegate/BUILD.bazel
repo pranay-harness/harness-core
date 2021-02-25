@@ -5,6 +5,7 @@ load("//:macros.bzl", "sources")
 load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:build-properties.bzl", "build_fullVersion")
 
 sources()
 
@@ -676,6 +677,9 @@ shared_dependencies = [
 java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    deploy_manifest_lines = [
+        "Application-Version: version=" + build_fullVersion,
+    ],
     main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",

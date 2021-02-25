@@ -176,7 +176,7 @@ rm -f -- *.bak
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
-curl https://repo1.maven.org/maven2/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
 JAVA_OPTS=" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
