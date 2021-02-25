@@ -86,12 +86,16 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
@@ -201,5 +205,9 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(LinkedHashSet.class, 100030);
     kryo.register(CEKubernetesClusterConfigDTO.class, 19543);
     kryo.register(GitlabSshCredentialsDTO.class, 19643);
+    kryo.register(GitlabTokenSpecDTO.class, 19644);
+    kryo.register(GitlabApiAccessDTO.class, 19645);
+    kryo.register(GitlabApiAccessType.class, 19646);
+    kryo.register(GitlabApiAccessSpecDTO.class, 19647);
   }
 }
