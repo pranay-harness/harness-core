@@ -143,7 +143,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
     String logPrefix = getLogPrefix(ambiance);
     for (ContainerDefinitionInfo serviceContainer : serviceContainers) {
-      String logKey = format("%s/service:%s", logPrefix, serviceContainer.getStepIdentifier());
+      String logKey = format("%s/serviceId:%s", logPrefix, serviceContainer.getStepIdentifier());
       String containerName = serviceContainer.getName();
       if (containerStatusMap.containsKey(containerName)) {
         CIContainerStatus containerStatus = containerStatusMap.get(containerName);
