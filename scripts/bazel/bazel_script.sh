@@ -69,8 +69,6 @@ BAZEL_MODULES="\
   //280-batch-processing:module_deploy.jar \
   //300-cv-nextgen:module_deploy.jar \
   //310-ci-manager:module \
-  //310-ci-manager:module_deploy.jar \
-  //320-ci-execution:module \
   //330-ci-beans:module \
   //340-ce-nextgen:module \
   //340-ce-nextgen:module_deploy.jar \
@@ -307,13 +305,12 @@ build_bazel_application 210-command-library-server
 build_bazel_application 250-watcher
 build_bazel_application 260-delegate
 build_bazel_application 300-cv-nextgen
-build_bazel_application 310-ci-manager
+#build_bazel_application 310-ci-manager
 build_bazel_application 270-verification
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
-build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest

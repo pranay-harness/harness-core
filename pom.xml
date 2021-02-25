@@ -9,6 +9,8 @@
         <module>190-deployment-functional-tests</module>
         <module>200-functional-test</module>
         <module>980-java-agent</module>
+        <module>320-ci-execution</module>
+        <module>310-ci-manager</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
