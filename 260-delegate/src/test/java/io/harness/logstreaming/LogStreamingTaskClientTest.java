@@ -14,7 +14,6 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.logstreaming.LogLine;
 import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;
@@ -34,8 +33,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 public class LogStreamingTaskClientTest extends CategoryTest {
   private final DelegateLogService logServiceMock = mock(DelegateLogService.class);
-  private final DelegateAgentLogStreamingClient delegateAgentLogStreamingClientMock =
-      mock(DelegateAgentLogStreamingClient.class);
+  private final LogStreamingClient logStreamingClientMock = mock(LogStreamingClient.class);
   private final LogStreamingSanitizer logStreamingSanitizerMock = mock(LogStreamingSanitizer.class);
 
   private static final String ACCOUNT_ID = generateUuid();
@@ -44,24 +42,23 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   private static final String APP_ID = generateUuid();
   private static final String ACTIVITY_ID = generateUuid();
 
-  private LogStreamingTaskClient completeLogStreamingTaskClient =
-      LogStreamingTaskClient.builder()
-          .delegateAgentLogStreamingClient(delegateAgentLogStreamingClientMock)
-          .accountId(ACCOUNT_ID)
-          .token(TOKEN)
-          .logStreamingSanitizer(logStreamingSanitizerMock)
-          .baseLogKey(BASE_LOG_KEY)
-          .logService(logServiceMock)
-          .appId(APP_ID)
-          .activityId(ACTIVITY_ID)
-          .build();
+  private LogStreamingTaskClient completeLogStreamingTaskClient = LogStreamingTaskClient.builder()
+                                                                      .logStreamingClient(logStreamingClientMock)
+                                                                      .accountId(ACCOUNT_ID)
+                                                                      .token(TOKEN)
+                                                                      .logStreamingSanitizer(logStreamingSanitizerMock)
+                                                                      .baseLogKey(BASE_LOG_KEY)
+                                                                      .logService(logServiceMock)
+                                                                      .appId(APP_ID)
+                                                                      .activityId(ACTIVITY_ID)
+                                                                      .build();
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldInvokeOpenLogStreamWithoutKeySuffix() {
     completeLogStreamingTaskClient.openStream(null);
-    verify(delegateAgentLogStreamingClientMock).openLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY);
+    verify(logStreamingClientMock).openLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY);
   }
 
   @Test
@@ -69,7 +66,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInvokeOpenLogStreamWithKeySuffix() {
     completeLogStreamingTaskClient.openStream("keySuffix");
-    verify(delegateAgentLogStreamingClientMock)
+    verify(logStreamingClientMock)
         .openLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix"));
   }
 
@@ -78,7 +75,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInvokeCloseLogStreamWithoutKeySuffix() {
     completeLogStreamingTaskClient.closeStream(null);
-    verify(delegateAgentLogStreamingClientMock).closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY, true);
+    verify(logStreamingClientMock).closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY, true);
   }
 
   @Test
@@ -86,7 +83,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInvokeCloseLogStreamWithKeySuffix() {
     completeLogStreamingTaskClient.closeStream("keySuffix");
-    verify(delegateAgentLogStreamingClientMock)
+    verify(logStreamingClientMock)
         .closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix"), true);
   }
 
@@ -110,8 +107,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     verify(logStreamingSanitizerMock).sanitizeLogMessage(logLine);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(delegateAgentLogStreamingClientMock)
-        .pushMessage(eq(TOKEN), eq(ACCOUNT_ID), eq(BASE_LOG_KEY), captor.capture());
+    verify(logStreamingClientMock).pushMessage(eq(TOKEN), eq(ACCOUNT_ID), eq(BASE_LOG_KEY), captor.capture());
     List logLines = captor.getValue();
     assertThat(logLines).containsExactly(logLine);
   }
@@ -127,7 +123,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     verify(logStreamingSanitizerMock).sanitizeLogMessage(logLine);
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(delegateAgentLogStreamingClientMock)
+    verify(logStreamingClientMock)
         .pushMessage(eq(TOKEN), eq(ACCOUNT_ID), eq(BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix")),
             captor.capture());
     List logLines = captor.getValue();
@@ -146,7 +142,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
       outputStream.flush();
 
       ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-      verify(delegateAgentLogStreamingClientMock)
+      verify(logStreamingClientMock)
           .pushMessage(eq(TOKEN), eq(ACCOUNT_ID),
               eq(BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix")), captor.capture());
 
@@ -174,16 +170,15 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenAppIdOrActivityIdAreNotPresent() {
     // Test no appId scenario
-    LogStreamingTaskClient logStreamingTaskClientWithoutAppId =
-        LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClientMock)
-            .accountId(ACCOUNT_ID)
-            .token(TOKEN)
-            .logStreamingSanitizer(logStreamingSanitizerMock)
-            .baseLogKey(BASE_LOG_KEY)
-            .logService(logServiceMock)
-            .activityId(ACTIVITY_ID)
-            .build();
+    LogStreamingTaskClient logStreamingTaskClientWithoutAppId = LogStreamingTaskClient.builder()
+                                                                    .logStreamingClient(logStreamingClientMock)
+                                                                    .accountId(ACCOUNT_ID)
+                                                                    .token(TOKEN)
+                                                                    .logStreamingSanitizer(logStreamingSanitizerMock)
+                                                                    .baseLogKey(BASE_LOG_KEY)
+                                                                    .logService(logServiceMock)
+                                                                    .activityId(ACTIVITY_ID)
+                                                                    .build();
 
     assertThatThrownBy(() -> logStreamingTaskClientWithoutAppId.obtainLogCallback("commandName"))
         .isInstanceOf(InvalidArgumentsException.class)
@@ -193,7 +188,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     // Test no activityId scenario
     LogStreamingTaskClient logStreamingTaskClientWithoutActivityId =
         LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClientMock)
+            .logStreamingClient(logStreamingClientMock)
             .accountId(ACCOUNT_ID)
             .token(TOKEN)
             .logStreamingSanitizer(logStreamingSanitizerMock)

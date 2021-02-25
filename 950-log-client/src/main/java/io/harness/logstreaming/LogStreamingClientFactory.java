@@ -29,17 +29,17 @@ import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-public class DelegateAgentLogStreamingClientFactory implements Provider<DelegateAgentLogStreamingClient> {
+public class LogStreamingClientFactory implements Provider<LogStreamingClient> {
   @Inject private KryoConverterFactory kryoConverterFactory;
 
   private String logStreamingServiceBaseUrl;
 
-  public DelegateAgentLogStreamingClientFactory(String logStreamingServiceBaseUrl) {
+  public LogStreamingClientFactory(String logStreamingServiceBaseUrl) {
     this.logStreamingServiceBaseUrl = logStreamingServiceBaseUrl;
   }
 
   @Override
-  public DelegateAgentLogStreamingClient get() {
+  public LogStreamingClient get() {
     if (StringUtils.isBlank(logStreamingServiceBaseUrl)) {
       return null;
     }
@@ -56,7 +56,7 @@ public class DelegateAgentLogStreamingClientFactory implements Provider<Delegate
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
 
-    return retrofit.create(DelegateAgentLogStreamingClient.class);
+    return retrofit.create(LogStreamingClient.class);
   }
 
   private OkHttpClient getSafeOkHttpClient() {

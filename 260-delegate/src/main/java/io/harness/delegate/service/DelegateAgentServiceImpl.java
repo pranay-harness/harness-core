@@ -120,7 +120,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
-import io.harness.logstreaming.DelegateAgentLogStreamingClient;
+import io.harness.logstreaming.LogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -312,7 +312,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
-  @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  @Inject(optional = true) @Nullable private LogStreamingClient logStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
@@ -1921,7 +1921,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String appId = null;
     String activityId = null;
 
-    if (delegateAgentLogStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
+    if (logStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
         && !isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
       logStreamingConfigPresent = true;
     }
@@ -1951,7 +1951,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     LogStreamingTaskClientBuilder taskClientBuilder =
         LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+            .logStreamingClient(logStreamingClient)
             .accountId(delegateTaskPackage.getAccountId())
             .token(delegateTaskPackage.getLogStreamingToken())
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())

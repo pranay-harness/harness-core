@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+    "//950-log-client:module",
     "//954-connector-beans:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
