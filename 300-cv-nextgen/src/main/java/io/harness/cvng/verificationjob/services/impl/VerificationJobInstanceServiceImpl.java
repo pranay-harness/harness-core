@@ -479,16 +479,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier, int limit) {
-    List<VerificationJobInstance> verificationJobInstances =
-        hPersistence.createQuery(VerificationJobInstance.class)
-            .filter(VerificationJobInstanceKeys.accountId, accountId)
-            .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
-            .filter(PROJECT_IDENTIFIER_KEY, projectIdentifier)
-            .filter(ORG_IDENTIFIER_KEY, orgIdentifier)
-            .filter(VerificationJobInstance.VERIFICATION_JOB_IDENTIFIER_KEY, verificationJobIdentifier)
-            .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
-            .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
-            .asList(new FindOptions().limit(limit));
+    List<VerificationJobInstance> verificationJobInstances = getVerificationJobBaselineExecutions(
+        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier, limit);
     return verificationJobInstances.stream()
         .map(verificationJobInstance
             -> TestVerificationBaselineExecutionDTO.builder()
@@ -498,15 +490,33 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .collect(Collectors.toList());
   }
 
+  private List<VerificationJobInstance> getVerificationJobBaselineExecutions(
+      String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier, int limit) {
+    return hPersistence.createQuery(VerificationJobInstance.class)
+        .filter(VerificationJobInstanceKeys.accountId, accountId)
+        .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
+        .filter(PROJECT_IDENTIFIER_KEY, projectIdentifier)
+        .filter(ORG_IDENTIFIER_KEY, orgIdentifier)
+        .filter(VerificationJobInstance.VERIFICATION_JOB_IDENTIFIER_KEY, verificationJobIdentifier)
+        .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
+        .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
+        .asList(new FindOptions().limit(limit));
+  }
+
   @Override
   public Optional<String> getLastSuccessfulTestVerificationJobExecutionId(
       String accountId, String projectIdentifier, String orgIdentifier, String verificationJobIdentifier) {
-    List<TestVerificationBaselineExecutionDTO> testVerificationBaselineExecutionDTOs =
-        getTestJobBaselineExecutions(accountId, projectIdentifier, orgIdentifier, verificationJobIdentifier, 1);
-    if (testVerificationBaselineExecutionDTOs.isEmpty()) {
+    List<VerificationJobInstance> verificationJobInstances = getVerificationJobBaselineExecutions(
+        accountId, projectIdentifier, orgIdentifier, verificationJobIdentifier, 20);
+    int i = 0;
+    while (i < verificationJobInstances.size()
+        && getDeploymentVerificationStatus(verificationJobInstances.get(i))
+            != ActivityVerificationStatus.VERIFICATION_PASSED)
+      i++;
+    if (i == verificationJobInstances.size()) {
       return Optional.empty();
     } else {
-      return Optional.of(testVerificationBaselineExecutionDTOs.get(0).getVerificationJobInstanceId());
+      return Optional.of(verificationJobInstances.get(i).getUuid());
     }
   }
 
