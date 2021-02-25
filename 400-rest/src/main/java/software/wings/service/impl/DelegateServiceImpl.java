@@ -61,6 +61,7 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.compare;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -109,6 +110,7 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
@@ -368,6 +370,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
+
+  private static final int WATCHER_RAM_IN_MB = 500;
+  // Calculated as 30% of total RAM for delegate + watcher, in EXTRA_SMALL delegate which was 1250 (500 watcher + 250
+  // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
+  private static final int POD_BASE_RAM_IN_MB = 400;
 
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -643,7 +650,7 @@ public class DelegateServiceImpl implements DelegateService {
         version = EMPTY_VERSION;
       }
 
-      boolean isCiEnabled = featureFlagService.isGlobalEnabled(NEXT_GEN_ENABLED);
+      boolean isCiEnabled = featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId);
 
       DelegateSizeDetails sizeDetails = fetchAvailableSizes()
                                             .stream()
@@ -666,10 +673,10 @@ public class DelegateServiceImpl implements DelegateService {
                                              .delegateSessionIdentifier(delegateSetupDetails.getSessionIdentifier())
                                              .delegateDescription(delegateSetupDetails.getDescription())
                                              .delegateSize(sizeDetails.getSize().name())
-                                             .delegateTaskLimit(sizeDetails.getTaskLimit())
+                                             .delegateTaskLimit(sizeDetails.getTaskLimit() / sizeDetails.getReplicas())
                                              .delegateReplicas(sizeDetails.getReplicas())
-                                             .delegateRam(sizeDetails.getRam())
-                                             .delegateCpu(sizeDetails.getCpu())
+                                             .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
+                                             .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
                                              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1063,6 +1070,48 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost,
+      String verificationHost, DelegateSize delegateSize) throws IOException {
+    DelegateSizeDetails sizeDetails =
+        fetchAvailableSizes().stream().filter(size -> size.getSize() == delegateSize).findFirst().orElse(null);
+    String delegateXmx = "-Xmx4096m";
+    if (sizeDetails != null) {
+      delegateXmx =
+          "-Xmx" + (sizeDetails.getRam() / sizeDetails.getReplicas() - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
+    }
+
+    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+        ScriptRuntimeParamMapInquiry.builder()
+            .accountId(accountId)
+            .version(version)
+            .managerHost(managerHost)
+            .verificationHost(verificationHost)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .delegateXmx(delegateXmx)
+            .build());
+
+    DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
+    if (isNotEmpty(scriptParams)) {
+      String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
+      log.info("Upgrading delegate to version: {}", upgradeToVersion);
+      boolean doUpgrade;
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+        doUpgrade = true;
+      } else {
+        doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(upgradeToVersion)));
+      }
+      delegateScripts.setDoUpgrade(doUpgrade);
+      delegateScripts.setVersion(upgradeToVersion);
+
+      delegateScripts.setStartScript(processTemplate(scriptParams, "start.sh.ftl"));
+      delegateScripts.setDelegateScript(processTemplate(scriptParams, "delegate.sh.ftl"));
+      delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
+      delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
+    }
+    return delegateScripts;
+  }
+
+  @Override
   public DelegateScripts getDelegateScripts(
       String accountId, String version, String managerHost, String verificationHost) throws IOException {
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
@@ -1122,6 +1171,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Value
   @lombok.Builder
   public static class ScriptRuntimeParamMapInquiry {
+    private String delegateXmx;
     private String accountId;
     private String version;
     private String managerHost;
@@ -1276,6 +1326,12 @@ public class DelegateServiceImpl implements DelegateService {
       params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
 
+      if (isNotBlank(inquiry.getDelegateXmx())) {
+        params.put("delegateXmx", inquiry.getDelegateXmx());
+      } else {
+        params.put("delegateXmx", "-Xmx4096m");
+      }
+
       JreConfig jreConfig = getJreConfig(inquiry.getAccountId());
 
       Preconditions.checkNotNull(jreConfig, "jreConfig cannot be null");
@@ -1292,6 +1348,8 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (isNotBlank(inquiry.getDelegateDescription())) {
         params.put("delegateDescription", inquiry.getDelegateDescription());
+      } else {
+        params.put("delegateDescription", EMPTY);
       }
 
       if (isNotBlank(inquiry.getDelegateSize())) {

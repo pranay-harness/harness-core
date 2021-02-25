@@ -272,6 +272,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+  private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -420,8 +421,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
 
       long start = clock.millis();
+      String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
       String description = "description here".equals(delegateConfiguration.getDescription())
-          ? ""
+          ? descriptionFromConfigFile
           : delegateConfiguration.getDescription();
 
       String delegateName = System.getenv().get("DELEGATE_NAME");

@@ -105,7 +105,7 @@ spec:
         - name: DELEGATE_NAME
           value: harness-delegate
         - name: DELEGATE_DESCRIPTION
-          value: "desc"
+          value: ""
         - name: DELEGATE_PROFILE
           value: "delConfigId"
         - name: DELEGATE_TYPE
