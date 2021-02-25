@@ -53,6 +53,10 @@ public class ManagerExecutor {
     String directoryPath = Project.rootDirectory(clazz);
     final File lockfile = new File(directoryPath, "manager");
 
+    log.info("peesu");
+    log.info(String.valueOf(clazz));
+    log.info(alpnPath);
+    log.info(alpnJarPath);
     if (FileIo.acquireLock(lockfile, waiting)) {
       try {
         if (isHealthy()) {
