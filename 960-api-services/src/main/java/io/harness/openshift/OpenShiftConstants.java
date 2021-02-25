@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.openshift;
+package io.harness.openshift;
 
 import java.util.concurrent.TimeUnit;
 
