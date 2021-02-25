@@ -1,20 +1,18 @@
-package software.wings.helpers.ext.openshift;
+package io.harness.delegate.k8s.openshift;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
-
-import software.wings.beans.command.ExecutionLogCallback;
+import io.harness.logging.LogCallback;
+import io.harness.openshift.OpenShiftClient;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
@@ -32,12 +30,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class OpenShiftDelegateService {
   @Inject private OpenShiftClient openShiftClient;
 
   public List<FileData> processTemplatization(@NotEmpty String manifestFilesDirectory, @NotEmpty String ocBinaryPath,
-      @NotEmpty String templateFilePath, ExecutionLogCallback executionLogCallback, List<String> paramFilesContent) {
+      @NotEmpty String templateFilePath, LogCallback executionLogCallback, List<String> paramFilesContent) {
     List<String> paramsFilePaths = null;
     if (isNotEmpty(paramFilesContent)) {
       paramsFilePaths = writeParamsToFile(manifestFilesDirectory, paramFilesContent);

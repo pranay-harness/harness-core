@@ -1,20 +1,16 @@
-package software.wings.helpers.ext.openshift;
+package io.harness.openshift;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.openshift.OpenShiftConstants.COMMAND_TIMEOUT;
+import static io.harness.openshift.OpenShiftConstants.OC_BINARY_PATH;
+import static io.harness.openshift.OpenShiftConstants.PROCESS_COMMAND;
+import static io.harness.openshift.OpenShiftConstants.TEMPLATE_FILE_PATH;
 
-import static software.wings.helpers.ext.openshift.OpenShiftConstants.COMMAND_TIMEOUT;
-import static software.wings.helpers.ext.openshift.OpenShiftConstants.OC_BINARY_PATH;
-import static software.wings.helpers.ext.openshift.OpenShiftConstants.PROCESS_COMMAND;
-import static software.wings.helpers.ext.openshift.OpenShiftConstants.TEMPLATE_FILE_PATH;
-
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-
-import software.wings.beans.command.ExecutionLogCallback;
+import io.harness.logging.LogCallback;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -24,15 +20,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@TargetModule(Module._960_API_SERVICES)
 public class OpenShiftClientImpl implements OpenShiftClient {
   @Inject CliHelper cliHelper;
 
   @Override
   @Nonnull
   public CliResponse process(@NotEmpty String ocBinaryPath, @NotEmpty String templateFilePath,
-      List<String> paramsFilePaths, @NotEmpty String manifestFilesDirectoryPath,
-      ExecutionLogCallback executionLogCallback) {
+      List<String> paramsFilePaths, @NotEmpty String manifestFilesDirectoryPath, LogCallback executionLogCallback) {
     StringBuilder processCommand = new StringBuilder(
         PROCESS_COMMAND.replace(OC_BINARY_PATH, ocBinaryPath).replace(TEMPLATE_FILE_PATH, templateFilePath));
 

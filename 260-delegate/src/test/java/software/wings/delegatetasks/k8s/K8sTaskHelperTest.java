@@ -63,6 +63,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
@@ -116,7 +117,6 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
-import software.wings.helpers.ext.openshift.OpenShiftDelegateService;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
