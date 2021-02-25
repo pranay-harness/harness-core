@@ -18,6 +18,7 @@ import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -66,7 +68,6 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
 
-    Set<SubtypeClassMap> subtypeClassMapSet = new HashSet<>();
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
     Set<String> refs = new HashSet<>();
     for (String instanceName : instanceNames) {
@@ -74,15 +75,15 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         continue;
       }
       PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
-      subtypeClassMapSet.add(
+      SubtypeClassMap subtypeClassMap =
           SubtypeClassMap.builder()
               .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
               .subtypeEnum(partialSchemaDTO.getNodeType())
-              .build());
+              .build();
       ObjectNode stageDefinitionsNode = moveRootNodeToDefinitions(
           partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
       ObjectNode stageElementCopy = stageElementConfig.deepCopy();
-      modifyStageElementConfig(stageElementCopy, subtypeClassMapSet,
+      modifyStageElementConfig(stageElementCopy, subtypeClassMap,
           instanceName.equals("ci") ? Arrays.asList("rollbackSteps", "failureStrategies") : Collections.emptyList());
 
       ObjectNode namespaceNode = (ObjectNode) stageDefinitionsNode.get(partialSchemaDTO.getNamespace());
@@ -114,20 +115,31 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   private void modifyStageElementConfig(
-      ObjectNode stageElementConfig, Set<SubtypeClassMap> subtypeClassMapSet, List<String> unwantedNodes) {
+      ObjectNode stageElementConfig, SubtypeClassMap subtypeClassMap, List<String> unwantedNodes) {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     Field field = YamlSchemaUtils.getTypedField(STAGE_ELEMENT_CONFIG_CLASS);
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(field, subtypeClassMapSet));
-    swaggerDefinitionsMetaInfoMap.put(
-        STAGE_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
+    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(field, ImmutableSet.of(subtypeClassMap)));
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(subtypeClassMap);
+    swaggerDefinitionsMetaInfoMap.put(STAGE_ELEMENT_CONFIG,
+        SwaggerDefinitionsMetaInfo.builder()
+            .fieldEnumData(fieldEnumData)
+            .subtypeClassMap(classFieldSubtypeData)
+            .build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STAGE_ELEMENT_CONFIG, stageElementConfig);
     JsonNode propertiesNode = stageElementConfig.get(PROPERTIES_NODE);
     if (propertiesNode.isObject()) {
       unwantedNodes.forEach(((ObjectNode) propertiesNode)::remove);
     }
+  }
+
+  private Set<FieldEnumData> getFieldEnumData(SubtypeClassMap subtypeClassMap) {
+    return ImmutableSet.of(FieldEnumData.builder()
+                               .fieldName("type")
+                               .enumValues(ImmutableSet.of(subtypeClassMap.getSubtypeEnum()))
+                               .build());
   }
 
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {
