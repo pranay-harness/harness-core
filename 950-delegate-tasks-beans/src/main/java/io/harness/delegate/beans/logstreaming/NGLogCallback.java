@@ -52,23 +52,24 @@ public class NGLogCallback implements LogCallback {
     }
 
     ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
+    if (taskProgressClient != null) {
+      LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
+          commandUnitsProgress.getCommandUnitProgressMap();
 
-    LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
-        commandUnitsProgress.getCommandUnitProgressMap();
+      CommandUnitProgressBuilder commandUnitProgressBuilder =
+          CommandUnitProgress.builder().status(commandExecutionStatus);
+      if (!commandUnitProgressMap.containsKey(commandUnitName)) {
+        commandUnitProgressBuilder.startTime(now.toEpochMilli());
+      } else {
+        CommandUnitProgress commandUnitProgress = commandUnitProgressMap.get(commandUnitName);
+        commandUnitProgressBuilder.startTime(commandUnitProgress.getStartTime());
+      }
+      if (terminalStatus) {
+        commandUnitProgressBuilder.endTime(now.toEpochMilli());
+      }
+      commandUnitProgressMap.put(commandUnitName, commandUnitProgressBuilder.build());
 
-    CommandUnitProgressBuilder commandUnitProgressBuilder =
-        CommandUnitProgress.builder().status(commandExecutionStatus);
-    if (!commandUnitProgressMap.containsKey(commandUnitName)) {
-      commandUnitProgressBuilder.startTime(now.toEpochMilli());
-    } else {
-      CommandUnitProgress commandUnitProgress = commandUnitProgressMap.get(commandUnitName);
-      commandUnitProgressBuilder.startTime(commandUnitProgress.getStartTime());
+      taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
     }
-    if (terminalStatus) {
-      commandUnitProgressBuilder.endTime(now.toEpochMilli());
-    }
-    commandUnitProgressMap.put(commandUnitName, commandUnitProgressBuilder.build());
-
-    taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
   }
 }
