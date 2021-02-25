@@ -67,6 +67,10 @@ func TestMainWithGrpcAndIntegrationService(t *testing.T) {
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
 
+	k := "HARNESS_SERVICE_LOG_KEY"
+	os.Setenv(k, "key")
+	defer os.Unsetenv(k)
+
 	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
 	s := func(uint, bool, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
