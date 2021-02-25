@@ -6,6 +6,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_D
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,6 +34,7 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
+import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
@@ -93,6 +96,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -871,7 +875,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetLastSuccessfulTestVerificationJobExecutionId_lastSuccessfulTestVerificationJobInstance() {
+  public void
+  testGetLastSuccessfulTestVerificationJobExecutionId_lastSuccessfulTestVerificationJobInstanceWithDeploymentVerificationNotSuccess() {
     String verificationJobIdentifier = generateUuid();
     List<ExecutionStatus> executionStatuses =
         Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS, ExecutionStatus.FAILED);
@@ -884,12 +889,41 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         createVerificationJobInstance(verificationJobIdentifier, generateUuid(), ExecutionStatus.SUCCESS, CANARY));
     verificationJobInstances.add(
         createVerificationJobInstance(generateUuid(), generateUuid(), ExecutionStatus.SUCCESS, TEST));
+
+    assertThat(verificationJobInstanceService.getLastSuccessfulTestVerificationJobExecutionId(
+                   accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier))
+        .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void
+  testGetLastSuccessfulTestVerificationJobExecutionId_lastSuccessfulTestVerificationJobInstanceWithDeploymentVerificationSuccess()
+      throws IllegalAccessException {
+    String verificationJobIdentifier = generateUuid();
+    List<ExecutionStatus> executionStatuses =
+        Arrays.asList(ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS, ExecutionStatus.FAILED);
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    for (ExecutionStatus executionStatus : executionStatuses) {
+      verificationJobInstances.add(
+          createVerificationJobInstance(verificationJobIdentifier, generateUuid(), executionStatus, TEST));
+    }
+    verificationJobInstances.add(
+        createVerificationJobInstance(verificationJobIdentifier, generateUuid(), ExecutionStatus.SUCCESS, CANARY));
+    verificationJobInstances.add(
+        createVerificationJobInstance(generateUuid(), generateUuid(), ExecutionStatus.SUCCESS, TEST));
+
+    DeploymentAnalysisService deploymentAnalysisService = mock(DeploymentAnalysisService.class);
+    FieldUtils.writeField(verificationJobInstanceService, "deploymentAnalysisService", deploymentAnalysisService, true);
+    when(deploymentAnalysisService.getLatestRiskScore(any(), any())).thenReturn(Optional.of(Risk.LOW));
     assertThat(verificationJobInstanceService
                    .getLastSuccessfulTestVerificationJobExecutionId(
                        accountId, orgIdentifier, projectIdentifier, verificationJobIdentifier)
                    .get())
         .isEqualTo(verificationJobInstances.get(1).getUuid());
   }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
