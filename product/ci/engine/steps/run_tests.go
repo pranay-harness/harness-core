@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -140,20 +141,18 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		runSelectedTests = false
 	}
 
-	var testExecList string
 	e.log.Infow(fmt.Sprintf("tests received from ti server are: %s", tests))
-	for index, test := range tests {
+	testList := []string{}
+	for _, test := range tests {
 		// In case we don't get malformed information, we should run all tests.
 		if test.Class == "" {
 			runSelectedTests = false
 			break
 		}
-		testExecList += test.Class
-		if index < (len(tests) - 1) {
-			testExecList += ","
-		}
+		testList = appendIfMissing(testList, test.Class)
 	}
-
+	testExecList := strings.Join(testList[:], ",")
+	e.log.Infow(fmt.Sprintf("tests exec list: %s, %t", testExecList, runSelectedTests))
 	e.execCommand, err = e.getRunTestsCommand(testExecList, runSelectedTests)
 	e.log.Infow(fmt.Sprintf("final execCommand is: %s", e.execCommand))
 	if err != nil {
@@ -263,4 +262,13 @@ func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 		},
 		TmpFilePath: e.tempPath,
 	}
+}
+
+func appendIfMissing(slice []string, s string) []string {
+	for _, ele := range slice {
+		if ele == s {
+			return slice
+		}
+	}
+	return append(slice, s)
 }
