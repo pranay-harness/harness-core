@@ -168,6 +168,7 @@ import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.ManagerVersionsCleanUpJob;
+import software.wings.scheduler.ResourceLookupSyncHandler;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -992,6 +993,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
+    injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

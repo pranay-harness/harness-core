@@ -17,6 +17,7 @@ accounts {"name": "gitSyncExpiryCheckIteration_1", "background": true} {"gitSync
 accounts {"name": "isHarnessSupportAccessAllowed_1", "background": true} {"isHarnessSupportAccessAllowed": 1}
 accounts {"name": "licenseExpiryCheckIteration_1", "background": true} {"licenseExpiryCheckIteration": 1}
 accounts {"name": "next_iteration_license_info2", "background": true} {"licenseExpiryCheckIteration": 1, "encryptedLicenseInfo": 1}
+accounts {"name": "resourceLookupSyncIteration_1", "background": true} {"resourceLookupSyncIteration": 1}
 accounts {"name": "secretManagerValidationIterator_1", "background": true} {"secretManagerValidationIterator": 1}
 accounts {"name": "serviceGuardDataAnalysisIteration_1", "background": true} {"serviceGuardDataAnalysisIteration": 1}
 accounts {"name": "serviceGuardDataCollectionIteration_1", "background": true} {"serviceGuardDataCollectionIteration": 1}
