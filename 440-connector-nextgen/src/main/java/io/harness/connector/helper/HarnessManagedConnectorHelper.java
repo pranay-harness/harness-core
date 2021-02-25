@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness.connector.helper;
 
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -8,8 +8,6 @@ import com.google.inject.Singleton;
 
 @Singleton
 public class HarnessManagedConnectorHelper {
-  public HarnessManagedConnectorHelper() {}
-
   public boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
     if (connector == null) {
       return false;
