@@ -11,6 +11,6 @@ import lombok.Value;
 @Builder
 public class RetryFailureSpecConfig {
   @NotNull int retryCount;
-  @NotNull List<Timeout> retryInterval;
+  @NotNull List<Timeout> retryIntervals;
   @NotNull OnRetryFailureConfig onRetryFailure;
 }

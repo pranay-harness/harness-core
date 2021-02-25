@@ -116,15 +116,16 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
       }
-
-      BaseStepParameterInfo baseStepParameterInfo = BaseStepParameterInfo.builder()
-                                                        .timeout(ParameterField.createValueField(timeout))
-                                                        .rollbackInfo(rollbackInfoBuilder.build())
-                                                        .description(stepElement.getDescription())
-                                                        .skipCondition(stepElement.getSkipCondition())
-                                                        .name(stepElement.getName())
-                                                        .description(stepElement.getDescription())
-                                                        .build();
+      RollbackInfo rollbackInfo = rollbackInfoBuilder.build();
+      BaseStepParameterInfo baseStepParameterInfo =
+          BaseStepParameterInfo.builder()
+              .timeout(ParameterField.createValueField(timeout))
+              .rollbackInfo(rollbackInfo.getStrategy() != null ? rollbackInfo : null)
+              .description(stepElement.getDescription())
+              .skipCondition(stepElement.getSkipCondition())
+              .name(stepElement.getName())
+              .description(stepElement.getDescription())
+              .build();
       stepParameters =
           ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
     }
@@ -227,7 +228,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                               toRepairAction(retryAction.getSpecConfig().getOnRetryFailure().getAction()))
                           .retryCount(retryAction.getSpecConfig().getRetryCount())
                           .waitIntervalList(retryAction.getSpecConfig()
-                                                .getRetryInterval()
+                                                .getRetryIntervals()
                                                 .stream()
                                                 .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
                                                 .collect(Collectors.toList()))

@@ -108,7 +108,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
     RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
     assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
-    assertThat(retryAction.getSpecConfig().getRetryInterval().size()).isEqualTo(2);
+    assertThat(retryAction.getSpecConfig().getRetryIntervals().size()).isEqualTo(2);
     assertThat(retryAction.getSpecConfig().getOnRetryFailure().getAction().getType())
         .isEqualTo(NGFailureActionType.ABORT);
 

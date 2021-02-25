@@ -55,7 +55,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                            .action(RetryFailureActionConfig.builder()
                                        .specConfig(RetryFailureSpecConfig.builder()
                                                        .retryCount(2)
-                                                       .retryInterval(
+                                                       .retryIntervals(
                                                            asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
                                                        .build())
                                        .build())
@@ -70,7 +70,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                            .action(RetryFailureActionConfig.builder()
                                        .specConfig(RetryFailureSpecConfig.builder()
                                                        .retryCount(2)
-                                                       .retryInterval(
+                                                       .retryIntervals(
                                                            asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
                                                        .build())
                                        .build())
@@ -82,7 +82,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                    RetryFailureActionConfig.builder()
                        .specConfig(RetryFailureSpecConfig.builder()
                                        .retryCount(2)
-                                       .retryInterval(asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
+                                       .retryIntervals(asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
                                        .build())
                        .build()))
         .contains(FailureType.AUTHENTICATION_FAILURE, FailureType.AUTHORIZATION_FAILURE);
@@ -102,7 +102,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                            .action(RetryFailureActionConfig.builder()
                                        .specConfig(RetryFailureSpecConfig.builder()
                                                        .retryCount(2)
-                                                       .retryInterval(
+                                                       .retryIntervals(
                                                            asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
                                                        .build())
                                        .build())
@@ -118,7 +118,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                     .action(RetryFailureActionConfig.builder()
                                 .specConfig(RetryFailureSpecConfig.builder()
                                                 .retryCount(4)
-                                                .retryInterval(Collections.singletonList(Timeout.fromString("2s")))
+                                                .retryIntervals(Collections.singletonList(Timeout.fromString("2s")))
                                                 .build())
                                 .build())
                     .build())
@@ -129,14 +129,14 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                    RetryFailureActionConfig.builder()
                        .specConfig(RetryFailureSpecConfig.builder()
                                        .retryCount(2)
-                                       .retryInterval(asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
+                                       .retryIntervals(asList(Timeout.fromString("2s"), Timeout.fromString("20s")))
                                        .build())
                        .build()))
         .contains(FailureType.AUTHENTICATION_FAILURE);
     assertThat(actionConfigCollectionMap.get(RetryFailureActionConfig.builder()
                                                  .specConfig(RetryFailureSpecConfig.builder()
                                                                  .retryCount(4)
-                                                                 .retryInterval(asList(Timeout.fromString("2s")))
+                                                                 .retryIntervals(asList(Timeout.fromString("2s")))
                                                                  .build())
                                                  .build()))
         .contains(FailureType.AUTHORIZATION_FAILURE);

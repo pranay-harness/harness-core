@@ -55,6 +55,7 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
       case RETRY:
         return interruptPackageBuilder.interruptType(InterruptType.RETRY).build();
       case IGNORE:
+        return interruptPackageBuilder.interruptType(InterruptType.IGNORE).build();
       case ON_FAIL:
         return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP)
             .metadata(Collections.singletonMap(InterruptType.NEXT_STEP.name(), interventionWaitAdvise.getNextNodeId()))
