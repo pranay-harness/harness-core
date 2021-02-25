@@ -2,8 +2,10 @@ package io.harness.cdng.service.beans;
 
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -35,5 +37,15 @@ public class ServiceConfigOutcome implements Outcome {
   @Override
   public String getType() {
     return "serviceConfigOutcome";
+  }
+
+  @Override
+  public String toViewJson() {
+    Map<String, Object> viewObject = new LinkedHashMap<>();
+    if (artifactsResult != null) {
+      viewObject.put("artifactsResult", artifactsResult);
+    }
+    viewObject.put("manifestResults", manifestResults);
+    return RecastOrchestrationUtils.toDocumentJson(viewObject);
   }
 }
