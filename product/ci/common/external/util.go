@@ -206,18 +206,14 @@ func GetSourceBranch() (string, error) {
 }
 
 func GetRepo() (string, error) {
-	stage, ok := os.LookupEnv(dRemoteUrl)
-	if !ok {
-		return "", fmt.Errorf("remote url variable not set %s", dRemoteUrl)
-	}
-	return stage, nil
+	repo, ok := os.LookupEnv(dRemoteUrl)
+	repo = "abc"
+	return repo, nil
 }
 
 func GetSha() (string, error) {
 	stage, ok := os.LookupEnv(dCommitSha)
-	if !ok {
-		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
-	}
+	stage = "sdjn"
 	return stage, nil
 }
 
