@@ -200,10 +200,16 @@ public class OrchestrationEngine {
       Object resolvedStepParameters = stepParameters == null
           ? null
           : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+      Object resolvedStepInputs = node.getStepInputs() == null
+          ? null
+          : pmsEngineExpressionService.resolve(
+              ambiance, NodeExecutionUtils.extractStepParameters(node.getStepInputs()));
 
       NodeExecution updatedNodeExecution =
-          Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
-              ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+          Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+            setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
+            setUnset(ops, NodeExecutionKeys.resolvedStepInputs, resolvedStepInputs);
+          }));
 
       NodeExecutionEvent event = NodeExecutionEvent.builder()
                                      .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
@@ -300,7 +306,8 @@ public class OrchestrationEngine {
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.getStepOutcomesList());
+    List<StepOutcomeRef> outcomeRefs =
+        handleOutcomes(ambiance, stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
 
     NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
       setUnset(ops, NodeExecutionKeys.skipInfo, stepResponse.getSkipInfo());
@@ -348,7 +355,8 @@ public class OrchestrationEngine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private List<StepOutcomeRef> handleOutcomes(Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos) {
+  private List<StepOutcomeRef> handleOutcomes(
+      Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos, List<StepOutcomeProto> graphOutcomesList) {
     List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
     if (isEmpty(stepOutcomeProtos)) {
       return outcomeRefs;
@@ -358,7 +366,14 @@ public class OrchestrationEngine {
       stepOutcomeProtos.forEach(proto -> {
         if (isNotEmpty(proto.getOutcome())) {
           String instanceId =
-              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup());
+              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), false);
+          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
+        }
+      });
+      graphOutcomesList.forEach(proto -> {
+        if (isNotEmpty(proto.getOutcome())) {
+          String instanceId =
+              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), true);
           outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
         }
       });

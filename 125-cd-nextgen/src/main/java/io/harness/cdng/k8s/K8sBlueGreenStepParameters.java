@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -18,6 +19,19 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sBlueGreenStepParameters extends K8sBlueGreenBaseStepInfo implements K8sStepParameters {
   String name;
   String identifier;
+
+  @Override
+  public String toViewJson() {
+    return RecastOrchestrationUtils.toDocumentJson(K8sBlueGreenStepParameters.infoBuilder()
+                                                       .skipDryRun(skipDryRun)
+                                                       .timeout(timeout)
+                                                       .name(name)
+                                                       .identifier(identifier)
+                                                       .skipCondition(skipCondition)
+                                                       .description(description)
+                                                       .build());
+  }
+
   String description;
   ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;

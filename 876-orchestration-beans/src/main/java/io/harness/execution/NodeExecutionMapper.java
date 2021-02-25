@@ -22,6 +22,7 @@ public class NodeExecutionMapper {
         .mode(proto.getMode())
         .startTs(ProtoUtils.timestampToUnixMillis(proto.getStartTs()))
         .endTs(ProtoUtils.timestampToUnixMillis(proto.getEndTs()))
+        .resolvedStepInputs(proto.getResolvedStepInputs())
         .initialWaitDuration(ProtoUtils.durationToJavaDuration(proto.getInitialWaitDuration()))
         .resolvedStepParameters(proto.getResolvedStepParameters())
         .notifyId(proto.getNotifyId())
@@ -66,6 +67,9 @@ public class NodeExecutionMapper {
     }
     if (nodeExecution.getResolvedStepParameters() != null) {
       builder.setResolvedStepParameters(nodeExecution.getResolvedStepParameters().toJson());
+    }
+    if (nodeExecution.getResolvedStepInputs() != null) {
+      builder.setResolvedStepInputs(nodeExecution.getResolvedStepInputs().toJson());
     }
     if (nodeExecution.getNotifyId() != null) {
       builder.setNotifyId(nodeExecution.getNotifyId());

@@ -59,6 +59,7 @@ public class ServicePMSPlanCreator {
         .name(PlanCreatorConstants.SERVICE_NODE_NAME)
         .identifier(YamlTypes.SERVICE_CONFIG)
         .stepParameters(stepParameters)
+        .stepInputs(stepParameters.toViewJson())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))

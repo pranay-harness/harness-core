@@ -16,4 +16,5 @@ message StepResponseProto {
   execution.failure.FailureInfo failureInfo = 3;
   execution.skip.SkipInfo skipInfo = 4;
   repeated logging.UnitProgress unitProgress = 5;
+  repeated StepOutcomeProto graphOutcomes = 6;
 }
