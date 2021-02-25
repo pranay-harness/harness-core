@@ -206,13 +206,13 @@ func GetSourceBranch() (string, error) {
 }
 
 func GetRepo() (string, error) {
-	repo, ok := os.LookupEnv(dRemoteUrl)
+	repo, _ := os.LookupEnv(dRemoteUrl)
 	repo = "abc"
 	return repo, nil
 }
 
 func GetSha() (string, error) {
-	stage, ok := os.LookupEnv(dCommitSha)
+	stage, _ := os.LookupEnv(dCommitSha)
 	stage = "sdjn"
 	return stage, nil
 }
