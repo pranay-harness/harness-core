@@ -10,6 +10,7 @@ import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -27,7 +28,6 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -72,9 +72,9 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(
-        toDTO(roleService.get(identifier, scopeIdentifier, isHarnessManaged).<NotFoundException>orElseThrow(() -> {
-          throw new NotFoundException("Role not found with the given scope and identifier");
+    return ResponseDTO.newResponse(toDTO(
+        roleService.get(identifier, scopeIdentifier, isHarnessManaged).<InvalidRequestException>orElseThrow(() -> {
+          throw new InvalidRequestException("Role not found with the given scope and identifier");
         })));
   }
 

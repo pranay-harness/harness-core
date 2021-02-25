@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.permissions;
 
+import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
+
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -16,4 +18,6 @@ public interface PermissionService {
   Permission update(@Valid Permission permission);
 
   Permission delete(@NotEmpty String identifier);
+
+  Optional<ResourceType> getResourceTypeFromPermission(@NotNull @Valid Permission permission);
 }

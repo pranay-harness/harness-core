@@ -84,7 +84,7 @@ public class HACLAggregatorServiceImpl implements ACLAggregatorService {
               if (hResourceOptional.isPresent()) {
                 HACL acl = HACL.builder()
                                .permission(permission)
-                               .resource(HResource.fromResourceSelector(resource).orElse(null))
+                               .resource(hResourceOptional.get())
                                .sourceMetadata(SourceMetadata.builder()
                                                    .roleIdentifier(role.get().getIdentifier())
                                                    .userGroupIdentifier(null)

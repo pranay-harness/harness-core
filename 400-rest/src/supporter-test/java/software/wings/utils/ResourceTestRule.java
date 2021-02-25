@@ -2,7 +2,8 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import software.wings.exception.ConstraintViolationExceptionMapper;
+import io.harness.exception.ConstraintViolationExceptionMapper;
+
 import software.wings.jersey.KryoMessageBodyProvider;
 
 import com.codahale.metrics.MetricRegistry;

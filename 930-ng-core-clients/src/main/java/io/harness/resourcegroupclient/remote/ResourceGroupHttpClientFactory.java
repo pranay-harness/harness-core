@@ -13,9 +13,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
 public class ResourceGroupHttpClientFactory extends AbstractHttpClientFactory implements Provider<ResourceGroupClient> {
-  public ResourceGroupHttpClientFactory(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret,
+  public ResourceGroupHttpClientFactory(ServiceHttpClientConfig resourceGroupClientConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(projectManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+    super(resourceGroupClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override

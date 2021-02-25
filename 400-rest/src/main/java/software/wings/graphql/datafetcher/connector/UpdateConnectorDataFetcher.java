@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.utils.ConstraintViolationHandlerUtils;
 
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
@@ -26,7 +27,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.ConstraintViolationHandlerUtils;
 
 import com.google.inject.Inject;
 import javax.validation.ConstraintViolationException;
