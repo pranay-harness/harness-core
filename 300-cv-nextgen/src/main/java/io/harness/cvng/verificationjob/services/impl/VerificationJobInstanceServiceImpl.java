@@ -511,8 +511,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int i = 0;
     while (i < verificationJobInstances.size()
         && getDeploymentVerificationStatus(verificationJobInstances.get(i))
-            != ActivityVerificationStatus.VERIFICATION_PASSED)
+            != ActivityVerificationStatus.VERIFICATION_PASSED) {
       i++;
+    }
+
     if (i == verificationJobInstances.size()) {
       return Optional.empty();
     } else {
