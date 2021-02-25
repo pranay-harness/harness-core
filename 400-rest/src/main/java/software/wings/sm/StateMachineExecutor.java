@@ -168,7 +168,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
   public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
   public static final String PIPELINE_STEP = "PIPELINE_STEP";
