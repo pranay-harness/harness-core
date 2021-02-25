@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -26,6 +27,7 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.command.TailFilePatternEntry.Builder.aTailFilePatternEntry;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.sm.StateMachineExecutor.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -1730,5 +1732,17 @@ public class CommandStateTest extends WingsBaseTest {
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
     verify(templateService).get("templateUuid", "4");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    Integer timeout = commandState.getTimeoutMillis();
+    assertThat(timeout).isEqualTo(DEFAULT_STATE_TIMEOUT_MILLIS);
+
+    commandState.setTimeoutMillis(60 * 10 * 1000);
+    timeout = commandState.getTimeoutMillis();
+    assertThat(timeout).isEqualTo(60 * 10 * 1000);
   }
 }
