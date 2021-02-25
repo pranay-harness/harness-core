@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
@@ -74,6 +75,9 @@ public interface DelegateService extends OwnedByAccount {
   Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
 
   Delegate updateScopes(@Valid Delegate delegate);
+
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
+      DelegateSize delegateSize) throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
       throws IOException;

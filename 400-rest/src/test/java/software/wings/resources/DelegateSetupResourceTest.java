@@ -199,9 +199,9 @@ public class DelegateSetupResourceTest {
                                                                             .size(DelegateSize.EXTRA_SMALL)
                                                                             .label("Extra Small")
                                                                             .replicas(1)
-                                                                            .taskLimit(25)
+                                                                            .taskLimit(50)
                                                                             .cpu(0.5)
-                                                                            .ram(1024)
+                                                                            .ram(1650)
                                                                             .build());
     when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
     RestResponse<List<DelegateSizeDetails>> restResponse =
