@@ -45,6 +45,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.ngexception.ConnectorValidationException;
+import io.harness.ng.HarnessManagedConnectorHelper;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -95,6 +96,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private SecretRefInputValidationHelper secretRefInputValidationHelper;
   ConnectorHeartbeatService connectorHeartbeatService;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -270,7 +272,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    if (existingConnector.getHeartbeatPerpetualTaskId() == null) {
+    if (existingConnector.getHeartbeatPerpetualTaskId() == null
+        && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
       PerpetualTaskId connectorHeartbeatTaskId =
           connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
               existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());

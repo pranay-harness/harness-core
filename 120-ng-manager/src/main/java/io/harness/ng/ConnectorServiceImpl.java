@@ -66,13 +66,15 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final Producer eventProducer;
   private final ExecutorService executorService;
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
       ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper) {
+      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper,
+      HarnessManagedConnectorHelper harnessManagedConnectorHelper) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -81,6 +83,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     this.eventProducer = eventProducer;
     this.executorService = executorService;
     this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
+    this.harnessManagedConnectorHelper = harnessManagedConnectorHelper;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -104,7 +107,8 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-      boolean isHarnessManagedSecretManager = connectorHeartbeatService.isHarnessManagedSecretManager(connectorInfo);
+      boolean isHarnessManagedSecretManager =
+          harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       if (!isHarnessManagedSecretManager) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
