@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,6 +12,8 @@ import io.harness.validation.Update;
 
 import software.wings.yaml.gitSync.GitFileProcessingSummary;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,15 +31,26 @@ import org.mongodb.morphia.annotations.Transient;
 @AllArgsConstructor
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
-
-@CdIndex(name = "gitCommits_for_appId_indx", fields = { @Field("accountId")
-                                                        , @Field("appId"), @Field("gitToHarness") })
-@CdIndex(name = "gitCommits_createdAt_direction_indx",
-    fields = { @Field("accountId")
-               , @Field("createdAt"), @Field("gitToHarness") })
 @HarnessEntity(exportable = true)
 public class GitFileActivitySummary
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("gitCommits_for_appId_indx")
+                 .field(GitFileActivitySummaryKeys.accountId)
+                 .field(GitFileActivitySummaryKeys.appId)
+                 .field(GitFileActivitySummaryKeys.gitToHarness)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("gitCommits_createdAt_direction_indx")
+                 .field(GitFileActivitySummaryKeys.accountId)
+                 .field(GitFileActivitySummaryKeys.createdAt)
+                 .field(GitFileActivitySummaryKeys.gitToHarness)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) String uuid;
   private String accountId;
   private String commitId;
