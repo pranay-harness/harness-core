@@ -936,6 +936,12 @@ public class SecretManagerImpl implements SecretManager {
     return secretService.hasAccessToReadSecrets(accountId, secretIds, appIdFromRequest, envIdFromRequest);
   }
 
+  @Override
+  public List<String> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    return secretService.filterSecretIdsByReadPermission(secretIds, accountId, appIdFromRequest, envIdFromRequest);
+  }
+
   public boolean hasUpdateAccessToSecrets(@NonNull Set<String> secretIds, @NonNull String accountId) {
     return secretService.hasAccessToEditSecrets(accountId, secretIds);
   }
