@@ -184,6 +184,8 @@ replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
 
 replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
+replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
+
 replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
 
 replace_key_value baseUrls.ui $MANAGER_UI_URL
