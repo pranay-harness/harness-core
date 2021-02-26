@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -222,7 +221,9 @@ public class YamlUtils {
 
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
-      return Collections.singletonList(getQNForNode(yamlNode, null));
+      List<String> qualifiedNameList = new ArrayList<>();
+      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
     if (isEmpty(qualifiedName)) {
