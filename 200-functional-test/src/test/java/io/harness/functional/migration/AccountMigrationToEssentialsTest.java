@@ -17,7 +17,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTest {
+public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTestBase {
   @Test
   @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)

@@ -6,8 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>190-deployment-functional-tests</module>
-        <module>200-functional-test</module>
         <module>980-java-agent</module>
     </modules>
     <scm>

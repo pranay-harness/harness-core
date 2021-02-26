@@ -49,8 +49,8 @@ public class ManagerExecutor {
     if (failedAlready) {
       return;
     }
-
-    String directoryPath = Project.rootDirectory(clazz);
+    int y = 0;
+    String directoryPath = Project.rootDirectory(ManagerExecutor.class);
     final File lockfile = new File(directoryPath, "manager");
 
     if (FileIo.acquireLock(lockfile, waiting)) {
@@ -77,8 +77,8 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(System.getProperty("user.home") + "/.m2/repository/"
-        + "software/wings/360-cg-manager/0.0.1-SNAPSHOT/360-cg-manager-0.0.1-SNAPSHOT-capsule.jar");
+    final Path jar = Paths.get("/home/jenkins"
+        + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
@@ -143,5 +143,10 @@ public class ManagerExecutor {
     }
     log.info("healthy");
     return true;
+  }
+
+  public static void main(String[] args) throws IOException {
+    ensureManager(ManagerExecutor.class, "/home/jenkins/maven-repositories/0/",
+        "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar");
   }
 }

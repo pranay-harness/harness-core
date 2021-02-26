@@ -155,6 +155,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   @Test
   @Owner(developers = YOGESH)
   @Category(CDFunctionalTests.class)
+  @Ignore("TODO: This test needs to be moved to 190-functional tests")
   public void shouldCreateAndRunAwsLambdaWorkflow() {
     service = serviceGenerator.ensureAwsLambdaGenericTest(seed, owners, "lambda-service");
     infrastructureDefinition =

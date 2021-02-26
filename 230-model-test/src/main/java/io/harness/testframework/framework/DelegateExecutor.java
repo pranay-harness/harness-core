@@ -47,7 +47,8 @@ public class DelegateExecutor {
 
   public void ensureDelegate(Account account, String bearerToken, Class clazz) throws IOException {
     if (!isHealthy(account.getUuid(), bearerToken)) {
-      executeLocalDelegate(account, bearerToken, clazz);
+      return;
+      //      executeLocalDelegate(account, bearerToken, clazz);
     }
   }
 
