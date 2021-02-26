@@ -13,7 +13,6 @@ import static io.harness.security.encryption.SecretManagerType.VAULT;
 
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
-import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -23,9 +22,6 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
-import software.wings.service.impl.DelegateServiceImpl;
-
-import com.amazonaws.auth.STSSessionCredentials;
 import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,7 +29,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -53,6 +48,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AwsSecretsManagerConfigKeys")
 public class AwsSecretsManagerConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key") private String accessKey;
@@ -95,10 +91,8 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
         Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             getEncryptionServiceUrl(), maskingEvaluator));
     if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
-      executionCapabilities.add(SelectorCapability.builder()
-                                    .selectors(delegateSelectors)
-                                    .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
-                                    .build());
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }
     return executionCapabilities;
   }
