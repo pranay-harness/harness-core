@@ -378,7 +378,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       // If the last update already updated the status.
       return;
     }
-    ActivityVerificationStatus activityVerificationStatus = getDeploymentVerificationStatus(verificationJobInstance);
     int verificationTaskCount =
         verificationTaskService
             .getVerificationTaskIds(verificationJobInstance.getAccountId(), verificationJobInstanceId)
@@ -390,6 +389,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .distinct()
             .count()
         == verificationTaskCount) {
+      verificationJobInstance.setExecutionStatus(ExecutionStatus.SUCCESS);
+      ActivityVerificationStatus activityVerificationStatus = getDeploymentVerificationStatus(verificationJobInstance);
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class);
       verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, SUCCESS)
