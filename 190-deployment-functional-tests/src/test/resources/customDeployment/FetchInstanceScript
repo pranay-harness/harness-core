@@ -7,9 +7,9 @@ if [ -z "${infra.custom.vars.secretKey}" ]
 fi
 
 
-if [ -z "${secrets.getValue("pcf_password")}" ]
+if [ -z '${secrets.getValue("pcf_password")}' ]
 	then
-		echo "${secrets.getValue("pcf_password")}"
+		echo '${secrets.getValue("pcf_password")}'
 		exit 1
 fi
 
