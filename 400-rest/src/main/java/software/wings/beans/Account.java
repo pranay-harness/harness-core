@@ -330,10 +330,6 @@ public class Account extends Base implements PersistentRegularIterable {
     this.oauthEnabled = oauthEnabled;
   }
 
-  public boolean isCloudCostEnabled() {
-    return this.cloudCostEnabled;
-  }
-
   public void setCloudCostEnabled(boolean cloudCostEnabled) {
     this.cloudCostEnabled = cloudCostEnabled;
   }
