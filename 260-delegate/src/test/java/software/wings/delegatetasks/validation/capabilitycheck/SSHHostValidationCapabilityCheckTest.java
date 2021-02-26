@@ -9,12 +9,17 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.shell.AccessType;
 import io.harness.shell.SshSessionConfig;
@@ -33,6 +38,7 @@ import software.wings.utils.WingsTestConstants;
 
 import com.jcraft.jsch.JSchException;
 import java.util.ArrayList;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -42,6 +48,8 @@ import org.mockito.Spy;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateConfiguration delegateConfiguration;
   @Spy @InjectMocks private SSHHostValidationCapabilityCheck sshHostValidationCapabilityCheck;
 
   private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
@@ -79,10 +87,16 @@ public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
                                       .build())
           .build();
 
+  @Before
+  public void setUpMocks() {
+    when(delegateConfiguration.getAccountId()).thenReturn("asdf");
+  }
+
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldPerformCapabilityCheck() throws JSchException {
+  public void shouldPerformCapabilityCheck_old() throws JSchException {
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doNothing().when(sshHostValidationCapabilityCheck).performTest(any(SshSessionConfig.class));
     CapabilityResponse capabilityResponse =
         sshHostValidationCapabilityCheck.performCapabilityCheck(validationCapability);
@@ -93,16 +107,10 @@ public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldPerformCapabilityCheckExecuteOnDelegate() {
-    SSHHostValidationCapability validationCapability = SSHHostValidationCapability.builder()
-                                                           .validationInfo(BasicValidationInfo.builder()
-                                                                               .accountId(ACCOUNT_ID)
-                                                                               .appId(APP_ID)
-                                                                               .activityId(ACTIVITY_ID)
-                                                                               .executeOnDelegate(true)
-                                                                               .publicDns(host.getPublicDns())
-                                                                               .build())
-                                                           .build();
+  public void shouldPerformCapabilityCheck() throws JSchException {
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+    when(sshHostValidationCapabilityCheck.checkConnectivity(any(), anyInt(), anyBoolean(), anyBoolean()))
+        .thenReturn(true);
     CapabilityResponse capabilityResponse =
         sshHostValidationCapabilityCheck.performCapabilityCheck(validationCapability);
     assertThat(capabilityResponse).isNotNull();

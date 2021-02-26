@@ -4,7 +4,9 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
@@ -49,6 +51,8 @@ public class CommandExecutionContextTest extends WingsBaseTest {
           .accountId(ACCOUNT_ID)
           .activityId(ACTIVITY_ID)
           .host(aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build())
+          .hostConnectionAttributes(
+              aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(aHostConnectionAttributes().build()).build())
           .winRmConnectionAttributes(WinRmConnectionAttributes.builder()
                                          .accountId(ACCOUNT_ID)
                                          .username(USER_NAME)
@@ -132,9 +136,9 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .build();
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
-    assertThat(executionCapabilities).hasSize(2);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
-    assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
+    // we do not evaluate ssh selector capability if execute on delegate is true.
+    assertThat(executionCapabilities).hasSize(1);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SelectorCapability.class);
   }
 
   @Test

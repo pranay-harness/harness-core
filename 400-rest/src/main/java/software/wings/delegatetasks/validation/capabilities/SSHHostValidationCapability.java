@@ -28,6 +28,9 @@ public class SSHHostValidationCapability implements ExecutionCapability {
   private List<EncryptedDataDetail> bastionConnectionCredentials;
   private SSHExecutionCredential sshExecutionCredential;
   private Map<String, String> envVariables = new HashMap<>();
+  // old impl above, new impl below
+  private String host;
+  private int port;
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SSH_HOST_CONNECTION;
 
   @Override

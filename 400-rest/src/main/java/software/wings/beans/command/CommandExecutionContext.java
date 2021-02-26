@@ -25,6 +25,7 @@ import io.harness.shell.CommandExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -247,20 +248,25 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         }
         return capabilities;
       case SSH:
-        capabilities.add(SSHHostValidationCapability.builder()
-                             .validationInfo(BasicValidationInfo.builder()
-                                                 .accountId(accountId)
-                                                 .appId(appId)
-                                                 .activityId(activityId)
-                                                 .executeOnDelegate(executeOnDelegate)
-                                                 .publicDns(host == null ? null : host.getPublicDns())
-                                                 .build())
-                             .hostConnectionAttributes(hostConnectionAttributes)
-                             .bastionConnectionAttributes(bastionConnectionAttributes)
-                             .hostConnectionCredentials(hostConnectionCredentials)
-                             .bastionConnectionCredentials(bastionConnectionCredentials)
-                             .sshExecutionCredential((SSHExecutionCredential) executionCredential)
-                             .build());
+        if (!executeOnDelegate) {
+          capabilities.add(SSHHostValidationCapability.builder()
+                               .validationInfo(BasicValidationInfo.builder()
+                                                   .accountId(accountId)
+                                                   .appId(appId)
+                                                   .activityId(activityId)
+                                                   .executeOnDelegate(executeOnDelegate)
+                                                   .publicDns(host == null ? null : host.getPublicDns())
+                                                   .build())
+                               .hostConnectionAttributes(hostConnectionAttributes)
+                               .bastionConnectionAttributes(bastionConnectionAttributes)
+                               .hostConnectionCredentials(hostConnectionCredentials)
+                               .bastionConnectionCredentials(bastionConnectionCredentials)
+                               .sshExecutionCredential((SSHExecutionCredential) executionCredential)
+                               // old impl above, new impl below
+                               .port(((HostConnectionAttributes) hostConnectionAttributes.getValue()).getSshPort())
+                               .host(host.getPublicDns())
+                               .build());
+        }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
