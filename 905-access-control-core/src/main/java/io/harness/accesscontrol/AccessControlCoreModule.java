@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.permissions.PermissionsModule;
+import io.harness.accesscontrol.resources.ResourceModule;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
 import io.harness.accesscontrol.roles.RoleModule;
 import io.harness.accesscontrol.scopes.ScopeModule;
@@ -28,6 +29,7 @@ public class AccessControlCoreModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(ResourceModule.getInstance());
     install(ScopeModule.getInstance());
     install(PermissionsModule.getInstance());
     install(RoleModule.getInstance());

@@ -22,7 +22,8 @@ public class OutcomeServiceImpl implements OutcomeService {
 
   @Override
   public String consume(Ambiance ambiance, String name, Outcome value, String groupName) {
-    return pmsOutcomeService.consume(ambiance, name, PmsOutcomeMapper.convertOutcomeValueToJson(value), groupName);
+    return pmsOutcomeService.consume(
+        ambiance, name, PmsOutcomeMapper.convertOutcomeValueToJson(value), groupName, false);
   }
 
   @Override

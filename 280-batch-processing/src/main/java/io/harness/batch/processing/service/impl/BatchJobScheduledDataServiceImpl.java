@@ -33,6 +33,13 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   @Override
   public Instant fetchLastBatchJobScheduledTime(String accountId, BatchJobType batchJobType) {
     Instant instant = fetchLastDependentBatchJobScheduledTime(accountId, batchJobType);
+    if (null != instant && batchJobType == BatchJobType.ANOMALY_DETECTION_CLOUD) {
+      Instant currentInstant = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(3, ChronoUnit.DAYS);
+      if (!instant.isBefore(currentInstant)) {
+        instant = currentInstant;
+      }
+      return instant;
+    }
     if (null == instant) {
       if (batchJobType.getBatchJobBucket() == BatchJobBucket.OUT_OF_CLUSTER) {
         SettingAttribute ceConnector = cloudToHarnessMappingService.getFirstSettingAttributeByCategory(
@@ -67,7 +74,12 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
-    if (null != instant && BatchJobType.ANOMALY_DETECTION == batchJobType) {
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
+      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
+
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_CLOUD == batchJobType) {
       Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }

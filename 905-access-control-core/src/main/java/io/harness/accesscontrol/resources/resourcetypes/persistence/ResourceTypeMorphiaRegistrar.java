@@ -1,15 +1,14 @@
-package io.harness.accesscontrol.roles;
+package io.harness.accesscontrol.resources.resourcetypes.persistence;
 
-import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
-public class RoleMorphiaRegistrar implements MorphiaRegistrar {
+public class ResourceTypeMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(RoleDBO.class);
+    set.add(ResourceTypeDBO.class);
   }
 
   @Override

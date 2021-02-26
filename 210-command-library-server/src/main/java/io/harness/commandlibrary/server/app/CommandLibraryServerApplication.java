@@ -10,6 +10,7 @@ import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticat
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -29,7 +30,6 @@ import io.harness.serializer.ManagerRegistrars;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;

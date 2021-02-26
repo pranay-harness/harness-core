@@ -68,12 +68,14 @@ def main(event, context):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableTableName)
     else:
+        alterUnifiedTable(client, jsonData)
         print_("%s table exists" % unifiedTableTableName)
 
     if not if_tbl_exists(client, preAggragatedTableRef):
         print_("%s table does not exists, creating table..." % preAggragatedTableRef)
         createTable(client, preAggragatedTableTableName)
     else:
+        alterPreaggTable(client, jsonData)
         print_("%s table exists" % preAggragatedTableTableName)
 
     # start streaming the data from the gcs
@@ -234,3 +236,42 @@ def createUDF(client, projectId):
 
     query_job = client.query(query)
     query_job.result()
+
+def alterPreaggTable(client, jsonData):
+    print_("Altering Preaggregated Data Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.preAggregated` ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceRate FLOAT64, \
+        ADD COLUMN IF NOT EXISTS azureServiceName STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e, "WARN")
+    else:
+        print_("Finished Altering preAggregated Table")
+
+def alterUnifiedTable(client, jsonData):
+    print_("Altering unifiedTable Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.unifiedTable` ADD COLUMN IF NOT EXISTS azureMeterCategory STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterSubcategory STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterId STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterName STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceType STRING, \
+        ADD COLUMN IF NOT EXISTS azureServiceTier STRING, \
+        ADD COLUMN IF NOT EXISTS azureInstanceId STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceGroup STRING, \
+        ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
+        ADD COLUMN IF NOT EXISTS azureServiceName STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e, "WARN")
+    else:
+        print_("Finished Altering unifiedTable Table")

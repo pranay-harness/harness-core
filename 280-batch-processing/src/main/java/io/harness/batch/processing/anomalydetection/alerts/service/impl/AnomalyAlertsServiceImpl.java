@@ -50,12 +50,12 @@ public class AnomalyAlertsServiceImpl implements AnomalyAlertsService {
   private void checkAndSendDailyReport(String accountId, Instant date) {
     checkNotNull(accountId);
     CESlackWebhook slackWebhook = ceSlackWebhookService.getByAccountId(accountId);
-    if (!slackWebhook.isSendAnomalyAlerts()) {
-      log.info("The Account with id={} has anomaly alerts turned off", accountId);
-      return;
-    }
     if (slackWebhook == null) {
       log.warn("The Account with id={} has no associated communication channels to send anomaly alerts.", accountId);
+      return;
+    }
+    if (!slackWebhook.isSendAnomalyAlerts()) {
+      log.info("The Account with id={} has anomaly alerts turned off", accountId);
       return;
     }
     try {

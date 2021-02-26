@@ -13,4 +13,5 @@ public class SwaggerDefinitionsMetaInfo {
   Set<FieldSubtypeData> subtypeClassMap;
   Set<OneOfMapping> oneOfMappings;
   Set<PossibleFieldTypes> fieldPossibleTypes;
+  Set<FieldEnumData> fieldEnumData;
 }

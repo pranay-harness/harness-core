@@ -1,4 +1,6 @@
-package software.wings.utils;
+package io.harness.utils;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.stream.Collectors.toList;
 
@@ -121,6 +123,9 @@ public class ConstraintViolationHandlerUtils {
     final Class<?> resourceClass = violation.getLeafBean().getClass();
     switch (parent.getKind()) {
       case PARAMETER:
+        if (isEmpty(member.getName())) {
+          return Optional.empty();
+        }
         Field field = FieldUtils.getField(resourceClass, member.getName(), true);
         return getMemberName(field.getDeclaredAnnotations());
       case METHOD:

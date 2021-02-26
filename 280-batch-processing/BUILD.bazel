@@ -7,7 +7,7 @@ load("//:macros.bzl", "sources")
 
 sources()
 
-shared_dependencies = [
+shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//350-event-xxxxxxxxmodule",
     "//400-rest:module",
     "//450-ce-views:module",
@@ -101,7 +101,7 @@ java_library(
     resources = [
         "//280-batch-processing/src/main/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
 

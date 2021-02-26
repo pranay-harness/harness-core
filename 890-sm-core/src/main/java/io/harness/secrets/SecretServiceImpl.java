@@ -61,6 +61,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -676,25 +677,32 @@ public class SecretServiceImpl implements SecretService {
   @Override
   public boolean hasAccessToReadSecrets(String accountId, Set<String> secretIds, String appId, String envId) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
-    try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
-        SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(
-            accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-        secretScopeMetadataSet.add(SecretScopeMetadata.builder()
-                                       .secretId(encryptedData.getUuid())
-                                       .secretScopes(encryptedData)
-                                       .inheritScopesFromSM(encryptedData.isInheritScopesFromSM())
-                                       .secretsManagerScopes(secretManagerConfig)
-                                       .build());
-      }
-    }
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
     return secretsRBACService.hasAccessToReadSecrets(accountId, secretScopeMetadataSet, appId, envId);
+  }
+
+  @Override
+  public List<String> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    return secretsRBACService
+        .filterSecretsByReadPermission(
+            accountId, new ArrayList<>(secretScopeMetadataSet), appIdFromRequest, envIdFromRequest)
+        .stream()
+        .map(SecretScopeMetadata::getSecretId)
+        .collect(Collectors.toList());
   }
 
   @Override
   public boolean hasAccessToEditSecrets(String accountId, Set<String> secretIds) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
+  }
+
+  private void buildSecretScopeMetadataSet(
+      String accountId, Set<String> secretIds, Set<SecretScopeMetadata> secretScopeMetadataSet) {
     try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
@@ -708,7 +716,6 @@ public class SecretServiceImpl implements SecretService {
                                        .build());
       }
     }
-    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
   }
 
   @Override

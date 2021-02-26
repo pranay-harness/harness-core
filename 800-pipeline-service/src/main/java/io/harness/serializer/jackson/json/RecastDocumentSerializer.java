@@ -56,8 +56,13 @@ public class RecastDocumentSerializer extends JsonSerializer<Document> {
         if (jsonFieldValue == null) {
           return null;
         }
-        return needConversion(jsonFieldValue.getClass()) ? RecastOrchestrationUtils.toDocument(jsonFieldValue)
-                                                         : jsonFieldValue;
+        if (RecastReflectionUtils.implementsInterface(jsonFieldValue.getClass(), Iterable.class)) {
+          traverseIterable((Iterable<Object>) jsonFieldValue);
+          return jsonFieldValue;
+        } else {
+          return needConversion(jsonFieldValue.getClass()) ? RecastOrchestrationUtils.toDocument(jsonFieldValue)
+                                                           : jsonFieldValue;
+        }
       }
       traverse(value1);
     } else if (RecastReflectionUtils.implementsInterface(value.getClass(), Iterable.class)) {

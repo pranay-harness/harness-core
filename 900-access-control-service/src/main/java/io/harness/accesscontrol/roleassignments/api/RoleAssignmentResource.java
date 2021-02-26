@@ -4,8 +4,10 @@ import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 
+import io.harness.accesscontrol.resources.HarnessResourceGroupService;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.ng.beans.PageRequest;
@@ -43,11 +45,14 @@ import retrofit2.http.Body;
     })
 public class RoleAssignmentResource {
   private final RoleAssignmentService roleAssignmentService;
+  private final HarnessResourceGroupService harnessResourceGroupService;
   private final ScopeService scopeService;
 
   @Inject
-  public RoleAssignmentResource(RoleAssignmentService roleAssignmentService, ScopeService scopeService) {
+  public RoleAssignmentResource(RoleAssignmentService roleAssignmentService,
+      HarnessResourceGroupService harnessResourceGroupService, ScopeService scopeService) {
     this.roleAssignmentService = roleAssignmentService;
+    this.harnessResourceGroupService = harnessResourceGroupService;
     this.scopeService = scopeService;
   }
 
@@ -66,8 +71,9 @@ public class RoleAssignmentResource {
   @ApiOperation(value = "Create Role Assignment", nickname = "createRoleAssignment")
   public ResponseDTO<RoleAssignmentResponseDTO> create(
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scopeIdentifier, roleAssignmentDTO));
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    harnessResourceGroupService.sync(roleAssignmentDTO.getResourceGroupIdentifier(), scope);
+    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
     return ResponseDTO.newResponse(toDTO(createdRoleAssignment));
   }
 

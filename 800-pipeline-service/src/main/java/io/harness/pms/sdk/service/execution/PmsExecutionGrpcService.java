@@ -116,6 +116,13 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
       }
+      if (status == ExecutionStatus.SKIPPED) {
+        update.set(
+            PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".skipInfo",
+            nodeExecution.getSkipInfo());
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
+            nodeExecution.getEndTs());
+      }
     }
 
     Criteria criteria =

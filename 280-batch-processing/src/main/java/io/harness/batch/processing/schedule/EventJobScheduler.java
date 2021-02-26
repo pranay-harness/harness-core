@@ -158,7 +158,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 */4 ? * *") //  0 */10 * * * ? for testing
+  @Scheduled(cron = "0 0 */1 ? * *") //  0 */10 * * * ? for testing
   public void runConnectorsHealthStatusJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {

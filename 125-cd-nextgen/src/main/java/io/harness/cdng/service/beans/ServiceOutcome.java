@@ -49,6 +49,11 @@ public class ServiceOutcome implements Outcome {
     return type;
   }
 
+  @Override
+  public String toViewJson() {
+    return null;
+  }
+
   @Data
   @Builder
   @TypeAlias("serviceOutcome_artifactsOutcome")

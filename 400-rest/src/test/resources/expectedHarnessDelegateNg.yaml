@@ -64,8 +64,8 @@ spec:
         name: harness-delegate-instance
         resources:
           limits:
-            cpu: "4.0"
-            memory: "4096Mi"
+            cpu: "0.5"
+            memory: "1650Mi"
         readinessProbe:
           exec:
             command:
@@ -104,6 +104,8 @@ spec:
           value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
+        - name: DELEGATE_GROUP_ID
+          value: delegateGroupId1
         - name: DELEGATE_DESCRIPTION
           value: "desc"
         - name: DELEGATE_PROFILE
@@ -115,7 +117,7 @@ spec:
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "9S5HMP0xROugl3_QgO62rQ"
         - name: DELEGATE_TASK_LIMIT
-          value: 400
+          value: "50"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

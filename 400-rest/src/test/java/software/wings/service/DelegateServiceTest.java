@@ -92,6 +92,7 @@ import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
@@ -794,7 +795,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .replicas(1)
                                           .taskLimit(50)
                                           .cpu(0.5)
-                                          .ram(500)
+                                          .ram(1650)
                                           .build();
 
     DelegateParams params = DelegateParams.builder()
@@ -806,6 +807,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE)
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
+                                .delegateGroupId(generateUuid())
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -827,6 +829,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
     assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getDelegateGroupId()).isEqualTo(params.getDelegateGroupId());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
@@ -863,6 +866,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
     assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getDelegateGroupId()).isNotNull();
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
@@ -2021,6 +2025,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .description("desc")
                                             .build();
 
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
 
@@ -2036,6 +2043,43 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(
               new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYamlWithoutDescription() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+                                            .delegateConfigurationId("delConfigId")
+                                            .name("harness-delegate")
+                                            .size(DelegateSize.LARGE)
+                                            .build();
+
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
+
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(new InputStreamReader(
+              getClass().getResourceAsStream("/expectedHarnessDelegateNgWithoutDescription.yaml"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2891,7 +2935,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Extra Small")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(500)
+                                       .ram(1650)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -2899,7 +2943,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(1024)
+                .ram(3300)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -2907,7 +2951,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(2048)
+                .ram(6600)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -2915,7 +2959,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(4096)
+                .ram(13200)
                 .cpu(4)
                 .build());
   }

@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -39,6 +40,17 @@ public class K8sCanaryDeleteStepParameters implements K8sStepParameters {
     this.timeout = timeout;
     this.skipDryRun = skipDryRun;
     this.rollbackInfo = rollbackInfo;
+  }
+
+  @Override
+  public String toViewJson() {
+    return RecastOrchestrationUtils.toDocumentJson(K8sCanaryDeleteStepParameters.infoBuilder()
+                                                       .name(name)
+                                                       .description(description)
+                                                       .skipCondition(skipCondition)
+                                                       .timeout(timeout)
+                                                       .skipDryRun(skipDryRun)
+                                                       .build());
   }
 
   @Override
