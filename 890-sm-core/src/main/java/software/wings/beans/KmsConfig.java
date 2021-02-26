@@ -21,8 +21,6 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
-import software.wings.service.impl.DelegateServiceImpl;
-
 import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
@@ -47,6 +45,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
 public class KmsConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true)
@@ -94,10 +93,8 @@ public class KmsConfig extends SecretManagerConfig {
         Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
             region, maskingEvaluator));
     if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
-      executionCapabilities.add(SelectorCapability.builder()
-                                    .selectors(delegateSelectors)
-                                    .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
-                                    .build());
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }
     return executionCapabilities;
   }
