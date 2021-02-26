@@ -26,9 +26,21 @@ aeriform("//220-graphql-test:tests")
 
 aeriform("//230-model-test:module")
 
+aeriform("//250-watcher:module")
+
+aeriform("//250-watcher:tests")
+
 aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
+
+aeriform("//270-verification:module")
+
+aeriform("//270-verification:tests")
+
+aeriform("//280-batch-processing:module")
+
+aeriform("//280-batch-processing:tests")
 
 aeriform("//300-cv-nextgen:module")
 
@@ -162,9 +174,21 @@ aeriform("//890-sm-core:module")
 
 aeriform("//890-sm-core:tests")
 
+aeriform("//900-access-control-service:module")
+
+aeriform("//900-access-control-service:tests")
+
+aeriform("//903-decision-module:module")
+
+aeriform("//903-decision-module:tests")
+
 aeriform("//905-access-control-core:module")
 
 aeriform("//905-access-control-core:tests")
+
+aeriform("//909-access-control-sdk:module")
+
+aeriform("//909-access-control-sdk:tests")
 
 aeriform("//910-delegate-service-driver:module")
 
@@ -209,6 +233,8 @@ aeriform("//950-events-api:module")
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
+
+aeriform("//950-git-sync-sdk:module")
 
 aeriform("//950-ng-core:module")
 
@@ -287,10 +313,6 @@ aeriform("//970-rbac-core:module")
 aeriform("//980-commons:module")
 
 aeriform("//980-commons:tests")
-
-aeriform("//980-java-agent:module")
-
-aeriform("//980-java-agent:tests")
 
 aeriform("//990-commons-test:abstract-module")
 
