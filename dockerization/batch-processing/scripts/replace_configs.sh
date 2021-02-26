@@ -179,3 +179,12 @@ fi
 if [[ "" != "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED" ]]; then
   yq write -i $CONFIG_FILE azureStorageSyncConfig.syncJobDisabled "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED"
 fi
+
+if [[ "" != "$ANOMALY_DETECTION_PYTHON_SERVICE_URL" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.pythonServiceUrl "$ANOMALY_DETECTION_PYTHON_SERVICE_URL"
+fi
+
+if [[ "" != "$ANOMALY_DETECTION_USE_PROPHET" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.useProphet "$ANOMALY_DETECTION_USE_PROPHET"
+fi
+
