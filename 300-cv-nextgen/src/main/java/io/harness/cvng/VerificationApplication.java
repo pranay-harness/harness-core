@@ -66,6 +66,7 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
@@ -254,6 +255,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     autoCreateCollectionsAndIndexes(injector);
+    registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
@@ -632,6 +634,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     jersey.register(BadRequestExceptionMapper.class);
     jersey.register(WingsExceptionMapperV2.class);
     jersey.register(GenericExceptionMapperV2.class);
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void runMigrations(Injector injector) {
