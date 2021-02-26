@@ -29,6 +29,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
+import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
@@ -74,7 +75,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
     })
 @PipelineServiceAuth
 @Slf4j
-public class PipelineResource {
+public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
   private PMSYamlSchemaService pmsYamlSchemaService;
