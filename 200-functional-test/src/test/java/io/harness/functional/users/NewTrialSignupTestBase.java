@@ -29,7 +29,7 @@ import org.junit.experimental.categories.Category;
  * @author rktummala on 04/04/19
  */
 @Slf4j
-public class NewTrialSignupTest extends AbstractFunctionalTest {
+public class NewTrialSignupTestBase extends AbstractFunctionalTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private OwnerManager ownerManager;
 

@@ -30,7 +30,7 @@ fi
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... || true
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//200-functional-test/... -//190-deployment-functional-tests/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -55,6 +55,7 @@ BAZEL_MODULES="\
   //160-model-gen-tool:module \
   //160-model-gen-tool:module_deploy.jar \
   //136-git-sync-manager:module \
+  //200-functional-test:module \
   //210-command-library-xxxxxxxxmodule \
   //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
@@ -378,6 +379,7 @@ build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test
 build_bazel_module 230-model-test
+build_bazel_module 200-functional-test
 
 build_bazel_tests 960-persistence
 build_bazel_tests 400-rest

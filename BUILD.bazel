@@ -53,6 +53,8 @@ modules = [
     "//125-cd-nextgen",
     "//130-resource-group",
     "//136-git-sync-manager",
+    "//190-deployment-functional-tests",
+    "//200-functional-test",
     "//160-model-gen-tool",
     "//160-stress-test",
     "//210-command-library-server",

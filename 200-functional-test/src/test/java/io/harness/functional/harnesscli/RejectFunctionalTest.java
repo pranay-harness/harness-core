@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -40,6 +41,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void rejectTheWorkflow() {
     workflowName = "CLI-Test-Approval-" + System.currentTimeMillis();
     approvalWorkflow = harnesscliHelper.createApprovalWorkflow(getAccount(), bearerToken, workflowName, application);
@@ -71,6 +73,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void rejectWithoutFlag() {
     String rejectOutput = "";
     String command = String.format("harness reject");
@@ -92,6 +95,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void rejectThePipeline() {
     pipelineName = "CLI-PIPELINE-" + System.currentTimeMillis();
     log.info("Generated unique pipeline name : " + pipelineName);

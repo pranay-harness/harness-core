@@ -6,6 +6,7 @@ directories:
   130-resource-group
   136-git-sync-manager
   160-model-gen-tool
+  190-deployment-functional-tests
   160-stress-tester
   210-command-library-server
   220-graphql-test
@@ -95,6 +96,7 @@ directories:
   980-commons
   990-commons-test
   run-configurations
+  200-functional-test
   tools
   scripts
 

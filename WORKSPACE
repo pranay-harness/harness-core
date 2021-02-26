@@ -2048,6 +2048,8 @@ maven_install(
         "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
         "com.squareup.okhttp3:okhttp:3.6.0",
+        "org.apache.httpcomponents:httpmime:4.5.1",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

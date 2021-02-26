@@ -42,7 +42,7 @@ import java.util.Arrays;
 import java.util.Map;
 import org.junit.Before;
 
-public abstract class AbstractAccountMigrationTest extends AbstractFunctionalTest {
+public abstract class AbstractAccountMigrationTestBase extends AbstractFunctionalTest {
   private static final String testUserPassword = "testPassword";
 
   @Inject private AccountGenerator accountGenerator;
