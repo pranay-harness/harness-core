@@ -480,6 +480,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerDeleteDataCollectionWorkersIterator(Injector injector) {
+    // TODO: remove this once moving to MonitoringSourcePerpetualTask is done.
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("delete-data-collection-workers-iterator").build());
     DeletePerpetualTasksHandler handler = injector.getInstance(DeletePerpetualTasksHandler.class);

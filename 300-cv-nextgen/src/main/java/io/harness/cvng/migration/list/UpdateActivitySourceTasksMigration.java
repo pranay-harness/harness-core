@@ -8,8 +8,9 @@ import static java.time.Duration.ofMillis;
 
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.migration.CNVGMigration;
 import io.harness.persistence.HPersistence;
 
@@ -27,13 +28,15 @@ import lombok.extern.slf4j.Slf4j;
 public class UpdateActivitySourceTasksMigration implements CNVGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Override
   public void migrate() {
     log.info("migration started");
     List<KubernetesActivitySource> kubernetesActivitySources =
-        hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority).asList();
+        hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+            .filter(ActivitySourceKeys.type, ActivitySourceType.KUBERNETES)
+            .asList();
     Set<CVConfigKey> cvConfigKeys = new HashSet<>();
     kubernetesActivitySources.stream()
         .filter(kubernetesActivitySource -> isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId()))
@@ -57,7 +60,7 @@ public class UpdateActivitySourceTasksMigration implements CNVGMigration {
         });
 
     cvConfigKeys.forEach(cvConfigKey
-        -> monitoringTaskPerpetualTaskService.createTask(cvConfigKey.getAccountId(), cvConfigKey.getOrgIdentifier(),
+        -> monitoringSourcePerpetualTaskService.createTask(cvConfigKey.getAccountId(), cvConfigKey.getOrgIdentifier(),
             cvConfigKey.getProjectIdentifier(), cvConfigKey.getConnectorIdentifier(),
             cvConfigKey.getMonitoringSourceIdentifier()));
     log.info("migration done");

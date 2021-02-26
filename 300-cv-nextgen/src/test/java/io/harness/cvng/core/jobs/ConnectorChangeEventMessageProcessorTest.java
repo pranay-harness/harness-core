@@ -29,7 +29,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -65,7 +65,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private ActivitySourceService activitySourceService;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private HPersistence hPersistence;
 
   private String accountIdentifier;
@@ -92,8 +92,8 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testProcessUpdateAction_resetLiveMonitoringPerpetualTask() throws IllegalAccessException {
-    MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService =
-        Mockito.mock(MonitoringTaskPerpetualTaskService.class);
+    MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService =
+        Mockito.mock(MonitoringSourcePerpetualTaskService.class);
     MonitoringSourcePerpetualTask monitoringSourcePerpetualTask = MonitoringSourcePerpetualTask.builder()
                                                                       .accountId(accountIdentifier)
                                                                       .orgIdentifier(orgIdentifier)
@@ -102,12 +102,12 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
                                                                       .monitoringSourceIdentifier(generateUuid())
                                                                       .perpetualTaskId(generateUuid())
                                                                       .build();
-    when(monitoringTaskPerpetualTaskService.listByConnectorIdentifier(
+    when(monitoringSourcePerpetualTaskService.listByConnectorIdentifier(
              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, Scope.PROJECT))
         .thenReturn(Lists.newArrayList(monitoringSourcePerpetualTask));
 
-    FieldUtils.writeField(connectorChangeEventMessageProcessor, "monitoringTaskPerpetualTaskService",
-        monitoringTaskPerpetualTaskService, true);
+    FieldUtils.writeField(connectorChangeEventMessageProcessor, "monitoringSourcePerpetualTaskService",
+        monitoringSourcePerpetualTaskService, true);
     connectorChangeEventMessageProcessor.processUpdateAction(
         EntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.newBuilder().setValue(accountIdentifier).build())
@@ -115,7 +115,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
             .setProjectIdentifier(StringValue.newBuilder().setValue(projectIdentifier).build())
             .setIdentifier(StringValue.newBuilder().setValue(connectorIdentifier).build())
             .build());
-    verify(monitoringTaskPerpetualTaskService, times(1))
+    verify(monitoringSourcePerpetualTaskService, times(1))
         .resetLiveMonitoringPerpetualTask(monitoringSourcePerpetualTask);
   }
 
