@@ -1140,7 +1140,9 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.perpetualTaskIds,
         VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, VerificationJobInstanceKeys.oldVersionHosts,
         VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
-        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap);
+        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap,
+        VerificationJobInstanceKeys.deploymentVerificationStatus);
+
     verificationJobInstances.forEach(verificationJobInstance -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
@@ -1348,6 +1350,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .resolvedJob(verificationJob)
             .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
+            .deploymentVerificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED)
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
