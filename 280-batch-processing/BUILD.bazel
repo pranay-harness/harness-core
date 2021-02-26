@@ -101,7 +101,7 @@ java_library(
     resources = [
         "//280-batch-processing/src/main/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
 
