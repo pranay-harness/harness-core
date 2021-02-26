@@ -1,6 +1,8 @@
 package io.harness.cvng;
 
-import static io.harness.AuthorizationServiceHeader.*;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
