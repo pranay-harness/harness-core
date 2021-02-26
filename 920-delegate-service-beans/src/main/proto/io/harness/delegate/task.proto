@@ -37,6 +37,7 @@ enum TaskMode {
 
 // Task details represent the object that will be propagated over the wire to the task executor Task executor needs to
 // be able to make sense of this data and accomplish the needed work from the task.
+// Next ID: 9
 message TaskDetails {
   TaskMode mode = 1;
 

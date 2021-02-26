@@ -14,6 +14,7 @@ import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
+import io.harness.delegate.task.executioncapability.SftpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SmbConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SmtpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SocketConnectivityCapabilityCheck;
@@ -23,7 +24,6 @@ import software.wings.delegatetasks.validation.capabilitycheck.ClusterMasterUrlC
 import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 

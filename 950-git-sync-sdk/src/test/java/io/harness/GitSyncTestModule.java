@@ -1,7 +1,6 @@
 package io.harness;
 
 import io.harness.gitsync.persistance.SpringPersistenceModule;
-import io.harness.govern.ProviderModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -9,6 +8,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -39,44 +39,60 @@ public class GitSyncTestModule extends AbstractModule {
         return new NoopUserProvider();
       }
     });
-    bind(HPersistence.class).to(MongoPersistence.class);
     install(new SpringPersistenceModule());
+    bind(HPersistence.class).to(MongoPersistence.class);
+    install(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
 
-    install(new ProviderModule() {
-      @Provides
-      @Singleton
-      MongoConfig mongoConfig() {
-        return config.getMongoConfig();
-      }
-      @Provides
-      @Singleton
-      public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
-      }
-
-      @Provides
-      @Singleton
-      public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
-      }
-
-      @Provides
-      @Singleton
-      public Set<Class<? extends TypeConverter>> morphiaConverters() {
-        return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
-      }
-      @Provides
-      @Singleton
-      List<Class<? extends Converter<?, ?>>> springConverters() {
-        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
-      }
-
-      @Provides
-      @Singleton
-      @Named("morphiaClasses")
-      Map<Class, String> morphiaCustomCollectionNames() {
-        return Collections.emptyMap();
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
       }
     });
+  }
+
+  @Provides
+  @Singleton
+  public MongoConfig mongoConfig() {
+    return config.getMongoConfig();
+  }
+
+  @Provides
+  @Singleton
+  public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
+    return ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
+  }
+
+  @Provides
+  @Singleton
+  public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
+    return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
+  }
+
+  @Provides
+  @Singleton
+  public Set<Class<? extends TypeConverter>> morphiaConverters() {
+    return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+  }
+
+  @Provides
+  @Singleton
+  public List<Class<? extends Converter<?, ?>>> springConverters() {
+    return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+  }
+
+  @Provides
+  @Singleton
+  @Named("morphiaClasses")
+  public Map<Class, String> morphiaCustomCollectionNames() {
+    return Collections.emptyMap();
   }
 }
