@@ -74,17 +74,16 @@ public class K8sQueryMetaDataTest extends CategoryTest {
   @Owner(developers = SANDESH)
   @Category(UnitTests.class)
   public void shouldFormK8sClusterQuery() {
-    TimeSeriesMetaData timeSeriesMetaData =
-        TimeSeriesMetaData.builder()
-            .accountId(accountId)
-            .trainStart(endTime.minus(AnomalyDetectionConstants.DAYS_TO_CONSIDER, ChronoUnit.DAYS))
-            .trainEnd(endTime.minus(1, ChronoUnit.DAYS))
-            .testStart(endTime.minus(1, ChronoUnit.DAYS))
-            .testEnd(endTime)
-            .timeGranularity(TimeGranularity.DAILY)
-            .entityType(EntityType.CLUSTER)
-            .k8sQueryMetaData(k8sQueryMetaData)
-            .build();
+    TimeSeriesMetaData timeSeriesMetaData = TimeSeriesMetaData.builder()
+                                                .accountId(accountId)
+                                                .trainStart(endTime.minus(15, ChronoUnit.DAYS))
+                                                .trainEnd(endTime.minus(1, ChronoUnit.DAYS))
+                                                .testStart(endTime.minus(1, ChronoUnit.DAYS))
+                                                .testEnd(endTime)
+                                                .timeGranularity(TimeGranularity.DAILY)
+                                                .entityType(EntityType.CLUSTER)
+                                                .k8sQueryMetaData(k8sQueryMetaData)
+                                                .build();
 
     // cost aggreation
     aggregationList.add(QLCCMAggregationFunction.builder()
@@ -134,17 +133,16 @@ public class K8sQueryMetaDataTest extends CategoryTest {
   @Owner(developers = SANDESH)
   @Category(UnitTests.class)
   public void shouldFormK8sNamespaceQuery() {
-    TimeSeriesMetaData timeSeriesMetaData =
-        TimeSeriesMetaData.builder()
-            .accountId(accountId)
-            .trainStart(endTime.minus(AnomalyDetectionConstants.DAYS_TO_CONSIDER, ChronoUnit.DAYS))
-            .trainEnd(endTime.minus(1, ChronoUnit.DAYS))
-            .testStart(endTime.minus(1, ChronoUnit.DAYS))
-            .testEnd(endTime)
-            .timeGranularity(TimeGranularity.DAILY)
-            .entityType(EntityType.NAMESPACE)
-            .k8sQueryMetaData(k8sQueryMetaData)
-            .build();
+    TimeSeriesMetaData timeSeriesMetaData = TimeSeriesMetaData.builder()
+                                                .accountId(accountId)
+                                                .trainStart(endTime.minus(15, ChronoUnit.DAYS))
+                                                .trainEnd(endTime.minus(1, ChronoUnit.DAYS))
+                                                .testStart(endTime.minus(1, ChronoUnit.DAYS))
+                                                .testEnd(endTime)
+                                                .timeGranularity(TimeGranularity.DAILY)
+                                                .entityType(EntityType.NAMESPACE)
+                                                .k8sQueryMetaData(k8sQueryMetaData)
+                                                .build();
     // cost aggreation
     aggregationList.add(QLCCMAggregationFunction.builder()
                             .operationType(QLCCMAggregateOperation.SUM)

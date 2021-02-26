@@ -32,6 +32,7 @@ import io.harness.cdng.k8s.K8sRollingStepParameters;
 import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
@@ -149,5 +150,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(DeleteResourcesWrapper.class, 12519);
     kryo.register(K8sDeleteStepParameters.class, 12520);
     kryo.register(K8sDeleteStepInfo.class, 12521);
+    kryo.register(GitFetchResponsePassThroughData.class, 12522);
   }
 }

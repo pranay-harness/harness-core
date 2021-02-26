@@ -35,6 +35,7 @@ java_library(
         "//136-git-sync-manager/src/test/resources:resource",
         "//136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook:resource",
     ],
+    resources = ["//136-git-sync-manager/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "module",

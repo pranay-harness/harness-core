@@ -83,3 +83,7 @@ scheduler-jobs-config:
   budgetAlertsJobCron: "0 30 14 * * ?"
   weeklyReportsJobCron: "0 0 14 * * MON"
   budgetCostUpdateJobCron: "0 0 14 * * ?"
+
+cePythonService:
+  pythonServiceUrl: "http://0.0.0.0:8081"
+  useProphet: false

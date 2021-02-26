@@ -75,7 +75,6 @@ public class OverviewPageStatsDataFetcher
     boolean isAzureConnectorPresent = false;
     boolean isApplicationDataPresent = false;
     boolean isClusterDataPresent = false;
-    boolean isAzureDataPresent = false;
     List<SettingAttribute> ceConnectorsList = getCEConnectors(accountId);
     QLCEOverviewStatsDataBuilder overviewStatsDataBuilder = QLCEOverviewStatsData.builder();
 
@@ -149,8 +148,7 @@ public class OverviewPageStatsDataFetcher
       Thread.currentThread().interrupt();
     }
 
-    QLCEOverviewStatsData data = overviewStatsDataBuilder.build();
-
+    overviewStatsDataBuilder.defaultAzurePerspectiveId(ceViewService.getDefaultAzureViewId(accountId));
     log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }
