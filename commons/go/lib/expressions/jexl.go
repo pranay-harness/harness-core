@@ -3,7 +3,7 @@ package expressions
 import "regexp"
 
 const (
-	jexlRegexPattern = `\$\{.*\}`
+	jexlRegexPattern = `\<\+.*\>`
 )
 
 var (

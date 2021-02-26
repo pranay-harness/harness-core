@@ -4,11 +4,11 @@ import static io.harness.rule.OwnerRule.KARAN;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
@@ -18,7 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ProjectMapperTest {
+public class ProjectMapperTest extends CategoryTest {
   ProjectDTO projectDTO;
   Project project;
   String HARNESS_BLUE = "#0063F7";

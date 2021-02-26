@@ -132,6 +132,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setId(id);
 
     when(projectRepository.save(any())).thenReturn(project);
+    when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
@@ -160,6 +161,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
     project.setName(randomAlphabetic(10));
     project.setId(randomAlphabetic(10));
+    when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.of(project));
     projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);
   }
@@ -177,6 +179,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
     project.setIdentifier(identifier);
 
+    when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(projectService.get(accountIdentifier, orgIdentifier, identifier)).thenReturn(Optional.empty());
 
     Project updatedProject = projectService.update(accountIdentifier, orgIdentifier, identifier, projectDTO);

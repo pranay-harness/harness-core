@@ -3,6 +3,8 @@ package io.harness.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
@@ -16,9 +18,9 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.tasks.Cd1SetupFields;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.EnumSet;
@@ -44,6 +46,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, HDelegateTask {
   public static List<MongoIndex> mongoIndexes() {
@@ -69,6 +72,8 @@ public class DelegateTask
                  .build())
         .build();
   }
+
+  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   @NotNull private TaskData data;
   private List<ExecutionCapability> executionCapabilities;
@@ -155,46 +160,6 @@ public class DelegateTask
       return data.getTaskType();
     }
     return description;
-  }
-
-  @Deprecated
-  /**
-   * @deprecated Value should be moved to setupAbstractions map and read from there
-   */
-  public String getAppId() {
-    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
-  }
-
-  @Deprecated
-  /**
-   * @deprecated Value should be moved to setupAbstractions map and read from there
-   */
-  public String getEnvId() {
-    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
-  }
-
-  @Deprecated
-  /**
-   * @deprecated Value should be moved to setupAbstractions map and read from there
-   */
-  public String getInfrastructureMappingId() {
-    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
-  }
-
-  @Deprecated
-  /**
-   * @deprecated Value should be moved to setupAbstractions map and read from there
-   */
-  public String getServiceTemplateId() {
-    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
-  }
-
-  @Deprecated
-  /**
-   * @deprecated Value should be moved to setupAbstractions map and read from there
-   */
-  public String getArtifactStreamId() {
-    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
   }
 
   public enum Status {

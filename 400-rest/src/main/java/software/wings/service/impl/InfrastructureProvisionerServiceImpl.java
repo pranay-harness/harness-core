@@ -6,6 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.ARMSourceType.GIT;
+import static software.wings.beans.ARMSourceType.TEMPLATE_BODY;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -50,12 +53,14 @@ import io.harness.validation.Update;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
@@ -190,12 +195,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @VisibleForTesting
   boolean differentProvisionerWithSameNameExists(String appId, String uuid, String name) {
     Query<InfrastructureProvisioner> query = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                                 .field(InfrastructureProvisioner.APP_ID_KEY2)
+                                                 .field(InfrastructureProvisioner.APP_ID)
                                                  .equal(appId)
                                                  .field(InfrastructureProvisioner.NAME_KEY)
                                                  .equal(name);
     if (isNotEmpty(uuid)) {
-      query.field(InfrastructureProvisioner.ID_KEY2).notEqual(uuid);
+      query.field(InfrastructureProvisioner.ID).notEqual(uuid);
     }
     return query.count() > 0;
   }
@@ -236,6 +241,20 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       validateCloudFormationProvisioner((CloudFormationInfrastructureProvisioner) provisioner);
     } else if (provisioner instanceof ShellScriptInfrastructureProvisioner) {
       validateShellScriptProvisioner((ShellScriptInfrastructureProvisioner) provisioner);
+    } else if (provisioner instanceof ARMInfrastructureProvisioner) {
+      validateARMProvisioner((ARMInfrastructureProvisioner) provisioner);
+    }
+  }
+
+  private void validateARMProvisioner(ARMInfrastructureProvisioner provisioner) {
+    if (GIT == provisioner.getSourceType()) {
+      notNullCheck("Git File Config is NULL", provisioner.getGitFileConfig());
+    } else if (TEMPLATE_BODY == provisioner.getSourceType()) {
+      if (isEmpty(provisioner.getTemplateBody())) {
+        throw new InvalidRequestException("Template Body is empty");
+      }
+    } else {
+      throw new InvalidRequestException("Unrecognized SourceType for ARM provisioner");
     }
   }
 
@@ -290,8 +309,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public PageResponse<InfrastructureProvisioner> listByBlueprintDetails(@NotEmpty String appId,
       String infrastructureProvisionerType, String serviceId, DeploymentType deploymentType,
       CloudProviderType cloudProviderType) {
-    PageRequestBuilder requestBuilder =
-        aPageRequest().addFilter(InfrastructureProvisioner.APP_ID_KEY2, Operator.EQ, appId);
+    PageRequestBuilder requestBuilder = aPageRequest().addFilter(InfrastructureProvisioner.APP_ID, Operator.EQ, appId);
 
     if (infrastructureProvisionerType != null) {
       requestBuilder.addFilter(
@@ -330,8 +348,19 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       String sourceType =
           CloudFormationSourceType.getSourceType(cloudFormationInfrastructureProvisioner.getSourceType());
       detailsBuilder.cloudFormationSourceType(sourceType);
+    } else if (provisioner instanceof ARMInfrastructureProvisioner) {
+      ARMInfrastructureProvisioner armInfrastructureProvisioner = (ARMInfrastructureProvisioner) provisioner;
+      if (GIT == armInfrastructureProvisioner.getSourceType()) {
+        GitFileConfig gitFileConfig = armInfrastructureProvisioner.getGitFileConfig();
+        if (gitFileConfig != null) {
+          SettingAttribute settingAttribute = idToSettingAttributeMapping.get(gitFileConfig.getConnectorId());
+          if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
+            GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+            detailsBuilder.repository(gitConfigHelperService.getRepositoryUrl(gitConfig, gitFileConfig.getRepoName()));
+          }
+        }
+      }
     }
-
     return detailsBuilder.build();
   }
 
@@ -340,7 +369,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       return Collections.emptyMap();
     }
     PageRequest<Service> servicePageRequest = new PageRequest<>();
-    servicePageRequest.addFilter(Service.APP_ID_KEY2, Operator.EQ, appId);
+    servicePageRequest.addFilter(Service.APP_ID, Operator.EQ, appId);
     servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, servicesIds.toArray());
 
     PageResponse<Service> services = serviceResourceService.list(servicePageRequest, false, false, false, null);
@@ -386,6 +415,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
         settingAttributeIds.add(
             ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
+      } else if (infrastructureProvisioner instanceof ARMInfrastructureProvisioner
+          && GIT == ((ARMInfrastructureProvisioner) infrastructureProvisioner).getSourceType()) {
+        settingAttributeIds.add(
+            ((ARMInfrastructureProvisioner) infrastructureProvisioner).getGitFileConfig().getConnectorId());
       }
     }
 
@@ -419,7 +452,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public InfrastructureProvisioner getByName(String appId, String provisionerName) {
     return wingsPersistence.createQuery(InfrastructureProvisioner.class)
-        .filter(InfrastructureProvisioner.APP_ID_KEY2, appId)
+        .filter(InfrastructureProvisioner.APP_ID, appId)
         .filter(InfrastructureProvisioner.NAME_KEY, provisionerName)
         .get();
   }
@@ -480,7 +513,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public void pruneByApplication(String appId) {
     List<Key<InfrastructureProvisioner>> keys = wingsPersistence.createQuery(InfrastructureProvisioner.class)
-                                                    .filter(InfrastructureProvisioner.APP_ID_KEY2, appId)
+                                                    .filter(InfrastructureProvisioner.APP_ID, appId)
                                                     .asKeyList();
     for (Key<InfrastructureProvisioner> key : keys) {
       prune(appId, (String) key.getId());

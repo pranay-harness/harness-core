@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package io.harness.product.ci.engine.proto;
+
+option java_multiple_files = true;
+option go_package = "cienginepb";
+
+// Definitions to interact with TI service
+message WriteTestsRequest {
+  string step_id = 1;
+  repeated string tests = 2;
+}
+
+message WriteTestsResponse {}
+
+service TiProxy {
+  // RPC to stream test cases from the addon
+  rpc WriteTests(stream WriteTestsRequest) returns (WriteTestsResponse);
+}

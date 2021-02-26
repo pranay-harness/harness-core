@@ -13,23 +13,9 @@ pipeline:
             spec:
               connectorRef: account.ciplayground
               namespace: harness-delegate
-          gitConnector:
-            type: git
-            identifier: account.gitportal
-            spec:
-              authScheme:
-                type: ssh
-                sshKey: git-ssh
-              repo: "master"
+          cloneCodebase: true # default is true
           execution:
             steps:
-              - step:
-                  identifier: gitClone
-                  type: GitClone
-                  spec:
-                    gitConnector: account.gitportal
-                    path: portal
-                    branch: master
               - step:
                   identifier: ping
                   type: Run
@@ -39,7 +25,7 @@ pipeline:
                       redis-cli -h cache ping
                     image: "shubham149/redis"
                     resources:
-                      limit:
+                      limits:
                         cpu: 400
                         memory: 500
           dependencies:

@@ -431,13 +431,19 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
       log.info("For {} serving control data from {}", logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
       logMLAnalysisRecord.decompressLogAnalysisRecord();
-      if (isEmpty(logMLAnalysisRecord.getTest_events())) {
+      Map<String, List<SplunkAnalysisCluster>> eventsFromBaseline;
+      if (logMLAnalysisRecord.isBaseLineCreated()) {
+        eventsFromBaseline = logMLAnalysisRecord.getTest_events();
+      } else {
+        eventsFromBaseline = logMLAnalysisRecord.getControl_events();
+      }
+      if (isEmpty(eventsFromBaseline)) {
         log.info("No test events found for control data for state {} with analysisId ",
             logRequest.getStateExecutionId(), logMLAnalysisRecord.getUuid());
         return rv;
       }
 
-      logMLAnalysisRecord.getTest_events().forEach((s, analysisClusters) -> {
+      eventsFromBaseline.forEach((s, analysisClusters) -> {
         if (isEmpty(analysisClusters)) {
           return;
         }

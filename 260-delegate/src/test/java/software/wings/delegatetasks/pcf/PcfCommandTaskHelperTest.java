@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -60,7 +61,6 @@ import software.wings.settings.SettingValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -950,7 +950,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = RIHAZ)
   @Category(UnitTests.class)
-  public void testDownloadArtifact() throws FileNotFoundException, IOException, ExecutionException {
+  public void testDownloadArtifact() throws IOException, ExecutionException {
     ArtifactStreamAttributes artifactStreamAttributes =
         ArtifactStreamAttributes.builder().artifactName("test-artifact").registryHostName(REGISTRY_HOST_NAME).build();
     PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder()
@@ -974,8 +974,48 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
              pcfCommandSetupRequest.getArtifactStreamAttributes().getRegistryHostName()))
         .thenReturn(new FileInputStream(testArtifactFile));
 
-    File artifactFile = pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory);
+    File artifactFile =
+        pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback);
 
     assertThat(artifactFile.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testDownloadArtifactWithExtractScript() throws IOException, ExecutionException {
+    String processedArtifactFilename = "test-artifact-processed";
+    ArtifactStreamAttributes artifactStreamAttributes =
+        ArtifactStreamAttributes.builder().artifactName("test-artifact").registryHostName(REGISTRY_HOST_NAME).build();
+    PcfCommandSetupRequest pcfCommandSetupRequest =
+        PcfCommandSetupRequest.builder()
+            .artifactStreamAttributes(artifactStreamAttributes)
+            .timeoutIntervalInMin(1)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .activityId(ACTIVITY_ID)
+            .commandName(PcfCommandRequest.PcfCommandType.SETUP.name())
+            .artifactProcessingScript("mv ${downloadedArtifact} " + processedArtifactFilename + "\ncp "
+                + processedArtifactFilename + " ${processedArtifactDir}")
+            .build();
+
+    String randomToken = Long.toString(System.currentTimeMillis());
+
+    String testFileName = randomToken + pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactName();
+
+    File workingDirectory = FileUtils.createTmpDir();
+    File testArtifactFile = FileUtils.createTempFile(FilenameUtils.getName(testFileName), randomToken);
+
+    when(delegateFileManager.downloadArtifactAtRuntime(pcfCommandSetupRequest.getArtifactStreamAttributes(),
+             pcfCommandSetupRequest.getAccountId(), pcfCommandSetupRequest.getAppId(),
+             pcfCommandSetupRequest.getActivityId(), pcfCommandSetupRequest.getCommandName(),
+             pcfCommandSetupRequest.getArtifactStreamAttributes().getRegistryHostName()))
+        .thenReturn(new FileInputStream(testArtifactFile));
+
+    File artifactFile =
+        pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback);
+
+    assertThat(artifactFile.exists()).isTrue();
+    assertThat(artifactFile.getName().contains(processedArtifactFilename)).isTrue();
   }
 }

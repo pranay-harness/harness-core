@@ -6,6 +6,9 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -13,9 +16,12 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -27,6 +33,7 @@ import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -37,18 +44,21 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
 
@@ -69,6 +79,11 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
+        bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+            .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }
@@ -76,7 +91,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(new ConnectorModule());
+    modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
@@ -113,6 +128,14 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
             .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder()
+            .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
+            .build();
+      }
     });
     return modules;
   }
@@ -130,6 +153,6 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
 
   @Override
   public Statement apply(Statement base, FrameworkMethod method, Object target) {
-    return applyInjector(base, method, target);
+    return applyInjector(log, base, method, target);
   }
 }

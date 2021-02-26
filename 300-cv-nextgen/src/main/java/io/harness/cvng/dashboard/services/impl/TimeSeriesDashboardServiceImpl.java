@@ -6,19 +6,19 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
-import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 
 public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardService {
   @Inject private CVConfigService cvConfigService;
-  @Inject private TimeSeriesService timeSeriesService;
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private ActivityService activityService;
 
   @Override
@@ -82,7 +82,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     Set<String> verificationTaskIds =
         verificationJobInstanceIds.stream()
             .map(verificationJobInstanceId
-                -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+                -> verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 
@@ -102,7 +102,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
 
     cvConfigIds.forEach(cvConfigId -> recordsPerId.add(() -> {
       List<TimeSeriesRecord> timeSeriesRecordsfromDB =
-          timeSeriesService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
+          timeSeriesRecordService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
       List<TimeSeriesRecord> timeSeriesRecords = Collections.synchronizedList(new ArrayList<>());
       if (isEmpty(timeSeriesRecordsfromDB)) {
         return timeSeriesRecords;
@@ -152,7 +152,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       return timeSeriesRecords;
     }));
 
-    List<List<TimeSeriesRecord>> timeSeriesThatMatter = cvParallelExecutor.executeParallel(recordsPerId);
+    List<List<TimeSeriesRecord>> timeSeriesThatMatter = cvngParallelExecutor.executeParallel(recordsPerId);
 
     List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
     timeSeriesThatMatter.forEach(timeSeriesRecords::addAll);
@@ -212,11 +212,11 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
      * */
     Instant lastWindowStartTime = endTime.minus(TIMESERIES_SERVICE_GUARD_WINDOW_SIZE, ChronoUnit.MINUTES);
     for (TimeSeriesMetricDataDTO timeSeriesMetricDataDTO : sortedMetricData) {
-      Optional<TimeSeriesRisk> risk = timeSeriesMetricDataDTO.getMetricDataList()
-                                          .stream()
-                                          .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
-                                          .map(MetricData::getRisk)
-                                          .findFirst();
+      Optional<Risk> risk = timeSeriesMetricDataDTO.getMetricDataList()
+                                .stream()
+                                .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
+                                .map(MetricData::getRisk)
+                                .findFirst();
       risk.ifPresent(timeSeriesRisk
           -> timeSeriesMetricDataDTO.getMetricDataList()
                  .stream()

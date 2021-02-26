@@ -4,7 +4,9 @@ import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 
+import io.harness.PipelineUtils;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -21,13 +23,14 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,14 +54,16 @@ public class GitBuildStatusUtility {
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  @Inject @Named("ngBaseUrl") private String ngBaseUrl;
+  @Inject private PipelineUtils pipelineUtils;
 
   public boolean shouldSendStatus(NodeExecution nodeExecution) {
     return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
   public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
-    IntegrationStageStepParametersPMS integrationStageStepParameters = JsonOrchestrationUtils.asObject(
-        nodeExecution.getResolvedStepParameters().toJson(), IntegrationStageStepParametersPMS.class);
+    IntegrationStageStepParametersPMS integrationStageStepParameters = RecastOrchestrationUtils.fromDocument(
+        nodeExecution.getResolvedStepParameters(), IntegrationStageStepParametersPMS.class);
 
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
@@ -66,6 +71,20 @@ public class GitBuildStatusUtility {
     if (buildStatusUpdateParameter != null) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
           getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus());
+
+      /* This check is require because delegate is not honouring the ordering and
+         there are instances where we are overriding final status with prev state status i.e running specially in case
+         time interval is minuscule
+      */
+
+      if (isFinalStatus(nodeExecution.getStatus())) {
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException exception) {
+          // Ignore
+        }
+      }
+
       if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
         DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                       .accountId(accountId)
@@ -81,7 +100,7 @@ public class GitBuildStatusUtility {
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
       } else {
-        log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type",
+        log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
             ciBuildStatusPushParameters.getGitSCMType());
@@ -95,21 +114,20 @@ public class GitBuildStatusUtility {
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
 
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
-    CIBuildStatusPushParameters ciBuildPushStatusParameters =
-        CIBuildStatusPushParameters.builder()
-            .desc(generateDesc(
-                buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
-            .sha(buildStatusUpdateParameter.getSha())
-            .gitSCMType(gitSCMType)
-            .connectorDetails(gitConnector)
-            .userName(connectorUtils.fetchUserName(gitConnector))
-            .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
-            .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
-            .identifier(buildStatusUpdateParameter.getIdentifier())
-            .state(retrieveBuildStatusState(gitSCMType, status))
-            .build();
-
-    return ciBuildPushStatusParameters;
+    return CIBuildStatusPushParameters.builder()
+        .detailsUrl(getBuildDetailsUrl(
+            ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
+        .desc(generateDesc(
+            buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
+        .sha(buildStatusUpdateParameter.getSha())
+        .gitSCMType(gitSCMType)
+        .connectorDetails(gitConnector)
+        .userName(connectorUtils.fetchUserName(gitConnector))
+        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+        .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
+        .identifier(buildStatusUpdateParameter.getIdentifier())
+        .state(retrieveBuildStatusState(gitSCMType, status))
+        .build();
   }
 
   private String generateDesc(String identifier, String name, String status) {
@@ -170,6 +188,9 @@ public class GitBuildStatusUtility {
     if (status == Status.RUNNING) {
       return GITHUB_PENDING;
     }
+    if (status == Status.QUEUED) {
+      return GITHUB_PENDING;
+    }
 
     return UNSUPPORTED;
   }
@@ -185,6 +206,9 @@ public class GitBuildStatusUtility {
       return GITLAB_SUCCESS;
     }
     if (status == Status.RUNNING) {
+      return GITLAB_PENDING;
+    }
+    if (status == Status.QUEUED) {
       return GITLAB_PENDING;
     }
 
@@ -204,11 +228,18 @@ public class GitBuildStatusUtility {
     if (status == Status.RUNNING) {
       return BITBUCKET_PENDING;
     }
+    if (status == Status.QUEUED) {
+      return BITBUCKET_PENDING;
+    }
 
     return UNSUPPORTED;
   }
 
   private ConnectorDetails getGitConnector(NGAccess ngAccess, String connectorRef) {
     return connectorUtils.getConnectorDetails(ngAccess, connectorRef);
+  }
+
+  private String getBuildDetailsUrl(NGAccess ngAccess, String pipelineId, String executionId) {
+    return pipelineUtils.getBuildDetailsUrl(ngAccess, pipelineId, executionId, ngBaseUrl);
   }
 }

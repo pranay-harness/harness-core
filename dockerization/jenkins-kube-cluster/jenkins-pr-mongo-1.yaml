@@ -14,7 +14,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app: mongo
+    app: mongo-1
   name: jenkins-pr-mongo-1
   namespace: jenkins
 spec:
@@ -23,12 +23,12 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongo
-  serviceName: mongo
+      app: mongo-1
+  serviceName: mongo-1
   template:
     metadata:
       labels:
-        app: mongo
+        app: mongo-1
     spec:
       containers:
         - command:
@@ -77,7 +77,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: mongo
+    app: mongo-1
   name: jenkins-pr-mongo-1
   namespace: jenkins
 spec:
@@ -87,5 +87,5 @@ spec:
       protocol: TCP
       targetPort: 27017
   selector:
-    app: mongo
+    app: mongo-1
   type: ClusterIP

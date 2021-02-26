@@ -4,18 +4,18 @@ import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
 
 @Singleton
-public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
+public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, GitConfig> {
   @Override
   public GitConfigDTO createConnectorDTO(GitConfig gitConnector) {
     GitAuthenticationDTO gitAuth = createGitAuthenticationDTO(gitConnector);
@@ -45,18 +45,18 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
   private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
     GitUserNamePasswordAuthentication userNamePasswordAuth =
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
-    return GitHTTPAuthenticationDTO
-        .builder()
-
+    return GitHTTPAuthenticationDTO.builder()
         .username(userNamePasswordAuth.getUserName())
+        .usernameRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getUserNameRef()))
         .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getPasswordReference()))
-
         .build();
   }
 
   private GitSSHAuthenticationDTO createSSHAuthenticationDTO(GitConfig gitConfig) {
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
-    return GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSSHAuthentication.getSshKeyReference()).build();
+    return GitSSHAuthenticationDTO.builder()
+        .encryptedSshKey(SecretRefHelper.createSecretRef(gitSSHAuthentication.getSshKeyReference()))
+        .build();
   }
 
   private GitSyncConfig createGitSyncConfigDTO(GitConfig gitConnector) {

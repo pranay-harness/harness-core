@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -11,7 +12,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.stream.Collectors.toMap;
@@ -328,6 +328,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                                                     .jobParameters(displayedParams)
                                                     .activityId(activityId)
                                                     .build();
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(jenkinsExecutionData)
@@ -350,6 +351,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
         .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
         .waitId(activityId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
+        .description("Trigger Jenkins job")
         .data(TaskData.builder()
                   .async(true)
                   .taskType(getTaskType().name())
@@ -361,7 +363,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
-
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
         .build();
   }
 
@@ -600,6 +602,11 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   @Override
   public KryoSerializer getKryoSerializer() {
     return kryoSerializer;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   @Data

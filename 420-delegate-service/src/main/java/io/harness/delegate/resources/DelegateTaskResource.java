@@ -27,17 +27,22 @@ import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/agent/delegates/tasks/v2")
-@Path("/agent/delegates/tasks/v2")
+@Api("agent/tasks")
+@Path("agent/tasks")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
 public class DelegateTaskResource {
-  @Inject DelegateTaskService delegateTaskService;
+  private DelegateTaskService delegateTaskService;
+
+  @Inject
+  public DelegateTaskResource(DelegateTaskService delegateTaskService) {
+    this.delegateTaskService = delegateTaskService;
+  }
 
   @DelegateAuth
   @POST
-  @Path("{delegateId}/tasks/{taskId}")
+  @Path("{taskId}/delegates/{delegateId}")
   @Consumes("application/x-kryo")
   @Timed
   @ExceptionMetered

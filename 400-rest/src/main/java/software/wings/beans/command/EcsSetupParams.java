@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import io.harness.k8s.model.ImageDetails;
 
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -41,8 +42,10 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean isDaemonSchedulingStrategy;
   private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
   private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+  private List<AwsElbConfig> awsElbConfigs;
   private boolean blueGreen;
   private String stageListenerPort;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   // Only for ECS BG route 53 DNS swap
   private boolean useRoute53DNSSwap;
@@ -50,6 +53,8 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String serviceDiscoveryService2JSON;
   private String parentRecordHostedZoneId;
   private String parentRecordName;
+
+  private boolean ecsRegisterTaskDefinitionTagsEnabled;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -82,6 +87,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private boolean isDaemonSchedulingStrategy;
     private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
     private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
+    private List<AwsElbConfig> awsElbConfigs;
+    private boolean isMultipleLoadBalancersFeatureFlagActive;
     private boolean blueGreen;
     private String targetGroupArn2;
     private String prodListenerArn;
@@ -98,6 +105,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String parentRecordHostedZoneId;
     private String parentRecordName;
 
+    private boolean ecsRegisterTaskDefinitionTagsEnabled;
+
     private EcsSetupParamsBuilder() {}
 
     public static EcsSetupParamsBuilder anEcsSetupParams() {
@@ -111,6 +120,17 @@ public class EcsSetupParams extends ContainerSetupParams {
 
     public EcsSetupParamsBuilder withServiceName(String serviceName) {
       this.serviceName = serviceName;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withIsMultipleLoadBalancersFeatureFlagActive(
+        boolean isMultipleLoadBalancersFeatureFlagActive) {
+      this.isMultipleLoadBalancersFeatureFlagActive = isMultipleLoadBalancersFeatureFlagActive;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withAwsElbConfigs(List<AwsElbConfig> awsElbConfigs) {
+      this.awsElbConfigs = awsElbConfigs;
       return this;
     }
 
@@ -320,6 +340,12 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withEcsRegisterTaskDefinitionTagsEnabled(
+        boolean ecsRegisterTaskDefinitionTagsEnabled) {
+      this.ecsRegisterTaskDefinitionTagsEnabled = ecsRegisterTaskDefinitionTagsEnabled;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -351,6 +377,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setEcsServiceArn(ecsServiceArn);
       ecsSetupParams.setDaemonSchedulingStrategy(isDaemonSchedulingStrategy);
       ecsSetupParams.setNewAwsAutoScalarConfigList(newAwsAutoScalarConfigList);
+      ecsSetupParams.setAwsElbConfigs(awsElbConfigs);
+      ecsSetupParams.setMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive);
       ecsSetupParams.setPreviousAutoScalarConfigList(previousAutoScalarConfigList);
       ecsSetupParams.setBlueGreen(blueGreen);
       ecsSetupParams.setTargetGroupArn2(targetGroupArn2);
@@ -365,6 +393,7 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setServiceDiscoveryService2JSON(serviceDiscoveryService2JSON);
       ecsSetupParams.setParentRecordHostedZoneId(parentRecordHostedZoneId);
       ecsSetupParams.setParentRecordName(parentRecordName);
+      ecsSetupParams.setEcsRegisterTaskDefinitionTagsEnabled(ecsRegisterTaskDefinitionTagsEnabled);
       return ecsSetupParams;
     }
   }

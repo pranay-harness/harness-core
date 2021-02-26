@@ -1,5 +1,7 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -23,6 +25,7 @@ import com.amazonaws.services.cloudwatch.model.MetricAlarm;
 import com.amazonaws.services.cloudwatch.model.PutMetricAlarmResult;
 import java.util.List;
 
+@TargetModule(Module._960_API_SERVICES)
 public interface AwsAppAutoScalingHelperServiceDelegate {
   RegisterScalableTargetResult registerScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterScalableTargetRequest scalableTargetRequest);

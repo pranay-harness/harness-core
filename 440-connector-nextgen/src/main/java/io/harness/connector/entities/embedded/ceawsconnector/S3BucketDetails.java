@@ -13,7 +13,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails")
 public class S3BucketDetails {
-  private String s3BucketName;
-  private String s3Prefix;
-  private String region;
+  String s3BucketName;
+  String s3Prefix;
+  String region;
 }

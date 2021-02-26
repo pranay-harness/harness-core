@@ -9,6 +9,10 @@ mongo:
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12201
+      secure: true
+      keyFilePath: 800-pipeline-service/src/test/java/io/harness/pms/sample/cv/key.pem
+      certFilePath: 800-pipeline-service/src/test/java/io/harness/pms/sample/cv/cert.pem
+    - port: 12202
 
 pmsGrpcClientConfig:
   target: localhost:12011

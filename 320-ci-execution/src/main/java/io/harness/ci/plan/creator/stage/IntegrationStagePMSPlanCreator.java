@@ -22,7 +22,6 @@ import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
@@ -93,8 +92,9 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       throw new InvalidRequestException("Invalid yaml", e);
     }
     YamlNode parentNode = executionField.getNode().getParentNode();
-    ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
-        executionElementConfig, stageElementConfig, ctx, podName, ciCodeBase);
+    ExecutionElementConfig modifiedExecutionPlan =
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
+            podName, ciCodeBase, IntegrationStageStepParametersPMS.getInfrastructure(stageElementConfig, ctx));
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
@@ -114,7 +114,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
     BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
     StepParameters stepParameters = IntegrationStageStepParametersPMS.getStepParameters(
-        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter);
+        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter, ctx);
 
     return PlanNode.builder()
         .uuid(stageElementConfig.getUuid())
@@ -132,7 +132,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
       YamlField siblingField =
@@ -157,14 +157,6 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap(STAGE, Collections.singleton(STAGE_NAME));
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
-    }
-    return false;
   }
 
   private String generatePodName(String identifier) {
@@ -199,6 +191,11 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
 
     CodeBase codeBase = getCICodebase(ctx);
+
+    if (codeBase == null) {
+      //  code base is not mandatory in case git clone is false, Sending status won't be possible
+      return null;
+    }
 
     ExecutionSource executionSource = IntegrationStageUtils.buildExecutionSource(
         executionMetadata, stageElementConfig.getIdentifier(), codeBase.getBuild());
@@ -236,7 +233,8 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
       ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
     } catch (Exception ex) {
-      throw new CIStageExecutionUserException("Failed to retrieve ciCodeBase from pipeline");
+      // Ignore exception because code base is not mandatory in case git clone is false
+      log.warn("Failed to retrieve ciCodeBase from pipeline");
     }
 
     return ciCodeBase;

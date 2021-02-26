@@ -13,11 +13,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
@@ -131,7 +131,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
 
-    emitEvent(updated);
+    emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_UPDATE);
     return updated;
   }
 
@@ -146,7 +146,16 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
-    return nodeExecution.getVersion() == null ? mongoTemplate.insert(nodeExecution) : mongoTemplate.save(nodeExecution);
+    if (nodeExecution.getVersion() == null) {
+      eventEmitter.emitEvent(OrchestrationEvent.builder()
+                                 .ambiance(nodeExecution.getAmbiance())
+                                 .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                 .eventType(OrchestrationEventType.NODE_EXECUTION_START)
+                                 .build());
+      return mongoTemplate.insert(nodeExecution);
+    } else {
+      return mongoTemplate.save(nodeExecution);
+    }
   }
 
   @Override
@@ -179,14 +188,14 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
-      emitEvent(updated);
+      emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
     }
     return updated;
   }
 
   @Override
   public boolean markLeavesDiscontinuingOnAbort(
-      String interruptId, ExecutionInterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
+      String interruptId, InterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     ops.addToSet(NodeExecutionKeys.interruptHistories,
@@ -220,6 +229,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
+    emitEvent(nodeExecution, OrchestrationEventType.NODE_EXECUTION_UPDATE);
     return true;
   }
 
@@ -242,11 +252,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return true;
   }
 
-  private void emitEvent(NodeExecution nodeExecution) {
+  private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(nodeExecution.getAmbiance())
                                .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                               .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
+                               .eventType(orchestrationEventType)
                                .build());
   }
 }

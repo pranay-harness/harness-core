@@ -1,11 +1,11 @@
 package software.wings.service.impl.workflow;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.Workflow.WorkflowBuilder;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID_ARTIFACTORY;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_ID;
@@ -34,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
@@ -51,6 +54,9 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.LastDeployedArtifactInformation;
 import software.wings.beans.ManifestVariable;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
@@ -67,25 +73,33 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.sm.PipelineSummary;
+import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachine.StateMachineBuilder;
 import software.wings.sm.StateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class WorkflowServiceImplTest extends WingsBaseTest {
   public static final String CHART_NAME = "CHART_NAME";
@@ -97,10 +111,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private PipelineService pipelineService;
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private Query<WorkflowExecution> query;
+  @Mock private Query<StateMachine> stateMachineQuery;
+  @Mock private Query<Workflow> workflowQuery;
   @Mock private Query<WorkflowExecution> emptyQuery;
   @Mock private FieldEnd fieldEnd;
+  @Mock UpdateOperations<Workflow> updateOperations;
 
   @Before
   public void setUp() {
@@ -112,8 +130,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetLastDeployedArtifactFromPreviousIndirectExecution() {
-    Workflow workflow =
-        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
 
     List<Artifact> artifacts =
         asList(anArtifact()
@@ -182,8 +199,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnNullIfNoSuccessfulExecutionFound() {
-    Workflow workflow =
-        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
 
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
@@ -208,8 +224,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnNullIfArtifactStreamOrAppManifestChanged() {
-    Workflow workflow =
-        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
 
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder()
@@ -243,8 +258,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldReturnNullIfArtifactOrManifestModifiedInStream() {
-    Workflow workflow =
-        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
 
     List<Artifact> artifacts =
         asList(anArtifact()
@@ -542,8 +556,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldGetLastDeployedArtifactFromDifferentServices() {
-    Workflow workflow =
-        WorkflowBuilder.aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).uuid(WORKFLOW_ID).accountId(ACCOUNT_ID).appId(APP_ID).build();
 
     List<Artifact> artifacts =
         asList(anArtifact()
@@ -615,5 +628,94 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
         workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
     assertThat(artifactInformation).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdatePipelinesWhenEnvIsChanged() {
+    Workflow oldWorkflow = aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_ID).build();
+    Workflow newWorkflow =
+        aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID_CHANGED).uuid(WORKFLOW_ID).build();
+    when(wingsPersistence.getWithAppId(any(), anyString(), anyString())).thenReturn(oldWorkflow);
+
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put(EnvStateKeys.workflowId, WORKFLOW_ID);
+    properties.put(EnvStateKeys.envId, ENV_ID);
+    Pipeline pipeline =
+        Pipeline.builder()
+            .appId(APP_ID)
+            .pipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(PipelineStageElement.builder().properties(properties).build()))
+                           .build(),
+                    PipelineStage.builder()
+                        .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                          .properties(ImmutableMap.of(EnvStateKeys.workflowId,
+                                                              WORKFLOW_ID + 2, EnvStateKeys.envId, ENV_ID))
+                                                          .build()))
+                        .build()))
+            .build();
+    Pipeline pipeline2 =
+        Pipeline.builder()
+            .appId(APP_ID)
+            .pipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                             .properties(ImmutableMap.of(EnvStateKeys.workflowId,
+                                                                 WORKFLOW_ID + 2, EnvStateKeys.envId, ENV_ID))
+                                                             .build()))
+                           .build()))
+            .build();
+
+    when(pipelineService.listPipelines(any()))
+        .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(stateMachineQuery);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(workflowQuery);
+    when(workflowQuery.filter(anyString(), any())).thenReturn(workflowQuery);
+    when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
+    when(stateMachineQuery.get()).thenReturn(StateMachineBuilder.aStateMachine().build());
+
+    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
+    workflowService.updateWorkflow(newWorkflow, null, false, false, false);
+    ArgumentCaptor<List> pipelineArgumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(pipelineService).savePipelines(pipelineArgumentCaptor.capture(), eq(true));
+    assertThat(pipelineArgumentCaptor.getValue()).hasSize(2);
+    pipeline = (Pipeline) pipelineArgumentCaptor.getValue().get(0);
+    pipeline2 = (Pipeline) pipelineArgumentCaptor.getValue().get(1);
+    assertThat(
+        pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.envId))
+        .isEqualTo(ENV_ID_CHANGED);
+    assertThat(
+        pipeline.getPipelineStages().get(1).getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.envId))
+        .isEqualTo(ENV_ID);
+    assertThat(
+        pipeline2.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.envId))
+        .isEqualTo(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDoNothingForNoLinkedPipelinesWhenEnvIsChanged() {
+    Workflow oldWorkflow = aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID).uuid(WORKFLOW_ID).build();
+    Workflow newWorkflow =
+        aWorkflow().name(WORKFLOW_NAME).appId(APP_ID).envId(ENV_ID_CHANGED).uuid(WORKFLOW_ID).build();
+    when(wingsPersistence.getWithAppId(any(), anyString(), anyString())).thenReturn(oldWorkflow);
+
+    when(pipelineService.listPipelines(any())).thenReturn(aPageResponse().withResponse(null).build());
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(stateMachineQuery);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(workflowQuery);
+    when(workflowQuery.filter(anyString(), any())).thenReturn(workflowQuery);
+    when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
+    when(stateMachineQuery.get()).thenReturn(StateMachineBuilder.aStateMachine().build());
+
+    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
+    workflowService.updateWorkflow(newWorkflow, null, false, false, false);
+    verify(pipelineService, Mockito.never()).savePipelines(any(), eq(true));
   }
 }

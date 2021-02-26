@@ -5,12 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
+import io.harness.pms.contracts.advisers.NextStepAdvise.Builder;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -66,9 +69,11 @@ public class RetryAdviser implements Adviser {
   }
 
   private AdviserResponse handlePostRetry(io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters parameters) {
+    AdviserResponse.Builder adviserResponseBuilder =
+        AdviserResponse.newBuilder().setRepairActionCode(parameters.getRepairActionCodeAfterRetry());
     switch (parameters.getRepairActionCodeAfterRetry()) {
       case MANUAL_INTERVENTION:
-        return AdviserResponse.newBuilder()
+        return adviserResponseBuilder
             .setInterventionWaitAdvise(
                 InterventionWaitAdvise.newBuilder()
                     .setTimeout(Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build())
@@ -76,14 +81,23 @@ public class RetryAdviser implements Adviser {
             .setType(AdviseType.INTERVENTION_WAIT)
             .build();
       case END_EXECUTION:
-        return AdviserResponse.newBuilder()
-            .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
-        return AdviserResponse.newBuilder()
-            .setNextStepAdvise(NextStepAdvise.newBuilder().setNextNodeId(parameters.getNextNodeId()).build())
-            .setType(AdviseType.NEXT_STEP)
+      case ON_FAIL:
+        Builder builder = NextStepAdvise.newBuilder();
+        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+          builder.setNextNodeId(parameters.getNextNodeId());
+        }
+        return adviserResponseBuilder.setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
+      case MARK_AS_SUCCESS:
+        MarkSuccessAdvise.Builder markSuccessBuilder = MarkSuccessAdvise.newBuilder();
+        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+          markSuccessBuilder.setNextNodeId(parameters.getNextNodeId());
+        }
+        return adviserResponseBuilder.setMarkSuccessAdvise(markSuccessBuilder.build())
+            .setType(AdviseType.MARK_SUCCESS)
             .build();
       default:
         throw new IllegalStateException("Unexpected value: " + parameters.getRepairActionCodeAfterRetry());

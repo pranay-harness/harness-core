@@ -1,21 +1,58 @@
 package io.harness.cvng.client;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
-import io.harness.ng.beans.PageResponse;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
-import java.util.List;
+import com.google.inject.Singleton;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import lombok.Builder;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Singleton
 public class NextGenServiceImpl implements NextGenService {
-  @Inject NextGenClient nextGenClient;
-  @Inject RequestExecutor requestExecutor;
+  @Inject private NextGenClient nextGenClient;
+  @Inject private RequestExecutor requestExecutor;
+
+  private LoadingCache<EntityKey, EnvironmentResponseDTO> environmentCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, EnvironmentResponseDTO>() {
+            @Override
+            public EnvironmentResponseDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getEnvironment(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                  .getData();
+            }
+          });
+
+  private LoadingCache<EntityKey, ServiceResponseDTO> serviceCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(100000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
+            @Override
+            public ServiceResponseDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                  .getData();
+            }
+          });
 
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
@@ -37,47 +74,57 @@ public class NextGenServiceImpl implements NextGenService {
 
   @Override
   public EnvironmentResponseDTO getEnvironment(
-      String environmentIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor
-        .execute(nextGenClient.getEnvironment(environmentIdentifier, accountId, orgIdentifier, projectIdentifier))
-        .getData();
+      String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier) {
+    try {
+      return environmentCache.get(EntityKey.builder()
+                                      .accountId(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .entityIdentifier(environmentIdentifier)
+                                      .build());
+    } catch (ExecutionException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   @Override
   public ServiceResponseDTO getService(
-      String serviceIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor
-        .execute(nextGenClient.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier))
-        .getData();
-  }
-
-  @Override
-  public PageResponse<ServiceResponseDTO> getServices(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
-    return requestExecutor
-        .execute(nextGenClient.listServicesForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
-        .getData();
-  }
-
-  @Override
-  public PageResponse<EnvironmentResponseDTO> listEnvironmentsForProject(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> sort) {
-    return requestExecutor
-        .execute(
-            nextGenClient.listEnvironmentsForProject(page, size, accountId, orgIdentifier, projectIdentifier, sort))
-        .getData();
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+    try {
+      return serviceCache.get(EntityKey.builder()
+                                  .accountId(accountId)
+                                  .orgIdentifier(orgIdentifier)
+                                  .projectIdentifier(projectIdentifier)
+                                  .entityIdentifier(serviceIdentifier)
+                                  .build());
+    } catch (ExecutionException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   @Override
   public int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier) {
-    PageResponse<ServiceResponseDTO> services = getServices(0, 1000, accountId, orgIdentifier, projectIdentifier, null);
-    return (int) services.getTotalItems();
+    return (int) requestExecutor
+        .execute(nextGenClient.listServicesForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null))
+        .getData()
+        .getTotalItems();
   }
 
   @Override
   public int getEnvironmentCount(String accountId, String orgIdentifier, String projectIdentifier) {
-    PageResponse<EnvironmentResponseDTO> environmentResponseDTOS =
-        listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null);
-    return (int) environmentResponseDTOS.getTotalItems();
+    return (int) requestExecutor
+        .execute(
+            nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
+        .getData()
+        .getTotalItems();
+  }
+
+  @Value
+  @Builder
+  public static class EntityKey {
+    private String accountId;
+    private String orgIdentifier;
+    private String projectIdentifier;
+    private String entityIdentifier;
   }
 }

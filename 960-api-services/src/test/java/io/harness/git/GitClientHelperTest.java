@@ -136,6 +136,15 @@ public class GitClientHelperTest extends CategoryTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
+  public void testGitHubType() {
+    final boolean githubSAAS =
+        GitClientHelper.isGithubSAAS("https://github.kdc.capitalone.com/wings-software/portal.git");
+    assertThat(githubSAAS).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
   public void testGetREPOFromHTTPURL() {
     final String repoName = GitClientHelper.getGitRepo("https://github.com/wings-software/portal.git");
     assertThat(repoName).isEqualTo("portal");

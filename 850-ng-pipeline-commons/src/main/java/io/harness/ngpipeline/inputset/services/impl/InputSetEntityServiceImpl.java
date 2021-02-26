@@ -26,7 +26,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -197,8 +202,8 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
                                               .identifier(inputSetIdentifier)
                                               .build();
     try {
-      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = execute(
-          entitySetupUsageClient.listAllEntityUsage(0, 10, accountId, inputSetReference.getFullyQualifiedName(), ""));
+      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = execute(entitySetupUsageClient.listAllEntityUsage(
+          0, 10, accountId, inputSetReference.getFullyQualifiedName(), EntityType.INPUT_SETS, ""));
       referredByEntities = entitySetupUsageDTOS.stream()
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));
@@ -253,7 +258,7 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
     EntityReferenceExtractorVisitor visitor =
         simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
     visitor.walkElementTree(pipeline);
-    return visitor.getEntityReferenceSet();
+    return new HashSet<>(); // visitor.getEntityReferenceSet();
   }
 
   private EntityDetail getInputSetEntityDetail(InputSetEntity inputSetEntity) {
@@ -307,8 +312,9 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
     // removes entities present in the old version but not in the update
     for (EntityDetail entity : entitiesToRemove) {
-      execute(entitySetupUsageClient.delete(inputSetEntity.getAccountId(),
-          entity.getEntityRef().getFullyQualifiedName(), referredByEntity.getEntityRef().getFullyQualifiedName()));
+      execute(
+          entitySetupUsageClient.delete(inputSetEntity.getAccountId(), entity.getEntityRef().getFullyQualifiedName(),
+              entity.getType(), referredByEntity.getEntityRef().getFullyQualifiedName(), referredByEntity.getType()));
     }
   }
 }

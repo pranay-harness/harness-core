@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.utils.RequestField;
@@ -18,8 +20,10 @@ import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class K8sDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 
@@ -40,8 +44,16 @@ public class K8sDataFetcherHelper {
         case INHERIT_CLUSTER_DETAILS:
           configBuilder.useKubernetesDelegate(true);
           if (input.getInheritClusterDetails().isPresent()) {
-            input.getInheritClusterDetails().getValue().ifPresent(
-                clusterDetails -> clusterDetails.getDelegateName().getValue().ifPresent(configBuilder::delegateName));
+            input.getInheritClusterDetails().getValue().ifPresent(clusterDetails -> {
+              clusterDetails.getDelegateName().getValue().ifPresent(configBuilder::delegateName);
+              if (!clusterDetails.getDelegateSelectors().getValue().isPresent()) {
+                clusterDetails.getDelegateName().getValue().ifPresent(
+                    delegateName -> configBuilder.delegateSelectors(Collections.singleton(delegateName)));
+              } else {
+                clusterDetails.getDelegateSelectors().getValue().ifPresent(configBuilder::delegateSelectors);
+              }
+            });
+
             QLInheritClusterDetails inheritClusterDetails = input.getInheritClusterDetails().getValue().orElse(null);
             RequestField<QLUsageScope> usageRestrictions = inheritClusterDetails.getUsageScope();
             if (usageRestrictions != null && usageRestrictions.isPresent()) {
@@ -152,8 +164,16 @@ public class K8sDataFetcherHelper {
         case INHERIT_CLUSTER_DETAILS:
           config.setUseKubernetesDelegate(true);
           if (input.getInheritClusterDetails().isPresent()) {
-            input.getInheritClusterDetails().getValue().ifPresent(
-                clusterDetails -> clusterDetails.getDelegateName().getValue().ifPresent(config::setDelegateName));
+            input.getInheritClusterDetails().getValue().ifPresent(clusterDetails -> {
+              clusterDetails.getDelegateName().getValue().ifPresent(config::setDelegateName);
+              if (!clusterDetails.getDelegateSelectors().getValue().isPresent()) {
+                clusterDetails.getDelegateName().getValue().ifPresent(
+                    delegateName -> config.setDelegateSelectors(Collections.singleton(delegateName)));
+              } else {
+                clusterDetails.getDelegateSelectors().getValue().ifPresent(config::setDelegateSelectors);
+              }
+            });
+
             QLUpdateInheritClusterDetails inheritClusterDetails =
                 input.getInheritClusterDetails().getValue().orElseThrow(
                     () -> new InvalidRequestException(" No Inherit cluster details supplied"));
@@ -167,6 +187,7 @@ public class K8sDataFetcherHelper {
         case MANUAL_CLUSTER_DETAILS:
           config.setUseKubernetesDelegate(false);
           config.setDelegateName(null);
+          config.setDelegateSelectors(null);
           if (input.getManualClusterDetails().isPresent()) {
             input.getManualClusterDetails().getValue().ifPresent(clusterDetails -> {
               clusterDetails.getMasterUrl().getValue().ifPresent(config::setMasterUrl);

@@ -71,16 +71,16 @@ public enum WebhookSource {
 
     PUSH_ANY("Any", "repo:any", null, WebhookEventType.PUSH, 1),
     ANY("Any", "any", null, WebhookEventType.ANY, 1),
-    // OTHER("Other", "other", WebhookEventType.OTHER),
-    FORK("Fork", "repo:fork", null, WebhookEventType.PUSH, 3),
-    UPDATED("Updated", "repo:updated", "repo:comment:edited", WebhookEventType.PUSH, 8),
-    COMMIT_COMMENT_CREATED(
-        "Commit Comment Created", "repo:commit_comment_created", " repo:comment:added", WebhookEventType.PUSH, 3),
 
-    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", null, WebhookEventType.PUSH, 4),
-    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", null, WebhookEventType.PUSH, 5),
-    PUSH("Push", "repo:push", "repo:refs_changed", WebhookEventType.PUSH, 6),
-    REFS_CHANGED("Refs Changed", "repo:refs_changed", null, WebhookEventType.PUSH, 7),
+    // OTHER("Other", "other", WebhookEventType.OTHER),
+    FORK("Fork", "repo:fork", null, WebhookEventType.REPO, 3),
+    UPDATED("Updated", "repo:updated", "repo:comment:edited", WebhookEventType.REPO, 8),
+    COMMIT_COMMENT_CREATED(
+        "Commit Comment Created", "repo:commit_comment_created", " repo:comment:added", WebhookEventType.REPO, 3),
+    BUILD_STATUS_CREATED("Build Status Created", "repo:commit_status_created", null, WebhookEventType.REPO, 4),
+    BUILD_STATUS_UPDATED("Build Status Updated", "repo:commit_status_updated", null, WebhookEventType.REPO, 5),
+    PUSH("Push", "repo:push", "repo:refs_changed", WebhookEventType.REPO, 6),
+    REFS_CHANGED("Refs Changed", "repo:refs_changed", null, WebhookEventType.REPO, 7),
 
     ISSUE_ANY("Any", "issue:any", null, WebhookEventType.ISSUE, 1),
     ISSUE_CREATED("Issue Created", "issue:created", null, WebhookEventType.ISSUE, 2),

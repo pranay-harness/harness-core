@@ -2,8 +2,8 @@ package io.harness.cvng.alert.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.ng.core.dto.NotificationSettingType;
 
 import com.google.common.collect.Lists;

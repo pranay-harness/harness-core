@@ -1,16 +1,14 @@
 package io.harness.cvng.beans;
 
-import io.harness.cvng.beans.activity.ActivitySourceDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorCapabilitiesHelper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -21,10 +19,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DataCollectionConnectorBundle implements ExecutionCapabilityDemander {
   // JSON serialization does not work for ConnectorConfigDTO without the wrapper so need to pass the whole object
+  private String connectorIdentifier;
+  private String sourceIdentifier;
+  private String dataCollectionWorkerId;
   private ConnectorInfoDTO connectorDTO;
-  private Map<String, String> params;
-  DataCollectionType dataCollectionType;
-  ActivitySourceDTO activitySourceDTO;
+  private DataCollectionType dataCollectionType;
 
   @JsonIgnore
   public ConnectorConfigDTO getConnectorConfigDTO() {
@@ -33,8 +32,7 @@ public class DataCollectionConnectorBundle implements ExecutionCapabilityDemande
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    Preconditions.checkState(getConnectorConfigDTO() instanceof ExecutionCapabilityDemander,
-        "ConnectorConfigDTO should impalement ExecutionCapabilityDemander");
-    return ((ExecutionCapabilityDemander) getConnectorConfigDTO()).fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return CVConnectorCapabilitiesHelper.fetchRequiredExecutionCapabilities(
+        connectorDTO.getConnectorConfig(), maskingEvaluator);
   }
 }

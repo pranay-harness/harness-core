@@ -4,6 +4,8 @@ import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -59,6 +61,7 @@ import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -72,9 +75,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private CeActivePodCountTableSchema podTableSchema = new CeActivePodCountTableSchema();
@@ -443,7 +449,8 @@ public class BillingDataQueryBuilder {
     }
   }
 
-  private void decorateQueryWithAggregation(SelectQuery selectQuery, QLCCMAggregationFunction aggregationFunction,
+  // TODO: Refactor; use reflection as implemented below this method for all schema fields matching with DB fields.
+  public void decorateQueryWithAggregation(SelectQuery selectQuery, QLCCMAggregationFunction aggregationFunction,
       List<BillingDataMetaDataFields> fieldNames) {
     if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.SUM) {
       if (aggregationFunction.getColumnName().equals(schema.getBillingAmount().getColumnNameSQL())) {
@@ -451,7 +458,7 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getBillingAmount()),
                 BillingDataMetaDataFields.SUM.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.SUM);
-      } else if (aggregationFunction.getColumnName().equals(schema.getIdleCost().getColumnNameSQL())) {
+      } else if (aggregationFunction.getColumnName().equalsIgnoreCase(schema.getIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getActualIdleCost()),
                 BillingDataMetaDataFields.IDLECOST.getFieldName()));
@@ -466,12 +473,12 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getUnallocatedCost()),
                 BillingDataMetaDataFields.UNALLOCATEDCOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.UNALLOCATEDCOST);
-      } else if (aggregationFunction.getColumnName().equals(schema.getCpuIdleCost().getColumnNameSQL())) {
+      } else if (aggregationFunction.getColumnName().equalsIgnoreCase(schema.getCpuIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuActualIdleCost()),
                 BillingDataMetaDataFields.CPUIDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.CPUIDLECOST);
-      } else if (aggregationFunction.getColumnName().equals(schema.getMemoryIdleCost().getColumnNameSQL())) {
+      } else if (aggregationFunction.getColumnName().equalsIgnoreCase(schema.getMemoryIdleCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryActualIdleCost()),
                 BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()));
@@ -533,6 +540,8 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryRequest()),
                 BillingDataMetaDataFields.MEMORYREQUEST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MEMORYREQUEST);
+      } else {
+        addSumOnColumn(aggregationFunction.getColumnName(), selectQuery, fieldNames);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
       if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {
@@ -555,6 +564,8 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxMemoryUtilizationValue()),
                 BillingDataMetaDataFields.MAXMEMORYUTILIZATIONVALUE.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MAXMEMORYUTILIZATIONVALUE);
+      } else {
+        addMaxOnColumn(aggregationFunction.getColumnName(), selectQuery, fieldNames);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.AVG) {
       if (aggregationFunction.getColumnName().equals(schema.getAvgCpuUtilization().getColumnNameSQL())) {
@@ -577,6 +588,8 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgMemoryUtilizationValue()),
                 BillingDataMetaDataFields.AVGMEMORYUTILIZATIONVALUE.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.AVGMEMORYUTILIZATIONVALUE);
+      } else {
+        addAvgOnColumn(aggregationFunction.getColumnName(), selectQuery, fieldNames);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.COUNT) {
       selectQuery.addCustomColumns(
@@ -584,6 +597,54 @@ public class BillingDataQueryBuilder {
               BillingDataMetaDataFields.COUNT.getFieldName()));
       fieldNames.add(BillingDataMetaDataFields.COUNT);
     }
+  }
+
+  @SneakyThrows
+  private DbColumn getCorrespondingDBColumn(@NotNull String columnName) {
+    try {
+      Field field = schema.getClass().getDeclaredField(columnName);
+      if (field.getType().equals(DbColumn.class)) {
+        field.setAccessible(true);
+        return (DbColumn) field.get(schema);
+      }
+    } catch (NoSuchFieldException e) {
+      log.warn("No DbColumn field with name {} in BillingDataTableSchema graphql schema", columnName);
+      // find by ignorecase if exact camelCase is not found.
+      for (Field field : schema.getClass().getDeclaredFields()) {
+        if (field.getType().equals(DbColumn.class) && field.getName().equalsIgnoreCase(columnName)) {
+          field.setAccessible(true);
+          return (DbColumn) field.get(schema);
+        }
+      }
+      throw new InvalidRequestException("can't find column '" + columnName + "' in graphql schema");
+    } catch (Exception e) {
+      log.error("unknown exception from decorateQueryWithAggregation ", e);
+    }
+    throw new InvalidRequestException("can't find column " + columnName);
+  }
+
+  private void addAvgOnColumn(String columnName, SelectQuery selectQuery, List<BillingDataMetaDataFields> fieldNames) {
+    DbColumn dbColumn = getCorrespondingDBColumn(columnName);
+    BillingDataMetaDataFields field = BillingDataMetaDataFields.valueOf(dbColumn.getColumnNameSQL().toUpperCase());
+    selectQuery.addCustomColumns(
+        Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(dbColumn), field.getFieldName()));
+    fieldNames.add(field);
+  }
+
+  private void addSumOnColumn(String columnName, SelectQuery selectQuery, List<BillingDataMetaDataFields> fieldNames) {
+    DbColumn dbColumn = getCorrespondingDBColumn(columnName);
+    BillingDataMetaDataFields field = BillingDataMetaDataFields.valueOf(dbColumn.getColumnNameSQL().toUpperCase());
+    selectQuery.addCustomColumns(
+        Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(dbColumn), field.getFieldName()));
+    fieldNames.add(field);
+  }
+
+  private void addMaxOnColumn(String columnName, SelectQuery selectQuery, List<BillingDataMetaDataFields> fieldNames) {
+    DbColumn dbColumn = getCorrespondingDBColumn(columnName);
+    BillingDataMetaDataFields field = BillingDataMetaDataFields.valueOf(dbColumn.getColumnNameSQL().toUpperCase());
+    selectQuery.addCustomColumns(
+        Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(dbColumn), field.getFieldName()));
+    fieldNames.add(field);
   }
 
   private void decorateQueryWithMinMaxStartTime(SelectQuery selectQuery, List<BillingDataMetaDataFields> fieldNames) {
@@ -792,54 +853,66 @@ public class BillingDataQueryBuilder {
         break;
       case Pod:
       case Node:
+      case PV:
         return;
       default:
         throw new InvalidRequestException("Invalid groupBy clause");
     }
-    selectQuery.addColumns(groupBy);
-    selectQuery.addGroupings(groupBy);
-    fieldNames.add(BillingDataMetaDataFields.valueOf(groupBy.getName().toUpperCase()));
-    selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
-    groupByFields.add(BillingDataMetaDataFields.valueOf(groupBy.getName().toUpperCase()));
+
+    addGroupByColumn(selectQuery, groupByFields, fieldNames, groupBy, true);
   }
 
   private void decorateQueryWithNodeOrPodGroupBy(List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery,
       List<QLCCMEntityGroupBy> groupBy, List<BillingDataMetaDataFields> groupByFields,
       List<QLBillingDataFilter> filters) {
+    List<String> instanceTypes = new ArrayList<>();
+    boolean isNodeAndPodQuery = false;
     for (QLCCMEntityGroupBy aggregation : groupBy) {
-      DbColumn groupByColumn;
-      List<String> instanceType = new ArrayList<>();
       switch (aggregation) {
         case Node:
-          groupByColumn = schema.getInstanceId();
-          instanceType.add("K8S_NODE");
+          instanceTypes.add("K8S_NODE");
+          isNodeAndPodQuery = true;
           break;
         case Pod:
-          groupByColumn = schema.getInstanceId();
-          instanceType.add("K8S_POD");
+          instanceTypes.add("K8S_POD");
+          isNodeAndPodQuery = true;
+          break;
+        case PV:
+          instanceTypes.add("K8S_PV");
+          isNodeAndPodQuery = true;
           break;
         default:
-          continue;
+          break;
       }
-      filters.add(QLBillingDataFilter.builder()
-                      .instanceType(QLIdFilter.builder()
-                                        .operator(QLIdOperator.EQUALS)
-                                        .values(instanceType.toArray(new String[0]))
-                                        .build())
-                      .build());
-      DbColumn instanceName = schema.getInstanceName();
-      selectQuery.addColumns(groupByColumn);
-      selectQuery.addGroupings(groupByColumn);
-      fieldNames.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
-      selectQuery.addCondition(UnaryCondition.isNotNull(groupByColumn));
-      groupByFields.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
-      // Adding group by instance name
-      selectQuery.addColumns(instanceName);
-      selectQuery.addGroupings(instanceName);
-      fieldNames.add(BillingDataMetaDataFields.valueOf(instanceName.getName().toUpperCase()));
-      selectQuery.addCondition(UnaryCondition.isNotNull(instanceName));
-      groupByFields.add(BillingDataMetaDataFields.valueOf(instanceName.getName().toUpperCase()));
     }
+    if (isNodeAndPodQuery) {
+      filters.add(
+          QLBillingDataFilter.builder()
+              .instanceType(
+                  QLIdFilter.builder().operator(QLIdOperator.IN).values(instanceTypes.toArray(new String[0])).build())
+              .build());
+      // Adding groupBy with corresponding selectField
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceId(), true);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceName(), true);
+
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceType(), false);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getNamespace(), false);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getCloudProvider(), false);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterName(), false);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterId(), false);
+      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getWorkloadName(), false);
+    }
+  }
+
+  private void addGroupByColumn(SelectQuery selectQuery, List<BillingDataMetaDataFields> groupByFields,
+      List<BillingDataMetaDataFields> fieldNames, DbColumn dbColumn, boolean notNull) {
+    selectQuery.addColumns(dbColumn);
+    selectQuery.addGroupings(dbColumn);
+    fieldNames.add(BillingDataMetaDataFields.valueOf(dbColumn.getName().toUpperCase()));
+    if (notNull) {
+      selectQuery.addCondition(UnaryCondition.isNotNull(dbColumn));
+    }
+    groupByFields.add(BillingDataMetaDataFields.valueOf(dbColumn.getName().toUpperCase()));
   }
 
   protected List<QLCCMEntityGroupBy> getGroupByEntity(List<QLCCMGroupBy> groupBy) {
@@ -936,6 +1009,9 @@ public class BillingDataQueryBuilder {
       case CloudProvider:
         selectQuery.addCustomOrdering(BillingDataMetaDataFields.CLOUDPROVIDERID.getFieldName(), dir);
         break;
+      case storageCost:
+        selectQuery.addCustomOrdering(BillingDataMetaDataFields.STORAGECOST.getFieldName(), dir);
+        break;
       default:
         throw new InvalidRequestException("Order type not supported " + sortType);
     }
@@ -992,6 +1068,7 @@ public class BillingDataQueryBuilder {
       instanceTypeValues.add("ECS_TASK_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
+      instanceTypeValues.add("K8S_PV");
       addInstanceTypeFilter(filters, instanceTypeValues);
     }
   }
@@ -1391,10 +1468,17 @@ public class BillingDataQueryBuilder {
   protected boolean showUnallocatedCost(List<QLCCMEntityGroupBy> groupBy, List<QLBillingDataFilter> filters) {
     boolean isClusterDrillDown = isClusterDrilldown(groupBy);
     boolean showUnallocated = false;
+    boolean filterPresent = false;
     List<String> values = new ArrayList<>();
     for (QLBillingDataFilter filter : filters) {
       if (filter.getWorkloadName() != null) {
         values.addAll(Arrays.asList(filter.getWorkloadName().getValues()));
+        // For workload drill-down
+        if ((filter.getWorkloadName().getOperator() == QLIdOperator.IN
+                || filter.getWorkloadName().getOperator() == QLIdOperator.EQUALS)
+            && filter.getWorkloadName().getValues().length != 0) {
+          filterPresent = true;
+        }
       }
       if (filter.getNamespace() != null) {
         values.addAll(Arrays.asList(filter.getNamespace().getValues()));
@@ -1410,7 +1494,7 @@ public class BillingDataQueryBuilder {
       }
     }
     showUnallocated = !values.contains(UNALLOCATED);
-    return isClusterDrillDown && showUnallocated;
+    return isClusterDrillDown && showUnallocated && !filterPresent;
   }
 
   protected List<QLCCMEntityGroupBy> getGroupByOrderedByDrillDown(List<QLCCMEntityGroupBy> groupByEntityList) {
@@ -1564,7 +1648,7 @@ public class BillingDataQueryBuilder {
   // Checking if any non supported group by for pre-aggregation is present
   private boolean isValidGroupByForPreAggregation(List<QLCCMEntityGroupBy> entityGroupBy) {
     return !entityGroupBy.stream().anyMatch(groupBy
-        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.Node
+        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.Node || groupBy == QLCCMEntityGroupBy.PV
             || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
             || groupBy == QLCCMEntityGroupBy.LaunchType);
   }
@@ -1593,6 +1677,24 @@ public class BillingDataQueryBuilder {
             -> aggregationFunction.getColumnName().equalsIgnoreCase(schema.getBillingAmount().getColumnNameSQL())
                 || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getIdleCost().getColumnNameSQL())
                 || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getUnallocatedCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getCpuBillingAmount().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getCpuIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getCpuActualIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getCpuUnallocatedCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getStorageCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getStorageActualIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getStorageUnallocatedCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getMemoryBillingAmount().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getMemoryIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getMemoryActualIdleCost().getColumnNameSQL())
+                || aggregationFunction.getColumnName().equalsIgnoreCase(
+                    schema.getMemoryUnallocatedCost().getColumnNameSQL())
                 || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getSystemCost().getColumnNameSQL()))
         .collect(Collectors.toList());
   }

@@ -1,5 +1,8 @@
 package io.harness.ccm.views.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewTimeRangeType;
@@ -121,6 +124,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final Color[] COLORS = {new Color(72, 165, 243), new Color(147, 133, 241), new Color(83, 205, 124),
       new Color(255, 188, 9), new Color(243, 92, 97), new Color(55, 214, 203), new Color(236, 97, 181),
       new Color(255, 142, 60), new Color(178, 96, 9), new Color(25, 88, 173)};
+  private static final String[] COLOR_HEX_CODES = {
+      "#48A5F3", "#9385F1", "#53CD7C", "#FFBC09", "#F35C61", "#37D6CB", "#EC61B5", "#FF8E3C", "#B26009", "#1958AD"};
   private static final Color WHITE = new Color(255, 255, 255);
   private static final Color GRAY = new Color(112, 113, 117);
   private static final int REPEAT_FREQUENCY = 10;
@@ -169,7 +174,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     // Generating table data
     List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(bigQuery, filters,
         groupBy, aggregationFunction, sortCriteria, cloudProviderTableName, DEFAULT_LIMIT, DEFAULT_OFFSET);
-    if (tableData == null || tableData.isEmpty()) {
+    if (isEmpty(tableData)) {
       throw new InvalidRequestException("Exception while generating report. No data to for table");
     }
     List<String> entities = tableData.stream().map(QLCEViewEntityStatsDataPoint::getName).collect(Collectors.toList());
@@ -180,7 +185,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
                     .build());
     List<QLCEViewTimeSeriesData> chartData =
         viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
-            bigQuery, filters, groupBy, aggregationFunction, Collections.emptyList(), cloudProviderTableName));
+            bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
     if (chartData == null) {
       throw new InvalidRequestException("Exception while generating report. No data to for chart");
     }
@@ -278,7 +283,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
   private String generateTable(List<QLCEViewEntityStatsDataPoint> tableData, String entity) {
     String table = "";
-    if (tableData != null && !tableData.isEmpty()) {
+    if (isNotEmpty(tableData)) {
       StringJoiner joiner = new StringJoiner(" ");
       joiner.add(TABLE_START);
       joiner.add(ROW_START);
@@ -375,15 +380,29 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     return encodedfile;
   }
 
-  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities, boolean adjustFont) {
+  private DefaultCategoryDataset getDataset(List<QLCEViewTimeSeriesData> data) {
     DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-    int index = 0;
-
     for (QLCEViewTimeSeriesData entry : data) {
       for (QLCEViewDataPoint dataPoint : entry.getValues()) {
         dataset.addValue(dataPoint.getValue().doubleValue(), dataPoint.getName(), entry.getDate());
       }
     }
+    return dataset;
+  }
+
+  private Map<String, String> getEntityColorMapping(List<QLCEViewTimeSeriesData> data, List<String> entities) {
+    Map<String, String> entityToColorMapping = new HashMap<>();
+    DefaultCategoryDataset dataset = getDataset(data);
+    for (String entity : entities) {
+      entityToColorMapping.put(entity, COLOR_HEX_CODES[dataset.getColumnIndex(entity) % REPEAT_FREQUENCY]);
+    }
+    log.info("Color mapping for legend: {}", entityToColorMapping);
+    return entityToColorMapping;
+  }
+
+  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities, boolean adjustFont) {
+    DefaultCategoryDataset dataset = getDataset(data);
+    int index = 0;
 
     // Creating stacked bar chart
     JFreeChart chart =

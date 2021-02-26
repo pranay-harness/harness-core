@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -21,6 +22,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SET
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.sm.states.EcsRunTaskDeploy.GIT_FETCH_FILES_TASK_NAME;
+import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
@@ -37,10 +39,12 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
@@ -60,6 +64,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
@@ -69,6 +74,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -86,6 +92,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder;
 import software.wings.beans.command.PcfDummyCommandUnit;
@@ -96,10 +103,12 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -159,6 +168,23 @@ public class EcsStateHelper {
         ? Misc.normalizeExpression(context.renderExpression(ecsSetupStateConfig.getEcsServiceName()))
         : EcsConvention.getTaskFamily(app.getName(), ecsSetupStateConfig.getServiceName(), env.getName());
 
+    List<AwsElbConfig> renderedAwsElbConfigList = null;
+    if (EmptyPredicate.isNotEmpty(ecsSetupStateConfig.getAwsElbConfigs())) {
+      renderedAwsElbConfigList =
+          ecsSetupStateConfig.getAwsElbConfigs()
+              .stream()
+              .map(awsElbConfig -> {
+                AwsElbConfig renderedAwsElbConfig = new AwsElbConfig();
+                renderedAwsElbConfig.setTargetContainerName(
+                    context.renderExpression(awsElbConfig.getTargetContainerName()));
+                renderedAwsElbConfig.setLoadBalancerName(context.renderExpression(awsElbConfig.getLoadBalancerName()));
+                renderedAwsElbConfig.setTargetGroupArn(context.renderExpression(awsElbConfig.getTargetGroupArn()));
+                renderedAwsElbConfig.setTargetPort(context.renderExpression(awsElbConfig.getTargetPort()));
+                return renderedAwsElbConfig;
+              })
+              .collect(toList());
+    }
+
     if (containerTask != null) {
       EcsContainerTask ecsContainerTask = (EcsContainerTask) containerTask;
       ecsContainerTask.getContainerDefinitions()
@@ -187,6 +213,8 @@ public class EcsStateHelper {
         .withLoadBalancerName(context.renderExpression(ecsSetupStateConfig.getLoadBalancerName()))
         .withInfraMappingId(ecsSetupStateConfig.getInfrastructureMapping().getUuid())
         .withRoleArn(context.renderExpression(ecsSetupStateConfig.getRoleArn()))
+        .withAwsElbConfigs(renderedAwsElbConfigList)
+        .withIsMultipleLoadBalancersFeatureFlagActive(ecsSetupStateConfig.isMultipleLoadBalancersFeatureFlagActive())
         .withTargetGroupArn(context.renderExpression(ecsSetupStateConfig.getTargetGroupArn()))
         // Next 3 are to be used by Ecs BG only
         .withBlueGreen(ecsSetupStateConfig.isBlueGreen())
@@ -224,6 +252,8 @@ public class EcsStateHelper {
         .withIsDaemonSchedulingStrategy(ecsSetupStateConfig.isDaemonSchedulingStrategy())
         .withNewAwsAutoScalarConfigList(
             getNewAwsAutoScalarConfigListWithRenderedExpression(ecsSetupStateConfig.getAwsAutoScalarConfigs(), context))
+        .withEcsRegisterTaskDefinitionTagsEnabled(
+            featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, app.getAccountId()))
         .build();
   }
 
@@ -628,6 +658,9 @@ public class EcsStateHelper {
       containerServiceElement.setEcsRegion(setupExecutionData.getEcsRegion());
       containerServiceElement.setTargetGroupForNewService(setupExecutionData.getTargetGroupForNewService());
       containerServiceElement.setTargetGroupForExistingService(setupExecutionData.getTargetGroupForExistingService());
+      containerServiceElement.setMultipleLoadBalancersFeatureFlagActive(
+          setupExecutionData.isMultipleLoadBalancersFeatureFlagActive());
+      containerServiceElement.setAwsElbConfigs(setupExecutionData.getAwsElbConfigs());
 
       if (((EcsSetupParams) executionData.getContainerSetupParams()).isBlueGreen()) {
         EcsSetupParams ecsSetupParams = (EcsSetupParams) executionData.getContainerSetupParams();
@@ -706,6 +739,52 @@ public class EcsStateHelper {
     return task;
   }
 
+  private void setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(EcsSetUpDataBag ecsSetUpDataBag,
+      ApplicationManifest applicationManifest, List<GitFile> gitFiles, ExecutionContext executionContext) {
+    EcsServiceSpecification ecsServiceSpecification = getOrCreateServiceSpec(ecsSetUpDataBag);
+    ContainerTask containerTask = getOrCreateTaskSpec(ecsSetUpDataBag);
+
+    String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
+    String containerSpec = getFileContentByPathFromGitFiles(gitFiles, containerTaskFilePath);
+    containerTask.setAdvancedConfig(executionContext.renderExpression(containerSpec));
+    ecsSetUpDataBag.setContainerTask(containerTask);
+
+    if (!applicationManifest.getGitFileConfig().isUseInlineServiceDefinition()) {
+      String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
+      String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
+      ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
+      ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
+    }
+  }
+
+  public void setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(
+      ExecutionContext executionContext, EcsSetUpDataBag ecsSetUpDataBag, Logger logger) {
+    if (!(executionContext.getStateExecutionData() instanceof EcsBGRoute53SetupStateExecutionData)) {
+      return;
+    }
+    EcsBGRoute53SetupStateExecutionData ecsBGRoute53SetupStateExecutionData =
+        (EcsBGRoute53SetupStateExecutionData) executionContext.getStateExecutionData();
+
+    if (ecsBGRoute53SetupStateExecutionData != null && ecsSetUpDataBag != null) {
+      ApplicationManifest applicationManifest =
+          ecsBGRoute53SetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
+      GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
+          && gitFileConfig.getTaskSpecFilePath() != null) {
+        List<GitFile> gitFiles = ecsBGRoute53SetupStateExecutionData.getFetchFilesResult()
+                                     .getFilesFromMultipleRepo()
+                                     .get("ServiceOverride")
+                                     .getFiles();
+
+        setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(
+            ecsSetUpDataBag, applicationManifest, gitFiles, executionContext);
+      } else {
+        log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
+        throw new InvalidRequestException("Manifest does not contain the proper git file config");
+      }
+    }
+  }
+
   public void setUpRemoteContainerTaskAndServiceSpecIfRequired(
       ExecutionContext executionContext, EcsSetUpDataBag ecsSetUpDataBag, Logger logger) {
     if (!(executionContext.getStateExecutionData() instanceof EcsSetupStateExecutionData)) {
@@ -715,9 +794,6 @@ public class EcsStateHelper {
         (EcsSetupStateExecutionData) executionContext.getStateExecutionData();
 
     if (ecsSetupStateExecutionData != null && ecsSetUpDataBag != null) {
-      EcsServiceSpecification ecsServiceSpecification = getOrCreateServiceSpec(ecsSetUpDataBag);
-      ContainerTask containerTask = getOrCreateTaskSpec(ecsSetUpDataBag);
-
       ApplicationManifest applicationManifest =
           ecsSetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
@@ -728,17 +804,8 @@ public class EcsStateHelper {
                                      .get("ServiceOverride")
                                      .getFiles();
 
-        String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
-        String containerSpec = getFileContentByPathFromGitFiles(gitFiles, containerTaskFilePath);
-        containerTask.setAdvancedConfig(executionContext.renderExpression(containerSpec));
-        ecsSetUpDataBag.setContainerTask(containerTask);
-
-        if (!applicationManifest.getGitFileConfig().isUseInlineServiceDefinition()) {
-          String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
-          String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
-          ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
-          ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
-        }
+        setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(
+            ecsSetUpDataBag, applicationManifest, gitFiles, executionContext);
       } else {
         log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
         throw new InvalidRequestException("Manifest does not contain the proper git file config");
@@ -836,12 +903,13 @@ public class EcsStateHelper {
             getAllInstanceElements(context, containerDeploymentHelper, deployResponse, finalInstanceElements);
         // This sweeping element will be used by verification or other consumers.
         List<InstanceDetails> instanceDetails = generateEcsInstanceDetails(allInstanceElements);
+        boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
         sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                        .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                        .value(InstanceInfoVariables.builder()
                                                   .instanceElements(allInstanceElements)
                                                   .instanceDetails(instanceDetails)
-                                                  .skipVerification(isEmpty(instanceDetails))
+                                                  .skipVerification(skipVerification)
                                                   .build())
                                        .build());
       }
@@ -1076,10 +1144,11 @@ public class EcsStateHelper {
                                                   .oldInstanceData(reverse(newInstanceData))
                                                   .newInstanceData(reverse(oldInstanceData))
                                                   .build();
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-                                   .name(getSweepingOutputName(context, false, ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME))
-                                   .value(element)
-                                   .build());
+    sweepingOutputService.ensure(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(getSweepingOutputName(context, false, ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME))
+            .value(element)
+            .build());
   }
 
   @VisibleForTesting
@@ -1166,5 +1235,55 @@ public class EcsStateHelper {
       }
     }
     return retVal;
+  }
+
+  public void createSweepingOutputForRollback(EcsDeployDataBag deployDataBag, Activity activity,
+      DelegateService delegateService, EcsResizeParams resizeParams, ExecutionContext context) {
+    EcsDeployRollbackDataFetchRequest request =
+        EcsDeployRollbackDataFetchRequest.builder()
+            .accountId(deployDataBag.getApp().getAccountId())
+            .appId(deployDataBag.getApp().getUuid())
+            .commandName(ECS_SERVICE_DEPLOY)
+            .activityId(activity.getUuid())
+            .region(deployDataBag.getRegion())
+            .cluster(deployDataBag.getEcsInfrastructureMapping().getClusterName())
+            .awsConfig(deployDataBag.getAwsConfig())
+            .ecsResizeParams(resizeParams)
+            .build();
+
+    DelegateTask task =
+        DelegateTask.builder()
+            .accountId(deployDataBag.getApp().getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
+            .waitId(activity.getUuid())
+            .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
+                    ? singletonList(deployDataBag.getAwsConfig().getTag())
+                    : null)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.ECS_COMMAND_TASK.name())
+                      .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
+                      .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, deployDataBag.getEnv().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, deployDataBag.getEnv().getEnvironmentType().name())
+            .setupAbstraction(
+                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.SERVICE_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getServiceId())
+            .build();
+
+    EcsCommandExecutionResponse delegateResponse;
+    try {
+      delegateResponse = delegateService.executeTask(task);
+    } catch (InterruptedException e) {
+      log.error("", e);
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException("Failed to generate rollback information", e, WingsException.USER);
+    }
+
+    EcsDeployRollbackDataFetchResponse response =
+        (EcsDeployRollbackDataFetchResponse) delegateResponse.getEcsCommandResponse();
+    saveDeploySweepingOutputForRollback(context, response.getOldInstanceData(), response.getNewInstanceData());
   }
 }

@@ -6,10 +6,13 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelp
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.steps.common.script.ExecutionTarget;
+import io.harness.steps.common.script.ShellScriptBaseStepInfo;
 import io.harness.steps.common.script.ShellScriptSourceWrapper;
+import io.harness.steps.common.script.ShellScriptStep;
 import io.harness.steps.common.script.ShellScriptStepParameters;
 import io.harness.steps.common.script.ShellType;
 import io.harness.walktree.beans.LevelNode;
@@ -32,7 +35,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 @TypeAlias("shellScriptStepInfo")
-public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo, Visitable {
+public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
 
@@ -40,7 +43,7 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   public ShellScriptStepInfo(ShellType shellType, ShellScriptSourceWrapper source,
       List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
       ParameterField<String> timeout, ParameterField<Boolean> onDelegate, String name, String identifier) {
-    super(shellType, source, environmentVariables, outputVariables, executionTarget, timeout, onDelegate);
+    super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
   }
@@ -65,5 +68,24 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).build();
+  }
+
+  @Override
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+    return ShellScriptStepParameters.infoBuilder()
+        .environmentVariables(getEnvironmentVariables())
+        .executionTarget(getExecutionTarget())
+        .onDelegate(getOnDelegate())
+        .outputVariables(getOutputVariables())
+        .environmentVariables(getEnvironmentVariables())
+        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
+        .shellType(getShell())
+        .source(getSource())
+        .timeout(baseStepParameterInfo.getTimeout())
+        .name(baseStepParameterInfo.getName())
+        .identifier(baseStepParameterInfo.getIdentifier())
+        .description(baseStepParameterInfo.getDescription())
+        .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .build();
   }
 }

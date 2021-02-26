@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.environment;
 
 import static software.wings.graphql.utils.nameservice.NameService.application;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.Environment;
@@ -29,6 +31,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class EnvironmentConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLEnvironmentFilter, QLNoOpSortCriteria, QLEnvironmentConnection> {
   @Inject EnvironmentQueryHelper environmentQueryHelper;

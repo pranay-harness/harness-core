@@ -14,11 +14,9 @@ import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
-import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.HelmHelper;
 import io.harness.functional.utils.K8SUtils;
@@ -73,7 +71,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTest {
-  private static final long TIMEOUT = 1200000; // 20 minutes
   private static final String RESOURCE_NAME_FORMAT = "git-account-level-%s-%s";
   private static final String PCF_FUNCTIONAL_TEST_REPO_NAME = "pcf-functional-test";
   private static final String K8S_FUNCTIONAL_TEST_REPO_NAME = "k8s-functional-test";
@@ -88,7 +85,6 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowService workflowService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private HelmHelper helmHelper;
 
@@ -103,14 +99,11 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     application = owners.obtainApplication(
         () -> applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST));
     assertThat(application).isNotNull();
-    if (!featureFlagService.isEnabled(FeatureName.GIT_ACCOUNT_SUPPORT, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.GIT_ACCOUNT_SUPPORT, application.getAccountId());
-    }
-
     accountGitConnector = settingGenerator.ensurePredefined(seed, owners, ACCOUNT_LEVEL_GIT_CONNECTOR);
+    logManagerFeatureFlags(application.getAccountId());
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testPcfUsingAccountLevelGitConnector() {
@@ -134,7 +127,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testK8sUsingAccountLevelGitConnector() {
@@ -157,7 +150,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
-  @Test(timeout = TIMEOUT)
+  @Test
   @Owner(developers = ABOSII)
   @Category(CDFunctionalTests.class)
   public void testHelmUsingAccountLevelGitConnector() {

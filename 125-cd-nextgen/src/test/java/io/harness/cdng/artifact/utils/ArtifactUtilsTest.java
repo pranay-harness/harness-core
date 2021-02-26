@@ -8,14 +8,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;

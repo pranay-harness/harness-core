@@ -2,11 +2,14 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.lang.String.format;
+
 import io.harness.batch.processing.YamlPropertyLoaderFactory;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
 import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
+import io.harness.batch.processing.budgets.service.impl.BudgetCostUpdateService;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -22,7 +25,10 @@ import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatus
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.view.CEMetaDataRecordUpdateService;
 import io.harness.batch.processing.view.ViewCostUpdateService;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -45,7 +51,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Slf4j
 @Configuration
 @EnableScheduling
-@PropertySource(value = "file:./batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
+@PropertySource(value = "file:batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
@@ -60,12 +66,16 @@ public class EventJobScheduler {
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private BudgetAlertsServiceImpl budgetAlertsService;
+  @Autowired private BudgetCostUpdateService budgetCostUpdateService;
   @Autowired private AccountExpiryCleanupService accountExpiryCleanupService;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private InstanceDataServiceImpl instanceDataService;
   @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
   @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
+  @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
+  @Autowired private CfClient cfClient;
+
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
@@ -135,18 +145,25 @@ public class EventJobScheduler {
       }
 
       try {
-        billingDataService.purgeOldHourlyBillingData();
+        billingDataService.purgeOldHourlyBillingData(BatchJobType.INSTANCE_BILLING_HOURLY);
+      } catch (Exception ex) {
+        log.error("Exception while running purgeOldHourlyBillingData Job", ex);
+      }
+
+      try {
+        billingDataService.purgeOldHourlyBillingData(BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION);
       } catch (Exception ex) {
         log.error("Exception while running purgeOldHourlyBillingData Job", ex);
       }
     }
   }
 
-  @Scheduled(cron = "0 0 */4 ? * *")
+  @Scheduled(cron = "0 0 */1 ? * *") //  0 */10 * * * ? for testing
   public void runConnectorsHealthStatusJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
       try {
+        log.info("running billing data pipeline health status service job");
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
         log.error("Exception while running runConnectorsHealthStatusJob {}", ex);
@@ -187,6 +204,16 @@ public class EventJobScheduler {
     }
   }
 
+  @Scheduled(cron = "0 0 */1 ? * *")
+  public void updateCostMetadatRecord() {
+    try {
+      ceMetaDataRecordUpdateService.updateCloudProviderMetadata();
+      log.info("updated cost data");
+    } catch (Exception ex) {
+      log.error("Exception while running updateCostMetadatRecord", ex);
+    }
+  }
+
   @Scheduled(cron = "0 30 8 * * ?")
   public void runViewUpdateCostJob() {
     try {
@@ -207,12 +234,35 @@ public class EventJobScheduler {
     }
   }
 
+  @Scheduled(cron = "${scheduler-jobs-config.budgetCostUpdateJobCron}")
+  public void runBudgetCostUpdateJob() {
+    try {
+      budgetCostUpdateService.updateCosts();
+      log.info("Costs updated for budgets");
+    } catch (Exception ex) {
+      log.error("Exception while running runBudgetCostUpdateJob", ex);
+    }
+  }
+
   // log hit/miss rate and size of the LoadingCache periodically for tuning
   @Scheduled(cron = "0 0 */7 ? * *")
   public void printCacheStats() throws IllegalAccessException {
     harnessServiceInfoFetcher.logCacheStats();
     instanceDataService.logCacheStats();
     k8sLabelServiceInfoFetcher.logCacheStats();
+  }
+
+  @Scheduled(cron = "0 * * ? * *")
+  public void runCfSampleJob() {
+    if (cfClient == null) {
+      return;
+    }
+    accountShardService.getCeEnabledAccounts().forEach(account -> {
+      Target target = Target.builder().name(account.getAccountName()).identifier(account.getUuid()).build();
+      boolean result = cfClient.boolVariation("cf_sample_flag", target, false);
+      log.info(format(
+          "The feature flag cf_sample_flag resolves to %s for account %s", Boolean.toString(result), target.getName()));
+    });
   }
 
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.

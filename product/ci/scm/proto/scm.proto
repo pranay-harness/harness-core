@@ -121,6 +121,36 @@ message PullRequestHook {
   User sender = 4;
 }
 
+message IssueCommentHook {
+  Action action = 1;
+  Repository repo = 2;
+  Issue issue = 3;
+  User sender = 4;
+  Comment comment = 5;
+}
+
+message Comment {
+  int32 id = 1;
+  string body = 2;
+  User user = 3;
+  google.protobuf.Timestamp created = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
+message Issue {
+  int32 number = 1;
+  string title = 2;
+  string body = 3;
+  string link = 4;
+  repeated string labels = 5;
+  bool closed = 6;
+  bool locked = 7;
+  User user = 8;
+  PullRequest pr = 9;
+  google.protobuf.Timestamp created = 10;
+  google.protobuf.Timestamp updated = 11;
+}
+
 message PushHook {
   string ref = 1;
   string base_ref = 2;
@@ -151,6 +181,7 @@ message ParseWebhookResponse {
   oneof hook {
     PullRequestHook pr = 1;
     PushHook push = 2;
+    IssueCommentHook comment = 3;
   }
 }
 

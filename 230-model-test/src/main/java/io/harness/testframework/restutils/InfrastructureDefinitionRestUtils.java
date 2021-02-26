@@ -2,6 +2,7 @@ package io.harness.testframework.restutils;
 
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
@@ -190,6 +191,43 @@ public class InfrastructureDefinitionRestUtils {
                                                   .as(restResponseGenericType.getType());
     if (restResponse.getResource() == null) {
       throw new EmptyRestResponseException(loadBalancersPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public List<String> listWebApps(String bearerToken, String appId, String infraDefinitionId) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String appServicesPath = String.format("/infrastructure-definitions/%s/azure-app-services", infraDefinitionId);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .queryParam("appType", "WEB_APP")
+                                                  .get(appServicesPath)
+                                                  .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(appServicesPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+    return restResponse.getResource();
+  }
+
+  public List<DeploymentSlotData> listSlots(
+      String bearerToken, String appId, String appService, String infraDefinitionId) {
+    GenericType<RestResponse<List<DeploymentSlotData>>> restResponseGenericType =
+        new GenericType<RestResponse<List<DeploymentSlotData>>>() {};
+    String appServiceSlotsPath =
+        String.format("/infrastructure-definitions/%s/azure-app-services/%s/slots", infraDefinitionId, appService);
+    RestResponse<List<DeploymentSlotData>> restResponse = Setup.portal()
+                                                              .auth()
+                                                              .oauth2(bearerToken)
+                                                              .contentType(ContentType.JSON)
+                                                              .queryParam("appId", appId)
+                                                              .queryParam("appType", "WEB_APP")
+                                                              .get(appServiceSlotsPath)
+                                                              .as(restResponseGenericType.getType());
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(appServiceSlotsPath, String.valueOf(restResponse.getResponseMessages()));
     }
 
     return restResponse.getResource();

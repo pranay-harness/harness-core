@@ -17,10 +17,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -71,6 +73,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -115,6 +118,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 
@@ -238,6 +242,10 @@ public class SettingValidationService {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
+      if (gcpConfig.isUseDelegate() && StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+        throw new InvalidArgumentsException(
+            "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
+      }
       if (!gcpConfig.isSkipValidation()) {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
       }
@@ -250,6 +258,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof AwsConfig) {
       validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
+      if (((KubernetesClusterConfig) settingValue).isUseKubernetesDelegate()) {
+        validateDelegateSelectorsProvided(settingValue);
+      }
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
         validateKubernetesClusterConfig(settingAttribute, encryptedDataDetails);
       }
@@ -316,6 +327,8 @@ public class SettingValidationService {
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof CEAwsConfig) {
       validateCEAwsConfig(settingAttribute);
+    } else if (settingValue instanceof CEAzureConfig) {
+      validateCEAzureConfig(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -337,8 +350,18 @@ public class SettingValidationService {
     return true;
   }
 
+  private void validateDelegateSelectorsProvided(SettingValue settingValue) {
+    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+      throw new InvalidRequestException("No Delegate Selector Provided.", USER);
+    }
+  }
+
   private void validateCEAwsConfig(SettingAttribute settingAttribute) {
     awsceConfigValidationService.verifyCrossAccountAttributes(settingAttribute);
+  }
+
+  private void validateCEAzureConfig(SettingAttribute settingAttribute) {
+    // TODO: Implement validation
   }
 
   private void validateSpotInstConfig(

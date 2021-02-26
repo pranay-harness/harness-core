@@ -6,6 +6,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,18 +23,24 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null ? "" : node.getStepParameters().toJson())
+            .setStepParameters(node.getStepParameters() == null
+                    ? ""
+                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
-            .setServiceName(serviceName);
+            .setServiceName(serviceName)
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepParameters() != null && node.getStepParameters().toViewJson() != null) {
+      builder.setStepInputs(node.getStepParameters().toViewJson());
     }
     return builder.build();
   }
@@ -46,17 +53,24 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null ? "" : node.getStepParameters().toJson())
+            .setStepParameters(node.getStepParameters() == null
+                    ? ""
+                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
-            .setSkipType(node.getSkipGraphType());
+            .setSkipType(node.getSkipGraphType())
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepInputs() != null) {
+      builder.setStepInputs(node.getStepInputs());
     }
     return builder.build();
   }

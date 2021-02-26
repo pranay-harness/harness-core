@@ -153,7 +153,7 @@ public class EnvironmentResourceTest extends CategoryTest {
     doReturn(environments).when(environmentService).list(criteria, pageable);
 
     List<EnvironmentResponseDTO> content =
-        environmentResource.listEnvironmentsForProject(0, 10, "", "", "", null).getData().getContent();
+        environmentResource.listEnvironmentsForProject(0, 10, "", "", "", null, null).getData().getContent();
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0)).isEqualTo(environmentResponseDTO);

@@ -35,6 +35,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -101,6 +102,7 @@ public class ProjectResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -113,6 +115,7 @@ public class ProjectResource {
                                             .orgIdentifier(orgIdentifier)
                                             .hasModule(hasModule)
                                             .moduleType(moduleType)
+                                            .identifiers(identifiers)
                                             .build();
     Page<ProjectResponse> projects =
         projectService.list(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)

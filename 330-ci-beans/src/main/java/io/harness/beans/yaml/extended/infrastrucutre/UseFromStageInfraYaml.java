@@ -2,19 +2,21 @@ package io.harness.beans.yaml.extended.infrastrucutre;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.AllArgsConstructor;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonTypeName("useFromStage")
 @TypeAlias("useFromStageInfraYaml")
 public class UseFromStageInfraYaml implements Infrastructure {
-  @JsonIgnore @Builder.Default private Type type = Type.USE_FROM_STAGE;
-  private String useFromStage;
+  @NotNull private String useFromStage;
+
+  @JsonIgnore
+  @Override
+  public Type getType() {
+    return Type.USE_FROM_STAGE;
+  }
 }

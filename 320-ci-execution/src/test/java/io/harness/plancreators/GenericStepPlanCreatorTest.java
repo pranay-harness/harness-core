@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class GenericStepPlanCreatorTest extends CIExecutionTest {
+public class GenericStepPlanCreatorTest extends CIExecutionTestBase {
   @Inject GenericStepPlanCreator genericStepPlanCreator;
 
   @Mock ExecutionPlanCreationContext executionPlanCreationContext;

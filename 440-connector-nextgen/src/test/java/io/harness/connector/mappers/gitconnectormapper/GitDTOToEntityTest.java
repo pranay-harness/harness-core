@@ -12,7 +12,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -20,6 +19,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -87,7 +87,7 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                         .commitMessage("commitMessage")
                                                         .build();
     GitSSHAuthenticationDTO httpAuthentication =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKeyReference).build();
+        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(sshKeyReference)).build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitAuthType(SSH).gitConnectionType(ACCOUNT).url(url).gitAuth(httpAuthentication).build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);

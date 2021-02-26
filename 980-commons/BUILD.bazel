@@ -11,6 +11,9 @@ sources()
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//990-commons-test:abstract-module",
+    ],
     resources = [
         "//980-commons/src/main/resources:resource",
         "//980-commons/src/main/resources-filtered:resource",
@@ -72,6 +75,7 @@ java_library(
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
+        "@maven//:net_jodah_failsafe",
         "@maven//:net_sf_json_lib_json_lib_jdk15",
         "@maven//:org_apache_commons_commons_csv",
         "@maven//:org_apache_commons_commons_jexl3",
@@ -105,7 +109,7 @@ java_library(
     resources = [
         "//980-commons/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",

@@ -35,6 +35,7 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.dl.WingsPersistence;
 import software.wings.resources.ContinuousVerificationResource;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.impl.event.GenericEventListener;
@@ -86,6 +87,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   private AlertNotificationHandler alertNotificationHandler;
   @Mock private NotificationDispatcherService notificationDispatcher;
   @Mock private FeatureFlagService featureFlagService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setUp() throws Exception {

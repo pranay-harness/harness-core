@@ -223,12 +223,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
         encryptionService.decrypt(config, edd, false);
-        String delegateName = System.getenv().get("DELEGATE_NAME");
-        if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
-          throw new InvalidRequestException(format("Kubernetes delegate name [%s] doesn't match "
-                  + "cloud provider delegate name [%s] for kubernetes cluster cloud provider [%s]",
-              delegateName, config.getDelegateName(), cloudProviderSetting.getName()));
-        }
+
         kubernetesConfig = config.createKubernetesConfig(setupParams.getNamespace());
       } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();

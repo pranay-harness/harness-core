@@ -13,8 +13,10 @@ import io.harness.yaml.core.intfc.OverridesApplier;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -23,25 +25,25 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
 @TypeAlias("environmentYaml")
 public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> name;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> identifier;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String name;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String identifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> description;
-  @Wither EnvironmentType type;
+  @NotNull @Wither EnvironmentType type;
   @Wither Map<String, String> tags;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {
     EnvironmentYaml resultant = this;
-    if (overrideConfig.getName() != null) {
+    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
       resultant = resultant.withName(overrideConfig.getName());
     }
-    if (overrideConfig.getIdentifier() != null) {
+    if (EmptyPredicate.isNotEmpty(overrideConfig.getIdentifier())) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());
     }
-    if (overrideConfig.getDescription() != null) {
+    if (!ParameterField.isNull(overrideConfig.getDescription())) {
       resultant = resultant.withDescription(overrideConfig.getDescription());
     }
     if (overrideConfig.getType() != null) {

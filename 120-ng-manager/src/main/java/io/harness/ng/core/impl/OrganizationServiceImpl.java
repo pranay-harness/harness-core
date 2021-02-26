@@ -37,6 +37,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -73,7 +74,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different org identifier, [%s] cannot be used", organization.getIdentifier()),
+          String.format(
+              "An organization with identifier %s is already present or was deleted", organization.getIdentifier()),
           USER_SRE, ex);
     }
   }
@@ -189,6 +191,9 @@ public class OrganizationServiceImpl implements OrganizationService {
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
+    if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
+      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
+    }
     return criteria;
   }
 
@@ -201,6 +206,16 @@ public class OrganizationServiceImpl implements OrganizationService {
           EventsFrameworkMetadataConstants.DELETE_ACTION);
     }
     return delete;
+  }
+
+  @Override
+  public boolean restore(String accountIdentifier, String identifier) {
+    boolean success = organizationRepository.restore(accountIdentifier, identifier);
+    if (success) {
+      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
   }
 
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {

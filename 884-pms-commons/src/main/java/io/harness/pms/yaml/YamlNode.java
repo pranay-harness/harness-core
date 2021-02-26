@@ -1,5 +1,9 @@
 package io.harness.pms.yaml;
 
+import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.beans.VisitableChildren;
+import io.harness.walktree.visitor.Visitable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,13 +11,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
 @Value
-public class YamlNode {
+public class YamlNode implements Visitable {
   public static final String UUID_FIELD_NAME = "uuid";
   public static final String IDENTIFIER_FIELD_NAME = "identifier";
   public static final String TYPE_FIELD_NAME = "type";
@@ -75,7 +81,7 @@ public class YamlNode {
 
   private YamlField getMatchingFieldNameFromParent(YamlNode parent, Set<String> fieldNames) {
     for (YamlField field : parent.fields()) {
-      if (fieldNames.contains(field.getName())) {
+      if (fieldNames.contains(field.getName()) && !field.getNode().getCurrJsonNode().isNull()) {
         return field;
       }
     }
@@ -113,10 +119,11 @@ public class YamlNode {
   private boolean compareFirstChildOfArrayNode(YamlNode firstParent, YamlNode secondParent) {
     List<YamlNode> firstParentChildNodes = firstParent.asArray();
     List<YamlNode> secondParentChildNodes = secondParent.asArray();
-    if (firstParentChildNodes.isEmpty() || secondParentChildNodes.isEmpty()) {
+    if (firstParentChildNodes.isEmpty() || secondParentChildNodes.isEmpty()
+        || firstParentChildNodes.get(0).getUuid() == null || secondParentChildNodes.get(0).getUuid() == null) {
       return false;
     }
-    return firstParentChildNodes.get(0).getUuid().equals(secondParentChildNodes.get(0).getUuid());
+    return Objects.equals(firstParentChildNodes.get(0).getUuid(), secondParentChildNodes.get(0).getUuid());
   }
 
   public String getIdentifier() {
@@ -154,5 +161,22 @@ public class YamlNode {
       value = null;
     }
     return value;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    if (isArray()) {
+      asArray().forEach(node -> visitableChildren.add(node.getName(), node));
+    } else if (isObject()) {
+      List<YamlNode> yamlNodeFields = fields().stream().map(YamlField::getNode).collect(Collectors.toList());
+      yamlNodeFields.forEach(field -> visitableChildren.add(field.getName(), field));
+    }
+    return visitableChildren;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().build();
   }
 }

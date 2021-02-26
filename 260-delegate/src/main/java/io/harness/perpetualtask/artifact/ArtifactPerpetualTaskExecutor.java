@@ -5,6 +5,8 @@ import static io.harness.network.SafeHttpCall.executeWithExceptions;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -35,6 +37,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
   // Deadline until we try to publish parts of build details to the manager. This should be considerably less than than
   // the task timeout. Right now, timeout is 2 minutes, and this value is 1.5 minutes.

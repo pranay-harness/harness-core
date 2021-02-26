@@ -9,6 +9,7 @@ proto_library(
         "artifact.proto",
         "execution.proto",
         "logproxy.proto",
+        "tiproxy.proto",
     ],
     visibility = ["//visibility:public"],
 )

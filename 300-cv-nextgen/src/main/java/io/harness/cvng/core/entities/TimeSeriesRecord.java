@@ -36,7 +36,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TimeSeriesRecordKeys")
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
+public final class TimeSeriesRecord
+    implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -58,7 +59,7 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
   private Instant bucketStartTime;
   private TimeSeriesMetricType metricType;
 
-  private long createdAt;
+  @FdIndex private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
 
   @JsonIgnore

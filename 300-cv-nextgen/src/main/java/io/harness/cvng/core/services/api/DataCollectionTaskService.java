@@ -12,10 +12,13 @@ public interface DataCollectionTaskService {
   void save(DataCollectionTask dataCollectionTask);
   Optional<DataCollectionTask> getNextTask(String accountId, String dataCollectionWorkerId);
   Optional<DataCollectionTaskDTO> getNextTaskDTO(String accountId, String dataCollectionWorkerId);
+  List<DataCollectionTaskDTO> getNextTaskDTOs(String accountId, String dataCollectionWorkerId);
   DataCollectionTask getDataCollectionTask(String dataCollectionTaskId);
   void updateTaskStatus(DataCollectionTaskResult dataCollectionTaskResult);
   void deletePerpetualTasks(String accountId, String perpetualTaskId);
-  String enqueueFirstTask(CVConfig cvConfig);
-  void resetLiveMonitoringPerpetualTask(CVConfig cvConfig);
+
+  void handleRecoverNextTask(CVConfig cvConfig);
+
+  void enqueueFirstTask(CVConfig cvConfig);
   List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks);
 }

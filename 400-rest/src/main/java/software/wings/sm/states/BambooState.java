@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -9,7 +10,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.StateType.BAMBOO;
 
@@ -198,6 +198,7 @@ public class BambooState extends State {
             .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .description("Trigger Bamboo plan")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(getTaskType().name())
@@ -211,10 +212,11 @@ public class BambooState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
-
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(BambooExecutionData.builder()
@@ -319,6 +321,11 @@ public class BambooState extends State {
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   @Data

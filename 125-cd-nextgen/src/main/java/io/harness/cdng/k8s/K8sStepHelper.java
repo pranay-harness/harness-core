@@ -12,6 +12,7 @@ import static java.lang.String.format;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStore;
@@ -23,10 +24,11 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -34,6 +36,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -41,33 +44,35 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
-import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.AuthenticationScheme;
-import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
-import io.harness.validation.Validator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
@@ -81,9 +86,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +103,7 @@ public class K8sStepHelper {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
+  @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     switch (infrastructure.getKind()) {
@@ -194,13 +198,12 @@ public class K8sStepHelper {
       GitStore gitStore = (GitStore) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStore.getConnectorRef()), ambiance);
       GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
-
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
-      List<EncryptedDataDetail> encryptedDataDetailList =
-          secretManagerClientService.getEncryptionDetails(basicNGAccessObject, gitConfigDTO.getGitAuth());
-
+      SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+      List<EncryptedDataDetail> encryptedDataDetails =
+          gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
       return K8sManifestDelegateConfig.builder()
-          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetailList))
+          .storeDelegateConfig(getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO))
           .build();
     } else {
       throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
@@ -208,9 +211,11 @@ public class K8sStepHelper {
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStore gitStore,
-      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList) {
+      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
+      SSHKeySpecDTO sshKeySpecDTO) {
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO((GitConfigDTO) connectorDTO.getConnectorConfig())
+        .sshKeySpecDTO(sshKeySpecDTO)
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitStore.getGitFetchType())
         .branch(getParameterFieldValue(gitStore.getBranch()))
@@ -218,6 +223,11 @@ public class K8sStepHelper {
         .paths(getParameterFieldValue(gitStore.getPaths()))
         .connectorName(connectorDTO.getName())
         .build();
+  }
+
+  private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
+    return gitConfigAuthenticationInfoHelper.getSSHKey(gitConfigDTO, AmbianceHelper.getAccountId(ambiance),
+        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
   }
 
   private List<EncryptedDataDetail> getEncryptionDataDetails(
@@ -270,16 +280,15 @@ public class K8sStepHelper {
 
   public TaskChainResponse queueK8sTask(K8sStepParameters k8sStepParameters, K8sDeployRequest k8sDeployRequest,
       Ambiance ambiance, InfrastructureOutcome infrastructure) {
-    TaskData taskData =
-        TaskData.builder()
-            .parameters(new Object[] {k8sDeployRequest})
-            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .async(true)
-            .build();
+    TaskData taskData = TaskData.builder()
+                            .parameters(new Object[] {k8sDeployRequest})
+                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
+                            .timeout(getTimeout(k8sStepParameters))
+                            .async(true)
+                            .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2, Collections.emptyList());
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -300,14 +309,18 @@ public class K8sStepHelper {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind())) {
-        GitStore gitStore = (GitStore) valuesManifest.getStore().getStoreConfig();
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind())) {
+        GitStore gitStore = (GitStore) valuesManifest.getStore();
         String connectorId = gitStore.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
+        GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
+        NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+        SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
-            getEncryptedDataDetails((GitConfigDTO) connectorDTO.getConnectorConfig(), ambiance);
+            gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+
         GitStoreDelegateConfig gitStoreDelegateConfig =
-            getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails);
+            getGitStoreDelegateConfig(gitStore, connectorDTO, encryptedDataDetails, sshKeySpecDTO);
 
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
                                      .identifier(valuesManifest.getIdentifier())
@@ -321,22 +334,15 @@ public class K8sStepHelper {
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
-    final TaskData taskData =
-        TaskData.builder()
-            .async(true)
-            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(k8sStepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
-            .parameters(new Object[] {gitFetchRequest})
-            .build();
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
+                                  .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .parameters(new Object[] {gitFetchRequest})
+                                  .build();
 
-    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
-
-    List<String> commandUnits =
-        Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
-            K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
-
-    final TaskRequest taskRequest = prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2, commandUnits);
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -353,14 +359,15 @@ public class K8sStepHelper {
   public TaskChainResponse startChainLink(
       K8sStepExecutor k8sStepExecutor, Ambiance ambiance, K8sStepParameters k8sStepParameters) {
     ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
 
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
-    Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifests();
-    Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());
-    Validator.notEmptyCheck("Timeout cannot be empty", k8sStepParameters.getTimeout().getValue());
+    Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
+    if (isEmpty(manifestOutcomeMap) || isEmpty(manifestOutcomeMap.keySet())) {
+      throw new InvalidRequestException("Manifests can't be empty");
+    }
 
     K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
     List<ValuesManifestOutcome> aggregatedValuesManifests =
@@ -420,7 +427,7 @@ public class K8sStepHelper {
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
     return aggregatedValuesManifests.stream().anyMatch(
-        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind()));
+        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind()));
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
@@ -428,7 +435,12 @@ public class K8sStepHelper {
     GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
-      throw new InvalidRequestException(gitFetchResponse.getErrorMessage());
+      GitFetchResponsePassThroughData gitFetchResponsePassThroughData =
+          GitFetchResponsePassThroughData.builder()
+              .errorMsg(gitFetchResponse.getErrorMessage())
+              .unitProgressData(gitFetchResponse.getUnitProgressData())
+              .build();
+      return TaskChainResponse.builder().chainEnd(true).passThroughData(gitFetchResponsePassThroughData).build();
     }
     Map<String, FetchFilesResult> gitFetchFilesResultMap = gitFetchResponse.getFilesFromMultipleRepo();
 
@@ -448,7 +460,7 @@ public class K8sStepHelper {
     List<String> valuesFileContents = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : valuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind())) {
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getKind())) {
         FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
@@ -456,5 +468,26 @@ public class K8sStepHelper {
       // TODO: for local store, add files directly
     }
     return valuesFileContents;
+  }
+
+  public static int getTimeout(K8sStepParameters stepParameters) {
+    String timeout = stepParameters.getTimeout() == null || isEmpty(stepParameters.getTimeout().getValue())
+        ? StepConstants.defaultTimeout
+        : stepParameters.getTimeout().getValue();
+
+    return NGTimeConversionHelper.convertTimeStringToMinutes(timeout);
+  }
+
+  public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {
+    return k8sDeployResponse.getErrorMessage() == null ? "" : k8sDeployResponse.getErrorMessage();
+  }
+
+  StepResponse handleGitTaskFailure(GitFetchResponsePassThroughData gitFetchResponse) {
+    UnitProgressData unitProgressData = gitFetchResponse.getUnitProgressData();
+    return StepResponse.builder()
+        .unitProgressList(unitProgressData.getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(gitFetchResponse.getErrorMsg()).build())
+        .build();
   }
 }

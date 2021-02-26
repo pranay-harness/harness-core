@@ -38,6 +38,6 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
     assertThat(dockerDelegateRequest.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_HUB);
     assertThat(dockerDelegateRequest.getTagsList()).isNull();
     assertThat(dockerDelegateRequest.getTag()).isEqualTo("");
-    assertThat(dockerDelegateRequest.getTagRegex()).isEqualTo("*");
+    assertThat(dockerDelegateRequest.getTagRegex()).isEqualTo("\\*");
   }
 }

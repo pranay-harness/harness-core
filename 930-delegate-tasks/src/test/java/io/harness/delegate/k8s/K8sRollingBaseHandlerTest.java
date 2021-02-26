@@ -2,10 +2,8 @@ package io.harness.delegate.k8s;
 
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -17,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
@@ -117,37 +116,6 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testTagNewPods() {
-    assertThat(k8sRollingBaseHandler.tagNewPods(emptyList(), emptyList())).isEmpty();
-
-    List<K8sPod> pods = k8sRollingBaseHandler.tagNewPods(
-        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("old-pod-1"), podWithName("old-pod-2")));
-    assertThat(pods).hasSize(2);
-    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
-    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
-        .containsExactlyInAnyOrder("pod-1", "pod-2");
-
-    pods = k8sRollingBaseHandler.tagNewPods(
-        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("pod-1")));
-    assertThat(pods).hasSize(2);
-    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
-    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
-        .containsExactlyInAnyOrder("pod-1", "pod-2");
-
-    pods = k8sRollingBaseHandler.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), emptyList());
-    assertThat(pods).hasSize(2);
-    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
-    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
-        .containsExactlyInAnyOrder("pod-1", "pod-2");
-  }
-
-  private K8sPod podWithName(String name) {
-    return K8sPod.builder().name(name).build();
-  }
-
-  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testUpdateDeploymentConfigRevision() throws Exception {
@@ -160,13 +128,38 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
     when(resourceIdMock.getWorkload())
         .thenReturn(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build());
 
-    k8sRollingBaseHandler.updateDeploymentConfigRevision(delegateTaskParams, release, null);
+    k8sRollingBaseHandler.updateManagedWorkloadsRevision(delegateTaskParams, release, null);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(resourceIdMock).setRevision(captor.capture());
     assertThat(captor.getValue()).isEqualTo("2");
 
     when(resourceIdMock.getWorkload()).thenReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build());
     verify(resourceIdMock, times(1)).setRevision(anyString());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateMultipleWorkloadsRevision() throws Exception {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    Release.KubernetesResourceIdRevision deploymentId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release.KubernetesResourceIdRevision statefulSetId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release.KubernetesResourceIdRevision daemonSetId = Mockito.mock(Release.KubernetesResourceIdRevision.class);
+    Release release = Release.builder().managedWorkloads(asList(deploymentId, statefulSetId, daemonSetId)).build();
+
+    doReturn("3")
+        .when(k8sTaskHelperBase)
+        .getLatestRevision(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class));
+
+    doReturn(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build()).when(deploymentId).getWorkload();
+    doReturn(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build()).when(deploymentId).getWorkload();
+    doReturn(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build()).when(deploymentId).getWorkload();
+
+    k8sRollingBaseHandler.updateManagedWorkloadsRevision(delegateTaskParams, release, null);
+    verify(deploymentId, times(1)).setRevision("3");
+    verify(statefulSetId, times(1)).setRevision("3");
+    verify(daemonSetId, times(1)).setRevision("3");
   }
 
   private K8sPod buildPod(int name) {

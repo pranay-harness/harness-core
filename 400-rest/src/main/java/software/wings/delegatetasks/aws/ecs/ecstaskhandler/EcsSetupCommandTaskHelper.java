@@ -13,7 +13,6 @@ import static software.wings.utils.EcsConvention.getServiceNamePrefixFromService
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.Optional.empty;
@@ -27,12 +26,14 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
@@ -134,8 +135,16 @@ public class EcsSetupCommandTaskHelper {
     executionLogCallback.saveExecutionLog("Container Name: " + containerName, LogLevel.INFO);
 
     // create Task definition and register it with AWS
-    return createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams, awsConfig,
-        serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback, domainName);
+    TaskDefinition taskDefinition;
+    if (setupParams.isEcsRegisterTaskDefinitionTagsEnabled()) {
+      taskDefinition = createTaskDefinitionParseAsRegisterTaskDefinitionRequest(ecsContainerTask, containerName,
+          dockerImageName, setupParams, awsConfig, serviceVariables, safeDisplayServiceVariables, encryptedDataDetails,
+          executionLogCallback, domainName);
+    } else {
+      taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams, awsConfig,
+          serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback, domainName);
+    }
+    return taskDefinition;
   }
 
   @VisibleForTesting
@@ -229,6 +238,87 @@ public class EcsSetupCommandTaskHelper {
   }
 
   /**
+   * This method will create TaskDefinition and register it with AWS.
+   */
+  public TaskDefinition createTaskDefinitionParseAsRegisterTaskDefinitionRequest(EcsContainerTask ecsContainerTask,
+      String containerName, String dockerImageName, EcsSetupParams ecsSetupParams, AwsConfig awsConfig,
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, String domainName) {
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = ecsContainerTask.createRegisterTaskDefinitionRequest(
+        containerName, dockerImageName, ecsSetupParams.getExecutionRoleArn(), domainName);
+
+    // For Awsvpc mode we need to make sure NetworkConfiguration is provided
+    String validationMessage =
+        isValidateSetupParamsForECSRegisterTaskDefinitionRequest(registerTaskDefinitionRequest, ecsSetupParams);
+    handleValidationMessage(validationMessage, executionLogCallback);
+
+    registerTaskDefinitionRequest.setFamily(ecsSetupParams.getTaskFamily());
+
+    // Set service variables as environment variables
+    if (isNotEmpty(serviceVariables)) {
+      if (isNotEmpty(safeDisplayServiceVariables)) {
+        executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
+        for (Entry<String, String> entry : safeDisplayServiceVariables.entrySet()) {
+          executionLogCallback.saveExecutionLog(entry.getKey() + "=" + entry.getValue(), LogLevel.INFO);
+        }
+      }
+      Map<String, KeyValuePair> serviceValuePairs = serviceVariables.entrySet().stream().collect(Collectors.toMap(
+          Entry::getKey, entry -> new KeyValuePair().withName(entry.getKey()).withValue(entry.getValue())));
+      for (ContainerDefinition containerDefinition : registerTaskDefinitionRequest.getContainerDefinitions()) {
+        Map<String, KeyValuePair> valuePairsMap = new HashMap<>();
+        if (containerDefinition.getEnvironment() != null) {
+          containerDefinition.getEnvironment().forEach(
+              keyValuePair -> valuePairsMap.put(keyValuePair.getName(), keyValuePair));
+        }
+        valuePairsMap.putAll(serviceValuePairs);
+        containerDefinition.setEnvironment(new ArrayList<>(valuePairsMap.values()));
+      }
+    }
+
+    if (registerTaskDefinitionRequest.getContainerDefinitions().size() > 1) {
+      Tag mainEcsContainerNameTag = new Tag().withKey(MAIN_ECS_CONTAINER_NAME_TAG).withValue(containerName);
+      if (registerTaskDefinitionRequest.getTags() == null) {
+        registerTaskDefinitionRequest.withTags(mainEcsContainerNameTag);
+      } else {
+        registerTaskDefinitionRequest.getTags().add(mainEcsContainerNameTag);
+      }
+    }
+
+    if (isEmpty(registerTaskDefinitionRequest.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(null);
+    }
+
+    if (isEmpty(registerTaskDefinitionRequest.getTags())) {
+      ArrayList<Tag> tags = null;
+      registerTaskDefinitionRequest.withTags(tags);
+    }
+
+    // Add extra parameters for Fargate launch type
+    if (isFargateTaskLauchType(ecsSetupParams)) {
+      registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
+      registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
+    } else {
+      registerTaskDefinitionRequest.withCpu(null);
+      registerTaskDefinitionRequest.withMemory(null);
+    }
+
+    executionLogCallback.saveExecutionLog(
+        format("Creating task definition %s with container image %s", ecsSetupParams.getTaskFamily(), dockerImageName),
+        LogLevel.INFO);
+    return awsClusterService.createTask(ecsSetupParams.getRegion(), aSettingAttribute().withValue(awsConfig).build(),
+        encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  public void handleValidationMessage(String validationMessage, ExecutionLogCallback executionLogCallback) {
+    if (!isEmptyOrBlank(validationMessage)) {
+      StringBuilder builder =
+          new StringBuilder().append("Invalid setup params for ECS deployment: ").append(validationMessage);
+      executionLogCallback.saveExecutionLog(builder.toString(), LogLevel.ERROR);
+      throw new WingsException(builder.toString(), USER).addParam("message", builder.toString());
+    }
+  }
+
+  /**
    * Checks for null, "" and  "    "
    *
    * @param input
@@ -286,6 +376,47 @@ public class EcsSetupCommandTaskHelper {
 
     if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
       if (isEmptyOrBlank(taskDefinition.getExecutionRoleArn())) {
+        errorMessage.append("Execution Role ARN is required for Fargate tasks");
+      }
+    }
+
+    return errorMessage.toString();
+  }
+
+  /**
+   * For AwsVpcMode we need to make sure NetworkConfiguration i.e. (SubnetId/s, securityGroupId/s) is provided and For
+   * fargate in addition to this executionRole is also required
+   *
+   * @param registerTaskDefinitionRequest
+   * @param ecsSetupParams
+   * @return
+   */
+  public String isValidateSetupParamsForECSRegisterTaskDefinitionRequest(
+      RegisterTaskDefinitionRequest registerTaskDefinitionRequest, EcsSetupParams ecsSetupParams) {
+    StringBuilder errorMessage = new StringBuilder(128);
+    if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())
+        || NetworkMode.Awsvpc.name().equals(registerTaskDefinitionRequest.getNetworkMode())) {
+      if (isEmptyOrBlank(ecsSetupParams.getVpcId())) {
+        errorMessage.append("VPC Id is required for fargate task");
+      }
+
+      if (ArrayUtils.isEmpty(ecsSetupParams.getSubnetIds())
+          || CollectionUtils.isEmpty(Arrays.stream(ecsSetupParams.getSubnetIds())
+                                         .filter(subnet -> !isEmptyOrBlank(subnet))
+                                         .collect(toList()))) {
+        errorMessage.append("At least 1 subnetId is required for mentioned VPC");
+      }
+
+      if (ArrayUtils.isEmpty(ecsSetupParams.getSecurityGroupIds())
+          || CollectionUtils.isEmpty(Arrays.stream(ecsSetupParams.getSecurityGroupIds())
+                                         .filter(securityGroup -> !isEmptyOrBlank(securityGroup))
+                                         .collect(toList()))) {
+        errorMessage.append("At least 1 security Group is required for mentioned VPC");
+      }
+    }
+
+    if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
+      if (isEmptyOrBlank(registerTaskDefinitionRequest.getExecutionRoleArn())) {
         errorMessage.append("Execution Role ARN is required for Fargate tasks");
       }
     }
@@ -463,7 +594,8 @@ public class EcsSetupCommandTaskHelper {
   public CreateServiceRequest getCreateServiceRequest(SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, EcsSetupParams setupParams, TaskDefinition taskDefinition,
       String containerServiceName, ExecutionLogCallback executionLogCallback, Logger logger,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      boolean isMultipleLoadBalancersFeatureFlagActive) {
     boolean isFargateTaskType = isFargateTaskLauchType(setupParams);
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -492,7 +624,7 @@ public class EcsSetupCommandTaskHelper {
     if (!setupParams.isUseRoute53DNSSwap() && setupParams.isUseLoadBalancer()) {
       executionLogCallback.saveExecutionLog("Setting load balancer to service");
       setLoadBalancerToService(setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition,
-          createServiceRequest, awsClusterService, executionLogCallback);
+          createServiceRequest, awsClusterService, executionLogCallback, isMultipleLoadBalancersFeatureFlagActive);
     }
 
     // for Fargate, where network mode is "awsvpc", setting taskRole causes error.
@@ -521,10 +653,10 @@ public class EcsSetupCommandTaskHelper {
     // Handle Advanced Scenario (This is ECS Service json spec provided by user)
     EcsServiceSpecification serviceSpecification = setupParams.getEcsServiceSpecification();
     List<ServiceRegistry> serviceRegistries = newArrayList();
-    if (serviceSpecification != null && StringUtils.isNotBlank(serviceSpecification.getServiceSpecJson())) {
+    if (serviceSpecification != null && isNotBlank(serviceSpecification.getServiceSpecJson())) {
       // Replace $Container_NAME string if exists, with actual container name
       if (setupParams.getEcsServiceSpecification() != null
-          && StringUtils.isNotBlank(setupParams.getEcsServiceSpecification().getServiceSpecJson())) {
+          && isNotBlank(setupParams.getEcsServiceSpecification().getServiceSpecJson())) {
         String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
         String containerName = EcsConvention.getContainerName(dockerImageName);
         EcsServiceSpecification specification = setupParams.getEcsServiceSpecification();
@@ -620,7 +752,7 @@ public class EcsSetupCommandTaskHelper {
   public void setLoadBalancerToService(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, TaskDefinition taskDefinition,
       CreateServiceRequest createServiceRequest, AwsClusterService awsClusterService,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive) {
     Integer containerPort = null;
     String containerName = null;
 
@@ -737,13 +869,13 @@ public class EcsSetupCommandTaskHelper {
       containerPort = portMapping.getContainerPort();
     }
 
-    List<LoadBalancer> loadBalancers;
+    List<LoadBalancer> loadBalancers = new ArrayList<>();
 
     if (containerName != null && containerPort != null) {
-      loadBalancers = asList(new LoadBalancer()
-                                 .withContainerName(containerName)
-                                 .withContainerPort(containerPort)
-                                 .withTargetGroupArn(setupParams.getTargetGroupArn()));
+      loadBalancers.add(new LoadBalancer()
+                            .withContainerName(containerName)
+                            .withContainerPort(containerPort)
+                            .withTargetGroupArn(setupParams.getTargetGroupArn()));
       createServiceRequest.withLoadBalancers(loadBalancers);
     } else {
       StringBuilder builder =
@@ -752,6 +884,155 @@ public class EcsSetupCommandTaskHelper {
               .append(setupParams.getTargetGroupArn());
       executionLogCallback.saveExecutionLog(ERROR + builder.toString());
       throw new WingsException(builder.toString());
+    }
+    if (isMultipleLoadBalancersFeatureFlagActive && EmptyPredicate.isNotEmpty(setupParams.getAwsElbConfigs())) {
+      setAdditionalLoadBalancersToService(setupParams, cloudProviderSetting, encryptedDataDetails, taskDefinition,
+          createServiceRequest, awsClusterService, executionLogCallback);
+    }
+  }
+
+  public void setAdditionalLoadBalancersToService(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, TaskDefinition taskDefinition,
+      CreateServiceRequest createServiceRequest, AwsClusterService awsClusterService,
+      ExecutionLogCallback executionLogCallback) {
+    String generatedContainerName = setupParams.getGeneratedContainerName();
+    List<LoadBalancer> loadBalancers = createServiceRequest.getLoadBalancers();
+
+    if (EmptyPredicate.isNotEmpty(setupParams.getAwsElbConfigs())) {
+      for (AwsElbConfig awsElbConfig : setupParams.getAwsElbConfigs()) {
+        Integer finalTargetContainerPort = null;
+        String finalTargetContainerName = null;
+
+        if (isNotBlank(awsElbConfig.getTargetContainerName())) {
+          awsElbConfig.setTargetContainerName(awsElbConfig.getTargetContainerName().replaceAll(
+              CONTAINER_NAME_PLACEHOLDER_REGEX, generatedContainerName));
+        }
+
+        String targetContainerName = awsElbConfig.getTargetContainerName();
+        String targetPort = awsElbConfig.getTargetPort();
+
+        if (isNotBlank(targetContainerName) && isNotBlank(targetPort)) {
+          finalTargetContainerName = targetContainerName;
+
+          if (!StringUtils.isNumeric(targetPort.trim())) {
+            StringBuilder builder =
+                new StringBuilder().append("Invalid port : ").append(targetPort).append(". It should be a number");
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          finalTargetContainerPort = Integer.parseInt(targetPort);
+
+        } else if (isBlank(targetContainerName) && isBlank(targetPort)) {
+          TargetGroup targetGroup = awsClusterService.getTargetGroup(
+              setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, awsElbConfig.getTargetGroupArn());
+
+          if (targetGroup == null) {
+            StringBuilder builder = new StringBuilder()
+                                        .append("Target group is null for the given ARN: ")
+                                        .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          final Integer targetGroupPort = targetGroup.getPort();
+
+          if (targetGroupPort == null) {
+            StringBuilder builder = new StringBuilder()
+                                        .append("Target group port is null for the given ARN: ")
+                                        .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          List<ContainerDefinition> containerDefinitionList = taskDefinition.getContainerDefinitions();
+
+          Multimap<ContainerDefinition, PortMapping> portMappingListWithTargetPort = HashMultimap.create();
+          containerDefinitionList.forEach(containerDefinition -> {
+            List<PortMapping> portMappings = containerDefinition.getPortMappings();
+
+            if (portMappings == null) {
+              return;
+            }
+
+            List<PortMapping> portMappingList =
+                portMappings.stream()
+                    .filter(portMapping
+                        -> portMapping.getContainerPort().equals(targetGroupPort)
+                            || (portMapping.getHostPort() != null && portMapping.getHostPort().equals(targetGroupPort)))
+                    .collect(toList());
+            portMappingListWithTargetPort.putAll(containerDefinition, portMappingList);
+          });
+
+          Set<ContainerDefinition> containerDefinitionSet = portMappingListWithTargetPort.keySet();
+          if (isEmpty(containerDefinitionSet)) {
+            StringBuilder builder =
+                new StringBuilder()
+                    .append("No container definition has port mapping that matches the target port: ")
+                    .append(targetGroupPort)
+                    .append(" for target group: ")
+                    .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          int portMatchCount = containerDefinitionSet.size();
+          if (portMatchCount > 1) {
+            StringBuilder builder = new StringBuilder()
+                                        .append("Only one port mapping should match the target port: ")
+                                        .append(targetGroupPort)
+                                        .append(" for target group: ")
+                                        .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          ContainerDefinition containerDefinition = containerDefinitionSet.iterator().next();
+          finalTargetContainerName = containerDefinition.getName();
+
+          Collection<PortMapping> portMappings = portMappingListWithTargetPort.get(containerDefinition);
+
+          if (isEmpty(portMappings)) {
+            StringBuilder builder = new StringBuilder()
+                                        .append("No container definition has port mapping that match the target port: ")
+                                        .append(targetGroupPort)
+                                        .append(" for target group: ")
+                                        .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          if (portMappings.size() > 1) {
+            StringBuilder builder = new StringBuilder()
+                                        .append("Only one port mapping should match the target port: ")
+                                        .append(targetGroupPort)
+                                        .append(" for target group: ")
+                                        .append(awsElbConfig.getTargetGroupArn());
+            executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+            throw new WingsException(builder.toString());
+          }
+
+          PortMapping portMapping = portMappings.iterator().next();
+
+          finalTargetContainerPort = portMapping.getContainerPort();
+        }
+
+        if (finalTargetContainerName != null && finalTargetContainerPort != null) {
+          loadBalancers.add(new LoadBalancer()
+                                .withContainerName(finalTargetContainerName)
+                                .withContainerPort(finalTargetContainerPort)
+                                .withTargetGroupArn(awsElbConfig.getTargetGroupArn()));
+        } else {
+          StringBuilder builder =
+              new StringBuilder()
+                  .append("Could not obtain container name and port to set to the target for target group: ")
+                  .append(awsElbConfig.getTargetGroupArn());
+          executionLogCallback.saveExecutionLog(ERROR + builder.toString());
+          throw new WingsException(builder.toString());
+        }
+      }
+
+      createServiceRequest.withLoadBalancers(loadBalancers);
     }
   }
 
@@ -795,7 +1076,7 @@ public class EcsSetupCommandTaskHelper {
         containerDefinition -> nameToContainerDefinitionMap.put(containerDefinition.getName(), containerDefinition));
 
     serviceRegistries.forEach(serviceRegistry -> {
-      if (StringUtils.isNotBlank(serviceRegistry.getContainerName())) {
+      if (isNotBlank(serviceRegistry.getContainerName())) {
         ContainerDefinition containerDefinition = nameToContainerDefinitionMap.get(serviceRegistry.getContainerName());
 
         // if Container Name is not null, Validate ContainerName is mentioned in ServiceRegistry
@@ -852,6 +1133,14 @@ public class EcsSetupCommandTaskHelper {
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       ExecutionLogCallback executionLogCallback) {
+    return createEcsService(setupParams, taskDefinition, cloudProviderSetting, encryptedDataDetails,
+        commandExecutionDataBuilder, executionLogCallback, false);
+  }
+
+  public String createEcsService(EcsSetupParams setupParams, TaskDefinition taskDefinition,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive) {
     String containerServiceName =
         EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
 
@@ -872,7 +1161,8 @@ public class EcsSetupCommandTaskHelper {
         .instanceCountForLatestVersion(instanceCountForLatestVersion);
 
     CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
-        setupParams, taskDefinition, containerServiceName, executionLogCallback, log, commandExecutionDataBuilder);
+        setupParams, taskDefinition, containerServiceName, executionLogCallback, log, commandExecutionDataBuilder,
+        isMultipleLoadBalancersFeatureFlagActive);
 
     executionLogCallback.saveExecutionLog(
         format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
@@ -1020,7 +1310,7 @@ public class EcsSetupCommandTaskHelper {
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\nCleaning versions with no tasks", LogLevel.INFO);
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
-    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
+    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName, serviceNamePrefix)
         .stream()
         .filter(service
             -> EcsConvention.getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix))

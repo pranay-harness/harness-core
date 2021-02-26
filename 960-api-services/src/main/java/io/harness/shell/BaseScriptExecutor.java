@@ -14,4 +14,7 @@ public interface BaseScriptExecutor {
   CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand);
 
   ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect);
+
+  ExecuteCommandResponse executeCommandString(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect);
 }

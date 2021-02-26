@@ -1,10 +1,8 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
-import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
-import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -18,7 +16,9 @@ import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -28,6 +28,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -35,6 +36,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
@@ -42,8 +44,13 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.security.JWTAuthenticationFilter;
-import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
+import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
+import io.harness.security.InternalApiAuthFilter;
+import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.security.UserPrincipalVerificationFilter;
+import io.harness.security.annotations.InternalApi;
+import io.harness.security.annotations.PublicApi;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -55,12 +62,16 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
+import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 
 import software.wings.app.CharsetResponseFilter;
+import software.wings.jersey.KryoFeature;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -74,6 +85,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.lang.annotation.Annotation;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,6 +110,8 @@ import org.glassfish.jersey.server.model.Resource;
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
+
+  private final MetricRegistry metricRegistry = new MetricRegistry();
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -125,6 +139,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+    bootstrap.setMetricRegistry(metricRegistry);
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
@@ -139,6 +154,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new NextGenModule(appConfig));
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(MetricRegistry.class).toInstance(metricRegistry);
+      }
+    });
+    modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     Injector injector = Guice.createInjector(modules);
 
@@ -146,7 +168,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
-    registerJerseyProviders(environment);
+    registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
@@ -159,8 +181,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerAuthFilters(appConfig, environment, injector);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
-
+    registerHealthCheck(environment, injector);
+    registerIterators(injector);
     MaintenanceController.forceMaintenance(false);
+  }
+
+  public void registerIterators(Injector injector) {
+    injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Next Gen Manager", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
@@ -168,13 +201,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerYamlSdk(Injector injector) {
-    //    final InputStream snippetIndexFile =
-    //        getClass().getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
-    //    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
-    //                                                    .snippetIndex(snippetIndexFile)
-    //                                                    .schemaBasePath(YamlSdkConstants.schemaBasePath)
-    //                                                    .build();
-    YamlSdkInitHelper.initialize(injector);
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(true)
+                                                    .requireValidatorInit(true)
+                                                    .build();
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 
   public void registerPipelineSDK(NextGenConfiguration appConfig, Injector injector) {
@@ -213,6 +245,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -233,7 +266,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
   }
 
-  private void registerJerseyProviders(Environment environment) {
+  private void registerJerseyProviders(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);
@@ -264,6 +298,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
     if (appConfig.getShouldConfigureWithPMS()) {
       queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     }
@@ -302,19 +337,47 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      // sample usage
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
-      serviceToSecretMapping.put(
-          IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-      serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-      serviceToSecretMapping.put(MANAGER.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-      serviceToSecretMapping.put(
-          CI_MANAGER.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      registerNextGenAuthFilter(configuration, environment);
+      registerInternalApiAuthFilter(configuration, environment);
+      environment.jersey().register(new UserPrincipalVerificationFilter(
+          getAuthFilterPredicate(PublicApi.class).negate(), injector.getInstance(NgUserService.class)));
     }
+  }
+
+  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
+        (getAuthenticationExemptedRequestsPredicate().negate())
+            .and((getAuthFilterPredicate(InternalApi.class)).negate());
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+  }
+
+  private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
+    environment.jersey().register(
+        new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthenticationExemptedRequestsPredicate() {
+    return getAuthFilterPredicate(PublicApi.class)
+        .or(resourceInfoAndRequest
+            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "/swagger.json"));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
+      Class<? extends Annotation> annotation) {
+    return resourceInfoAndRequest
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 }

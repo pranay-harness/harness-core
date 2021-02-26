@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.mutation.cloudProvider.k8s;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
@@ -14,6 +16,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLK8sCloudProviderInput {
   private RequestField<String> name;
 

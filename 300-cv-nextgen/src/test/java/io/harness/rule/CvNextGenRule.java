@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static io.harness.CvNextGenTestBase.getResourceFilePath;
+
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
@@ -17,6 +19,7 @@ import io.harness.notification.MongoBackendConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.notification.constant.NotificationClientSecrets;
 import io.harness.notification.module.NotificationClientModule;
+import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.serializer.CvNextGenRegistrars;
@@ -40,7 +43,6 @@ import io.dropwizard.jersey.validation.Validators;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -122,6 +124,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
                         "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
                     .build())
             .build()));
+    modules.add(new NotificationClientPersistenceModule());
     modules.add(new NextGenClientModule(
         NGManagerServiceConfig.builder().managerServiceSecret("secret").ngManagerUrl("http://test-ng-host").build()));
     modules.add(new VerificationManagerClientModule("http://test-host"));
@@ -134,7 +137,9 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     final Validator validator = Validators.newValidator();
     final YamlConfigurationFactory<VerificationConfiguration> factory =
         new YamlConfigurationFactory<>(VerificationConfiguration.class, validator, objectMapper, "dw");
-    final File yaml = Paths.get("cv-nextgen-config.yml").toAbsolutePath().toFile();
+
+    // TODO: once we move completely on bazel, we can get rid of mvn way
+    final File yaml = new File(getResourceFilePath("test-config.yml"));
     return factory.build(yaml);
   }
 
@@ -151,6 +156,6 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

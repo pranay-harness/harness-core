@@ -2,22 +2,20 @@ package io.harness.ngtriggers.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
-import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
-import io.harness.ngtriggers.beans.target.TargetType;
+import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 
-import com.google.inject.Singleton;
-import java.time.Duration;
-import lombok.NoArgsConstructor;
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -54,14 +52,39 @@ public class TriggerFilterHelper {
     return criteria;
   }
 
-  public Criteria createCriteriaForWebhookTriggerGetList(
-      String accountIdentifier, String repoURL, String searchTerm, boolean deleted, boolean enabledOnly) {
+  public Criteria createCriteriaForCustomWebhookTriggerGetList(TriggerWebhookEvent triggerWebhookEvent,
+      String decryptedAuthToken, String searchTerm, boolean deleted, boolean enabled) {
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
+        triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
+        deleted, enabled);
+    if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
+      if (triggerWebhookEvent.getTriggerIdentifier() != null) {
+        criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
+      }
+      criteria.and("metadata.webhook.type").is("CUSTOM");
+      criteria.and("metadata.webhook.custom.customAuthTokenType")
+          .is("inline")
+          .and("metadata.webhook.custom.customAuthTokenValue")
+          .is(decryptedAuthToken);
+    }
+
+    return criteria;
+  }
+
+  public Criteria createCriteriaForWebhookTriggerGetList(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, List<String> repoURLs, String searchTerm, boolean deleted, boolean enabledOnly) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountIdentifier)) {
       criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
     }
-    if (isNotEmpty(repoURL)) {
-      criteria.and("metadata.webhook.repoURL").is(repoURL);
+    if (isNotEmpty(orgIdentifier)) {
+      criteria.and(NGTriggerEntityKeys.orgIdentifier).is(orgIdentifier);
+    }
+    if (isNotEmpty(projectIdentifier)) {
+      criteria.and(NGTriggerEntityKeys.projectIdentifier).is(projectIdentifier);
+    }
+    if (isNotEmpty(repoURLs)) {
+      criteria.and("metadata.webhook.repoURL").in(repoURLs);
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
     criteria.and(NGTriggerEntityKeys.type).is(NGTriggerType.WEBHOOK);

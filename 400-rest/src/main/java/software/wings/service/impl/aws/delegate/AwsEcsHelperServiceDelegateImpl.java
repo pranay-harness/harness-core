@@ -7,6 +7,8 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -43,12 +45,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsEcsHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcsHelperServiceDelegate {
   @VisibleForTesting
   AmazonECSClient getAmazonEcsClient(String region, AwsConfig awsConfig) {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECSClient) builder.build();
   }
 

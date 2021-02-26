@@ -7,10 +7,13 @@ import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
 
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,12 +23,16 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.retry.PredefinedBackoffStrategies;
+import com.amazonaws.retry.PredefinedRetryPolicies;
+import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
@@ -44,12 +51,13 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 class AwsHelperServiceDelegateBase {
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
   @Inject protected AwsCallTracker tracker;
 
-  protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
+  protected void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
 
     if (awsConfig.isUseEc2IamCredentials()) {
@@ -77,6 +85,11 @@ class AwsHelperServiceDelegateBase {
     }
 
     builder.withCredentials(credentialsProvider);
+    ClientConfiguration clientConfiguration = new ClientConfiguration();
+    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    clientConfiguration.setRetryPolicy(retryPolicy);
+    builder.withClientConfiguration(clientConfiguration);
   }
 
   @VisibleForTesting

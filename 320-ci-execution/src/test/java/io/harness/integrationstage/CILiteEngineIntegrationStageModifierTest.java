@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTest {
+public class CILiteEngineIntegrationStageModifierTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
   @Before

@@ -1,6 +1,5 @@
 package io.harness.ng.core.service.services;
 
-import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 
 import java.util.List;

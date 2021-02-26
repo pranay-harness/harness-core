@@ -1,9 +1,13 @@
 package io.harness.delegate.beans.executioncapability;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 // ALWAYS_TRUE should not be a capability type. In this case, task validation should not even happen.
 // But Validation needs to happen at delegate as its part of Handshake between Delegate and manager,
 // in order for delegate to acquire a task.
 // May be changed later
+@TargetModule(Module._955_DELEGATE_BEANS)
 public enum CapabilityType {
   SOCKET,
   ALWAYS_TRUE,
@@ -28,5 +32,6 @@ public enum CapabilityType {
   KUSTOMIZE,
   SMB,
   SELECTORS,
-  GIT_CONNECTION_NG;
+  GIT_CONNECTION_NG,
+  GIT_INSTALLATION;
 }

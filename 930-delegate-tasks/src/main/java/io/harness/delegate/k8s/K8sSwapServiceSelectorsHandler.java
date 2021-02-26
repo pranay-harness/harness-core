@@ -2,6 +2,7 @@ package io.harness.delegate.k8s;
 
 import static io.harness.k8s.K8sCommandUnitConstants.SwapServiceSelectors;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
@@ -24,14 +25,16 @@ public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sSwapServiceSelectorsRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("k8sSwapServiceSelectorsRequest", "Must be instance of K8sSwapServiceSelectorsRequest"));
     }
 
     K8sSwapServiceSelectorsRequest k8sSwapServiceSelectorsRequest = (K8sSwapServiceSelectorsRequest) k8sDeployRequest;
-    LogCallback logCallback = k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, SwapServiceSelectors);
+    LogCallback logCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, SwapServiceSelectors, true, commandUnitsProgress);
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(
         k8sSwapServiceSelectorsRequest.getK8sInfraDelegateConfig());
@@ -40,13 +43,9 @@ public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
         k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(), logCallback);
 
     if (!success) {
-      return getResponse(CommandExecutionStatus.FAILURE);
+      return getGenericFailureResponse(null);
     }
 
-    return getResponse(CommandExecutionStatus.SUCCESS);
-  }
-
-  private K8sDeployResponse getResponse(CommandExecutionStatus executionStatus) {
-    return K8sDeployResponse.builder().commandExecutionStatus(executionStatus).build();
+    return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
 }

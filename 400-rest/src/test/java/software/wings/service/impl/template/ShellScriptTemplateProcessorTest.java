@@ -90,8 +90,10 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
                                                   .scriptType(ScriptType.BASH.name())
                                                   .scriptString("echo ${var1}\n"
                                                       + "export A=\"aaa\"\n"
-                                                      + "export B=\"bbb\"")
+                                                      + "export B=\"bbb\"\n"
+                                                      + "export C=\"ccc\"")
                                                   .outputVars("A,B")
+                                                  .secretOutputVars("C")
                                                   .build();
     Template template = Template.builder()
                             .templateObject(shellScriptTemplate)
@@ -106,6 +108,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
     ShellScriptTemplate savedShellScriptTemplate = (ShellScriptTemplate) savedTemplate.getTemplateObject();
     assertThat(savedShellScriptTemplate).isNotNull();
     assertThat(savedShellScriptTemplate.getTimeoutMillis()).isEqualTo(600000);
+    assertThat(savedShellScriptTemplate.getSecretOutputVars()).isEqualTo("C");
   }
 
   @Test
@@ -126,7 +129,8 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
     assertThat(savedShellScriptTemplate).isNotNull();
     assertThat(savedShellScriptTemplate.getScriptString()).isNotEmpty();
 
-    ShellScriptTemplate updatedShellScriptTemplate = ShellScriptTemplate.builder().timeoutMillis(300000).build();
+    ShellScriptTemplate updatedShellScriptTemplate =
+        ShellScriptTemplate.builder().secretOutputVars("C").timeoutMillis(300000).build();
     savedTemplate.setTemplateObject(updatedShellScriptTemplate);
     Template updatedTemplate = templateService.update(savedTemplate);
 
@@ -136,6 +140,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
     assertThat(updatedTemplate.getVersion()).isEqualTo(2L);
     assertThat(updatedTemplate.getTemplateObject()).isNotNull();
     assertThat(((ShellScriptTemplate) updatedTemplate.getTemplateObject()).getTimeoutMillis()).isEqualTo(300000);
+    assertThat(((ShellScriptTemplate) updatedTemplate.getTemplateObject()).getSecretOutputVars()).isEqualTo("C");
     assertThat(updatedTemplate.getVariables()).extracting("name").contains("var1");
     assertThat(updatedShellScriptTemplate).isNotNull();
   }
@@ -227,8 +232,9 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
     ShellScriptTemplate httpTemplate =
         ShellScriptTemplate.builder()
             .scriptType("BASH")
-            .scriptString("echo \"Hello World ${var1}\"\n export A=\"aaa\"\n export B=\"bbb\"")
+            .scriptString("echo \"Hello World ${var1}\"\n export A=\"aaa\"\n export B=\"bbb\"\n export C=\"ccc\"")
             .outputVars("A,B")
+            .secretOutputVars("C")
             .build();
     return Template.builder()
         .templateObject(httpTemplate)

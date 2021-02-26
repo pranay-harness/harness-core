@@ -5,11 +5,18 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Value
-@Builder
+@Data
+@NoArgsConstructor
 public class ShellScriptSourceWrapper {
   String type;
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true) ShellScriptBaseSource spec;
+
+  @Builder
+  public ShellScriptSourceWrapper(String type, ShellScriptBaseSource spec) {
+    this.type = type;
+    this.spec = spec;
+  }
 }

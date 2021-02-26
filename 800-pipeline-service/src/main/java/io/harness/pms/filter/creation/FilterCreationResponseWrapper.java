@@ -1,5 +1,6 @@
 package io.harness.pms.filter.creation;
 
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 
 import lombok.Builder;
@@ -10,4 +11,5 @@ import lombok.Data;
 public class FilterCreationResponseWrapper {
   String serviceName;
   FilterCreationBlobResponse response;
+  ErrorResponse errorResponse;
 }

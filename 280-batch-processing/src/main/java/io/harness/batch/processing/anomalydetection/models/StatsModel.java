@@ -1,27 +1,23 @@
 package io.harness.batch.processing.anomalydetection.models;
 
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
-import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
-import io.harness.batch.processing.anomalydetection.types.AnomalyType;
+import io.harness.ccm.anomaly.entities.Anomaly;
+import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
+import io.harness.ccm.anomaly.entities.AnomalyType;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.springframework.stereotype.Service;
 
 @Service
-@Builder
+@Slf4j
 public class StatsModel {
-  private static final Double RELATIVITY_THRESHOLD = 1.25;
-  private static final Double ABSOLUTE_THRESHOLD = 20.0;
-  private static final Double PROBABILITY_THRESHOLD = 0.995;
-
-  public List<Anomaly> detectAnomaly(AnomalyDetectionTimeSeries data) {
+  public Anomaly detectAnomaly(AnomalyDetectionTimeSeries data) {
     List<Double> stats = TimeSeriesUtils.getStats(data);
     Double mean = stats.get(0);
     Double standardDeviation = stats.get(1);
@@ -37,12 +33,11 @@ public class StatsModel {
       }
 
       Anomaly currentAnomaly = Anomaly.builder()
-                                   .id(UUID.randomUUID().toString())
+                                   .id(data.getHash())
                                    .accountId(data.getAccountId())
                                    .actualCost(currentValue)
                                    .expectedCost(mean)
                                    .timeGranularity(data.getTimeGranularity())
-                                   .entityType(data.getEntityType())
                                    .clusterId(data.getClusterId())
                                    .clusterName(data.getClusterName())
                                    .workloadType(data.getWorkloadType())
@@ -58,7 +53,7 @@ public class StatsModel {
                                    .awsInstanceType(data.getAwsInstanceType())
                                    .awsService(data.getAwsService())
                                    .awsUsageType(data.getAwsUsageType())
-                                   .time(current)
+                                   .anomalyTime(current)
                                    .relativeThreshold(relativityThreshold(currentValue, mean))
                                    .absoluteThreshold(absoluteThreshold(currentValue, mean))
                                    .probabilisticThreshold(probabilityThreshold)
@@ -74,20 +69,24 @@ public class StatsModel {
           && currentAnomaly.isAbsoluteThreshold();
       currentAnomaly.setAnomaly(isAnomaly);
       anomaliesList.add(currentAnomaly);
+      log.info(
+          "statistics : predicted : [{}] , actual : [{}] , STD : [{}] , absolute Threshold : [{}] , relative Threshold : [{}] , probabilistic Threshold : [{}] , isAnomaly : [{}] ",
+          mean, currentValue, standardDeviation, currentAnomaly.isAbsoluteThreshold(),
+          currentAnomaly.isRelativeThreshold(), currentAnomaly.isProbabilisticThreshold(), currentAnomaly.isAnomaly());
     }
-    return anomaliesList;
+    return anomaliesList.get(0);
   }
 
   private static boolean relativityThreshold(Double original, Double expected) {
-    return original > StatsModel.RELATIVITY_THRESHOLD * expected;
+    return original > AnomalyDetectionConstants.STATS_MODEL_RELATIVITY_THRESHOLD * expected;
   }
 
   private static boolean absoluteThreshold(Double original, Double expected) {
-    return original > expected + StatsModel.ABSOLUTE_THRESHOLD;
+    return original > expected + AnomalyDetectionConstants.STATS_MODEL_ABSOLUTE_THRESHOLD;
   }
 
   private static boolean probabilityThreshold(Double original, Double mean, Double standardDeviation) {
     NormalDistribution normal = new NormalDistribution(mean, standardDeviation);
-    return normal.cumulativeProbability(original) > StatsModel.PROBABILITY_THRESHOLD;
+    return normal.cumulativeProbability(original) > AnomalyDetectionConstants.STATS_MODEL_PROBABILITY_THRESHOLD;
   }
 }

@@ -3,12 +3,10 @@ package io.harness.pms.plan.creation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 
 import com.google.inject.Inject;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCloudWatchHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsCloudWatchHelperServiceDelegate {
   @Override
@@ -106,7 +109,7 @@ public class AwsCloudWatchHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();
   }
 }

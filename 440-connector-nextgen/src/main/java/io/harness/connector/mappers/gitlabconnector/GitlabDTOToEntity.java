@@ -10,8 +10,6 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAcce
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessSpecDTO;
@@ -27,12 +25,10 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
-import java.util.Collections;
-import java.util.List;
-
-public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConnectorDTO> {
+public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
   public GitlabConnector toConnectorEntity(GitlabConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
@@ -61,7 +57,7 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
       case SSH:
         final GitlabSshCredentialsDTO sshCredentialsDTO = (GitlabSshCredentialsDTO) credentialsDTO;
         return GitlabSshAuthentication.builder()
-            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSpec().getSshKeyRef()))
+            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
             .build();
       case HTTP:
         final GitlabHttpCredentialsDTO httpCredentialsDTO = (GitlabHttpCredentialsDTO) credentialsDTO;
@@ -127,10 +123,5 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
 
   private GitAuthType getAuthType(GitlabAuthenticationDTO authentication) {
     return authentication.getAuthType();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 }

@@ -1,12 +1,12 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
@@ -246,7 +246,6 @@ public abstract class CloudFormationState extends State {
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
     Preconditions.checkNotNull(app, "No app found from executionContext");
-    Preconditions.checkNotNull(env, "No env found from executionContext");
     ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
@@ -283,6 +282,10 @@ public abstract class CloudFormationState extends State {
   }
 
   protected String getStackNameSuffix(ExecutionContextImpl executionContext, String provisionerId) {
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
+      return getNormalizedId(provisionerId);
+    }
     WorkflowStandardParams workflowStandardParams = executionContext.fetchWorkflowStandardParamsFromContext();
     Environment env = workflowStandardParams.fetchRequiredEnv();
     return getNormalizedId(env.getUuid()) + getNormalizedId(provisionerId);

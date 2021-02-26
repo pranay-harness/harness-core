@@ -15,18 +15,20 @@ import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.SecretManagementTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AzureVaultConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.features.api.PremiumFeature;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
+import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -37,8 +39,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private SecretManager secretManager;
+  @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private SecretManagementTestHelper secretManagementTestHelper;
 
   @Inject @InjectMocks private AzureSecretsManagerService azureSecretsManagerService;
   @Mock private AccountService accountService;
@@ -61,7 +65,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void saveAzureVaultConfig_shouldPass() {
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     String savedConfigId = azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureVaultConfig);
@@ -75,7 +79,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   public void saveAzureVaultConfigIfFeatureNotAvailable_shouldThrowException() {
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(false);
 
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     try {
@@ -90,7 +94,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void updateAzureVaultConfigNonSecretKey_shouldPass() {
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -111,7 +115,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void updateAzureVaultConfigSecretKey_shouldPass() {
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -132,7 +136,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAzureVaultConfigWithNoEncryptedSecrets_shouldPass() {
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     String savedConfigId =
@@ -149,17 +153,17 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAzureVaultConfigWithEncryptedSecrets_shouldFail() {
-    AzureVaultConfig azureVaultConfig = getAzureVaultConfig();
+    AzureVaultConfig azureVaultConfig = secretManagementTestHelper.getAzureVaultConfig();
     azureVaultConfig.setAccountId(accountId);
 
     String savedConfigId =
         azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, kryoSerializer.clone(azureVaultConfig));
 
-    wingsPersistence.save(EncryptedData.builder()
-                              .accountId(accountId)
-                              .encryptionType(EncryptionType.AZURE_VAULT)
-                              .kmsId(savedConfigId)
-                              .build());
+    persistence.save(EncryptedData.builder()
+                         .accountId(accountId)
+                         .encryptionType(EncryptionType.AZURE_VAULT)
+                         .kmsId(savedConfigId)
+                         .build());
 
     try {
       azureSecretsManagerService.deleteConfig(accountId, savedConfigId);

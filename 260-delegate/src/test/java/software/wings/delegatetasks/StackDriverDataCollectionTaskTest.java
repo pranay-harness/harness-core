@@ -8,6 +8,7 @@ import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -20,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
@@ -27,7 +29,6 @@ import io.harness.time.Timestamp;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -101,7 +102,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
         .thenReturn("testFilter secondHost");
     when(metricStoreService.saveNewRelicMetrics(anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
-    when(gcpHelperService.getMonitoringService(any(), any(), any())).thenReturn(monitoring);
+    when(gcpHelperService.getMonitoringService(any(), any(), anyBoolean())).thenReturn(monitoring);
     setupSDMonitoringObject();
     String infrastructureMappingId = UUID.randomUUID().toString();
     String timeDuration = "10";

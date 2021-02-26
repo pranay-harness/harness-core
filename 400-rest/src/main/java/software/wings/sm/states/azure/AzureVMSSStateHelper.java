@@ -2,10 +2,9 @@ package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
-import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING;
-import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING_SECRET;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -21,7 +20,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -32,14 +30,6 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
-import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -50,8 +40,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -84,7 +72,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
@@ -94,13 +81,13 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 import software.wings.utils.ServiceVersionConvention;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -119,7 +106,6 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
-  @Inject private NGSecretService ngSecretService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -268,6 +254,19 @@ public class AzureVMSSStateHelper {
     if (isNotEmpty(expr)) {
       try {
         retVal = Integer.parseInt(context.renderExpression(expr));
+      } catch (NumberFormatException e) {
+        log.error(format("Number format Exception while evaluating: [%s]", expr), e);
+        retVal = defaultValue;
+      }
+    }
+    return retVal;
+  }
+
+  public double renderDoubleExpression(String expr, ExecutionContext context, double defaultValue) {
+    double retVal = defaultValue;
+    if (isNotEmpty(expr)) {
+      try {
+        retVal = Double.parseDouble(context.renderExpression(expr));
       } catch (NumberFormatException e) {
         log.error(format("Number format Exception while evaluating: [%s]", expr), e);
         retVal = defaultValue;
@@ -470,6 +469,10 @@ public class AzureVMSSStateHelper {
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
   }
 
+  public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, EncryptableSetting setting) {
+    return secretManager.getEncryptionDetails(setting, context.getAppId(), context.getWorkflowExecutionId());
+  }
+
   private List<EncryptedDataDetail> getServiceVariableEncryptedDataDetails(
       ExecutionContext context, final String passwordSecretTextName, final String envId) {
     String appId = context.getAppId();
@@ -500,6 +503,13 @@ public class AzureVMSSStateHelper {
     }
   }
 
+  public void updateEncryptedDataDetailSecretFieldName(
+      List<EncryptedDataDetail> encryptedDataDetails, String secretFieldName) {
+    for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+      encryptedDataDetail.setFieldName(secretFieldName);
+    }
+  }
+
   public String getVMSSIdFromName(
       String subscriptionId, String resourceGroupName, String newVirtualMachineScaleSetName) {
     return isNotBlank(newVirtualMachineScaleSetName)
@@ -527,8 +537,8 @@ public class AzureVMSSStateHelper {
         .serviceId(serviceId)
         .environment(environment)
         .azureConfig(azureConfig)
-        .resourceGroup(infrastructureMapping.getResourceGroup())
-        .subscriptionId(infrastructureMapping.getSubscriptionId())
+        .resourceGroup(context.renderExpression(infrastructureMapping.getResourceGroup()))
+        .subscriptionId(context.renderExpression(infrastructureMapping.getSubscriptionId()))
         .infrastructureMapping(infrastructureMapping)
         .azureEncryptedDataDetails(encryptionDetails)
         .currentUser(workflowStandardParams.getCurrentUser())
@@ -538,62 +548,70 @@ public class AzureVMSSStateHelper {
   public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-    return ArtifactStreamMapper.getArtifactStreamMapper(artifactStream);
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+    artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+    artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
+    artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
+    return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
   }
 
-  public List<EncryptedDataDetail> getNgEncryptedDataDetails(
-      final String accountId, DecryptableEntity connectorAuthCredentials) {
-    NGAccess ngAccess = buildNgAccess(accountId);
-    return ngSecretService.getEncryptionDetails(ngAccess, connectorAuthCredentials);
-  }
+  public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
+    if (isEmpty(appSettings)) {
+      return;
+    }
+    List<String> appSettingNames =
+        appSettings.stream().map(AzureAppServiceApplicationSetting::getName).collect(Collectors.toList());
+    Set<String> duplicateAppSettingNames = getDuplicateItems(appSettingNames);
 
-  private NGAccess buildNgAccess(final String accountId) {
-    return BaseNGAccess.builder().accountIdentifier(accountId).build();
-  }
+    if (isNotEmpty(duplicateAppSettingNames)) {
+      String duplicateAppSettingNamesStr = String.join(",", duplicateAppSettingNames);
+      throw new InvalidRequestException(format("Duplicate application string names [%s]", duplicateAppSettingNamesStr));
+    }
 
-  public List<AzureAppServiceApplicationSettingDTO> createAppSettingDTOs(
-      List<AzureAppServiceApplicationSetting> appSettings, ImmutableList<String> appSettingSecretsImmutableList) {
-    return appSettings.stream()
-        .map(appSetting
-            -> appSettingSecretsImmutableList.contains(appSetting.getName())
-                ? AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING_SECRET)
-                : AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING))
-        .collect(Collectors.toList());
-  }
-
-  public List<AzureAppServiceConnectionStringDTO> createConnStringDTOs(
-      List<AzureAppServiceConnectionString> connStrings, ImmutableList<String> connStringSecretsImmutableList) {
-    return connStrings.stream()
-        .map(connSetting
-            -> connStringSecretsImmutableList.contains(connSetting.getName())
-                ? AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING_SECRET)
-                : AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING))
-        .collect(Collectors.toList());
-  }
-
-  public <T extends AzureAppServiceSettingDTO> void encryptAzureAppServiceSettingDTOs(
-      @NotNull Map<String, T> settings, final String accountId) {
-    settings.values().forEach(appServiceSetting -> {
-      log.info("Checking for encryption Harness setting: {}", appServiceSetting.getName());
-      AzureAppServiceSettingValue setting = appServiceSetting.getValue();
-      if (setting instanceof AzureAppServiceAzureSettingValue) {
-        throw new InvalidRequestException(format(
-            "Unsupported encryption on manager for Azure App Service setting value type: [%s]", setting.getClass()));
+    appSettings.forEach(appSetting -> {
+      String name = appSetting.getName();
+      if (isBlank(name)) {
+        throw new InvalidRequestException("Application setting name cannot be empty or null");
       }
-
-      if (setting instanceof AzureAppServiceHarnessSettingSecretValue) {
-        log.info("Encrypting Harness setting: {}", appServiceSetting.getName());
-        AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue =
-            (AzureAppServiceHarnessSettingSecretValue) setting;
-        encryptSettingByNGSecretService(accountId, harnessSettingSecretValue);
+      if (isBlank(appSetting.getValue())) {
+        throw new InvalidRequestException(format("Application setting value cannot be empty or null for [%s]", name));
       }
     });
   }
 
-  private void encryptSettingByNGSecretService(
-      String accountId, AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue) {
-    AzureAppServiceHarnessSettingSecretRef settingSecretRef = harnessSettingSecretValue.getSettingSecretRef();
-    List<EncryptedDataDetail> encryptedDataDetails = getNgEncryptedDataDetails(accountId, settingSecretRef);
-    harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
+  public void validateConnStrings(List<AzureAppServiceConnectionString> connStrings) {
+    if (isEmpty(connStrings)) {
+      return;
+    }
+    List<String> connStringNames =
+        connStrings.stream().map(AzureAppServiceConnectionString::getName).collect(Collectors.toList());
+    Set<String> duplicateConnStringNames = getDuplicateItems(connStringNames);
+
+    if (isNotEmpty(duplicateConnStringNames)) {
+      String duplicateConnStringNamesStr = String.join(",", duplicateConnStringNames);
+      throw new InvalidRequestException(format("Duplicate connection string names [%s]", duplicateConnStringNamesStr));
+    }
+
+    connStrings.forEach(connString -> {
+      String name = connString.getName();
+      if (isBlank(name)) {
+        throw new InvalidRequestException("Connection string name cannot be empty or null");
+      }
+
+      if (isBlank(connString.getValue())) {
+        throw new InvalidRequestException(format("Connection string value cannot be empty or null for [%s]", name));
+      }
+
+      if (connString.getType() == null) {
+        throw new InvalidRequestException("Connection string type cannot be null");
+      }
+    });
+  }
+
+  @NotNull
+  private <T> Set<T> getDuplicateItems(List<T> listItems) {
+    Set<T> tempItemsSet = new HashSet<>();
+    return listItems.stream().filter(item -> !tempItemsSet.add(item)).collect(Collectors.toSet());
   }
 }

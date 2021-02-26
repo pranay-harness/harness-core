@@ -15,9 +15,10 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.impl.ConnectorHeartbeatServiceImpl;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.TaskClientParams;
@@ -54,8 +55,10 @@ public class ConnectorHeartbeatServiceImplTest extends CategoryTest {
                                             .orgIdentifier(orgIdentifier)
                                             .projectIdentifier(projectIdentifier)
                                             .identifier(connectorIdentifier)
+                                            .connectorType(ConnectorType.DOCKER)
                                             .build();
-    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, connectorInfoDTO);
+    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, connectorInfoDTO.getOrgIdentifier(),
+        connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
     ArgumentCaptor<AccountId> accountIdArgumentCaptor = ArgumentCaptor.forClass(AccountId.class);
     ArgumentCaptor<PerpetualTaskClientContextDetails> perpetualTaskClientContextDetailsCaptor =
         ArgumentCaptor.forClass(PerpetualTaskClientContextDetails.class);

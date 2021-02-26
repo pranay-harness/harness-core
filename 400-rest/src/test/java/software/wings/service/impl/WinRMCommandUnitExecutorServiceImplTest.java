@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ShellExecutionException;
 import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -61,6 +62,10 @@ import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 import java.util.HashMap;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPFactory;
+import javax.xml.soap.SOAPFault;
+import javax.xml.ws.soap.SOAPFaultException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -431,5 +436,85 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
     commandPath =
         winRMCommandUnitExecutorService.getCommandPath(setupEnvCommandUnit, commandExecutionContextBuider.build());
     assertThat(commandPath).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testExecuteSoapFaultException() {
+    WinRmConnectionAttributes winRmConnectionAttributes = WinRmConnectionAttributes.builder()
+                                                              .domain("TEST.LOCAL")
+                                                              .username("testUser")
+                                                              .password(new char[0])
+                                                              .useKeyTab(true)
+                                                              .keyTabFilePath("/etc/test.keyTab")
+                                                              .build();
+    WinRmSessionConfig winRmSessionConfig = WinRmSessionConfig.builder()
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .hostname(PUBLIC_DNS)
+                                                .domain("TEST.LOCAL")
+                                                .username("testUser")
+                                                .password("")
+                                                .useKeyTab(true)
+                                                .keyTabFilePath("/etc/test.keyTab")
+                                                .port(0)
+                                                .useSSL(false)
+                                                .skipCertChecks(false)
+                                                .workingDirectory(null)
+                                                .useNoProfile(false)
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .timeout(0)
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .winRmConnectionAttributes(winRmConnectionAttributes)
+                                                          .build();
+
+    final String errorMessage = "The directory name is invalid.";
+
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any())).thenThrow(createSOAPFaultException(errorMessage));
+    when(winRmExecutorFactory.getExecutor(winRmSessionConfig, false)).thenReturn(winRmExecutor);
+
+    assertThatExceptionOfType(ShellExecutionException.class)
+        .isThrownBy(() -> winRMCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("Script Execution Failed");
+    verify(winRmExecutorFactory).getExecutor(winRmSessionConfig, false);
+    verify(delegateLogService)
+        .save(ACCOUNT_ID,
+            aLog()
+                .appId(APP_ID)
+                .hostName(PUBLIC_DNS)
+                .activityId(ACTIVITY_ID)
+                .logLevel(INFO)
+                .commandUnitName(commandUnit.getName())
+                .logLine(format("Begin execution of command: %s", commandUnit.getName()))
+                .executionResult(RUNNING)
+                .build());
+    verify(delegateLogService)
+        .save(ACCOUNT_ID,
+            aLog()
+                .appId(APP_ID)
+                .activityId(ACTIVITY_ID)
+                .hostName(PUBLIC_DNS)
+                .logLevel(ERROR)
+                .logLine("SOAPFaultException: " + errorMessage)
+                .commandUnitName(commandUnit.getName())
+                .executionResult(FAILURE)
+                .build());
+  }
+
+  private SOAPFaultException createSOAPFaultException(String faultString) {
+    SOAPFault soapFault;
+    try {
+      SOAPFactory soapFactory = SOAPFactory.newInstance();
+      soapFault = soapFactory.createFault();
+      soapFault.setFaultString(faultString);
+    } catch (SOAPException e) {
+      throw new RuntimeException("SOAP error");
+    }
+    return new SOAPFaultException(soapFault);
   }
 }

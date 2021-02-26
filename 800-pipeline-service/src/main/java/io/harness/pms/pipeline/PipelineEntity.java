@@ -12,19 +12,17 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.pms.contracts.plan.GraphLayoutNode;
-import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import com.sun.istack.internal.NotNull;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
@@ -69,16 +67,17 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
   private int stageCount;
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
-  @Builder.Default Boolean deleted = Boolean.FALSE;
+  @Default Boolean deleted = Boolean.FALSE;
 
   @EntityName String name;
   @Size(max = 1024) String description;
   @Singular @Size(max = 128) List<NGTag> tags;
 
   @Version Long version;
-  @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
+  @Default Map<String, org.bson.Document> filters = new HashMap<>();
   ExecutionSummaryInfo executionSummaryInfo;
-  @Builder.Default int runSequence = 0;
+  int runSequence;
+  @Singular List<String> stageNames;
 
   @Override
   public String getAccountId() {

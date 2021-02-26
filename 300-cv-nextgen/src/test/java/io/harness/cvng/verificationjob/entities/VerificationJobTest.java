@@ -16,12 +16,13 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,9 +33,13 @@ import org.junit.experimental.categories.Category;
 
 public class VerificationJobTest extends CategoryTest {
   private String accountId;
+
+  private String portalUrl;
+
   @Before
   public void setup() {
     this.accountId = generateUuid();
+    portalUrl = "https://app.harness.io/";
   }
 
   @Test
@@ -44,7 +49,7 @@ public class VerificationJobTest extends CategoryTest {
     testFieldForNotNull(VerificationJobKeys.accountId);
     testFieldForNotNull(VerificationJobKeys.identifier);
     testFieldForNotNull(VerificationJobKeys.jobName);
-    testFieldForNotNull(VerificationJobKeys.dataSources);
+    testFieldForNotNull(VerificationJobKeys.monitoringSources);
 
     testFieldForNotNull(VerificationJobKeys.duration);
 
@@ -97,12 +102,12 @@ public class VerificationJobTest extends CategoryTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testValidate_emptyDataSources() {
+  public void testValidate_emptyMonitoringSources() {
     VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setDataSources(Collections.emptyList());
+    verificationJob.setMonitoringSources(Collections.emptyList());
     assertThatThrownBy(() -> verificationJob.validate())
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("DataSources can not be empty");
+        .hasMessage("Monitoring Sources can not be empty");
   }
 
   @Test(expected = Test.None.class)
@@ -170,6 +175,17 @@ public class VerificationJobTest extends CategoryTest {
     assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(30);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testSetVerificationJobUrl() {
+    VerificationJob verificationJob = createVerificationJob();
+    String url = verificationJob.getVerificationJobUrl();
+    assertThat(url).isEqualTo("/cv/api/verification-job?accountId=" + accountId + "&orgIdentifier="
+        + verificationJob.getOrgIdentifier() + "&projectIdentifier=" + verificationJob.getProjectIdentifier()
+        + "&identifier=" + verificationJob.getIdentifier());
+  }
+
   private void testFieldForNotNull(String fieldName) throws IllegalAccessException {
     VerificationJob verificationJob = createVerificationJob();
     FieldUtils.writeField(verificationJob, fieldName, null, true);
@@ -184,6 +200,7 @@ public class VerificationJobTest extends CategoryTest {
     testVerificationJob.setIdentifier("identifier");
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJob.setMonitoringSources(Arrays.asList("monitoringIdentifier"));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
     testVerificationJob.setServiceIdentifier(generateUuid(), false);
     testVerificationJob.setEnvIdentifier(generateUuid(), false);

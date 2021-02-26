@@ -17,7 +17,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -25,7 +25,6 @@ import com.mongodb.DuplicateKeyException;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -45,7 +44,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : ((Document) value).toJson();
+    return value == null ? null : RecastOrchestrationUtils.toDocumentJson(value);
   }
 
   private String resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
@@ -65,7 +64,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
       throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
 
-    return instance.getValue() == null ? null : instance.getValue().toJson();
+    return RecastOrchestrationUtils.toDocumentJson(instance.getValue());
   }
 
   @Override
@@ -81,7 +80,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .value(DocumentOrchestrationUtils.convertToDocumentFromJson(value))
+                                   .value(RecastOrchestrationUtils.toDocumentFromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();

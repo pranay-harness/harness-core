@@ -62,7 +62,7 @@ public class WebhookTriggerProcessorUtils {
     pushHook.getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
 
     return BranchWebhookEvent.builder()
-        .branchName(pushHook.getRepo().getBranch())
+        .branchName(pushHook.getRef().replaceFirst("^refs/heads/", ""))
         .link(pushHook.getRepo().getLink())
         .commitDetailsList(commitDetailsList)
         .repository(convertRepository(pushHook.getRepo()))

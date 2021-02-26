@@ -1,6 +1,7 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
@@ -30,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeseriesRiskSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
+public final class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -61,9 +62,15 @@ public class TimeSeriesRiskSummary implements PersistentEntity, UuidAware {
   public static class TransactionMetricRisk {
     private String transactionName;
     private String metricName;
-    private int metricRisk;
+    private Integer metricRisk;
     private double metricScore;
     private boolean longTermPattern;
     private long lastSeenTime;
+    public Risk getMetricRisk() {
+      return Risk.valueOf(metricRisk);
+    }
+    public boolean isAnomalous() {
+      return getMetricRisk().isGreaterThanEq(Risk.MEDIUM);
+    }
   }
 }

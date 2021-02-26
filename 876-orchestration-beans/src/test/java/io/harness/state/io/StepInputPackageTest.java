@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.rule.Owner;
@@ -23,15 +23,15 @@ public class StepInputPackageTest extends OrchestrationBeansTestBase {
   io.harness.pms.sdk.core.steps.io.StepInputPackage inputPackage =
       StepInputPackage.builder()
           .input(io.harness.pms.sdk.core.steps.io.ResolvedRefInput.builder()
-                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName1", "refKey", generateUuid()))
+                     .refObject(RefObjectUtils.getSweepingOutputRefObject("refName1", "refKey", generateUuid()))
                      .transput(new DummyOutcome("name1"))
                      .build())
           .input(io.harness.pms.sdk.core.steps.io.ResolvedRefInput.builder()
-                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName2", "refKey", generateUuid()))
+                     .refObject(RefObjectUtils.getSweepingOutputRefObject("refName2", "refKey", generateUuid()))
                      .transput(new DummyOutcome("name2"))
                      .build())
           .input(ResolvedRefInput.builder()
-                     .refObject(RefObjectUtil.getSweepingOutputRefObject("refName1", "refKeyBlah", generateUuid()))
+                     .refObject(RefObjectUtils.getSweepingOutputRefObject("refName1", "refKeyBlah", generateUuid()))
                      .transput(new DummyOutcome("name3"))
                      .build())
           .build();

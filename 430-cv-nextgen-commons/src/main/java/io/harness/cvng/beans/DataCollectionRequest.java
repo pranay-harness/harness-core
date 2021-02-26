@@ -1,19 +1,27 @@
 package io.harness.cvng.beans;
 
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapabilityHelper;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelper;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +68,22 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    Preconditions.checkState(getConnectorConfigDTO() instanceof ExecutionCapabilityDemander,
-        "ConnectorConfigDTO should impalement ExecutionCapabilityDemander");
-    return ((ExecutionCapabilityDemander) getConnectorConfigDTO()).fetchRequiredExecutionCapabilities(maskingEvaluator);
+    // TODO: this is a stop gap fix, we will be refactoring it once DX team works on their proposal
+    switch (connectorInfoDTO.getConnectorType()) {
+      case KUBERNETES_CLUSTER:
+        return K8sTaskCapabilityHelper.fetchRequiredExecutionCapabilities(
+            (KubernetesClusterConfigDTO) connectorInfoDTO.getConnectorConfig(), maskingEvaluator);
+      case APP_DYNAMICS:
+        return AppDynamicsCapabilityHelper.fetchRequiredExecutionCapabilities(
+            maskingEvaluator, (AppDynamicsConnectorDTO) connectorInfoDTO.getConnectorConfig());
+      case SPLUNK:
+        return SplunkCapabilityHelper.fetchRequiredExecutionCapabilities(
+            maskingEvaluator, (SplunkConnectorDTO) connectorInfoDTO.getConnectorConfig());
+      case GCP:
+        return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            "https://storage.cloud.google.com/", maskingEvaluator));
+      default:
+        throw new InvalidRequestException("Connector capability not found");
+    }
   }
 }

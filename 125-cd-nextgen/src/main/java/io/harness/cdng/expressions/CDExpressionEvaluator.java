@@ -10,6 +10,8 @@ import io.harness.ngpipeline.expressions.functors.EventPayloadFunctor;
 import io.harness.ngpipeline.expressions.functors.OrgFunctor;
 import io.harness.ngpipeline.expressions.functors.ProjectFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.util.Set;
@@ -32,5 +34,10 @@ public class CDExpressionEvaluator extends AmbianceExpressionEvaluator {
     addToContext("org", new OrgFunctor(organizationService, ambiance));
     addToContext("project", new ProjectFunctor(projectService, ambiance));
     addToContext(PipelinePlanCreator.EVENT_PAYLOAD_KEY, new EventPayloadFunctor(ambiance));
+    addStaticAlias("artifact", "service.artifacts.primary.output");
+    addStaticAlias("serviceVariables", "service.variables.output");
+    addStaticAlias("env", "infrastructure.environment");
+    addGroupAlias(YAMLFieldNameConstants.STAGE, StepOutcomeGroup.STAGE.name());
+    addGroupAlias(YAMLFieldNameConstants.STEP, StepOutcomeGroup.STEP.name());
   }
 }

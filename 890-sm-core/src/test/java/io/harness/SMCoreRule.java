@@ -2,7 +2,6 @@ package io.harness;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -12,6 +11,7 @@ import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
 import io.harness.encryptors.clients.AzureVaultEncryptor;
 import io.harness.encryptors.clients.CyberArkVaultEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.factory.ClosingFactory;
@@ -21,7 +21,6 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -149,6 +148,11 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
         binder()
             .bind(VaultEncryptor.class)
+            .annotatedWith(Names.named(Encryptors.GCP_VAULT_ENCRYPTOR.getName()))
+            .to(GcpSecretsManagerEncryptor.class);
+
+        binder()
+            .bind(VaultEncryptor.class)
             .annotatedWith(Names.named(Encryptors.CYBERARK_VAULT_ENCRYPTOR.getName()))
             .to(CyberArkVaultEncryptor.class);
 
@@ -204,17 +208,10 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
         }
       }
     }
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new UserProvider() {
-      @Override
-      public EmbeddedUser activeUser() {
-        return EmbeddedUser.builder().email("test@test.com").name("test").uuid("dummy").build();
-      }
-    });
   }
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

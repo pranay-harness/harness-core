@@ -146,8 +146,7 @@ public class CDNGExecutionResource {
   @ApiOperation(value = "dummy api", nickname = "getDummyCDStageModuleInfo")
   @Path("/dummyCDStageModuleInfo")
   public ResponseDTO<CDStageModuleInfo> getDummyCDStageModuleInfo() {
-    return ResponseDTO.newResponse(
-        CDStageModuleInfo.builder().infrastructureIdentifiers("infra1").nodeExecutionId("node1").build());
+    return ResponseDTO.newResponse(CDStageModuleInfo.builder().nodeExecutionId("node1").build());
   }
 
   @GET

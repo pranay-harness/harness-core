@@ -11,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.govern.ProviderModule;
+import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
@@ -86,6 +87,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       DelegateGrpcClientWrapper registerDelegateGrpcClientWrapper() {
         return mock(DelegateGrpcClientWrapper.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      NGActivityService registerNGActivityService() {
+        return mock(NGActivityService.class);
       }
     });
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()

@@ -1,6 +1,6 @@
 package io.harness.rules;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
@@ -53,7 +53,6 @@ public class VerificationTestRule extends WingsRule {
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-
     modules.add(TestMongoModule.getInstance());
     modules.add(new VerificationServiceModule((VerificationServiceConfiguration) configuration));
     modules.add(new VerificationTestModule());
@@ -100,6 +99,6 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected boolean isIntegrationTest(Object target) {
-    return target instanceof VerificationBaseIntegrationTest;
+    return target instanceof VerificationIntegrationBase;
   }
 }

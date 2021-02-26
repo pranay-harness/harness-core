@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -120,7 +120,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should list activities.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =
@@ -142,7 +142,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should get activity.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldGetActivity() {
     RestResponse<Activity> restResponse = RESOURCES.client()

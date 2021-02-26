@@ -10,8 +10,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
-@Builder
 @Data
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StackdriverCredential {
   @JsonProperty("client_email") private String clientEmail;

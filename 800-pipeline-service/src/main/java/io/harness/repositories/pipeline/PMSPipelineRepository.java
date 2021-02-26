@@ -2,7 +2,6 @@ package io.harness.repositories.pipeline;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.repositories.pipeline.PMSPipelineRepositoryCustom;
 
 import java.util.Optional;
 import org.springframework.data.repository.PagingAndSortingRepository;

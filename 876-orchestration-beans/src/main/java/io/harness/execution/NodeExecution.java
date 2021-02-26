@@ -5,9 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -17,9 +21,11 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
+import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +64,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Resolved StepParameters stored just before invoking step.
   org.bson.Document resolvedStepParameters;
+  org.bson.Document resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -76,6 +83,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular private List<InterruptEffect> interruptHistories;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
+
   // Retries
   @Singular List<String> retryIds;
   boolean oldRetry;
@@ -87,6 +95,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   List<StepOutcomeRef> outcomeRefs;
 
   Map<String, List<ProgressData>> progressDataMap;
+
+  @Singular List<UnitProgress> unitProgresses;
+
+  AdviserResponse adviserResponse;
 
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
@@ -116,13 +128,65 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
-      this.resolvedStepParameters = stepParameters == null ? null : org.bson.Document.parse(stepParameters.toJson());
+      this.resolvedStepParameters = RecastOrchestrationUtils.toDocument(stepParameters);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
-      this.resolvedStepParameters = isEmpty(jsonString) ? null : org.bson.Document.parse(jsonString);
+      this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
       return this;
     }
+
+    public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
+      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      return this;
+    }
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder().name("planExecutionId_idx").field(NodeExecutionKeys.planExecutionId).build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_planNodeId_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.planNodeId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_planNodeIdentifier_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.planNodeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_oldRetry_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.oldRetry)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_parentId_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.parentId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_notifyId_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.notifyId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_status_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_parentId_status_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.parentId)
+                 .field(NodeExecutionKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("parentId_status_idx")
+                 .field(NodeExecutionKeys.parentId)
+                 .field(NodeExecutionKeys.status)
+                 .build())
+        .build();
   }
 }

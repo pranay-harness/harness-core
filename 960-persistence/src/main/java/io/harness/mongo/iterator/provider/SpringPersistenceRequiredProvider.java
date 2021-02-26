@@ -31,7 +31,7 @@ public class SpringPersistenceRequiredProvider<T extends PersistentIterable>
 
   public Query createQuery(Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
     Query query = new Query();
-    query.restrict(clazz).with(Sort.by(new Order(Sort.Direction.DESC, fieldName)));
+    query.restrict(clazz).with(Sort.by(new Order(Sort.Direction.ASC, fieldName)));
     if (filterExpander != null) {
       filterExpander.filter(query);
     }

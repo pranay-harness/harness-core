@@ -12,7 +12,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
-import io.harness.ng.core.invites.RetryUtils;
 import io.harness.ng.core.invites.api.InvitesService;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
@@ -23,6 +22,7 @@ import io.harness.ng.core.invites.ext.mail.MailUtils;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.invites.spring.InvitesRepository;
+import io.harness.utils.RetryUtils;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.google.common.collect.ImmutableList;
@@ -76,8 +76,9 @@ public class InvitesServiceImpl implements InvitesService {
           ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public InvitesServiceImpl(@Named("baseUrl") String baseURL, @Named("userVerificationSecret") String jwtPasswordSecret,
-      MongoConfig mongoConfig, JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
+  public InvitesServiceImpl(@Named("ngManagerBaseUrl") String baseURL,
+      @Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
+      JWTGeneratorUtils jwtGeneratorUtils, MailUtils mailUtils, NgUserService ngUserService,
       TransactionTemplate transactionTemplate, InvitesRepository invitesRepository) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
@@ -85,7 +86,7 @@ public class InvitesServiceImpl implements InvitesService {
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
     this.transactionTemplate = transactionTemplate;
-    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
+    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountIdentifier=%s";
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -249,7 +250,7 @@ public class InvitesServiceImpl implements InvitesService {
   public Optional<Invite> verify(String jwtToken) {
     Optional<String> inviteIdOptional = getInviteIdFromToken(jwtToken);
     if (!inviteIdOptional.isPresent()) {
-      throw new InvalidArgumentsException("invalid token. verification failed");
+      throw new InvalidArgumentsException("Invalid token. verification failed");
     }
     Optional<Invite> inviteOptional = get(inviteIdOptional.get());
 

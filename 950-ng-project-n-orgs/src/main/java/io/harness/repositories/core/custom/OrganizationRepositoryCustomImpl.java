@@ -35,6 +35,19 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
+  public boolean restore(String accountIdentifier, String identifier) {
+    Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(OrganizationKeys.identifier)
+                            .is(identifier)
+                            .and(OrganizationKeys.deleted)
+                            .is(Boolean.TRUE);
+    Query query = new Query(criteria);
+    Update update = new Update().set(OrganizationKeys.deleted, Boolean.FALSE);
+    return mongoTemplate.findAndModify(query, update, Organization.class) != null;
+  }
+
+  @Override
   public Organization update(Query query, Update update) {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Organization.class);
   }

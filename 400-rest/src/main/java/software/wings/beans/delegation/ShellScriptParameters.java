@@ -5,6 +5,8 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
@@ -49,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Value
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class ShellScriptParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 
@@ -70,6 +73,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   @Expression(ALLOW_SECRETS) @NonFinal @Setter String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
+  private final String secretOutputVars;
   private final HostConnectionAttributes hostConnectionAttributes;
   private final String keyPath;
   private final boolean keyless;

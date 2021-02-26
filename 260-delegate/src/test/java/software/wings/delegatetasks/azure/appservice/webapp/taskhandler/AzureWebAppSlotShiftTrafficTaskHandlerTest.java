@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG;
-import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_WEIGHT;
+import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
 import static io.harness.azure.model.AzureConstants.TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -14,15 +14,18 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotShiftTrafficParameters;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
@@ -32,6 +35,7 @@ import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceD
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -63,11 +67,15 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
     AzureWebAppSlotShiftTrafficParameters azureAppServiceTaskParameters = buildAzureWebAppSlotShiftTrafficParameters();
     AzureConfig azureConfig = buildAzureConfig();
     mockRerouteProductionSlotTraffic();
+    ArgumentCaptor<Double> trafficCaptor = ArgumentCaptor.forClass(Double.class);
 
-    AzureAppServiceTaskResponse azureAppServiceTaskResponse = slotShiftTrafficTaskHandler.executeTaskInternal(
-        azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient);
-
-    assertThat(azureAppServiceTaskResponse).isNotNull();
+    AzureTaskExecutionResponse azureTaskExecutionResponse =
+        slotShiftTrafficTaskHandler.executeTask(azureAppServiceTaskParameters, azureConfig, mockLogStreamingTaskClient);
+    verify(azureAppServiceDeploymentService)
+        .rerouteProductionSlotTraffic(any(), eq(SHIFT_TRAFFIC_SLOT_NAME), trafficCaptor.capture(), any());
+    assertThat(trafficCaptor.getValue()).isEqualTo(TRAFFIC_WEIGHT_IN_PERCENTAGE);
+    assertThat(azureTaskExecutionResponse).isNotNull();
+    assertThat(azureTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -132,10 +140,11 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
         .resourceGroupName("resourceGroupName")
         .subscriptionId("subscriptionId")
         .timeoutIntervalInMin(15)
-        .commandName(SLOT_TRAFFIC_WEIGHT)
+        .commandName(SLOT_TRAFFIC_PERCENTAGE)
         .webAppName("webAppName")
         .deploymentSlot(SHIFT_TRAFFIC_SLOT_NAME)
         .trafficWeightInPercentage(TRAFFIC_WEIGHT_IN_PERCENTAGE)
+        .preDeploymentData(AzureAppServicePreDeploymentData.builder().build())
         .build();
   }
 

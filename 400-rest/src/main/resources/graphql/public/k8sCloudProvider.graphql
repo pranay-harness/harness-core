@@ -14,7 +14,8 @@ enum ClusterDetailsType {
 }
 
 input InheritClusterDetails {
-  delegateName: String!
+  delegateName: String
+  delegateSelectors: [String!]
   usageScope: UsageScopeInput
 }
 
@@ -78,6 +79,7 @@ input UpdateK8sCloudProviderInput {
 
 input UpdateInheritClusterDetails {
   delegateName: String
+  delegateSelectors: [String!]
   usageScope: UsageScopeInput
 }
 

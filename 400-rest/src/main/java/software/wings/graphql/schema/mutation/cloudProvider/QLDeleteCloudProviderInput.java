@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.mutation.cloudProvider;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -12,6 +15,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLDeleteCloudProviderInput implements QLMutationInput {
   String clientMutationId;
 

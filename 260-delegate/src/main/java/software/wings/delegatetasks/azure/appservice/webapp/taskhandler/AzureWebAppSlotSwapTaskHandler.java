@@ -6,6 +6,8 @@ import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -17,7 +19,9 @@ import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
@@ -29,7 +33,8 @@ public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandl
 
     swapSlots(slotSwapParameters, webClientContext, logStreamingTaskClient);
 
-    return AzureWebAppSwapSlotsResponse.builder().build();
+    markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+    return AzureWebAppSwapSlotsResponse.builder().preDeploymentData(slotSwapParameters.getPreDeploymentData()).build();
   }
 
   private void validateSlotSwapParameters(AzureWebAppSwapSlotsParameters slotSwapParameters) {
@@ -57,8 +62,12 @@ public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandl
     AzureAppServiceDeploymentContext azureAppServiceDeploymentContext = toAzureAppServiceDeploymentContext(
         slotSwapParameters, webClientContext, timeoutIntervalInMin, logStreamingTaskClient);
 
-    azureAppServiceDeploymentService.swapSlots(
+    slotSwapParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.SWAP_SLOT.name());
+    azureAppServiceDeploymentService.swapSlotsUsingCallback(
         azureAppServiceDeploymentContext, targetSlotName, logStreamingTaskClient);
+    slotSwapParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.DEPLOYMENT_COMPLETE.name());
   }
 
   private AzureAppServiceDeploymentContext toAzureAppServiceDeploymentContext(

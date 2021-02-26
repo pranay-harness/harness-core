@@ -1,5 +1,8 @@
 package software.wings.scheduler;
 
+import static software.wings.scheduler.approval.ApprovalPollingHandler.PUMP_INTERVAL;
+import static software.wings.scheduler.approval.ApprovalPollingHandler.TARGET_INTERVAL;
+
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -15,6 +18,7 @@ import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.TaskType;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
+import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
@@ -35,11 +39,14 @@ public class ShellScriptApprovalService {
 
   private final DelegateService delegateService;
   private final WaitNotifyEngine waitNotifyEngine;
+  private final ApprovalPolingService approvalPolingService;
 
   @Inject
-  public ShellScriptApprovalService(DelegateService delegateService, WaitNotifyEngine waitNotifyEngine) {
+  public ShellScriptApprovalService(
+      DelegateService delegateService, WaitNotifyEngine waitNotifyEngine, ApprovalPolingService approvalPolingService) {
     this.delegateService = delegateService;
     this.waitNotifyEngine = waitNotifyEngine;
+    this.approvalPolingService = approvalPolingService;
   }
 
   public void handleShellScriptPolling(ApprovalPollingJobEntity scriptApprovalPollingEntity) {
@@ -48,8 +55,14 @@ public class ShellScriptApprovalService {
     String approvalId = scriptApprovalPollingEntity.getApprovalId();
     String activityId = scriptApprovalPollingEntity.getActivityId();
     String scriptString = scriptApprovalPollingEntity.getScriptString();
+    long retryInterval = scriptApprovalPollingEntity.getRetryInterval();
+    long delayUntilNext = retryInterval - PUMP_INTERVAL.toMillis();
 
-    tryShellScriptApproval(accountId, appId, approvalId, activityId, scriptString);
+    boolean shouldRetry = !tryShellScriptApproval(accountId, appId, approvalId, activityId, scriptString);
+    if (shouldRetry && retryInterval != TARGET_INTERVAL.toMillis()) {
+      long nextIteration = System.currentTimeMillis() + delayUntilNext;
+      approvalPolingService.updateNextIteration(scriptApprovalPollingEntity.getUuid(), nextIteration);
+    }
   }
 
   boolean tryShellScriptApproval(

@@ -53,7 +53,6 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
 
   @Inject
   public RedissonBroadcaster(@Named("atmosphere") RedisConfig redisAtmosphereConfig) {
-    super();
     this.redisAtmosphereConfig = redisAtmosphereConfig;
   }
 

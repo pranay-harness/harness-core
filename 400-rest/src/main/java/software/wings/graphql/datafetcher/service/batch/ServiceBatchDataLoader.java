@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.service.batch;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Service;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ServiceBatchDataLoader implements MappedBatchLoader<String, QLService> {
   @Inject private WingsPersistence wingsPersistence;
 

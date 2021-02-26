@@ -274,4 +274,10 @@ public class NoOpSecretManagerImpl implements SecretManager {
   public void deleteByAccountId(String accountId) {
     // no-op
   }
+
+  @Override
+  public List<String> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    throw new UnsupportedOperationException();
+  }
 }

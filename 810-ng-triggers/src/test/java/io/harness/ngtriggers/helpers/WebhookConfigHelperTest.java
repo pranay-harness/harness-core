@@ -18,7 +18,6 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.REOPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.SYNCHRONIZED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.UNLABELED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.DELETE;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.ISSUE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PUSH;
@@ -29,8 +28,8 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLA
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -40,7 +39,11 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.rule.Owner;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -63,7 +66,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
     }
 
     // Need to ad support for these
-    assertThat(eventsNotPresent).containsOnly(ISSUE, DELETE, REPOSITORY);
+    assertThat(eventsNotPresent).containsOnly(DELETE, REPOSITORY);
   }
 
   @Test

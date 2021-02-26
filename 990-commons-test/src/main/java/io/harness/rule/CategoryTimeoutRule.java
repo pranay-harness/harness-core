@@ -110,6 +110,12 @@ public class CategoryTimeoutRule extends Timeout {
       } else if (slow) {
         timeoutMS = TimeUnit.MINUTES.toMillis(15);
       }
+    } else if (categoryElement == CDFunctionalTests.class) {
+      if (fast) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(5);
+      } else if (slow) {
+        timeoutMS = TimeUnit.MINUTES.toMillis(20);
+      }
     }
 
     return HFailOnTimeout.builder()

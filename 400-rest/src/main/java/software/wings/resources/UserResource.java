@@ -23,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -626,10 +625,6 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> forceLoginUsingHarnessPassword(LoginRequest loginBody) {
-    if (!DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-      throw new InvalidRequestException("Invalid Login mechanism");
-    }
-
     return new RestResponse<>(authenticationManager.loginUsingHarnessPassword(
         authenticationManager.extractToken(loginBody.getAuthorization(), BASIC)));
   }

@@ -6,6 +6,8 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -44,6 +46,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "perpetualTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class PerpetualTaskRecord implements PersistentEntity, UuidAware, PersistentRegularIterable,
                                             PersistentFibonacciIterable, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

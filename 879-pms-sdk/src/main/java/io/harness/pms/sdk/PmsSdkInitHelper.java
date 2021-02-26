@@ -15,7 +15,13 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import io.grpc.StatusRuntimeException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -57,7 +63,8 @@ public class PmsSdkInitHelper {
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
     String serviceName = config.getServiceName();
-    if (config.getDeploymentMode().equals(PmsSdkConfiguration.DeployMode.REMOTE)) {
+    log.info("Initializing PMS SDK for service: {}", serviceName);
+    if (config.getDeploymentMode().isNonLocal()) {
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();
@@ -66,7 +73,6 @@ public class PmsSdkInitHelper {
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
       registerSdk(pipelineServiceInfoProvider, serviceName, injector);
-      // registerEventListeners(injector);
     }
   }
 
@@ -93,10 +99,4 @@ public class PmsSdkInitHelper {
       throw ex;
     }
   }
-
-  //  private void registerEventListeners(Injector injector) {
-  //    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-  //    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-  //    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-  //  }
 }

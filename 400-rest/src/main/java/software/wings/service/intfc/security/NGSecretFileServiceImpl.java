@@ -119,8 +119,8 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
 
     // get secret manager with which the file is to be encrypted
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+        ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+            metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
     // in case of file creation of YAML, we receive an empty stream, so we create an empty byte array to handle it
     byte[] inputBytes = new byte[0];
@@ -183,8 +183,8 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
 
       // get secret manager to be used to save file
       Optional<SecretManagerConfig> secretManagerConfigOptional =
-          ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
-              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
+          ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+              metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier(), true);
 
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {

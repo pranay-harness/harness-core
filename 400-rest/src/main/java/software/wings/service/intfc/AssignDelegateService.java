@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.TaskFailureReason;
@@ -11,9 +14,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by brett on 7/20/17
- */
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public interface AssignDelegateService {
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task);
 
@@ -39,6 +40,8 @@ public interface AssignDelegateService {
   void clearConnectionResults(String accountId);
 
   String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask);
+
+  List<Delegate> getAccountDelegates(String accountId);
 
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 

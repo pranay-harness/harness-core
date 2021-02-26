@@ -1,6 +1,7 @@
 package software.wings.beans;
 
-import software.wings.beans.Environment.EnvironmentType;
+import io.harness.beans.EnvironmentType;
+
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 

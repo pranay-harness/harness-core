@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,10 +20,12 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by anubhaw on 12/29/16.
  */
+@TargetModule(Module._960_API_SERVICES)
 public interface AwsClusterService {
   /**
    * Create cluster.
@@ -48,6 +52,9 @@ public interface AwsClusterService {
    */
   List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName);
+
+  List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceNamePrefix);
 
   TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn);
@@ -76,4 +83,7 @@ public interface AwsClusterService {
   Map<String, String> getActiveServiceImages(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName,
       String imagePrefix);
+
+  Optional<Service> getService(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName);
 }

@@ -11,4 +11,9 @@ public class ShellExecutionException extends WingsException {
     super(message, null, ErrorCode.SHELL_EXECUTION_EXCEPTION, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public ShellExecutionException(String message, Throwable cause) {
+    super(message, cause, ErrorCode.SHELL_EXECUTION_EXCEPTION, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

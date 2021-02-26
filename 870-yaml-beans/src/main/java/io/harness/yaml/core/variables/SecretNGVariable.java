@@ -3,16 +3,19 @@ package io.harness.yaml.core.variables;
 import io.harness.common.SwaggerConstants;
 import io.harness.encryption.SecretRefData;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.visitor.helpers.variables.SecretVariableVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.yaml.core.LevelNodeQualifierName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.sun.istack.internal.NotNull;
 import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -21,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName(NGVariableConstants.SECRET_TYPE)
+@SimpleVisitorHelper(helperClass = SecretVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.SecretNGVariable")
 public class SecretNGVariable implements NGVariable {
   String name;
@@ -30,6 +34,7 @@ public class SecretNGVariable implements NGVariable {
   String description;
   boolean required;
   @JsonProperty("default") String defaultValue;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public LevelNode getLevelNode() {

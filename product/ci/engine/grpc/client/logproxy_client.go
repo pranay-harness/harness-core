@@ -44,7 +44,8 @@ func NewLogProxyClient(port uint, log *zap.SugaredLogger) (LogProxyClient, error
 		fmt.Sprintf(":%d", port),
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithNoProxy())
 	if err != nil {
 		log.Errorw("Could not create a client to log proxy", zap.Error(err))
 		return nil, err

@@ -6,17 +6,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 
+import com.google.inject.Inject;
 import com.mongodb.DBObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
 public class ExportExecutionsRequestQueryTest extends WingsBaseTest {
+  @Inject private HPersistence persistence;
+
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
@@ -24,12 +28,12 @@ public class ExportExecutionsRequestQueryTest extends WingsBaseTest {
   public void testConversion() {
     assertThat(ExportExecutionsRequestQuery.fromQuery(null)).isNull();
 
-    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class).filter("accountId", "aid");
+    Query<WorkflowExecution> query = persistence.createQuery(WorkflowExecution.class).filter("accountId", "aid");
     ExportExecutionsRequestQuery requestQuery = ExportExecutionsRequestQuery.fromQuery(query);
     assertThat(requestQuery).isNotNull();
     assertThat(requestQuery.getDbObjectJson()).isNotNull();
 
-    Query<WorkflowExecution> newQuery = wingsPersistence.createQuery(WorkflowExecution.class);
+    Query<WorkflowExecution> newQuery = persistence.createQuery(WorkflowExecution.class);
     assertThatCode(() -> ExportExecutionsRequestQuery.updateQuery(null, requestQuery)).doesNotThrowAnyException();
     assertThatCode(() -> ExportExecutionsRequestQuery.updateQuery(query, null)).doesNotThrowAnyException();
 

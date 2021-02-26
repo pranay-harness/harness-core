@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import io.harness.beans.ExecutionStatus;

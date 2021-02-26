@@ -28,7 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SortOrder.OrderType;
@@ -96,11 +96,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.time.Instant;
@@ -136,7 +132,7 @@ import retrofit2.Response;
  * Created by rsingh on 9/27/17.
  */
 @Slf4j
-public class LogMLAnalysisServiceTest extends VerificationBaseTest {
+public class LogMLAnalysisServiceTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -323,7 +319,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataNoPreviousAnalysis() throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -349,7 +345,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void getLogDataPreviousAnalysis() throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -359,6 +355,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
 
     assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(true);
     logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
     wingsPersistence.save(logMLAnalysisRecord);
 
@@ -387,6 +384,112 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     });
 
     assertThat(logData).isEqualTo(expectedLogs);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_noPreviousBaseline() throws Exception {
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(false);
+    logMLAnalysisRecord.setControl_events(logMLAnalysisRecord.getTest_events());
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData.isEmpty()).isFalse();
+    Set<LogDataRecord> expectedLogs = new HashSet<>();
+    logMLAnalysisRecord.getControl_events().forEach((s, analysisClusters) -> {
+      analysisClusters.forEach(analysisCluster -> {
+        MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
+        expectedLogs.add(LogDataRecord.builder()
+                             .stateType(logMLAnalysisRecord.getStateType())
+                             .workflowExecutionId(logMLAnalysisRecord.getWorkflowExecutionId())
+                             .stateExecutionId(logMLAnalysisRecord.getStateExecutionId())
+                             .query(logMLAnalysisRecord.getQuery())
+                             .clusterLabel(Integer.toString(analysisCluster.getCluster_label()))
+                             .host(messageFrequency.getHost())
+                             .timeStamp(messageFrequency.getTime())
+                             .logMessage(analysisCluster.getText())
+                             .count(messageFrequency.getCount())
+                             .build());
+      });
+    });
+
+    assertThat(logData).isEqualTo(expectedLogs);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_hasPreviousBaselineNoData() throws Exception {
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(true);
+    logMLAnalysisRecord.setControl_events(logMLAnalysisRecord.getTest_events());
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_noPreviousBaselineNoControlData() throws Exception {
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(false);
+    logMLAnalysisRecord.setControl_events(null);
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData).isEmpty();
   }
 
   @Test
@@ -1083,7 +1186,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void checkClusterScores() throws IOException {
-    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    InputStream is = new FileInputStream(new File("270-verification/src"
+        + "/test/resources/verification/LogAnalysisRecord.json"));
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
     records.setStateType(ELK);
@@ -1309,7 +1413,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCompressionLogMlAnalysisRecord() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -1370,7 +1474,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCompressionLogMlAnalysisRecordOnDemand() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -1501,7 +1605,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
   public void testCompressionLogMLAnalysisRecordFrequencyPattern() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/sumo/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord compressedLogMLAnalysisRecord;
@@ -1525,7 +1629,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
   public void testCompressionLogMLAnalysisRecordLogAnalysisResult() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./sumo/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/sumo/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord compressedLogMLAnalysisRecord;
@@ -1549,7 +1653,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisForBaseline() throws IOException {
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -1588,7 +1692,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
     FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -1624,7 +1728,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
     doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -1654,7 +1758,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeDeclaredField(analysisService, "managerClient", verificationManagerClient, true);
     doNothing().when(continuousVerificationService).triggerLogAnalysisAlertIfNecessary(any(), any(), anyInt());
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -2376,7 +2480,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(verificationManagerClient.isFeatureEnabled(FeatureName.DISABLE_SERVICEGUARD_LOG_ALERTS, accountId))
         .thenReturn(managerCallFeedbacks);
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -2407,7 +2511,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources/elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;
@@ -2436,7 +2540,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     when(managerCallFeedbacks.execute()).thenReturn(Response.success(new RestResponse<>(false)));
     when(verificationManagerClient.isFeatureEnabled(any(), any())).thenReturn(managerCallFeedbacks);
 
-    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+    File file = new File("270-verification/src/test/resources//elk/logml_data_record.json");
 
     Gson gson = new Gson();
     LogMLAnalysisRecord logMLAnalysisRecord;

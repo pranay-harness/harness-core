@@ -5,7 +5,11 @@ import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome.ManifestsOutcomeBuilder;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -35,7 +39,15 @@ public class ManifestStep {
       stageOverrideManifests = serviceConfig.getStageOverrides().getManifests();
     }
 
-    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests);
+    List<ManifestOverrideSetWrapper> manifestOverrideSetWrappers =
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets();
+    List<ManifestOverrideSets> allOverrideSets = manifestOverrideSetWrappers == null
+        ? new ArrayList<>()
+        : manifestOverrideSetWrappers.stream()
+              .map(ManifestOverrideSetWrapper::getOverrideSet)
+              .collect(Collectors.toList());
+
+    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests, allOverrideSets);
   }
 
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
@@ -51,13 +63,13 @@ public class ManifestStep {
                      .getServiceSpec()
                      .getManifestOverrideSets()
                      .stream()
-                     .filter(o -> o.getIdentifier().equals(useManifestOverrideSet))
+                     .filter(o -> o.getOverrideSet().getIdentifier().equals(useManifestOverrideSet))
                      .findFirst())
           .forEachOrdered(optionalManifestOverrideSets -> {
             if (!optionalManifestOverrideSets.isPresent()) {
               throw new InvalidRequestException("Manifest Override Set is not defined.");
             }
-            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getManifests());
+            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getOverrideSet().getManifests());
           });
     }
     return manifestOverrideSets;
@@ -65,7 +77,8 @@ public class ManifestStep {
 
   @VisibleForTesting
   StepOutcome processManifests(List<ManifestConfigWrapper> serviceSpecManifests,
-      List<ManifestConfigWrapper> manifestOverrideSets, List<ManifestConfigWrapper> stageOverrideManifests) {
+      List<ManifestConfigWrapper> applicableManifestOverrideSets, List<ManifestConfigWrapper> stageOverrideManifests,
+      List<ManifestOverrideSets> allOverrideSets) {
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to KubernetesServiceSpec
@@ -75,25 +88,50 @@ public class ManifestStep {
           serviceSpecManifest -> serviceSpecManifest.getManifest().getManifestAttributes(), (a, b) -> b));
     }
 
+    ManifestsOutcomeBuilder outcomeBuilder = ManifestsOutcome.builder();
+    outcomeBuilder.manifestOriginalList(
+        ManifestOutcomeMapper.toManifestOutcome(new ArrayList<>(identifierToManifestMap.values())));
+
     // 2. Apply Override Sets
-    applyManifestOverlay(identifierToManifestMap, manifestOverrideSets);
+    applyManifestOverlay(identifierToManifestMap, applicableManifestOverrideSets);
+    outcomeBuilder.manifestOverrideSets(getAllOverrideSets(allOverrideSets));
 
     // 3. Get Manifests belonging to Stage Overrides
     applyManifestOverlay(identifierToManifestMap, stageOverrideManifests);
 
+    Map<String, ManifestAttributes> onlyStageOverridesManifests = new HashMap<>();
+    applyManifestOverlay(onlyStageOverridesManifests, stageOverrideManifests);
+    outcomeBuilder.manifestStageOverridesList(
+        ManifestOutcomeMapper.toManifestOutcome(new ArrayList<>(onlyStageOverridesManifests.values())));
+
     return StepOutcome.builder()
         .name(MANIFESTS.toLowerCase())
-        .outcome(ManifestsOutcome.builder()
+        .outcome(outcomeBuilder
                      .manifestOutcomeList(
                          ManifestOutcomeMapper.toManifestOutcome(new ArrayList<>(identifierToManifestMap.values())))
                      .build())
         .build();
   }
 
+  private Map<String, List<ManifestOutcome>> getAllOverrideSets(List<ManifestOverrideSets> allOverrideSets) {
+    Map<String, List<ManifestOutcome>> manifestOverridesMap = new HashMap<>();
+    if (EmptyPredicate.isEmpty(allOverrideSets)) {
+      return manifestOverridesMap;
+    }
+    for (ManifestOverrideSets overrideSet : allOverrideSets) {
+      manifestOverridesMap.put(overrideSet.getIdentifier(),
+          ManifestOutcomeMapper.toManifestOutcome(new ArrayList<>(overrideSet.getManifests()
+                                                                      .stream()
+                                                                      .map(m -> m.getManifest().getManifestAttributes())
+                                                                      .collect(Collectors.toList()))));
+    }
+    return manifestOverridesMap;
+  }
+
   private void applyManifestOverlay(
-      Map<String, ManifestAttributes> identifierToManifestMap, List<ManifestConfigWrapper> stageOverrideManifests) {
-    if (EmptyPredicate.isNotEmpty(stageOverrideManifests)) {
-      stageOverrideManifests.forEach(stageOverrideManifest -> {
+      Map<String, ManifestAttributes> identifierToManifestMap, List<ManifestConfigWrapper> overrideManifests) {
+    if (EmptyPredicate.isNotEmpty(overrideManifests)) {
+      overrideManifests.forEach(stageOverrideManifest -> {
         if (identifierToManifestMap.containsKey(stageOverrideManifest.getManifest().getIdentifier())) {
           identifierToManifestMap.put(stageOverrideManifest.getManifest().getIdentifier(),
               identifierToManifestMap.get(stageOverrideManifest.getManifest().getIdentifier())

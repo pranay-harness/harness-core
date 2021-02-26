@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.ngtriggers.Constants.UNRECOGNIZED_WEBHOOK;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -26,7 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.AccessLevel;
@@ -74,15 +81,21 @@ public class NGTriggerWebhookConfigResource {
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
   @PublicApi
   public ResponseDTO<String> processWebhookEvent(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @NotNull String eventPayload,
       @Context HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
     httpHeaders.getRequestHeaders().forEach(
         (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
 
-    TriggerWebhookEvent eventEntity =
-        ngTriggerElementMapper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, headerConfigs);
-    TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
-    return ResponseDTO.newResponse(newEvent.getUuid());
+    TriggerWebhookEvent eventEntity = ngTriggerElementMapper.toNGTriggerWebhookEvent(
+        accountIdentifier, orgIdentifier, projectIdentifier, eventPayload, headerConfigs);
+    if (eventEntity != null) {
+      TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
+      return ResponseDTO.newResponse(newEvent.getUuid());
+    } else {
+      return ResponseDTO.newResponse(UNRECOGNIZED_WEBHOOK);
+    }
   }
 }

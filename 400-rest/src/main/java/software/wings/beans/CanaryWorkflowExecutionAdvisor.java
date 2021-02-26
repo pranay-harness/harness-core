@@ -38,6 +38,7 @@ import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.api.PhaseElement;
+import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -62,11 +63,13 @@ import software.wings.sm.states.PhaseSubWorkflow;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlException;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -76,6 +79,8 @@ import org.mongodb.morphia.annotations.Transient;
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
+  public static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
+  public static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
@@ -96,6 +101,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
+  @SuppressWarnings("PMD")
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     State state = executionEvent.getState();
     ExecutionContextImpl context = executionEvent.getContext();
@@ -286,25 +292,35 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .build();
       }
 
+      List<FailureStrategy> workflowFailureStrategies = orchestrationWorkflow.getFailureStrategies();
+
       if (state.getParentId() != null) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
+
         if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
           FailureStrategy failureStrategy = selectTopMatchingStrategy(
-              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
+              phaseStep.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName(), phaseElement);
+
+          if (failureStrategy == null) {
+            failureStrategy = selectTopMatchingStrategy(
+                workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
+          }
           return computeExecutionEventAdvice(
               orchestrationWorkflow, failureStrategy, executionEvent, null, stateExecutionInstance);
         }
       }
+
       FailureStrategy failureStrategy = selectTopMatchingStrategy(
-          orchestrationWorkflow.getFailureStrategies(), executionEvent.getFailureTypes(), state.getName());
+          workflowFailureStrategies, executionEvent.getFailureTypes(), state.getName(), phaseElement);
 
       return computeExecutionEventAdvice(
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
+
     } catch (Exception ex) {
       log.error("Error Occurred while calculating advise. This is really bad");
       return null;
     } catch (Throwable t) {
-      log.error("Encountered a throwable while calculating execution advice: {} ", t.getStackTrace());
+      log.error("Encountered a throwable while calculating execution advice: {}", t.getStackTrace());
       return null;
     } finally {
       try {
@@ -389,6 +405,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       try {
+        context.renderExpression(assertionExpression);
         Object resultObj = context.evaluateExpression(assertionExpression);
         if (!(resultObj instanceof Boolean)) {
           return anExecutionEventAdvice()
@@ -407,13 +424,22 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return anExecutionEventAdvice()
             .withSkipState(true)
             .withSkipExpression(assertionExpression)
-            .withSkipError(
-                "Error evaluating skip condition: " + assertionExpression + ": " + ExceptionUtils.getMessage(ex))
+            .withSkipError(processErrorMessage(assertionExpression, ex))
             .build();
       }
     }
 
     return null;
+  }
+
+  private static String processErrorMessage(String assertionExpression, Exception ex) {
+    if (ex instanceof JexlException.Variable
+        && ((JexlException.Variable) ex).getVariable().equals("sweepingOutputSecrets")) {
+      return "Error evaluating skip condition: " + assertionExpression
+          + ": Secret Variables defined in Script output of shell scripts cannot be used in skip assertions";
+    }
+
+    return "Error evaluating skip condition: " + assertionExpression + ": " + ExceptionUtils.getMessage(ex);
   }
 
   boolean isExecutionHostsPresent(ExecutionContextImpl context) {
@@ -472,12 +498,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state, executionEvent);
-        return anExecutionEventAdvice()
-            .withTimeout(failureStrategy.getManualInterventionTimeout())
-            .withActionAfterManualInterventionTimeout(failureStrategy.getActionAfterTimeout())
-            .withExecutionInterruptType(ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION)
-            .withStateParams(stateParams)
-            .build();
+        return issueManualInterventionAdvice(failureStrategy, stateParams);
       }
 
       case ROLLBACK_PHASE: {
@@ -512,8 +533,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             || stateType.equals(StateType.SUB_WORKFLOW.name()) || stateType.equals(StateType.FORK.name())
             || stateType.equals(REPEAT.name())) {
           // Retry is only at the leaf node
-          FailureStrategy failureStrategyAfterRetry =
-              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          FailureStrategy failureStrategyAfterRetry = getFailureStrategyAfterRetry(failureStrategy);
           return computeExecutionEventAdvice(orchestrationWorkflow, failureStrategyAfterRetry, executionEvent,
               phaseSubWorkflow, stateExecutionInstance);
         }
@@ -538,8 +558,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               .withWaitInterval(waitInterval)
               .build();
         } else {
-          FailureStrategy failureStrategyAfterRetry =
-              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          FailureStrategy failureStrategyAfterRetry = getFailureStrategyAfterRetry(failureStrategy);
           return computeExecutionEventAdvice(orchestrationWorkflow, failureStrategyAfterRetry, executionEvent,
               phaseSubWorkflow, stateExecutionInstance);
         }
@@ -547,6 +566,45 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       default:
         return null;
     }
+  }
+
+  @VisibleForTesting
+  ExecutionEventAdvice issueManualInterventionAdvice(FailureStrategy failureStrategy, Map<String, Object> stateParams) {
+    Long manualInterventionTimeout = failureStrategy.getManualInterventionTimeout();
+    ExecutionInterruptType actionAfterTimeout = failureStrategy.getActionAfterTimeout();
+    return anExecutionEventAdvice()
+        .withTimeout(isValidTimeOut(manualInterventionTimeout) ? manualInterventionTimeout : DEFAULT_TIMEOUT)
+        .withActionAfterManualInterventionTimeout(
+            isValidAction(actionAfterTimeout) ? actionAfterTimeout : DEFAULT_ACTION_AFTER_TIMEOUT)
+        .withExecutionInterruptType(ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION)
+        .withStateParams(stateParams)
+        .build();
+  }
+
+  private boolean isValidTimeOut(Long manualInterventionTimeout) {
+    return manualInterventionTimeout != null && manualInterventionTimeout >= 60000L;
+  }
+
+  private boolean isValidAction(ExecutionInterruptType actionAfterTimeout) {
+    return Arrays.asList(ExecutionInterruptType.values()).contains(actionAfterTimeout);
+  }
+
+  @VisibleForTesting
+  FailureStrategy getFailureStrategyAfterRetry(FailureStrategy failureStrategy) {
+    FailureStrategyBuilder failureStrategyBuilder = FailureStrategy.builder();
+    RepairActionCode repairActionCodeAfterRetry = failureStrategy.getRepairActionCodeAfterRetry();
+    Long timeout;
+    ExecutionInterruptType actionAfterTimeout;
+    if (RepairActionCode.MANUAL_INTERVENTION == repairActionCodeAfterRetry) {
+      timeout = isValidTimeOut(failureStrategy.getManualInterventionTimeout())
+          ? failureStrategy.getManualInterventionTimeout()
+          : DEFAULT_TIMEOUT;
+      actionAfterTimeout = isValidAction(failureStrategy.getActionAfterTimeout())
+          ? failureStrategy.getActionAfterTimeout()
+          : DEFAULT_ACTION_AFTER_TIMEOUT;
+      failureStrategyBuilder.manualInterventionTimeout(timeout).actionAfterTimeout(actionAfterTimeout);
+    }
+    return failureStrategyBuilder.repairActionCode(repairActionCodeAfterRetry).build();
   }
 
   private OrchestrationWorkflow findOrchestrationWorkflow(Workflow workflow, WorkflowExecution workflowExecution) {
@@ -711,10 +769,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         .build();
   }
 
-  public static FailureStrategy selectTopMatchingStrategy(
-      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
+  public static FailureStrategy selectTopMatchingStrategy(List<FailureStrategy> failureStrategies,
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
     final FailureStrategy failureStrategy =
-        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName);
+        selectTopMatchingStrategyInternal(failureStrategies, failureTypes, stateName, phaseElement);
 
     if (failureStrategy != null && isNotEmpty(failureStrategy.getFailureTypes()) && isEmpty(failureTypes)) {
       log.error("Defaulting to accepting the action. "
@@ -725,8 +783,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     return failureStrategy;
   }
 
-  private static FailureStrategy selectTopMatchingStrategyInternal(
-      List<FailureStrategy> failureStrategies, EnumSet<FailureType> failureTypes, String stateName) {
+  private static FailureStrategy selectTopMatchingStrategyInternal(List<FailureStrategy> failureStrategies,
+      EnumSet<FailureType> failureTypes, String stateName, PhaseElement phaseElement) {
     if (isEmpty(failureStrategies)) {
       return null;
     }
@@ -773,6 +831,13 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return rollbackStrategy.get();
     }
 
-    return filteredFailureStrategies.get(0);
+    FailureStrategy failureStrategy = filteredFailureStrategies.get(0);
+
+    // If scope is WORKFLOW_PHASE and step is not within the Phase the strategy will not be applied
+    if (failureStrategy.getExecutionScope() == ExecutionScope.WORKFLOW_PHASE && phaseElement == null) {
+      return null;
+    } else {
+      return failureStrategy;
+    }
   }
 }

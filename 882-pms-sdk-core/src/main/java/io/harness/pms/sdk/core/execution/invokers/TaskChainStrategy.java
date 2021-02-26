@@ -86,7 +86,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
       @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
       TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
-      pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+      pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
                                 .setChainEnd(true)

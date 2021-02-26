@@ -2,6 +2,7 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
@@ -90,7 +91,8 @@ public class ProjectServiceImpl implements ProjectService {
       return savedProject;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different project identifier, [%s] cannot be used", project.getIdentifier()),
+          String.format("A project with identifier %s and orgIdentifier %s is already present or was deleted",
+              project.getIdentifier(), orgIdentifier),
           USER_SRE, ex);
     }
   }
@@ -229,6 +231,9 @@ public class ProjectServiceImpl implements ProjectService {
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.key).regex(projectFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.value).regex(projectFilterDTO.getSearchTerm(), "i"));
     }
+    if (isNotEmpty(projectFilterDTO.getIdentifiers())) {
+      criteria.and(ProjectKeys.identifier).in(projectFilterDTO.getIdentifiers());
+    }
     return criteria;
   }
 
@@ -248,10 +253,29 @@ public class ProjectServiceImpl implements ProjectService {
     return delete;
   }
 
+  @Override
+  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+    boolean success = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
+    if (success) {
+      publishEvent(Project.builder()
+                       .accountIdentifier(accountIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .identifier(identifier)
+                       .build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
+  }
+
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+  }
+
+  private void validateParentOrgExists(String accountIdentifier, String orgIdentifier) {
     if (!organizationService.get(accountIdentifier, orgIdentifier).isPresent()) {
       throw new InvalidArgumentsException(
           String.format("Organization [%s] in Account [%s] does not exist", orgIdentifier, accountIdentifier),
@@ -265,5 +289,6 @@ public class ProjectServiceImpl implements ProjectService {
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
 }

@@ -50,7 +50,7 @@ public class ManualInterventionAdviser implements Adviser {
 
   private ManualInterventionAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
     byte[] adviserParameters = advisingEvent.getAdviserParameters();
-    if (adviserParameters == null || adviserParameters.length == 0) {
+    if (isEmpty(adviserParameters)) {
       return null;
     }
     return (ManualInterventionAdviserParameters) kryoSerializer.asObject(adviserParameters);

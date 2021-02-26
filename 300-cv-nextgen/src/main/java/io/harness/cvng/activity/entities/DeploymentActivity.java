@@ -6,8 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.utils.DateTimeUtils;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -55,7 +55,7 @@ public class DeploymentActivity extends Activity {
     setDeploymentTag(deploymentActivityDTO.getDeploymentTag());
     setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
     setType(ActivityType.DEPLOYMENT);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
@@ -66,16 +66,17 @@ public class DeploymentActivity extends Activity {
     verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
 
     // Set the properties needed for a health verification instance
-    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
-    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
-
+    Instant postActivityStart = DateTimeUtils.roundDownTo5MinBoundary(getVerificationStartTime());
+    Instant preActivityStart = postActivityStart.minus(verificationJobInstance.getResolvedJob().getDuration());
+    // TODO: we can probably get rid of this logic by moving postActivityStart, preActivityStart inside the job
     if (!VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-      verificationJobInstance.setStartTime(preactivityStart);
+      verificationJobInstance.setStartTime(preActivityStart);
     } else {
       verificationJobInstance.setStartTime(this.getVerificationStartTime());
     }
-    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
-    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
+    // TODO: These should be inferred from startTime and probably should be part of HealthVerification as methods
+    verificationJobInstance.setPreActivityVerificationStartTime(preActivityStart);
+    verificationJobInstance.setPostActivityVerificationStartTime(postActivityStart);
   }
 
   @Override
@@ -87,6 +88,11 @@ public class DeploymentActivity extends Activity {
       Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
           "The verification job identifier is a required parameter for deployment activities");
     });
+  }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return false;
   }
 
   @JsonIgnore

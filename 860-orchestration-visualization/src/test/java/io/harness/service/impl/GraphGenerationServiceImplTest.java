@@ -64,6 +64,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
+            .uuid(generateUuid())
+            .status(Status.RUNNING)
             .ambiance(Ambiance.newBuilder()
                           .setPlanExecutionId(planExecution.getUuid())
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
@@ -100,6 +102,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
+            .uuid(generateUuid())
+            .status(Status.RUNNING)
             .ambiance(Ambiance.newBuilder()
                           .setPlanExecutionId(planExecution.getUuid())
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
@@ -149,6 +153,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
+            .uuid(generateUuid())
+            .status(Status.SUCCEEDED)
             .ambiance(Ambiance.newBuilder()
                           .setPlanExecutionId(planExecution.getUuid())
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
@@ -185,6 +191,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().build());
     NodeExecution dummyStart =
         NodeExecution.builder()
+            .uuid(generateUuid())
+            .status(Status.SUCCEEDED)
             .ambiance(Ambiance.newBuilder()
                           .setPlanExecutionId(planExecution.getUuid())
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node1_plan").build()))
@@ -201,6 +209,8 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
 
     NodeExecution dummyEnd =
         NodeExecution.builder()
+            .uuid(generateUuid())
+            .status(Status.SUCCEEDED)
             .ambiance(Ambiance.newBuilder()
                           .setPlanExecutionId(planExecution.getUuid())
                           .addAllLevels(Collections.singletonList(Level.newBuilder().setSetupId("node2_plan").build()))

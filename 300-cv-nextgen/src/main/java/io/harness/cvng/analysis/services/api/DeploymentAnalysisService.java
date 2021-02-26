@@ -1,15 +1,16 @@
 package io.harness.cvng.analysis.services.api;
 
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
 import java.util.Optional;
 
 public interface DeploymentAnalysisService {
-  Optional<Double> getLatestRiskScore(String accountId, String verificationJobInstanceId);
+  Optional<Risk> getLatestRiskScore(String accountId, String verificationJobInstanceId);
 
-  CanaryDeploymentAdditionalInfo getCanaryDeploymentAdditionalInfo(
+  CanaryBlueGreenAdditionalInfo getCanaryBlueGreenAdditionalInfo(
       String accountId, VerificationJobInstance verificationJobInstance);
 
   LoadTestAdditionalInfo getLoadTestAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance);

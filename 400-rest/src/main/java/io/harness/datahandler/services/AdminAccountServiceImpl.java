@@ -158,4 +158,14 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   public boolean updatePovFlag(String accountId, boolean isPov) {
     return accountService.updatePovFlag(accountId, isPov);
   }
+
+  @Override
+  public boolean updateAccountName(String accountId, String accountName) {
+    return accountService.updateAccountName(accountId, accountName);
+  }
+
+  @Override
+  public boolean updateCompanyName(String accountId, String companyName) {
+    return accountService.updateCompanyName(accountId, companyName);
+  }
 }

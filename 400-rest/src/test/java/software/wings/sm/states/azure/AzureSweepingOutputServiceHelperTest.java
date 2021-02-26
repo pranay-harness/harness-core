@@ -218,7 +218,9 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
                                                    .deploySlotId(DEPLOYMENT_SLOT_ID)
                                                    .appServicePlanId(APP_SERVICE_PLAN_ID)
                                                    .hostName(HOST_NAME)
+                                                   .instanceName(INSTANCE_NAME)
                                                    .instanceIp(PRIVATE_IP_ADDRESS)
+                                                   .instanceId(INSTANCE_ID)
                                                    .build();
     List<AzureAppDeploymentData> azureAppDeploymentData = Collections.singletonList(appDeploymentData);
 
@@ -245,13 +247,13 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
 
     assertThat(instanceElementsList.size()).isEqualTo(1);
     assertThat(instanceElement.isNewInstance()).isTrue();
-    assertThat(instanceElement.getUuid()).isEqualTo(DEPLOYMENT_SLOT_ID);
-    assertThat(instanceElement.getDisplayName()).isEqualTo(HOST_NAME);
+    assertThat(instanceElement.getUuid()).isEqualTo(INSTANCE_ID);
+    assertThat(instanceElement.getDisplayName()).isEqualTo(INSTANCE_NAME);
     assertThat(instanceElement.getHostName()).isEqualTo(HOST_NAME_FROM_CONVENTION);
 
     assertThat(instanceElement.getHost().getUuid()).isEqualTo(HOST_ID);
     assertThat(instanceElement.getHost().getPublicDns()).isEqualTo(HOST_NAME);
-    assertThat(instanceElement.getHost().getInstanceId()).isEqualTo(HOST_NAME);
+    assertThat(instanceElement.getHost().getInstanceId()).isEqualTo(INSTANCE_ID);
     assertThat(instanceElement.getHost().getIp()).isEqualTo(PRIVATE_IP_ADDRESS);
     assertThat(instanceElement.getHost().getWebAppInstance()).isEqualTo(appDeploymentData);
   }
@@ -306,7 +308,7 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
     doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
     doReturn(phaseElement).when(executionContext).getContextElement(any(), any());
 
-    azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(executionContext, "test");
+    azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(executionContext, "test");
 
     verify(sweepingOutputService, times(1)).findSweepingOutput(any());
   }

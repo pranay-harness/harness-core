@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -42,6 +43,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -60,7 +62,6 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joor.Reflect;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,9 +69,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-/**
- * Created by srinivas on 3/30/17.
- */
 public class NexusServiceTest extends WingsBaseTest {
   private static final String XML_RESPONSE = "<indexBrowserTreeViewResponse>\n"
       + "  <data>\n"
@@ -570,9 +568,15 @@ public class NexusServiceTest extends WingsBaseTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8881);
-  @Rule public WireMockRule wireMockRule2 = new WireMockRule(8882);
-  @Rule public WireMockRule wireMockRule3 = new WireMockRule(8883);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8881));
+  @Rule
+  public WireMockRule wireMockRule2 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8882));
+  @Rule
+  public WireMockRule wireMockRule3 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8883));
 
   private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
 
@@ -727,6 +731,21 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  public void shouldGetRepositoriesError404() {
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl("http://localhost:8881/nexus3/")
+                             .version("2.x")
+                             .username("admin")
+                             .password("wings123!".toCharArray())
+                             .build();
+    assertThatThrownBy(() -> nexusService.getRepositories(config, null))
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesNexus2xError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
                              .willReturn(aResponse()
@@ -735,7 +754,7 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "application/xml")));
     assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, null, RepositoryFormat.docker.name()))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+        .hasMessageContaining(INVALID_ARTIFACT_SERVER.name());
   }
 
   @Test
@@ -783,7 +802,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
                              .willReturn(aResponse()

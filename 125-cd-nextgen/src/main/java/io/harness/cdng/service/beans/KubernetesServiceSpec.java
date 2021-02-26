@@ -1,11 +1,11 @@
 package io.harness.cdng.service.beans;
 
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
-import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.service.ServiceSpec;
-import io.harness.cdng.variables.beans.NGVariableOverrideSets;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.KubernetesServiceSpecVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -31,9 +31,9 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
   ArtifactListConfig artifacts;
   List<ManifestConfigWrapper> manifests;
 
-  List<NGVariableOverrideSets> variableOverrideSets;
-  List<ArtifactOverrideSets> artifactOverrideSets;
-  List<ManifestOverrideSets> manifestOverrideSets;
+  List<NGVariableOverrideSetWrapper> variableOverrideSets;
+  List<ArtifactOverrideSetWrapper> artifactOverrideSets;
+  List<ManifestOverrideSetWrapper> manifestOverrideSets;
 
   // For Visitor Framework Impl
   String metadata;

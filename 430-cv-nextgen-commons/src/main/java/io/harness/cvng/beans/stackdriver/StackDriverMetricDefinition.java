@@ -11,10 +11,10 @@ import lombok.experimental.FieldNameConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-@Builder
 @Data
-@FieldNameConstants(innerTypeName = "StackDriverMetricDefinitionKeys")
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "StackDriverMetricDefinitionKeys")
 public class StackDriverMetricDefinition {
   public static final String dataSetsKey = "dataSets";
   public static final String timeSeriesFilterKey = "timeSeriesFilter";
@@ -30,8 +30,8 @@ public class StackDriverMetricDefinition {
   String filter;
   Aggregation aggregation;
 
-  @Builder
   @Data
+  @Builder
   @FieldNameConstants(innerTypeName = "AggregationKeys")
   public static class Aggregation {
     @Builder.Default String alignmentPeriod = "60s";
@@ -79,7 +79,7 @@ public class StackDriverMetricDefinition {
     String[] filters = filter.split(" ");
     for (String innerFilter : filters) {
       if (innerFilter.contains(metricTypeField)) {
-        return innerFilter.substring(innerFilter.indexOf("=") + 1).replaceAll("\"", "");
+        return innerFilter.substring(innerFilter.indexOf('=') + 1).replaceAll("\"", "");
       }
     }
     return null;

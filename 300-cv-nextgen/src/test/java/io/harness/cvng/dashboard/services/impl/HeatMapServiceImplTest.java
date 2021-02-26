@@ -15,7 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -40,11 +40,13 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -69,7 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HeatMapServiceImplTest extends CvNextGenTest {
+public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Inject private HeatMapService heatMapService;
 
   private String projectIdentifier;
@@ -124,6 +126,31 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(cvConfig));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testUpsertAddsAllFields() {
+    Instant instant = Instant.now();
+    heatMapService.updateRiskScore(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
+        cvConfig, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
+    Set<String> nullableFields = Sets.newHashSet(HeatMapKeys.serviceIdentifier, HeatMapKeys.envIdentifier);
+    heatMaps.forEach(heatMap -> {
+      List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(HeatMap.class);
+      fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+        try {
+          field.setAccessible(true);
+          assertThat(field.get(heatMap)).withFailMessage("field %s is null", field.getName()).isNotNull();
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    });
   }
 
   @Test
@@ -569,6 +596,19 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_noSetup() {
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(null);
+    CategoryRisksDTO categoryRisk =
+        heatMapService.getCategoryRiskScores(accountId, orgIdentifier, projectIdentifier, null, null);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.isHasConfigsSetup()).isFalse();
   }
 
   @Test

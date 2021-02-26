@@ -16,6 +16,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
 import io.harness.exception.WingsException;
+import io.harness.pcf.PcfAppNotFoundException;
 
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -36,7 +37,6 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
-import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.InstanceSyncPerpetualTaskCreator;

@@ -2,7 +2,6 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -342,7 +341,7 @@ public class InstanceFetchState extends State {
     activityHelperService.updateStatus(
         stateExecutionData.getActivityId(), context.getAppId(), executionData.getExecutionStatus());
 
-    String messageToLog = format("%n Found %d hosts {%s}", instanceDetails.size(),
+    String messageToLog = format("%n Found %d targets {%s}", instanceDetails.size(),
         instanceDetails.stream().map(InstanceDetails::getHostName).collect(Collectors.toList()));
     logCallback.saveExecutionLog(
         doneColoring(color(messageToLog, LogColor.Green)), LogLevel.INFO, CommandExecutionStatus.SUCCESS);
@@ -391,7 +390,7 @@ public class InstanceFetchState extends State {
     } else if (t instanceof WingsException) {
       errorMessage.append(ExceptionUtils.getMessage(t));
     } else {
-      errorMessage.append(defaultErrorMessage).append("\n").append(t.getMessage());
+      errorMessage.append(defaultErrorMessage).append('\n').append(t.getMessage());
     }
     log.error(errorMessage.toString(), t);
     return responseBuilder.errorMessage(errorMessage.toString()).build();
@@ -418,12 +417,13 @@ public class InstanceFetchState extends State {
 
   void saveInstanceInfoToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
   }

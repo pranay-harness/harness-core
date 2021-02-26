@@ -12,6 +12,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -34,7 +35,7 @@ public class AnalysisOrchestrator
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   @Id private String uuid;
   @FdIndex private String verificationTaskId;
-  private List<AnalysisStateMachine> analysisStateMachineQueue;
+  @Builder.Default private List<AnalysisStateMachine> analysisStateMachineQueue = new ArrayList<>();
   private AnalysisStatus status;
   private long createdAt;
   private long lastUpdatedAt;

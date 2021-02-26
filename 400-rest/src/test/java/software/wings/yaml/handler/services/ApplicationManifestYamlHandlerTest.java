@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -54,7 +53,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -137,7 +135,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
       + "storeType: Remote\n"
       + "skipVersioningForAllK8sObjects: true";
 
-  private static final String resourcePath = "./yaml/ApplicationManifest";
+  private static final String resourcePath = "400-rest/src/test/resources/yaml/ApplicationManifest";
   private static final String kustomizeYamlFile = "kustomize_manifest.yaml";
   ArgumentCaptor<ApplicationManifest> captor = ArgumentCaptor.forClass(ApplicationManifest.class);
 
@@ -425,16 +423,13 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testFieldsInYaml() {
     int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifest.Yaml.class);
-    assertThat(attributeDiff).isEqualTo(8);
+    assertThat(attributeDiff).isEqualTo(9);
   }
 
   private String readResourceFile(String fileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile = new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + fileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + fileName);
+
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }
 

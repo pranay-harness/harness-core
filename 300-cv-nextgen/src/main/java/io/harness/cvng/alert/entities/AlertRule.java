@@ -25,7 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AlertRuleKeys")
 @Entity(value = "alertRule", noClassnameStored = true)
-public class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

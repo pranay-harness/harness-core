@@ -39,7 +39,8 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, CV_NEXT_GEN.getServiceId(), redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME));
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
     }
   }
 }

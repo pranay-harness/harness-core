@@ -37,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
@@ -173,5 +174,20 @@ public class AdminAccountResource {
   public RestResponse<Boolean> updatePovFlag(
       @PathParam("accountId") @NotEmpty String accountId, @QueryParam("isPov") boolean isPov) {
     return new RestResponse<>(adminAccountService.updatePovFlag(accountId, isPov));
+  }
+
+  @PUT
+  @Path("{accountId}/details")
+  public RestResponse<Boolean> updateAccountDetails(@PathParam("accountId") String accountId,
+      @QueryParam("account-name") String accountName, @QueryParam("company-name") String companyName) {
+    boolean accountNameUpdateSuccess = true;
+    boolean companyNameUpdateStatus = true;
+    if (!StringUtils.isEmpty(accountName)) {
+      accountNameUpdateSuccess = adminAccountService.updateAccountName(accountId, accountName);
+    }
+    if (!StringUtils.isEmpty(companyName)) {
+      companyNameUpdateStatus = adminAccountService.updateCompanyName(accountId, companyName);
+    }
+    return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus);
   }
 }

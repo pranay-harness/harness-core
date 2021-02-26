@@ -4,7 +4,7 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
-import io.harness.exception.GeneralException;
+import io.harness.exception.WingsException;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -34,11 +34,11 @@ public class SecretGenerator {
                                 .build();
     try {
       return secretManager.saveSecretUsingLocalMode(accountId, secretText);
-    } catch (GeneralException ge) {
-      if (ge.getCause() instanceof DuplicateKeyException) {
+    } catch (WingsException we) {
+      if (we.getCause() instanceof DuplicateKeyException) {
         return secretManager.getSecretByName(accountId, name.getValue()).getUuid();
       }
-      throw ge;
+      throw we;
     }
   }
 

@@ -5,6 +5,8 @@ import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class TagsInUseConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLTagInUseFilter, QLNoOpSortCriteria, QLTagsInUseConnection> {
   @Override

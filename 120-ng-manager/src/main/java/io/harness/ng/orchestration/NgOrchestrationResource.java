@@ -110,8 +110,13 @@ public class NgOrchestrationResource {
   }
 
   private ExecutionMetadata getMetadata() {
-    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo()).build();
+    return ExecutionMetadata.newBuilder()
+        .setExecutionUuid(generateUuid())
+        .setRunSequence(0)
+        .setTriggerInfo(getTriggerInfo())
+        .build();
   }
+
   private ExecutionTriggerInfo getTriggerInfo() {
     User user = UserThreadLocal.get();
     TriggeredBy userInfo = null;

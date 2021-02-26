@@ -10,12 +10,12 @@ import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerResponseDTO;
 import io.harness.cdng.artifact.resources.docker.mappers.DockerResourceMapper;
 import io.harness.common.NGTaskType;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -185,7 +186,10 @@ public class DockerResourceServiceImpl implements DockerResourceService {
 
   private List<EncryptedDataDetail> getEncryptionDetails(
       @Nonnull DockerConnectorDTO dockerConnectorDTO, @Nonnull NGAccess ngAccess) {
-    return secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+    if (dockerConnectorDTO.getAuth() != null && dockerConnectorDTO.getAuth().getCredentials() != null) {
+      return secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+    }
+    return new ArrayList<>();
   }
 
   private ArtifactTaskExecutionResponse executeSyncTask(DockerArtifactDelegateRequest dockerRequest,

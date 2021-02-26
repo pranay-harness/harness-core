@@ -10,7 +10,7 @@ import static software.wings.service.impl.stackdriver.StackDriverDelegateService
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -18,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -26,7 +27,6 @@ import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.helpers.ext.gcb.GcbService;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.intfc.security.EncryptionService;
@@ -91,7 +91,7 @@ public class StackDriverDelegateServiceImplTest extends WingsBaseTest {
     listLogEntriesResponse.setEntries(Lists.newArrayList(new LogEntry(), new LogEntry()));
 
     when(list.execute()).thenReturn(listLogEntriesResponse);
-    when(gcpHelperService.getLoggingResource(any(GcpConfig.class), anyList(), anyString())).thenReturn(logging);
+    when(gcpHelperService.getLoggingResource(any(), anyString(), anyBoolean())).thenReturn(logging);
     DelegateCVActivityLogService.Logger logger = mock(DelegateCVActivityLogService.Logger.class);
     when(delegateCVActivityLogService.getLogger(
              anyString(), anyString(), anyLong(), anyString(), anyString(), anyLong(), anyLong()))

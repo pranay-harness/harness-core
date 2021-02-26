@@ -12,10 +12,10 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "SplunkConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
-@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.splunkconnector.SplunkConnector")
 public class SplunkConnector extends Connector {
   private String username;

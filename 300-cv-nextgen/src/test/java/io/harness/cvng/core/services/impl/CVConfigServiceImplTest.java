@@ -3,8 +3,10 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,7 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
@@ -22,6 +24,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -53,7 +56,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-public class CVConfigServiceImplTest extends CvNextGenTest {
+public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Inject private DSConfigService dsConfigService;
   @Mock private NextGenService nextGenService;
@@ -85,28 +88,26 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return EnvironmentResponseDTO.builder()
-          .identifier((String) args[0])
-          .accountId((String) args[1])
-          .orgIdentifier((String) args[2])
-          .projectIdentifier((String) args[3])
-          .name((String) args[0])
+          .accountId((String) args[0])
+          .orgIdentifier((String) args[1])
+          .projectIdentifier((String) args[2])
+          .identifier((String) args[3])
+          .name((String) args[3])
           .type(EnvironmentType.Production)
           .build();
     });
     when(nextGenService.getService(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return ServiceResponseDTO.builder()
-          .identifier((String) args[0])
-          .accountId((String) args[1])
-          .orgIdentifier((String) args[2])
-          .projectIdentifier((String) args[3])
-          .name((String) args[0])
+          .accountId((String) args[0])
+          .orgIdentifier((String) args[1])
+          .projectIdentifier((String) args[2])
+          .identifier((String) args[3])
+          .name((String) args[3])
           .build();
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
-
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-
     FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
@@ -121,6 +122,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
 
     ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
     verify(eventService, times(1)).sendConnectorCreateEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendServiceCreateEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   private CVConfig save(CVConfig cvConfig) {
@@ -195,16 +198,50 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_SplunkCVConfig() {
+    CVConfig cvConfig = createCVConfig();
+    String perpetualTaskId = "perpetual-task-id";
+    cvConfig.setPerpetualTaskId(perpetualTaskId);
+    save(cvConfig);
+    CVConfig updated = cvConfigService.get(cvConfig.getUuid());
+    updated.setPerpetualTaskId(null);
+    updated.setEnvIdentifier("new-env-id");
+    cvConfigService.update(updated);
+    CVConfig updateStored = cvConfigService.get(updated.getUuid());
+    assertCommons(updateStored, updated);
+    assertThat(updateStored.getEnvIdentifier()).isEqualTo("new-env-id");
+    assertThat(updateStored.getPerpetualTaskId()).isEqualTo(perpetualTaskId);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_AppDCVConfig() {
+    AppDynamicsCVConfig appDynamicsCVConfig = createAppDCVConfig();
+    save(appDynamicsCVConfig);
+    AppDynamicsCVConfig updated = (AppDynamicsCVConfig) cvConfigService.get(appDynamicsCVConfig.getUuid());
+    updated.setTierName("updated-tier-name");
+    updated.setApplicationName("updated-application-name");
+    cvConfigService.update(updated);
+    AppDynamicsCVConfig updateStored = (AppDynamicsCVConfig) cvConfigService.get(updated.getUuid());
+    assertCommons(updated, updateStored);
+    assertThat(updateStored.getApplicationName()).isEqualTo("updated-application-name");
+    assertThat(updateStored.getTierName()).isEqualTo("updated-tier-name");
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testUpdate_withMultipleCVConfig() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    updated.setProjectIdentifier("ProjectIdentifier");
+    updated.setEnvIdentifier("envIdentifier");
     cvConfigService.update(Lists.newArrayList(updated));
     assertCommons(cvConfigService.get(updated.getUuid()), updated);
-    assertThat(updated.getProjectIdentifier()).isEqualTo("ProjectIdentifier");
+    assertThat(updated.getEnvIdentifier()).isEqualTo("envIdentifier");
   }
 
   @Test
@@ -367,16 +404,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = KAMAL)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void setCollectionTaskId() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
-    assertThat(cvConfig.getPerpetualTaskId()).isNull();
-    String taskId = generateUuid();
-    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
+    assertThat(cvConfig.getFirstTaskQueued()).isNull();
+    cvConfigService.markFirstTaskCollected(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getPerpetualTaskId()).isEqualTo(taskId);
+    assertThat(updated.getFirstTaskQueued()).isTrue();
   }
 
   @Test
@@ -497,21 +533,24 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     appDynamicsDSConfig.setAccountId(accountId);
     appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
-    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
-        AppdynamicsAppConfig.builder()
-            .applicationName(identifier)
-            .envIdentifier(envIdentifier)
-            .metricPacks(Sets.newHashSet(
-                MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()))
-            .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                 .serviceIdentifier("harness-manager")
-                                                 .tierName("manager")
-                                                 .build(),
-                AppDynamicsDSConfig.ServiceMapping.builder()
-                    .serviceIdentifier("harness-qa")
-                    .tierName("manager-qa")
-                    .build()))
-            .build()));
+    appDynamicsDSConfig.setAppConfigs(
+        Lists.newArrayList(AppdynamicsAppConfig.builder()
+                               .applicationName(identifier)
+                               .envIdentifier(envIdentifier)
+                               .metricPacks(Sets.newHashSet(MetricPack.builder()
+                                                                .accountId(accountId)
+                                                                .category(CVMonitoringCategory.INFRASTRUCTURE)
+                                                                .identifier("appd performance metric pack")
+                                                                .build()))
+                               .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                                    .serviceIdentifier("harness-manager")
+                                                                    .tierName("manager")
+                                                                    .build(),
+                                   AppDynamicsDSConfig.ServiceMapping.builder()
+                                       .serviceIdentifier("harness-qa")
+                                       .tierName("manager-qa")
+                                       .build()))
+                               .build()));
     return appDynamicsDSConfig;
   }
 
@@ -540,6 +579,15 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
     return cvConfig;
+  }
+
+  private AppDynamicsCVConfig createAppDCVConfig() {
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    fillCommon(appDynamicsCVConfig);
+    appDynamicsCVConfig.setApplicationName("application-name");
+    appDynamicsCVConfig.setTierName("tier-name");
+    appDynamicsCVConfig.setMetricPack(MetricPack.builder().build());
+    return appDynamicsCVConfig;
   }
 
   private void fillCommon(CVConfig cvConfig) {
@@ -599,7 +647,35 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     List<CVConfig> cvConfigs = createCVConfigs(5);
     cvConfigs.get(0).setProjectIdentifier("newProject");
     save(cvConfigs);
-    cvConfigService.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    cvConfigService.deleteByProjectIdentifier(CVConfig.class, accountId, orgIdentifier, projectIdentifier);
+    assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
+    for (int i = 1; i < 5; i++) {
+      assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDeleteConfigsForOrganisation() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.get(0).setOrgIdentifier("newOrganisation");
+    save(cvConfigs);
+    cvConfigService.deleteByOrgIdentifier(CVConfig.class, accountId, orgIdentifier);
+    assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
+    for (int i = 1; i < 5; i++) {
+      assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDeleteConfigsForAccount() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.get(0).setAccountId("newAccount");
+    save(cvConfigs);
+    cvConfigService.deleteByAccountIdentifier(CVConfig.class, accountId);
     assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
     for (int i = 1; i < 5; i++) {
       assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
@@ -714,5 +790,72 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfigService.cleanupPerpetualTasks(accountId, cvConfigIds);
 
     cvConfigIds.forEach(cvConfigId -> { assertThat(cvConfigService.get(cvConfigId).getPerpetualTaskId()).isNull(); });
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId));
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_multiple() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId, monSourceId + "2"));
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+    assertThat(results.get(1).getUuid()).isEqualTo(updated2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_filterById() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results = cvConfigService.listByMonitoringSources(
+        accountId, orgIdentifier, projectIdentifier, "service", "env", Arrays.asList(monSourceId));
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testListByMonitoringSource_null() {
+    String monSourceId = "monitoringSource1";
+    CVConfig cvConfig = createCVConfig();
+    cvConfig.setIdentifier(monSourceId);
+    CVConfig updated = save(cvConfig);
+    CVConfig cvConfig2 = createCVConfig();
+    cvConfig2.setIdentifier(monSourceId + "2");
+    CVConfig updated2 = save(cvConfig2);
+    List<CVConfig> results =
+        cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier, "service", "env", null);
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+    assertThat(results.get(1).getUuid()).isEqualTo(updated2.getUuid());
   }
 }

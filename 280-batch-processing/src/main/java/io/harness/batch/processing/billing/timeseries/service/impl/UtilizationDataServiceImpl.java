@@ -40,9 +40,9 @@ public class UtilizationDataServiceImpl {
   private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE, AVGSTORAGECAPACITYVALUE ,AVGSTORAGEUSAGEVALUE, AVGSTORAGEREQUESTVALUE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   private static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND SETTINGID = '%s' AND CLUSTERID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
+      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, AVG(AVGSTORAGECAPACITYVALUE) as AVGSTORAGECAPACITYVALUE ,AVG(AVGSTORAGEUSAGEVALUE) as AVGSTORAGEUSAGEVALUE, AVG(AVGSTORAGEREQUESTVALUE) as AVGSTORAGEREQUESTVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND SETTINGID = '%s' AND CLUSTERID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
@@ -92,6 +92,9 @@ public class UtilizationDataServiceImpl {
     statement.setDouble(13, instanceUtilizationData.getMemoryUtilizationMaxValue());
     statement.setDouble(14, instanceUtilizationData.getCpuUtilizationAvgValue());
     statement.setDouble(15, instanceUtilizationData.getMemoryUtilizationAvgValue());
+    statement.setDouble(16, instanceUtilizationData.getStorageCapacityAvgValue());
+    statement.setDouble(17, instanceUtilizationData.getStorageUsageAvgValue());
+    statement.setDouble(18, instanceUtilizationData.getStorageRequestAvgValue());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(List<? extends InstanceData> instanceDataList,
@@ -133,6 +136,11 @@ public class UtilizationDataServiceImpl {
           double maxMemoryValue = resultSet.getDouble("MAXMEMORYVALUE");
           double avgCpuValue = resultSet.getDouble("AVGCPUVALUE");
           double avgMemoryValue = resultSet.getDouble("AVGMEMORYVALUE");
+
+          double avgStorageCapacityValue = resultSet.getDouble("AVGSTORAGECAPACITYVALUE");
+          double avgStorageUsageValue = resultSet.getDouble("AVGSTORAGEUSAGEVALUE");
+          double avgStorageRequestValue = resultSet.getDouble("AVGSTORAGEREQUESTVALUE");
+
           if (serviceArnToInstanceIds.get(instanceId) != null) {
             serviceArnToInstanceIds.get(instanceId)
                 .forEach(instance
@@ -146,6 +154,9 @@ public class UtilizationDataServiceImpl {
                             .avgCpuUtilizationValue(avgCpuValue)
                             .maxMemoryUtilizationValue(maxMemoryValue)
                             .avgMemoryUtilizationValue(avgMemoryValue)
+                            .avgStorageCapacityValue(avgStorageCapacityValue)
+                            .avgStorageRequestValue(avgStorageRequestValue)
+                            .avgStorageUsageValue(avgStorageUsageValue)
                             .build()));
           }
         }
@@ -169,6 +180,10 @@ public class UtilizationDataServiceImpl {
         utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_ARN, instanceData);
       } else if (instanceData.getInstanceType() == InstanceType.ECS_CONTAINER_INSTANCE) {
         utilInstanceId = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_ARN, instanceData);
+      } else if (instanceData.getInstanceType() == InstanceType.K8S_PV) {
+        utilInstanceId = String.format("%s/%s",
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLAIM_NAMESPACE, instanceData),
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLAIM_NAME, instanceData));
       }
       instanceIds.computeIfAbsent(utilInstanceId, k -> new ArrayList<>()).add(instanceId);
     });

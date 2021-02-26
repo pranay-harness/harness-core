@@ -1,11 +1,12 @@
 package io.harness.ng.core.entitysetupusage.event;
 
+import io.harness.EntityType;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
-import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOToRestDTOMapper;
+import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.event.MessageProcessor;
 
@@ -17,19 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@Deprecated
 public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
   EntitySetupUsageService entitySetupUsageService;
-  EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
+  EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
 
   @Inject
   public SetupUsageChangeEventMessageProcessor(EntitySetupUsageService entitySetupUsageService,
-      EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper) {
+      EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper) {
     this.entitySetupUsageService = entitySetupUsageService;
     this.entitySetupUsageEventDTOToRestDTOMapper = entitySetupUsageEventDTOToRestDTOMapper;
   }
 
   @Override
-  public void processMessage(Message message) {
+  public boolean processMessage(Message message) {
     String messageId = message.getId();
     log.info("Processing the setup usage crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
@@ -38,20 +40,22 @@ public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
         case EventsFrameworkMetadataConstants.CREATE_ACTION:
           EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
           processCreateAction(setupUsageCreateDTO);
-          return;
+          return true;
         case EventsFrameworkMetadataConstants.DELETE_ACTION:
           DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
           processDeleteAction(deleteRequestDTO);
-          return;
+          return true;
         default:
           log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
+    return true;
   }
 
   private void processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO) {
     entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(), deleteRequestDTO.getReferredEntityFQN(),
-        deleteRequestDTO.getReferredByEntityFQN());
+        EntityType.valueOf(deleteRequestDTO.getReferredEntityType().name()), deleteRequestDTO.getReferredByEntityFQN(),
+        EntityType.valueOf(deleteRequestDTO.getReferredByEntityType().name()));
   }
 
   private void processCreateAction(EntitySetupUsageCreateDTO setupUsageCreateDTO) {

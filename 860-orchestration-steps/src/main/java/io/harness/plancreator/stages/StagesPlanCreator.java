@@ -1,6 +1,5 @@
 package io.harness.plancreator.stages;
 
-import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
@@ -12,13 +11,22 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
   @Override
@@ -72,10 +80,10 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
         NGSectionStepParameters.builder().childNodeId(childrenNodeIds.get(0)).logMessage("Stages").build();
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
-        .identifier(PlanCreationConstants.STAGES_NODE_IDENTIFIER)
+        .identifier(YAMLFieldNameConstants.STAGES)
         .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.STAGES.name())
-        .name(PlanCreationConstants.STAGES_NODE_IDENTIFIER)
+        .name(YAMLFieldNameConstants.STAGES)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipExpressionChain(false)

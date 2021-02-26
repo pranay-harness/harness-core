@@ -5,6 +5,9 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -47,8 +50,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConfiguration;
-import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -76,6 +80,7 @@ import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.version.VersionInfoManager;
@@ -84,12 +89,11 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountPreferences;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application.ApplicationKeys;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
@@ -157,7 +161,9 @@ import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -296,32 +302,31 @@ public class AccountServiceImpl implements AccountService {
       if (account.isForImport()) {
         log.info("Creating the account for import only, no default account entities will be created");
       } else {
-        createDefaultAccountEntities(account, shouldCreateSampleApp);
+        createDefaultAccountEntities(account, shouldCreateSampleApp, fromDataGen);
         // Schedule default account level jobs.
         scheduleAccountLevelJobs(account.getUuid());
       }
 
       publishAccountChangeEvent(account);
-      // TODO {karan} remove this if condition when NG is enabled globally for new accounts
-      if (fromDataGen) {
-        publishAccountChangeEventViaEventFramework(account, EventsFrameworkMetadataConstants.CREATE_ACTION);
-      }
+      // TODO {karan} uncomment this when NG is enabled globally for new accounts
+      // publishAccountChangeEventViaEventFramework(account.getUuid(), EventsFrameworkMetadataConstants.CREATE_ACTION);
 
       log.info("Successfully created account.");
     }
     return account;
   }
 
-  private void publishAccountChangeEventViaEventFramework(Account account, String action) {
+  private void publishAccountChangeEventViaEventFramework(String accountId, String action) {
     try {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
                   EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(AccountEntityChangeDTO.newBuilder().setAccountId(account.getUuid()).build().toByteString())
+              .setData(AccountEntityChangeDTO.newBuilder().setAccountId(accountId).build().toByteString())
               .build());
     } catch (Exception ex) {
-      log.error("Failed to publish account creation event via event framework.");
+      log.error(
+          String.format("Failed to publish account %s event for accountId %s via event framework.", action, accountId));
     }
   }
 
@@ -407,7 +412,7 @@ public class AccountServiceImpl implements AccountService {
     return licenseService.updateAccountLicense(accountId, licenseInfo);
   }
 
-  private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp) {
+  private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp, boolean fromDataGen) {
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN == role.getRoleType())
@@ -430,16 +435,25 @@ public class AccountServiceImpl implements AccountService {
       }
     });
 
-    enableFeatureFlags(account);
+    enableFeatureFlags(account, fromDataGen);
     if (shouldCreateSampleApp) {
       sampleDataProviderService.createK8sV2SampleApp(account);
     }
   }
 
-  private void enableFeatureFlags(@NotNull Account account) {
+  private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
     featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
+
+    if (fromDataGen) {
+      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CENG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    }
   }
 
   List<Role> createDefaultRoles(Account account) {
@@ -477,8 +491,8 @@ public class AccountServiceImpl implements AccountService {
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {
-      throw new AccountNotFoundException("Account is not found for the given id:" + accountId, null,
-          ErrorCode.ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
+      throw new AccountNotFoundException(
+          "Account is not found for the given id:" + accountId, null, ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
@@ -516,7 +530,11 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean delete(String accountId) {
-    return accountId != null && deleteAccountHelper.deleteAccount(accountId);
+    boolean success = accountId != null && deleteAccountHelper.deleteAccount(accountId);
+    if (success) {
+      publishAccountChangeEventViaEventFramework(accountId, DELETE_ACTION);
+    }
+    return success;
   }
 
   @Override
@@ -860,6 +878,40 @@ public class AccountServiceImpl implements AccountService {
                           .get();
 
     return account.getDelegateConfiguration();
+  }
+
+  @Override
+  public boolean updateAccountPreference(String accountId, String preferenceKey, Object value) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, USER);
+
+    AccountPreferences accountPreferences = account.getAccountPreferences();
+    if (accountPreferences == null) {
+      accountPreferences = AccountPreferences.builder().build();
+    }
+
+    try {
+      Field field = ReflectionUtils.getFieldByName(accountPreferences.getClass(), preferenceKey);
+      if (field == null) {
+        log.warn("The provided preferenceKey is not valid");
+        return false;
+      }
+      if (field != null) {
+        field.setAccessible(true);
+        Class clazz = field.getType();
+        if (clazz.getSuperclass().isAssignableFrom(Integer.class)) {
+          field.set(accountPreferences, value);
+          wingsPersistence.update(account,
+              wingsPersistence.createUpdateOperations(Account.class)
+                  .set(AccountKeys.accountPreferences, accountPreferences));
+          return true;
+        }
+      }
+    } catch (IllegalAccessException exception) {
+      log.warn("Exception encountered while updating account preference for accountId: {} ", accountId, exception);
+      return false;
+    }
+    return false;
   }
 
   @Override
@@ -1457,6 +1509,50 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.update(wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId),
         whitelistedDomainsUpdateOperations);
     return get(accountId);
+  }
+
+  @Override
+  public boolean updateAccountName(String accountId, String accountName) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      log.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.accountName, accountName);
+
+    try {
+      UpdateResults updateResults = wingsPersistence.update(
+          wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
+      if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+        log.info("Successfully updated account name to {} for accountId = {} ", accountName, accountId);
+        return true;
+      }
+      log.info("Failed to update account name to {} for accountId = {} ", accountName, accountId);
+      return false;
+    } catch (DuplicateKeyException duplicateKeyException) {
+      log.error("Account name already exists", duplicateKeyException);
+      throw new InvalidRequestException("Account name already exists", INVALID_REQUEST, USER);
+    }
+  }
+
+  @Override
+  public boolean updateCompanyName(String accountId, String companyName) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      log.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.companyName, companyName);
+    UpdateResults updateResults = wingsPersistence.update(
+        wingsPersistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
+    if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+      log.info("Successfully updated company name to {} for accountId = {} ", companyName, accountId);
+      return true;
+    }
+    log.info("Failed to update company name to {} for accountId = {} ", companyName, accountId);
+    return false;
   }
 
   @Override

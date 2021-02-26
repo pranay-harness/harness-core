@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.EnvironmentType.PROD;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
@@ -11,13 +13,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
+import io.harness.ccm.budget.Budget.BudgetBuilder;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
-import io.harness.ccm.budget.entities.BudgetType;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
-import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.budget.BudgetType;
+import io.harness.ccm.budget.ClusterBudgetScope;
+import io.harness.ccm.budget.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -49,8 +51,8 @@ public class BudgetDataFetcherTest extends AbstractDataFetcherTestBase {
   final String budgetName = "budgetName";
   final String[] clusterIds = {"clusterId"};
   final String[] appIds = {"appId"};
-  final BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
-  final EnvironmentType environmentType = EnvironmentType.PROD;
+  final BudgetType budgetType = SPECIFIED_AMOUNT;
+  final EnvironmentType environmentType = PROD;
   final long createdAt = System.currentTimeMillis();
   final long lastUpdatedAt = System.currentTimeMillis();
   final double budgetAmount = 25000.0;

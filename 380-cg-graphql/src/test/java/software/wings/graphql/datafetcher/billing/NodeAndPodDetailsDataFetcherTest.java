@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.UTSAV;
 
@@ -13,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
@@ -104,7 +107,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
     when(statsHelper.getEntityName(any(), anyString())).thenAnswer(i -> i.getArgumentAt(1, String.class));
     when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
-        .thenReturn(Collections.singletonList(getTestInstanceData(INSTANCE_ID, INSTANCE_ID)));
+        .thenReturn(Collections.singletonList(getTestInstanceData(INSTANCE_ID, INSTANCE_ID, K8S_POD)));
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
@@ -147,6 +150,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
   @Category(UnitTests.class)
   public void testFetchMethodForNodeDetails() {
     String[] clusterIdFilterValues = new String[] {CLUSTER_ID};
+    when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
+        .thenReturn(Collections.singletonList(getTestInstanceData(INSTANCE_ID, INSTANCE_ID, K8S_NODE)));
 
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeClusterFilter(clusterIdFilterValues));
@@ -242,8 +247,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(row0.getIdleCost()).isEqualTo(3.0);
     assertThat(row0.getCpuRequested()).isEqualTo(-1D);
     assertThat(row0.getMemoryRequested()).isEqualTo(-1D);
-    assertThat(row0.getWorkload()).isEqualTo(defaultStringValue);
-    assertThat(row0.getNamespace()).isEqualTo(defaultStringValue);
+    assertThat(row0.getWorkload()).isEqualTo(WORKLOAD);
+    assertThat(row0.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(row0.getCreateTime()).isEqualTo(0L);
     assertThat(row0.getDeleteTime()).isEqualTo(0L);
     assertThat(row0.getNodePoolName()).isEqualTo(defaultStringValue);
@@ -254,6 +259,9 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchMethodForPodDetails() {
+    when(instanceDataService.fetchInstanceDataForGivenInstances(Collections.singletonList(INSTANCE_ID)))
+        .thenReturn(Collections.singletonList(getTestInstanceData(INSTANCE_ID, INSTANCE_ID, K8S_POD)));
+
     String[] clusterIdFilterValues = new String[] {CLUSTER_ID};
     String[] parentInstanceIdFilterValues = new String[] {NODE_INSTANCE_ID};
 
@@ -272,7 +280,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getId()).isEqualTo(INSTANCE_ID);
     assertThat(data.getData().get(0).getNamespace()).isEqualTo("namespace");
-    assertThat(data.getData().get(0).getWorkload()).isEqualTo("workload");
+    assertThat(data.getData().get(0).getWorkload()).isEqualTo(WORKLOAD);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
@@ -301,6 +309,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
     when(resultSet.getString("INSTANCENAME")).thenAnswer((Answer<String>) invocation -> INSTANCE_NAME);
+    when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE);
+    when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD);
 
     returnResultSet(1);
   }
@@ -315,7 +325,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     });
   }
 
-  private InstanceData getTestInstanceData(String instanceId, String parentInstanceId) {
+  private InstanceData getTestInstanceData(String instanceId, String parentInstanceId, InstanceType instanceType) {
     Map<String, String> metaData = new HashMap<>();
     metaData.put(INSTANCE_CATEGORY, "SPOT");
     metaData.put(OPERATING_SYSTEM, "linux");
@@ -326,6 +336,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
 
     return InstanceData.builder()
         .uuid(UUID)
+        .instanceType(instanceType)
         .accountId(ACCOUNT_ID)
         .clusterId(CLUSTER_ID)
         .instanceId(instanceId)

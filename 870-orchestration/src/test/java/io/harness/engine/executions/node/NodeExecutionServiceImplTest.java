@@ -11,7 +11,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;

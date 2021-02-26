@@ -8,13 +8,13 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.ff.FeatureFlagService;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;

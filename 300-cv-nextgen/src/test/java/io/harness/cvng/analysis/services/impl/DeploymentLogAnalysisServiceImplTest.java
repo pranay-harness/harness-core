@@ -6,9 +6,8 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.data.Offset.offset;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
@@ -19,6 +18,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -36,7 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
+public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
@@ -265,10 +265,9 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetLogAnalysisResult_withWrongVerificationJobInstanceId() {
-    assertThatThrownBy(
-        () -> deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("No verification task mapping exist for verificationJobInstanceId");
+    PageResponse<LogAnalysisClusterDTO> pageResponse =
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, null);
+    assertThat(pageResponse.getContent()).isEmpty();
   }
 
   @Test
@@ -305,7 +304,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
     deploymentLogAnalysis.setResultSummary(createResultSummary(0, .7654, clusterSummaries, null));
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
     assertThat(deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
-        .isCloseTo(.7654, offset(.0001));
+        .isEqualTo(Risk.LOW);
   }
 
   private DeploymentLogAnalysis createDeploymentLogAnalysis(String verificationTaskId) {

@@ -75,7 +75,7 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
       return true;
     }
     boolean deleteSuccessful = false;
-    Query query = query(where(DelegateAsyncTaskResponseKeys.uuid).in(responsesToBeDeleted));
+    Query query = query(where("_id").in(responsesToBeDeleted));
     DeleteResult deleteResult =
         persistence.remove(query, morphiaCustomCollectionNames.get(DelegateAsyncTaskResponse.class));
 

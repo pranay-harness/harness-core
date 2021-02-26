@@ -1,7 +1,6 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static io.harness.yaml.core.failurestrategy.NGFailureType.ALL_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHENTICATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 
@@ -14,6 +13,7 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.failurestrategy.NGFailureType;
 import io.harness.yaml.core.failurestrategy.OnFailureConfig;
 import io.harness.yaml.core.failurestrategy.abort.AbortFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.ignore.IgnoreFailureActionConfig;
@@ -135,7 +135,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldMergeFailureStrategiesOnAllErrors() {
+  public void shouldMergeFailureStrategiesOnOtherErrors() {
     Map<FailureStrategyActionConfig, Collection<FailureType>> actionConfigCollectionMap;
 
     List<FailureStrategyConfig> stepFailureStrategies;
@@ -151,7 +151,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     stageFailureStrategies =
         Collections.singletonList(FailureStrategyConfig.builder()
                                       .onFailure(OnFailureConfig.builder()
-                                                     .errors(Collections.singletonList(ALL_ERRORS))
+                                                     .errors(Collections.singletonList(NGFailureType.ANY_OTHER_ERRORS))
                                                      .action(AbortFailureActionConfig.builder().build())
                                                      .build())
                                       .build());

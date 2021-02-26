@@ -13,9 +13,9 @@ import io.harness.rule.Owner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,18 +23,42 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class RecastComplexValuesTest extends RecasterTestBase {
+  private static final String RECAST_KEY = Recaster.RECAST_CLASS_KEY;
   private Recaster recaster;
 
   @Before
   public void setup() {
     recaster = new Recaster();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithEnum() {
+    Recast recast = new Recast(recaster, ImmutableSet.of(DummyEnum.class));
+    DummyEnum dummyEnum = DummyEnum.builder().types(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY)).build();
+
+    Document document = recast.toDocument(dummyEnum);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get("types")).isEqualTo(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY.name()));
+
+    DummyEnum recastedDummyEnum = recast.fromDocument(document, DummyEnum.class);
+    assertThat(recastedDummyEnum).isNotNull();
+    assertThat(recastedDummyEnum.types).isEqualTo(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY));
+  }
+
+  @Builder
+  @AllArgsConstructor
+  private static class DummyEnum {
+    private List<Type> types;
+    private enum Type { SUPER_DUMMY }
   }
 
   @Test
@@ -57,7 +81,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummySimpleList {
     private List<Integer> list;
@@ -72,7 +95,7 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(DummySimpleSet.class));
     DummySimpleSet dummySet = DummySimpleSet.builder().set(set).build();
 
-    Document expected = new Document().append("__recast", DummySimpleSet.class.getName()).append("set", set);
+    Document expected = new Document().append(RECAST_KEY, DummySimpleSet.class.getName()).append("set", set);
 
     Document document = recast.toDocument(dummySet);
 
@@ -85,7 +108,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummySimpleSet {
     private Set<Integer> set;
@@ -99,7 +121,7 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(ITest.class));
 
     Document document = recast.toDocument(iTest);
-    assertThat(document.get("__recast")).isEqualTo(ITestImpl.class.getName());
+    assertThat(document.get(RECAST_KEY)).isEqualTo(ITestImpl.class.getName());
     assertThat(document.get("type")).isEqualTo("someType");
 
     ITest recastedITest = recast.fromDocument(document, ITest.class);
@@ -122,12 +144,12 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", "io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces")
+            .append(RECAST_KEY, "io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces")
             .append("iTests",
                 ImmutableList.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2")));
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2")));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -151,12 +173,12 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document document =
         new Document()
-            .append("__recast", "io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces")
+            .append(RECAST_KEY, "io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces")
             .append("iTests",
                 ImmutableList.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2")));
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2")));
 
     Recast recast = new Recast(recaster, ImmutableSet.of());
 
@@ -172,18 +194,14 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestRecastWithListOfInterfacesWithoutRegisteringTheClassException() {
-    ITest iTest = new ITestImpl("someType");
-    ITest iTest1 = new ITestImpl("someType1");
-    ITest iTest2 = new ITestImpl("someType2");
-
     Document document =
         new Document()
-            .append("__recast", DummyListOfSetOfInterfaces.class.getName())
+            .append(RECAST_KEY, DummyListOfSetOfInterfaces.class.getName())
             .append("list",
                 ImmutableList.of(ImmutableSet.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2"))));
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2"))));
 
     Recast recast = new Recast(recaster, ImmutableSet.of());
 
@@ -207,12 +225,12 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyListOfSetOfInterfaces.class.getName())
+            .append(RECAST_KEY, DummyListOfSetOfInterfaces.class.getName())
             .append("list",
                 ImmutableList.of(ImmutableSet.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2"))));
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2"))));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -228,7 +246,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyListOfSetOfInterfaces {
     private List<Set<ITest>> list;
@@ -250,12 +267,12 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyListOfSetOfListOfSetInterfaces.class.getName())
+            .append(RECAST_KEY, DummyListOfSetOfListOfSetInterfaces.class.getName())
             .append("list",
                 ImmutableList.of(ImmutableSet.of(ImmutableList.of(ImmutableSet.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2"))))));
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2"))))));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -276,7 +293,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyListOfSetOfListOfSetInterfaces {
     private List<Set<List<Set<ITest>>>> list;
@@ -301,13 +317,13 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyListStringKeyOfSetOfListOfSetInterfacesMap.class.getName())
+            .append(RECAST_KEY, DummyListStringKeyOfSetOfListOfSetInterfacesMap.class.getName())
             .append("damnMap",
                 new Document("WOOW",
                     ImmutableList.of(ImmutableSet.of(ImmutableList.of(ImmutableSet.of(
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2")))))));
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1"),
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2")))))));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -321,7 +337,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class DummyListStringKeyOfSetOfListOfSetInterfacesMap {
@@ -348,15 +363,15 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyListOfInterfaces.class.getName())
+            .append(RECAST_KEY, DummyListOfInterfaces.class.getName())
             .append("iTests",
                 ImmutableList.of(
-                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType"),
                     new Document()
-                        .append("__recast", ITestImpl1.class.getName())
+                        .append(RECAST_KEY, ITestImpl1.class.getName())
                         .append("type1", "someType1")
                         .append("map", new Document().append("four", fourArray).append("five", fiveArray)),
-                    new Document().append("__recast", ITestImpl2.class.getName()).append("type2", "someType2")));
+                    new Document().append(RECAST_KEY, ITestImpl2.class.getName()).append("type2", "someType2")));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -370,7 +385,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class DummyListOfInterfaces {
@@ -394,15 +408,15 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyListOfMapOfInterfaces.class.getName())
+            .append(RECAST_KEY, DummyListOfMapOfInterfaces.class.getName())
             .append("iTestsMap",
                 ImmutableList.of(
                     new Document("itest",
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType")),
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType")),
                     new Document("itest1",
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1")),
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType1")),
                     new Document("itest2",
-                        new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2"))));
+                        new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType2"))));
 
     Document document = recast.toDocument(dummyListOfInterfaces);
     assertThat(document).isEqualTo(expectedDoc);
@@ -416,7 +430,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class DummyListOfMapOfInterfaces {
@@ -434,11 +447,10 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(DummyStringKeyValueListMap.class));
     DummyStringKeyValueListMap stringKeyMap = DummyStringKeyValueListMap.builder().map(map).build();
 
-    Gson gson = new Gson();
     Document document = recast.toDocument(stringKeyMap);
     assertThat(document).isNotEmpty();
-    assertThat(document.get("__recast")).isEqualTo(DummyStringKeyValueListMap.class.getName());
-    assertThat((Document) document.get("map")).isEqualTo(Document.parse(gson.toJson(map)));
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyStringKeyValueListMap.class.getName());
+    assertThat((Document) document.get("map")).isEqualTo(new Document().append("Test", strings));
 
     DummyStringKeyValueListMap recastedDummyMap = recast.fromDocument(document, DummyStringKeyValueListMap.class);
     assertThat(recastedDummyMap).isNotNull();
@@ -447,7 +459,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class DummyStringKeyValueListMap {
@@ -464,11 +475,13 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of(DummyStringKeyValueMap.class));
     DummyStringKeyValueMap stringKeyMap = DummyStringKeyValueMap.builder().map(map).build();
 
-    Gson gson = new Gson();
     Document document = recast.toDocument(stringKeyMap);
     assertThat(document).isNotEmpty();
-    assertThat(document.get("__recast")).isEqualTo(DummyStringKeyValueMap.class.getName());
-    assertThat((Document) document.get("map")).isEqualTo(Document.parse(gson.toJson(map)));
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyStringKeyValueMap.class.getName());
+    assertThat((Document) document.get("map"))
+        .isEqualTo(new Document()
+                       .append("Test", new Document().append("status", "Success"))
+                       .append("Test1", new Document("status", "Success")));
 
     DummyStringKeyValueMap recastedDummyMap = recast.fromDocument(document, DummyStringKeyValueMap.class);
     assertThat(recastedDummyMap).isNotNull();
@@ -476,7 +489,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyStringKeyValueMap {
     private Map<String, Map<String, String>> map;
@@ -506,16 +518,16 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expected =
         new Document()
-            .append("__recast", DummyKeyStringValueListOfListOfListOfInterfaceMap.class.getName())
+            .append(RECAST_KEY, DummyKeyStringValueListOfListOfListOfInterfaceMap.class.getName())
             .append("map",
                 new Document()
                     .append("Test",
                         ImmutableList.of(ImmutableList.of(ImmutableList.of(
-                            new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType")))))
+                            new Document().append(RECAST_KEY, ITestImpl.class.getName()).append("type", "someType")))))
                     .append("Test1",
                         ImmutableList.of(ImmutableList.of(ImmutableList.of(
                             new Document()
-                                .append("__recast", ITestImpl1.class.getName())
+                                .append(RECAST_KEY, ITestImpl1.class.getName())
                                 .append("type1", "someType1")
                                 .append(
                                     "map", new Document().append("four", firstList).append("five", secondList)))))));
@@ -537,7 +549,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyKeyStringValueListOfListOfListOfInterfaceMap {
     private Map<String, List<List<List<ITest>>>> map;
@@ -561,16 +572,16 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expected =
         new Document()
-            .append("__recast", DummyStringKeyValueInterfaceMap.class.getName())
+            .append(RECAST_KEY, DummyStringKeyValueInterfaceMap.class.getName())
             .append("map",
                 new Document()
                     .append("Test",
                         new Document()
-                            .append("__recast", "io.harness.core.RecastComplexValuesTest$ITestImpl")
+                            .append(RECAST_KEY, "io.harness.core.RecastComplexValuesTest$ITestImpl")
                             .append("type", "test"))
                     .append("Test1",
                         new Document()
-                            .append("__recast", "io.harness.core.RecastComplexValuesTest$ITestImpl1")
+                            .append(RECAST_KEY, "io.harness.core.RecastComplexValuesTest$ITestImpl1")
                             .append("type1", "test1")
                             .append("map", new Document().append("four", firstList).append("five", secondList))));
 
@@ -585,7 +596,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyStringKeyValueInterfaceMap {
     private Map<String, ITest> map;
@@ -616,21 +626,21 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document expectedDoc =
         new Document()
-            .append("__recast", DummyKeyStringValueMapOfMapOfMapOfListInterfaceMap.class.getName())
+            .append(RECAST_KEY, DummyKeyStringValueMapOfMapOfMapOfListInterfaceMap.class.getName())
             .append("complexMapOfMapEtc",
                 new Document()
                     .append("Test0",
                         new Document("TestMap02",
                             new Document("TestMap03-list",
                                 ImmutableList.of(new Document()
-                                                     .append("__recast", ITestImpl.class.getName())
+                                                     .append(RECAST_KEY, ITestImpl.class.getName())
                                                      .append("type", "test0123")))))
                     .append("Test1",
                         new Document("TestMap12",
                             new Document("TestMap13-list",
                                 ImmutableList.of(
                                     new Document()
-                                        .append("__recast", ITestImpl1.class.getName())
+                                        .append(RECAST_KEY, ITestImpl1.class.getName())
                                         .append("type1", "test1")
                                         .append("map",
                                             new Document().append("four", firstList).append("five", secondList)))))));
@@ -646,7 +656,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyKeyStringValueMapOfMapOfMapOfListInterfaceMap {
     private Map<String, Map<String, Map<String, List<ITest>>>> complexMapOfMapEtc;
@@ -661,11 +670,9 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
   @EqualsAndHashCode
   private static class ITestImpl implements ITest {
-    private String type;
+    private final String type;
 
     @Override
     public String getType() {
@@ -674,7 +681,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class ITestImpl1 implements ITestChildWithComplexMap {
@@ -693,7 +699,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode
   private static class ITestImpl2 implements ITest {
@@ -717,11 +722,11 @@ public class RecastComplexValuesTest extends RecasterTestBase {
 
     Document document = recast.toDocument(dummyWithInnerClass);
     assertThat(document).isNotEmpty();
-    assertThat(document.get("__recast")).isEqualTo(DummyWithInnerClass.class.getName());
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyWithInnerClass.class.getName());
     assertThat(document.get("id")).isEqualTo(id);
     Document userDocument = (Document) document.get("user");
     assertThat(userDocument).isNotEmpty();
-    assertThat(userDocument.get("__recast")).isEqualTo(DummyWithInnerClass.User.class.getName());
+    assertThat(userDocument.get(RECAST_KEY)).isEqualTo(DummyWithInnerClass.User.class.getName());
     assertThat(userDocument.get("name")).isEqualTo(name);
     assertThat(userDocument.get("age")).isEqualTo(age);
 
@@ -732,14 +737,12 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   }
 
   @Builder
-  @NoArgsConstructor
   @AllArgsConstructor
   private static class DummyWithInnerClass {
     private String id;
     private DummyWithInnerClass.User user;
 
     @Builder
-    @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
     private static class User {
@@ -747,4 +750,246 @@ public class RecastComplexValuesTest extends RecasterTestBase {
       private Integer age;
     }
   }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedField() {
+    DummyParameterized<Boolean> parameterized = DummyParameterized.<Boolean>builder().expression(true).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression")).isEqualTo(true);
+
+    DummyParameterized<Boolean> recasted = recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsList() {
+    DummyParameterized<List<Boolean>> parameterized =
+        DummyParameterized.<List<Boolean>>builder().expression(Collections.singletonList(true)).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression")).isEqualTo(ImmutableList.of(true));
+
+    DummyParameterized<List<Boolean>> recasted = recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsMap() {
+    DummyParameterized<Map<String, String>> parameterized =
+        DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression")).isEqualTo(new Document().append("key", "value"));
+
+    DummyParameterized<Map<String, Integer>> recasted = recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsClassField() {
+    DummyParameterized<Map<String, String>> parameterized =
+        DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
+    DummyParameterizedInside dummyParameterizedInside = DummyParameterizedInside.builder().map(parameterized).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(dummyParameterizedInside);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterizedInside.class.getName());
+    assertThat(document.get("map"))
+        .isEqualTo(new Document()
+                       .append(RECAST_KEY, DummyParameterized.class.getName())
+                       .append("expression", new Document().append("key", "value")));
+
+    DummyParameterizedInside recasted = recast.fromDocument(document, DummyParameterizedInside.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(dummyParameterizedInside);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsClass() {
+    DummyWithInnerClass.User user = new DummyWithInnerClass.User("name", 23);
+    DummyParameterized<DummyWithInnerClass.User> parameterized =
+        DummyParameterized.<DummyWithInnerClass.User>builder().expression(user).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression"))
+        .isEqualTo(new Document()
+                       .append(RECAST_KEY, DummyWithInnerClass.User.class.getName())
+                       .append("name", "name")
+                       .append("age", 23));
+
+    DummyParameterized<Boolean> recasted = recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsClassWrapper() {
+    DummyWithInnerClass.User user = new DummyWithInnerClass.User("name", 23);
+    DummyParameterized<DummyWithInnerClass.User> parameterized =
+        DummyParameterized.<DummyWithInnerClass.User>builder().expression(user).build();
+    DummyPrameterizedWrapper wrapper = DummyPrameterizedWrapper.builder().user(parameterized).build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(wrapper);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyPrameterizedWrapper.class.getName());
+    assertThat(Document.parse(document.toJson())).isEqualTo(document);
+
+    // assertThat(document.get("expression")).isEqualTo(true);
+
+    DummyPrameterizedWrapper recasted = recast.fromDocument(document, DummyPrameterizedWrapper.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(wrapper);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterParamField() {
+    DummyParam parameterized = new DummyParam(true, false);
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParam.class.getName());
+    assertThat(document.get("a")).isEqualTo(false);
+    assertThat(document.get("expression")).isEqualTo(true);
+
+    DummyParam recasted = recast.fromDocument(document, DummyParam.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  private static class DummyParam extends DummyParameterized<Boolean> {
+    @Setter private Boolean a;
+
+    DummyParam(Boolean expression, Boolean a) {
+      super(expression);
+      this.a = a;
+    }
+  }
+
+  @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class DummyParameterized<T> {
+    @Setter T expression;
+  }
+
+  @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class DummyPrameterizedWrapper {
+    DummyParameterized<DummyWithInnerClass.User> user;
+  }
+
+  @Builder
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class DummyParameterizedInside {
+    @Setter DummyParameterized<Map<String, String>> map;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterClassExtendMap() {
+    DummyParameterized<Map<String, String>> parameterized =
+        DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
+    DummyParameterizedInside dummyParameterizedInside = DummyParameterizedInside.builder().map(parameterized).build();
+    DummyExtendsMapClass dummyExtendsMapClass = new DummyExtendsMapClass();
+    dummyExtendsMapClass.put("Key", dummyParameterizedInside);
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(dummyExtendsMapClass);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyExtendsMapClass.class.getName());
+    assertThat(document.get("Key"))
+        .isEqualTo(new Document()
+                       .append(RECAST_KEY, DummyParameterizedInside.class.getName())
+                       .append("map",
+                           new Document()
+                               .append(RECAST_KEY, DummyParameterized.class.getName())
+                               .append("expression", new Document().append("key", "value"))));
+
+    DummyExtendsMapClass recasted = recast.fromDocument(document, DummyExtendsMapClass.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(dummyExtendsMapClass);
+  }
+
+  @EqualsAndHashCode(callSuper = false)
+  private static class DummyExtendsMapClass extends HashMap<String, Object> {}
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterClassExtendsList() {
+    DummyParameterized<Map<String, String>> parameterized =
+        DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
+    DummyParameterizedInside dummyParameterizedInside = DummyParameterizedInside.builder().map(parameterized).build();
+    DummyParameterized<Map<String, String>> parameterized1 = DummyParameterized.<Map<String, String>>builder()
+                                                                 .expression(Collections.singletonMap("key1", "value1"))
+                                                                 .build();
+    DummyParameterizedInside dummyParameterizedInside1 = DummyParameterizedInside.builder().map(parameterized1).build();
+
+    DummyExtendsListClass dummyExtendsMapClass = new DummyExtendsListClass();
+    dummyExtendsMapClass.add(dummyParameterizedInside);
+    dummyExtendsMapClass.add(dummyParameterizedInside1);
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    DummyExtendsListClass expected = new DummyExtendsListClass();
+    expected.add(new Document()
+                     .append(RECAST_KEY, DummyParameterizedInside.class.getName())
+                     .append("map",
+                         new Document()
+                             .append(RECAST_KEY, DummyParameterized.class.getName())
+                             .append("expression", new Document().append("key", "value"))));
+    expected.add(new Document()
+                     .append(RECAST_KEY, DummyParameterizedInside.class.getName())
+                     .append("map",
+                         new Document()
+                             .append("__recast", DummyParameterized.class.getName())
+                             .append("expression", new Document().append("key1", "value1"))));
+
+    Document document = recast.toDocument(dummyExtendsMapClass);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyExtendsListClass.class.getName());
+    assertThat(document.get(Recaster.ENCODED_VALUE)).isEqualTo(expected);
+
+    DummyExtendsListClass recasted = recast.fromDocument(document, DummyExtendsListClass.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(dummyExtendsMapClass);
+  }
+
+  @EqualsAndHashCode(callSuper = false)
+  private static class DummyExtendsListClass extends ArrayList<Object> {}
 }

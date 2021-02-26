@@ -91,7 +91,7 @@ func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 	prevStepOutputs := make(map[string]*pb.StepOutput)
 	for stepID, stepOutput := range e.stageOutput {
 		if stepOutput != nil {
-			prevStepOutputs[stepID] = &pb.StepOutput{Output: stepOutput.Output}
+			prevStepOutputs[stepID] = &pb.StepOutput{Output: stepOutput.Output.Variables}
 		}
 	}
 

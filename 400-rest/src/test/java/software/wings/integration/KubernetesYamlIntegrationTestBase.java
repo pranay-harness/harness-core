@@ -16,8 +16,9 @@
 
 package software.wings.integration;
 
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import io.harness.CategoryTest;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -29,7 +30,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.rules.Integration;
 
-import com.google.api.services.container.model.NodePoolAutoscaling;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Service;
@@ -67,15 +67,6 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
 
     KubernetesConfig config =
         gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default", false);
-
-    //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 4, 8);
-    //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, false, 4, 8);
-
-    NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-    log.info("Autoscale setting: {}", autoscaling);
-
-    //    kubernetesService.cleanup(config);
 
     String yaml = "---\n"
         + "apiVersion: \"v1\"\n"
@@ -253,7 +244,5 @@ public abstract class KubernetesYamlIntegrationTestBase extends CategoryTest {
 
     kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
-
-    //    gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
   }
 }

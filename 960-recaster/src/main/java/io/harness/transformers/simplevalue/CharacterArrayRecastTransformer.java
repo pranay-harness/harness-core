@@ -13,15 +13,36 @@ public class CharacterArrayRecastTransformer extends RecastTransformer implement
 
   @Override
   public Object decode(Class<?> targetClass, Object object, CastedField castedField) {
-    return object;
+    if (object == null) {
+      return null;
+    }
+
+    final char[] chars = object.toString().toCharArray();
+    if (targetClass.isArray() && targetClass.equals(Character[].class)) {
+      return convertToWrapperArray(chars);
+    }
+    return chars;
   }
 
   @Override
   public Object encode(Object object, CastedField castedField) {
-    return object;
+    if (object == null) {
+      return null;
+    } else {
+      if (object instanceof char[]) {
+        return new String((char[]) object);
+      } else {
+        final StringBuilder builder = new StringBuilder();
+        final Character[] array = (Character[]) object;
+        for (final Character character : array) {
+          builder.append(character);
+        }
+        return builder.toString();
+      }
+    }
   }
 
-  Object convertToWrapperArray(final Character[] values) {
+  Object convertToWrapperArray(final char[] values) {
     final int length = values.length;
     final Object array = Array.newInstance(Character.class, length);
     for (int i = 0; i < length; i++) {

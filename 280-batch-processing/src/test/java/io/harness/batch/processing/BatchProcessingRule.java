@@ -28,11 +28,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@Slf4j
 public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private final ClosingFactory closingFactory;
 
@@ -46,7 +48,7 @@ public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, Mongo
       @Override
       public void evaluate() throws Throwable {
         try {
-          applyInjector(base, method, target).evaluate();
+          applyInjector(log, base, method, target).evaluate();
         } finally {
           closingFactory.close();
         }

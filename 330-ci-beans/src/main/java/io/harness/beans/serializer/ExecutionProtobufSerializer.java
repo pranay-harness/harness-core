@@ -36,7 +36,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
   @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
-  @Inject private TestIntelligenceStepProtobufSerializer testIntelligenceStepProtobufSerializer;
+  @Inject private RunTestsStepProtobufSerializer runTestsStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
   public Execution convertExecutionElement(ExecutionElementConfig executionElement,
@@ -47,19 +47,20 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
     }
 
     executionElement.getSteps().forEach(executionWrapper -> {
-      if (!executionWrapper.getStep().isNull()) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
         StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
 
         UnitStep serialisedStep = serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds);
         if (serialisedStep != null) {
           protoSteps.add(Step.newBuilder().setUnit(serialisedStep).build());
         }
-      } else if (!executionWrapper.getParallel().isNull()) {
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
         ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapper);
         List<UnitStep> unitStepsList =
             parallelStepElementConfig.getSections()
                 .stream()
-                .filter(executionWrapperInParallel -> !executionWrapperInParallel.getStep().isNull())
+                .filter(executionWrapperInParallel
+                    -> executionWrapperInParallel.getStep() != null && !executionWrapperInParallel.getStep().isNull())
                 .map(executionWrapperInParallel -> getStepElementConfig(executionWrapperInParallel))
                 .map(stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds))
                 .filter(Objects::nonNull)
@@ -135,6 +136,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case GCR:
         case DOCKER:
         case ECR:
+        case UPLOAD_ARTIFACTORY:
         case UPLOAD_GCS:
         case UPLOAD_S3:
         case SAVE_CACHE_GCS:
@@ -143,8 +145,8 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case RESTORE_CACHE_S3:
           return pluginCompatibleStepSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
-        case TEST_INTELLIGENCE:
-          return testIntelligenceStepProtobufSerializer.serializeStep(
+        case RUN_TESTS:
+          return runTestsStepProtobufSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case CLEANUP:
         case TEST:

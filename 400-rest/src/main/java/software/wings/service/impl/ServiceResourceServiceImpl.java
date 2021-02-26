@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.HARNESS_TAGS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -142,6 +143,7 @@ import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsServiceSpecification.EcsServiceSpecificationKeys;
 import software.wings.beans.container.HelmChartSpecification;
@@ -236,6 +238,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -633,7 +636,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       List<ServiceTemplate> serviceTemplates =
           serviceTemplateService
               .list(aPageRequest()
-                        .addFilter(ServiceTemplate.APP_ID_KEY2, EQ, originalService.getAppId())
+                        .addFilter(ServiceTemplate.APP_ID, EQ, originalService.getAppId())
                         .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
                         .build(),
                   false, OBTAIN_VALUE)
@@ -767,21 +770,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       version = commandNameVersionMap.get(commandName);
     }
 
-    Command command = getCommandByNameAndVersion(appId, serviceId, commandName, version).getCommand();
-
-    return command.getCommandUnits()
+    return getCommandByNameAndVersion(appId, serviceId, commandName, version)
+        .getCommand()
+        .getCommandUnits()
         .stream()
-        .flatMap(commandUnit -> {
-          if (COMMAND == commandUnit.getCommandUnitType()) {
-            String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
-                ? ((Command) commandUnit).getReferenceId()
-                : commandUnit.getName();
-            return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
-          } else {
-            return Stream.of(commandUnit);
-          }
-        })
+        .flatMap(commandUnit -> processCommandUnit(appId, serviceId, commandNameVersionMap, commandUnit))
         .collect(toList());
+  }
+
+  @Nullable
+  private Stream<? extends CommandUnit> processCommandUnit(
+      String appId, String serviceId, Map<String, Integer> commandNameVersionMap, CommandUnit commandUnit) {
+    if (COMMAND == commandUnit.getCommandUnitType()) {
+      Command internalCommand = (Command) commandUnit;
+      if (internalCommand.getTemplateReference() != null) {
+        Template template = templateService.get(internalCommand.getTemplateReference().getTemplateUuid(),
+            internalCommand.getTemplateReference().getTemplateVersion().toString());
+        SshCommandTemplate baseTemplate = (SshCommandTemplate) template.getTemplateObject();
+        return baseTemplate.getCommandUnits().stream().flatMap(
+            cm -> processCommandUnit(appId, null, new HashMap<>(), cm));
+      } else {
+        String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
+            ? ((Command) commandUnit).getReferenceId()
+            : commandUnit.getName();
+        return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
+      }
+    } else {
+      return Stream.of(commandUnit);
+    }
   }
 
   @Override
@@ -1194,7 +1210,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId, boolean syncFromGit) {
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
@@ -1395,7 +1411,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, false));
 
       pruneDeploymentSpecifications(service);
-      pruneDescendingEntities(appId, serviceUuid);
+      pruneDescendingEntities(appId, serviceUuid, false);
       harnessTagService.pruneTagLinks(service.getAccountId(), serviceUuid);
     }
 
@@ -1437,6 +1453,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
 
     if (advanced) {
+      if (persistedContainerTask instanceof EcsContainerTask) {
+        return ((EcsContainerTask) persistedContainerTask)
+            .convertToAdvanced(featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, accountId));
+      }
       return persistedContainerTask.convertToAdvanced();
     }
 
@@ -2801,7 +2821,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   HelmVersion getDefaultHelmVersion(DeploymentType deploymentType) {
     if (deploymentType == null) {
-      return null;
+      return V2;
     }
     switch (deploymentType) {
       case HELM:
@@ -3022,9 +3042,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
 
-    Query<Service> query = wingsPersistence.createQuery(Service.class)
-                               .filter(Service.APP_ID_KEY2, appId)
-                               .filter(Service.ID_KEY2, serviceId);
+    Query<Service> query =
+        wingsPersistence.createQuery(Service.class).filter(Service.APP_ID, appId).filter(Service.ID, serviceId);
 
     wingsPersistence.update(query, updateOperations);
   }

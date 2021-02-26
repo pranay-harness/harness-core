@@ -77,6 +77,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private SpotInstStateHelper spotInstStateHelper;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private AwsStateHelper awsStateHelper;
   @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
 
   @Test
@@ -177,6 +178,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
     on(state).set("spotinstStateHelper", spotInstStateHelper);
     on(state).set("delegateService", delegateService);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
+    on(state).set("awsStateHelper", awsStateHelper);
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();

@@ -127,8 +127,13 @@ public class ExportExecutionsResourceService {
       throw new InvalidRequestException("No user params provided to export executions request");
     }
 
-    if (userParams.isNotifyOnlyTriggeringUser() || EmptyPredicate.isEmpty(userParams.getUserGroupIds())) {
+    if (EmptyPredicate.isEmpty(userParams.getUserGroupIds())) {
       return;
+    }
+
+    if (userParams.isNotifyOnlyTriggeringUser()) {
+      throw new InvalidRequestException(
+          "Both \"notifyOnlyTriggeringUser\" and \"userGroupIds\" can't be set simultaneously.");
     }
 
     List<UserGroup> userGroups = userGroupService.fetchUserGroupNamesFromIds(userParams.getUserGroupIds());

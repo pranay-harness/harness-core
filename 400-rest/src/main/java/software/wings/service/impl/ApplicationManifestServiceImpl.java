@@ -313,7 +313,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ApplicationManifest getById(String appId, String id) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                           .filter(ApplicationManifest.ID_KEY2, id)
+                                           .filter(ApplicationManifest.ID, id)
                                            .filter(ApplicationKeys.appId, appId);
     return query.get();
   }
@@ -330,7 +330,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ManifestFile getManifestFileById(String appId, String id) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
                                     .filter(ApplicationKeys.appId, appId)
-                                    .filter(ApplicationManifest.ID_KEY2, id);
+                                    .filter(ApplicationManifest.ID, id);
     return query.get();
   }
 
@@ -405,7 +405,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     // we'll have an extra perpetual task running for this.
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifestKeys.accountId, accountId)
-                                           .filter(ApplicationManifest.ID_KEY2, appManifestId)
+                                           .filter(ApplicationManifest.ID, appManifestId)
                                            .field(ApplicationManifestKeys.perpetualTaskId)
                                            .doesNotExist();
     UpdateOperations<ApplicationManifest> updateOperations =
@@ -551,7 +551,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifestKeys.accountId, accountId)
-                                           .filter(ApplicationManifest.ID_KEY2, appManifestId);
+                                           .filter(ApplicationManifest.ID, appManifestId);
 
     UpdateOperations<ApplicationManifest> updateOperations =
         wingsPersistence.createUpdateOperations(ApplicationManifest.class)
@@ -698,12 +698,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ManifestFile upsertApplicationManifestFile(
       ManifestFile manifestFile, ApplicationManifest applicationManifest, boolean isCreate) {
+    notNullCheck("applicationManifest", applicationManifest, USER);
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     manifestFile.setAccountId(appService.getAccountIdByAppId(manifestFile.getAppId()));
 
     validateManifestFileName(manifestFile);
     validateFileNamePrefixForDirectory(manifestFile);
-    notNullCheck("applicationManifest", applicationManifest, USER);
+
+    ManifestFile oldManifestFile = null;
+    if (!isCreate) {
+      oldManifestFile = wingsPersistence.createQuery(ManifestFile.class)
+                            .field(ManifestFileKeys.accountId)
+                            .equal(manifestFile.getAccountId())
+                            .field("_id")
+                            .equal(manifestFile.getUuid())
+                            .get();
+    }
 
     if (isCreate
         && getManifestFilesCount(applicationManifest.getUuid()) >= MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST) {
@@ -720,8 +730,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     String accountId = appService.getAccountIdByAppId(appId);
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    boolean isRename = oldManifestFile != null && !oldManifestFile.getFileName().equals(manifestFile.getFileName());
     yamlPushService.pushYamlChangeSet(
-        accountId, isCreate ? null : savedManifestFile, savedManifestFile, type, manifestFile.isSyncFromGit(), false);
+        accountId, isCreate ? null : oldManifestFile, savedManifestFile, type, manifestFile.isSyncFromGit(), isRename);
 
     return savedManifestFile;
   }

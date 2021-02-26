@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 
 import io.harness.context.ContextElementType;
 import io.harness.k8s.model.HelmVersion;
@@ -73,7 +73,7 @@ public class HelmRollbackState extends HelmDeployState {
             .appId(context.getAppId())
             .activityId(activityId)
             .commandName(HELM_COMMAND_NAME)
-            .timeoutInMillis(getSafeTimeoutInMillis(getTimeoutMillis()))
+            .timeoutInMillis(fetchSafeTimeoutInMillis(getTimeoutMillis()))
             .containerServiceParams(containerServiceParams)
             .chartSpecification(helmChartSpecification)
             .repoName(repoName)

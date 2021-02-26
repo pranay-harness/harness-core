@@ -38,7 +38,7 @@ class PmsSdkProviderModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    if (config.getDeploymentMode().equals(REMOTE)) {
+    if (config.getDeploymentMode() == REMOTE) {
       bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
       bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
       bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);

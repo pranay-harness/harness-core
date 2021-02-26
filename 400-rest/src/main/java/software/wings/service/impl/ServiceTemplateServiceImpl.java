@@ -254,7 +254,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String environmentId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
-        .filter(ServiceTemplate.APP_ID_KEY2, appId)
+        .filter(ServiceTemplate.APP_ID, appId)
         .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
         .filter(ServiceTemplate.ENVIRONMENT_ID_KEY, environmentId)
         .get();
@@ -287,7 +287,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId) {
     Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
-                                               .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                               .filter(ServiceTemplate.APP_ID, appId)
                                                .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId);
 
     if (isNotBlank(envId)) {
@@ -300,7 +300,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void updateDefaultServiceTemplateName(
       String appId, String serviceId, String oldServiceName, String newServiceName) {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
-                                       .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                       .filter(ServiceTemplate.APP_ID, appId)
                                        .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
                                        .filter(ServiceTemplateKeys.defaultServiceTemplate, true)
                                        .filter(ServiceTemplateKeys.name, oldServiceName);
@@ -312,7 +312,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public boolean exist(String appId, String templateId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
-               .filter(ServiceTemplate.APP_ID_KEY2, appId)
+               .filter(ServiceTemplate.APP_ID, appId)
                .filter(ID_KEY, templateId)
                .getKey()
         != null;
@@ -486,7 +486,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void delete(String appId, String serviceTemplateId) {
     // TODO: move to the prune pattern
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                                  .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                                  .filter(ServiceTemplate.APP_ID, appId)
                                                   .filter(ID_KEY, serviceTemplateId));
     if (deleted) {
       executorService.submit(() -> infrastructureMappingService.deleteByServiceTemplate(appId, serviceTemplateId));
@@ -499,7 +499,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                          .filter(ServiceTemplate.APP_ID, appId)
                                           .filter(ServiceTemplateKeys.envId, envId)
                                           .asKeyList();
     for (Key<ServiceTemplate> key : keys) {
@@ -510,7 +510,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
-        .filter(ServiceTemplate.APP_ID_KEY2, appId)
+        .filter(ServiceTemplate.APP_ID, appId)
         .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
         .asList()
         .forEach(serviceTemplate -> delete(serviceTemplate.getAppId(), serviceTemplate.getUuid()));

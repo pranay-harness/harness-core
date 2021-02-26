@@ -8,11 +8,11 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 

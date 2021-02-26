@@ -48,6 +48,7 @@ public class ViewCustomFieldResource {
   private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
   private ViewCustomFieldDao customFieldDao;
+  private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
 
   @Inject
   public ViewCustomFieldResource(ViewCustomFieldService viewCustomFieldService,
@@ -95,8 +96,8 @@ public class ViewCustomFieldResource {
                          .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
                          .identifier(ViewFieldIdentifier.LABEL)
                          .build());
-      userDefinedExpression = userDefinedExpression.replaceAll(
-          labelsPatternMatcher.group(), ViewsMetaDataFields.LABEL_VALUE.getFieldName());
+      userDefinedExpression =
+          userDefinedExpression.replaceAll(labelsPatternMatcher.group(), String.format(labelsSubQuery, labelKey));
     }
 
     HashMap<String, ViewField> viewFieldsHashMap = customFieldExpressionHelper.getViewFieldsHashMap();

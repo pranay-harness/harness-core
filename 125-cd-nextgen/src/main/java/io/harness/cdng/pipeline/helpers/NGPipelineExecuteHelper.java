@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.helpers;
 
 import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.EVENT_PAYLOAD_KEY;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
@@ -164,6 +165,7 @@ public class NGPipelineExecuteHelper {
     }
     return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build(),
         ExecutionMetadata.newBuilder()
+            .setExecutionUuid(generateUuid())
             .setRunSequence(0)
             .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(user).build())
             .build());

@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.azure.registry;
 
-import io.harness.azure.model.AzureAppServiceDockerSetting;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -19,7 +19,7 @@ public class AzureDockerHubPrivateRegistry extends AzureRegistry {
   }
 
   @Override
-  public Map<String, AzureAppServiceDockerSetting> getContainerSettings(ConnectorConfigDTO connectorConfigDTO) {
+  public Map<String, AzureAppServiceApplicationSetting> getContainerSettings(ConnectorConfigDTO connectorConfigDTO) {
     DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorConfigDTO;
     DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
         (DockerUserNamePasswordDTO) dockerConnectorDTO.getAuth().getCredentials();

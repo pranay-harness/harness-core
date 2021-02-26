@@ -36,6 +36,8 @@ import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -116,6 +118,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -741,21 +744,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @VisibleForTesting
   public byte[] getTerraformPlanFile(String scriptDirectory, TerraformProvisionParameters parameters)
       throws IOException {
-    return isEmpty(parameters.getWorkspace())
-        ? Files.readAllBytes(Paths.get(scriptDirectory, getPlanName(parameters)))
-        : Files.readAllBytes(Paths.get(scriptDirectory,
-            getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace())));
+    return Files.readAllBytes(Paths.get(scriptDirectory, getPlanName(parameters)));
   }
 
   @VisibleForTesting
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
-    File tfPlanFile = isEmpty(parameters.getWorkspace())
-        ? Paths.get(scriptDirectory, getPlanName(parameters)).toFile()
-        : Paths
-              .get(scriptDirectory,
-                  getWorkspacePlanFileFormat(parameters).replace("$WORKSPACE_NAME", parameters.getWorkspace()))
-              .toFile();
+    File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
 
     byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedTerraformPlan(
         parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());

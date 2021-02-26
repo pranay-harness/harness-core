@@ -6,5 +6,7 @@ import com.esotericsoftware.kryo.Kryo;
 
 public class ConnectorNextGenKryoRegistrar implements KryoRegistrar {
   @Override
-  public void register(Kryo kryo) {}
+  public void register(Kryo kryo) {
+    // nothing to do
+  }
 }

@@ -4,12 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.beans.RepresentationStrategy;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,7 +45,7 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private Map<String, Object> stepParameters;
+  private Document stepParameters;
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;
@@ -52,6 +55,12 @@ public class GraphVertex implements Serializable {
 
   private Map<String, List<ProgressData>> progressDataMap;
 
+  private SkipInfo skipInfo;
   // skip
   private SkipType skipType;
+
+  private List<UnitProgress> unitProgresses;
+
+  // UI
+  @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
 }

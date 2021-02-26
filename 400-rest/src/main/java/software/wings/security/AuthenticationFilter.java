@@ -1,6 +1,5 @@
 package software.wings.security;
 
-import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -33,6 +32,7 @@ import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
+import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -260,7 +260,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private Map<String, String> getServiceToSecretMapping() {
     Map<String, String> mapping = new HashMap<>();
     mapping.put(DEFAULT.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET));
-    mapping.put(BEARER.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET));
     return mapping;
   }
 
@@ -339,10 +338,17 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
-    return requestContext.getMethod().equals(OPTIONS) || publicAPI()
+    return requestContext.getMethod().equals(OPTIONS) || publicAPI() || isPublicApiWithWhitelist()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
+  }
+
+  private boolean isPublicApiWithWhitelist() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
+        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
   }
 
   protected boolean publicAPI() {

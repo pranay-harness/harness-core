@@ -94,7 +94,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
     }
   }
 
-  private boolean prune(Class clz, String appId, String entityId) {
+  private boolean prune(Class clz, String appId, String entityId, boolean syncFromGit) {
     log.info("Pruning Entity {} {} for appId {}", clz.getCanonicalName(), entityId, appId);
     if (clz.equals(Application.class)) {
       if (!appId.equals(entityId)) {
@@ -128,7 +128,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         pipelineService.pruneDescendingEntities(appId, entityId);
       } else if (clz.equals(Service.class)) {
         pruneTagLinks = true;
-        serviceResourceService.pruneDescendingEntities(appId, entityId);
+        serviceResourceService.pruneDescendingEntities(appId, entityId, syncFromGit);
       } else if (clz.equals(Workflow.class)) {
         pruneTagLinks = true;
         workflowService.pruneDescendingEntities(appId, entityId);
@@ -175,7 +175,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
 
       } else {
         GlobalContextManager.upsertGlobalContextRecord(PurgeGlobalContextData.builder().build());
-        if (!prune(clz, message.getAppId(), message.getEntityId())) {
+        if (!prune(clz, message.getAppId(), message.getEntityId(), message.isSyncFromGit())) {
           throw new WingsException("The prune failed this time");
         }
       }

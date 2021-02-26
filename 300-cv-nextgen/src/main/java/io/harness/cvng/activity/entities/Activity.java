@@ -3,10 +3,13 @@ package io.harness.cvng.activity.entities;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -27,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -44,7 +48,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "activities")
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-public abstract class Activity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public abstract class Activity
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -75,11 +80,12 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   private long lastUpdatedAt;
 
   @NotNull private ActivityType type;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   private String serviceIdentifier;
   @NotNull private String environmentIdentifier;
   @NotNull private String projectIdentifier;
   @NotNull private String orgIdentifier;
+  private String activitySourceId;
 
   private String activityName;
   private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
@@ -87,7 +93,13 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   private Instant activityEndTime;
   @FdIndex private List<String> verificationJobInstanceIds;
   private List<String> tags;
-  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+
+  private ActivityVerificationSummary verificationSummary;
+
+  @Builder.Default private ActivityVerificationStatus analysisStatus = ActivityVerificationStatus.NOT_STARTED;
+
+  @FdIndex private Long verificationIteration;
 
   public abstract ActivityType getType();
 
@@ -95,7 +107,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
 
   public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
 
-  public void addCommonFileds(ActivityDTO activityDTO) {
+  protected void addCommonFields(ActivityDTO activityDTO) {
     setAccountId(activityDTO.getAccountIdentifier());
     setProjectIdentifier(activityDTO.getProjectIdentifier());
     setOrgIdentifier(activityDTO.getOrgIdentifier());
@@ -121,4 +133,23 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
     this.validateActivityParams();
   }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (fieldName.equals(ActivityKeys.verificationIteration)) {
+      this.verificationIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (fieldName.equals(ActivityKeys.verificationIteration)) {
+      return verificationIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public abstract boolean deduplicateEvents();
 }

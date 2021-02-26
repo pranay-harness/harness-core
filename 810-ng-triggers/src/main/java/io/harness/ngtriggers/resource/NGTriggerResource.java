@@ -1,6 +1,5 @@
 package io.harness.ngtriggers.resource;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -11,8 +10,6 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.TriggerException;
-import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -26,14 +23,36 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.rest.RestResponse;
+import io.harness.utils.CryptoUtils;
 import io.harness.utils.PageUtils;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +72,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@PipelineServiceAuth
 @Slf4j
 public class NGTriggerResource {
   private final NGTriggerService ngTriggerService;
@@ -202,17 +222,24 @@ public class NGTriggerResource {
       @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    Criteria criteria =
-        TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false, false);
+    Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(
+        null, null, null, Arrays.asList(repoURL), searchTerm, false, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest =
-          PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntity.NGTriggerEntityKeys.createdAt));
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     Page<NGTriggerResponseDTO> triggers =
         ngTriggerService.list(criteria, pageRequest).map(ngTriggerElementMapper::toResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(triggers));
+  }
+
+  @GET
+  @Path("regenerateToken")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> generateWebhookToken() {
+    return new RestResponse<>(CryptoUtils.secureRandAlphaNumString(40));
   }
 }

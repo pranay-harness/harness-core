@@ -49,6 +49,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.command.GcbTaskParams.GcbTaskType;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -85,6 +86,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.annotations.Transient;
@@ -227,7 +229,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
         .build();
   }
 
-  private static DelegateTask delegateTaskOf(@NotNull final String activityId, @NotNull final ExecutionContext context,
+  private DelegateTask delegateTaskOf(@NotNull final String activityId, @NotNull final ExecutionContext context,
       InfrastructureMappingService infrastructureMappingService, Object... parameters) {
     final Application application = context.fetchRequiredApp();
     final WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -239,10 +241,15 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
     String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
+
+    GcbTaskParams gcbTaskParams = (GcbTaskParams) parameters[0];
+    GcbTaskType taskType = gcbTaskParams.getType();
+    String action = StringUtils.capitalize(taskType.name());
     return DelegateTask.builder()
         .accountId(application.getAccountId())
         .waitId(activityId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, application.getAppId())
+        .description(action + " GCB Build")
         .data(TaskData.builder()
                   .async(true)
                   .taskType(GCB.name())
@@ -254,6 +261,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
         .build();
   }
 

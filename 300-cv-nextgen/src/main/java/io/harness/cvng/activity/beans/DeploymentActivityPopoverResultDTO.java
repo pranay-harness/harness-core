@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.beans;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class DeploymentActivityPopoverResultDTO {
   public static class VerificationResult {
     String jobName;
     ActivityVerificationStatus status;
-    Double riskScore;
+    Risk risk;
     Long remainingTimeMs;
     int progressPercentage;
     Long startTime;

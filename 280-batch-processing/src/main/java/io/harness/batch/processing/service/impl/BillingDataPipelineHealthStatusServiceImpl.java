@@ -45,9 +45,9 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   private BatchJobScheduledDataDao batchJobScheduledDataDao;
   @Autowired private BigQueryService bigQueryService;
 
-  private static final String AWS_PRE_AGG_TABLE_DATACHECK_TEMPLATE =
+  private static final String BQ_PRE_AGG_TABLE_DATACHECK_TEMPLATE =
       "SELECT count(*) as count FROM `%s.preAggregated` WHERE DATE(startTime) "
-      + ">= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n";
+      + ">= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"%s\";%n";
 
   @Autowired
   public BillingDataPipelineHealthStatusServiceImpl(BatchMainConfig mainConfig,
@@ -97,10 +97,31 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   }
 
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
+    log.info("running updateBillingPipelineRecordsStatus");
     billingDataPipelineRecordDao.listAllBillingDataPipelineRecords().forEach(billingDataPipelineRecord -> {
       try {
         BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder = BillingDataPipelineRecord.builder();
-        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.GCP.name())) {
+        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AZURE.name())) {
+          billingDataPipelineRecordBuilder.accountId(billingDataPipelineRecord.getAccountId())
+              .settingId(billingDataPipelineRecord.getSettingId());
+          // Check for data in last 3 days in preAgg table. Only when time has elapsed more than 24 hours.
+          long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
+          if (billingDataPipelineRecord.getCreatedAt() >= now
+              || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId(), CloudProvider.AZURE.name())) {
+            // Set SUCCEEDED in first 24 hours
+            log.info("Updating data transfer and preagg status..");
+            billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.SUCCEEDED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+          } else {
+            log.info("Updating data transfer and preagg status...");
+            billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.FAILED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+          }
+          billingDataPipelineRecordBuilder.lastSuccessfulStorageSync(fetchLastSuccessfulS3RunInstant(
+              billingDataPipelineRecord.getAccountId(), BatchJobType.SYNC_BILLING_REPORT_AZURE));
+        } else if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.GCP.name())) {
           billingDataPipelineRecordBuilder.accountId(billingDataPipelineRecord.getAccountId())
               .settingId(billingDataPipelineRecord.getSettingId())
               .dataTransferJobStatus(
@@ -124,7 +145,7 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
             log.info("Setting status for preagg query in new pipeline for AWS");
             long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
             if (billingDataPipelineRecord.getCreatedAt() >= now
-                || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId())) {
+                || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId(), CloudProvider.AWS.name())) {
               // Set SUCCEEDED in first 24 hours
               billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.SUCCEEDED.toString())
                   .preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString())
@@ -145,19 +166,20 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
                 .awsFallbackTableScheduledQueryStatus(getTransferStateStringValue(
                     transferToStatusMap, billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName()));
           }
-          billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(
-              fetchLastSuccessfulS3RunInstant(billingDataPipelineRecord.getAccountId()));
+          billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(
+              billingDataPipelineRecord.getAccountId(), BatchJobType.SYNC_BILLING_REPORT_S3));
         }
         billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
+        log.info("Updated record");
       } catch (Exception e) {
         log.error("Failed to update the health status for the account {}", billingDataPipelineRecord.getAccountId(), e);
       }
     });
   }
 
-  private Instant fetchLastSuccessfulS3RunInstant(String accountId) {
+  private Instant fetchLastSuccessfulS3RunInstant(String accountId, BatchJobType batchJobType) {
     BatchJobScheduledData batchJobScheduledData =
-        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, BatchJobType.SYNC_BILLING_REPORT_S3);
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, batchJobType);
     if (null != batchJobScheduledData) {
       return Instant.ofEpochMilli(batchJobScheduledData.getCreatedAt());
     }
@@ -169,11 +191,11 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
                                                 : TransferState.UNRECOGNIZED.toString();
   }
 
-  private boolean isDataPresentPreAgg(String datasetId) {
+  private boolean isDataPresentPreAgg(String datasetId, String cloudProvider) {
     BigQuery bigquery = bigQueryService.get();
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String tablePrefix = gcpProjectId + "." + datasetId;
-    String query = String.format(AWS_PRE_AGG_TABLE_DATACHECK_TEMPLATE, tablePrefix);
+    String query = String.format(BQ_PRE_AGG_TABLE_DATACHECK_TEMPLATE, tablePrefix, cloudProvider);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(query)
             .addNamedParameter("run_date", QueryParameterValue.date(String.valueOf(java.time.LocalDate.now())))

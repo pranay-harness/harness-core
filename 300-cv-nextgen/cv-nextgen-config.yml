@@ -35,7 +35,7 @@ logging:
     - type: console
       threshold: TRACE
       target: STDOUT
-      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
     - type: gke-console
       threshold: TRACE
       target: STDOUT
@@ -65,7 +65,7 @@ managerAuthConfig:
 notificationClient:
   messageBroker:
     type: MONGO
-    uri: mongodb://localhost:27017/notificationChannel
+    uri: mongodb://localhost:27017/notification
     connectTimeout: 30000
     serverSelectionTimeout: 90000
     maxConnectionIdleTime: 600000
@@ -76,15 +76,16 @@ notificationClient:
     readTimeOutSeconds: 15
   secrets:
     notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 eventsFramework:
   redis:
     sentinel: false
-    masterName: "mymaster"
-    redisUrl: "dummyRedisUrl"
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
     sentinelUrls:
-      - "redis://localhost:26379"
-      - "redis://localhost:26380"
-      - "redis://localhost:26381"
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
     envNamespace: ""
     readMode: MASTER
     nettyThreads: 16

@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.type.secrets;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.beans.WinRmConnectionAttributes;
@@ -14,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLWinRMCredentialUpdateKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLWinRMCredentialUpdate {
   RequestField<String> name;
   RequestField<WinRmConnectionAttributes.AuthenticationScheme> authenticationScheme;

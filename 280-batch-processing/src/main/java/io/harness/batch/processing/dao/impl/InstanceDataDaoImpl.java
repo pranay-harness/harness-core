@@ -1,5 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -281,6 +282,21 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
+  public List<InstanceData> fetchActivePVList(String accountId, Instant startTime, Instant endTime) {
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .filter(InstanceDataKeys.instanceType, K8S_PV);
+
+    query.and(query.or(query.and(query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(startTime),
+                           query.or(query.criteria(InstanceDataKeys.usageStopTime).doesNotExist(),
+                               query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime))),
+        query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(startTime),
+            query.criteria(InstanceDataKeys.usageStartTime).lessThan(endTime))));
+
+    return query.asList();
+  }
+
+  @Override
   public InstanceData fetchInstanceData(String accountId, String instanceId) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
@@ -407,4 +423,38 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
             query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
     return query.asList(new FindOptions().limit(batchSize));
   }
+
+  @Override
+  public List<InstanceData> getInstanceDataListsOfType(String accountId, int batchSize, Instant startTime,
+      Instant endTime, Instant seekingDate, InstanceType instanceType) {
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
+                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .filter(InstanceDataKeys.instanceType, instanceType)
+                                    .order(InstanceDataKeys.usageStartTime);
+
+    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
+        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
+        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
+            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
+    return query.asList(new FindOptions().limit(batchSize));
+  }
+
+  @Override
+  public List<InstanceData> getInstanceDataListsOtherThanPV(
+      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
+                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .field(InstanceDataKeys.instanceType)
+                                    .notEqual(K8S_PV)
+                                    .order(InstanceDataKeys.usageStartTime);
+
+    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
+        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
+        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
+            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
+    return query.asList(new FindOptions().limit(batchSize));
+  }
+
+  // TODO(utsav): refactor; add "query.and(..." from above three to one here
+  private void enforceActiveInstances() {}
 }

@@ -1,12 +1,12 @@
 package migrations.all;
 
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;

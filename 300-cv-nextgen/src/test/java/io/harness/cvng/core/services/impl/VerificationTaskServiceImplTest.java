@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class VerificationTaskServiceImplTest extends CvNextGenTest {
+public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   private String accountId;
 
@@ -163,9 +163,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
         .isInstanceOf(NullPointerException.class)
         .hasMessage(
             "VerificationTask mapping does not exist for cvConfigId " + cvConfigId + ". Please check cvConfigId");
-    assertThatThrownBy(() -> verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No verification task mapping exist for verificationJobInstanceId " + verificationJobInstanceId);
+    assertThat(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId)).hasSize(1);
   }
 
   @Test

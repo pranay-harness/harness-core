@@ -24,7 +24,7 @@ import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -56,11 +56,11 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
     StepTransput transput = new DummyOutcome("value");
     StepInputPackage inputPackage = StepInputPackage.builder()
                                         .input(ResolvedRefInput.builder()
-                                                   .refObject(RefObjectUtil.getOutcomeRefObject("TEST"))
+                                                   .refObject(RefObjectUtils.getOutcomeRefObject("TEST"))
                                                    .transput(transput)
                                                    .build())
                                         .input(ResolvedRefInput.builder()
-                                                   .refObject(RefObjectUtil.getOutcomeRefObject("TEST"))
+                                                   .refObject(RefObjectUtils.getOutcomeRefObject("TEST"))
                                                    .transput(transput)
                                                    .build())
                                         .build();

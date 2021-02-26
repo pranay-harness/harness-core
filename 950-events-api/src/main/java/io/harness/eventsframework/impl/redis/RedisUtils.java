@@ -8,10 +8,13 @@ import static java.lang.Long.parseLong;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
@@ -25,6 +28,8 @@ import org.redisson.config.ReadMode;
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
+  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 1000000;
+  public static final int UNACKED_RETRY_COUNT = 10;
 
   public RedissonClient getClient(RedisConfig redisConfig) {
     Config config = new Config();
@@ -46,17 +51,24 @@ public class RedisUtils {
     return fromMillis(parseLong(messageId.split("-")[0]));
   }
 
-  public RStream<String, String> getStream(String topicName, RedissonClient client) {
-    return client.getStream(getStreamName(topicName), new StringCodec("UTF-8"));
+  public RStream<String, String> getStream(String topicName, RedissonClient client, String envNamespace) {
+    return client.getStream(getStreamName(envNamespace, topicName), new StringCodec("UTF-8"));
   }
 
-  public String getStreamName(String topicName) {
-    return "streams:" + topicName;
+  public RStream<String, String> getDeadLetterStream(String topicName, RedissonClient client, String envNamespace) {
+    String deadLetterStreamName = "deadletter_queue:" + topicName;
+    return getStream(deadLetterStreamName, client, envNamespace);
+  }
+
+  public String getStreamName(String envNamespace, String topicName) {
+    return (envNamespace.isEmpty() ? "" : envNamespace + ":") + "streams:" + topicName;
   }
 
   public StreamMessageId getStreamId(String messageId) {
-    if (messageId.equals("$"))
+    if (messageId.equals("$")) {
       return StreamMessageId.NEWEST;
+    }
+
     String[] parts = messageId.split("-");
     return new StreamMessageId(parseLong(parts[0]), parseLong(parts[1]));
   }

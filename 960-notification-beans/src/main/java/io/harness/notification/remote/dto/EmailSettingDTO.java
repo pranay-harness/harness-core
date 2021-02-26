@@ -8,9 +8,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class EmailSettingDTO extends NotificationSettingDTO {
   @NotNull private String subject;
   @NotNull private String body;

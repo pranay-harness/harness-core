@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
@@ -11,17 +12,18 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
@@ -41,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -52,7 +55,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
+public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
   @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
   @Inject private HPersistence hPersistence;
 
@@ -63,7 +66,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   private String accountId;
 
   @Mock private CVConfigService cvConfigService;
-  @Mock private TimeSeriesService timeSeriesService;
+  @Mock private TimeSeriesRecordService timeSeriesRecordService;
   @Mock private VerificationTaskService verificationTaskService;
   @Mock private ActivityService activityService;
 
@@ -77,7 +80,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(timeSeriesDashboardService, "cvConfigService", cvConfigService, true);
-    FieldUtils.writeField(timeSeriesDashboardService, "timeSeriesService", timeSeriesService, true);
+    FieldUtils.writeField(timeSeriesDashboardService, "timeSeriesRecordService", timeSeriesRecordService, true);
     FieldUtils.writeField(timeSeriesDashboardService, "verificationTaskService", verificationTaskService, true);
     FieldUtils.writeField(timeSeriesDashboardService, "activityService", activityService, true);
   }
@@ -89,7 +92,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, false));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -151,7 +154,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -235,7 +238,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -305,7 +308,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -340,7 +343,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -360,9 +363,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     assertThat(response.getContent().size()).isEqualTo(response.getPageSize());
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -373,7 +375,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, false));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -399,7 +401,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -420,9 +422,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -433,7 +434,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -451,9 +452,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
-      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
-      });
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(
+          metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
   }
 
@@ -473,10 +473,10 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     Set<String> verificationTaskIds = new HashSet<>();
     verificationTaskIds.add(taskId);
-    when(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
+    when(verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
         .thenReturn(verificationTaskIds);
     when(verificationTaskService.getCVConfigId(taskId)).thenReturn(cvConfigId);
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
 
     PageResponse<TimeSeriesMetricDataDTO> response =
@@ -490,7 +490,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();
       assertThat(timeSeriesMetricDataDTO.getMetricType()).isNotNull();
       timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
-        assertThat(metricData.getRisk().name()).isNotEqualTo(TimeSeriesMetricDataDTO.TimeSeriesRisk.LOW_RISK.name());
+        assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW);
         if (TimeSeriesMetricType.ERROR.equals(timeSeriesMetricDataDTO.getMetricType())) {
           assertThat(metricData.getValue()).isGreaterThan(0.0);
         }
@@ -498,8 +498,34 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     });
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetActivityMetrics_withNoVerificationTaskMapping() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String activityId = generateUuid();
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    String taskId = generateUuid();
+    Activity activity = DeploymentActivity.builder().deploymentTag("Build23").build();
+    activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
+    when(activityService.get(activityId)).thenReturn(activity);
+    when(verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId))
+        .thenReturn(Collections.emptySet());
+    when(verificationTaskService.getCVConfigId(taskId)).thenReturn(cvConfigId);
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(getTimeSeriesRecords(cvConfigId, true));
+
+    PageResponse<TimeSeriesMetricDataDTO> response =
+        timeSeriesDashboardService.getActivityMetrics(activityId, accountId, projectIdentifier, orgIdentifier,
+            envIdentifier, serviceIdentifier, start.toEpochMilli(), end.toEpochMilli(), false, 0, 10);
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isEmpty();
+  }
+
   private List<TimeSeriesRecord> getTimeSeriesRecords(String cvConfigId, boolean anomalousOnly) throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("timeseries/timeseriesRecords.json").getFile());
+    File file = new File(getResourceFilePath("timeseries/timeseriesRecords.json"));
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();

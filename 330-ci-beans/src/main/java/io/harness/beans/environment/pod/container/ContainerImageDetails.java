@@ -13,6 +13,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 public class ContainerImageDetails {
-  private transient ImageDetails imageDetails;
+  private ImageDetails imageDetails;
   @NotEmpty private String connectorIdentifier;
 }

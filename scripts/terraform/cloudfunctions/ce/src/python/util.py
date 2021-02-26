@@ -1,22 +1,30 @@
+import json
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from clusterdata_schema import clusterDataTableFields
 from unified_schema import unifiedTableTableSchema
 from preaggregated_schema import preAggreagtedTableSchema
 
-def create_dataset(client, jsonData):
-    dataset_id = "{}.{}".format(client.project, jsonData["datasetName"])
+ACCOUNTID_LOG = ""
+
+def print_(message, severity="INFO"):
+    # Set account id in the beginning of your CF call
+    print(json.dumps({"accountId":ACCOUNTID_LOG, "severity":severity, "message": message}))
+
+def create_dataset(client, datasetName):
+    dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
+    dataset.description = "Data set for [ AccountId: %s ]" % (ACCOUNTID_LOG)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already
     # exists within the project.
     try:
         dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
-        print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
+        print_("Created dataset {}.{}".format(client.project, dataset.dataset_id))
     except Exception as e:
-        print("Dataset {} already exists {}".format(dataset_id, e))
+        print_("Dataset {} already exists {}".format(dataset_id, e), "WARN")
 
 
 def if_tbl_exists(client, table_ref):
@@ -28,7 +36,7 @@ def if_tbl_exists(client, table_ref):
 
 
 def createTable(client, tableName):
-    print("Creating %s table" % tableName)
+    print_("Creating %s table" % tableName)
     schema = []
     if tableName.endswith("clusterData"):
         fieldset = clusterDataTableFields
@@ -57,7 +65,7 @@ def createTable(client, tableName):
         )
     try:
         table = client.create_table(table)  # Make an API request.
-        print("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))
+        print_("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))
     except Exception as e:
-        print("Error while creating table\n {}".format(e))
+        print_("Error while creating table\n {}".format(e), "WARN")
 

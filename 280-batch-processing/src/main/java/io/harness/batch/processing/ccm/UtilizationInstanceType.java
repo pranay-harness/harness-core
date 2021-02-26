@@ -5,6 +5,7 @@ public class UtilizationInstanceType {
   public static final String ECS_SERVICE = "ECS_SERVICE";
   public static final String K8S_POD = "K8S_POD";
   public static final String K8S_NODE = "K8S_NODE";
+  public static final String K8S_PV = "K8S_PV";
 
   private UtilizationInstanceType() {}
 }

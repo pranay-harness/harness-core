@@ -1,9 +1,9 @@
 package migrations.all;
 
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.persistence.HIterator;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;

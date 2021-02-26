@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -61,6 +62,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -69,9 +71,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
@@ -96,6 +98,8 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureK
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.AzureWebAppInfra;
+import software.wings.infra.AzureWebAppInfra.AzureWebAppInfraKeys;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
@@ -105,6 +109,7 @@ import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBui
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
@@ -143,9 +148,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
+public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
   @Mock private ExecutionContext executionContext;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -162,6 +168,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
   @Mock private SecretManager secretManager;
+  @Mock private QueuePublisher<PruneEvent> pruneQueue;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -173,6 +180,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    MockitoAnnotations.initMocks(this);
     hostedZones1 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone1").build(),
         AwsRoute53HostedZoneData.builder().hostedZoneName("zone2").build());
     hostedZones2 = Arrays.asList(AwsRoute53HostedZoneData.builder().hostedZoneName("zone3").build(),
@@ -426,6 +434,11 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(eq(ACCOUNT_ID), any(InfrastructureDefinitionService.class), eq(null), eq(Event.Type.DELETE),
             eq(false), eq(false));
+    ArgumentCaptor<PruneEvent> captor = ArgumentCaptor.forClass(PruneEvent.class);
+    verify(pruneQueue, times(1)).send(captor.capture());
+    assertThat(captor.getValue().getEntityId()).isEqualTo(INFRA_DEFINITION_ID);
+    assertThat(captor.getValue().getAppId()).isEqualTo(APP_ID);
+    assertThat(captor.getValue().getEntityClass()).isEqualTo(InfrastructureDefinition.class.getCanonicalName());
   }
 
   @Test
@@ -435,6 +448,23 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     assertThat(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions().size()
         == DeploymentType.values().length)
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAzureWebAppInfraWithProvisioner() {
+    AzureWebAppInfra infra = AzureWebAppInfra.builder().build();
+    Map<String, String> expressions = new HashMap<>();
+    infra.setExpressions(expressions);
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra));
+
+    expressions.put(AzureWebAppInfraKeys.resourceGroup, "testResourceGroup");
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra))
+        .hasMessage("Subscription Id is required");
+
+    expressions.put(AzureWebAppInfraKeys.subscriptionId, "subcription-id");
+    infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra);
   }
 
   @Test

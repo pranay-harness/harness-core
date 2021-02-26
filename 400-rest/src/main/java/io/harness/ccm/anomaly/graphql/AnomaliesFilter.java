@@ -1,12 +1,12 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesIdFilter.AnomaliesIdFilterBuilder;
 import io.harness.ccm.anomaly.graphql.AnomaliesTimeFilter.AnomaliesTimeFilterBuilder;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 
-import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 import software.wings.graphql.schema.type.aggregation.Filter;
 
 import com.healthmarketscience.sqlbuilder.Condition;
@@ -32,7 +32,9 @@ public interface AnomaliesFilter extends Filter {
     }
 
     // --- gcp ---
-
+    if (filter.getProduct() != null) {
+      return convertFromCloudBillingFilter(filter.getProduct());
+    }
     if (filter.getProject() != null) {
       return convertFromCloudBillingFilter(filter.getProject());
     }
@@ -49,10 +51,10 @@ public interface AnomaliesFilter extends Filter {
     // ---- aws ---
 
     if (filter.getAwsLinkedAccount() != null) {
-      return convertFromCloudBillingFilter(filter.getAwsLinkedAccount());
+      return convertFromCloudBillingFilter(filter.getLinkedAccount());
     }
     if (filter.getAwsService() != null) {
-      return convertFromCloudBillingFilter(filter.getAwsService());
+      return convertFromCloudBillingFilter(filter.getService());
     }
     if (filter.getAwsUsageType() != null) {
       return convertFromCloudBillingFilter(filter.getAwsUsageType());
@@ -91,7 +93,7 @@ public interface AnomaliesFilter extends Filter {
         filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_PROJECT);
         break;
       case CloudBillingFilter.BILLING_GCP_SKU:
-        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_SKU_ID);
+        filterBuilder.variable(AnomaliesDataTableSchema.fields.GCP_SKU_DESCRIPTION);
         break;
       case CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT:
         filterBuilder.variable(AnomaliesDataTableSchema.fields.AWS_ACCOUNT);

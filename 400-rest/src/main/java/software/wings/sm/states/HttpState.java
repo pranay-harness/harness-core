@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.KeyValuePair;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
@@ -77,6 +78,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -106,6 +108,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @DefaultValue("GET")
   private String method;
   @Attributes(title = "Header") private String header;
+  @Getter @Setter private List<KeyValuePair> headers;
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
   @Getter @Setter @Attributes(title = "Use Delegate Proxy") private boolean useProxy;
@@ -261,8 +264,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return method;
   }
 
-  protected String getFinalHeader(ExecutionContext context) {
-    return header;
+  protected List<KeyValuePair> getFinalHeaders(ExecutionContext context) {
+    return headers;
   }
 
   protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
@@ -292,7 +295,6 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   public List<String> getPatternsForRequiredContextElementType() {
     String resolvedUrl = url;
     String resolvedBody = body;
-    String resolvedHeader = header;
     String resolvedAssertion = assertion;
     List<Variable> variables = new ArrayList<>();
     if (isNotEmpty(getTemplateVariables())) {
@@ -305,11 +307,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       if (isNotEmpty(templateVariables)) {
         resolvedUrl = fetchTemplatedValue(url, templateVariables);
         resolvedBody = fetchTemplatedValue(body, templateVariables);
-        resolvedHeader = fetchTemplatedValue(header, templateVariables);
         resolvedAssertion = fetchTemplatedValue(assertion, templateVariables);
       }
     }
-    return asList(resolvedUrl, resolvedBody, resolvedHeader, resolvedAssertion);
+    return asList(resolvedUrl, resolvedBody, resolvedAssertion);
   }
 
   private String fetchTemplatedValue(String fieldName, Map<String, Object> templatedVariables) {
@@ -330,7 +331,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     return MoreObjects.toStringHelper(this)
         .add("url", url)
         .add("method", method)
-        .add("header", header)
+        .add("headers", headers)
         .add("body", body)
         .add("assertion", assertion)
         .add("socketTimeoutMillis", socketTimeoutMillis)
@@ -352,7 +353,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     } catch (UnsupportedEncodingException e) {
       log.error("", e);
     }
-    String finalHeader = getFinalHeader(context);
+    List<KeyValuePair> finalHeaders = getFinalHeaders(context);
     String finalMethod = getFinalMethod(context);
     String infrastructureMappingId = context.fetchInfraMappingId();
 
@@ -378,10 +379,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     boolean isCertValidationRequired = accountService.isCertValidationRequired(context.getAccountId());
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
-                                                .header(finalHeader)
                                                 .method(finalMethod)
                                                 .body(finalBody)
                                                 .url(finalUrl)
+                                                .headers(finalHeaders)
                                                 .socketTimeoutMillis(taskSocketTimeout)
                                                 .useProxy(useProxy)
                                                 .isCertValidationRequired(isCertValidationRequired)
@@ -396,9 +397,20 @@ public class HttpState extends State implements SweepingOutputStateMixin {
 
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
+    if (isNotEmpty(httpTaskParameters.getHeaders())) {
+      List<KeyValuePair> httpHeaders =
+          httpTaskParameters.getHeaders()
+              .stream()
+              .map(pair
+                  -> KeyValuePair.builder()
+                         .key(expressionEvaluator.substitute(pair.getKey(), Collections.emptyMap()))
+                         .value(expressionEvaluator.substitute(pair.getValue(), Collections.emptyMap()))
+                         .build())
+              .collect(Collectors.toList());
+      executionDataBuilder.headers(httpHeaders);
+    }
     executionDataBuilder.httpUrl(expressionEvaluator.substitute(httpTaskParameters.getUrl(), Collections.emptyMap()))
         .httpMethod(expressionEvaluator.substitute(httpTaskParameters.getMethod(), Collections.emptyMap()))
-        .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()))
         .warningMessage(warningMessage);
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
@@ -534,6 +546,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       } else if (e instanceof Property) {
         Property pr = (Property) e;
         errorMsg = "Unresolvable property '" + pr.getProperty() + "' in assertion.";
+      } else if (e instanceof JexlException.Variable
+          && ((JexlException.Variable) e).getVariable().equals("sweepingOutputSecrets")) {
+        errorMsg = "Error evaluating assertion condition: " + assertion
+            + ": Secret Variables defined in Script output of shell scripts cannot be used in assertions";
       } else {
         errorMsg = getMessage(e);
       }
@@ -606,6 +622,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     private String url;
     private String method;
     private String header;
+    private List<KeyValuePair> headers;
     private String body;
     private String assertion;
     private boolean useProxy;
@@ -671,6 +688,17 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
 
     /**
+     * With header builder.
+     *
+     * @param headers the header
+     * @return the builder
+     */
+    public Builder withHeaders(List<KeyValuePair> headers) {
+      this.headers = headers;
+      return this;
+    }
+
+    /**
      * With body builder.
      *
      * @param body the body
@@ -724,6 +752,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
           .withUrl(url)
           .withMethod(method)
           .withHeader(header)
+          .withHeaders(headers)
           .withBody(body)
           .withAssertion(assertion)
           .usesProxy(useProxy)
@@ -747,6 +776,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       httpState.setTemplateVariables(templateVariables);
       httpState.setHeader(header);
       httpState.setUseProxy(useProxy);
+      httpState.setHeaders(headers);
       return httpState;
     }
   }

@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution.beans.dto;
 
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
@@ -7,6 +8,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,13 +29,14 @@ public class PipelineExecutionSummaryDTO {
 
   ExecutionStatus status;
 
-  Map<String, String> tags;
+  List<NGTag> tags;
 
   ExecutionTriggerInfo executionTriggerInfo;
   ExecutionErrorInfo executionErrorInfo;
 
   Map<String, Document> moduleInfo;
   Map<String, GraphLayoutNodeDTO> layoutNodeMap;
+  List<String> modules;
   String startingNodeId;
 
   Long startTs;

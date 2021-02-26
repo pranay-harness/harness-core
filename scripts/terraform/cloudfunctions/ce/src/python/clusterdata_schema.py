@@ -328,5 +328,35 @@ clusterDataTableFields = [
         "mode": "REPEATED",
         "name": "label",
         "type": "RECORD"
-      }
+      },
+    {
+        "mode": "NULLABLE",
+        "name": "storagecost",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "storagembseconds",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "storagerequest",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "storageutilizationvalue",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "storageunallocatedcost",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "storageactualidlecost",
+        "type": "FLOAT"
+    }
     ]

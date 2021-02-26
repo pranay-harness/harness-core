@@ -2,11 +2,11 @@ package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
 import com.google.common.base.Preconditions;
@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
@@ -55,8 +56,12 @@ public class TestVerificationJob extends VerificationJob {
   public VerificationJobDTO getVerificationJobDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
-    testVerificationJobDTO.setSensitivity(this.sensitivity.string());
-    testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    if (baselineVerificationJobInstanceId == null) {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId("LAST");
+    } else {
+      testVerificationJobDTO.setBaselineVerificationJobInstanceId(baselineVerificationJobInstanceId);
+    }
     return testVerificationJobDTO;
   }
 
@@ -85,6 +90,17 @@ public class TestVerificationJob extends VerificationJob {
   }
 
   @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    addCommonFileds(verificationJobDTO);
+    TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) verificationJobDTO;
+    this.setSensitivity(testVerificationJobDTO.getSensitivity(),
+        VerificationJobDTO.isRuntimeParam(testVerificationJobDTO.getSensitivity()));
+    if (!testVerificationJobDTO.getBaselineVerificationJobInstanceId().equals("LAST")) {
+      this.setBaselineVerificationJobInstanceId(testVerificationJobDTO.getBaselineVerificationJobInstanceId());
+    }
+  }
+
+  @Override
   public void resolveJobParams(Map<String, String> runtimeParameters) {}
 
   @Override
@@ -100,5 +116,18 @@ public class TestVerificationJob extends VerificationJob {
                                               .orElse(null);
     }
     return this;
+  }
+
+  public static class TestVerificationUpdatableEntity
+      extends VerificationJobUpdatableEntity<TestVerificationJob, TestVerificationJobDTO> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<TestVerificationJob> updateOperations, TestVerificationJobDTO dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(TestVerificationJobKeys.sensitivity,
+          getRunTimeParameter(dto.getSensitivity(), VerificationJobDTO.isRuntimeParam(dto.getEnvIdentifier())));
+      updateOperations.set(
+          TestVerificationJobKeys.baselineVerificationJobInstanceId, dto.getBaselineVerificationJobInstanceId());
+    }
   }
 }

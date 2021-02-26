@@ -34,6 +34,11 @@ public class EncryptSecretTask extends AbstractDelegateRunnableTask {
   }
 
   private EncryptSecretTaskResponse run(EncryptSecretTaskParameters deleteSecretTaskParameters) {
+    return run(deleteSecretTaskParameters, kmsEncryptorsRegistry);
+  }
+
+  protected static EncryptSecretTaskResponse run(
+      EncryptSecretTaskParameters deleteSecretTaskParameters, KmsEncryptorsRegistry kmsEncryptorsRegistry) {
     EncryptionConfig encryptionConfig = deleteSecretTaskParameters.getEncryptionConfig();
     String value = deleteSecretTaskParameters.getValue();
     KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(encryptionConfig);

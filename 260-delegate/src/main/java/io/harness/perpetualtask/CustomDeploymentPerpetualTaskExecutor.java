@@ -4,6 +4,8 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.grpc.utils.AnyUtils;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
@@ -83,7 +86,7 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
 
       final ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
       final ExecuteCommandResponse executeCommandResponse =
-          executor.executeCommandString(taskParams.getScript(), emptyList());
+          executor.executeCommandString(taskParams.getScript(), emptyList(), emptyList());
 
       if (CommandExecutionStatus.SUCCESS == executeCommandResponse.getStatus()) {
         return ShellScriptProvisionExecutionData.builder()

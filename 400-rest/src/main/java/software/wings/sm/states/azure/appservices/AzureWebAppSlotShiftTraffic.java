@@ -10,7 +10,7 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotS
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
 
 import software.wings.beans.Activity;
-import software.wings.beans.command.AzureVMSSDummyCommandUnit;
+import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -38,7 +38,21 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected void emitAnyDataForExternalConsumption(
       ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    azureSweepingOutputServiceHelper.saveTrafficShiftInfoToSweepingOutput(context, renderTrafficWeight(context));
+    azureSweepingOutputServiceHelper.saveTrafficShiftInfoToSweepingOutput(context, renderTrafficPercent(context));
+  }
+
+  @Override
+  protected boolean shouldExecute(ExecutionContext context) {
+    double renderTrafficPercent = renderTrafficPercent(context);
+    if (Double.compare(AzureConstants.INVALID_TRAFFIC, renderTrafficPercent) == 0) {
+      return false;
+    }
+    return verifyIfContextElementExist(context);
+  }
+
+  @Override
+  public String skipMessage() {
+    return String.format("Invalid traffic percent - [%s] specified. Skipping traffic shift step", trafficWeightExpr);
   }
 
   @Override
@@ -63,7 +77,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
         .appServiceName(contextElement.getWebApp())
         .deploySlotName(contextElement.getDeploymentSlot())
-        .trafficWeight(String.valueOf(renderTrafficWeight(context)))
+        .trafficWeight(String.valueOf(renderTrafficPercent(context)))
         .appServiceSlotSetupTimeOut(getTimeoutMillis(context))
         .build();
   }
@@ -85,7 +99,8 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.SLOT_TRAFFIC_WEIGHT));
+    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
+        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 
   @NotNull
@@ -97,12 +112,6 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected String commandType() {
     return APP_SERVICE_SLOT_TRAFFIC_SHIFT;
-  }
-
-  @NotNull
-  @Override
-  protected String errorMessageTag() {
-    return "Azure App Service traffic shift failed";
   }
 
   private AzureWebAppSlotShiftTrafficParameters buildTrafficShiftParams(
@@ -119,12 +128,12 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .webAppName(contextElement.getWebApp())
         .deploymentSlot(contextElement.getDeploymentSlot())
-        .trafficWeightInPercentage(renderTrafficWeight(context))
+        .trafficWeightInPercentage(renderTrafficPercent(context))
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }
 
-  private int renderTrafficWeight(ExecutionContext context) {
-    return azureVMSSStateHelper.renderExpressionOrGetDefault(trafficWeightExpr, context, 0);
+  private double renderTrafficPercent(ExecutionContext context) {
+    return azureVMSSStateHelper.renderDoubleExpression(trafficWeightExpr, context, AzureConstants.INVALID_TRAFFIC);
   }
 }

@@ -2,21 +2,36 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 
 import static java.lang.String.format;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filter.FilterType;
+import io.harness.filter.dto.FilterDTO;
+import io.harness.filter.service.FilterService;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
-import io.harness.pms.pipeline.*;
+import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
+import io.harness.pms.pipeline.CommonStepInfo;
+import io.harness.pms.pipeline.ExecutionSummaryInfo;
+import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.GraphGenerationService;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,6 +47,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
@@ -43,106 +59,13 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @Slf4j
 public class PMSPipelineServiceImpl implements PMSPipelineService {
-  public static String PIPELINE_EXECUTION_SUMMARY_JSON = "{\n"
-      + "                \"planExecutionId\": \"planexecutionId\",\n"
-      + "                \"name\": \"test\",\n"
-      + "                \"status\": \"NotStarted\",\n"
-      + "                \"executionTriggerInfo\": {\n"
-      + "                    \"triggeredBy\": null,\n"
-      + "                    \"triggerType\": null\n"
-      + "                },\n"
-      + "                \"moduleInfo\": {\n"
-      + "                    \"cd\": {\n"
-      + "                        \"envIdentifiers\": [\n"
-      + "                                \"env\"\n"
-      + "                        ],\n"
-      + "                        \"environmentTypes\": [\n"
-      + "                                \"PreProduction\"\n"
-      + "                        ],\n"
-      + "                        \"serviceDefinitionTypes\": [\n"
-      + "                                \"Kubernetes\"\n"
-      + "                        ],\n"
-      + "                        \"serviceIdentifiers\": [\n"
-      + "                        ]\n"
-      + "                    }\n"
-      + "                },\n"
-      + "                \"layoutNodeMap\": {\n"
-      + "                    \"KHQLWC2MQFCWJNFw4loqOgparallel\": {\n"
-      + "                        \"nodeType\": \"parallel\",\n"
-      + "                        \"nodeIdentifier\": \"parallel\",\n"
-      + "                        \"nodeUuid\": \"KHQLWC2MQFCWJNFw4loqOgparallel\",\n"
-      + "                        \"status\": \"NotStarted\",\n"
-      + "                        \"edgeLayoutList\": {\n"
-      + "                            \"currentNodeChildren\": [\n"
-      + "                                \"ztUSwKDiR6KswSvkU7fctw\"\n"
-      + "                            ],\n"
-      + "                            \"nextIds\": []\n"
-      + "                        }\n"
-      + "                    },\n"
-      + "                    \"ztUSwKDiR6KswSvkU7fctw\": {\n"
-      + "                        \"nodeType\": \"stage\",\n"
-      + "                        \"nodeIdentifier\": \"google_1\",\n"
-      + "                        \"nodeUuid\": \"ztUSwKDiR6KswSvkU7fctw\",\n"
-      + "                        \"status\": \"Running\",\n"
-      + "                        \"moduleInfo\": {\n"
-      + "                            \"cd\": {\n"
-      + "                                \"infrastructureIdentifiers\": \"infraIdentifier\",\n"
-      + "                                \"nodeExecutionId\": \"randomId\",\n"
-      + "                                \"serviceInfoList\": {\n"
-      + "                                    \"artifacts\": {\n"
-      + "                                        \"primary\": {\n"
-      + "                                            \"type\": \"Docker\"\n"
-      + "                                        },\n"
-      + "                                        \"sidecars\": []\n"
-      + "                                    }\n"
-      + "                                }\n"
-      + "                            }\n"
-      + "                        },\n"
-      + "                        \"edgeLayoutList\": {\n"
-      + "                            \"currentNodeChildren\": [],\n"
-      + "                            \"nextIds\": [\n"
-      + "                                \"HPdKmejETHqIWCK62syYww\"\n"
-      + "                            ]\n"
-      + "                        }\n"
-      + "                    },\n"
-      + "                    \"HPdKmejETHqIWCK62syYww\": {\n"
-      + "                        \"nodeType\": \"stage\",\n"
-      + "                        \"nodeIdentifier\": \"HPdKmejETHqIWCK62syYww\",\n"
-      + "                        \"nodeUuid\": \"HPdKmejETHqIWCK62syYww\",\n"
-      + "                        \"status\": \"NotStarted\",\n"
-      + "                        \"edgeLayoutList\": {\n"
-      + "                            \"currentNodeChildren\": [],\n"
-      + "                            \"nextIds\": [\n"
-      + "                                \"6iyMwdTxSWqf4rdF5eqVMw\"\n"
-      + "                            ]\n"
-      + "                        }\n"
-      + "                    },\n"
-      + "                    \"6iyMwdTxSWqf4rdF5eqVMw\": {\n"
-      + "                        \"nodeType\": \"stage\",\n"
-      + "                        \"nodeIdentifier\": \"6iyMwdTxSWqf4rdF5eqVMw\",\n"
-      + "                        \"nodeUuid\": \"6iyMwdTxSWqf4rdF5eqVMw\",\n"
-      + "                        \"status\": \"NotStarted\",\n"
-      + "                        \"edgeLayoutList\": {\n"
-      + "                            \"currentNodeChildren\": [],\n"
-      + "                            \"nextIds\": []\n"
-      + "                        }\n"
-      + "                    }\n"
-      + "                },\n"
-      + "                \"startingNodeId\": \"KHQLWC2MQFCWJNFw4loqOgparallel\",\n"
-      + "                \"startTs\": 123,\n"
-      + "                \"endTs\": 0,\n"
-      + "                \"createdAt\": 1608059579307,\n"
-      + "                \"successfulStagesCount\": 0,\n"
-      + "                \"runningStagesCount\": 0,\n"
-      + "                \"failedStagesCount\": 0,\n"
-      + "                \"totalStagesCount\": 0\n"
-      + "            }";
-
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   @Inject private FilterCreatorMergeService filterCreatorMergeService;
   @Inject private PmsSdkInstanceService pmsSdkInstanceService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
+  @Inject private FilterService filterService;
+  @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -163,13 +86,12 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
       updatePipelineInfo(pipelineEntity);
 
-      PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
-      return createdEntity;
+      return pmsPipelineRepository.save(pipelineEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException exception) {
+    } catch (IOException | ProducerShutdownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -200,7 +122,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       }
 
       return updateResult;
-    } catch (IOException exception) {
+    } catch (IOException | ProducerShutdownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -238,15 +160,23 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public boolean delete(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
+  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
+      Long version) throws ProducerShutdownException {
     Criteria criteria =
         getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
+
     UpdateResult updateResult = pmsPipelineRepository.delete(criteria);
     if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
               projectIdentifier, orgIdentifier));
+    }
+
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (pipelineEntity.isPresent()) {
+      pipelineSetupUsageHelper.deleteSetupUsagesForGivenPipeline(pipelineEntity.get());
     }
     return true;
   }
@@ -256,10 +186,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return pmsPipelineRepository.findAll(criteria, pageable);
   }
 
-  private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
-    FilterCreatorMergeServiceResponse filtersAndStageCount =
-        filterCreatorMergeService.getPipelineInfo(pipelineEntity.getYaml());
+  private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
+    FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+    pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(
           (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
@@ -273,6 +203,74 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } catch (Exception ex) {
       throw new InvalidRequestException(
           format("Error happened while creating variables for pipeline: %s", ex.getMessage(), ex));
+    }
+  }
+
+  @Override
+  public Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
+      PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm) {
+    Criteria criteria = new Criteria();
+    if (isNotEmpty(accountId)) {
+      criteria.and(PipelineEntityKeys.accountId).is(accountId);
+    }
+    if (isNotEmpty(orgId)) {
+      criteria.and(PipelineEntityKeys.orgIdentifier).is(orgId);
+    }
+    if (isNotEmpty(projectId)) {
+      criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
+    }
+    criteria.and(PipelineEntityKeys.deleted).is(deleted);
+
+    if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
+      throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
+    } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
+      populateFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
+    } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
+      populateFilter(criteria, filterProperties);
+    }
+    if (EmptyPredicate.isNotEmpty(module)) {
+      criteria.and(String.format("filters.%s", module)).exists(true);
+    }
+
+    if (EmptyPredicate.isNotEmpty(searchTerm)) {
+      Criteria searchCriteria = new Criteria().orOperator(
+          where(PipelineEntityKeys.identifier)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PipelineEntityKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      criteria.andOperator(searchCriteria);
+    }
+
+    return criteria;
+  }
+
+  private void populateFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotNull String filterIdentifier) {
+    FilterDTO pipelineFilterDTO = this.filterService.get(
+        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.PIPELINESETUP);
+    if (pipelineFilterDTO == null) {
+      throw new InvalidRequestException("Could not find a pipeline filter with the identifier ");
+    } else {
+      this.populateFilter(criteria, (PipelineFilterPropertiesDto) pipelineFilterDTO.getFilterProperties());
+    }
+  }
+
+  private void populateFilter(Criteria criteria, @NotNull PipelineFilterPropertiesDto piplineFilter) {
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getName())) {
+      criteria.and(PipelineEntityKeys.name).is(piplineFilter.getName());
+    }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getDescription())) {
+      criteria.and(PipelineEntityKeys.description).is(piplineFilter.getDescription());
+    }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
+      criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());
+    }
+    if (piplineFilter.getModuleProperties() != null) {
+      ModuleInfoFilterUtils.processNode(
+          JsonUtils.readTree(piplineFilter.getModuleProperties().toJson()), "filters", criteria);
     }
   }
 
@@ -301,7 +299,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     StepCategory stepCategory =
         calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module)) {
+      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
         continue;
       }
       stepCategory.addStepCategory(calculateStepsForCategory(entry.getKey(), entry.getValue()));
@@ -318,7 +316,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
-    List<StepInfo> filteredStepTypes = new ArrayList<StepInfo>();
+    List<StepInfo> filteredStepTypes = new ArrayList<>();
     if (!stepInfos.isEmpty()) {
       filteredStepTypes =
           stepInfos.stream()

@@ -9,10 +9,10 @@ import io.harness.eventsframework.consumer.Message;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,11 +27,17 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(
           EventsFrameworkMetadataConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
       @Named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY)
-      ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
+      ConsumerMessageProcessor connectorChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
+      ConsumerMessageProcessor organizationChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY)
+      ConsumerMessageProcessor accountChangeEventMessageProcessor) {
     this.consumer = abstractConsumer;
     processorMap = new HashMap<>();
     processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
     processorMap.put(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY, organizationChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, accountChangeEventMessageProcessor);
   }
 
   @Override
@@ -50,7 +56,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = consumer.read(MAX_WAIT_TIME_SEC, TimeUnit.SECONDS);
+    messages = consumer.read(Duration.ofSeconds(MAX_WAIT_TIME_SEC));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

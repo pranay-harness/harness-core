@@ -2,7 +2,8 @@ package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

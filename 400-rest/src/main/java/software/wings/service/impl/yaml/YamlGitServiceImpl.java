@@ -698,6 +698,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // only check for file and not directories
 
     if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SERVICE.getPathExpression()).matcher(filePath).matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE.getPathExpression()).matcher(filePath).matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE.getPathExpression())
                .matcher(filePath)

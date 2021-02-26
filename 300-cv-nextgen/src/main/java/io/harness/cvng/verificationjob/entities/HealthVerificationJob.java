@@ -1,9 +1,9 @@
 package io.harness.cvng.verificationjob.entities;
 
+import io.harness.cvng.beans.job.HealthVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "HealthVerificationJobKeys")
@@ -59,10 +60,24 @@ public class HealthVerificationJob extends VerificationJob {
   }
 
   @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    addCommonFileds(verificationJobDTO);
+  }
+
+  @Override
   public void resolveJobParams(Map<String, String> runtimeParameters) {}
 
   @Override
   public boolean collectHostData() {
     return false;
+  }
+
+  public static class HealthVerificationUpdatableEntity
+      extends VerificationJobUpdatableEntity<HealthVerificationJob, HealthVerificationJobDTO> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<HealthVerificationJob> updateOperations, HealthVerificationJobDTO dto) {
+      setCommonOperations(updateOperations, dto);
+    }
   }
 }

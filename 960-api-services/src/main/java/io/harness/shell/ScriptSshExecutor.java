@@ -36,11 +36,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -156,6 +159,12 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   @Override
   public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
+    return executeCommandString(command, envVariablesToCollect, Collections.emptyList());
+  }
+
+  @Override
+  public ExecuteCommandResponse executeCommandString(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -172,10 +181,16 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       String directoryPath = resolveEnvVarsInPath(this.config.getWorkingDirectory() + "/");
       String envVariablesFilename = null;
       command = "cd \"" + directoryPath + "\"\n" + command;
-      if (!envVariablesToCollect.isEmpty()) {
+
+      // combine both variable types
+      List<String> allVariablesToCollect =
+          Stream.concat(envVariablesToCollect.stream(), secretEnvVariablesToCollect.stream())
+              .collect(Collectors.toList());
+
+      if (!allVariablesToCollect.isEmpty()) {
         envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
         command = addEnvVariablesCollector(
-            command, envVariablesToCollect, "\"" + directoryPath + envVariablesFilename + "\"", ScriptType.BASH);
+            command, allVariablesToCollect, "\"" + directoryPath + envVariablesFilename + "\"", ScriptType.BASH);
       }
 
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
@@ -222,7 +237,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
                 BoundedInputStream stream =
                     new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
                 br = new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
-                processScriptOutputFile(envVariablesMap, br);
+                processScriptOutputFile(envVariablesMap, br, secretEnvVariablesToCollect);
               } catch (JSchException | SftpException | IOException e) {
                 log.error("Exception occurred during reading file from SFTP server due to " + e.getMessage(), e);
               } finally {

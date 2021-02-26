@@ -8,6 +8,7 @@ import io.harness.limits.lib.StaticLimit;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
+@Deprecated // Do not create generic constant buckets
 public interface WingsTestConstants {
   String APP_ID = "APP_ID";
 
@@ -46,6 +47,8 @@ public interface WingsTestConstants {
   String SERVICE_ID_CHANGED = "SERVICE_ID_CHANGED";
 
   String SERVICE_NAME = "SERVICE_NAME";
+
+  String SERVICE_NAME_PREFIX = "SERVICE_NAME__";
 
   String SERVICE_URL = "SERVICE_URL";
 
@@ -386,6 +389,7 @@ public interface WingsTestConstants {
   String UUID = "UUID";
 
   String HELM_CHART_ID = "HELM_CHART_ID";
+  String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";
 
   /**
    * The constant URL.

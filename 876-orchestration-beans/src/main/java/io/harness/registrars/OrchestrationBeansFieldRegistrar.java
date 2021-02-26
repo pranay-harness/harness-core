@@ -7,7 +7,7 @@ import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.expression.field.dummy.DummyOrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
-import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.ParameterFieldProcessor;
 

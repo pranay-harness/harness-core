@@ -2,12 +2,12 @@ package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.SmtpParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
-import io.harness.delegate.task.executioncapability.CapabilityCheck;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -20,7 +20,7 @@ import javax.mail.Transport;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SmtpCapabilityCheck implements CapabilityCheck {
+public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
 
   @Override
@@ -31,8 +31,9 @@ public class SmtpCapabilityCheck implements CapabilityCheck {
     return CapabilityResponse.builder().delegateCapability(capability).validated(capable).build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SMTP_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

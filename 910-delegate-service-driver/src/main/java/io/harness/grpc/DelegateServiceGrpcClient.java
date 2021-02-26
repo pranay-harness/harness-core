@@ -38,7 +38,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.DelegateServiceDriverException;
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
@@ -47,6 +46,7 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -92,6 +92,32 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
     final String taskId = submitTaskResponse.getTaskId().getId();
     log.info("sync task id created =[{}]", taskId);
+    return delegateSyncService.waitForTask(taskId,
+        Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
+        Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
+  }
+
+  /**
+   * This api, doesn't deserialize delegate response into specific objects.
+   * This api can just return response containing byte[] and let
+   * caller deserialize it.
+   *
+   * So your delegateSyncService implementation doesn't need to know about
+   * all DelegeteResponse objects and caller can take that responsibility.
+   *
+   * e.g. Please refer to PmsDelegateSyncServiceImpl
+   * (PmsDelegateSyncServiceImpl.waitForTask())
+   *
+   * @param taskRequest
+   * @param delegateCallbackToken
+   * @param <T>
+   * @return
+   */
+  public <T extends ResponseData> T executeSyncTaskReturningResponseData(
+      DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+    final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
+    final String taskId = submitTaskResponse.getTaskId().getId();
+    log.info("ID for Sync Task =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));

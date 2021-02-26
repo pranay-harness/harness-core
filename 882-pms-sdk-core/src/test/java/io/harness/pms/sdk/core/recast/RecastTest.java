@@ -12,35 +12,76 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BigIntegerNode;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ShortNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.JsonFormat;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class RecastTest extends PmsSdkCoreTestBase {
   private static final String RECAST_KEY = "__recast";
-  private static final String ENCODED_PROTO = "__encodedProto";
+  private static final String ENCODED_VALUE = "__encodedValue";
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestRecastWithProtoAsAField() throws InvalidProtocolBufferException {
     ExecutionErrorInfo executionErrorInfo = ExecutionErrorInfo.newBuilder().setMessage("some-message").build();
-    ProtoAsAFieldClass protoAsAFieldClass = ProtoAsAFieldClass.builder().executionErrorInfo(executionErrorInfo).build();
+    ProtoAsAFieldClass protoAsAFieldClass =
+        ProtoAsAFieldClass.builder()
+            .executionErrorInfo(executionErrorInfo)
+            .failureTypeSet(Sets.newHashSet(FailureType.APPLICATION_FAILURE, FailureType.AUTHORIZATION_FAILURE))
+            .build();
 
-    Document expectedDocument = new Document()
-                                    .append(RECAST_KEY, ProtoAsAFieldClass.class.getName())
-                                    .append("executionErrorInfo", JsonFormat.printer().print(executionErrorInfo));
+    Document expectedDocument =
+        new Document()
+            .append(RECAST_KEY, ProtoAsAFieldClass.class.getName())
+            .append("executionErrorInfo",
+                new Document()
+                    .append(RECAST_KEY, ExecutionErrorInfo.class.getName())
+                    .append(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo)))
+            .append("failureTypeSet",
+                Sets.newHashSet(new Document()
+                                    .append(RECAST_KEY, FailureType.class.getName())
+                                    .append(ENCODED_VALUE, FailureType.APPLICATION_FAILURE.name()),
+                    new Document()
+                        .append(RECAST_KEY, FailureType.class.getName())
+                        .append(ENCODED_VALUE, FailureType.AUTHORIZATION_FAILURE.name())));
 
     Document document = RecastOrchestrationUtils.toDocument(protoAsAFieldClass);
     assertThat(document).isNotNull();
@@ -56,6 +97,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
   @EqualsAndHashCode
   private static class ProtoAsAFieldClass {
     private ExecutionErrorInfo executionErrorInfo;
+    private Set<FailureType> failureTypeSet;
   }
 
   @Test
@@ -66,7 +108,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document expectedDocument = new Document()
                                     .append(RECAST_KEY, ExecutionErrorInfo.class.getName())
-                                    .append(ENCODED_PROTO, JsonFormat.printer().print(executionErrorInfo));
+                                    .append(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo));
 
     Document document = RecastOrchestrationUtils.toDocument(executionErrorInfo);
     assertThat(document).isNotNull();
@@ -98,7 +140,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document expectedDocument = new Document()
                                     .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                                    .append(ENCODED_PROTO, JsonFormat.printer().print(nodeExecutionProto));
+                                    .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
 
     Document document = RecastOrchestrationUtils.toDocument(nodeExecutionProto);
     assertThat(document).isNotNull();
@@ -130,9 +172,106 @@ public class RecastTest extends PmsSdkCoreTestBase {
 
     Document document = new Document()
                             .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                            .append(ENCODED_PROTO, JsonFormat.printer().print(nodeExecutionProto));
+                            .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
 
     NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromDocument(document, NodeExecutionProto.class);
     assertThat(recastedClass).isEqualTo(nodeExecutionProto);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldRecastWithYamlField() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("pipeline.yaml");
+    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+
+    ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
+    objectNode.set("stage", yamlField.getNode().getCurrJsonNode());
+
+    Document document = RecastOrchestrationUtils.toDocument(objectNode);
+    ObjectNode objectNode1 = RecastOrchestrationUtils.fromDocument(document, ObjectNode.class);
+    assertThat(objectNode1).isEqualTo(objectNode);
+
+    Document doc = RecastOrchestrationUtils.toDocument(yamlField);
+    YamlField yamlField1 = RecastOrchestrationUtils.fromDocument(doc, YamlField.class);
+    assertThat(yamlField1).isEqualTo(yamlField);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldRecastWithYamlNodeWrapperConfigList() {
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    YamlNodeWrapperConfig yamlNodeWrapperConfig = YamlNodeWrapperConfig.builder()
+                                                      .step(objectMapper.createArrayNode())
+                                                      .parallel(objectMapper.createObjectNode())
+                                                      .nullNode(NullNode.getInstance())
+                                                      .stepGroup(NullNode.getInstance())
+                                                      .booleanNode(BooleanNode.getTrue())
+                                                      .bigIntegerNode(BigIntegerNode.valueOf(BigInteger.TEN))
+                                                      .binaryNode(BinaryNode.valueOf(ALEXEI.getBytes()))
+                                                      .doubleNode(DoubleNode.valueOf(Double.MAX_VALUE))
+                                                      .intNode(IntNode.valueOf(Integer.MAX_VALUE))
+                                                      .longNode(LongNode.valueOf(Long.MAX_VALUE))
+                                                      .objectNode(objectMapper.createObjectNode())
+                                                      .shortNode(ShortNode.valueOf((short) 1))
+                                                      .textNode(TextNode.valueOf(ALEXEI))
+                                                      .build();
+
+    YamlNodeWrapperConfig yamlNodeWrapperConfig1 = YamlNodeWrapperConfig.builder()
+                                                       .step(objectMapper.createArrayNode())
+                                                       .parallel(objectMapper.createObjectNode())
+                                                       .nullNode(NullNode.getInstance())
+                                                       .stepGroup(NullNode.getInstance())
+                                                       .booleanNode(BooleanNode.getTrue())
+                                                       .bigIntegerNode(BigIntegerNode.valueOf(BigInteger.TEN))
+                                                       .binaryNode(BinaryNode.valueOf(ALEXEI.getBytes()))
+                                                       .doubleNode(DoubleNode.valueOf(Double.MAX_VALUE))
+                                                       .intNode(IntNode.valueOf(Integer.MAX_VALUE))
+                                                       .longNode(LongNode.valueOf(Long.MAX_VALUE))
+                                                       .objectNode(objectMapper.createObjectNode())
+                                                       .shortNode(ShortNode.valueOf((short) 1))
+                                                       .textNode(TextNode.valueOf(ALEXEI))
+                                                       .build();
+
+    YamlNodeWrapperConfigList wrapperConfigListi = new YamlNodeWrapperConfigList();
+    wrapperConfigListi.setList(ImmutableList.of(yamlNodeWrapperConfig, yamlNodeWrapperConfig1));
+
+    Document document = RecastOrchestrationUtils.toDocument(wrapperConfigListi);
+    YamlNodeWrapperConfigList objectNode1 =
+        RecastOrchestrationUtils.fromDocument(document, YamlNodeWrapperConfigList.class);
+    assertThat(objectNode1).isEqualTo(wrapperConfigListi);
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class YamlNodeWrapperConfig {
+    String uuid;
+    @Setter JsonNode step;
+    @Setter JsonNode parallel;
+    @Setter JsonNode stepGroup;
+    @Setter JsonNode nullNode;
+    @Setter JsonNode booleanNode;
+    @Setter JsonNode bigIntegerNode;
+    @Setter JsonNode binaryNode;
+    @Setter JsonNode doubleNode;
+    @Setter JsonNode intNode;
+    @Setter JsonNode longNode;
+    @Setter JsonNode objectNode;
+    @Setter JsonNode shortNode;
+    @Setter JsonNode textNode;
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private static class YamlNodeWrapperConfigList {
+    @Setter List<YamlNodeWrapperConfig> list;
   }
 }

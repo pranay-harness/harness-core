@@ -13,7 +13,9 @@ import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABL
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -26,7 +28,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -97,6 +98,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class PipelineExecutionController {
   @Inject AuthHandler authHandler;
   @Inject AuthService authService;
@@ -317,30 +319,12 @@ public class PipelineExecutionController {
       log.info("Environment is Not templatized in pipeline {} ", pipeline.getUuid());
       return null;
     }
-    if (!isEmpty(variableInputs)) {
-      QLVariableInput envVarInput =
-          variableInputs.stream().filter(t -> templatizedEnvName.equals(t.getName())).findFirst().orElse(null);
-      if (envVarInput != null) {
-        QLVariableValue envVarValue = envVarInput.getVariableValue();
-        notNullCheck(envVarInput.getName() + " has no variable value present", envVarValue, USER);
-        switch (envVarValue.getType()) {
-          case ID:
-            String envId = envVarValue.getValue();
-            Environment environment = environmentService.get(pipeline.getAppId(), envId);
-            notNullCheck("Environment [" + envId + "] doesn't exist in specified application " + pipeline.getAppId(),
-                environment, USER);
-            return envId;
-          case NAME:
-            String envName = envVarValue.getValue();
-            Environment environmentFromName = environmentService.getEnvironmentByName(pipeline.getAppId(), envName);
-            notNullCheck("Environment [" + envName + "] doesn't exist in specified application " + pipeline.getAppId(),
-                environmentFromName, USER);
-            return environmentFromName.getUuid();
-          default:
-            throw new InvalidRequestException("Value Type " + envVarValue.getType() + " Not supported");
-        }
-      }
+
+    String envId = executionController.getEnvId(templatizedEnvName, pipeline.getAppId(), variableInputs);
+    if (envId != null) {
+      return envId;
     }
+
     boolean isRuntime = pipeline.getPipelineVariables()
                             .stream()
                             .filter(v -> v.getName().equals(templatizedEnvName))

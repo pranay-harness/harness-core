@@ -20,6 +20,8 @@ import migrations.timescaledb.AddPercentagesToCostEvents;
 import migrations.timescaledb.AddRequestColumnToBillingData;
 import migrations.timescaledb.AddRollbackToDeployment;
 import migrations.timescaledb.AddSchemaForServiceGuardStats;
+import migrations.timescaledb.AddSlackNotificationSupportAnomalies;
+import migrations.timescaledb.AddStorageSupportK8sUtilTable;
 import migrations.timescaledb.AddSystemCostBillingData;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.AlterCEUtilizationDataTables;
@@ -29,11 +31,17 @@ import migrations.timescaledb.CreateAnomaliesData;
 import migrations.timescaledb.CreateBillingData;
 import migrations.timescaledb.CreateBillingDataHourly;
 import migrations.timescaledb.CreateBudgetAlerts;
+import migrations.timescaledb.CreateDeploymentParentTable;
+import migrations.timescaledb.CreateDeploymentStageTable;
+import migrations.timescaledb.CreateInstanceStatsDayTable;
+import migrations.timescaledb.CreateInstanceStatsHourTable;
 import migrations.timescaledb.CreateKubernetesUtilizationData;
 import migrations.timescaledb.CreateNewInstanceV2Migration;
+import migrations.timescaledb.CreatePreAggHourlyTable;
 import migrations.timescaledb.CreateUtilizationData;
 import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
+import migrations.timescaledb.InitTriggerFunctions;
 import migrations.timescaledb.InitVerificationSchemaMigration;
 import migrations.timescaledb.RenameInstanceMigration;
 import migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
@@ -83,6 +91,14 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(35, CreateAnomaliesDataV2.class))
         .add(Pair.of(36, AddAccountIdStatusIndexToDeployment.class))
         .add(Pair.of(37, AddFeedbackToAnomalies.class))
+        .add(Pair.of(38, AddStorageSupportK8sUtilTable.class))
+        .add(Pair.of(39, AddSlackNotificationSupportAnomalies.class))
+        .add(Pair.of(40, CreatePreAggHourlyTable.class))
+        .add(Pair.of(41, InitTriggerFunctions.class))
+        .add(Pair.of(42, CreateInstanceStatsHourTable.class))
+        .add(Pair.of(43, CreateInstanceStatsDayTable.class))
+        .add(Pair.of(44, CreateDeploymentParentTable.class))
+        .add(Pair.of(45, CreateDeploymentStageTable.class))
         .build();
   }
 }

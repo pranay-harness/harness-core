@@ -27,6 +27,8 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -69,6 +71,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -152,10 +155,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       boolean customWorkloadsStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
           client, customWorkloads, k8sDelegateTaskParams, executionLogCallback, true, steadyStateTimeoutInMillis);
 
-      // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
-      // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
-      // after the apply command has successfully run
-      k8sRollingBaseHandler.updateDeploymentConfigRevision(k8sDelegateTaskParams, release, client);
+      // We have to update the workload revision again as the rollout history command sometimes gives the older
+      // revision (known issue at least for Deployment and DeploymentConfig). There seems to be delay in handling of
+      // the workloads where it still gives older revision even after the apply command has successfully run
+      k8sRollingBaseHandler.updateManagedWorkloadsRevision(k8sDelegateTaskParams, release, client);
 
       if (!success || !customWorkloadsStatusSuccess) {
         releaseHistory.setReleaseStatus(Status.Failed);
@@ -178,7 +181,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(k8sRollingBaseHandler.tagNewPods(
+            .k8sPodList(k8sTaskHelperBase.tagNewPods(
                 k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
             .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))

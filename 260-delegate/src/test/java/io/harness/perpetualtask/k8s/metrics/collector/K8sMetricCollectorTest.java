@@ -337,6 +337,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
                 .setClusterId(CLUSTER_DETAILS.getClusterId())
                 .setKubeSystemUid(CLUSTER_DETAILS.getKubeSystemUid())
                 .setName("delegate-scope/datadir-mongo-replicaset-2")
+                .setPodUid("327d830d-e485-4964-9d97-992f97ee4f6f")
                 .setTimestamp(HTimestamps.parse("2020-09-01T20:07:13Z"))
                 .setWindow(Durations.fromSeconds(0))
                 .setAggregatedStorage(

@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CVNGVerificationTaskKeys")
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode
 @Entity(value = "cvngVerificationTasks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class CVNGVerificationTask
@@ -49,7 +49,10 @@ public class CVNGVerificationTask
   private String correlationId;
   private Status status;
   private Instant startTime;
-  @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  @EqualsAndHashCode.Exclude
+  @FdTtlIndex
+  @Builder.Default
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
   private long cvngVerificationTaskIteration;
 
   @Override

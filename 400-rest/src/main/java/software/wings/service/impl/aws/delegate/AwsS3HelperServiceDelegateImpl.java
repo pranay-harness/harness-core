@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -20,13 +22,14 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsS3HelperServiceDelegateImpl extends AwsHelperServiceDelegateBase implements AwsS3HelperServiceDelegate {
   @VisibleForTesting
   AmazonS3Client getAmazonS3Client(AwsConfig awsConfig) {
     // S3 does not have region selection
     AmazonS3ClientBuilder builder =
         AmazonS3ClientBuilder.standard().withRegion(getRegion(awsConfig)).withForceGlobalBucketAccessEnabled(true);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonS3Client) builder.build();
   }
 

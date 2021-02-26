@@ -3,9 +3,10 @@ package io.harness.cvng.verificationjob.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
+import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
@@ -51,7 +52,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class VerificationJobInstance
+public final class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -62,7 +63,7 @@ public class VerificationJobInstance
                  .build())
         .build();
   }
-
+  private static final Duration TIMEOUT = Duration.ofMinutes(30);
   public static final String VERIFICATION_JOB_TYPE_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.type);
   public static String PROJECT_IDENTIFIER_KEY =
@@ -77,8 +78,8 @@ public class VerificationJobInstance
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.identifier);
   @Id private String uuid;
   @NotNull @FdIndex private String accountId;
-  private long createdAt;
-  private long lastUpdatedAt;
+  @FdIndex private long createdAt;
+  @FdIndex private long lastUpdatedAt;
   private ExecutionStatus executionStatus;
 
   private String verificationJobIdentifier;
@@ -88,6 +89,7 @@ public class VerificationJobInstance
   @FdIndex private Long dataCollectionTaskIteration;
   @FdIndex private Long analysisOrchestrationIteration;
   @FdIndex private Long deletePerpetualTaskIteration;
+  @FdIndex private Long timeoutTaskIteration;
 
   // TODO: Refactor and Split into separate job instances
 
@@ -106,6 +108,7 @@ public class VerificationJobInstance
   private List<ProgressLog> progressLogs;
 
   private VerificationJob resolvedJob;
+  private Map<String, CVConfig> cvConfigMap;
 
   @Builder.Default
   @FdTtlIndex
@@ -123,6 +126,10 @@ public class VerificationJobInstance
       this.deletePerpetualTaskIteration = nextIteration;
       return;
     }
+    if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
+      this.timeoutTaskIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -134,6 +141,9 @@ public class VerificationJobInstance
 
     if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       return this.deletePerpetualTaskIteration;
+    }
+    if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
+      return this.timeoutTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -167,9 +177,21 @@ public class VerificationJobInstance
     Instant endTime;
     boolean isFinalState;
     String log;
+    private String verificationTaskId;
+    private Instant createdAt;
+    public void validate() {
+      Preconditions.checkNotNull(verificationTaskId);
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
+      Preconditions.checkNotNull(log);
+      Preconditions.checkNotNull(createdAt);
+    }
     public abstract ExecutionStatus getVerificationJobExecutionStatus();
-    public boolean shouldUpdateJobStatus(VerificationJobInstance verificationJobInstance) {
-      return getEndTime().equals(verificationJobInstance.getEndTime()) && isFinalState() || isFailedStatus();
+    public boolean shouldUpdateJobStatus() {
+      return isFailedStatus();
+    }
+    public boolean isLastProgressLog(VerificationJobInstance verificationJobInstance) {
+      return getEndTime().equals(verificationJobInstance.getEndTime()) && isFinalState();
     }
 
     public abstract boolean isFailedStatus();
@@ -215,7 +237,12 @@ public class VerificationJobInstance
     FAILED,
     SUCCESS,
     TIMEOUT;
-
+    public static List<ExecutionStatus> nonFinalStatuses() {
+      return Lists.newArrayList(QUEUED, RUNNING);
+    }
+    public static List<ExecutionStatus> noAnalysisStatuses() {
+      return Lists.newArrayList(QUEUED, TIMEOUT);
+    }
     public static List<ExecutionStatus> finalStatuses() {
       return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);
     }
@@ -272,5 +299,11 @@ public class VerificationJobInstance
 
   private boolean isFinalStatus() {
     return ExecutionStatus.finalStatuses().contains(executionStatus);
+  }
+
+  public boolean isExecutionTimedOut(Instant now) {
+    Instant cutoff =
+        Collections.max(Arrays.asList(Instant.ofEpochMilli(createdAt).plus(TIMEOUT), getEndTime().plus(TIMEOUT)));
+    return now.isAfter(cutoff);
   }
 }

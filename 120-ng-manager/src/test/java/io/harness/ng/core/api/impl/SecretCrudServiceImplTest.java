@@ -1,8 +1,8 @@
 package io.harness.ng.core.api.impl;
-
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -10,6 +10,8 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,6 +45,7 @@ import software.wings.app.FileUploadLimit;
 import com.amazonaws.util.StringInputStream;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,14 +65,16 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Mock private NGSecretServiceV2 ngSecretServiceV2;
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
+  @Mock private SecretCrudServiceImpl secretCrudServiceSpy;
   @Mock private SecretCrudServiceImpl secretCrudService;
   @Mock private Producer eventProducer;
 
   @Before
   public void setup() {
     initMocks(this);
-    secretCrudService = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService, sshService,
-        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
+    secretCrudServiceSpy = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService,
+        sshService, secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
+    secretCrudService = spy(secretCrudServiceSpy);
   }
 
   @Test
@@ -130,11 +135,15 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
-    when(secretTextService.update(any(), any())).thenReturn(true);
+    when(secretTextService.update(any(), any(), any())).thenReturn(true);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
-        .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
+        .thenReturn(
+            Secret.builder().identifier("secret").accountIdentifier("account").identifier("identifier").build());
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
-    SecretResponseWrapper updatedSecret = secretCrudService.update("account", secretDTOV2);
+    SecretResponseWrapper updatedSecret = secretCrudService.update("account", null, null, "identifier", secretDTOV2);
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
@@ -178,9 +187,12 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
     try {
-      secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+      secretCrudService.updateFile("account", null, null, "identifier", secretDTOV2, new StringInputStream("string"));
       fail("Execution should not reach here");
     } catch (InvalidRequestException invalidRequestException) {
       // not required
@@ -202,9 +214,12 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(true)));
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
     SecretResponseWrapper updatedFile =
-        secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+        secretCrudService.updateFile("account", null, null, "identifier", secretDTOV2, new StringInputStream("string"));
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
@@ -246,8 +261,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testList() {
     when(ngSecretServiceV2.list(any(), anyInt(), anyInt()))
         .thenReturn(new PageImpl<>(Lists.newArrayList(Secret.builder().build()), PageRequest.of(0, 10), 1));
-    PageResponse<SecretResponseWrapper> secretPage =
-        secretCrudService.list("account", "org", "proj", SecretType.SSHKey, "abc", 0, 100);
+    PageResponse<SecretResponseWrapper> secretPage = secretCrudService.list(
+        "account", "org", "proj", Collections.emptyList(), singletonList(SecretType.SSHKey), false, "abc", 0, 100);
     assertThat(secretPage.getContent()).isNotEmpty();
     assertThat(secretPage.getContent().size()).isEqualTo(1);
     verify(ngSecretServiceV2).list(any(), anyInt(), anyInt());

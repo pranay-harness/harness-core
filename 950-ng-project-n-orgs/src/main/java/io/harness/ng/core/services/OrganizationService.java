@@ -24,4 +24,6 @@ public interface OrganizationService {
   List<Organization> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String identifier, Long version);
+
+  boolean restore(String accountIdentifier, String identifier);
 }

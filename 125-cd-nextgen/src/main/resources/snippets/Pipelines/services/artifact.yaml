@@ -1,0 +1,7 @@
+artifacts:
+  primary:
+    type: "Dockerhub"
+    spec:
+      connectorRef: "account.DockerConnector"
+      imagePath: "library/nginx"
+      tag: "latest"

@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.beans.RepresentationStrategy;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorType;
@@ -14,5 +16,7 @@ public class PmsCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ParameterField.class, 35001);
     kryo.register(InputSetValidator.class, 35002);
     kryo.register(InputSetValidatorType.class, 35008);
+    kryo.register(RepresentationStrategy.class, 35012);
+    kryo.register(InterruptType.class, 35013);
   }
 }

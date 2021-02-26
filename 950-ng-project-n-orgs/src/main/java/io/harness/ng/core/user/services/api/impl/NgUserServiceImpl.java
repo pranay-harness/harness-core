@@ -92,4 +92,9 @@ public class NgUserServiceImpl implements NgUserService {
   public UserProjectMap createUserProjectMap(UserProjectMap userProjectMap) {
     return userProjectMapRepository.save(userProjectMap);
   }
+
+  @Override
+  public boolean isUserInAccount(String accountId, String userId) {
+    return Boolean.TRUE.equals(RestClientUtils.getResponse(userClient.isUserInAccount(accountId, userId)));
+  }
 }

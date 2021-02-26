@@ -22,10 +22,11 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyForkStepParameters;
-import io.harness.utils.DummyOutcome;
 import io.harness.utils.DummySectionStepParameters;
+import io.harness.utils.DummyVisualizationOutcome;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -58,7 +59,8 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   @Before
   public void setUp() {
     when(pmsOutcomeService.findAllByRuntimeId(anyString(), anyString()))
-        .thenReturn(Collections.singletonList(PmsOutcomeMapper.convertOutcomeValueToJson(new DummyOutcome("outcome"))));
+        .thenReturn(Collections.singletonList(
+            PmsOutcomeMapper.convertOutcomeValueToJson(new DummyVisualizationOutcome("outcome"))));
   }
 
   @Test
@@ -95,7 +97,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                       .setName("name2")
                       .setStepType(StepType.newBuilder().setType("SECTION").build())
                       .setIdentifier("identifier2")
-                      .setStepParameters(sectionStepParams.toJson())
+                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
                       .build())
             .resolvedStepParameters(sectionStepParams)
             .previousId(dummyStart.getUuid())
@@ -289,7 +291,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                        .setName("name1")
                                        .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .setIdentifier("identifier1")
-                                       .setStepParameters(forkStepParams.toJson())
+                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
                                        .build())
                              .resolvedStepParameters(forkStepParams)
                              .createdAt(System.currentTimeMillis())
@@ -384,7 +386,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                        .setName("name1")
                                        .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .setIdentifier("identifier1")
-                                       .setStepParameters(forkStepParams.toJson())
+                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
                                        .build())
                              .resolvedStepParameters(forkStepParams)
                              .createdAt(System.currentTimeMillis())
@@ -671,7 +673,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                        .setName("name1")
                                        .setStepType(StepType.newBuilder().setType("DUMMY_FORK").build())
                                        .setIdentifier("identifier1")
-                                       .setStepParameters(forkStepParams.toJson())
+                                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(forkStepParams))
                                        .build())
                              .resolvedStepParameters(forkStepParams)
                              .createdAt(System.currentTimeMillis())

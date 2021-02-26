@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.beans;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 
@@ -24,7 +25,7 @@ public class DeploymentActivityResultDTO {
     int progressPercentage;
     Long startTime;
     Long durationMs;
-    Double riskScore;
+    Risk risk;
     String environmentName;
     String jobName;
     String verificationJobInstanceId;

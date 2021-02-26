@@ -1,34 +1,39 @@
 package software.wings.service.impl.gcp;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 
 import io.harness.beans.DelegateTask;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -39,18 +44,33 @@ import org.apache.commons.lang3.StringUtils;
 public class GcpHelperServiceManager {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private DelegateService delegateService;
+  @Inject private EncryptionService encryptionService;
 
   public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (gcpConfig.isUseDelegate()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
-          GcpValidationRequest.builder().delegateSelector(gcpConfig.getDelegateSelector()).build());
-      if (gcpResponse.getExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        throw new InvalidRequestException(gcpResponse.getErrorMessage(), USER);
+          GcpValidationRequest.builder()
+              .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+              .build());
+      ConnectorValidationResult validationResult =
+          ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
+      if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {
+        String errorMessage = getErrorMessage(validationResult.getErrors());
+        throw new InvalidRequestException(errorMessage, USER);
       }
     } else {
-      gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
+      // Decrypt gcpConfig
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
+      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
     }
+  }
+
+  private String getErrorMessage(List<ErrorDetail> errors) {
+    if (isNotEmpty(errors) && errors.size() == 1) {
+      return errors.get(0).getMessage();
+    }
+    return "Invalid Credentials";
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {
@@ -60,12 +80,12 @@ public class GcpHelperServiceManager {
   }
 
   private GcpResponse executeSyncTask(String accountId, GcpRequest request) {
+    List<String> tags = isNotEmpty(request.getDelegateSelectors()) ? new ArrayList<>(request.getDelegateSelectors())
+                                                                   : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                                    .tags(StringUtils.isNotBlank(request.getDelegateSelector())
-                                            ? Collections.singletonList(request.getDelegateSelector())
-                                            : emptyList())
+                                    .tags(tags)
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.GCP_TASK.name())

@@ -51,12 +51,15 @@ import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CEViewsMigration;
 import migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration;
+import migrations.all.CleanupOrphanInfraMappings;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
+import migrations.all.ConvertHttpHeadersStringTypeToList;
 import migrations.all.CreatePrimiryProfileForAllAccounts;
 import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteInvalidServiceGuardConfigs;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.DeleteOrphanPerpetualTaskMigration;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.DeletedAccountStatusMigration;
@@ -83,6 +86,7 @@ import migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import migrations.all.MigrateServiceNowCriteriaInPipelines;
 import migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import migrations.all.MoveDelegateNameToDelegateSelectorsMigration;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveDeletedAppIdsFromUserGroups;
 import migrations.all.RemoveDeprecatedFieldsFromHarnessUserGroup;
@@ -300,6 +304,11 @@ public class MigrationBackgroundList {
         .add(Pair.of(182, CEViewsMigration.class))
         .add(Pair.of(183, BaseMigration.class))
         .add(Pair.of(184, SetDefaultTimeOutAndActionForManualInterventionFailureStrategy.class))
+        .add(Pair.of(185, ConvertHttpHeadersStringTypeToList.class))
+        .add(Pair.of(186, DeleteOrphanPerpetualTaskMigration.class))
+        .add(Pair.of(187, BaseMigration.class))
+        .add(Pair.of(188, MoveDelegateNameToDelegateSelectorsMigration.class))
+        .add(Pair.of(189, CleanupOrphanInfraMappings.class))
         .build();
   }
 }

@@ -67,12 +67,12 @@ public class HeatMapResource {
   @Path("/risk-summary-popover")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "get current risk summary", nickname = "get-risk-summary-popover")
+  @ApiOperation(value = "get current risk summary", nickname = "getRiskSummaryPopover")
   public RestResponse<RiskSummaryPopoverDTO> getRiskSummaryPopover(
       @QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull final String projectIdentifier,
-      @NotNull @QueryParam("endTime") long endTime, @QueryParam("serviceIdentifier") final String serviceIdentifier,
+      @NotNull @QueryParam("endTime") Long endTime, @QueryParam("serviceIdentifier") final String serviceIdentifier,
       @QueryParam("category") CVMonitoringCategory category) {
     return new RestResponse<>(heatMapService.getRiskSummaryPopover(
         accountId, orgIdentifier, projectIdentifier, Instant.ofEpochMilli(endTime), serviceIdentifier, category));

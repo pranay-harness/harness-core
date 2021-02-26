@@ -1,10 +1,10 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
@@ -20,8 +20,12 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -30,7 +34,7 @@ import java.util.Map;
 
 public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getYamlType()).build();
   private final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
@@ -48,20 +52,21 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
 
   public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    StoreConfig storeConfig = k8sManifestOutcome.getStore().getStoreConfig();
+    StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    boolean skipDryRun =
+        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sRollingDeployRequest k8sRollingDeployRequest =
         K8sRollingDeployRequest.builder()
-            .skipDryRun(stepParameters.getSkipDryRun().getValue())
+            .skipDryRun(skipDryRun)
             .inCanaryWorkflow(false)
             .releaseName(releaseName)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
-            .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
@@ -80,14 +85,26 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+    if (passThroughData instanceof GitFetchResponsePassThroughData) {
+      return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
+    }
+
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder()
-                           .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
-                           .build())
-          .build();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
+                               .build());
+      if (k8sRollingStepParameters.getRollbackInfo() != null) {
+        stepResponseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return stepResponseBuilder.build();
     }
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
 
@@ -103,16 +120,29 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
 
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
+          .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
           .stepOutcome(StepResponse.StepOutcome.builder()
                            .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
                            .outcome(k8sRollingOutcome)
+                           .group(StepOutcomeGroup.STAGE.name())
                            .build())
           .build();
     } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
-          .build();
+      StepResponseBuilder stepResponseBuilder =
+          StepResponse.builder()
+              .status(Status.FAILED)
+              .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
+              .failureInfo(FailureInfo.newBuilder()
+                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
+                               .build());
+      if (k8sRollingStepParameters.getRollbackInfo() != null) {
+        stepResponseBuilder.stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name("RollbackOutcome")
+                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
+                .build());
+      }
+      return stepResponseBuilder.build();
     }
   }
 }

@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class HttpInternalResponse {
   private CommandExecutionStatus commandExecutionStatus;
   private String errorMessage;

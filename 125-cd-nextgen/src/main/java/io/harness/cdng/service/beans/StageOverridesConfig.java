@@ -16,6 +16,7 @@ import io.harness.yaml.core.variables.NGVariable;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -37,7 +38,7 @@ public class StageOverridesConfig implements Visitable {
   List<ManifestConfigWrapper> manifests;
 
   // For Visitor Framework Impl
-  String metadata;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public VisitableChildren getChildrenToWalk() {

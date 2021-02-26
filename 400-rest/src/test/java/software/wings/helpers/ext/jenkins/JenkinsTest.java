@@ -39,6 +39,7 @@ import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.utils.JsonUtils;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -75,7 +76,9 @@ public class JenkinsTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8089));
   private Jenkins jenkins = new JenkinsImpl(JENKINS_URL, USERNAME, PASSWORD.toCharArray());
 
   public JenkinsTest() throws URISyntaxException {}

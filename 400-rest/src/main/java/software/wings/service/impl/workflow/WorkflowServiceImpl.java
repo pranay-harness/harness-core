@@ -30,6 +30,7 @@ import static io.harness.provision.TerraformConstants.RUN_PLAN_ONLY_KEY;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -68,6 +69,7 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
+import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -153,6 +155,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -247,6 +250,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -418,8 +422,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
-    return stencils;
+    return getStencils(appId, workflowId, phaseId, stateTypeScopes);
   }
 
   private void removeStencil(Map<StateTypeScope, List<Stencil>> stencils, String appId, FeatureName featureName,
@@ -1136,6 +1139,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (envChanged) {
+      List<Pipeline> pipelinesWithWorkflowLinked = pipelineService.listPipelines(
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
+              .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
+              .build());
+      if (isNotEmpty(pipelinesWithWorkflowLinked)) {
+        updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
+        pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+      }
+    }
+
     if (isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
@@ -1201,6 +1217,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void updateEnvIdInLinkedPipelines(
+      Workflow workflow, String newEnvId, List<Pipeline> pipelinesWithWorkflowLinked) {
+    if (isEmpty(pipelinesWithWorkflowLinked)) {
+      return;
+    }
+    for (Pipeline pipeline : pipelinesWithWorkflowLinked) {
+      if (isNotEmpty(pipeline.getPipelineStages())) {
+        for (PipelineStage stage : pipeline.getPipelineStages()) {
+          if (workflow.getUuid().equals(
+                  stage.getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.workflowId))) {
+            stage.getPipelineStageElements().get(0).getProperties().put(EnvStateKeys.envId, newEnvId);
+          }
+        }
+      }
+    }
   }
 
   private void populateServices(Workflow workflow) {
@@ -1384,6 +1417,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private PhaseStep generateRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    if (isARMProvisionState(preDeploymentSteps)) {
+      return generateARMRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
+    }
+
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
                                            .stream()
                                            .filter(step -> {
@@ -1418,6 +1455,49 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                          .properties(propertiesMap)
                                          .build());
       }
+    });
+    rollbackProvisionerStep.setRollback(true);
+    rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
+    return rollbackProvisionerStep;
+  }
+
+  private boolean isARMProvisionState(PhaseStep preDeploymentSteps) {
+    List<GraphNode> graphNodes = preDeploymentSteps.getSteps()
+                                     .stream()
+                                     .filter(step -> StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()))
+                                     .collect(toList());
+    return isNotEmpty(graphNodes);
+  }
+
+  private PhaseStep generateARMRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    List<GraphNode> provisionerSteps =
+        preDeploymentSteps.getSteps()
+            .stream()
+            .filter(step -> { return StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()); })
+            .collect(Collectors.toList());
+
+    if (isEmpty(provisionerSteps)) {
+      return null;
+    }
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    PhaseStep rollbackProvisionerStep = new PhaseStep(phaseStepType, phaseStepName);
+    rollbackProvisionerStep.setUuid(generateUuid());
+    provisionerSteps.forEach(step -> {
+      StateType stateType = StateType.ARM_ROLLBACK;
+      Map<String, Object> propertiesMap = new HashMap<>();
+      propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+      propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+      propertiesMap.put("timeoutExpression", step.getProperties().get("timeoutExpression"));
+      propertiesMap.put("cloudProviderId", step.getProperties().get("cloudProviderId"));
+      propertiesMap.put("resourceGroupExpression", step.getProperties().get("resourceGroupExpression"));
+      propertiesMap.put("subscriptionExpression", step.getProperties().get("subscriptionExpression"));
+      rollbackProvisionerNodes.add(GraphNode.builder()
+                                       .type(stateType.name())
+                                       .rollback(true)
+                                       .name("Rollback " + step.getName())
+                                       .properties(propertiesMap)
+                                       .build());
     });
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
@@ -1500,7 +1580,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean artifactCheckRequiredForDeployment(
       WorkflowPhase workflowPhase, CanaryOrchestrationWorkflow orchestrationWorkflow) {
-    return (workflowPhase.getDeploymentType() == SSH || workflowPhase.getDeploymentType() == DeploymentType.PCF)
+    return (workflowPhase.getDeploymentType() == SSH || workflowPhase.getDeploymentType() == DeploymentType.PCF
+               || workflowPhase.getDeploymentType() == AZURE_WEBAPP)
         && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD;
   }
 
@@ -1567,6 +1648,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<String> getResolvedInfraDefinitionIds(Workflow workflow, Map<String, String> workflowVariables) {
     return workflowServiceHelper.getResolvedInfraDefinitionIds(workflow, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedServiceIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedServiceIdFromPhase(workflowPhase, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedInfraDefinitionIdFromPhase(
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraDefinitionIdFromPhase(workflowPhase, workflowVariables);
   }
 
   @Override
@@ -3813,10 +3905,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
+    filteredStepTypes = filterARMStepTypes(filteredStepTypes, workflow.getAccountId());
 
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(workflow.getAccountId(), favorites, recent, stepTypes, workflowPhase,
         workflow.getAppId(), workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+  }
+
+  private List<StepType> filterARMStepTypes(List<StepType> steps, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.AZURE_ARM, accountId)) {
+      return steps;
+    }
+    return steps.stream().filter(step -> step != ARM_CREATE_RESOURCE).collect(toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,
@@ -3844,7 +3944,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Add favorites category always even if it is empty.
     addFavoritesToWorkflowCategories(favorites, steps.keySet(), categories);
     // get all categories relevant for workflow
-    addWorkflowCategorySteps(steps.keySet(), categories);
+    addWorkflowCategorySteps(steps.keySet(), categories, accountId);
     // add service commands to categories
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
@@ -3888,7 +3988,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
   }
 
-  public void addWorkflowCategorySteps(Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories) {
+  public void addWorkflowCategorySteps(
+      Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories, String accountId) {
     for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
       WorkflowStepType workflowStepType = entry.getKey();
       List<StepType> stepTypeList = entry.getValue();
@@ -3903,11 +4004,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       // not adding category if there are no steps
       if (isNotEmpty(stepIds)) {
-        categories.add(WorkflowCategoryStepsMeta.builder()
-                           .id(workflowStepType.name())
-                           .name(workflowStepType.getDisplayName())
-                           .stepIds(stepIds)
-                           .build());
+        String displayName = workflowStepType.getDisplayName();
+        if ((workflowStepType.equals(WorkflowStepType.APM) || workflowStepType.equals(WorkflowStepType.LOG))
+            && featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+          displayName = "Harness CV 1.0 - " + displayName;
+        }
+        categories.add(
+            WorkflowCategoryStepsMeta.builder().id(workflowStepType.name()).name(displayName).stepIds(stepIds).build());
       }
     }
   }

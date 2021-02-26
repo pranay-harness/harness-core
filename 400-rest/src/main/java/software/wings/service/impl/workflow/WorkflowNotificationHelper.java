@@ -23,15 +23,20 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.InformationNotification;
@@ -93,6 +98,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class WorkflowNotificationHelper {
   private static final String APPLICATION = "APPLICATION";
   private static final String TRIGGER = "TRIGGER";
@@ -375,8 +381,8 @@ public class WorkflowNotificationHelper {
     String workflowUrl = calculateWorkflowUrl(context.getWorkflowExecutionId(), context.getOrchestrationWorkflowType(),
         app.getAccountId(), app.getUuid(), env == null ? null : env.getUuid());
 
-    String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
-    String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
+    String startTime = getFormattedTime(startTs);
+    String endTime = getFormattedTime(endTs);
 
     final WorkflowNotificationDetails applicationDetails =
         calculateApplicationDetails(app.getAccountId(), app.getAppId(), app);
@@ -433,7 +439,7 @@ public class WorkflowNotificationHelper {
           app.getAccountId(), app.getAppId(), context, workflowExecution, WORKFLOW, null);
     }
     WorkflowNotificationDetails infraDetails =
-        calculateInfraDetails(app.getAccountId(), context.getAppId(), workflowExecution, env);
+        calculateInfraDetails(app.getAccountId(), context.getAppId(), workflowExecution);
 
     placeHolderValues.put("INFRA", infraDetails.getMessage());
     placeHolderValues.put("INFRA_NAME", infraDetails.getName());
@@ -447,10 +453,14 @@ public class WorkflowNotificationHelper {
     return placeHolderValues;
   }
 
+  public String getFormattedTime(long startTs) {
+    return format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
+  }
+
   public String calculateWorkflowUrl(String workflowExecutionId, OrchestrationWorkflowType type, String accountId,
       String appId, String environmentId) {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    return NotificationMessageResolver.buildAbsoluteUrl(configuration,
+    return NotificationMessageResolver.buildAbsoluteUrl(
         format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
             BUILD == type ? "build" : environmentId, workflowExecutionId),
         baseUrl);
@@ -464,7 +474,7 @@ public class WorkflowNotificationHelper {
       String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
       if (isNotBlank(pipelineName)) {
         String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
-        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
+        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                 app.getUuid(), workflowExecution.getPipelineExecutionId(), context.getWorkflowExecutionId()),
             baseUrl);
@@ -485,7 +495,7 @@ public class WorkflowNotificationHelper {
       String pipelineName = workflowExecution.getPipelineExecution().getPipeline().getName();
       if (isNotBlank(pipelineName)) {
         String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
-        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(configuration,
+        String pipelineUrl = NotificationMessageResolver.buildAbsoluteUrl(
             format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                 app.getUuid(), workflowExecution.getUuid(), "undefined"),
             baseUrl);
@@ -499,17 +509,21 @@ public class WorkflowNotificationHelper {
   }
 
   public WorkflowNotificationDetails calculateInfraDetails(
-      String accountId, String appId, WorkflowExecution workflowExecution, Environment env) {
+      String accountId, String appId, WorkflowExecution workflowExecution) {
     WorkflowNotificationDetailsBuilder infraDetails = WorkflowNotificationDetails.builder();
     List<String> infraIds = workflowExecution.getInfraDefinitionIds();
 
-    StringBuilder infraMsg = new StringBuilder();
-    StringBuilder infraDetailsName = new StringBuilder();
-    StringBuilder infraDetailsUrl = new StringBuilder();
+    StringBuilder infraMsg = new StringBuilder(64);
+    StringBuilder infraDetailsName = new StringBuilder(32);
+    StringBuilder infraDetailsUrl = new StringBuilder(32);
 
     if (isNotEmpty(infraIds)) {
+      List<String> infras = infraIds.stream()
+                                .filter(EmptyPredicate::isNotEmpty)
+                                .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
+                                .collect(Collectors.toList());
       boolean firstInfra = true;
-      for (String infraId : infraIds) {
+      for (String infraId : infras) {
         InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraId);
         if (!firstInfra) {
           infraMsg.append(", ");
@@ -517,7 +531,7 @@ public class WorkflowNotificationHelper {
           infraDetailsUrl.append(',');
         }
         notNullCheck("Infrastructure Definition might have been deleted", infrastructureDefinition, USER);
-        String infraUrl = calculateInfraUrl(accountId, appId, infraId, env == null ? null : env.getUuid());
+        String infraUrl = calculateInfraUrl(accountId, appId, infraId, infrastructureDefinition.getEnvId());
         infraMsg.append(format("<<<%s|-|%s>>>", infraUrl, infrastructureDefinition.getName()));
         infraDetailsName.append(infrastructureDefinition.getName());
         infraDetailsUrl.append(infraUrl);
@@ -536,10 +550,45 @@ public class WorkflowNotificationHelper {
 
   private String calculateInfraUrl(String accountId, String appId, String infraId, String envId) {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    return NotificationMessageResolver.buildAbsoluteUrl(configuration,
+    return NotificationMessageResolver.buildAbsoluteUrl(
         format("/account/%s/app/%s/environments/%s/infrastructure-definitions/%s/details", accountId, appId, envId,
             infraId),
         baseUrl);
+  }
+
+  public WorkflowNotificationDetails calculateEnvDetails(
+      String accountId, String appId, List<EnvSummary> envSummaries) {
+    WorkflowNotificationDetailsBuilder envDetails = WorkflowNotificationDetails.builder();
+
+    StringBuilder envMsg = new StringBuilder();
+    StringBuilder envDetailsName = new StringBuilder();
+    StringBuilder envDetailsUrl = new StringBuilder();
+
+    if (isNotEmpty(envSummaries)) {
+      boolean firstEnv = true;
+      for (EnvSummary envSummary : envSummaries) {
+        if (!firstEnv) {
+          envMsg.append(", ");
+          envDetailsName.append(',');
+          envDetailsUrl.append(',');
+        }
+        String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+        String envURL = NotificationMessageResolver.buildAbsoluteUrl(
+            format("/account/%s/app/%s/environments/%s/details", accountId, appId, envSummary.getUuid()), baseUrl);
+        envMsg.append(format("<<<%s|-|%s>>>", envURL, envSummary.getName()));
+        envDetailsName.append(envSummary.getName());
+        envDetailsUrl.append(envURL);
+        firstEnv = false;
+      }
+
+    } else {
+      envDetailsName.append("no environments");
+      envMsg.append("no environments");
+    }
+    envDetails.name(envDetailsName.toString());
+    envDetails.url(envDetailsUrl.toString());
+    envDetails.message(format("*Environments:* %s", envMsg));
+    return envDetails.build();
   }
 
   public WorkflowNotificationDetails calculateServiceDetailsForAllServices(String accountId, String appId,
@@ -560,7 +609,11 @@ public class WorkflowNotificationHelper {
     StringBuilder serviceDetailsUrl = new StringBuilder();
 
     boolean firstService = true;
-    for (String serviceId : serviceIds) {
+    List<String> filteredServices = serviceIds.stream()
+                                        .filter(EmptyPredicate::isNotEmpty)
+                                        .filter(id -> !ExpressionEvaluator.containsVariablePattern(id))
+                                        .collect(Collectors.toList());
+    for (String serviceId : filteredServices) {
       Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
       if (!firstService) {
         serviceMsg.append(", ");
@@ -575,7 +628,7 @@ public class WorkflowNotificationHelper {
       firstService = false;
     }
 
-    if (serviceIds.isEmpty()) {
+    if (filteredServices.isEmpty()) {
       serviceMsg.append("no service");
       serviceDetailsName.append("no service");
     }
@@ -589,7 +642,7 @@ public class WorkflowNotificationHelper {
   public String calculateServiceUrl(String accountId, String appId, String serviceId) {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     return NotificationMessageResolver.buildAbsoluteUrl(
-        configuration, format("/account/%s/app/%s/services/%s/details", accountId, appId, serviceId), baseUrl);
+        format("/account/%s/app/%s/services/%s/details", accountId, appId, serviceId), baseUrl);
   }
 
   public WorkflowNotificationDetails calculateEnvironmentDetails(String accountId, String appId, Environment env) {
@@ -597,7 +650,7 @@ public class WorkflowNotificationHelper {
     String envMsg = "";
     if (env != null) {
       String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-      String envURL = NotificationMessageResolver.buildAbsoluteUrl(configuration,
+      String envURL = NotificationMessageResolver.buildAbsoluteUrl(
           format("/account/%s/app/%s/environments/%s/details", accountId, appId, env.getUuid()), baseUrl);
 
       envMsg = format("*Environment:* <<<%s|-|%s>>>", envURL, env.getName());
@@ -615,8 +668,8 @@ public class WorkflowNotificationHelper {
 
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     if (isNotEmpty(appId) && (app != null)) {
-      String appURL = NotificationMessageResolver.buildAbsoluteUrl(
-          configuration, format("/account/%s/app/%s/details", accountId, appId), baseUrl);
+      String appURL =
+          NotificationMessageResolver.buildAbsoluteUrl(format("/account/%s/app/%s/details", accountId, appId), baseUrl);
       appMsg = format("*Application:* <<<%s|-|%s>>>", appURL, app.getName());
       applicationDetails.name(app.getName());
       applicationDetails.url(appURL);
@@ -634,7 +687,7 @@ public class WorkflowNotificationHelper {
     String triggerMsg = "";
     if (triggeredBy.contains("Deployment Trigger")) {
       String triggerURL = NotificationMessageResolver.buildAbsoluteUrl(
-          configuration, format("/account/%s/app/%s/triggers", accountId, appId), baseUrl);
+          format("/account/%s/app/%s/triggers", accountId, appId), baseUrl);
       triggerMsg = format("*TriggeredBy:* <<<%s|-|%s>>>", triggerURL, triggeredBy);
       triggerDetails.url(triggerURL);
     } else {

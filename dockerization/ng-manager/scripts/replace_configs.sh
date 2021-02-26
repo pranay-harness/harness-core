@@ -2,6 +2,14 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i $CONFIG_FILE $CONFIG_KEY $CONFIG_VALUE
+  fi
+}
+
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
@@ -81,6 +89,18 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
+if [[ "" != "$USER_VERIFICATION_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.userVerificationSecret "$USER_VERIFICATION_SECRET"
+fi
+
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -109,12 +129,12 @@ if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtAuthSecret "$JWT_AUTH_SECRET"
 fi
 
-if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE nextGen.identityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
-fi
-
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
@@ -148,4 +168,33 @@ fi
 
 if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
+fi
+
+if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
+  yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
+fi
+
+if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
+fi
+
+replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
+
+replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
+
+replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
+
+replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
+
+replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
+
+replace_key_value baseUrls.ui $MANAGER_UI_URL
+
+replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
 fi

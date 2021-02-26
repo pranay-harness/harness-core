@@ -5,8 +5,7 @@ pipeline:
       identifier: qa
       type: Deployment
       spec:
-        service:
-          identifier: <+input>
+        serviceConfig:
           serviceDefinition:
             type: Kubernetes # Can it be type to make it consistent with other types
             spec:
@@ -47,9 +46,6 @@ pipeline:
                             connectorRef: <+input>
                             branch: <+input>
         infrastructure:
-          environment:
-            name: <+input>
-            identifier: <+input>
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
@@ -74,7 +70,7 @@ pipeline:
       identifier: prod
       type: Deployment
       spec:
-        service:
+        serviceConfig:
           useFromStage:
             stage: <+input>.regex(^prod*)
           stageOverrides:
@@ -88,8 +84,3 @@ pipeline:
                     spec:
                       connectorRef: <+input>
                       branch: <+input>
-        infrastructure:
-          useFromStage:
-            overrides:
-              environment:
-                identifier: <+input>

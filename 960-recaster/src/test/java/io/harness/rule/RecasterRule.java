@@ -8,10 +8,12 @@ import com.google.inject.Module;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
+@Slf4j
 public class RecasterRule implements MethodRule, InjectorRuleMixin {
   ClosingFactory closingFactory;
 
@@ -32,6 +34,6 @@ public class RecasterRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

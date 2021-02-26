@@ -31,15 +31,13 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.serializer.KryoSerializer;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -77,7 +75,7 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                                                        .setNodeExecutionId(nodeExecutionId)
                                                        .setExecutableResponse(executableResponse)
                                                        .addAllCallbackIds(callbackIds);
-    if (status != null && status != Status.UNRECOGNIZED) {
+    if (status != null && status != Status.NO_OP) {
       builder.setStatus(status);
     }
     nodeExecutionProtoServiceBlockingStub.addExecutableResponse(builder.build());
@@ -149,6 +147,6 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
     if (isEmpty(stepParameters)) {
       return null;
     }
-    return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
+    return RecastOrchestrationUtils.fromDocumentJson(stepParameters, step.getStepParametersClass());
   }
 }

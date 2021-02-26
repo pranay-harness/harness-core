@@ -18,4 +18,8 @@ public class TimeScaleDBConfig {
   boolean logUnclosedConnections;
   private String loggerLevel;
   private int instanceDataRetentionDays;
+  private int instanceStatsMigrationEventsLimit;
+  private int instanceStatsMigrationQueryBatchSize;
+  private int deploymentDataMigrationRowLimit;
+  private int deploymentDataMigrationQueryBatchSize;
 }

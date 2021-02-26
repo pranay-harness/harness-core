@@ -10,5 +10,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface NGActivityRepository
     extends PagingAndSortingRepository<NGActivity, String>, NGActivityCustomRepository {
-  long deleteByReferredEntityFQN(String referredEntityFQN);
+  long deleteByReferredEntityFQNAndReferredEntityType(String referredEntityFQN, String referredEntityType);
 }

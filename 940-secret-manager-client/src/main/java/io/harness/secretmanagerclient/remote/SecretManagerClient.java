@@ -6,6 +6,7 @@ import static io.harness.NGConstants.FILE_METADATA_KEY;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.beans.PageResponse;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -102,7 +103,7 @@ public interface SecretManagerClient {
 
   // validate secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}/validate")
-  Call<RestResponse<Boolean>> validateSecretManager(@Path(value = "identifier") String identifier,
+  Call<RestResponse<ConnectorValidationResult>> validateSecretManager(@Path(value = "identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
@@ -122,6 +123,14 @@ public interface SecretManagerClient {
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  // list secret managers
+  @GET(SECRET_MANAGERS_API)
+  Call<RestResponse<List<SecretManagerConfigDTO>>> listSecretManagers(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);
 
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")

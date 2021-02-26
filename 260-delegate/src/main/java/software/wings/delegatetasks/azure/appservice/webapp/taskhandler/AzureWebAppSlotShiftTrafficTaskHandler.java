@@ -6,6 +6,8 @@ import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -16,7 +18,9 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlot
 import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
@@ -29,7 +33,10 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
 
     updateSlotTrafficWeight(slotShiftTrafficParameters, webClientContext, logStreamingTaskClient);
 
-    return AzureWebAppSlotShiftTrafficResponse.builder().build();
+    markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+    return AzureWebAppSlotShiftTrafficResponse.builder()
+        .preDeploymentData(slotShiftTrafficParameters.getPreDeploymentData())
+        .build();
   }
 
   private void validateSlotShiftTrafficParameters(AzureWebAppSlotShiftTrafficParameters slotShiftTrafficParameters) {
@@ -43,8 +50,8 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
       throw new InvalidArgumentsException(SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG);
     }
 
-    double trafficWeightInPercentage = slotShiftTrafficParameters.getTrafficWeightInPercentage();
-    if (trafficWeightInPercentage > 100.0 || trafficWeightInPercentage < 0) {
+    double trafficPercent = slotShiftTrafficParameters.getTrafficWeightInPercentage();
+    if (trafficPercent > 100.0 || trafficPercent < 0) {
       throw new InvalidArgumentsException(TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG);
     }
   }
@@ -53,7 +60,8 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
       AzureWebClientContext webClientContext, ILogStreamingTaskClient logStreamingTaskClient) {
     String shiftTrafficSlotName = slotShiftTrafficParameters.getDeploymentSlot();
     double trafficWeightInPercentage = slotShiftTrafficParameters.getTrafficWeightInPercentage();
-
+    slotShiftTrafficParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.UPDATE_TRAFFIC_PERCENT.name());
     azureAppServiceDeploymentService.rerouteProductionSlotTraffic(
         webClientContext, shiftTrafficSlotName, trafficWeightInPercentage, logStreamingTaskClient);
   }

@@ -16,7 +16,6 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -28,6 +27,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 
@@ -35,7 +35,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<KubernetesClusterConfig> {
+public class KubernetesEntityToDTO
+    implements ConnectorEntityToDTOMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Inject private KubernetesConfigCastHelper kubernetesConfigCastHelper;
 
   @Override
@@ -61,7 +62,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
       KubernetesDelegateDetails delegateCredential) {
     KubernetesCredentialDTO k8sCredentials =
         KubernetesCredentialDTO.builder()
-            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateCredential.getDelegateName()).build())
+            .config(KubernetesDelegateDetailsDTO.builder()
+                        .delegateSelectors(delegateCredential.getDelegateSelectors())
+                        .build())
             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
             .build();
     return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();

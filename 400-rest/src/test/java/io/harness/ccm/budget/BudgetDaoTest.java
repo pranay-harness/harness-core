@@ -1,7 +1,7 @@
 package io.harness.ccm.budget;
 
-import static io.harness.ccm.budget.entities.BudgetType.PREVIOUS_MONTH_SPEND;
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.BudgetType.PREVIOUS_MONTH_SPEND;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -55,7 +55,8 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   public Map<String, List<ExecutionPlanCreatorResponse>> createPlanForChildren(
       DeploymentStage deploymentStage, ExecutionPlanCreationContext context) {
     Map<String, List<ExecutionPlanCreatorResponse>> childrenPlanMap = new HashMap<>();
-    final ExecutionPlanCreatorResponse planForService = createPlanForService(deploymentStage.getService(), context);
+    final ExecutionPlanCreatorResponse planForService =
+        createPlanForService(deploymentStage.getServiceConfig(), context);
     final ExecutionPlanCreatorResponse planForInfrastructure =
         createPlanForInfrastructure(deploymentStage.getInfrastructure(), context);
     final ExecutionPlanCreatorResponse planForExecution =

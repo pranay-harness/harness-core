@@ -103,6 +103,6 @@ public class ApiServiceRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

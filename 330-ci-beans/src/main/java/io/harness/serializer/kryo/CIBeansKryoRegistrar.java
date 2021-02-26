@@ -39,11 +39,12 @@ import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
+import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
@@ -64,7 +65,7 @@ import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.beans.yaml.extended.infrastrucutre.K8sGCPInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.stdvars.BuildStandardVariables;
@@ -72,7 +73,6 @@ import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
-import java.util.LinkedHashSet;
 
 /**
  * Class will register all kryo classes
@@ -110,7 +110,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PodSetupInfo.PodSetupParams.class, 100027);
     kryo.register(ContainerDefinitionInfo.class, 100028);
     kryo.register(ContainerImageDetails.class, 100029);
-    kryo.register(LinkedHashSet.class, 100030);
     kryo.register(DockerFileArtifact.class, 100031);
     kryo.register(DockerhubConnector.class, 100032);
     kryo.register(EcrConnector.class, 100033);
@@ -121,9 +120,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConnectorYaml.Spec.class, 100038);
     kryo.register(GitConnectorYaml.Spec.AuthScheme.class, 100039);
     kryo.register(K8sDirectInfraYaml.class, 100040);
-    kryo.register(K8sDirectInfraYaml.Spec.class, 100041);
-    kryo.register(K8sGCPInfraYaml.Spec.class, 100042);
-    kryo.register(K8sGCPInfraYaml.class, 100043);
+    kryo.register(K8sDirectInfraYamlSpec.class, 100041);
     kryo.register(WebhookExecutionSource.class, 100044);
     kryo.register(WebhookGitUser.class, 100045);
     kryo.register(WebhookEvent.class, 100046);
@@ -154,7 +151,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DependencyOutcome.class, 100072);
     kryo.register(ServiceDependency.class, 100073);
     kryo.register(ServiceDependency.Status.class, 100074);
-    kryo.register(TestIntelligenceStepInfo.class, 100075);
+    kryo.register(RunTestsStepInfo.class, 100075);
     kryo.register(GCRStepInfo.class, 100076);
     kryo.register(ECRStepInfo.class, 100077);
     kryo.register(DockerStepInfo.class, 100078);
@@ -165,5 +162,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToS3StepInfo.class, 100083);
     kryo.register(UploadToGCSStepInfo.class, 100084);
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
+    kryo.register(UploadToArtifactoryStepInfo.class, 100086);
   }
 }

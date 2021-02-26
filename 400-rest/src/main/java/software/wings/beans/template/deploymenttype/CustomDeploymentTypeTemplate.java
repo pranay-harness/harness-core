@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.template.BaseTemplate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Map;
@@ -19,6 +20,7 @@ import lombok.Value;
 @Builder
 @JsonInclude(NON_NULL)
 @JsonTypeName(CUSTOM_DEPLOYMENT_TYPE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.CDP)
 public class CustomDeploymentTypeTemplate implements BaseTemplate {
   private String fetchInstanceScript;

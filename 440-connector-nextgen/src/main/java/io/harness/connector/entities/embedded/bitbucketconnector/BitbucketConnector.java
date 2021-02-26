@@ -15,8 +15,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "BitbucketConnectorKeys")
-@Entity(value = "connectors", noClassnameStored = true)
 @EqualsAndHashCode(callSuper = true)
+@Entity(value = "connectors", noClassnameStored = true)
 @TypeAlias("io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector")
 @Persistent
 public class BitbucketConnector extends Connector {

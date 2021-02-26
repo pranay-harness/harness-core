@@ -20,11 +20,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.sm.StateMachineExecutor;
 
@@ -39,7 +39,7 @@ import org.mockito.Mock;
  */
 public class ExecutionEventListenerTest extends WingsBaseTest {
   @Inject @InjectMocks private ExecutionEventListener executionEventListener;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private StateMachineExecutor stateMachineExecutor;
   @Mock private AppService appService;
 
@@ -47,7 +47,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
-    wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
+    persistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -58,7 +58,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotQueued() throws Exception {
-    wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
+    persistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
 
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
 
@@ -72,7 +72,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
     WorkflowExecution queuedExecution =
         WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(QUEUED).build();
 
-    wingsPersistence.save(queuedExecution);
+    persistence.save(queuedExecution);
 
     when(stateMachineExecutor.startQueuedExecution(APP_ID, queuedExecution.getUuid())).thenReturn(true);
     executionEventListener.onMessage(ExecutionEvent.builder().appId(APP_ID).workflowId(WORKFLOW_ID).build());
@@ -91,7 +91,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
                                             .status(QUEUED)
                                             .build();
 
-    wingsPersistence.save(queuedExecution);
+    persistence.save(queuedExecution);
 
     executionEventListener.onMessage(ExecutionEvent.builder()
                                          .infraMappingIds(asList(INFRA_MAPPING_ID))
@@ -115,7 +115,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
                                             .status(QUEUED)
                                             .build();
 
-    wingsPersistence.save(queuedExecution);
+    persistence.save(queuedExecution);
 
     executionEventListener.onMessage(ExecutionEvent.builder()
                                          .infraDefinitionIds(asList(INFRA_DEFINITION_ID))

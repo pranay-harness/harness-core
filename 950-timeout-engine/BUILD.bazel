@@ -11,6 +11,8 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//950-timeout-engine/src/main/proto:950_timeout_engine_java_proto",
+        "//950-timeout-engine/src/main/proto:950_timeout_engine_proto",
         "//960-persistence:module",
         "//980-commons:module",
         "@maven//:com_google_code_findbugs_annotations",

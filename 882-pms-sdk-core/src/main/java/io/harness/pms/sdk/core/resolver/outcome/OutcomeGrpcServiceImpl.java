@@ -5,8 +5,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
-import io.harness.pms.contracts.service.*;
+import io.harness.pms.contracts.service.OutcomeConsumeBlobRequest;
+import io.harness.pms.contracts.service.OutcomeConsumeBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomeBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomeBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomesBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomesBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFindAllBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFindAllBlobResponse;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub;
+import io.harness.pms.contracts.service.OutcomeResolveBlobRequest;
+import io.harness.pms.contracts.service.OutcomeResolveBlobResponse;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 

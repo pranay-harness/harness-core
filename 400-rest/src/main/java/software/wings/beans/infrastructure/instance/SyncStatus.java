@@ -2,15 +2,17 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 
 import software.wings.beans.Base;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
@@ -20,14 +22,28 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NgUniqueIndex(name = "compositeIdx1",
-    fields = { @Field("appId")
-               , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") })
-@CdIndex(name = "compositeIdx2", fields = { @Field("appId")
-                                            , @Field("infraMappingId") })
 @Entity(value = "syncStatus", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@FieldNameConstants(innerTypeName = "SyncStatusKeys")
 public class SyncStatus extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("compositeIdx1")
+                 .unique(true)
+                 .field(Base.APP_ID_KEY2)
+                 .field(SyncStatusKeys.serviceId)
+                 .field(SyncStatusKeys.envId)
+                 .field(SyncStatusKeys.infraMappingId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("compositeIdx2")
+                 .field(Base.APP_ID_KEY2)
+                 .field(SyncStatusKeys.infraMappingId)
+                 .build())
+        .build();
+  }
+
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENV_ID_KEY = "envId";
   public static final String INFRA_MAPPING_ID_KEY = "infraMappingId";

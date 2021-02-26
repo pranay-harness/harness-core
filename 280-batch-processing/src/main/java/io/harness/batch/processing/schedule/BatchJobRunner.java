@@ -2,6 +2,7 @@ package io.harness.batch.processing.schedule;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
@@ -37,6 +38,7 @@ public class BatchJobRunner {
   @Autowired private BatchJobIntervalService batchJobIntervalService;
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
   @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
+  @Autowired private BatchMainConfig batchMainConfig;
 
   private Cache<CacheKey, Boolean> logErrorCache = Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
 
@@ -56,6 +58,12 @@ public class BatchJobRunner {
       throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException,
              JobInstanceAlreadyCompleteException {
     BatchJobType batchJobType = BatchJobType.fromJob(job);
+    // Disable some jobs based on the flag. This can be removed later on
+    if (batchJobType == BatchJobType.SYNC_BILLING_REPORT_AZURE
+        && batchMainConfig.getAzureStorageSyncConfig().isSyncJobDisabled()) {
+      log.warn("Azure sync job is disabled in this environment");
+      return;
+    }
     long duration = batchJobType.getInterval();
     ChronoUnit chronoUnit = batchJobType.getIntervalUnit();
     BatchJobInterval batchJobInterval = batchJobIntervalService.fetchBatchJobInterval(accountId, batchJobType);
@@ -70,6 +78,9 @@ public class BatchJobRunner {
       return;
     }
     Instant endAt = Instant.now().minus(1, ChronoUnit.HOURS);
+    if (batchJobType == BatchJobType.ANOMALY_DETECTION_CLOUD) {
+      endAt = Instant.now().minus(7, ChronoUnit.HOURS);
+    }
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;

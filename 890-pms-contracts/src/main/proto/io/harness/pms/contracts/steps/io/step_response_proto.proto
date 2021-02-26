@@ -4,6 +4,7 @@ package io.harness.pms.contracts.steps.io;
 
 option java_multiple_files = true;
 
+import "970-api-services-beans/src/main/proto/io/harness/logging/unit_progress.proto";
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/execution/skip/skip_info.proto";
 import "io/harness/pms/contracts/execution/status.proto";
@@ -14,4 +15,6 @@ message StepResponseProto {
   repeated StepOutcomeProto stepOutcomes = 2;
   execution.failure.FailureInfo failureInfo = 3;
   execution.skip.SkipInfo skipInfo = 4;
+  repeated logging.UnitProgress unitProgress = 5;
+  repeated StepOutcomeProto graphOutcomes = 6;
 }

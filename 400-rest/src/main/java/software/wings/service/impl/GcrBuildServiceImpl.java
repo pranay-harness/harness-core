@@ -5,6 +5,8 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.gcr.service.GcrApiService;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,34 +14,56 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.GcrBuildService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
+import software.wings.service.mappers.artifact.GcrConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by brett on 8/2/17
  */
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class GcrBuildServiceImpl implements GcrBuildService {
-  @Inject private GcrService gcrService;
+  @Inject private GcrApiService gcrApiService;
+  @Inject private GcpHelperService gcpHelperService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCR.name());
-    return wrapNewBuildsWithLabels(gcrService.getBuilds(gcpConfig, encryptionDetails, artifactStreamAttributes, 50),
-        artifactStreamAttributes, gcpConfig);
+    try {
+      // Decrypt gcpConfig
+      encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+      return wrapNewBuildsWithLabels(
+          gcrApiService
+              .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
+                             gcpHelperService.getBasicAuthHeader(
+                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate())),
+                  artifactStreamAttributes.getImageName(), 50)
+              .stream()
+              .map(ArtifactConfigMapper::toBuildDetails)
+              .collect(Collectors.toList()),
+          artifactStreamAttributes, gcpConfig);
+    } catch (IOException e) {
+      log.error("", e);
+    }
+    return null;
   }
 
   @Override
@@ -81,7 +105,17 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    return gcrService.verifyImageName(config, encryptionDetails, artifactStreamAttributes);
+    try {
+      // Decrypt gcpConfig
+      encryptionService.decrypt(config, encryptionDetails, false);
+      return gcrApiService.verifyImageName(
+          GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
+              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegate())),
+          artifactStreamAttributes.getImageName());
+    } catch (IOException e) {
+      log.error("Could not verify Artifact source", e);
+    }
+    return false;
   }
 
   @Override

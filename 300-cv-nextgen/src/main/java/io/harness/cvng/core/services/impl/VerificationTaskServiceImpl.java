@@ -25,6 +25,8 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String create(String accountId, String cvConfigId) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(cvConfigId);
     // TODO: Change to new generated uuid in a separate PR since it needs more validation.
     VerificationTask verificationTask =
         VerificationTask.builder().uuid(cvConfigId).accountId(accountId).cvConfigId(cvConfigId).build();
@@ -34,6 +36,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
+    Preconditions.checkNotNull(accountId, "accountId can not be null");
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
     checkIfVerificationTaskAlreadyExists(accountId, cvConfigId, verificationJobInstanceId);
@@ -90,16 +93,21 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId) {
-    Set<String> results = hPersistence.createQuery(VerificationTask.class)
-                              .filter(VerificationTaskKeys.accountId, accountId)
-                              .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
-                              .asList()
-                              .stream()
-                              .map(VerificationTask::getUuid)
-                              .collect(Collectors.toSet());
+    Set<String> results = maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
     Preconditions.checkState(!results.isEmpty(), "No verification task mapping exist for verificationJobInstanceId %s",
         verificationJobInstanceId);
     return results;
+  }
+
+  @Override
+  public Set<String> maybeGetVerificationTaskIds(String accountId, String verificationJobInstanceId) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.accountId, accountId)
+        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+        .asList()
+        .stream()
+        .map(VerificationTask::getUuid)
+        .collect(Collectors.toSet());
   }
 
   @Override
@@ -138,13 +146,15 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public void removeCVConfigMappings(String cvConfigId) {
-    hPersistence.delete(
-        hPersistence.createQuery(VerificationTask.class).filter(VerificationTaskKeys.cvConfigId, cvConfigId));
+    hPersistence.delete(hPersistence.createQuery(VerificationTask.class)
+                            .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+                            .field(VerificationTaskKeys.verificationJobInstanceId)
+                            .doesNotExist());
   }
 
   @Override
   public List<String> getVerificationTaskIds(String cvConfigId) {
-    return hPersistence.createQuery(VerificationTask.class)
+    return hPersistence.createQuery(VerificationTask.class, excludeAuthority)
         .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
         .project(VerificationTaskKeys.uuid, true)
         .asList()

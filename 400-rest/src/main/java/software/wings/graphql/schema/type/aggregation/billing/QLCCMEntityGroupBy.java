@@ -1,7 +1,11 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public enum QLCCMEntityGroupBy {
   Application(QLAggregationKind.SIMPLE),
   Service(QLAggregationKind.SIMPLE),
@@ -21,7 +25,8 @@ public enum QLCCMEntityGroupBy {
   InstanceName(QLAggregationKind.SIMPLE),
   CloudProvider(QLAggregationKind.SIMPLE),
   Node(QLAggregationKind.SIMPLE),
-  Pod(QLAggregationKind.SIMPLE);
+  Pod(QLAggregationKind.SIMPLE),
+  PV(QLAggregationKind.SIMPLE);
 
   QLAggregationKind aggregationKind;
 

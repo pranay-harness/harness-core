@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> {
+public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
   CVConfig save(CVConfig cvConfig);
   List<CVConfig> save(List<CVConfig> cvConfig);
   void update(CVConfig cvConfig);
@@ -30,12 +30,14 @@ public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> 
       String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier);
   List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
       String serviceIdentifier, CVMonitoringCategory monitoringCategory);
+  List<CVConfig> listByMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, List<String> monitoringSources);
   List<String> getProductNames(String accountId, String connectorIdentifier);
   List<String> getMonitoringSourceIds(String accountId, String orgIdentifier, String projectIdentifier, String filter);
   List<CVConfig> listByMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier);
 
-  void setCollectionTaskId(String cvConfigId, String dataCollectionTaskId);
+  void markFirstTaskCollected(CVConfig cvConfig);
   List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
       String envIdentifier, List<DataSourceType> dataSourceTypes);
   List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier);
@@ -50,9 +52,11 @@ public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> 
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
   boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
-  void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier);
+
   List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
+  List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds);

@@ -1,0 +1,7 @@
+step:
+  type: K8sRollingDeploy
+  name: K8sRolling
+  identifier: K8sRolling
+  spec:
+    skipDryRun: false
+    timeout: 10m

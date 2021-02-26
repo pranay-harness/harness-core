@@ -11,7 +11,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -35,7 +40,7 @@ public class AzureContainerRegistryConnectorDTO extends ConnectorConfigDTO imple
   }
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     return null;
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -20,6 +21,7 @@ import org.mongodb.morphia.query.Query;
 
 public class MigrationServiceImplTest extends WingsBaseTest {
   @Inject MigrationServiceImpl migrationService;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = ABHINAV)
@@ -38,12 +40,12 @@ public class MigrationServiceImplTest extends WingsBaseTest {
                         .timescaleDBDataVersion(0)
                         .onPrimaryManagerVersion(0)
                         .build();
-    wingsPersistence.save(schema);
+    persistence.save(schema);
 
     Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerMigrationMap = new HashMap<>();
     onPrimaryManagerMigrationMap.put(1, TestClass.class);
     migrationService.runMigrationWhenNewManagerIsPrimary(1, onPrimaryManagerMigrationMap);
-    Query<Schema> query = wingsPersistence.createQuery(Schema.class);
+    Query<Schema> query = persistence.createQuery(Schema.class);
     assertThat(query.get().getOnPrimaryManagerVersion()).isEqualTo(1);
   }
 
@@ -56,12 +58,12 @@ public class MigrationServiceImplTest extends WingsBaseTest {
                         .timescaleDBDataVersion(0)
                         .onPrimaryManagerVersion(2)
                         .build();
-    wingsPersistence.save(schema);
+    persistence.save(schema);
 
     Map<Integer, Class<? extends OnPrimaryManagerMigration>> onPrimaryManagerMigrationMap = new HashMap<>();
     onPrimaryManagerMigrationMap.put(1, TestClass.class);
     migrationService.scheduleOnPrimaryMigrations(schema, 1, onPrimaryManagerMigrationMap);
-    Query<Schema> query = wingsPersistence.createQuery(Schema.class);
+    Query<Schema> query = persistence.createQuery(Schema.class);
     assertThat(query.get().getOnPrimaryManagerVersion()).isEqualTo(1);
   }
 

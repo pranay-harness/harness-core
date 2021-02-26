@@ -404,9 +404,9 @@ public class AppServiceTest extends WingsBaseTest {
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
     appService.pruneDescendingEntities(APP_ID);
-    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
-        appContainerService, artifactService, artifactStreamService, instanceService, workflowService, pipelineService,
-        alertService, triggerService, templateService);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, settingsService,
+        environmentService, appContainerService, artifactService, artifactStreamService, instanceService,
+        workflowService, pipelineService, alertService, triggerService, templateService);
 
     inOrder.verify(alertService).pruneByApplication(APP_ID);
     inOrder.verify(environmentService).pruneByApplication(APP_ID);
@@ -414,6 +414,7 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(notificationService).pruneByApplication(APP_ID);
     inOrder.verify(pipelineService).pruneByApplication(APP_ID);
     inOrder.verify(serviceResourceService).pruneByApplication(APP_ID);
+    inOrder.verify(settingsService).pruneByApplication(APP_ID);
     inOrder.verify(triggerService).pruneByApplication(APP_ID);
     inOrder.verify(workflowService).pruneByApplication(APP_ID);
     inOrder.verify(templateService).pruneByApplication(APP_ID);

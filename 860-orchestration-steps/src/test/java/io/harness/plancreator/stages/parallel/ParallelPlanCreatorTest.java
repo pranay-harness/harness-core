@@ -17,7 +17,6 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

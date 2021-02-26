@@ -2,11 +2,13 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -16,13 +18,21 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NgUniqueIndex(
-    name = "uniqueDelegateSequenceIdx", fields = { @Field("accountId")
-                                                   , @Field("hostName"), @Field("sequenceNum") })
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class DelegateSequenceConfig extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueDelegateSequenceIdx")
+                 .unique(true)
+                 .field(DelegateSequenceConfigKeys.accountId)
+                 .field(DelegateSequenceConfigKeys.hostName)
+                 .field(DelegateSequenceConfigKeys.sequenceNum)
+                 .build())
+        .build();
+  }
   @NotEmpty private String accountId;
   @NotEmpty private String hostName;
   @NotEmpty private Integer sequenceNum;

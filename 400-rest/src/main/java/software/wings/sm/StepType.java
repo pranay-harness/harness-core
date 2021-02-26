@@ -14,6 +14,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -116,6 +117,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
+import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
@@ -223,6 +225,8 @@ import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
+import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -246,6 +250,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -322,10 +327,9 @@ public enum StepType {
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
       asList(CANARY, BLUE_GREEN)),
-  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class,
-      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, singletonList(WorkflowStepType.AZURE_WEBAPP),
-      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT), Lists.newArrayList(DeploymentType.AZURE_WEBAPP),
-      singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
+  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_TRAFFIC,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
   AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK,
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.ROLLBACK), asList(CANARY, BLUE_GREEN)),
@@ -539,8 +543,8 @@ public enum StepType {
       asList(PhaseType.ROLLBACK)),
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_PROVISION,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
-      Lists.newArrayList(
-          DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
+          DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP),
       asList(PhaseType.NON_ROLLBACK)),
   TERRAFORM_APPLY(ApplyTerraformState.class, WorkflowServiceHelper.TERRAFORM_APPLY, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
@@ -559,20 +563,27 @@ public enum StepType {
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
+  ARM_CREATE_RESOURCE(ARMProvisionState.class, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
+      Collections.singletonList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
+      Collections.singletonList(PhaseType.NON_ROLLBACK)),
+  ARM_ROLLBACK(ARMRollbackState.class, ProvisionerConstants.ARM_ROLLBACK, asList(INFRASTRUCTURE_PROVISIONER),
+      singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
+      asList(PhaseType.ROLLBACK)),
 
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE,
-          PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM),
-      asList(
-          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM),
-      asList(
-          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
@@ -620,7 +631,7 @@ public enum StepType {
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   // cvng
-  CVNG(CVNGState.class, CVNG_STATE, asList(LOG, APM),
+  CVNG(CVNGState.class, CVNG_STATE, asList(WorkflowStepType.CVNG),
       asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 

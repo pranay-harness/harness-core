@@ -1,8 +1,17 @@
 package io.harness.notification;
 
+import software.wings.jersey.JsonViews;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @JsonTypeName("stmp")
 @Data
@@ -19,4 +28,5 @@ public class SmtpConfig {
   @JsonProperty("useSSL") private boolean useSSL;
   @JsonProperty("username") private String username;
   @JsonProperty("password") private char[] password;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 }

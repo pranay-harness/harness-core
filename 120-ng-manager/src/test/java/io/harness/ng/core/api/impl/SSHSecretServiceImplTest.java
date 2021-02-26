@@ -41,7 +41,7 @@ public class SSHSecretServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     secretManagerClient = mock(SecretManagerClient.class, RETURNS_DEEP_STUBS);
-    sshSecretService = new SSHSecretServiceImpl(secretManagerClient);
+    sshSecretService = new SSHSecretServiceImpl();
   }
 
   private SecretDTOV2 getBaseSecret() {
@@ -77,7 +77,7 @@ public class SSHSecretServiceImplTest extends CategoryTest {
             .build());
     when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
-    boolean success = sshSecretService.update("Account", secretDTOV2);
+    boolean success = sshSecretService.update("Account", secretDTOV2, secretDTOV2);
     assertThat(success).isTrue();
     verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());
   }
@@ -106,7 +106,7 @@ public class SSHSecretServiceImplTest extends CategoryTest {
             .build());
     when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
-    boolean success = sshSecretService.updateViaYaml("Account", secretDTOV2);
+    boolean success = sshSecretService.updateViaYaml("Account", null, secretDTOV2);
     assertThat(success).isTrue();
     verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());
   }

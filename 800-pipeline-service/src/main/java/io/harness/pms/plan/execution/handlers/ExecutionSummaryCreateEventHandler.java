@@ -9,28 +9,24 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
-import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
-import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.bson.Document;
 
 @Singleton
@@ -55,10 +51,11 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
       return;
     }
     updateExecutionInfoInPipelineEntity(
-        accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo());
+        accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo(), planExecutionId);
     Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
     String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
+    List<String> modules = new ArrayList<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
       if (entry.getValue().getNodeType().equals("parallel")) {
@@ -71,6 +68,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
       moduleInfo.put(moduleName, new Document());
       graphLayoutNodeDTO.setModuleInfo(moduleInfo);
       layoutNodeDTOMap.put(entry.getKey(), graphLayoutNodeDTO);
+      modules.add(moduleName);
     }
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         PipelineExecutionSummaryEntity.builder()
@@ -88,12 +86,14 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
             .executionTriggerInfo(planExecution.getMetadata().getTriggerInfo())
+            .tags(pipelineEntity.get().getTags())
+            .modules(modules)
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }
 
-  public void updateExecutionInfoInPipelineEntity(
-      String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo) {
+  public void updateExecutionInfoInPipelineEntity(String accountId, String orgId, String projectId, String pipelineId,
+      ExecutionSummaryInfo executionSummaryInfo, String planExecutionId) {
     if (executionSummaryInfo == null) {
       executionSummaryInfo = ExecutionSummaryInfo.builder().build();
     }
@@ -107,7 +107,9 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     } else {
       deploymentsMap.put(strDate, 1);
     }
+    executionSummaryInfo.setDeployments(deploymentsMap);
     executionSummaryInfo.setLastExecutionTs(todaysDate.getTime());
+    executionSummaryInfo.setLastExecutionId(planExecutionId);
     pmsPipelineService.saveExecutionInfo(accountId, orgId, projectId, pipelineId, executionSummaryInfo);
   }
 }

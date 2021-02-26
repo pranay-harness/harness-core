@@ -14,5 +14,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication")
 public class ArtifactoryUserNamePasswordAuthentication implements ArtifactoryAuthentication {
   String username;
+  String usernameRef;
   String passwordRef;
 }

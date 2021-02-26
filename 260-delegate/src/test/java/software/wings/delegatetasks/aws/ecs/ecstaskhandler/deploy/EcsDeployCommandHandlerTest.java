@@ -126,45 +126,6 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
-  public void testExecuteTaskAlreadyRolledBack() {
-    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
-    doNothing().when(mockCallback).saveExecutionLog(anyString());
-
-    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
-                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                                            .output(StringUtils.EMPTY)
-                                                            .build();
-    doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
-
-    EcsCommandRequest ecsCommandRequest =
-        EcsServiceDeployRequest.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .cluster(CLUSTER_NAME)
-            .ecsResizeParams(anEcsResizeParams()
-                                 .withRollback(true)
-                                 .withRollbackAllPhases(true)
-                                 .withNewInstanceData(Collections.singletonList(ContainerServiceData.builder().build()))
-                                 .withOldInstanceData(Collections.singletonList(ContainerServiceData.builder().build()))
-                                 .build())
-            .build();
-
-    doReturn(true).when(mockEcsDeployCommandTaskHelper).getDeployingToHundredPercent(any());
-
-    doReturn(new LinkedHashMap<String, Integer>()).when(mockEcsDeployCommandTaskHelper).listOfStringArrayToMap(any());
-    doReturn(new LinkedHashMap<String, Integer>()).when(mockEcsDeployCommandTaskHelper).getActiveServiceCounts(any());
-
-    EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
-
-    verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
-    verify(mockEcsDeployCommandTaskHelper, times(0)).restoreAutoScalarConfigs(any(), any(), any());
-    verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
-  }
-
-  @Test
-  @Owner(developers = ARVIND)
-  @Category(UnitTests.class)
   public void testExecuteTaskNoRollback() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());

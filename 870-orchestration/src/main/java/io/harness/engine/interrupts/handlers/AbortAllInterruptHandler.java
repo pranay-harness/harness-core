@@ -5,7 +5,6 @@ import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
@@ -21,6 +20,7 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -44,7 +44,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == ABORT_ALL)) {
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.ABORT_ALL)) {
       throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
     }
     if (isEmpty(interrupts)) {

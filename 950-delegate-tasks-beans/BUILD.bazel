@@ -7,44 +7,60 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 sources()
 
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//970-ng-commons:module",
-        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_protobuf_protobuf_java",
-        "@maven//:io_swagger_swagger_annotations",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_apache_httpcomponents_httpclient",
-        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-        "@maven//:org_projectlombok_lombok",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
+shared_dependencies = [
+    "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+    "//950-log-client:module",
+    "//954-connector-beans:module",
+    "//955-delegate-beans:module",
+    "//960-persistence:module",
+    "//960-yaml-sdk:module",
+    "//970-api-services-beans:module",
+    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_service_beans_proto",
+    "//970-ng-commons:module",
+    "//980-commons:module",
+    "//:lombok",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_retrofit2_retrofit",
+    "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
+    "@maven//:io_github_resilience4j_resilience4j_retrofit",
+    "@maven//:io_swagger_swagger_annotations",
+    "@maven//:javax_validation_validation_api",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_apache_httpcomponents_httpclient",
+    "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+    "@maven//:org_hibernate_hibernate_validator",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_projectlombok_lombok",
+    "@maven//:org_slf4j_slf4j_api",
+    "@maven//:org_springframework_data_spring_data_commons",
+    "@maven//:org_springframework_data_spring_data_mongodb",
+]
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
+    resource_jars = [
         "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
-        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
-        "//970-api-services-beans:module",
     ],
+    resources = [
+        "//950-delegate-tasks-beans/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
 )
 
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:junit_junit",

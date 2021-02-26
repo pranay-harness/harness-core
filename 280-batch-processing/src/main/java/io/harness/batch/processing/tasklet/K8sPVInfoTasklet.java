@@ -7,12 +7,13 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.pricing.data.PVTypeCloudProviderMap;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
@@ -81,14 +82,21 @@ public class K8sPVInfoTasklet implements Tasklet {
     String clusterId = pvInfo.getClusterId();
 
     Map<String, String> metaData = new HashMap<>();
-    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
     metaData.put(InstanceMetaDataConstants.PV_TYPE, pvInfo.getPvType().name());
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, PVTypeCloudProviderMap.get(pvInfo.getPvType()).name());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
     metaData.put(InstanceMetaDataConstants.CLAIM_NAMESPACE, pvInfo.getClaimNamespace());
     metaData.put(InstanceMetaDataConstants.CLAIM_NAME, pvInfo.getClaimName());
-    metaData.put(InstanceMetaDataConstants.STORAGE_CLASS, pvInfo.getStorageClassType());
+    metaData.put(
+        InstanceMetaDataConstants.STORAGE_CLASS, pvInfo.getStorageClassType()); // can be removed after one release
 
     Map<String, String> labelsMap = pvInfo.getLabelsMap();
+    if (labelsMap.get(K8sCCMConstants.REGION) != null) {
+      metaData.put(InstanceMetaDataConstants.REGION, labelsMap.get(K8sCCMConstants.REGION));
+    }
+
+    Map<String, String> storageClassParams = pvInfo.getStorageClassParamsMap();
+    metaData.putAll(encodeDotsInKey(storageClassParams));
 
     StorageResource resource = K8sResourceUtils.getCapacity(pvInfo.getCapacity());
 

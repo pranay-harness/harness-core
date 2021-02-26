@@ -1,12 +1,20 @@
 package io.harness.serializer.kryo;
 
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
 import io.harness.azure.AzureEnvironmentType;
+import io.harness.azure.model.ARMScopeType;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConfiguration;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
+import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
@@ -40,10 +48,12 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -54,6 +64,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.CommandExecutionData;
+import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.KerberosConfig;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
@@ -61,6 +72,7 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.settings.SettingVariableTypes;
+import software.wings.utils.RepositoryFormat;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
@@ -233,5 +245,20 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TfVarSource.class, 1434);
     kryo.register(TfVarSourceType.class, 1435);
     kryo.register(InstanceDetails.AZURE_WEBAPP.class, 1437);
+    kryo.register(ExecuteCommandResponse.class, 1438);
+    kryo.register(AzureAppServiceConnectionStringType.class, 1439);
+    kryo.register(AzureAppServiceConfiguration.class, 1440);
+
+    kryo.register(NexusRequest.class, 1441);
+    kryo.register(RepositoryFormat.class, 7204);
+
+    kryo.register(AzureAppServiceApplicationSetting.class, 1442);
+    kryo.register(AzureAppServiceConnectionString.class, 1443);
+    kryo.register(ArtifactoryConfigRequest.class, 1444);
+    kryo.register(NGInstanceUnitType.class, 1445);
+    kryo.register(AzureDeploymentMode.class, 1446);
+    kryo.register(ARMScopeType.class, 1447);
+
+    kryo.register(AdditionalMetadata.class, 72101);
   }
 }

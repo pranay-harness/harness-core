@@ -11,16 +11,17 @@ import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -48,8 +49,13 @@ public class CvServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(MongoModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
+    install(new CvPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CV_SAMPLE")

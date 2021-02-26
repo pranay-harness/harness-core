@@ -117,3 +117,35 @@ func TestParsePushWebhookPRSuccess(t *testing.T) {
 		t.Log(want)
 	}
 }
+
+func TestParseCommentWebhookSuccess(t *testing.T) {
+	data, _ := ioutil.ReadFile("testdata/comment.json")
+	in := &pb.ParseWebhookRequest{
+		Body: string(data),
+		Header: &pb.Header{
+			Fields: []*pb.Header_Pair{
+				{
+					Key:    "X-Github-Event",
+					Values: []string{"issue_comment"},
+				},
+			},
+		},
+		Secret:   "",
+		Provider: pb.GitProvider_GITHUB,
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := ParseWebhook(context.Background(), in, log.Sugar())
+	assert.Nil(t, err)
+	assert.NotNil(t, got.GetComment())
+
+	want := &pb.ParseWebhookResponse{}
+	raw, _ := ioutil.ReadFile("testdata/comment.json.golden")
+	jsonpb.UnmarshalString(string(raw), want)
+
+	if !proto.Equal(got, want) {
+		t.Errorf("Unexpected Results")
+		t.Log(got)
+		t.Log(want)
+	}
+}

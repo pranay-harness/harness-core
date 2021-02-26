@@ -8,4 +8,5 @@ public class IdleCostData {
   private BigDecimal idleCost;
   private BigDecimal cpuIdleCost;
   private BigDecimal memoryIdleCost;
+  private BigDecimal storageIdleCost;
 }

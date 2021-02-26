@@ -4,9 +4,6 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -20,15 +17,14 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
-import io.harness.gitsync.GitSyncBaseTest;
+import io.harness.gitsync.GitSyncTestBase;
+import io.harness.gitsync.common.TestConstants;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitSyncMetadata;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
 import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.rule.Owner;
-
-import software.wings.utils.WingsTestConstants;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
@@ -41,7 +37,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class GitChangeSetRunnableTest extends GitSyncBaseTest {
+public class GitChangeSetRunnableTest extends GitSyncTestBase {
   @Inject YamlGitConfigService yamlGitConfigService;
   @Inject @Spy GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
   @Inject @Spy YamlChangeSetServiceImpl yamlChangeSetService;
@@ -63,8 +59,8 @@ public class GitChangeSetRunnableTest extends GitSyncBaseTest {
     final String webhookToken = "Webhook_Token";
 
     YamlGitConfigDTO yamlGitConfig = YamlGitConfigDTO.builder()
-                                         .accountId(ACCOUNT_ID)
-                                         .gitConnectorId(SETTING_ID)
+                                         .accountId(TestConstants.ACCOUNT_ID)
+                                         .gitConnectorId(TestConstants.SETTING_ID)
                                          .branch("master")
                                          .rootFolders(Arrays.asList(YamlGitConfigDTO.RootFolder.builder().build()))
                                          .build();
@@ -75,7 +71,7 @@ public class GitChangeSetRunnableTest extends GitSyncBaseTest {
     yamlChangeSetService.save(YamlChangeSet.builder()
                                   .fullSync(true)
                                   .status(QUEUED)
-                                  .accountId(ACCOUNT_ID)
+                                  .accountId(TestConstants.ACCOUNT_ID)
                                   .gitToHarness(false)
                                   .gitFileChanges(Arrays.asList(gitFileChange))
                                   .queueKey("queuekey1")
@@ -85,25 +81,25 @@ public class GitChangeSetRunnableTest extends GitSyncBaseTest {
     yamlChangeSetService.save(YamlChangeSet.builder()
                                   .fullSync(true)
                                   .status(QUEUED)
-                                  .accountId(ACCOUNT_ID)
+                                  .accountId(TestConstants.ACCOUNT_ID)
                                   .gitToHarness(false)
                                   .gitFileChanges(Arrays.asList(gitFileChange))
                                   .queueKey("queuekey1")
                                   .gitSyncMetadata(GitSyncMetadata.builder().build())
                                   .build());
 
-    doNothing().when(yamlGitSyncService).handleHarnessChangeSet(any(YamlChangeSet.class), eq(ACCOUNT_ID));
+    doNothing().when(yamlGitSyncService).handleHarnessChangeSet(any(YamlChangeSet.class), eq(TestConstants.ACCOUNT_ID));
 
     gitChangeSetRunnable.run();
 
-    verify(yamlGitSyncService, times(1)).handleHarnessChangeSet(any(YamlChangeSet.class), eq(ACCOUNT_ID));
+    verify(yamlGitSyncService, times(1)).handleHarnessChangeSet(any(YamlChangeSet.class), eq(TestConstants.ACCOUNT_ID));
   }
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testRetryAnyStuckYamlChangeSet() {
-    YamlChangeSet yamlChangeSet = YamlChangeSet.builder().accountId(WingsTestConstants.ACCOUNT_ID).build();
+    YamlChangeSet yamlChangeSet = YamlChangeSet.builder().accountId(TestConstants.ACCOUNT_ID).build();
     yamlChangeSet.setUuid("12345");
 
     doReturn(Arrays.asList(yamlChangeSet)).when(gitChangeSetRunnableHelper).getStuckYamlChangeSets(any(), anyList());

@@ -57,10 +57,13 @@ func TestEvaluateJEXLErr(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
+
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	tests := []struct {
@@ -98,7 +101,7 @@ func TestEvaluateJEXLErr(t *testing.T) {
 				}
 			}
 		}
-		_, got := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
+		_, got := EvaluateJEXL(ctx, stepID, expressions, so, false, log.Sugar())
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -125,15 +128,18 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	oldClient := newExpressionEvalClient
 	defer func() { newExpressionEvalClient = oldClient }()
@@ -144,7 +150,7 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, false, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)
@@ -164,15 +170,18 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: &pb.ExpressionResponse{
@@ -202,7 +211,7 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	ret, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
+	ret, err := EvaluateJEXL(ctx, stepID, expressions, so, false, log.Sugar())
 	assert.Nil(t, err)
 	assert.Equal(t, ret[expr1], envVal1)
 	assert.Equal(t, ret[expr2], envVal2)
@@ -224,15 +233,18 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: nil,
@@ -250,7 +262,7 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, false, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)
@@ -270,15 +282,18 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: &pb.ExpressionResponse{
@@ -309,7 +324,7 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	testSetEnv(delegateSvcEndpointEnv, "1.1.1.1", t)
 	testSetEnv(delegateSvcTokenEnv, token, t)
 	testSetEnv(delegateSvcIDEnv, svcID, t)
-	_, err := EvaluateJEXL(ctx, stepID, expressions, so, log.Sugar())
+	_, err := EvaluateJEXL(ctx, stepID, expressions, so, false, log.Sugar())
 	assert.NotNil(t, err)
 	testUnsetEnv(delegateSvcEndpointEnv, t)
 	testUnsetEnv(delegateSvcTokenEnv, t)

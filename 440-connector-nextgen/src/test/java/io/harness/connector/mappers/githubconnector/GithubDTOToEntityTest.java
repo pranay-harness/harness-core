@@ -4,7 +4,7 @@ import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -15,7 +15,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentic
 import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
@@ -26,10 +25,10 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -209,11 +208,8 @@ public class GithubDTOToEntityTest extends CategoryTest {
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
             .authType(GitAuthType.SSH)
-            .credentials(GithubSshCredentialsDTO.builder()
-                             .spec(GithubSshCredentialsSpecDTO.builder()
-                                       .sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef))
-                                       .build())
-                             .build())
+            .credentials(
+                GithubSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
 
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()

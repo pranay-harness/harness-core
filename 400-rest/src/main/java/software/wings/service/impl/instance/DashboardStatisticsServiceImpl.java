@@ -29,6 +29,7 @@ import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -51,7 +52,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -953,9 +953,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(service);
-    if (artifactStreamIds == null) {
-      artifactStreamIds = new ArrayList<>();
-    }
 
     PageRequestBuilder pageRequestBuilder = aPageRequest()
                                                 .addFilter("appId", EQ, appId)
@@ -1058,13 +1055,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         executionStatus = status.name();
       }
 
-      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId) && artifacts == null
-          && manifestSummary != null) {
-        deploymentExecutionHistoryList.add(
-            getDeploymentHistory(appId, serviceId, workflowExecution, pipelineEntitySummary, workflowExecutionSummary,
-                triggeredBySummary, instanceCount, manifestSummary, startDate, executionStatus, null));
-      }
-
       if (isNotEmpty(artifacts)) {
         for (Artifact artifact : artifacts) {
           if (artifact == null) {
@@ -1089,6 +1079,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         if (log.isDebugEnabled()) {
           log.debug("artifacts is null for workflowExecution:" + workflowExecution.normalizedName());
         }
+        deploymentExecutionHistoryList.add(
+            getDeploymentHistory(appId, serviceId, workflowExecution, pipelineEntitySummary, workflowExecutionSummary,
+                triggeredBySummary, instanceCount, manifestSummary, startDate, executionStatus, null));
       }
     }
 

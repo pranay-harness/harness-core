@@ -20,7 +20,7 @@ public class CustomActivity extends Activity {
   @Override
   public void fromDTO(ActivityDTO activityDTO) {
     setType(ActivityType.CUSTOM);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
@@ -28,4 +28,9 @@ public class CustomActivity extends Activity {
 
   @Override
   public void validateActivityParams() {}
+
+  @Override
+  public boolean deduplicateEvents() {
+    throw new UnsupportedOperationException("Custom events are not yet supported");
+  }
 }

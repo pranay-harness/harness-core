@@ -36,7 +36,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -44,13 +43,17 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -58,7 +61,10 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GitOperationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
@@ -93,12 +99,15 @@ import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -114,6 +123,7 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import java.io.File;
@@ -152,6 +162,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -171,6 +182,8 @@ public class K8sTaskHelperBase {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private NGErrorHelper ngErrorHelper;
+  @Inject private GitDecryptionHelper gitDecryptionHelper;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -1520,14 +1533,17 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    V1ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1ConfigMap releaseConfigMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1Secret releaseSecret = kubernetesContainerService.getSecret(kubernetesConfig, releaseName);
 
-    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+    if (!(releaseHistoryPresent(releaseConfigMap) || releaseHistoryPresent(releaseSecret))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
       return emptyList();
     }
 
-    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
+        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
+        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
@@ -1542,13 +1558,34 @@ public class K8sTaskHelperBase {
       }
     }
 
-    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
-                                                          .kind(configMap.getKind())
-                                                          .name(releaseName)
-                                                          .namespace(kubernetesConfig.getNamespace())
-                                                          .build();
-    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    if (releaseConfigMap != null) {
+      KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                            .kind(releaseConfigMap.getKind())
+                                                            .name(releaseName)
+                                                            .namespace(kubernetesConfig.getNamespace())
+                                                            .build();
+      kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    }
+    if (releaseSecret != null) {
+      KubernetesResourceId harnessGeneratedSecretResource = KubernetesResourceId.builder()
+                                                                .kind(releaseSecret.getKind())
+                                                                .name(releaseName)
+                                                                .namespace(kubernetesConfig.getNamespace())
+                                                                .build();
+      kubernetesResourceIdMap.put(
+          generateResourceIdentifier(harnessGeneratedSecretResource), harnessGeneratedSecretResource);
+    }
     return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  private boolean releaseHistoryPresent(V1ConfigMap configMap) {
+    return configMap != null && isNotEmpty(configMap.getData())
+        && isNotBlank(configMap.getData().get(ReleaseHistoryKeyName));
+  }
+
+  private boolean releaseHistoryPresent(V1Secret secret) {
+    return secret != null && isNotEmpty(secret.getData())
+        && ArrayUtils.isNotEmpty(secret.getData().get(ReleaseHistoryKeyName));
   }
 
   public List<FileData> readFilesFromDirectory(
@@ -1784,8 +1821,9 @@ public class K8sTaskHelperBase {
     return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
-  public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {
-    return new NGLogCallback(logStreamingTaskClient, commandUnitName);
+  public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,
+      boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
+    return new NGLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -1872,7 +1910,14 @@ public class K8sTaskHelperBase {
 
     try {
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
-      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, accountId);
+
+      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+
+      ngGitService.downloadFiles(
+          gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));
@@ -1880,18 +1925,18 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", e);
+      String errorMsg = "Failed to download manifest files from git. ";
       executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
-      return false;
+          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new GitOperationException(errorMsg, e);
     }
   }
 
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());
@@ -1905,6 +1950,20 @@ public class K8sTaskHelperBase {
 
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    try {
+      kubernetesContainerService.validate(kubernetesConfig);
+      connectivityStatus = ConnectivityStatus.SUCCESS;
+    } catch (Exception ex) {
+      log.info("Exception while validating kubernetes credentials", ex);
+      return createConnectivityFailureValidationResult(ex);
+    }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private KubernetesConfig getKubernetesConfig(
+      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connector;
     if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
         == KubernetesCredentialType.MANUAL_CREDENTIALS) {
@@ -1912,25 +1971,80 @@ public class K8sTaskHelperBase {
           (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
       secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptionDetailList);
     }
-    Exception exceptionInProcessing = null;
-    boolean isCredentialsValid = false;
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+  }
+
+  public ConnectorValidationResult validateCEKubernetesCluster(
+      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.SUCCESS;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    List<ErrorDetail> errorDetails = new ArrayList<>();
+    String errorSummary = "";
     try {
-      kubernetesContainerService.validate(kubernetesConfig);
-      isCredentialsValid = true;
+      CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+          kubernetesContainerService.validateMetricsServer(kubernetesConfig);
+      List<CEK8sDelegatePrerequisite.Rule> ruleList =
+          kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
+
+      if (!metricsServerCheck.getIsInstalled()) {
+        errorDetails.add(ErrorDetail.builder()
+                             .message("Please install metrics server on your cluster")
+                             .reason("couldn't access metrics server")
+                             .build());
+        errorSummary += metricsServerCheck.getMessage();
+      }
+      if (!ruleList.isEmpty()) {
+        errorDetails.addAll(ruleList.stream()
+                                .map(e
+                                    -> ErrorDetail.builder()
+                                           .reason(String.format("'%s' not granted on '%s' in apiGroup:'%s'",
+                                               e.getVerbs(), e.getResources(), e.getApiGroups()))
+                                           .message(e.getMessage())
+                                           .code(0)
+                                           .build())
+                                .collect(toList()));
+        errorSummary += "; few permissions are missing.";
+      }
+
+      if (!errorDetails.isEmpty()) {
+        return ConnectorValidationResult.builder()
+            .errorSummary(errorSummary)
+            .errors(errorDetails)
+            .status(ConnectivityStatus.FAILURE)
+            .build();
+      }
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
-      exceptionInProcessing = ex;
+      return createConnectivityFailureValidationResult(ex);
     }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
+    String errorMessage = ex.getMessage();
+    ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
+    String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
     return ConnectorValidationResult.builder()
-        .errorMessage(isNull(exceptionInProcessing) ? null : exceptionInProcessing.getMessage())
-        .valid(isCredentialsValid)
+        .status(ConnectivityStatus.FAILURE)
+        .errors(Collections.singletonList(errorDetail))
+        .errorSummary(errorSummary)
         .build();
   }
 
   private KubernetesAuthCredentialDTO getKubernetesCredentialsAuth(
       KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
     return kubernetesClusterConfigDTO.getAuth().getCredentials();
+  }
+
+  @VisibleForTesting
+  public List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
+    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+    List<K8sPod> allPods = new ArrayList<>(newPods);
+    allPods.forEach(pod -> {
+      if (!existingPodNames.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
   }
 }

@@ -55,11 +55,13 @@ public class AzureTimeLimiter {
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation [%s], %n %s", commandUnitName, e.getMessage());
       errorLogCallback.saveExecutionLog(message, LogLevel.ERROR, FAILURE);
+      subscriber.unsubscribe();
       throw new InvalidRequestException(message, e);
     } catch (Exception e) {
       String message =
           format("Error while waiting for executing operation [%s], %n %s", commandUnitName, e.getMessage());
       errorLogCallback.saveExecutionLog(message, LogLevel.ERROR, FAILURE);
+      subscriber.unsubscribe();
       throw new InvalidRequestException(message, e);
     }
   }

@@ -78,6 +78,8 @@ public interface WorkflowState {
 
         Object resultObj = context.evaluateExpression(
             disableAssertion, StateExecutionContext.builder().stateExecutionData(skipStateExecutionData).build());
+        // rendering expression in order to have it tracked
+        context.renderExpression(disableAssertion);
         if (!(resultObj instanceof Boolean)) {
           return ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -101,6 +103,10 @@ public interface WorkflowState {
         String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
         if (jexlError.contains(":")) {
           jexlError = jexlError.split(":")[1];
+        }
+        if (je instanceof JexlException.Variable
+            && ((JexlException.Variable) je).getVariable().equals("sweepingOutputSecrets")) {
+          jexlError = "Secret Variables defined in Script output of shell scripts cannot be used in assertions";
         }
         return ExecutionResponse.builder()
             .executionStatus(FAILED)

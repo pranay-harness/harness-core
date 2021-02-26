@@ -20,5 +20,6 @@ public class ConnectorDetails {
   String orgIdentifier;
   String projectIdentifier;
   @NotNull List<EncryptedDataDetail> encryptedDataDetails;
+  SSHKeyDetails sshKeyDetails;
   @Singular("envToSecretEntry") Map<EnvVariableEnum, String> envToSecretsMap;
 }

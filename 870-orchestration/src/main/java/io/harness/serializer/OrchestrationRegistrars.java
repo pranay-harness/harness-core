@@ -2,6 +2,8 @@ package io.harness.serializer;
 
 import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
+import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
@@ -21,6 +23,8 @@ import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggeredByMorphiaConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentWriteConverter;
+import io.harness.serializer.spring.converters.advisers.response.AdviserResponseReadConverter;
+import io.harness.serializer.spring.converters.advisers.response.AdviserResponseWriteConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
@@ -47,6 +51,8 @@ import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoReadCon
 import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
+import io.harness.serializer.spring.converters.logging.UnitProgressReadConverter;
+import io.harness.serializer.spring.converters.logging.UnitProgressWriteConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
@@ -61,10 +67,12 @@ import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefRead
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoWriteConverter;
-import io.harness.serializer.spring.converters.steps.StepTypeReadConverter;
-import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
+import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
+import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
+import io.harness.serializer.spring.converters.timeout.obtainment.TimeoutObtainmentReadConverter;
+import io.harness.serializer.spring.converters.timeout.obtainment.TimeoutObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoReadConverter;
 import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoWriteConverter;
 import io.harness.serializer.spring.converters.triggers.TriggeredByReadConverter;
@@ -85,6 +93,8 @@ public class OrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
+          .add(DelegateServiceBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -133,5 +143,7 @@ public class OrchestrationRegistrars {
       LayoutNodeInfoWriteConverter.class, ExecutionTriggerInfoReadConverter.class,
       ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class,
       ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
-      TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class);
+      TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
+      TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
+      AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class);
 }

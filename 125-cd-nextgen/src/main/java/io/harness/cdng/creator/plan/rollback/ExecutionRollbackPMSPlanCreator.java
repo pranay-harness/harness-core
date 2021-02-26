@@ -1,12 +1,13 @@
 package io.harness.cdng.creator.plan.rollback;
 
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.common.NGSectionStep;
@@ -22,6 +23,9 @@ import java.util.Optional;
 
 public class ExecutionRollbackPMSPlanCreator {
   public static PlanCreationResponse createExecutionRollbackPlanNode(YamlField rollbackStepsField) {
+    if (rollbackStepsField == null || rollbackStepsField.getNode().asArray().size() == 0) {
+      return PlanCreationResponse.builder().build();
+    }
     List<YamlField> stepsArrayFields = getStepYamlFields(rollbackStepsField);
     if (stepsArrayFields.isEmpty()) {
       return PlanCreationResponse.builder().build();
@@ -41,8 +45,8 @@ public class ExecutionRollbackPMSPlanCreator {
     PlanNode executionRollbackNode =
         PlanNode.builder()
             .uuid(rollbackStepsField.getNode().getUuid() + "_executionrollback")
-            .name("Execution Rollback")
-            .identifier(PlanCreatorConstants.EXECUTION_ROLLBACK_NODE_IDENTIFIER)
+            .name(PlanCreationConstants.ROLLBACK_NODE_NAME)
+            .identifier(PlanCreationConstants.ROLLBACK_NODE_NAME)
             .stepType(NGSectionStep.STEP_TYPE)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
@@ -57,9 +61,9 @@ public class ExecutionRollbackPMSPlanCreator {
     List<YamlField> stepFields = new LinkedList<>();
 
     yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField("step");
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
-      YamlField parallelStepField = yamlNode.getField("parallel");
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
       if (stepField != null) {
         stepFields.add(stepField);
       } else if (stepGroupField != null) {

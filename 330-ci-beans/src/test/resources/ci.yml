@@ -50,19 +50,22 @@ pipeline:
                       retry: 2
                       command: mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
                       reports:
-                        - type: JUnit
-                          spec:
-                            paths:
-                              - rspec.xml
-                              - reports.xml
+                        type: JUnit
+                        spec:
+                          paths:
+                            - rspec.xml
+                            - reports.xml
                 - step:
                     identifier: runUnitTestsIntelligently
-                    type: TestIntelligence
+                    type: RunTests
                     spec:
                       retry: 2
-                      goals: echo "Running test"
+                      args: echo "Running test"
                       buildTool: maven
                       language: java
+                      packages: "*.harness, *.wings"
+                      testAnnotaions: "harnessTest"
+                      runOnlySelectedTests: true
             - step:
                 identifier: generateReport
                 type: Run

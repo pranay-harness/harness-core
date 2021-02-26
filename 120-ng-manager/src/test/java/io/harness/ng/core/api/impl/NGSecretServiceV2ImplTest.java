@@ -15,6 +15,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.TGTGenerationMethod;
@@ -33,6 +34,7 @@ import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
@@ -49,17 +51,21 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGSecretServiceV2ImplTest extends CategoryTest {
   private SecretRepository secretRepository;
   private SecretManagerClientService secretManagerClientService;
+  private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
+  private NGSecretActivityService ngSecretActivityService;
 
   @Before
   public void setup() {
     secretRepository = mock(SecretRepository.class);
     secretManagerClientService = mock(SecretManagerClientService.class);
     delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
-    secretServiceV2 =
-        new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper);
+    sshKeySpecDTOHelper = mock(SshKeySpecDTOHelper.class);
+    ngSecretActivityService = mock(NGSecretActivityService.class);
+    secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper,
+        sshKeySpecDTOHelper, ngSecretActivityService);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 

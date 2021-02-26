@@ -1,8 +1,10 @@
 package io.harness.pms.merger.helpers;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -20,8 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class MergeHelper {
   public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
     return createTemplateFromPipeline(pipelineYaml, true);
@@ -38,7 +42,8 @@ public class MergeHelper {
     fullMap.keySet().forEach(key -> {
       String value = fullMap.get(key).toString().replace("\"", "");
       if ((keepInput && NGExpressionUtils.matchesInputSetPattern(value))
-          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName())) {
+          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName()
+              && !key.isType())) {
         templateMap.put(key, fullMap.get(key));
       }
     });
@@ -120,6 +125,10 @@ public class MergeHelper {
   private String sanitizeInputSet(String pipelineYaml, String runtimeInput, boolean isInputSet) throws IOException {
     String templateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
 
+    if (templateYaml == null) {
+      return EMPTY;
+    }
+
     // Strip off inputSet top key from yaml.
     // when its false, its runtimeInput (may be coming from trigger)
     if (isInputSet) {
@@ -127,6 +136,9 @@ public class MergeHelper {
     }
 
     String filteredInputSetYaml = MergeHelper.removeRuntimeInputFromYaml(runtimeInput);
+    if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
+      return "";
+    }
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);
 
     Set<FQN> invalidFQNsInInputSet = getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml);
@@ -148,7 +160,7 @@ public class MergeHelper {
     for (String yaml : inputSetPipelineCompYamlList) {
       res = mergeInputSetIntoPipeline(res, yaml, false, appendInputSetValidator);
     }
-    return createTemplateFromPipeline(res, false);
+    return res;
   }
 
   private Object checkForRuntimeInputExpressions(Object inputSetValue, Object pipelineValue) {
@@ -164,7 +176,7 @@ public class MergeHelper {
       return ParameterField.createExpressionField(true, ((JsonNode) inputSetValue).asText(),
           parameterField.getInputSetValidator(), ((JsonNode) inputSetValue).getNodeType() != JsonNodeType.STRING);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("", e);
       return inputSetValue;
     }
   }

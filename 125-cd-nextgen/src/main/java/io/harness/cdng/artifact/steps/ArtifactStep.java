@@ -1,8 +1,8 @@
 package io.harness.cdng.artifact.steps;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
@@ -21,6 +21,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -67,7 +68,7 @@ public class ArtifactStep {
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
   }
 
   public StepOutcome processDelegateResponse(
@@ -94,9 +95,9 @@ public class ArtifactStep {
 
   public StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
     ArtifactOutcome artifact = ArtifactResponseToOutcomeMapper.toArtifactOutcome(applyArtifactsOverlay(stepParameters),
-        taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0));
+        taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0), true);
     String outcomeKey =
-        OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
+        OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + artifact.getIdentifier();
     if (artifact.isPrimaryArtifact()) {
       outcomeKey = OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.PRIMARY_ARTIFACT;
     }
@@ -106,12 +107,15 @@ public class ArtifactStep {
   @VisibleForTesting
   ArtifactConfig applyArtifactsOverlay(ArtifactStepParameters stepParameters) {
     List<ArtifactConfig> artifactList = new LinkedList<>();
+    // 1. Original artifacts
     if (stepParameters.getArtifact() != null) {
       artifactList.add(stepParameters.getArtifact());
     }
+    // 2. Override sets
     if (stepParameters.getArtifactOverrideSet() != null) {
       artifactList.add(stepParameters.getArtifactOverrideSet());
     }
+    // 3. Stage Overrides
     if (stepParameters.getArtifactStageOverride() != null) {
       artifactList.add(stepParameters.getArtifactStageOverride());
     }
@@ -135,7 +139,8 @@ public class ArtifactStep {
                 .getServiceSpec()
                 .getArtifactOverrideSets()
                 .stream()
-                .filter(o -> o.getIdentifier().equals(useArtifactOverrideSet))
+                .filter(o -> o.getOverrideSet().getIdentifier().equals(useArtifactOverrideSet))
+                .map(ArtifactOverrideSetWrapper::getOverrideSet)
                 .collect(Collectors.toList());
         if (artifactOverrideSetsList.size() != 1) {
           throw new InvalidRequestException("Artifact Override Set is not defined properly.");
@@ -167,9 +172,6 @@ public class ArtifactStep {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
     ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (artifacts != null) {
-      if (artifacts.getPrimary() == null) {
-        throw new InvalidArgumentsException("Primary artifact cannot be null.");
-      }
       // Add service artifacts.
       List<ArtifactConfig> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
       mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);

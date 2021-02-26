@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -16,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -33,7 +30,6 @@ import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.appmanifest.HelmChart;
@@ -277,6 +273,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private ApiKeyInfo triggeringApiKeyInfo;
 
   private List<Artifact> artifacts;
+  private List<Artifact> rollbackArtifacts;
   private List<HelmChart> helmCharts;
 
   private Set<String> keywords;
@@ -351,6 +348,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
     public static final String executionArgs_artifact_variables =
         executionArgs + "." + ExecutionArgsKeys.artifactVariables;
     public static final String tags_name = tags + "." + NameValuePairKeys.name;
+    public static final String triggeredByID = triggeredBy + "." + User.BaseKeys.uuid;
     public static final String pipelineSummary_pipelineId = pipelineSummary + "." + ExecutionArgsKeys.pipelineId;
   }
 

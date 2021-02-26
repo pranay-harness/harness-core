@@ -11,14 +11,21 @@ public interface YamlTypes {
   String SIDECAR_ARTIFACT_CONFIG = "sidecar";
   String SIDECARS_ARTIFACT_CONFIG = "sidecars";
   String ENVIRONMENT_YAML = "environment";
+  String ENVIRONMENT_REF = "environmentRef";
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
   String INFRA_USE_FROM_STAGE = "useFromStage";
   String INFRA_USE_FROM_STAGE_OVERRIDES = "overrides";
+  String OVERRIDE_SET = "overrideSet";
 
   String K8S_ROLLING_ROLLBACK = StepSpecTypeConstants.K8S_ROLLING_ROLLBACK;
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;
   String K8S_BLUE_GREEN_DEPLOY = StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY;
   String K8S_APPLY = StepSpecTypeConstants.K8S_APPLY;
+  String K8S_SCALE = StepSpecTypeConstants.K8S_SCALE;
+  String K8S_CANARY_DEPLOY = StepSpecTypeConstants.K8S_CANARY_DEPLOY;
+  String K8S_BG_SWAP_SERVICES = StepSpecTypeConstants.K8S_BG_SWAP_SERVICES;
+  String K8S_DELETE = StepSpecTypeConstants.K8S_DELETE;
+  String K8S_CANARY_DELETE = StepSpecTypeConstants.K8S_CANARY_DELETE;
 
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
@@ -28,7 +35,9 @@ public interface YamlTypes {
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
-  String SERVICE_CONFIG = "service";
+  String SERVICE_CONFIG = "serviceConfig";
+  String SERVICE_ENTITY = "service";
+  String SERVICE_REF = "serviceRef";
   String SERVICE_DEFINITION = "serviceDefinition";
   String SERVICE_SPEC = "spec";
   String SERVICE_USE_FROM_STAGE = "useFromStage";
@@ -47,4 +56,14 @@ public interface YamlTypes {
   String STORE_CONFIG_WRAPPER = "store";
 
   String SKIP_DRY_RUN = "skipDryRun";
+  String OUTPUT = "output";
+  String TIMEOUT = "timeout";
+  String UUID = "uuid";
+  String SHELL = "shell";
+  String SOURCE = "source";
+  String EXECUTION_TARGET = "executionTarget";
+  String OUTPUT_VARIABLES = "outputVariables";
+  String HEADERS = "headers";
+  String DELEGATE_SELECTORS = "delegateSelectors";
+  String ENVIRONMENT_VARIABLES = "environmentVariables";
 }

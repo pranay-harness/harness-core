@@ -2,6 +2,7 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -28,6 +29,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.rest.RestResponse;
 import io.harness.secrets.setupusage.SecretSetupUsage;
 import io.harness.secrets.validation.BaseSecretValidator;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
 
@@ -238,6 +240,7 @@ public class SecretManagementResource {
       @QueryParam("accountId") final String accountId, @Nullable @FormDataParam("kmsId") final String kmsId,
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
+      @FormDataParam("additionalMetadata") final String additionalMetadata,
       @FormDataParam("runtimeParameters") final String runtimeParametersString,
       @FormDataParam("scopedToAccount") final boolean scopedToAccount,
       @FormDataParam("inheritScopesFromSM") final boolean inheritScopesFromSM) throws IOException {
@@ -247,10 +250,14 @@ public class SecretManagementResource {
     }
     BaseSecretValidator.validateFileWithinSizeLimit(
         request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
+    AdditionalMetadata additionalMetadataObj = isNotEmpty(additionalMetadata)
+        ? JsonUtils.asObject(additionalMetadata, AdditionalMetadata.class)
+        : AdditionalMetadata.builder().build();
     SecretFile secretFile =
         SecretFile.builder()
             .fileContent(ByteStreams.toByteArray(uploadedInputStream))
             .name(name)
+            .additionalMetadata(additionalMetadataObj)
             .kmsId(kmsId)
             .hideFromListing(false)
             .scopedToAccount(scopedToAccount)
@@ -269,6 +276,7 @@ public class SecretManagementResource {
   public RestResponse<Boolean> updateFile(@Context HttpServletRequest request,
       @QueryParam("accountId") final String accountId, @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
+      @FormDataParam("additionalMetadata") final String additionalMetadata,
       @FormDataParam("runtimeParameters") final String runtimeParametersString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("scopedToAccount") final boolean scopedToAccount,
@@ -279,12 +287,16 @@ public class SecretManagementResource {
     }
     BaseSecretValidator.validateFileWithinSizeLimit(
         request.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
+    AdditionalMetadata additionalMetadataObj = isNotEmpty(additionalMetadata)
+        ? JsonUtils.asObject(additionalMetadata, AdditionalMetadata.class)
+        : AdditionalMetadata.builder().build();
     SecretFile secretFile =
         SecretFile.builder()
             .fileContent(uploadedInputStream == null ? null : ByteStreams.toByteArray(uploadedInputStream))
             .name(name)
             .hideFromListing(false)
             .scopedToAccount(scopedToAccount)
+            .additionalMetadata(additionalMetadataObj)
             .runtimeParameters(runtimeParameters)
             .usageRestrictions(usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString))
             .inheritScopesFromSM(inheritScopesFromSM)

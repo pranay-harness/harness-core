@@ -1,17 +1,17 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.ALL_LOCATIONS;
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.threading.Morpheus.sleep;
-
-import static software.wings.service.impl.GcpHelperService.ALL_LOCATIONS;
-import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -20,23 +20,18 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
-import com.google.api.services.container.model.ClusterUpdate;
 import com.google.api.services.container.model.CreateClusterRequest;
 import com.google.api.services.container.model.ListClustersResponse;
 import com.google.api.services.container.model.MasterAuth;
 import com.google.api.services.container.model.NodeConfig;
-import com.google.api.services.container.model.NodePool;
-import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.api.services.container.model.Operation;
-import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -47,7 +42,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,13 +52,17 @@ import lombok.extern.slf4j.Slf4j;
 public class GkeClusterServiceImpl implements GkeClusterService {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
   @Inject private TimeLimiter timeLimiter;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public KubernetesConfig createCluster(SettingAttribute computeProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace,
       Map<String, String> params) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
+    // Decrypt gcpConfig
+    encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
+    Container gkeContainerService =
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -146,33 +144,6 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return (GcpConfig) computeProviderSetting.getValue();
   }
 
-  @Override
-  public boolean deleteCluster(SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
-      String locationClusterName) {
-    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
-    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
-    String location = locationCluster[0];
-    String clusterName = locationCluster[1];
-    try {
-      Operation deleteOperation =
-          gkeContainerService.projects()
-              .locations()
-              .clusters()
-              .delete("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
-              .execute();
-      String operationStatus =
-          waitForOperationToComplete(deleteOperation, gkeContainerService, projectId, location, "Deleting cluster");
-      if (operationStatus.equals("DONE")) {
-        return true;
-      }
-    } catch (IOException e) {
-      logNotFoundOrError(e, projectId, location, clusterName, "deleting");
-    }
-    return false;
-  }
-
   private String waitForOperationToComplete(Operation operation, Container gkeContainerService, String projectId,
       String location, String operationLogMessage) {
     log.info(operationLogMessage + "...");
@@ -213,8 +184,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   @Override
   public KubernetesConfig getCluster(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String locationClusterName, String namespace, boolean isInstanceSync) {
+    // Decrypt gcpConfig
+    encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);
     Container gkeContainerService =
-        gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, isInstanceSync);
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -251,7 +224,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public List<String> listClusters(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
+    // Decrypt gcpConfig
+    encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
+    Container gkeContainerService =
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     try {
       ListClustersResponse response = gkeContainerService.projects()
@@ -274,40 +250,6 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return (String) ((DBObject) JSON.parse(new String(credentials))).get("project_id");
   }
 
-  @Override
-  public boolean setNodePoolAutoscaling(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId,
-      boolean enabled, int min, int max) {
-    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
-    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
-    String location = locationCluster[0];
-    String clusterName = locationCluster[1];
-    try {
-      ClusterUpdate clusterUpdate = new ClusterUpdate();
-      if (isNotBlank(nodePoolId)) {
-        clusterUpdate.setDesiredNodePoolId(nodePoolId);
-      }
-      UpdateClusterRequest update = new UpdateClusterRequest().setUpdate(clusterUpdate.setDesiredNodePoolAutoscaling(
-          new NodePoolAutoscaling().setEnabled(enabled).setMinNodeCount(min).setMaxNodeCount(max)));
-      Operation updateOperation =
-          gkeContainerService.projects()
-              .locations()
-              .clusters()
-              .update("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName, update)
-              .execute();
-      String operationStatus =
-          waitForOperationToComplete(updateOperation, gkeContainerService, projectId, location, "Updating cluster");
-      if (operationStatus.equals("DONE")) {
-        return true;
-      }
-    } catch (IOException e) {
-      logNotFoundOrError(e, projectId, location, clusterName, "updating");
-    }
-    return false;
-  }
-
   private void logNotFoundOrError(
       IOException e, String projectId, String location, String clusterName, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
@@ -317,35 +259,5 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       log.error(
           format("Error %s cluster %s in location %s for project %s", actionVerb, clusterName, location, projectId), e);
     }
-  }
-
-  @Override
-  public NodePoolAutoscaling getNodePoolAutoscaling(SettingAttribute computeProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, @Nullable String nodePoolId) {
-    GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
-    Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
-    String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
-    String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
-    String location = locationCluster[0];
-    String clusterName = locationCluster[1];
-    try {
-      Cluster cluster = gkeContainerService.projects()
-                            .locations()
-                            .clusters()
-                            .get("projects/" + projectId + "/locations/" + location + "/clusters/" + clusterName)
-                            .execute();
-      if (isNotBlank(nodePoolId)) {
-        for (NodePool nodePool : cluster.getNodePools()) {
-          if (nodePool.getName().equals(nodePoolId)) {
-            return nodePool.getAutoscaling();
-          }
-        }
-      } else {
-        return Iterables.getOnlyElement(cluster.getNodePools()).getAutoscaling();
-      }
-    } catch (IOException e) {
-      logNotFoundOrError(e, projectId, location, clusterName, "getting");
-    }
-    return null;
   }
 }

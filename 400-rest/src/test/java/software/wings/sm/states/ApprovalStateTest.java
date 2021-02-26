@@ -26,11 +26,13 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
 import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
+import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APPROVAL_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -49,6 +51,8 @@ import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_URL;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
@@ -103,6 +107,7 @@ import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
+import software.wings.beans.approval.SlackApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.security.UserGroup;
@@ -111,6 +116,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.security.SecretManager;
 import software.wings.service.ApprovalUtils;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
@@ -152,7 +158,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.sf.json.JSONArray;
 import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.text.StringEscapeUtils;
 import org.joor.Reflect;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -204,20 +212,20 @@ public class ApprovalStateTest extends WingsBaseTest {
           .status(ExecutionStatus.NEW)
           .appId(APP_ID)
           .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
-          .serviceIds(asList(SERVICE_ID))
-          .environments(asList(EnvSummary.builder().name(ENV_NAME).build()))
-          .artifacts(asList(Artifact.Builder.anArtifact()
-                                .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-                                .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                .build()))
+          .serviceIds(Collections.singletonList(SERVICE_ID))
+          .environments(Collections.singletonList(EnvSummary.builder().name(ENV_NAME).build()))
+          .artifacts(Collections.singletonList(anArtifact()
+                                                   .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                   .build()))
           .createdAt(70L)
-          .infraDefinitionIds(asList(INFRA_DEFINITION_ID))
+          .infraDefinitionIds(Collections.singletonList(INFRA_DEFINITION_ID))
           .build();
 
   @BeforeClass
   public static void readMockData() throws IOException {
-    projects = new ObjectMapper().readValue(new File("src/test/resources/mock_projects"), JSONArray.class);
-    statuses = new ObjectMapper().readValue(new File("src/test/resources/mock_statuses"), JSONArray.class);
+    projects = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_projects"), JSONArray.class);
+    statuses = new ObjectMapper().readValue(new File("400-rest/src/test/resources/mock_statuses"), JSONArray.class);
   }
 
   @Before
@@ -299,15 +307,15 @@ public class ApprovalStateTest extends WingsBaseTest {
         .thenReturn(execution);
     when(serviceResourceService.fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(SERVICE_NAME));
     when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("artifacts").build());
-    when(workflowNotificationHelper.calculateEnvironmentDetails(any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("env").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("*Artifacts*: artifacts").name("artifacts").build());
     when(workflowNotificationHelper.calculateServiceDetailsForAllServices(any(), any(), any(), any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("services").build());
-    when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("infra").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("services").name("services").build());
+    when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("infra").name("infra").build());
     when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("app").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("nameW/Omrkdwn").build());
+    when(workflowNotificationHelper.calculateEnvDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("*Environments:* env").build());
   }
 
   @Test
@@ -334,10 +342,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -367,10 +375,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -386,6 +394,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion("true");
     when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression("true");
     verify(alertService, times(0))
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
@@ -400,6 +409,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -415,6 +425,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -434,12 +445,13 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = approvalState.execute(context);
 
+    verify(context).renderExpression(disableAssertion);
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -610,10 +622,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -638,10 +650,10 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -675,10 +687,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -760,7 +772,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
 
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().executionStatus(FAILED).build());
 
     approvalStateParams.getJiraApprovalParams().setIssueId("issueId");
@@ -776,7 +788,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "DONE";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus(approvalValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -800,7 +812,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     String rejectionValue = "REJECTED";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus(rejectionValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -823,7 +835,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteJiraApprovalWithPollingService() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus("TODO").build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -1316,10 +1328,10 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
@@ -1363,82 +1375,14 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
-    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
     verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
-    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
     verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateEnvDetails(ACCOUNT_ID, APP_ID, execution.getEnvironments());
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
             WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
             WorkflowExecutionKeys.infraDefinitionIds);
-  }
-
-  private void verifyJiraSweepingOutput() {
-    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
-                                                   .approvalStateType(ApprovalStateType.JIRA)
-                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
-                                                   .build();
-    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
-    assertJiraKeysInSweepingOutput(keys);
-  }
-
-  private void verifyUserGroupSweepingOutput() {
-    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
-                                                   .approvalStateType(ApprovalStateType.USER_GROUP)
-                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
-                                                   .build();
-    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
-    assertUserGroupKeysInSweepingOutput(keys);
-  }
-
-  private void verifySnowSweepingOutput() {
-    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
-                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
-                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
-                                                   .build();
-    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
-    assertSnowKeysInSweepingOutput(keys);
-  }
-
-  private List<String> GetSweepingOutputKeys(
-      ArgumentCaptor<SweepingOutputInstance> captor, ApprovalStateExecutionData executionData) {
-    approvalState.fillSweepingOutput(context, executionData, null);
-
-    verify(sweepingOutputService, times(1)).save(captor.capture());
-
-    SweepingOutputInstance sweepingOutput = captor.getValue();
-    Map<String, Object> data = (Map<String, Object>) kryoSerializer.asInflatedObject(sweepingOutput.getOutput());
-
-    reset(sweepingOutputService);
-    return data.keySet().stream().collect(Collectors.toList());
-  }
-
-  private void assertUserGroupKeysInSweepingOutput(List<String> keys) {
-    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
-        ApprovalStateExecutionDataKeys.variables, ApprovalStateExecutionDataKeys.comments, "test",
-        ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.approvalFromSlack,
-        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType,
-        ApprovalStateExecutionDataKeys.approvedBy);
-  }
-
-  private void assertJiraKeysInSweepingOutput(List<String> keys) {
-    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
-        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.issueKey,
-        ApprovalStateExecutionDataKeys.issueUrl, ApprovalStateExecutionDataKeys.currentStatus,
-        ApprovalStateExecutionDataKeys.approvalField, ApprovalStateExecutionDataKeys.approvalValue,
-        ApprovalStateExecutionDataKeys.rejectionField, ApprovalStateExecutionDataKeys.rejectionValue,
-        ApprovalStateExecutionDataKeys.approvalFromSlack, ApprovalStateExecutionDataKeys.timeoutMillis,
-        ApprovalStateExecutionDataKeys.approvalStateType);
-  }
-
-  private void assertSnowKeysInSweepingOutput(List<String> keys) {
-    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
-        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
-        ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
-        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
   }
 
   @Test
@@ -1516,5 +1460,216 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(response.getErrorMessage())
         .isEqualTo("Invalid rejection status [UNKNOWN]. Please, check out allowed values [To Do, In Progress, Done]");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldUpdatePlaceholderValuesForSlackApprovalNotification() {
+    Map<String, String> placeholderValues = new HashMap<>();
+    placeholderValues.put("START_TS_SECS", "1000");
+    placeholderValues.put("END_TS_SECS", "1000");
+    placeholderValues.put("EXPIRES_TS_SECS", "1000");
+    placeholderValues.put("START_DATE", "StartDate");
+    placeholderValues.put("END_DATE", "EndDate");
+    placeholderValues.put("EXPIRES_DATE", "ExpiresDate");
+    placeholderValues.put("DURATION", "5s");
+    placeholderValues.put("VERB", "failed");
+    placeholderValues.put("STATUS_CAMELCASE", "FAILED");
+    placeholderValues.put("WORKFLOW_NAME", WORKFLOW_NAME);
+    placeholderValues.put("WORKFLOW_URL", WORKFLOW_URL);
+    placeholderValues.put("TIMEOUT", "1000");
+    placeholderValues.put("APP_NAME", APP_NAME);
+    placeholderValues.put("USER_NAME", USER_NAME);
+    placeholderValues.put("STATUS", "statusMsg");
+    placeholderValues.put("ENV", "env");
+    placeholderValues.put("ARTIFACT", "artifactsMessage");
+    when(context.getStateExecutionInstanceId()).thenReturn(STATE_EXECUTION_ID);
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(APP_ID)
+            .appName("app")
+            .nonFormattedAppName("nameW/Omrkdwn")
+            .routingId(ACCOUNT_ID)
+            .deploymentId(PIPELINE_WORKFLOW_EXECUTION_ID)
+            .workflowId(WORKFLOW_ID)
+            .workflowExecutionName(BUILD_JOB_NAME)
+            .stateExecutionId(STATE_EXECUTION_ID)
+            .stateExecutionInstanceName("Name")
+            .approvalId(APPROVAL_EXECUTION_ID)
+            .pausedStageName("Name")
+            .servicesInvolved("*Services*: services")
+            .environmentsInvolved("*Environments*: env")
+            .artifactsInvolved("*Artifacts*: artifacts")
+            .infraDefinitionsInvolved("*Infrastructure Definitions*: infra")
+            .confirmation(false)
+            .pipeline(false)
+            .workflowUrl(WORKFLOW_URL)
+            .jwtToken("token")
+            .startTsSecs(placeholderValues.get(SlackApprovalMessageKeys.START_TS_SECS))
+            .endTsSecs(placeholderValues.get(SlackApprovalMessageKeys.END_TS_SECS))
+            .startDate(placeholderValues.get(SlackApprovalMessageKeys.START_DATE))
+            .expiryTsSecs(placeholderValues.get(SlackApprovalMessageKeys.EXPIRES_TS_SECS))
+            .endDate(placeholderValues.get(SlackApprovalMessageKeys.END_DATE))
+            .expiryDate(placeholderValues.get(SlackApprovalMessageKeys.EXPIRES_DATE))
+            .verb(placeholderValues.get(SlackApprovalMessageKeys.VERB))
+            .build();
+    Map<String, String> claims = new HashMap<>();
+    claims.put("approvalId", APPROVAL_EXECUTION_ID);
+    when(secretManager.generateJWTTokenWithCustomTimeOut(claims, "secret", DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS))
+        .thenReturn("token");
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getStateExecutionInstanceName()).thenReturn("Name");
+    when(workflowExecutionService.fetchWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId(),
+             WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+             WorkflowExecutionKeys.infraDefinitionIds))
+        .thenReturn(builder()
+                        .artifacts(Collections.singletonList(anArtifact().build()))
+                        .serviceIds(Collections.singletonList(SERVICE_ID))
+                        .infraDefinitionIds(Collections.singletonList(INFRA_DEFINITION_ID))
+                        .environments(Collections.singletonList(EnvSummary.builder().name("env").build()))
+                        .build());
+
+    JSONObject customData = new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
+    String buttonValue = StringEscapeUtils.escapeJson(customData.toString());
+    String displayText = createSlackApprovalMessage(
+        slackApprovalParams, ApprovalState.class.getResource("/slack/workflow-approval-message.txt"));
+    approvalState.updatePlaceholderValuesForSlackApproval(
+        APPROVAL_EXECUTION_ID, ACCOUNT_ID, placeholderValues, context);
+    assertThat(placeholderValues.get(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS)).isEqualTo(buttonValue);
+    assertThat(placeholderValues.get(SlackApprovalMessageKeys.APPROVAL_MESSAGE)).isEqualTo(displayText);
+    assertThat(placeholderValues.get(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER))
+        .isEqualTo("suppressTraditionalNotificationOnSlack");
+    assertThat(customData.get("nonFormattedAppName")).isEqualTo("nameW/Omrkdwn");
+    assertPlaceholdersAddedForEmailNotification(placeholderValues);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldTrimExcessiveServicesAndArtifactsDetails() {
+    String excessiveInfo =
+        "first,second,third,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo,lotsOfLongExcessiveInfo";
+    WorkflowNotificationDetails serviceDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    WorkflowNotificationDetails infraDetails = WorkflowNotificationDetails.builder().name(excessiveInfo).build();
+    StringBuilder artifacts = new StringBuilder(String.format("*Artifacts:* %s", excessiveInfo.replace(",", ", ")));
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(APP_ID)
+            .appName(APP_NAME)
+            .routingId(ACCOUNT_ID)
+            .deploymentId(WORKFLOW_EXECUTION_ID)
+            .workflowId(WORKFLOW_ID)
+            .workflowExecutionName(WORKFLOW_NAME)
+            .stateExecutionId(STATE_EXECUTION_ID)
+            .stateExecutionInstanceName(STATE_NAME)
+            .approvalId(APPROVAL_EXECUTION_ID)
+            .pausedStageName(WORKFLOW_NAME)
+            .servicesInvolved(String.format("*Services*: %s", serviceDetails.getName()))
+            .environmentsInvolved(ENV_NAME)
+            .artifactsInvolved(artifacts.toString())
+            .infraDefinitionsInvolved(String.format("*Infrastructure Definitions*: %s", infraDetails.getName()))
+            .confirmation(false)
+            .pipeline(true)
+            .workflowUrl(WORKFLOW_URL)
+            .jwtToken("token")
+            .startTsSecs("mockEpochTimeMillis")
+            .endTsSecs("mockEpochTimeMillis")
+            .startDate("mockEpochTimeMillis")
+            .expiryTsSecs("mockEpochTimeMillis")
+            .endDate("mockEpochTimeMillis")
+            .expiryDate("someMockDate")
+            .verb("paused")
+            .build();
+    String displayText = createSlackApprovalMessage(slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE));
+
+    String trimmedMessage = approvalState.validateMessageLength(displayText, slackApprovalParams,
+        ApprovalState.class.getResource(SlackApprovalMessageKeys.PIPELINE_APPROVAL_MESSAGE_TEMPLATE), serviceDetails,
+        artifacts, infraDetails);
+    assertThat(trimmedMessage.length()).isLessThanOrEqualTo(2000);
+    assertThat(trimmedMessage).contains("*Services*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getServicesInvolved());
+    assertThat(trimmedMessage).contains("*Artifacts:* first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getArtifactsInvolved());
+    assertThat(trimmedMessage).contains("*Infrastructure Definitions*: first, second, third... 25 more");
+    assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getInfraDefinitionsInvolved());
+  }
+
+  private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {
+    assertThat(placeholderValues.containsKey("APPROVAL_STEP"));
+    assertThat(placeholderValues.containsKey("WORKFLOW"));
+    assertThat(placeholderValues.containsKey("APP"));
+    assertThat(placeholderValues.containsKey("SERVICE_NAMES"));
+    assertThat(placeholderValues.containsKey("ARTIFACTS"));
+    assertThat(placeholderValues.containsKey("ENV"));
+    assertThat(placeholderValues.containsKey("INFRA_NAMES"));
+  }
+  private void verifyJiraSweepingOutput() {
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.JIRA)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertJiraKeysInSweepingOutput(keys);
+  }
+
+  private void verifyUserGroupSweepingOutput() {
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.USER_GROUP)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertUserGroupKeysInSweepingOutput(keys);
+  }
+
+  private void verifySnowSweepingOutput() {
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
+                                                   .approvalStateType(ApprovalStateType.SERVICENOW)
+                                                   .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                                   .build();
+    final List<String> keys = GetSweepingOutputKeys(captor, executionData);
+    assertSnowKeysInSweepingOutput(keys);
+  }
+
+  private List<String> GetSweepingOutputKeys(
+      ArgumentCaptor<SweepingOutputInstance> captor, ApprovalStateExecutionData executionData) {
+    approvalState.fillSweepingOutput(context, executionData, null);
+
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+
+    SweepingOutputInstance sweepingOutput = captor.getValue();
+    Map<String, Object> data = (Map<String, Object>) kryoSerializer.asInflatedObject(sweepingOutput.getOutput());
+
+    reset(sweepingOutputService);
+    return data.keySet().stream().collect(Collectors.toList());
+  }
+
+  private void assertUserGroupKeysInSweepingOutput(List<String> keys) {
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.variables, ApprovalStateExecutionDataKeys.comments, "test",
+        ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.approvalFromSlack,
+        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType,
+        ApprovalStateExecutionDataKeys.approvedBy);
+  }
+
+  private void assertJiraKeysInSweepingOutput(List<String> keys) {
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.issueKey,
+        ApprovalStateExecutionDataKeys.issueUrl, ApprovalStateExecutionDataKeys.currentStatus,
+        ApprovalStateExecutionDataKeys.approvalField, ApprovalStateExecutionDataKeys.approvalValue,
+        ApprovalStateExecutionDataKeys.rejectionField, ApprovalStateExecutionDataKeys.rejectionValue,
+        ApprovalStateExecutionDataKeys.approvalFromSlack, ApprovalStateExecutionDataKeys.timeoutMillis,
+        ApprovalStateExecutionDataKeys.approvalStateType);
+  }
+
+  private void assertSnowKeysInSweepingOutput(List<String> keys) {
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
+        ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
+        ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
   }
 }

@@ -30,6 +30,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -94,6 +96,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsAmiHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAmiHelperServiceDelegate {
   private static final String AUTOSCALING_GROUP_RESOURCE_TYPE = "auto-scaling-group";
@@ -626,7 +629,8 @@ public class AwsAmiHelperServiceDelegateImpl
         .build();
   }
 
-  private AwsAmiServiceSetupRequest createAwsAmiSetupRequest(
+  @VisibleForTesting
+  AwsAmiServiceSetupRequest createAwsAmiSetupRequest(
       AwsAmiServiceTrafficShiftAlbSetupRequest trafficShiftAlbSetupRequest,
       List<LbDetailsForAlbTrafficShift> lbDetailsForAlbTrafficShifts) {
     List<String> targetGroups = lbDetailsForAlbTrafficShifts.stream()
@@ -651,6 +655,7 @@ public class AwsAmiHelperServiceDelegateImpl
         .useCurrentRunningCount(trafficShiftAlbSetupRequest.isUseCurrentRunningCount())
         .infraMappingTargetGroupArns(targetGroups)
         .blueGreen(true)
+        .userData(trafficShiftAlbSetupRequest.getUserData())
         .build();
   }
 

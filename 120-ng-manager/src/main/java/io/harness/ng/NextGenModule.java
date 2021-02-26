@@ -1,7 +1,14 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 
+import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -28,27 +35,33 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.modules.ModulesClientModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
-import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageProcessor;
+import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
+import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
+import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
-import io.harness.ng.core.event.AccountChangeEventMessageProcessor;
-import io.harness.ng.core.event.FeatureFlagChangeEventMessageProcessor;
+import io.harness.ng.core.event.ConnectorEntityCRUDStreamListener;
+import io.harness.ng.core.event.ConnectorFeatureFlagStreamListener;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.event.MessageProcessor;
-import io.harness.ng.core.event.OrganizationChangeEventMessageProcessor;
-import io.harness.ng.core.event.ProjectChangeEventMessageProcessor;
+import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
+import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
+import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
@@ -60,10 +73,12 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
+import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -71,6 +86,10 @@ import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+
+import software.wings.security.ThreadLocalUserProvider;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -113,6 +132,12 @@ public class NextGenModule extends AbstractModule {
         .put(DelegateAsyncTaskResponse.class, "ngManager_delegateAsyncTaskResponses")
         .put(DelegateTaskProgressResponse.class, "ngManager_delegateTaskProgressResponses")
         .build();
+  }
+
+  @Provides
+  @Singleton
+  CiDefaultEntityConfiguration getCiDefaultConfiguration() {
+    return appConfig.getCiDefaultEntityConfiguration();
   }
 
   @Provides
@@ -166,12 +191,17 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named("lock"))
         .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
     install(new ValidationModule(getValidatorFactory()));
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
     install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
     install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new ConnectorModule());
+    install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
@@ -186,6 +216,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(YamlSdkModule.getInstance());
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -216,6 +247,11 @@ public class NextGenModule extends AbstractModule {
             .addAll(ManagerRegistrars.springConverters)
             .build();
       }
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
+      }
     });
     install(new AbstractModule() {
       @Override
@@ -238,7 +274,10 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
+    install(EntitySetupUsageModule.getInstance());
 
+    install(new ResourceGroupModule(
+        appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);
@@ -256,25 +295,39 @@ public class NextGenModule extends AbstractModule {
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
+    bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
 
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY))
-        .to(AccountChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY))
-        .to(OrganizationChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.PROJECT_ENTITY))
-        .to(ProjectChangeEventMessageProcessor.class);
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACTIVITY_ENTITY))
-        .to(EntityActivityCrudEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-        .to(FeatureFlagChangeEventMessageProcessor.class);
+
+    install(new AccessControlClientModule(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
+
+    registerEventsFrameworkMessageListeners();
+  }
+
+  private void registerEventsFrameworkMessageListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + ENTITY_CRUD))
+        .to(OrganizationEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PROJECT_ENTITY + ENTITY_CRUD))
+        .to(ProjectEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(CONNECTOR_ENTITY + ENTITY_CRUD))
+        .to(ConnectorEntityCRUDStreamListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM))
+        .to(OrganizationFeatureFlagStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM))
+        .to(ConnectorFeatureFlagStreamListener.class);
+
+    bind(MessageListener.class).annotatedWith(Names.named(SETUP_USAGE)).to(SetupUsageChangeEventMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
+        .to(EntityActivityCrudEventMessageListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

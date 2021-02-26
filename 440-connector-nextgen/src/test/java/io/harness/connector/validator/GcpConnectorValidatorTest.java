@@ -1,5 +1,7 @@
 package io.harness.connector.validator;
 
+import static io.harness.connector.ConnectivityStatus.SUCCESS;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -7,6 +9,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
@@ -15,12 +19,12 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 public class GcpConnectorValidatorTest extends CategoryTest {
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
+  @Mock private EncryptionHelper encryptionHelper;
   @InjectMocks private GcpConnectorValidator gcpConnectorValidator;
 
   @Before
@@ -44,15 +49,19 @@ public class GcpConnectorValidatorTest extends CategoryTest {
   public void validateTestWithDelegateSelector() {
     GcpConnectorDTO gcpConnectorDTO =
         GcpConnectorDTO.builder()
-            .credential(GcpConnectorCredentialDTO.builder()
-                            .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-                            .config(GcpDelegateDetailsDTO.builder().delegateSelector("foo").build())
-                            .build())
+            .credential(
+                GcpConnectorCredentialDTO.builder()
+                    .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                    .config(GcpDelegateDetailsDTO.builder().delegateSelectors(Collections.singleton("foo")).build())
+                    .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
-    gcpConnectorValidator.validate(gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+        .thenReturn(GcpValidationTaskResponse.builder()
+                        .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
+                        .build());
+    gcpConnectorValidator.validate(
+        gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 
@@ -70,9 +79,13 @@ public class GcpConnectorValidatorTest extends CategoryTest {
                             .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
-    gcpConnectorValidator.validate(gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+        .thenReturn(GcpValidationTaskResponse.builder()
+                        .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
+                        .build());
+    gcpConnectorValidator.validate(
+        gcpConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }

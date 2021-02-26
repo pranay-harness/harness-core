@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -207,6 +208,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
             anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build());
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
+
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);
     on(std).set("artifactService", artifactService);
@@ -216,6 +218,30 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Artifact artifact = std.getArtifactForService(SERVICE_ID);
     assertThat(artifact).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldGetRollbackArtifactForService() {
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList("ROLLBACK_ARTIFACT_STREAM_ID"));
+    when(artifactService.get("ROLLBACK_ARTIFACT_ID"))
+        .thenReturn(anArtifact()
+                        .withUuid("ROLLBACK_ARTIFACT_ID")
+                        .withAppId(APP_ID)
+                        .withArtifactStreamId("ROLLBACK_ARTIFACT_STREAM_ID")
+                        .build());
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    std.setAppId(APP_ID);
+    std.setRollbackArtifactIds(singletonList("ROLLBACK_ARTIFACT_ID"));
+
+    Artifact rollbackArtifact = std.getRollbackArtifactForService(SERVICE_ID);
+    assertThat(rollbackArtifact).isNotNull();
   }
 
   @Test
@@ -233,6 +259,24 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Artifact artifact = std.getArtifactForService(SERVICE_ID);
     assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldGetNullRollbackArtifact() {
+    when(artifactService.get("ROLLBACK_ARTIFACT_ID"))
+        .thenReturn(anArtifact().withUuid("ROLLBACK_ARTIFACT_ID").withAppId(APP_ID).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(new ArrayList<>());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    std.setAppId(APP_ID);
+    std.setRollbackArtifactIds(singletonList("ROLLBACK_ARTIFACT_ID"));
+
+    Artifact rollbackArtifact = std.getRollbackArtifactForService(SERVICE_ID);
+    assertThat(rollbackArtifact).isNull();
   }
 
   @Test
@@ -278,6 +322,51 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Artifact artifact = (Artifact) map.get(ContextElement.ARTIFACT);
     assertThat(artifact).isNotNull();
     assertThat(artifact.getSource())
+        .isNotEmpty()
+        .containsKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldGetRollbackArtifactWithSourceProperties() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+    Environment env = anEnvironment().appId(app.getUuid()).name("DEV").build();
+    env = environmentService.save(env);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    on(std).set("artifactStreamService", artifactStreamService);
+    on(std).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    on(std).set("featureFlagService", featureFlagService);
+
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+    std.setRollbackArtifactIds(singletonList("ROLLBACK_ARTIFACT_ID"));
+
+    ServiceElement serviceElement = ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
+    when(artifactService.get("ROLLBACK_ARTIFACT_ID"))
+        .thenReturn(anArtifact()
+                        .withUuid("ROLLBACK_ARTIFACT_ID")
+                        .withAppId(app.getUuid())
+                        .withArtifactStreamId("ROLLBACK_ARTIFACT_STREAM_ID")
+                        .build());
+    when(artifactStreamService.fetchArtifactSourceProperties(app.getAccountId(), "ROLLBACK_ARTIFACT_STREAM_ID"))
+        .thenReturn(ImmutableMap.of(
+            ARTIFACT_SOURCE_USER_NAME_KEY, "harness", ARTIFACT_SOURCE_REGISTRY_URL_KEY, "http://docker.registry.io"));
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList("ROLLBACK_ARTIFACT_STREAM_ID"));
+
+    Map<String, Object> map = std.paramMap(context);
+    assertThat(map).isNotNull().containsKey(ContextElement.ROLLBACK_ARTIFACT);
+    Artifact rollbackArtifact = (Artifact) map.get(ContextElement.ROLLBACK_ARTIFACT);
+    assertThat(rollbackArtifact).isNotNull();
+    assertThat(rollbackArtifact.getSource())
         .isNotEmpty()
         .containsKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
   }

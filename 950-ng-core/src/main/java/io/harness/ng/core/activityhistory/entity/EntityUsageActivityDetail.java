@@ -1,7 +1,10 @@
 package io.harness.ng.core.activityhistory.entity;
 
+import io.harness.connector.ConnectivityStatus;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.dto.ErrorDetail;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,13 +19,16 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "entityActivity", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.ng.core.activity.EntityUsageActivityDetail")
-@EqualsAndHashCode(callSuper = false)
 public class EntityUsageActivityDetail extends NGActivity {
   @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;
   @NotNull EntityDetail referredByEntity;
   @NotEmpty String activityStatusMessage;
+  List<ErrorDetail> errors;
+  String errorSummary;
+  ConnectivityStatus status;
 }

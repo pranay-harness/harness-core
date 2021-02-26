@@ -10,7 +10,7 @@ trigger:
   source:
     type: Webhook
     spec:
-      type: Github
+      type: GITHUB
       spec:
         repoUrl: https://github.com/test/myrepo
         event: Pull Request

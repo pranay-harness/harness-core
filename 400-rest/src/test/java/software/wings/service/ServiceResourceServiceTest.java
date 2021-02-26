@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
@@ -39,6 +40,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandType.OTHER;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.CommandType.STOP;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -79,6 +81,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -118,6 +121,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
@@ -170,6 +174,7 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -258,7 +263,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
@@ -334,14 +339,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.createUpdateOperations(Service.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);
 
-    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(wingsPersistence.createQuery(Service.class));
+    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(persistence.createQuery(Service.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class, excludeAuthority))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
-    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
+    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(persistence.createQuery(Command.class));
     when(mockWingsPersistence.createQuery(ContainerTask.class))
-        .thenReturn(wingsPersistence.createQuery(ContainerTask.class));
+        .thenReturn(persistence.createQuery(ContainerTask.class));
 
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
@@ -574,7 +579,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
-    srs.pruneDescendingEntities(APP_ID, SERVICE_ID);
+    srs.pruneDescendingEntities(APP_ID, SERVICE_ID, false);
     InOrder inOrder = inOrder(mockWingsPersistence, workflowService, notificationService, serviceTemplateService,
         configService, serviceVariableService, artifactStreamService);
     inOrder.verify(artifactStreamService).pruneByService(APP_ID, SERVICE_ID);
@@ -1293,9 +1298,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   private void prepareServiceCommandMocks() {
     when(mockWingsPersistence.createUpdateOperations(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(ServiceCommand.class));
+        .thenReturn(persistence.createUpdateOperations(ServiceCommand.class));
     when(mockWingsPersistence.createQuery(ServiceCommand.class))
-        .thenReturn(wingsPersistence.createQuery(ServiceCommand.class));
+        .thenReturn(persistence.createQuery(ServiceCommand.class));
   }
 
   @Test
@@ -1432,7 +1437,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     prepareServiceCommandMocks();
 
     when(mockWingsPersistence.createUpdateOperations(Command.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(Command.class));
+        .thenReturn(persistence.createUpdateOperations(Command.class));
 
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(
@@ -1829,8 +1834,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     prepareServiceCommandMocks();
 
     when(mockWingsPersistence.createUpdateOperations(Command.class))
-        .thenReturn(wingsPersistence.createUpdateOperations(Command.class));
-    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(wingsPersistence.createQuery(Command.class));
+        .thenReturn(persistence.createUpdateOperations(Command.class));
+    when(mockWingsPersistence.createQuery(Command.class)).thenReturn(persistence.createQuery(Command.class));
 
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(
@@ -2448,12 +2453,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdateContainerTaskAdvanced() {
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesContainerTask containerTask = new KubernetesContainerTask();
     containerTask.setAppId(APP_ID);
     containerTask.setServiceId(SERVICE_ID);
     containerTask.setUuid("TASK_ID");
-    wingsPersistence.save(containerTask);
+    persistence.save(containerTask);
     KubernetesPayload payload = new KubernetesPayload();
 
     when(mockWingsPersistence.saveAndGet(ContainerTask.class, containerTask)).thenAnswer(t -> t.getArguments()[1]);
@@ -3004,6 +3009,52 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetFlattenNestedCommandUnits() {
+    final Command nestedCommand =
+        Command.Builder.aCommand()
+            .withCommandType(CommandType.OTHER)
+            .withName("start")
+            .withTemplateReference(TemplateReference.builder().templateUuid(UUID).templateVersion(4L).build())
+            .build();
+    final Command parentCommand = Command.Builder.aCommand()
+                                      .withCommandType(OTHER)
+                                      .withName("stop")
+                                      .withCommandUnits(Collections.singletonList(nestedCommand))
+                                      .build();
+    final Map<String, EntityVersion> envIdVersionMap =
+        ImmutableMap.<String, EntityVersion>of(ENV_ID, EntityVersion.Builder.anEntityVersion().withVersion(1).build());
+    ServiceCommand sc_1 = ServiceCommand.Builder.aServiceCommand()
+                              .withUuid("uuid_1")
+                              .withAppId(APP_ID)
+                              .withServiceId(SERVICE_ID)
+                              .withName(parentCommand.getName())
+                              .withTargetToAllEnv(true)
+                              .withCommand(parentCommand)
+                              .withEnvIdVersionMap(envIdVersionMap)
+                              .build();
+
+    when(templateService.get(any(), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Collections.singletonList(
+                                                ExecCommandUnit.Builder.anExecCommandUnit().withName("exec").build()))
+                                            .build())
+                        .build());
+    List<ServiceCommand> serviceCommands = Arrays.asList(sc_1);
+    doReturn(serviceCommands).when(spyServiceResourceService).getServiceCommands(anyString(), anyString());
+    doReturn(PageResponseBuilder.aPageResponse().withResponse(serviceCommands).build())
+        .when(mockWingsPersistence)
+        .query(any(), any());
+    doReturn(parentCommand).when(commandService).getCommand(APP_ID, sc_1.getUuid(), sc_1.getVersionForEnv(ENV_ID));
+    List<CommandUnit> commandUnits =
+        spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName());
+    assertThat(commandUnits).hasSize(1);
+    assertThat(commandUnits.get(0).getName()).isEqualTo("exec");
+  }
+
+  @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldGetExistingEcsServiceSpecification() {
@@ -3106,7 +3157,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         aServiceCommand().withName("START").withAppId(APP_ID).withServiceId(SERVICE_ID).withCommand(command).build();
     Service service = serviceBuilder.build();
     service.setServiceCommands(Arrays.asList(serviceCommand));
-    wingsPersistence.save(serviceCommand);
+    persistence.save(serviceCommand);
     when(entityVersionService.newEntityVersion(
              APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.CREATED, null))
         .thenReturn(anEntityVersion().withVersion(2).build());
@@ -3129,7 +3180,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testsetConfigMapYaml() {
-    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesPayload payload = new KubernetesPayload();
     payload.setAdvancedConfig("${DOCKER_IMAGE_NAME}");
     srs.setConfigMapYaml(APP_ID, SERVICE_ID, payload);
@@ -3147,7 +3198,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     applicationManifest.setAppId(APP_ID);
     applicationManifest.setUuid("APPMANIFEST_ID");
     Service service = Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).build();
-    wingsPersistence.save(service);
+    persistence.save(service);
     srs.setK8v2ServiceFromAppManifest(applicationManifest, ApplicationManifest.AppManifestSource.SERVICE);
     verify(mockWingsPersistence).createUpdateOperations(Service.class);
     verify(updateOperations).set("isK8sV2", true);

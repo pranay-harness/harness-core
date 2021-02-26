@@ -17,13 +17,16 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -55,6 +58,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -64,7 +68,6 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,12 +81,12 @@ import org.mockito.Mock;
 public class K8sCanaryDeployTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
 
-  @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ActivityService activityService;
-  @InjectMocks K8sCanaryDeploy k8sCanaryDeploy;
+  @Mock private K8sStateHelper k8sStateHelper;
+  @InjectMocks K8sCanaryDeploy k8sCanaryDeploy = spy(new K8sCanaryDeploy(K8S_CANARY_DEPLOY.name()));
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
 
@@ -110,23 +113,24 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute() {
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
-    when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
-    when(k8sStateHelper.createDelegateManifestConfig(any(), any()))
-        .thenReturn(K8sDelegateManifestConfig.builder().build());
-    when(k8sStateHelper.queueK8sDelegateTask(any(), any())).thenReturn(ExecutionResponse.builder().build());
-    when(k8sStateHelper.getReleaseName(any(), any())).thenReturn(RELEASE_NAME);
+    doReturn(RELEASE_NAME).when(k8sCanaryDeploy).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sCanaryDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sCanaryDeploy).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sCanaryDeploy).queueK8sDelegateTask(any(), any());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
     applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
-    when(k8sStateHelper.getApplicationManifests(any())).thenReturn(applicationManifestMap);
+    doReturn(applicationManifestMap).when(k8sCanaryDeploy).fetchApplicationManifests(any());
 
     k8sCanaryDeploy.executeK8sTask(context, ACTIVITY_ID);
 
     ArgumentCaptor<K8sTaskParameters> k8sTaskParamsArgumentCaptor = ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(), k8sTaskParamsArgumentCaptor.capture());
+    verify(k8sCanaryDeploy, times(1)).queueK8sDelegateTask(any(), k8sTaskParamsArgumentCaptor.capture());
     K8sCanaryDeployTaskParameters taskParams = (K8sCanaryDeployTaskParameters) k8sTaskParamsArgumentCaptor.getValue();
 
     assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);
@@ -143,8 +147,9 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testValidateParameters() {
+    doNothing().when(k8sCanaryDeploy).validateK8sV2TypeServiceUsed(context);
     k8sCanaryDeploy.validateParameters(context);
-    verify(k8sStateHelper, times(1)).validateK8sV2TypeServiceUsed(context);
+    verify(k8sCanaryDeploy, times(1)).validateK8sV2TypeServiceUsed(context);
   }
 
   @Test
@@ -174,8 +179,12 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
             .build();
 
     doReturn(InstanceElementListParam.builder().build())
-        .when(k8sStateHelper)
-        .getInstanceElementListParam(anyListOf(K8sPod.class));
+        .when(k8sCanaryDeploy)
+        .fetchInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(emptyList()).when(k8sCanaryDeploy).fetchInstanceStatusSummaries(any(), any());
+    doNothing().when(k8sCanaryDeploy).saveK8sElement(any(), any());
+    doNothing().when(k8sCanaryDeploy).saveInstanceInfoToSweepingOutput(any(), any(), any());
+    doReturn(APP_ID).when(k8sCanaryDeploy).fetchAppId(context);
     doReturn(ImmutableMap.of()).when(standardContextElement).paramMap(context);
     ExecutionResponse executionResponse =
         k8sCanaryDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of("response", taskExecutionResponse));
@@ -216,10 +225,13 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDelegateExecuteToK8sStateHelper() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sCanaryDeploy)
+        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
     k8sCanaryDeploy.execute(context);
-    verify(k8sStateHelper, times(1))
+    verify(k8sCanaryDeploy, times(1))
         .executeWrapperWithManifest(
-            k8sCanaryDeploy, context, K8sStateHelper.getSafeTimeoutInMillis(k8sCanaryDeploy.getTimeoutMillis()));
+            k8sCanaryDeploy, context, K8sStateHelper.fetchSafeTimeoutInMillis(k8sCanaryDeploy.getTimeoutMillis()));
   }
 
   @Test
@@ -247,12 +259,13 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
             .commandExecutionStatus(FAILURE)
             .k8sTaskResponse(K8sCanaryDeployResponse.builder().canaryWorkload("workload").build())
             .build();
+    doNothing().when(k8sCanaryDeploy).saveK8sElement(any(), any());
 
     ExecutionResponse executionResponse =
         k8sCanaryDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
 
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
-    verify(k8sStateHelper, times(1)).saveK8sElement(context, K8sElement.builder().canaryWorkload("workload").build());
+    verify(k8sCanaryDeploy, times(1)).saveK8sElement(context, K8sElement.builder().canaryWorkload("workload").build());
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }

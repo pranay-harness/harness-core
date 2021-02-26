@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -40,6 +38,7 @@ import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStepParameters;
 
+import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -119,6 +118,7 @@ import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
+import software.wings.api.arm.ARMOutputVariables;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -150,11 +150,13 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.Account;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.Activity;
@@ -192,9 +194,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.CustomArtifactServerConfig;
 import software.wings.beans.CustomInfrastructureMapping;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DeletedEntity;
 import software.wings.beans.DeploymentPreference;
@@ -289,6 +288,7 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
+import software.wings.beans.alert.DeploymentFreezeEventAlert;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -339,8 +339,10 @@ import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.ce.depricated.CECloudAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
+import software.wings.beans.command.AzureARMCommandUnit;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -469,12 +471,9 @@ import software.wings.collect.CollectEvent;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
@@ -749,6 +748,8 @@ import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
+import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.AdjustTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
@@ -864,6 +865,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Budget.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CECloudAccount.class);
+    set.add(CECloudAccountOld.class);
     set.add(CECluster.class);
     set.add(CEMetadataRecord.class);
     set.add(CECommunications.class);
@@ -897,10 +899,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DashboardSettings.class);
     set.add(DatadogCVServiceConfiguration.class);
     set.add(DatadogLogCVConfiguration.class);
-    set.add(Delegate.class);
-    set.add(DelegateConnection.class);
-    set.add(DelegateConnectionResult.class);
-    set.add(DelegateScope.class);
     set.add(DelegateSequenceConfig.class);
     set.add(DeploymentEvent.class);
     set.add(DeploymentPreference.class);
@@ -1085,12 +1083,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
+    set.add(ARMInfrastructureProvisioner.class);
   }
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);
-    h.put("ccm.budget.entities.ClusterBudgetScope", ClusterBudgetScope.class);
     h.put("ccm.cluster.entities.AzureKubernetesCluster", AzureKubernetesCluster.class);
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
@@ -1187,6 +1184,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.ResourceConstraintStepExecutionSummary", ResourceConstraintStepExecutionSummary.class);
     w.put("api.RouteUpdateRollbackElement", RouteUpdateRollbackElement.class);
     w.put("api.ScriptStateExecutionData", ScriptStateExecutionData.class);
+    w.put("api.ARMStateExecutionData", ARMStateExecutionData.class);
     w.put("api.ScriptStateExecutionSummary", ScriptStateExecutionSummary.class);
     w.put("api.SelectedNodeExecutionData", SelectedNodeExecutionData.class);
     w.put("api.SelectNodeStepExecutionSummary", SelectNodeStepExecutionSummary.class);
@@ -1218,6 +1216,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.cv.ContinuousVerificationDataCollectionAlert", ContinuousVerificationDataCollectionAlert.class);
     w.put("beans.alert.DelegateProfileErrorAlert", DelegateProfileErrorAlert.class);
     w.put("beans.alert.DelegatesDownAlert", DelegatesDownAlert.class);
+    w.put("beans.alert.DeploymentFreezeEventAlert", DeploymentFreezeEventAlert.class);
     w.put("beans.alert.DeploymentRateApproachingLimitAlert", DeploymentRateApproachingLimitAlert.class);
     w.put("beans.alert.EmailSendingFailedAlert", EmailSendingFailedAlert.class);
     w.put("beans.alert.GitConnectionErrorAlert", GitConnectionErrorAlert.class);
@@ -1286,6 +1285,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.AzureVMSSDummyCommandUnit", AzureVMSSDummyCommandUnit.class);
     w.put("beans.command.AzureWebAppCommandUnit", AzureWebAppCommandUnit.class);
+    w.put("beans.command.AzureARMCommandUnit", AzureARMCommandUnit.class);
     w.put("beans.config.ArtifactoryConfig", ArtifactoryConfig.class);
     w.put("beans.config.LogzConfig", LogzConfig.class);
     w.put("beans.config.NexusConfig", NexusConfig.class);
@@ -1368,8 +1368,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
         ClusterMasterUrlValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.HelmCommandCapability", HelmCommandCapability.class);
     w.put("delegatetasks.validation.capabilities.GitConnectionCapability", GitConnectionCapability.class);
-    w.put("delegatetasks.validation.capabilities.PcfAutoScalarCapability", PcfAutoScalarCapability.class);
-    w.put("delegatetasks.validation.capabilities.PcfConnectivityCapability", PcfConnectivityCapability.class);
     w.put("delegatetasks.validation.capabilities.SSHHostValidationCapability", SSHHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);
@@ -1571,6 +1569,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.provision.DestroyTerraformProvisionState", DestroyTerraformProvisionState.class);
     w.put("sm.states.provision.ShellScriptProvisionState", ShellScriptProvisionState.class);
     w.put("sm.states.provision.TerraformRollbackState", TerraformRollbackState.class);
+    w.put("sm.states.provision.ARMProvisionState", ARMProvisionState.class);
+    w.put("sm.states.provision.ARMRollbackState", ARMRollbackState.class);
     w.put("sm.states.RepeatState", RepeatState.class);
     w.put("sm.states.RepeatState$RepeatStateExecutionData", RepeatStateExecutionData.class);
     w.put("sm.states.ResourceConstraintState", ResourceConstraintState.class);
@@ -1648,6 +1648,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.CustomDeploymentTypeInfo", CustomDeploymentTypeInfo.class);
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
     w.put("api.AwsAmiInfoVariables", AwsAmiInfoVariables.class);
+    w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
+    w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

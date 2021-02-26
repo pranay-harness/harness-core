@@ -11,7 +11,10 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -59,6 +62,8 @@ public class DelegateTasksRule implements MethodRule, InjectorRuleMixin {
     List<Module> modules = new ArrayList<>();
     modules.add(new ComponentTestsModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
+
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -88,6 +93,12 @@ public class DelegateTasksRule implements MethodRule, InjectorRuleMixin {
       Map<Class, String> morphiaCustomCollectionNames() {
         return Collections.emptyMap();
       }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().build();
+      }
     });
     modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
@@ -102,6 +113,6 @@ public class DelegateTasksRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return applyInjector(statement, frameworkMethod, target);
+    return applyInjector(log, statement, frameworkMethod, target);
   }
 }

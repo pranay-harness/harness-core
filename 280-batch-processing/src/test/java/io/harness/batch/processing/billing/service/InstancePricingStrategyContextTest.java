@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
-import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
+import io.harness.batch.processing.billing.service.impl.StoragePricingStrategy;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.rule.Owner;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -32,19 +33,27 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private CustomBillingMetaDataService customBillingMetaDataService;
   @Mock private PricingProfileService pricingProfileService;
 
+  private static InstancePricingStrategyContext instancePricingStrategyContext;
+
+  @Before
+  public void before() {
+    instancePricingStrategyContext = new InstancePricingStrategyContext(
+        new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
+            ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService),
+        new EcsFargateInstancePricingStrategy(vmPricingService), new StoragePricingStrategy());
+  }
+
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstancePricingStrategy() {
-    InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
-        new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
-            ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService),
-        new EcsFargateInstancePricingStrategy(vmPricingService));
-    InstancePricingStrategy computeInstancePricingStrategy =
-        instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);
-    assertThat(computeInstancePricingStrategy.getClass()).isEqualTo(ComputeInstancePricingStrategy.class);
-    InstancePricingStrategy ecsFargateInstancePricingStrategy =
-        instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.ECS_TASK_FARGATE);
-    assertThat(ecsFargateInstancePricingStrategy.getClass()).isEqualTo(EcsFargateInstancePricingStrategy.class);
+    assertThat(instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE))
+        .isInstanceOf(ComputeInstancePricingStrategy.class);
+
+    assertThat(instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.ECS_TASK_FARGATE))
+        .isInstanceOf(EcsFargateInstancePricingStrategy.class);
+
+    assertThat(instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.K8S_PV))
+        .isInstanceOf(StoragePricingStrategy.class);
   }
 }

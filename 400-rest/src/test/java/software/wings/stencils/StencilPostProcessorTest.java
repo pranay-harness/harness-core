@@ -1,8 +1,8 @@
 package software.wings.stencils;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DOUBLE_DEFAULT_VALUE;
@@ -91,7 +91,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -107,7 +107,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(

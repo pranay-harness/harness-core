@@ -7,8 +7,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -16,7 +15,10 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.beans.ServiceYaml;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.execution.NodeExecution;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary.CDStageExecutionSummaryKeys;
@@ -31,7 +33,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
@@ -47,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.query.Update;
 
-public class PipelineExecutionHelperTest extends CDNGBaseTest {
+public class PipelineExecutionHelperTest extends CDNGTestBase {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
 
   @Test
@@ -55,19 +56,18 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testAddStageSpecificDetailsToPipelineExecution_StageElement() throws IOException {
     StageElement stageElement = StageElement.builder().identifier("testIdentifier").build();
+    ServiceYaml entity = ServiceYaml.builder().identifier("serviceIdentifier").name("serviceName").build();
     DeploymentStage deploymentStage =
         DeploymentStage.builder()
             .identifier("testIdentifier")
-            .service(ServiceConfig.builder()
-                         .identifier(ParameterField.createValueField("serviceIdentifier"))
-                         .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
-                         .build())
-            .infrastructure(PipelineInfrastructure.builder()
-                                .environment(EnvironmentYaml.builder()
-                                                 .identifier(ParameterField.createValueField("envIdentifier"))
-                                                 .name(ParameterField.createValueField("stageName"))
-                                                 .build())
-                                .build())
+            .serviceConfig(ServiceConfig.builder()
+                               .service(entity)
+                               .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
+                               .build())
+            .infrastructure(
+                PipelineInfrastructure.builder()
+                    .environment(EnvironmentYaml.builder().identifier("envIdentifier").name("stageName").build())
+                    .build())
             .build();
     stageElement.setStageType(deploymentStage);
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
@@ -93,19 +93,18 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testAddStageSpecificDetailsToPipelineExecution_ParallelStageElement() throws IOException {
     StageElement stageElement = StageElement.builder().identifier("testIdentifier").build();
+    ServiceYaml entity = ServiceYaml.builder().identifier("serviceIdentifier").name("serviceName").build();
     DeploymentStage deploymentStage =
         DeploymentStage.builder()
             .identifier("testIdentifier")
-            .service(ServiceConfig.builder()
-                         .identifier(ParameterField.createValueField("serviceIdentifier"))
-                         .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
-                         .build())
-            .infrastructure(PipelineInfrastructure.builder()
-                                .environment(EnvironmentYaml.builder()
-                                                 .identifier(ParameterField.createValueField("envIdentifier"))
-                                                 .name(ParameterField.createValueField("stageName"))
-                                                 .build())
-                                .build())
+            .serviceConfig(ServiceConfig.builder()
+                               .service(entity)
+                               .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
+                               .build())
+            .infrastructure(
+                PipelineInfrastructure.builder()
+                    .environment(EnvironmentYaml.builder().identifier("envIdentifier").name("stageName").build())
+                    .build())
             .build();
     stageElement.setStageType(deploymentStage);
     ParallelStageElement parallelStageElement =
@@ -252,7 +251,12 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   public void testMapArtifactsOutcomeToSummary() {
     ServiceOutcome.ArtifactsOutcome artifactsOutcome =
         ServiceOutcome.ArtifactsOutcome.builder()
-            .primary(DockerArtifactOutcome.builder().primaryArtifact(true).imagePath("image").tag("tag").build())
+            .primary(DockerArtifactOutcome.builder()
+                         .primaryArtifact(true)
+                         .imagePath("image")
+                         .tag("tag")
+                         .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+                         .build())
             .sidecars(Maps.of("sidecar1", DockerArtifactOutcome.builder().imagePath("image1").tag("tag1").build()))
             .build();
     ServiceExecutionSummary.ArtifactsSummary artifactsSummary =
@@ -262,7 +266,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
             .build();
 
     ServiceExecutionSummary.ArtifactsSummary result = pipelineExecutionHelper.mapArtifactsOutcomeToSummary(
-        ServiceOutcome.builder().artifacts(artifactsOutcome).build());
+        ServiceOutcome.builder().artifactsResult(artifactsOutcome).build());
     assertThat(result).isEqualTo(artifactsSummary);
   }
 

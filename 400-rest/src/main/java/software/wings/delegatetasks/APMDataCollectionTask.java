@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -26,6 +27,7 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -168,6 +170,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
+    private boolean firstDataCollectionCompleted;
     private final long collectionStartMinute;
     private long lastEndTime;
     private long currentEndTime;
@@ -186,6 +189,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.currentElapsedTime = 0;
       this.is24x7Task = is24x7Task;
       hostStartMinuteMap = new HashMap<>();
+      this.firstDataCollectionCompleted = false;
     }
 
     private APMRestClient getAPMRestClient(final String baseUrl) {
@@ -232,7 +236,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       // TODO: Come back and clean up the time variables.
       List<String> result = new ArrayList<>();
       long startTime = lastEndTime;
-      long endTime = Timestamp.currentMinuteBoundary();
+      long possibleEndTime = !firstDataCollectionCompleted ? startTime + TimeUnit.MINUTES.toMillis(1)
+                                                           : startTime + TimeUnit.MINUTES.toMillis(collectionWindow);
+      long endTime = Math.min(possibleEndTime,
+          collectionStartMinute + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getDataCollectionTotalTime()));
       currentEndTime = endTime;
 
       if (!dataCollectionInfo.isCanaryUrlPresent() && TEST_HOST_NAME.equals(host)
@@ -463,126 +470,142 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
      * @return
      */
     private boolean shouldRunCollection() {
-      currentElapsedTime =
-          (int) ((Timestamp.currentMinuteBoundary() - collectionStartMinute) / TimeUnit.MINUTES.toMillis(1));
-      boolean shouldCollectData = false;
-      if (dataCollectionMinute == 0 || currentElapsedTime % collectionWindow == 0
-          || currentElapsedTime >= dataCollectionInfo.getDataCollectionTotalTime() - 1) {
-        shouldCollectData = true;
+      if (!firstDataCollectionCompleted) {
+        log.info("First data not yet collected. Returning true");
+        return true;
       }
-      log.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, currentElapsedTime);
-      return shouldCollectData;
+      long currentTime = Timestamp.currentMinuteBoundary();
+      long lastCollectionTime = lastEndTime + TimeUnit.MINUTES.toMillis(1);
+      if ((int) TimeUnit.MILLISECONDS.toMinutes(currentTime - lastCollectionTime) % collectionWindow == 0) {
+        log.info("ShouldCollectDataCollection is {} for minute {}, lastCollectionTime {}", true, currentTime,
+            lastCollectionTime);
+        return true;
+      }
+
+      if (currentTime > collectionStartMinute
+              + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getDataCollectionTotalTime() + getInitialDelayMinutes())) {
+        log.info("ShouldCollectDataCollection is {} for minute {}, collectionStartMinute {}", true, currentTime,
+            collectionStartMinute);
+        return true;
+      }
+      return false;
     }
 
     @Override
     @SuppressWarnings("PMD")
     public void run() {
       int retry = 0;
-      boolean shouldRunDataCollection = shouldRunCollection();
-      while (shouldRunDataCollection && !completed.get() && retry < RETRIES) {
-        try {
-          TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
+      try (VerificationLogContext ignored = new VerificationLogContext(dataCollectionInfo.getAccountId(), null,
+               dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getStateType(), OVERRIDE_ERROR)) {
+        boolean shouldRunDataCollection = shouldRunCollection();
+        while (shouldRunDataCollection && !completed.get() && retry < RETRIES) {
+          try {
+            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-          List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
-          if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
-            apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
-                dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
-          }
-
-          for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
-              dataCollectionInfo.getMetricEndpoints().entrySet()) {
-            apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
-                dataCollectionInfo.getStrategy()));
-          }
-          Set<String> groupNameSet = dataCollectionInfo.getHosts() != null
-              ? new HashSet<>(dataCollectionInfo.getHosts().values())
-              : new HashSet<>();
-          Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
-              APMResponseParser.extract(apmResponseDataList);
-
-          newRelicMetricDataRecords.forEach(newRelicMetricDataRecord -> {
-            if (newRelicMetricDataRecord.getTimeStamp() == 0) {
-              newRelicMetricDataRecord.setTimeStamp(currentEndTime);
-            }
-            newRelicMetricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
-            newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
-            newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
-            newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
-            newRelicMetricDataRecord.setCvConfigId(dataCollectionInfo.getCvConfigId());
-            long startTimeMinForHost = collectionStartMinute;
-            if (hostStartMinuteMap.containsKey(newRelicMetricDataRecord.getHost())) {
-              startTimeMinForHost = hostStartMinuteMap.get(newRelicMetricDataRecord.getHost());
+            List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
+            if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
+                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
+                  dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
             }
 
-            int collectionMin = resolveDataCollectionMinute(
-                newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord.getHost(), false);
-            newRelicMetricDataRecord.setDataCollectionMinute(collectionMin);
-
-            if (isPredictiveAnalysis()) {
-              newRelicMetricDataRecord.setHost(newRelicMetricDataRecord.getGroupName());
+            for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
+                dataCollectionInfo.getMetricEndpoints().entrySet()) {
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
+                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
+                  dataCollectionInfo.getStrategy()));
             }
+            Set<String> groupNameSet = dataCollectionInfo.getHosts() != null
+                ? new HashSet<>(dataCollectionInfo.getHosts().values())
+                : new HashSet<>();
+            Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
+                APMResponseParser.extract(apmResponseDataList);
 
-            newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
-            groupNameSet.add(newRelicMetricDataRecord.getGroupName());
+            newRelicMetricDataRecords.forEach(newRelicMetricDataRecord -> {
+              if (newRelicMetricDataRecord.getTimeStamp() == 0) {
+                newRelicMetricDataRecord.setTimeStamp(currentEndTime);
+              }
+              newRelicMetricDataRecord.setServiceId(dataCollectionInfo.getServiceId());
+              newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
+              newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
+              newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
+              newRelicMetricDataRecord.setCvConfigId(dataCollectionInfo.getCvConfigId());
+              long startTimeMinForHost = collectionStartMinute;
+              if (hostStartMinuteMap.containsKey(newRelicMetricDataRecord.getHost())) {
+                startTimeMinForHost = hostStartMinuteMap.get(newRelicMetricDataRecord.getHost());
+              }
 
-            newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-            if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost || is24x7Task) {
-              records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
-                  newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
+              int collectionMin = resolveDataCollectionMinute(
+                  newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord.getHost(), false);
+              newRelicMetricDataRecord.setDataCollectionMinute(collectionMin);
+
+              if (isPredictiveAnalysis()) {
+                newRelicMetricDataRecord.setHost(newRelicMetricDataRecord.getGroupName());
+              }
+
+              newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
+              groupNameSet.add(newRelicMetricDataRecord.getGroupName());
+
+              newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
+              if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost || is24x7Task) {
+                records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
+                    newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
+              } else {
+                log.info("The data record {} is older than startTime. Ignoring", newRelicMetricDataRecord);
+              }
+            });
+
+            dataCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(currentEndTime - collectionStartMinute) - 1);
+            addHeartbeatRecords(groupNameSet, records);
+            List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
+            log.info("fetched records: {}", allMetricRecords);
+            if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
+                    dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
+              log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
+                  dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             } else {
-              log.info("The data record {} is older than startTime. Ignoring", newRelicMetricDataRecord);
+              log.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
+                  allMetricRecords.size(), dataCollectionMinute);
+              if (!firstDataCollectionCompleted) {
+                firstDataCollectionCompleted = true;
+              }
             }
-          });
-
-          dataCollectionMinute = currentElapsedTime - 1;
-          addHeartbeatRecords(groupNameSet, records);
-          List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
-
-          if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
-                  dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
-            log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
-                dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
-          } else {
-            log.debug(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
-                allMetricRecords.size(), dataCollectionMinute);
-          }
-          lastEndTime = currentEndTime;
-          collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
-          if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() || is24x7Task) {
-            // We are done with all data collection, so setting task status to success and quitting.
-            log.debug(
-                "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
-                dataCollectionInfo.getStateExecutionId());
-            completed.set(true);
-            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
-          }
-          break;
-
-        } catch (Throwable ex) {
-          if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-            log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
-                dataCollectionMinute, ex);
-            taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-            completed.set(true);
+            lastEndTime = currentEndTime;
+            collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
+            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() - 1 || is24x7Task) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              log.info(
+                  "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
+                  dataCollectionInfo.getStateExecutionId());
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             break;
-          } else {
-            if (retry == 1) {
-              taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
+
+          } catch (Throwable ex) {
+            if (!(ex instanceof Exception) || ++retry >= RETRIES) {
+              log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+                  dataCollectionMinute, ex);
+              taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+              completed.set(true);
+              break;
+            } else {
+              if (retry == 1) {
+                taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
+              }
+              log.warn("error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in "
+                      + DATA_COLLECTION_RETRY_SLEEP + "s",
+                  ex);
+              sleep(DATA_COLLECTION_RETRY_SLEEP);
             }
-            log.warn("error fetching apm metrics for minute " + dataCollectionMinute + ". retrying in "
-                    + DATA_COLLECTION_RETRY_SLEEP + "s",
-                ex);
-            sleep(DATA_COLLECTION_RETRY_SLEEP);
           }
         }
-      }
 
-      if (completed.get()) {
-        log.debug(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
-        shutDownCollection();
-        return;
+        if (completed.get()) {
+          log.debug(dataCollectionInfo.getStateType() + ": Shutting down apm data collection");
+          shutDownCollection();
+          return;
+        }
       }
     }
 

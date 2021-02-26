@@ -3,10 +3,12 @@ package software.wings.graphql.datafetcher.environment;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentType;
@@ -15,6 +17,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class EnvironmentController {
   public static QLEnvironmentType convertEnvironmentType(EnvironmentType type) {
     switch (type) {

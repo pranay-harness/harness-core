@@ -40,7 +40,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuild() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(buildDetailsInternal)
         .when(dockerRegistryService)
         .verifyBuildNumber(dockerInternalConfig, "imagePath", "tag");
@@ -52,6 +53,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())
@@ -73,7 +75,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildFromRegex() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(buildDetailsInternal)
         .when(dockerRegistryService)
         .getLastSuccessfulBuildFromRegex(dockerInternalConfig, "imagePath", "tagRegex");
@@ -85,6 +88,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())
@@ -106,7 +110,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetBuilds() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(Lists.newArrayList(buildDetailsInternal))
         .when(dockerRegistryService)
         .getBuilds(dockerInternalConfig, "imagePath", MAX_NO_OF_TAGS_PER_IMAGE);
@@ -118,6 +123,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())
@@ -139,7 +145,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLabels() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(Lists.newArrayList(new HashMap()))
         .when(dockerRegistryService)
         .getLabels(dockerInternalConfig, "imagePath", Lists.newArrayList("tag1"));
@@ -151,6 +158,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())
@@ -171,7 +179,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateArtifactServer() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(true).when(dockerRegistryService).validateCredentials(dockerInternalConfig);
     DockerArtifactDelegateRequest sourceAttributes =
         DockerArtifactDelegateRequest.builder()
@@ -181,6 +190,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())
@@ -196,7 +206,8 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateArtifactImage() {
     BuildDetailsInternal buildDetailsInternal = BuildDetailsInternal.builder().number("tag").build();
-    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl("URL").build();
+    DockerInternalConfig dockerInternalConfig =
+        DockerInternalConfig.builder().dockerRegistryUrl("URL").username("username").build();
     doReturn(true).when(dockerRegistryService).verifyImageName(dockerInternalConfig, "imagePath");
     DockerArtifactDelegateRequest sourceAttributes =
         DockerArtifactDelegateRequest.builder()
@@ -206,6 +217,7 @@ public class DockerArtifactTaskHandlerTest extends CategoryTest {
                                     .dockerRegistryUrl("URL")
                                     .auth(DockerAuthenticationDTO.builder()
                                               .credentials(DockerUserNamePasswordDTO.builder()
+                                                               .username("username")
                                                                .passwordRef(SecretRefData.builder().build())
                                                                .build())
                                               .build())

@@ -21,7 +21,7 @@ public class VaultConfigDTO extends SecretManagerConfigDTO {
   private String basePath;
   private String vaultUrl;
   @JsonProperty("readOnly") private boolean isReadOnly;
-  private int renewIntervalHours;
+  private long renewalIntervalMinutes;
   private String secretEngineName;
   private String appRoleId;
   private String secretId;

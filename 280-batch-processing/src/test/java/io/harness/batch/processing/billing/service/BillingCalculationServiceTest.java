@@ -1,16 +1,22 @@
 package io.harness.batch.processing.billing.service;
 
+import static io.harness.batch.processing.writer.constants.InstanceMetaDataConstants.GCE_STORAGE_CLASS;
+import static io.harness.batch.processing.writer.constants.InstanceMetaDataConstants.PV_TYPE;
+import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
+import io.harness.batch.processing.billing.service.impl.StoragePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.PricingSource;
@@ -29,9 +35,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -40,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.assertj.core.data.Offset;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -79,6 +88,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final double CPU_UTILIZATION_HIGH = 1.5;
   private final double MEMORY_UTILIZATION = 0.5;
   private final double MEMORY_UTILIZATION_HIGH = 1.5;
+  private static final double STORAGE_CAPACITY = 1024D;
+  private static final double STORAGE_UTIL_VALUE = 10D;
+  private static final double STORAGE_REQUEST_VALUE = 1000D;
+  // Increase offset's absolute value in case test fails with minor difference.
+  private static final Offset<BigDecimal> BIG_DECIMAL_OFFSET = within(new BigDecimal("0.000000000001"));
 
   @Test
   @Owner(developers = HITESH)
@@ -242,8 +256,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     addParentResource(metaData, 1024, 1024);
     InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
-    BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountForResource(
-        instanceData, BigDecimal.valueOf(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb());
+    BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountBreakupForResource(
+        instanceData, BigDecimal.valueOf(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb(), 0);
     assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
   }
 
@@ -260,20 +274,21 @@ public class BillingCalculationServiceTest extends CategoryTest {
     BigDecimal cpuBillingAmount = BigDecimal.valueOf(100);
     BigDecimal memoryBillingAmount = BigDecimal.valueOf(100);
     BillingAmountBreakup billingAmountBreakup =
-        new BillingAmountBreakup(billingAmount, cpuBillingAmount, memoryBillingAmount);
+        new BillingAmountBreakup(billingAmount, cpuBillingAmount, memoryBillingAmount, BigDecimal.ZERO);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     IdleCostData idleCost =
         billingCalculationService.getIdleCostForResource(billingAmountBreakup, utilizationData, instanceData);
     assertThat(idleCost.getIdleCost()).isEqualTo(BigDecimal.valueOf(100.0));
     assertThat(idleCost.getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
     assertThat(idleCost.getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
+    assertThat(idleCost.getStorageIdleCost()).isEqualTo(BigDecimal.ZERO);
   }
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmount() {
-    PricingData pricingData = new PricingData(0, 10, 256.0, 512.0, PricingSource.PUBLIC_API);
+    PricingData pricingData = new PricingData(0, 10, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
@@ -299,7 +314,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetBillingAmountWithZeroResourceInInstance() {
-    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, PricingSource.PUBLIC_API);
+    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(0, 0);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
@@ -325,7 +340,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountWhereResourceIsNotPresent() {
-    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, PricingSource.CUR_REPORT);
+    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, 0, PricingSource.CUR_REPORT);
     Map<String, String> metaData = new HashMap<>();
     InstanceData instanceData = getInstance(null, null, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
@@ -558,6 +573,86 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
 
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetPVTotalAndIdleCost() {
+    StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
+    UtilizationData utilizationData = getStorageUtilization();
+    Map<String, String> metaData = ImmutableMap.of();
+    InstanceData instanceData = getInstance(storageResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_PV);
+
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_PV))
+        .thenReturn(new StoragePricingStrategy());
+
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+
+    BigDecimal totalCost = getTotalCost(0.040D, 12D);
+    BigDecimal idleCost = getIdleCost(totalCost);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(idleCost, BIG_DECIMAL_OFFSET);
+
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
+  }
+
+  /**
+   * This test uses a network call at Host: https://lepton.appspot.com
+   * on connection failure this test will fail, to solve this apply <code>metaData = ImmutableMap.of();</code>
+   * so that default PricingSource.HARDCODED storage pricing is used without making a network call.
+   */
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetPVTotalAndIdleCostWithNULLStopTime() {
+    StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
+    UtilizationData utilizationData = getStorageUtilization();
+    Map<String, String> metaData =
+        ImmutableMap.of(PV_TYPE, PV_TYPE_GCE_PERSISTENT_DISK.name(), GCE_STORAGE_CLASS, "pd-ssd");
+    InstanceData instanceData =
+        getInstance(storageResource, metaData, INSTANCE_START_TIMESTAMP, null, InstanceType.K8S_PV);
+
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_PV))
+        .thenReturn(new StoragePricingStrategy());
+
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+
+    BigDecimal totalCost = getTotalCost(0.17D, 24D);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost())
+        .isCloseTo(getIdleCost(totalCost), BIG_DECIMAL_OFFSET);
+
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.PUBLIC_API);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetPVCostWithUtilizationNotAvailable() {
+    StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
+    UtilizationData utilizationData = null;
+    Map<String, String> metaData = ImmutableMap.of();
+    InstanceData instanceData =
+        getInstance(storageResource, metaData, INSTANCE_START_TIMESTAMP, null, InstanceType.K8S_PV);
+
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_PV))
+        .thenReturn(new StoragePricingStrategy());
+
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+
+    BigDecimal totalCost = getTotalCost(0.040, 24D);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+    // The absence of util may indicate either orphaned PV or simply missing util data due to delegate/batch-process
+    // errors. All cost becomes unallocated -> idle = 0;
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
+
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
+  }
+
   private InstanceData getInstanceWithTime(Instant startInstant, Instant endInstant) {
     return InstanceData.builder().usageStartTime(startInstant).usageStopTime(endInstant).build();
   }
@@ -575,12 +670,32 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .build();
   }
 
+  private InstanceData getInstance(StorageResource storageResource, Map<String, String> metaData, Instant startInstant,
+      Instant endInstant, InstanceType instanceType) {
+    return InstanceData.builder()
+        .accountId(ACCOUNT_ID)
+        .storageResource(storageResource)
+        .metaData(metaData)
+        .usageStartTime(startInstant)
+        .usageStopTime(endInstant)
+        .instanceType(instanceType)
+        .build();
+  }
+
   private UtilizationData getUtilization(double cpuUtilization, double memoryUtilization) {
     return UtilizationData.builder()
         .maxCpuUtilization(cpuUtilization)
         .maxMemoryUtilization(memoryUtilization)
         .avgCpuUtilization(cpuUtilization)
         .avgMemoryUtilization(memoryUtilization)
+        .build();
+  }
+
+  private static UtilizationData getStorageUtilization() {
+    return UtilizationData.builder()
+        .avgStorageCapacityValue(STORAGE_CAPACITY)
+        .avgStorageRequestValue(STORAGE_REQUEST_VALUE)
+        .avgStorageUsageValue(STORAGE_UTIL_VALUE)
         .build();
   }
 
@@ -630,5 +745,13 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private void addParentResource(Map<String, String> metaData, double parentCpu, double parentMemory) {
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_CPU, String.valueOf(parentCpu));
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY, String.valueOf(parentMemory));
+  }
+
+  private static BigDecimal getIdleCost(BigDecimal totalCost) {
+    return BigDecimal.valueOf((STORAGE_REQUEST_VALUE - STORAGE_UTIL_VALUE) / STORAGE_CAPACITY).multiply(totalCost);
+  }
+
+  private static BigDecimal getTotalCost(double pricePerGBPerMonth, double activeHours) {
+    return BigDecimal.valueOf(pricePerGBPerMonth * activeHours / (30D * 24D));
   }
 }

@@ -73,7 +73,7 @@ func (o *osCmdContext) Start() error {
 		return err
 	}
 
-	o.log.Debugw("cmd started", "cmd", o.String(), "pid", o.Pid())
+	// o.log.Debugw("cmd started", "cmd", o.String(), "pid", o.Pid())
 	o.wait = make(chan struct{})
 	go func() {
 		select {
@@ -81,15 +81,15 @@ func (o *osCmdContext) Start() error {
 			// The only signal values guaranteed to be present in the os package on all systems are
 			//os.Interrupt(send the process an interrupt) and os.Kill (force the process to exit).
 			//https://golang.org/pkg/os/#Signal
-			o.log.Infow("signaling process", "signal", os.Interrupt.String(), "cmd", o.String(), "pid", o.Pid())
+			//o.log.Infow("signaling process", "signal", os.Interrupt.String(), "cmd", o.String(), "pid", o.Pid())
 			o.Process.Signal(os.Interrupt)
 
 			time.Sleep(o.sleep)
-			o.log.Infow("signaling process", "signal", os.Kill.String(), "cmd", o.String(), "pid", o.Pid())
+			//o.log.Infow("signaling process", "signal", os.Kill.String(), "cmd", o.String(), "pid", o.Pid())
 			o.Process.Signal(os.Kill)
 
 		case <-o.wait:
-			o.log.Debugw("cmd completed", "cmd", o.String(), "pid", o.Pid())
+			// o.log.Debugw("cmd completed", "cmd", o.String(), "pid", o.Pid())
 		}
 	}()
 	return err

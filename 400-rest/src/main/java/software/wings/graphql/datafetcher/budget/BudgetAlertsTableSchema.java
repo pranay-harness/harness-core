@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
@@ -12,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "BudgetAlertsTableKeys")
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BudgetAlertsTableSchema {
   /**
    * 	TIME TIMESTAMP NOT NULL,

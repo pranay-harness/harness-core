@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -24,10 +25,8 @@ import software.wings.settings.SettingValue;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-/**
- * Created by peeyushaggarwal on 1/12/17.
- */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(Module._910_DELEGATE_SERVICE_DRIVER)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;
   private SyncTaskContext syncTaskContext;
@@ -44,19 +43,23 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[0] = proxy.getClass().getInterfaces()[0].getName();
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
-    DelegateTaskBuilder builder = DelegateTask.builder()
-                                      .data(TaskData.builder()
-                                                .async(false)
-                                                .taskType(taskType.name())
-                                                .parameters(delegateArguments)
-                                                .timeout(syncTaskContext.getTimeout())
-                                                .build())
-                                      .accountId(syncTaskContext.getAccountId())
-                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, syncTaskContext.getAppId())
-                                      .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, syncTaskContext.getEnvId())
-                                      .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-                                          syncTaskContext.getInfrastructureMappingId())
-                                      .tags(syncTaskContext.getTags());
+    DelegateTaskBuilder builder =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(taskType.name())
+                      .parameters(delegateArguments)
+                      .timeout(syncTaskContext.getTimeout())
+                      .build())
+            .accountId(syncTaskContext.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, syncTaskContext.getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, syncTaskContext.getEnvId())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
+                syncTaskContext.getEnvType() == null ? null : syncTaskContext.getEnvType().name())
+            .setupAbstraction(
+                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, syncTaskContext.getInfrastructureMappingId())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, syncTaskContext.getServiceId())
+            .tags(syncTaskContext.getTags());
 
     String awsConfigTag = getAwsConfigTags(args);
     if (isNotEmpty(awsConfigTag)) {

@@ -1,22 +1,21 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.rule.OwnerRule.BRETT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
-import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
@@ -24,7 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -51,7 +50,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -72,10 +70,12 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Mock private Container.Projects.Locations.Operations operations;
   @Mock private Container.Projects.Locations.Operations.Get operationsGet;
   @Mock private HttpHeaders httpHeaders;
+  @Mock private EncryptionService encryptionService;
 
   @Inject @InjectMocks private GkeClusterService gkeClusterService;
   private GoogleJsonResponseException notFoundException;
 
+  private final char[] serviceAccountKey = "{\"project_id\": \"project-a\"}".toCharArray();
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withValue(
@@ -119,7 +119,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gcpHelperService.getGkeContainerService(any(), any(), anyBoolean())).thenReturn(container);
+    when(gcpHelperService.getGkeContainerService(serviceAccountKey, false)).thenReturn(container);
     when(gcpHelperService.getSleepIntervalSecs()).thenReturn(0);
     when(gcpHelperService.getTimeoutMins()).thenReturn(1);
     when(container.projects()).thenReturn(projects);
@@ -214,62 +214,6 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldDeleteCluster() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersDelete.execute()).thenReturn(pendingOperation);
-    Operation doneOperation = new Operation().setStatus("DONE");
-    when(operationsGet.execute()).thenReturn(doneOperation);
-
-    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER);
-
-    verify(clusters).delete(anyString());
-    assertThat(success).isTrue();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotDeleteClusterIfNotExists() throws Exception {
-    when(clustersDelete.execute()).thenThrow(notFoundException);
-
-    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER);
-
-    verify(clusters).delete(anyString());
-    assertThat(success).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotDeleteClusterIfOperationFailed() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersDelete.execute()).thenReturn(pendingOperation);
-    Operation doneOperation = new Operation().setStatus("FAILED");
-    when(operationsGet.execute()).thenReturn(doneOperation);
-
-    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER);
-
-    verify(clusters).delete(anyString());
-    assertThat(success).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotDeleteClusterIfOperationQueryFailed() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersDelete.execute()).thenReturn(pendingOperation);
-    when(operationsGet.execute()).thenThrow(new IOException());
-
-    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER);
-
-    verify(clusters).delete(anyString());
-    assertThat(success).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
   public void shouldGetCluster() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
@@ -359,140 +303,5 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
     verify(clusters).list(anyString());
     assertThat(result).isNull();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldSetNodePoolAutoscaling() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersUpdate.execute()).thenReturn(pendingOperation);
-    Operation doneOperation = new Operation().setStatus("DONE");
-    when(operationsGet.execute()).thenReturn(doneOperation);
-
-    boolean success = gkeClusterService.setNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null, true, 2, 4);
-
-    verify(clusters).update(anyString(), any(UpdateClusterRequest.class));
-    assertThat(success).isTrue();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldSetNodePoolAutoscalingWithPoolId() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersUpdate.execute()).thenReturn(pendingOperation);
-    Operation doneOperation = new Operation().setStatus("DONE");
-    when(operationsGet.execute()).thenReturn(doneOperation);
-
-    boolean success = gkeClusterService.setNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "pool-id", true, 2, 4);
-
-    ArgumentCaptor<UpdateClusterRequest> args = ArgumentCaptor.forClass(UpdateClusterRequest.class);
-    verify(clusters).update(anyString(), args.capture());
-    assertThat(success).isTrue();
-    assertThat(args.getValue().getUpdate().getDesiredNodePoolId()).isEqualTo("pool-id");
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotSetNodePoolAutoscalingIfError() throws Exception {
-    when(clustersUpdate.execute()).thenThrow(new IOException());
-
-    boolean success = gkeClusterService.setNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null, true, 2, 4);
-
-    verify(clusters).update(anyString(), any(UpdateClusterRequest.class));
-    assertThat(success).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotSetNodePoolAutoscalingIfOperationQueryFailed() throws Exception {
-    Operation pendingOperation = new Operation().setStatus("RUNNING");
-    when(clustersUpdate.execute()).thenReturn(pendingOperation);
-    when(operationsGet.execute()).thenThrow(new IOException());
-
-    boolean success = gkeClusterService.setNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null, true, 2, 4);
-
-    verify(clusters).update(anyString(), any(UpdateClusterRequest.class));
-    assertThat(success).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldGetNodePoolAutoscaling() throws Exception {
-    when(clustersGet.execute()).thenReturn(CLUSTER_2);
-
-    NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-
-    verify(clusters).get(anyString());
-    assertThat(autoscaling).isNotNull();
-    assertThat(autoscaling.getEnabled()).isTrue();
-    assertThat(autoscaling.getMinNodeCount()).isEqualTo(5);
-    assertThat(autoscaling.getMaxNodeCount()).isEqualTo(10);
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldGetNodePoolAutoscalingWithPoolId() throws Exception {
-    when(clustersGet.execute()).thenReturn(CLUSTER_1);
-
-    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "node-pool1.2");
-
-    verify(clusters).get(anyString());
-    assertThat(autoscaling).isNotNull();
-    assertThat(autoscaling.getEnabled()).isTrue();
-    assertThat(autoscaling.getMinNodeCount()).isEqualTo(1);
-    assertThat(autoscaling.getMaxNodeCount()).isEqualTo(3);
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotGetNodePoolAutoscalingIfNotExists() throws Exception {
-    when(clustersGet.execute()).thenThrow(notFoundException);
-
-    NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-
-    verify(clusters).get(anyString());
-    assertThat(autoscaling).isNull();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldNotGetNodePoolAutoscalingIfNodePoolNotExists() throws Exception {
-    when(clustersGet.execute()).thenReturn(CLUSTER_1);
-
-    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(
-        COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "node-pool-missing");
-
-    verify(clusters).get(anyString());
-    assertThat(autoscaling).isNull();
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldFailOnMissingNodePoolIdWhenMultiplePools() throws Exception {
-    when(clustersGet.execute()).thenReturn(CLUSTER_1);
-
-    try {
-      gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-      fail();
-    } catch (IllegalArgumentException e) {
-      // Expected
-      assertThat(e.getMessage()).startsWith("expected one element but was:");
-    }
   }
 }

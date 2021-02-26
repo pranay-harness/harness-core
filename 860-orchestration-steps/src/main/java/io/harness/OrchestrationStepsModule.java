@@ -2,7 +2,12 @@ package io.harness;
 
 import io.harness.steps.barriers.service.BarrierService;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
-import io.harness.steps.resourcerestraint.service.*;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistryImpl;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
+import io.harness.steps.resourcerestraint.service.RestraintService;
+import io.harness.steps.resourcerestraint.service.RestraintServiceImpl;
 
 import com.google.inject.AbstractModule;
 

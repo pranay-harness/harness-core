@@ -14,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-public class OrganizationRepositoryCustomImplTest {
+public class OrganizationRepositoryCustomImplTest extends CategoryTest {
   private MongoTemplate mongoTemplate;
   private OrganizationRepositoryCustomImpl organizationRepository;
 
@@ -89,5 +90,33 @@ public class OrganizationRepositoryCustomImplTest {
     assertTrue(query.getQueryObject().containsKey(OrganizationKeys.deleted));
     assertTrue(query.getQueryObject().containsKey(OrganizationKeys.version));
     assertEquals(version, query.getQueryObject().get(OrganizationKeys.version));
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testRestore() {
+    String accountIdentifier = randomAlphabetic(10);
+    String identifier = randomAlphabetic(10);
+    ArgumentCaptor<Update> updateArgumentCaptor = ArgumentCaptor.forClass(Update.class);
+    ArgumentCaptor<Query> queryArgumentCaptor = ArgumentCaptor.forClass(Query.class);
+
+    when(mongoTemplate.findAndModify(any(), any(), eq(Organization.class))).thenReturn(null);
+
+    boolean deleted = organizationRepository.restore(accountIdentifier, identifier);
+
+    verify(mongoTemplate, times(1))
+        .findAndModify(queryArgumentCaptor.capture(), updateArgumentCaptor.capture(), eq(Organization.class));
+    Query query = queryArgumentCaptor.getValue();
+    Update update = updateArgumentCaptor.getValue();
+    assertFalse(deleted);
+    assertEquals(1, update.getUpdateObject().size());
+    assertEquals(3, query.getQueryObject().size());
+    assertTrue(query.getQueryObject().containsKey(OrganizationKeys.accountIdentifier));
+    assertEquals(accountIdentifier, query.getQueryObject().get(OrganizationKeys.accountIdentifier));
+    assertTrue(query.getQueryObject().containsKey(OrganizationKeys.identifier));
+    assertEquals(identifier, query.getQueryObject().get(OrganizationKeys.identifier));
+    assertTrue(query.getQueryObject().containsKey(OrganizationKeys.deleted));
+    assertEquals(Boolean.TRUE, query.getQueryObject().get(OrganizationKeys.deleted));
   }
 }

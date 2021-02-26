@@ -6,9 +6,10 @@ import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TimeoutException;
@@ -33,11 +34,11 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsClusterService awsClusterService;
@@ -86,13 +87,6 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
         // Rollback
         Map<String, Integer> originalServiceCounts =
             ecsDeployCommandTaskHelper.listOfStringArrayToMap(resizeParams.getOriginalServiceCounts());
-
-        if (Objects.equals(ecsDeployCommandTaskHelper.getActiveServiceCounts(contextData), originalServiceCounts)) {
-          // Already rolled back
-          executionLogCallback.saveExecutionLog("** Rollback already complete **\n");
-          executionDataBuilder.newInstanceData(emptyList()).oldInstanceData(emptyList());
-          return executionResponse;
-        }
 
         newInstanceDataList = resizeParams.getNewInstanceData();
         oldInstanceDataList = resizeParams.getOldInstanceData();

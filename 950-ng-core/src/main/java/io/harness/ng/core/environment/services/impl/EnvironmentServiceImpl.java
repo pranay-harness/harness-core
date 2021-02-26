@@ -3,6 +3,7 @@ package io.harness.ng.core.environment.services.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 
+import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
@@ -132,7 +133,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                                       .build();
     try {
       Page<EntitySetupUsageDTO> entitySetupUsageDTOS = entitySetupUsageService.listAllEntityUsage(
-          0, 10, environment.getAccountId(), identifierRef.getFullyQualifiedName(), "");
+          0, 10, environment.getAccountId(), identifierRef.getFullyQualifiedName(), EntityType.ENVIRONMENT, "");
       referredByEntities = entitySetupUsageDTOS.stream()
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));

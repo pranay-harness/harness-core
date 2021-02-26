@@ -7,6 +7,7 @@ import static io.harness.generator.SettingGenerator.Settings.ECS_FUNCTIONAL_TEST
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
 
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
@@ -559,6 +560,17 @@ public class ServiceGenerator {
         seed, owners, builder().name(serviceName).artifactType(ArtifactType.AZURE_MACHINE_IMAGE).build()));
     ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.AZURE_MACHINE_IMAGE_LINUX_GALLERY);
+    Service service = owners.obtainService();
+    service.setArtifactStreams(Collections.singletonList(artifactStream));
+    return service;
+  }
+
+  public Service ensureAzureWebAppService(Seed seed, Owners owners, String serviceName) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder().name(serviceName).deploymentType(AZURE_WEBAPP).artifactType(ArtifactType.DOCKER).build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     Service service = owners.obtainService();
     service.setArtifactStreams(Collections.singletonList(artifactStream));
     return service;

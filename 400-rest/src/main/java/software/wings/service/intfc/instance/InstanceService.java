@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 /**
@@ -96,7 +97,7 @@ public interface InstanceService
    */
   PageResponse<Instance> list(PageRequest<Instance> pageRequest);
 
-  PageResponse<Instance> listInstancesNotRemovedFully(PageRequest<Instance> pageRequest);
+  List<Instance> listInstancesNotRemovedFully(Query<Instance> query);
 
   /**
    * @param appId            the app id

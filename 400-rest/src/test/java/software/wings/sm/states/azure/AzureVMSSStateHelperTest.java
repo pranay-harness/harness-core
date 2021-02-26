@@ -21,7 +21,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DecryptableEntity;
+import io.harness.CategoryTest;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
@@ -31,10 +35,6 @@ import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -48,7 +48,6 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -95,16 +94,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class AzureVMSSStateHelperTest extends WingsBaseTest {
+public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -116,6 +116,11 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   @Spy @Inject @InjectMocks AzureVMSSStateHelper azureVMSSStateHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = OwnerRule.IVAN)
@@ -358,6 +363,94 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testRenderDoubleExpression() {
+    String expr1 = "10.5";
+    String expr2 = "${workflow.variables.trafficPercent}";
+    String expr3 = "non-integer";
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.renderExpression(expr1)).thenReturn(expr1);
+    when(context.renderExpression(expr2)).thenReturn("20");
+    when(context.renderExpression(expr3)).thenReturn(expr3);
+
+    double renderExpr1 = azureVMSSStateHelper.renderDoubleExpression(expr1, context, AzureConstants.INVALID_TRAFFIC);
+    double renderExpr2 = azureVMSSStateHelper.renderDoubleExpression(expr2, context, AzureConstants.INVALID_TRAFFIC);
+    double renderExpr3 = azureVMSSStateHelper.renderDoubleExpression(expr3, context, AzureConstants.INVALID_TRAFFIC);
+
+    assertThat(renderExpr1).isEqualTo(10.5);
+    assertThat(renderExpr2).isEqualTo(20);
+    assertThat(renderExpr3).isEqualTo(AzureConstants.INVALID_TRAFFIC);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAppSettings() {
+    List<AzureAppServiceApplicationSetting> appSettings = new ArrayList<>();
+    azureVMSSStateHelper.validateAppSettings(appSettings);
+
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting1").value("value1").build());
+    azureVMSSStateHelper.validateAppSettings(appSettings);
+
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Application setting name cannot be empty or null");
+
+    appSettings.remove(appSettings.size() - 1);
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting2").value("").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Application setting value cannot be empty or null for [appSetting2]");
+
+    appSettings.remove(appSettings.size() - 1);
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting1").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate application string names [appSetting1]");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testValidateConnStrings() {
+    List<AzureAppServiceConnectionString> connectionStrings = new ArrayList<>();
+    azureVMSSStateHelper.validateConnStrings(connectionStrings);
+
+    connectionStrings.add(AzureAppServiceConnectionString.builder()
+                              .name("connString1")
+                              .value("value1")
+                              .type(AzureAppServiceConnectionStringType.SQL_AZURE)
+                              .build());
+    azureVMSSStateHelper.validateConnStrings(connectionStrings);
+
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string name cannot be empty or null");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString2").value("").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string value cannot be empty or null for [connString2]");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString2").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string type cannot be null");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString1").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate connection string names [connString1]");
+  }
+
+  @Test
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testRenderExpressionOrGetDefaultWithDefaultValue() {
@@ -540,19 +633,6 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.IVAN)
-  @Category(UnitTests.class)
-  public void testGetConnectorAuthEncryptedDataDetails() {
-    DecryptableEntity mockDecryptableEntity = mock(DecryptableEntity.class);
-    doReturn(Collections.emptyList()).when(ngSecretService).getEncryptionDetails(any(), any());
-
-    List<EncryptedDataDetail> connectorAuthEncryptedDataDetails =
-        azureVMSSStateHelper.getNgEncryptedDataDetails("accountId", mockDecryptableEntity);
-
-    assertThat(connectorAuthEncryptedDataDetails).isNotNull();
-  }
-
-  @Test
   @Owner(developers = OwnerRule.ANIL)
   @Category(UnitTests.class)
   public void testPopulateAzureAppServiceData() {
@@ -588,6 +668,8 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     when(settingsService.get(computeProviderSettingId)).thenReturn(settingAttribute);
     when(settingAttribute.getValue()).thenReturn(AzureConfig.builder().accountId(accountId).build());
     when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
+    when(context.renderExpression(resourceGroup)).thenReturn(resourceGroup);
+    when(context.renderExpression(subscriptionId)).thenReturn(subscriptionId);
     when(infrastructureMappingService.get(appId, infraMappingId)).thenReturn(webAppInfrastructureMapping);
 
     AzureAppServiceStateData azureAppServiceStateData = azureVMSSStateHelper.populateAzureAppServiceData(context);
@@ -882,6 +964,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     assertThat(azureVMSSStateData.getInfrastructureMapping()).isEqualTo(azureVMSSInfrastructureMapping);
     assertThat(azureVMSSStateData.getAzureConfig()).isEqualTo(azureConfig);
     assertThat(azureVMSSStateData.getAzureEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+    assertThat(azureVMSSStateData.toString()).isNotEmpty();
   }
 
   @Test
@@ -1067,40 +1150,5 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
 
     ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.TMACARI)
-  @Category(UnitTests.class)
-  public void testEncryptAzureAppServiceSettingDTOsUnsupportedEncryption() {
-    Map<String, AzureAppServiceApplicationSettingDTO> settings =
-        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
-            AzureAppServiceApplicationSettingDTO.builder()
-                .value(AzureAppServiceAzureSettingValue.builder().build())
-                .build());
-
-    assertThatThrownBy(() -> azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId"))
-        .hasMessageContaining("Unsupported encryption on manager for Azure App Service setting value type")
-        .isInstanceOf(InvalidRequestException.class);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.TMACARI)
-  @Category(UnitTests.class)
-  public void testEncryptAzureAppServiceSettingDTOs() {
-    AzureAppServiceHarnessSettingSecretRef secretRef = AzureAppServiceHarnessSettingSecretRef.builder().build();
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    AzureAppServiceHarnessSettingSecretValue secretValue =
-        AzureAppServiceHarnessSettingSecretValue.builder()
-            .settingSecretRef(AzureAppServiceHarnessSettingSecretRef.builder().build())
-            .build();
-    Map<String, AzureAppServiceApplicationSettingDTO> settings =
-        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
-            AzureAppServiceApplicationSettingDTO.builder().value(secretValue).build());
-
-    doReturn(encryptedDataDetails).when(azureVMSSStateHelper).getNgEncryptedDataDetails("accountId", secretRef);
-
-    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId");
-    assertThat(secretValue.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
   }
 }

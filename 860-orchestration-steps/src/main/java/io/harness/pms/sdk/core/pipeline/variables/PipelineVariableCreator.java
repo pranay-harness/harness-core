@@ -10,7 +10,15 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PipelineVariableCreator extends ChildrenVariableCreator {
@@ -51,6 +59,20 @@ public class PipelineVariableCreator extends ChildrenVariableCreator {
       String descriptionFQN = YamlUtils.getFullyQualifiedName(descriptionField.getNode());
       yamlPropertiesMap.put(descriptionField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(descriptionFQN).setFqn(descriptionFQN).build());
+    }
+    YamlField variablesField = yamlNode.getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      VariableCreatorHelper.addVariablesForVariables(
+          variablesField, yamlPropertiesMap, YAMLFieldNameConstants.PIPELINE);
+    }
+    YamlField tagsField = yamlNode.getField(YAMLFieldNameConstants.TAGS);
+    if (tagsField != null) {
+      List<YamlField> fields = tagsField.getNode().fields();
+      fields.forEach(field -> {
+        if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
+          VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YAMLFieldNameConstants.PIPELINE);
+        }
+      });
     }
   }
 

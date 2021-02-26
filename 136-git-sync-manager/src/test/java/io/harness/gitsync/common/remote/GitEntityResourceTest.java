@@ -8,7 +8,7 @@ import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
-import io.harness.gitsync.GitSyncBaseTest;
+import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncProductDTO;
@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
-public class GitEntityResourceTest extends GitSyncBaseTest {
+public class GitEntityResourceTest extends GitSyncTestBase {
   @Inject GitEntityResource gitEntityResource;
   @Inject GitFileLocationRepository gitFileLocationRepository;
   @Inject GitEntityServiceImpl gitEntityService;
@@ -69,7 +69,7 @@ public class GitEntityResourceTest extends GitSyncBaseTest {
         .isEqualTo(2);
     assertThat(
         data.getGitSyncEntityListDTOList().stream().map(GitSyncEntityListDTO::getCount).collect(Collectors.toList()))
-        .isEqualTo(Arrays.asList(2L));
+        .isEqualTo(Arrays.asList(2L, 0L, 0L));
   }
 
   @Test

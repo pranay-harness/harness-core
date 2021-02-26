@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "engine_client.go",
         "logproxy_client.go",
+        "tiproxy_client.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/engine/grpc/client",
     visibility = ["//visibility:public"],

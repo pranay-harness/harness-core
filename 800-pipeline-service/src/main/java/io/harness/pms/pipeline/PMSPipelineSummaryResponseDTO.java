@@ -1,14 +1,11 @@
 package io.harness.pms.pipeline;
 
-import io.harness.mongo.index.FdIndex;
-import io.harness.pms.execution.ExecutionStatus;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sun.istack.internal.NotNull;
 import io.swagger.annotations.ApiModel;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.Version;
@@ -27,5 +24,8 @@ public class PMSPipelineSummaryResponseDTO {
   int numOfStages;
   long createdAt;
   long lastUpdatedAt;
+  Set<String> modules;
   ExecutionSummaryInfoDTO executionSummaryInfo;
+  Map<String, org.bson.Document> filters;
+  List<String> stageNames;
 }

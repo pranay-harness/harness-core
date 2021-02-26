@@ -5,22 +5,27 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.NotificationRequest;
 import io.harness.Team;
 
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@EqualsAndHashCode(callSuper = true)
 public class SlackChannel extends NotificationChannel {
-  List<String> slackWebHookURLs;
+  List<String> webhookUrls;
 
   @Builder
   public SlackChannel(String accountId, List<String> userGroupIds, String templateId, Map<String, String> templateData,
-      Team team, List<String> slackWebHookURLs) {
+      Team team, List<String> webhookUrls) {
     super(accountId, userGroupIds, templateId, templateData, team);
-    this.slackWebHookURLs = slackWebHookURLs;
+    this.webhookUrls = webhookUrls;
   }
 
   @Override
@@ -31,7 +36,7 @@ public class SlackChannel extends NotificationChannel {
         .setAccountId(accountId)
         .setTeam(team)
         .setSlack(builder.getSlackBuilder()
-                      .addAllSlackWebHookUrls(slackWebHookURLs)
+                      .addAllSlackWebHookUrls(webhookUrls)
                       .setTemplateId(templateId)
                       .putAllTemplateData(templateData)
                       .addAllUserGroupIds(userGroupIds))

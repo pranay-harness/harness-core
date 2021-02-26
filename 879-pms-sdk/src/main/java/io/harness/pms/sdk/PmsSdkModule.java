@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.PmsSdkCoreModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 
 import com.google.inject.AbstractModule;
@@ -47,7 +46,7 @@ public class PmsSdkModule extends AbstractModule {
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
     modules.add(PmsSdkQueueModule.getInstance(config));
-    if (config.getDeploymentMode().equals(DeployMode.REMOTE)) {
+    if (config.getDeploymentMode().isNonLocal()) {
       modules.add(PmsSdkGrpcModule.getInstance(config));
     }
     return modules;

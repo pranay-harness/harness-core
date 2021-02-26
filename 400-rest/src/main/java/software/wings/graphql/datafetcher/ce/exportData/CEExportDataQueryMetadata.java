@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CEExportDataQueryMetadata {
   private static final CEExportDataTableSchema schema = new CEExportDataTableSchema();
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }
@@ -56,7 +60,13 @@ public class CEExportDataQueryMetadata {
     AVGCPUUTILIZATION("AVGCPUUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGMEMORYUTILIZATION("AVGMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     CPULIMIT("CPULIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE),
-    MEMORYLIMIT("MEMORYLIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE);
+    MEMORYLIMIT("MEMORYLIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDCPUUTILIZATIONVALUE("AGGREGATEDCPUUTILIZATIONVALUE", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDMEMORYUTILIZATIONVALUE("AGGREGATEDMEMORYUTILIZATIONVALUE", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDCPUREQUEST("AGGREGATEDCPUREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDMEMORYREQUEST("AGGREGATEDMEMORYREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDCPULIMIT("AGGREGATEDCPULIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    AGGREGATEDMEMORYLIMIT("AGGREGATEDMEMORYLIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

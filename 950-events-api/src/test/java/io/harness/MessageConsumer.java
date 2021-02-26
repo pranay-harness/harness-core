@@ -13,7 +13,6 @@ import io.harness.redis.RedisConfig;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +29,12 @@ public class MessageConsumer implements Runnable {
       String readVia, RedisConfig redisConfig, String channel, String groupName, Integer processingTime, String color) {
     this.readVia = readVia;
     this.color = color;
-    if (readVia.equals("serialConsumerGroups"))
+    if (readVia.equals("serialConsumerGroups")) {
       this.client =
-          RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig, Duration.ofMinutes(10));
-    else
-      this.client = RedisConsumer.of(channel, groupName, redisConfig, Duration.ofMinutes(10));
+          RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig, Duration.ofSeconds(10));
+    } else {
+      this.client = RedisConsumer.of(channel, groupName, redisConfig, Duration.ofSeconds(10), 5);
+    }
     this.groupName = groupName;
     this.processingTime = processingTime;
   }
@@ -59,9 +59,16 @@ public class MessageConsumer implements Runnable {
     List<Message> messages;
     while (true) {
       try {
-        messages = client.read(2, TimeUnit.SECONDS);
+        messages = client.read(Duration.ofSeconds(2));
         for (Message message : messages) {
-          processMessage(message);
+          try {
+            processMessage(message);
+          } catch (Exception e) {
+            //        throw e;
+            e.printStackTrace();
+            log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
+                ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
+          }
         }
       } catch (ConsumerShutdownException e) {
         e.printStackTrace();
@@ -81,14 +88,23 @@ public class MessageConsumer implements Runnable {
       }
 
       try {
-        messages = client.read(2, TimeUnit.SECONDS);
+        messages = client.read(Duration.ofSeconds(2));
         for (Message message : messages) {
-          processMessage(message);
+          try {
+            processMessage(message);
+          } catch (Exception e) {
+            log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
+                ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET, e);
+          }
         }
+        Thread.sleep(1000);
       } catch (ConsumerShutdownException e) {
         e.printStackTrace();
         redisLocker.destroy(lock);
         break;
+      } catch (Exception e) {
+        log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
+            ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
       } finally {
         redisLocker.destroy(lock);
         Thread.sleep(200);
@@ -99,6 +115,9 @@ public class MessageConsumer implements Runnable {
   private void processMessage(Message message)
       throws InterruptedException, InvalidProtocolBufferException, ConsumerShutdownException {
     ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
+    if (p.getIdentifier().isEmpty()) {
+      throw new IllegalStateException("Bad data sent - " + message.getId());
+    }
     log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, message.getId(), this.client.getName(),
         p.getIdentifier(), ColorConstants.TEXT_RESET);
     Thread.sleep(processingTime);

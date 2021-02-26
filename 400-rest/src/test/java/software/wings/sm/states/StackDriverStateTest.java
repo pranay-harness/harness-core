@@ -21,7 +21,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
-import software.wings.service.impl.verification.CVConfigurationServiceImplTest;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -67,8 +66,8 @@ public class StackDriverStateTest extends APMStateVerificationTestBase {
   @Before
   public void setUp() throws IllegalAccessException, IOException {
     setupCommon();
-    String paramsForStackDriver = Resources.toString(
-        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
+    String paramsForStackDriver =
+        Resources.toString(StackDriverStateTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
     MockitoAnnotations.initMocks(this);
 
     analysisContext = AnalysisContext.builder().build();

@@ -3,6 +3,7 @@ package io.harness.testframework.restutils;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Registration;
@@ -21,6 +22,7 @@ import io.restassured.mapper.ObjectMapperType;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 
@@ -67,8 +69,7 @@ public class UserRestUtils {
     RestResponse<User> userRestResponse =
         Setup.portal().body(loginRequest).post("/users/login").as(genericType.getType());
     assertThat(userRestResponse).isNotNull();
-    User user = userRestResponse.getResource();
-    return user;
+    return userRestResponse.getResource();
   }
 
   public static void sendResetPasswordMail(String emailId) {
@@ -173,5 +174,17 @@ public class UserRestUtils {
         .contentType(ContentType.JSON)
         .delete("/users/" + userId)
         .statusCode();
+  }
+
+  public static Collection<FeatureFlag> listFeatureFlags(String accountId, String bearerToken) {
+    RestResponse<Collection<FeatureFlag>> featureFlagListResponse =
+        Setup.portal()
+            .auth()
+            .oauth2(bearerToken)
+            .pathParam("accountId", accountId)
+            .get("/users/feature-flags/{accountId}")
+            .as(new GenericType<RestResponse<Collection<FeatureFlag>>>() {}.getType());
+
+    return featureFlagListResponse.getResource();
   }
 }

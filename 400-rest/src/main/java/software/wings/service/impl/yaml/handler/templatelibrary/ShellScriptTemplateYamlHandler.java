@@ -19,12 +19,14 @@ public class ShellScriptTemplateYamlHandler extends TemplateLibraryYamlHandler<S
   @Override
   public ShellScriptTemplateYaml toYaml(Template bean, String appId) {
     ShellScriptTemplate shellScriptTemplateBean = (ShellScriptTemplate) bean.getTemplateObject();
-    ShellScriptTemplateYaml shellScriptTemplateYaml = ShellScriptTemplateYaml.builder()
-                                                          .outputVars(shellScriptTemplateBean.getOutputVars())
-                                                          .scriptString(shellScriptTemplateBean.getScriptString())
-                                                          .scriptType(shellScriptTemplateBean.getScriptType())
-                                                          .timeOutMillis(shellScriptTemplateBean.getTimeoutMillis())
-                                                          .build();
+    ShellScriptTemplateYaml shellScriptTemplateYaml =
+        ShellScriptTemplateYaml.builder()
+            .outputVars(shellScriptTemplateBean.getOutputVars())
+            .scriptString(shellScriptTemplateBean.getScriptString())
+            .scriptType(shellScriptTemplateBean.getScriptType())
+            .timeOutMillis(shellScriptTemplateBean.getTimeoutMillis())
+            .secretOutputVars(shellScriptTemplateBean.getSecretOutputVars())
+            .build();
     super.toYaml(shellScriptTemplateYaml, bean);
     return shellScriptTemplateYaml;
   }
@@ -36,6 +38,7 @@ public class ShellScriptTemplateYamlHandler extends TemplateLibraryYamlHandler<S
     BaseTemplate baseTemplate = ShellScriptTemplate.builder()
                                     .scriptString(yaml.getScriptString())
                                     .outputVars(yaml.getOutputVars())
+                                    .secretOutputVars(yaml.getSecretOutputVars())
                                     .scriptType(yaml.getScriptType())
                                     .timeoutMillis(yaml.getTimeoutMillis())
                                     .build();

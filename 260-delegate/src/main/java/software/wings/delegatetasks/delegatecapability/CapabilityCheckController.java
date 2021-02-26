@@ -5,11 +5,18 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.capability.CapabilityParameters;
+import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.delegate.beans.CapabilityProtoConverter;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.delegate.task.executioncapability.ProtoCapabilityCheck;
+import io.harness.delegate.task.executioncapability.ProtoCapabilityCheckFactory;
 
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -22,8 +29,10 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CapabilityCheckController extends AbstractDelegateValidateTask {
   @Inject CapabilityCheckFactory capabilityCheckFactory;
+  @Inject ProtoCapabilityCheckFactory protoCapabilityCheckFactory;
 
   public CapabilityCheckController(String delegateId, DelegateTaskPackage delegateTaskPackage,
       Consumer<List<DelegateConnectionResult>> postExecute) {
@@ -49,13 +58,29 @@ public class CapabilityCheckController extends AbstractDelegateValidateTask {
         log.info("Checking Capability: " + delegateCapability.toString());
         CapabilityCheck capabilityCheck =
             capabilityCheckFactory.obtainCapabilityCheck(delegateCapability.getCapabilityType());
-
         if (capabilityCheck == null) {
           log.error("Unknown capability type: {}", delegateCapability.getCapabilityType());
           return;
         }
 
-        checkResponses.add(capabilityCheck.performCapabilityCheck(delegateCapability));
+        CapabilityResponse capabilityResponse = capabilityCheck.performCapabilityCheck(delegateCapability);
+
+        try {
+          CapabilityParameters parameters = CapabilityProtoConverter.toProto(delegateCapability);
+          ProtoCapabilityCheck protoCheck = protoCapabilityCheckFactory.obtainCapabilityCheck(parameters);
+          if (CapabilityProtoConverter.shouldCompareResults(parameters)) {
+            CapabilitySubjectPermission permission = protoCheck.performCapabilityCheckWithProto(parameters);
+            if (CapabilityProtoConverter.hasDivergingResults(capabilityResponse, permission)) {
+              log.warn("Diverging capabilities: " + delegateCapability.toString() + " -vs- " + parameters);
+            } else {
+              log.info("Proto/execution capability have the same result: " + parameters);
+            }
+          }
+        } catch (Exception e) {
+          log.warn("Comparison failing for capability : " + delegateCapability.toString() + "; caused by: " + e);
+        }
+
+        checkResponses.add(capabilityResponse);
       });
 
     } catch (RuntimeException exception) {

@@ -20,6 +20,7 @@ import (
 	"github.com/wings-software/portal/product/ci/engine/status"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	"go.uber.org/zap"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var (
@@ -28,6 +29,7 @@ var (
 	publishArtifactsStep = steps.NewPublishArtifactsStep
 	runStep              = steps.NewRunStep
 	pluginStep           = steps.NewPluginStep
+	runTests             = steps.NewRunTestsStep
 	sendStepStatus       = status.SendStepStatus
 	newRemoteLogger      = logutil.GetGrpcRemoteLogger
 	newAddonClient       = caddon.NewAddonClient
@@ -99,6 +101,9 @@ func (e *unitExecutor) Run(ctx context.Context, step *pb.UnitStep, so output.Sta
 	if err != nil {
 		stepStatus = statuspb.StepExecutionStatus_FAILURE
 		errMsg = err.Error()
+		if e, ok := grpcstatus.FromError(err); ok {
+			errMsg = e.Message()
+		}
 	}
 	statusErr := e.updateStepStatus(ctx, step, stepStatus, errMsg, numRetries, stepOutput, accountID, time.Since(start))
 	if statusErr != nil {
@@ -131,7 +136,7 @@ func (e *unitExecutor) skipStep(ctx context.Context, step *pb.UnitStep, so outpu
 	}
 
 	e.log.Infow("Evaluating skip condition", "condition", skipCondition)
-	ret, err := evaluateJEXL(ctx, step.GetId(), []string{skipCondition}, so, e.log)
+	ret, err := evaluateJEXL(ctx, step.GetId(), []string{skipCondition}, so, true, e.log)
 	if err != nil {
 		return false, errors.Wrap(err, fmt.Sprintf("failed to evalue skip condition: %s", skipCondition))
 	}
@@ -165,6 +170,12 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 	case *pb.UnitStep_Run:
 		e.log.Infow("Run step info", "step", x.Run.String(), "step_id", step.GetId())
 		stepOutput, numRetries, err = runStep(step, e.tmpFilePath, so, e.log).Run(ctx)
+		if err != nil {
+			return nil, numRetries, err
+		}
+	case *pb.UnitStep_RunTests:
+		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
+		stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}

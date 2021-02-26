@@ -20,6 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -28,7 +29,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -50,7 +50,7 @@ import org.mockito.MockitoAnnotations;
 
 public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestBase {
   @Inject private SettingsService settingsService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private SecretManager secretManager;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private WorkflowExecutionService workflowExecutionService;
@@ -77,7 +77,7 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
     when(executionContext.getApp())
         .thenReturn(Application.Builder.anApplication().appId(generateUuid()).accountId(accountId).build());
     when(delegateService.queueTask(any(DelegateTask.class)))
-        .thenAnswer(invocationOnMock -> wingsPersistence.save((PersistentEntity) invocationOnMock.getArguments()[0]));
+        .thenAnswer(invocationOnMock -> persistence.save((PersistentEntity) invocationOnMock.getArguments()[0]));
 
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()
                                         .accountId(accountId)
@@ -90,7 +90,7 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
                                             .withValue(newRelicConfig)
                                             .build();
 
-    settingId = wingsPersistence.save(settingAttribute);
+    settingId = persistence.save(settingAttribute);
 
     doReturn(NewRelicApplication.builder().id(1234).build())
         .when(newRelicService)
@@ -164,7 +164,7 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
     when(executionContext.renderExpression("${app.appName}")).thenReturn("valid_app");
     final ExecutionResponse executionResponse = newRelicDeploymentMarkerState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    final DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).get();
+    final DelegateTask delegateTask = persistence.createQuery(DelegateTask.class, excludeAuthority).get();
     final TaskData taskData = delegateTask.getData();
     NewRelicDataCollectionInfo newRelicDataCollectionInfo = (NewRelicDataCollectionInfo) taskData.getParameters()[0];
     assertThat(newRelicDataCollectionInfo.getSettingAttributeId()).isEqualTo(settingId);

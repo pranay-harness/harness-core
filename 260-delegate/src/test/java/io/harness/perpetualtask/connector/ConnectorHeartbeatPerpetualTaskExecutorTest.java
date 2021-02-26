@@ -3,23 +3,24 @@ package io.harness.perpetualtask.connector;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.task.k8s.ConnectorValidationHandler;
-import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
+import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -47,10 +48,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTest {
+public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTestBase {
   @InjectMocks ConnectorHeartbeatPerpetualTaskExecutor connectorHeartbeatPerpetualTaskExecutor;
   @Inject KryoSerializer kryoSerializer;
-  @Mock KubernetesTestConnectionDelegateTask.KubernetesValidationHandler KubernetesValidationHandler;
+  @Mock KubernetesValidationHandler KubernetesValidationHandler;
   @Mock DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
   @Mock private Call<RestResponse<Boolean>> call;
@@ -71,8 +72,8 @@ public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTest {
   @Category({UnitTests.class})
   public void runOnce() {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(generateUuid()).build();
-    when(KubernetesValidationHandler.validate(Matchers.any(), anyString(), anyList()))
-        .thenReturn(ConnectorValidationResult.builder().valid(true).build());
+    when(KubernetesValidationHandler.validate(Matchers.any(), Matchers.any()))
+        .thenReturn(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build());
     connectorHeartbeatPerpetualTaskExecutor.runOnce(perpetualTaskId, getPerpetualTaskParams(), Instant.EPOCH);
     verify(delegateAgentManagerClient, times(1)).publishConnectorHeartbeatResult(anyString(), anyString(), any());
   }
@@ -84,10 +85,13 @@ public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTest {
                                                        .connectorConfig(KubernetesClusterConfigDTO.builder().build())
                                                        .build())
                                     .build();
-    ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(connectorDTO));
+    K8sValidationParams k8sValidationParams =
+        K8sValidationParams.builder().kubernetesClusterConfigDTO(KubernetesClusterConfigDTO.builder().build()).build();
+    ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(k8sValidationParams));
     ConnectorHeartbeatTaskParams connectorHeartbeatTaskParams = ConnectorHeartbeatTaskParams.newBuilder()
                                                                     .setAccountIdentifier("accountIdentifier")
-                                                                    .setConnector(connectorConfigBytes)
+                                                                    .setConnectorIdentifier("connectorIdentifier")
+                                                                    .setConnectorValidationParams(connectorConfigBytes)
                                                                     .build();
     return PerpetualTaskExecutionParams.newBuilder()
         .setCustomizedParams(Any.pack(connectorHeartbeatTaskParams))

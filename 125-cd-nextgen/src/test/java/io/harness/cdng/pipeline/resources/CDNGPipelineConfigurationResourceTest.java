@@ -31,6 +31,7 @@ public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     cdngPipelineConfigurationResource = new CDNGPipelineConfigurationResource(pipelineService);
   }
+
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
@@ -42,8 +43,8 @@ public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
     assertThat(executionStrategyResponse).isNotNull();
     assertThat(executionStrategyResponse.keySet().size()).isEqualTo(5);
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.KUBERNETES))
-        .isEqualTo(Lists.newArrayList(
-            ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY));
+        .isEqualTo(Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN,
+            ExecutionStrategyType.CANARY, ExecutionStrategyType.DEFAULT));
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.HELM))
         .isEqualTo(Lists.newArrayList(ExecutionStrategyType.BASIC));
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.PCF))

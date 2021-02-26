@@ -16,6 +16,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -44,10 +45,12 @@ public abstract class ActivitySource
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("query_idx")
+                 .name("unique_idx")
+                 .unique(true)
                  .field(ActivitySourceKeys.accountId)
                  .field(ActivitySourceKeys.orgIdentifier)
                  .field(ActivitySourceKeys.projectIdentifier)
+                 .field(ActivitySourceKeys.identifier)
                  .build())
         .build();
   }
@@ -56,7 +59,7 @@ public abstract class ActivitySource
   long createdAt;
   long lastUpdatedAt;
 
-  @NotNull @FdIndex String accountId;
+  @NotNull String accountId;
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
   @NotNull @FdUniqueIndex String identifier;
@@ -84,4 +87,16 @@ public abstract class ActivitySource
   }
 
   public abstract ActivitySourceDTO toDTO();
+
+  public void validate() {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(orgIdentifier);
+    Preconditions.checkNotNull(projectIdentifier);
+    Preconditions.checkNotNull(identifier);
+    Preconditions.checkNotNull(type);
+    Preconditions.checkNotNull(name);
+    this.validateParams();
+  }
+
+  protected abstract void validateParams();
 }

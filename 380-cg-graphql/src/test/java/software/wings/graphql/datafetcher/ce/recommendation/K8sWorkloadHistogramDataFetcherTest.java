@@ -120,6 +120,8 @@ public class K8sWorkloadHistogramDataFetcherTest extends AbstractDataFetcherTest
     assertThat(qlContainerHistogramData.getContainerName()).isEqualTo("nginx");
     QLHistogramExp cpuHistogram = qlContainerHistogramData.getCpuHistogram();
     assertThat(cpuHistogram.getFirstBucketSize()).isEqualTo(0.01);
+    assertThat(cpuHistogram.getMinBucket()).isEqualTo(0);
+    assertThat(cpuHistogram.getMaxBucket()).isEqualTo(2);
     assertThat(cpuHistogram.getGrowthRatio()).isEqualTo(0.05);
     assertThat(cpuHistogram.getTotalWeight()).isEqualTo(2.0);
     assertThat(cpuHistogram.getNumBuckets()).isEqualTo(3);
@@ -127,7 +129,9 @@ public class K8sWorkloadHistogramDataFetcherTest extends AbstractDataFetcherTest
     assertThat(cpuHistogram.getBucketWeights()[2]).isEqualTo(1.0);
 
     QLHistogramExp memoryHistogram = qlContainerHistogramData.getMemoryHistogram();
-    assertThat(memoryHistogram.getFirstBucketSize()).isEqualTo(8.149666932873309E7);
+    assertThat(memoryHistogram.getFirstBucketSize()).isEqualTo(1E7);
+    assertThat(memoryHistogram.getMinBucket()).isEqualTo(43);
+    assertThat(memoryHistogram.getMaxBucket()).isEqualTo(49);
     assertThat(memoryHistogram.getGrowthRatio()).isEqualTo(0.05);
     assertThat(memoryHistogram.getTotalWeight()).isEqualTo(2.0);
     assertThat(memoryHistogram.getNumBuckets()).isEqualTo(7);

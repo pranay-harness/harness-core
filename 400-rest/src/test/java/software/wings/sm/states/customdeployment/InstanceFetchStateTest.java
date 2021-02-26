@@ -1,14 +1,15 @@
 package software.wings.sm.states.customdeployment;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
@@ -21,10 +22,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -61,6 +62,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.customdeployment.InstanceFetchStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.CustomInfrastructureMapping;
@@ -85,7 +87,6 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -116,7 +117,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
-  private static String resourcePath = "./software/wings/customdeployment";
+  private static String resourcePath = "400-rest/src/test/resources/software/wings/customdeployment";
 
   @Before
   public void setUp() throws Exception {
@@ -387,11 +388,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
 
   private String readFile(String fileName) throws IOException {
     File file = null;
-    try {
-      file = new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + fileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find file " + fileName);
-    }
+    file = new File(resourcePath + PATH_DELIMITER + fileName);
+
     assertThat(file).isNotNull();
     return FileUtils.readFileToString(file, "UTF-8");
   }
@@ -629,5 +627,37 @@ public class InstanceFetchStateTest extends WingsBaseTest {
         .doesNotContainNull();
     assertThat(instanceDetails.stream().map(details -> details.getServiceTemplateId()).collect(Collectors.toList()))
         .contains("serviceTemplateId", "serviceTemplateId");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveInstanceInfoToSweepingOutputDontSkipVerification() {
+    on(state).set("sweepingOutputService", sweepingOutputService);
+    state.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(true).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputSkipVerification() {
+    on(state).set("sweepingOutputService", sweepingOutputService);
+    state.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(false).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
   }
 }

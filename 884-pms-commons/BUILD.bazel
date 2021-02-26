@@ -11,7 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
+        "//890-pms-contracts:module",
         "//950-walktree-visitor:module",
         "//960-persistence:module",
         "//960-recaster:module",

@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher;
 
 import static software.wings.beans.Account.Builder.anAccount;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -19,7 +20,6 @@ import software.wings.beans.Application.Builder;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -36,6 +36,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.dl.WingsPersistence;
 import software.wings.events.TestUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -151,6 +152,7 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   @Inject CECloudAccountDao cloudAccountDao;
   @Inject HPersistence hPersistence;
   @Inject protected TestUtils testUtils;
+  @Inject private WingsPersistence wingsPersistence;
 
   public Account createAccount(String accountId, LicenseInfo licenseInfo) {
     return accountService.save(anAccount()

@@ -1,3 +1,5 @@
 package io.harness.beans.dependencies;
 
-public enum CIDependencyType { SERVICE }
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public enum CIDependencyType { @JsonProperty("Service") SERVICE }

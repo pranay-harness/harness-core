@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.AKRITI;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.Application.Builder.anApplication;
@@ -14,7 +15,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
@@ -22,6 +25,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.audit.EntityAuditRecord;
+import software.wings.beans.AuditPreference;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityYamlRecord;
 import software.wings.dl.WingsPersistence;
@@ -43,8 +47,8 @@ public class AuditServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService mockFeatureFlagService;
   @Mock private YamlResourceService mockYamlResourceService;
   @Mock private WingsPersistence mockWingsPersistence;
-  @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks protected AuditServiceImpl auditServiceImpl;
+  @Inject private AuditPreferenceHelper auditPreferenceHelper;
 
   @Test
   @Owner(developers = SATYAM)
@@ -106,5 +110,31 @@ public class AuditServiceImplTest extends WingsBaseTest {
                                                     .affectedResourceType(EntityType.TEMPLATE.name())
                                                     .build()))
         .isEqualTo(false);
+  }
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void checkLoginFeatureFlagEnabled() {
+    String mockJsonFilter =
+        "{\"preferenceType\":\"AUDIT_PREFERENCE\",\"offset\":0,\"lastNDays\":7,\"startTime\":1613028205502,\"endTime\":1613633005502,\"includeAccountLevelResources\":true,\"includeAppLevelResources\":true}";
+    AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(mockJsonFilter);
+    auditPreference.setAccountId(ACCOUNT_ID);
+    when(mockFeatureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, ACCOUNT_ID)).thenReturn(true);
+    auditServiceImpl.changeAuditPreferenceForHomePage(auditPreference, ACCOUNT_ID);
+    assertThat(auditPreference.getOperationTypes().contains("LOGIN")).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void checkLoginFeatureFlagDisabled() {
+    String mockJsonFilter =
+        "{\"preferenceType\":\"AUDIT_PREFERENCE\",\"offset\":0,\"lastNDays\":7,\"startTime\":1613028205502,\"endTime\":1613633005502,\"includeAccountLevelResources\":true,\"includeAppLevelResources\":true}";
+    AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(mockJsonFilter);
+    auditPreference.setAccountId(ACCOUNT_ID);
+
+    when(mockFeatureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, ACCOUNT_ID)).thenReturn(false);
+    auditServiceImpl.changeAuditPreferenceForHomePage(auditPreference, ACCOUNT_ID);
+    assertThat(auditPreference.getOperationTypes().contains("LOGIN")).isEqualTo(false);
   }
 }

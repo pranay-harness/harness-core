@@ -15,7 +15,7 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
-import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -36,7 +36,7 @@ public class SecretEntityReferenceHelper {
   @Inject
   public SecretEntityReferenceHelper(EntitySetupUsageHelper entityReferenceHelper,
       EntitySetupUsageClient entitySetupUsageClient,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      @Named(EventsFrameworkConstants.SETUP_USAGE) Producer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.entityReferenceHelper = entityReferenceHelper;
     this.entitySetupUsageClient = entitySetupUsageClient;
@@ -68,17 +68,18 @@ public class SecretEntityReferenceHelper {
                                                     .setType(EntityTypeProtoEnum.CONNECTORS)
                                                     .setName(emptyIfNull(encryptedDataDTO.getSecretManagerName()))
                                                     .build();
-    EntitySetupUsageCreateDTO entityReferenceDTO = EntitySetupUsageCreateDTO.newBuilder()
-                                                       .setAccountIdentifier(encryptedDataDTO.getAccount())
-                                                       .setReferredByEntity(secretDetails)
-                                                       .setReferredEntity(secretManagerDetails)
-                                                       .build();
+    EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
+                                                         .setAccountIdentifier(encryptedDataDTO.getAccount())
+                                                         .setReferredByEntity(secretDetails)
+                                                         .addReferredEntities(secretManagerDetails)
+                                                         .setDeleteOldReferredByRecords(false)
+                                                         .build();
     try {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.CREATE_ACTION))
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
               .setData(entityReferenceDTO.toByteString())
               .build());
     } catch (Exception ex) {
@@ -98,12 +99,14 @@ public class SecretEntityReferenceHelper {
       DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.newBuilder()
                                                     .setAccountIdentifier(encryptedDataDTO.getAccount())
                                                     .setReferredByEntityFQN(secretFQN)
+                                                    .setReferredByEntityType(EntityTypeProtoEnum.SECRETS)
                                                     .setReferredEntityFQN(secretMangerFQN)
+                                                    .setReferredEntityType(EntityTypeProtoEnum.CONNECTORS)
                                                     .build();
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.SECRETS.name(),
                   EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.DELETE_ACTION))
               .setData(deleteSetupUsageDTO.toByteString())
               .build());

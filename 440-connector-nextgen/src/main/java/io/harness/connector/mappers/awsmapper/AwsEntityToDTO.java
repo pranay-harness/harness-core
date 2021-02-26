@@ -4,7 +4,6 @@ import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredentia
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO.AwsCredentialDTOBuilder;
@@ -12,12 +11,13 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
 
 @Singleton
-public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConfig> {
+public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDTO, AwsConfig> {
   @Override
   public AwsConnectorDTO createConnectorDTO(AwsConfig connector) {
     final AwsCredentialType credentialType = connector.getCredentialType();
@@ -39,8 +39,12 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConfig> {
 
   private AwsCredentialDTOBuilder buildManualCredential(AwsAccessKeyCredential credential) {
     final SecretRefData secretRef = SecretRefHelper.createSecretRef(credential.getSecretKeyRef());
-    final AwsManualConfigSpecDTO awsManualConfigSpecDTO =
-        AwsManualConfigSpecDTO.builder().accessKey(credential.getAccessKey()).secretKeyRef(secretRef).build();
+    final SecretRefData accessKeyRef = SecretRefHelper.createSecretRef(credential.getAccessKeyRef());
+    final AwsManualConfigSpecDTO awsManualConfigSpecDTO = AwsManualConfigSpecDTO.builder()
+                                                              .accessKey(credential.getAccessKey())
+                                                              .secretKeyRef(secretRef)
+                                                              .accessKeyRef(accessKeyRef)
+                                                              .build();
     return AwsCredentialDTO.builder()
         .awsCredentialType(AwsCredentialType.MANUAL_CREDENTIALS)
         .config(awsManualConfigSpecDTO);
@@ -48,7 +52,7 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConfig> {
 
   private AwsCredentialDTOBuilder buildInheritFromDelegate(AwsIamCredential credential) {
     final AwsInheritFromDelegateSpecDTO specDTO =
-        AwsInheritFromDelegateSpecDTO.builder().delegateSelector(credential.getDelegateSelector()).build();
+        AwsInheritFromDelegateSpecDTO.builder().delegateSelectors(credential.getDelegateSelectors()).build();
     return AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).config(specDTO);
   }
 }

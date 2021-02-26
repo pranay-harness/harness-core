@@ -1,21 +1,27 @@
 package io.harness.yaml.core.failurestrategy;
 
-import static io.harness.pms.contracts.execution.failure.FailureType.*;
+import static io.harness.pms.contracts.execution.failure.FailureType.APPLICATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.AUTHENTICATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.AUTHORIZATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.CONNECTIVITY_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.DELEGATE_PROVISIONING_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.SKIPPING_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.TIMEOUT_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.UNKNOWN_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.VERIFICATION_FAILURE;
 
 import io.harness.pms.contracts.execution.failure.FailureType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Arrays;
 import java.util.EnumSet;
 
 public enum NGFailureType {
-  @JsonProperty(NGFailureTypeConstants.ALL_ERRORS)
-  ALL_ERRORS(NGFailureTypeConstants.ALL_ERRORS,
-      EnumSet.of(AUTHENTICATION_FAILURE, CONNECTIVITY_FAILURE, DELEGATE_PROVISIONING_FAILURE, APPLICATION_FAILURE,
-          AUTHORIZATION_FAILURE, VERIFICATION_FAILURE, TIMEOUT_FAILURE)),
-  @JsonProperty(NGFailureTypeConstants.OTHER_ERRORS)
-  OTHER_ERRORS(NGFailureTypeConstants.OTHER_ERRORS, EnumSet.of(APPLICATION_FAILURE)),
+  @JsonProperty(NGFailureTypeConstants.ANY_OTHER_ERRORS)
+  ANY_OTHER_ERRORS(
+      NGFailureTypeConstants.ANY_OTHER_ERRORS, EnumSet.of(APPLICATION_FAILURE, SKIPPING_FAILURE, UNKNOWN_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.AUTHENTICATION_ERROR)
   AUTHENTICATION_ERROR(NGFailureTypeConstants.AUTHENTICATION_ERROR, EnumSet.of(AUTHENTICATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.CONNECTIVITY_ERROR)
@@ -39,7 +45,7 @@ public enum NGFailureType {
   }
 
   @JsonCreator
-  public static NGFailureType getFailureType(String yamlName) {
+  public static NGFailureType getFailureTypes(String yamlName) {
     for (NGFailureType value : NGFailureType.values()) {
       if (value.yamlName.equalsIgnoreCase(yamlName)) {
         return value;
@@ -53,7 +59,13 @@ public enum NGFailureType {
     return yamlName;
   }
 
-  public EnumSet<FailureType> getFailureType() {
+  public EnumSet<FailureType> getFailureTypes() {
     return failureType;
+  }
+
+  public static EnumSet<FailureType> getAllFailureTypes() {
+    EnumSet<FailureType> allFailures = EnumSet.noneOf(FailureType.class);
+    Arrays.stream(NGFailureType.values()).map(NGFailureType::getFailureTypes).forEach(allFailures::addAll);
+    return allFailures;
   }
 }

@@ -17,7 +17,6 @@ import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceField;
-import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
@@ -103,14 +102,14 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   }
 
   @Override
-  public List<ContainerInstance> listContainerInstancesForCluster(AwsCrossAccountAttributes awsCrossAccountAttributes,
-      String region, String cluster, ContainerInstanceStatus containerInstanceStatus) {
+  public List<ContainerInstance> listContainerInstancesForCluster(
+      AwsCrossAccountAttributes awsCrossAccountAttributes, String region, String cluster) {
     try {
       AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
       List<String> containerInstanceArns = newArrayList();
       String nextToken = null;
       ListContainerInstancesRequest listContainerInstancesRequest =
-          new ListContainerInstancesRequest().withCluster(cluster).withStatus(containerInstanceStatus);
+          new ListContainerInstancesRequest().withCluster(cluster);
       do {
         listContainerInstancesRequest.withNextToken(nextToken);
         ListContainerInstancesResult listContainerInstancesResult =
@@ -152,7 +151,10 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
     try {
       AmazonECSClient client = getAmazonECSClient(region, awsCrossAccountAttributes);
       String nextToken = null;
-      ListTasksRequest listTasksRequest = new ListTasksRequest().withCluster(cluster).withDesiredStatus(desiredStatus);
+      ListTasksRequest listTasksRequest = new ListTasksRequest().withCluster(cluster);
+      if (null != desiredStatus) {
+        listTasksRequest.withDesiredStatus(desiredStatus);
+      }
       do {
         listTasksRequest.withNextToken(nextToken);
         if (null != service) {

@@ -18,15 +18,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.alert.AlertType;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
@@ -53,14 +53,14 @@ public class AlertCheckJobTest extends WingsBaseTest {
   @Mock private EmailHelperUtils emailHelperUtils;
   @Mock private MainConfiguration mainConfiguration;
   @InjectMocks @Inject AlertCheckJob alertCheckJob;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     when(mainConfiguration.getSmtpConfig()).thenReturn(mock(SmtpConfig.class));
     when(emailHelperUtils.isSmtpConfigValid(any(SmtpConfig.class))).thenReturn(true);
-    wingsPersistence.save(aManagerConfiguration().withPrimaryVersion("*").build());
+    persistence.save(aManagerConfiguration().withPrimaryVersion("*").build());
   }
 
   /**
@@ -115,7 +115,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   private void saveDelegate(String host, int timeAfterLastHB, boolean createConnection) {
     long lastHeartbeat = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeAfterLastHB);
     Delegate delegate = Delegate.builder().accountId(ACCOUNT_ID).hostName(host).lastHeartBeat(lastHeartbeat).build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     if (createConnection) {
       DelegateConnection connection = DelegateConnection.builder()
@@ -123,7 +123,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
                                           .delegateId(delegate.getUuid())
                                           .lastHeartbeat(lastHeartbeat)
                                           .build();
-      wingsPersistence.save(connection);
+      persistence.save(connection);
     }
   }
 
@@ -157,7 +157,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
                              .delegateGroupName(delegateGroupName)
                              .lastHeartBeat(lastHeartbeatDisconnected)
                              .build();
-    wingsPersistence.save(delegate1);
+    persistence.save(delegate1);
 
     Delegate delegate2 = Delegate.builder()
                              .accountId(ACCOUNT_ID)
@@ -165,7 +165,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
                              .delegateGroupName(delegateGroupName)
                              .lastHeartBeat(lastHeartbeatDisconnected)
                              .build();
-    wingsPersistence.save(delegate2);
+    persistence.save(delegate2);
 
     List<Delegate> delegates = Arrays.asList(delegate1, delegate2);
 
@@ -193,7 +193,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
                             .delegateGroupName(delegateGroupName)
                             .lastHeartBeat(lastHeartbeatConnected)
                             .build();
-    wingsPersistence.save(delegate);
+    persistence.save(delegate);
 
     List<Delegate> delegates = Arrays.asList(delegate);
     Set<String> primaryConnections = new HashSet();

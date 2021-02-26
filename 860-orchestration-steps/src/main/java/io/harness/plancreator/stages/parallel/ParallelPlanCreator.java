@@ -5,7 +5,6 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
-import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
@@ -15,6 +14,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
@@ -70,25 +70,28 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
     YamlNode currentNode = config.getNode();
     return PlanNode.builder()
         .uuid(currentNode.getUuid())
-        .name("parallel")
-        .identifier("parallel" + currentNode.getUuid())
+        .name(YAMLFieldNameConstants.PARALLEL)
+        .identifier(YAMLFieldNameConstants.PARALLEL + currentNode.getUuid())
         .stepType(NGForkStep.STEP_TYPE)
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build())
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(config))
         .skipExpressionChain(true)
-        .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
 
   @Override
   public GraphLayoutResponse getLayoutNodeInfo(PlanCreationContext ctx, YamlField config) {
     List<String> possibleSiblings = new ArrayList<>();
-    possibleSiblings.add("stage");
-    possibleSiblings.add("parallel");
-    YamlField nextSibling = ctx.getCurrentField().getNode().nextSiblingFromParentArray("parallel", possibleSiblings);
+    possibleSiblings.add(YAMLFieldNameConstants.STAGE);
+    possibleSiblings.add(YAMLFieldNameConstants.PARALLEL);
+    YamlField nextSibling =
+        ctx.getCurrentField().getNode().nextSiblingFromParentArray(YAMLFieldNameConstants.PARALLEL, possibleSiblings);
 
-    List<YamlField> children = getDependencyNodeIdsList(ctx);
+    List<YamlField> children = getStageChildFields(ctx);
+    if (children.isEmpty()) {
+      return GraphLayoutResponse.builder().build();
+    }
     List<String> childrenUuids =
         children.stream().map(YamlField::getNode).map(YamlNode::getUuid).collect(Collectors.toList());
     EdgeLayoutList.Builder stagesEdgesBuilder = EdgeLayoutList.newBuilder().addAllCurrentNodeChildren(childrenUuids);
@@ -107,9 +110,9 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
                .build()));
     GraphLayoutNode parallelNode = GraphLayoutNode.newBuilder()
                                        .setNodeUUID(config.getNode().getUuid())
-                                       .setNodeType("parallel")
+                                       .setNodeType(YAMLFieldNameConstants.PARALLEL)
                                        .setNodeGroup(StepOutcomeGroup.STAGE.name())
-                                       .setNodeIdentifier("parallel" + config.getNode().getUuid())
+                                       .setNodeIdentifier(YAMLFieldNameConstants.PARALLEL + config.getNode().getUuid())
                                        .setEdgeLayoutList(stagesEdgesBuilder.build())
                                        .build();
     layoutNodeMap.put(config.getNode().getUuid(), parallelNode);
@@ -119,8 +122,9 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList("stage", "step", "stepGroup", "parallel"));
+      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(currentField.getName(),
+          Arrays.asList(YAMLFieldNameConstants.STAGE, YAMLFieldNameConstants.STEP, YAMLFieldNameConstants.STEP_GROUP,
+              YAMLFieldNameConstants.PARALLEL));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
@@ -135,20 +139,14 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
 
   @VisibleForTesting
   List<YamlField> getDependencyNodeIdsList(PlanCreationContext planCreationContext) {
-    List<YamlField> childYamlFields = Optional.of(planCreationContext.getCurrentField().getNode().asArray())
-                                          .orElse(Collections.emptyList())
-                                          .stream()
-                                          .map(el -> el.getField("stage"))
-                                          .filter(Objects::nonNull)
-                                          .collect(Collectors.toList());
-
+    List<YamlField> childYamlFields = getStageChildFields(planCreationContext);
     if (childYamlFields.isEmpty()) {
       List<YamlNode> yamlNodes =
           Optional.of(planCreationContext.getCurrentField().getNode().asArray()).orElse(Collections.emptyList());
 
       yamlNodes.forEach(yamlNode -> {
-        YamlField stageField = yamlNode.getField("step");
-        YamlField stepGroupField = yamlNode.getField("stepGroup");
+        YamlField stageField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+        YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
         if (stageField != null) {
           childYamlFields.add(stageField);
         } else if (stepGroupField != null) {
@@ -157,5 +155,14 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
       });
     }
     return childYamlFields;
+  }
+
+  private List<YamlField> getStageChildFields(PlanCreationContext planCreationContext) {
+    return Optional.of(planCreationContext.getCurrentField().getNode().asArray())
+        .orElse(Collections.emptyList())
+        .stream()
+        .map(el -> el.getField(YAMLFieldNameConstants.STAGE))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 }

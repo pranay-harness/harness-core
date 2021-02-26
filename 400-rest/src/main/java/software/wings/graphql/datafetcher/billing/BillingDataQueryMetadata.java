@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingDataQueryMetadata {
   private static final BillingDataTableSchema schema = new BillingDataTableSchema();
 
@@ -53,8 +57,9 @@ public class BillingDataQueryMetadata {
     AVGCPUUTILIZATION("AVGCPUUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AVGMEMORYUTILIZATION("AVGMEMORYUTILIZATION", DataType.DOUBLE, QLFilterKind.SIMPLE),
     CLOUDPROVIDERID("CLOUDPROVIDERID", DataType.STRING, QLFilterKind.SIMPLE),
+    CLOUDPROVIDER("CLOUDPROVIDER", DataType.STRING, QLFilterKind.SIMPLE),
     CPUBILLINGAMOUNT("CPUBILLINGAMOUNT", DataType.STRING, QLFilterKind.SIMPLE),
-    MEMORYBILLINGAMOUNT("MEMORYBILLINGAMOUNT", DataType.STRING, QLFilterKind.SIMPLE),
+    MEMORYBILLINGAMOUNT("MEMORYBILLINGAMOUNT", DataType.DOUBLE, QLFilterKind.SIMPLE),
     UNALLOCATEDCOST("UNALLOCATEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
     NETWORKCOST("NETWORKCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
     SYSTEMCOST("SYSTEMCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
@@ -69,7 +74,14 @@ public class BillingDataQueryMetadata {
     AGGREGATEDCPULIMIT("AGGREGATEDCPULIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE),
     AGGREGATEDMEMORYLIMIT("AGGREGATEDMEMORYLIMIT", DataType.DOUBLE, QLFilterKind.SIMPLE),
     CPUREQUEST("CPUREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE),
-    MEMORYREQUEST("MEMORYREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE);
+    MEMORYREQUEST("MEMORYREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    STORAGECOST("STORAGECOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    STORAGEUTILIZATIONVALUE("STORAGEUTILIZATIONVALUE", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    STORAGEREQUEST("STORAGEREQUEST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    STORAGEUNALLOCATEDCOST("STORAGEUNALLOCATEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    MEMORYUNALLOCATEDCOST("MEMORYUNALLOCATEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    CPUUNALLOCATEDCOST("CPUUNALLOCATEDCOST", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    STORAGEACTUALIDLECOST("STORAGEACTUALIDLECOST", DataType.DOUBLE, QLFilterKind.SIMPLE);
     private DataType dataType;
     private String fieldName;
     private QLFilterKind filterKind;

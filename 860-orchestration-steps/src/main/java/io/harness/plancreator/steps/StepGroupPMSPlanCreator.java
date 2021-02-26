@@ -1,10 +1,16 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
+
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -12,11 +18,13 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.common.NGSectionStepParameters;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.common.steps.stepgroup.StepGroupStepParameters;
 
@@ -48,19 +56,31 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);
       responseMap.put(yamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(yamlFieldMap).build());
     }
+
+    // Add Steps Node
+    if (EmptyPredicate.isNotEmpty(dependencyNodeIdsList)) {
+      YamlField stepsField =
+          Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
+      PlanNode stepsNode = getStepsPlanNode(stepsField, dependencyNodeIdsList.get(0).getNode().getUuid());
+      responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
+    }
+
     return responseMap;
   }
 
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StepGroupElementConfig config, List<String> childrenNodeIds) {
-    StepParameters stepParameters = StepGroupStepParameters.getStepParameters(config, childrenNodeIds.get(0));
+    YamlField stepsField =
+        Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
+    StepParameters stepParameters = StepGroupStepParameters.getStepParameters(config, stepsField.getNode().getUuid());
     return PlanNode.builder()
         .name(config.getName())
         .uuid(config.getUuid())
         .identifier(config.getIdentifier())
         .stepType(StepGroupStep.STEP_TYPE)
         .group(StepOutcomeGroup.STEP_GROUP.name())
+        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
@@ -75,17 +95,17 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stepGroup", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+    return Collections.singletonMap(STEP_GROUP, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STEP_GROUP)) {
         return adviserObtainments;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList("step", "parallel", "stepGroup"));
+          currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STEP, PARALLEL, STEP_GROUP));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
@@ -95,6 +115,9 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
                 .build());
       }
     }
+
+    // Add custom rollback adviser
+    adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
   }
 
@@ -107,8 +130,8 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
                     .asArray())
             .orElse(Collections.emptyList());
     yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField("step");
-      YamlField parallelStepField = yamlNode.getField("parallel");
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
       if (stepField != null) {
         childYamlFields.add(stepField);
       } else if (parallelStepField != null) {
@@ -118,7 +141,17 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     return childYamlFields;
   }
 
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), "parallel") != null;
+  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Steps Element").build();
+    return PlanNode.builder()
+        .uuid(stepsYamlField.getNode().getUuid())
+        .identifier(YAMLFieldNameConstants.STEPS)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.STEPS)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 }

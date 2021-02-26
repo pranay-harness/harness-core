@@ -13,7 +13,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -42,10 +42,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+@Ignore
 @Slf4j
-public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
+public class ServiceGuardAlertTest extends VerificationIntegrationBase {
   @Override
   @Before
   public void setUp() throws Exception {

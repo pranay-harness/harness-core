@@ -16,6 +16,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -52,7 +53,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -71,7 +71,6 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -232,8 +231,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                             .parameters(new Object[] {shellScriptParameters.build()})
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(),
-        TaskCategory.DELEGATE_TASK_V1, Collections.emptyList());
+    return StepUtils.prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
   }
 
   @Override

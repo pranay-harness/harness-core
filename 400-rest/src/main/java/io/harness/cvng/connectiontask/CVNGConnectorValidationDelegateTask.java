@@ -1,9 +1,12 @@
 package io.harness.cvng.connectiontask;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -21,6 +24,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -68,6 +72,7 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
     return CVConnectorTaskResponse.builder()
         .valid(validCredentials)
         .errorMessage(exceptionInProcessing != null ? exceptionInProcessing.getMessage() : null)
+        .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
         .build();
   }
 }

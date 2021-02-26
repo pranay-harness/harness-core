@@ -55,6 +55,13 @@ import org.mongodb.morphia.annotations.Id;
       , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceState),
           @Field(value = InstanceDataKeys.usageStartTime)
     })
+@CdIndex(name = "accountId_instancetype_usageStartTime_usageStopTime",
+    fields =
+    {
+      @Field(InstanceDataKeys.accountId)
+      , @Field(InstanceDataKeys.instanceType), @Field(value = InstanceDataKeys.usageStartTime),
+          @Field(value = InstanceDataKeys.usageStopTime)
+    })
 @CdIndex(name = "accountId_usageStartTime_usageStopTime",
     fields =
     {
@@ -78,6 +85,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   Resource limitResource;
   Resource allocatableResource;
   StorageResource storageResource;
+  List<String> pvcClaimNames;
   List<Container> containerList;
   Map<String, String> labels;
   Map<String, String> namespaceLabels;

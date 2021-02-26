@@ -32,6 +32,7 @@ public class AzureAppServiceSlotSetupExecutionData
   private String appServiceName;
   private String deploySlotName;
   private String targetSlotName;
+  private String webAppUrl;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
@@ -53,7 +54,9 @@ public class AzureAppServiceSlotSetupExecutionData
     putNotNull(executionDetails, "deploySlotName",
         ExecutionDataValue.builder().displayName("Deployment Slot").value(deploySlotName).build());
     putNotNull(executionDetails, "targetSlotName",
-        ExecutionDataValue.builder().displayName("Target Slot").value(deploySlotName).build());
+        ExecutionDataValue.builder().displayName("Target Slot").value(targetSlotName).build());
+    putNotNull(
+        executionDetails, "webAppUrl", ExecutionDataValue.builder().displayName("WebApp URL").value(webAppUrl).build());
     putNotNull(
         executionDetails, ACTIVITY_ID, ExecutionDataValue.builder().displayName(ACTIVITY_ID).value(activityId).build());
     return executionDetails;
@@ -61,6 +64,9 @@ public class AzureAppServiceSlotSetupExecutionData
 
   @Override
   public AzureAppServiceSlotSetupExecutionSummary getStepExecutionSummary() {
-    return AzureAppServiceSlotSetupExecutionSummary.builder().build();
+    return AzureAppServiceSlotSetupExecutionSummary.builder()
+        .newSlotName(deploySlotName)
+        .newAppName(appServiceName)
+        .build();
   }
 }

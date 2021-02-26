@@ -4,8 +4,10 @@ import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.cvng.state.CVNGVerificationTask;
-import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
+import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStepParameters;
@@ -16,6 +18,7 @@ import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -101,6 +104,8 @@ import software.wings.api.TerraformPlanParam;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
+import software.wings.api.arm.ARMOutputVariables;
+import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -145,6 +150,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
+import software.wings.beans.AccountPreferences;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
@@ -153,6 +159,7 @@ import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
@@ -172,7 +179,6 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.Event;
 import software.wings.beans.ExecutionCredential;
@@ -390,11 +396,10 @@ import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
+import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageVersion;
@@ -416,6 +421,7 @@ import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53ServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsRunTaskDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
@@ -424,6 +430,7 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateRespon
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
@@ -766,6 +773,7 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.CVNGState.CVNGStateExecutionData;
 import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.EcsRunTaskDataBag;
@@ -806,7 +814,6 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecut
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
-import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -1471,7 +1478,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
-    kryo.register(RepositoryFormat.class, 7204);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);
@@ -1586,8 +1592,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SSHHostValidationCapability.class, 7326);
     kryo.register(WinrmHostValidationCapability.class, 7327);
     kryo.register(PcfCommandTaskParameters.class, 7328);
-    kryo.register(PcfConnectivityCapability.class, 7329);
-    kryo.register(PcfAutoScalarCapability.class, 7330);
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
     kryo.register(ScalyrConfig.class, 7334);
@@ -1627,7 +1631,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppPermissionSummaryForUI.class, 7395);
     kryo.register(UserRestrictionInfo.class, 7396);
     kryo.register(AppPermissionSummary.class, 7397);
-    kryo.register(EnvironmentType.class, 7398);
     kryo.register(EnvInfo.class, 7399);
     kryo.register(AuthToken.class, 7400);
     kryo.register(WhitelistConfig.class, 7401);
@@ -1666,7 +1669,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsAmiServiceTrafficShiftAlbDeployRequest.class, 7434);
     kryo.register(AwsAmiTrafficShiftAlbSwitchRouteRequest.class, 7435);
     kryo.register(AwsAmiTrafficShiftAlbStateExecutionData.class, 7436);
-    kryo.register(KustomizeCapability.class, 7437);
     kryo.register(GcbOptions.class, 7439);
     kryo.register(GcbTriggerBuildSpec.class, 7440);
     kryo.register(GcbRemoteBuildSpec.class, 7441);
@@ -1710,6 +1712,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformOutputVariables.class, 8063);
     kryo.register(EcsRunTaskStateExecutionData.class, 8084);
     kryo.register(EcsRunTaskDataBag.class, 8085);
+    kryo.register(EcsDeployRollbackDataFetchRequest.class, 8086);
+    kryo.register(EcsDeployRollbackDataFetchResponse.class, 8087);
     kryo.register(PipelineStageExecutionAdvisor.class, 8072);
     kryo.register(ContinuePipelineResponseData.class, 8073);
 
@@ -1739,5 +1743,19 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CVNGVerificationTask.Status.class, 8117);
     kryo.register(HelmReleaseInfoElement.class, 8118);
     kryo.register(AwsEcsAllPhaseRollbackData.class, 8119);
+
+    kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
+    kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
+    kryo.register(CapabilityCheckDetails.class, 8202);
+
+    kryo.register(ShellScriptEnvironmentVariables.class, 8120);
+
+    kryo.register(AwsElbConfig.class, 8500);
+    kryo.register(CVNGStateExecutionData.class, 8501);
+
+    kryo.register(ARMOutputVariables.class, 8121);
+    kryo.register(ARMPreExistingTemplate.class, 8122);
+    kryo.register(ARMStateExecutionData.class, 8123);
+    kryo.register(AccountPreferences.class, 8124);
   }
 }

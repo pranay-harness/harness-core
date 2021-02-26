@@ -10,7 +10,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAcce
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
@@ -23,13 +22,14 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
+import io.harness.govern.Switch;
 
-public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnector> {
+public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
     GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);
@@ -52,11 +52,9 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
     switch (authType) {
       case SSH:
         final GithubSshAuthentication githubSshAuthentication = (GithubSshAuthentication) authenticationDetails;
-        final GithubSshCredentialsSpecDTO githubSshCredentialsSpecDTO =
-            GithubSshCredentialsSpecDTO.builder()
-                .sshKeyRef(SecretRefHelper.createSecretRef(githubSshAuthentication.getSshKeyRef()))
-                .build();
-        githubCredentialsDTO = GithubSshCredentialsDTO.builder().spec(githubSshCredentialsSpecDTO).build();
+        githubCredentialsDTO = GithubSshCredentialsDTO.builder()
+                                   .sshKeyRef(SecretRefHelper.createSecretRef(githubSshAuthentication.getSshKeyRef()))
+                                   .build();
         break;
       case HTTP:
         final GithubHttpAuthentication githubHttpAuthentication = (GithubHttpAuthentication) authenticationDetails;
@@ -65,6 +63,9 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         GithubHttpCredentialsSpecDTO githubHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
         githubCredentialsDTO =
             GithubHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(githubHttpCredentialsSpecDTO).build();
+        break;
+      default:
+        Switch.unhandled(authType);
     }
     return GithubAuthenticationDTO.builder().authType(authType).credentials(githubCredentialsDTO).build();
   }
@@ -96,6 +97,9 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
                 .username(githubUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
+        break;
+      default:
+        Switch.unhandled(type);
     }
     return githubHttpCredentialsSpecDTO;
   }
@@ -117,6 +121,9 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         apiAccessSpecDTO = GithubTokenSpecDTO.builder()
                                .tokenRef(SecretRefHelper.createSecretRef(githubTokenApiAccess.getTokenRef()))
                                .build();
+        break;
+      default:
+        Switch.unhandled(apiAccessType);
     }
     return GithubApiAccessDTO.builder().type(apiAccessType).spec(apiAccessSpecDTO).build();
   }

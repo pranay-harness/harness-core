@@ -1,5 +1,9 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
+@TargetModule(Module._970_API_SERVICES_BEANS)
 public interface AwsConstants {
   String AWS_SIMPLE_HTTP_CONNECTIVITY_URL = "https://aws.amazon.com/";
   int DEFAULT_AMI_ASG_MAX_INSTANCES = 10;
@@ -57,4 +61,6 @@ public interface AwsConstants {
   String AWS_DEFAULT_REGION = "us-east-1";
 
   int DEFAULT_STATE_TIMEOUT_BUFFER_MIN = 5;
+
+  int DEFAULT_BACKOFF_MAX_ERROR_RETRIES = 5;
 }

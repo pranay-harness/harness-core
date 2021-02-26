@@ -51,4 +51,5 @@ message PVMetric {
   string cluster_id = 7;
   string kube_system_uid = 8;
   AggregatedStorage aggregated_storage = 9;
+  string pod_uid = 10;
 }

@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.repositories.CIBuildRepository;
 import io.harness.rule.Owner;
 
@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class CIBuildServiceImplTest extends CIExecutionTest {
+public class CIBuildServiceImplTest extends CIExecutionTestBase {
   @Mock CIBuildRepository ciBuildRepository;
   @InjectMocks CIBuildServiceImpl ciBuildService;
 

@@ -11,6 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//950-events-api:module",
+        "//950-events-api/src/main/proto:950_events_api_java_proto",
+        "//950-events-api/src/main/proto:950_events_api_proto",
         "//960-ng-core-beans:module",
         "//970-ng-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

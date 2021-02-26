@@ -17,4 +17,6 @@ public interface ProjectRepositoryCustom {
   Boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version);
 
   List<Project> findAll(Criteria criteria);
+
+  boolean restore(String accountIdentifier, String orgIdentifier, String identifier);
 }

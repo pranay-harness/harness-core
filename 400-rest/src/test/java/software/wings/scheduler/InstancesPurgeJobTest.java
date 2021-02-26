@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -13,7 +14,6 @@ import software.wings.beans.Account;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -35,7 +35,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
   private static final int MONTHS_INSTANCES_DATA_TO_GENERATE_EXCLUDING_CURRENT_MONTH = 11;
   private static final int MONTHS_INSTANCE_STATS_DATA_TO_GENERATE_EXCLUDING_CURRENT_MONTH = 11;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject @InjectMocks private InstancesPurgeJob job;
 
@@ -47,8 +47,8 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
     generateInstances();
     generateInstanceStats();
 
-    List<Instance> allInstances = wingsPersistence.createQuery(Instance.class).asList();
-    List<InstanceStatsSnapshot> allInstanceStats = wingsPersistence.createQuery(InstanceStatsSnapshot.class).asList();
+    List<Instance> allInstances = persistence.createQuery(Instance.class).asList();
+    List<InstanceStatsSnapshot> allInstanceStats = persistence.createQuery(InstanceStatsSnapshot.class).asList();
 
     List<Instance> instancesThatShouldBeRetained =
         allInstances.stream()
@@ -66,9 +66,8 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
 
     job.purge();
 
-    List<Instance> retainedInstances = wingsPersistence.createQuery(Instance.class).asList();
-    List<InstanceStatsSnapshot> retainedInstanceStats =
-        wingsPersistence.createQuery(InstanceStatsSnapshot.class).asList();
+    List<Instance> retainedInstances = persistence.createQuery(Instance.class).asList();
+    List<InstanceStatsSnapshot> retainedInstanceStats = persistence.createQuery(InstanceStatsSnapshot.class).asList();
 
     assertThat(retainedInstances).isEqualTo(instancesThatShouldBeRetained);
     assertThat(retainedInstanceStats).isEqualTo(instanceStatsThatShouldBeRetained);
@@ -85,7 +84,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
     List<Instance> instances = Stream.generate(() -> createInstanceInTimeRange(startInstant, endInstant))
                                    .limit(MAX_INSTANCES)
                                    .collect(toList());
-    wingsPersistence.save(instances);
+    persistence.save(instances);
   }
 
   private void generateAccount() {
@@ -94,7 +93,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
                           .withCompanyName("Dummy")
                           .withAccountName("Dummy")
                           .build();
-    wingsPersistence.save(account);
+    persistence.save(account);
   }
 
   private Instance createInstanceInTimeRange(Instant startInstant, Instant endInstant) {
@@ -121,7 +120,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
             .limit(MAX_INSTANCE_STATS)
             .collect(toList());
 
-    wingsPersistence.save(instanceStats);
+    persistence.save(instanceStats);
   }
 
   private InstanceStatsSnapshot createInstanceStatInTimeRange(Instant startInstant, Instant endInstant) {

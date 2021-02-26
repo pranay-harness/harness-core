@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution.beans.dto;
 
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,7 +10,6 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.bson.Document;
 
@@ -27,6 +27,8 @@ public class GraphLayoutNodeDTO {
   ExecutionStatus status;
   String module;
   Map<String, Document> moduleInfo;
-
+  private Long startTs;
+  private Long endTs;
   EdgeLayoutListDTO edgeLayoutList;
+  SkipInfo skipInfo;
 }

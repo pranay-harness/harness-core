@@ -6,11 +6,10 @@ import io.harness.beans.CastedClass;
 import io.harness.beans.CastedField;
 import io.harness.exceptions.CastedFieldException;
 import io.harness.exceptions.RecasterException;
-import io.harness.fieldrecaster.DefaultFieldRecaster;
+import io.harness.fieldrecaster.ComplexFieldRecaster;
 import io.harness.fieldrecaster.FieldRecaster;
 import io.harness.fieldrecaster.SimpleValueFieldRecaster;
 
-import com.google.protobuf.Message;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,7 @@ import org.bson.Document;
 @Slf4j
 public class Recaster {
   public static final String RECAST_CLASS_KEY = "__recast";
-  public static final String ENCODED_PROTO = "__encodedProto";
+  public static final String ENCODED_VALUE = "__encodedValue";
 
   private final Map<String, CastedClass> castedClasses = new ConcurrentHashMap<>();
   private final Transformer transformer;
@@ -33,8 +32,8 @@ public class Recaster {
   private final RecasterOptions options = new RecasterOptions();
 
   public Recaster() {
-    this.transformer = new Transformer(this);
-    this.defaultFieldRecaster = new DefaultFieldRecaster();
+    this.transformer = new CustomTransformer(this);
+    this.defaultFieldRecaster = new ComplexFieldRecaster();
     this.simpleValueFieldRecaster = new SimpleValueFieldRecaster();
   }
 
@@ -55,7 +54,7 @@ public class Recaster {
     if (obj == null) {
       return null;
     }
-    Class type = (obj instanceof Class) ? (Class) obj : obj.getClass();
+    Class<?> type = (obj instanceof Class) ? (Class<?>) obj : obj.getClass();
     CastedClass cc = castedClasses.get(type.getName());
     if (cc == null) {
       cc = new CastedClass(type, this);
@@ -66,7 +65,7 @@ public class Recaster {
 
   public <T> T fromDocument(final Document document, final Class<T> entityClass) {
     if (document == null) {
-      log.warn("Null reference was passed in document");
+      log.info("Null reference was passed in document");
       return null;
     }
 
@@ -89,24 +88,12 @@ public class Recaster {
 
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, T entity) {
-    if (entity instanceof Message) {
-      if (!document.containsKey(ENCODED_PROTO)) {
-        throw new RecasterException(
-            format("The proto document does not contain a %s key. Decoding proto is impossible.", ENCODED_PROTO));
-      }
-      return (T) transformer.decode(entity.getClass(), document.get(ENCODED_PROTO), null);
-    }
-    if (entity instanceof Map) {
-      Map<String, Object> map = (Map<String, Object>) entity;
-      for (String key : document.keySet()) {
-        Object o = document.get(key);
-        map.put(key, (o instanceof Document) ? fromDocument((Document) o) : o);
-      }
+    if (transformer.hasCustomTransformer(entity.getClass())) {
+      entity = (T) transformer.decode(entity.getClass(), document.get(ENCODED_VALUE), null);
+    } else if (entity instanceof Map) {
+      populateMap(document, entity);
     } else if (entity instanceof Collection) {
-      Collection<Object> collection = (Collection<Object>) entity;
-      for (Object o : (List<Object>) document) {
-        collection.add((o instanceof Document) ? fromDocument((Document) o) : o);
-      }
+      populateCollection(document, entity);
     } else {
       final CastedClass castedClass = getCastedClass(entity);
       for (final CastedField cf : castedClass.getPersistenceFields()) {
@@ -125,6 +112,38 @@ public class Recaster {
     return entity;
   }
 
+  @SuppressWarnings("unchecked")
+  private <T> T decodeProto(final Document document, T entity) {
+    if (!document.containsKey(ENCODED_VALUE)) {
+      throw new RecasterException(
+          format("The proto document does not contain a %s key. Decoding proto is impossible.", ENCODED_VALUE));
+    }
+    return (T) transformer.decode(entity.getClass(), document.get(ENCODED_VALUE), null);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> void populateMap(final Document document, T entity) {
+    Map<String, Object> map = (Map<String, Object>) entity;
+    for (Map.Entry<String, Object> entry : document.entrySet()) {
+      if (entry.getKey().equals(RECAST_CLASS_KEY)) {
+        continue;
+      }
+      Object o = document.get(entry.getKey());
+      map.put(entry.getKey(), (o instanceof Document) ? fromDocument((Document) o) : o);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> void populateCollection(final Document document, T entity) {
+    if (!document.containsKey(ENCODED_VALUE)) {
+      return;
+    }
+    Collection<Object> collection = (Collection<Object>) entity;
+    for (Object o : (List<Object>) document.get(ENCODED_VALUE)) {
+      collection.add((o instanceof Document) ? fromDocument((Document) o) : o);
+    }
+  }
+
   private <T> T fromDocument(final Document document) {
     if (document.containsKey(RECAST_CLASS_KEY)) {
       T entity = getObjectFactory().createInstance(null, document);
@@ -139,7 +158,7 @@ public class Recaster {
 
   private void readCastedField(final Document document, final CastedField cf, final Object entity) {
     // Annotation logic should be wired here
-    if (transformer.hasSimpleValueTransformer(cf)) {
+    if (transformer.hasSimpleValueTransformer(cf.getType())) {
       simpleValueFieldRecaster.fromDocument(this, document, cf, entity);
     } else {
       defaultFieldRecaster.fromDocument(this, document, cf, entity);
@@ -150,14 +169,46 @@ public class Recaster {
     return toDocument(entity, null);
   }
 
+  @SuppressWarnings("unchecked")
   public Document toDocument(Object entity, final Map<Object, Document> involvedObjects) {
+    if (entity == null) {
+      log.info("Null reference was passed as object");
+      return null;
+    }
+
+    if (entity instanceof Document) {
+      return (Document) entity;
+    }
+
     Document document = new Document();
     final CastedClass cc = getCastedClass(entity);
     document.put(RECAST_CLASS_KEY, entity.getClass().getName());
 
-    if (entity instanceof Message) {
-      Object encodedProto = transformer.encode(entity);
-      return document.append(ENCODED_PROTO, encodedProto);
+    if (transformer.hasCustomTransformer(entity.getClass())) {
+      Object encode = transformer.encode(entity);
+      return document.append(ENCODED_VALUE, encode);
+    }
+
+    if (entity instanceof Map) {
+      Object encoded = transformer.getTransformer(entity.getClass()).encode(entity);
+      if (encoded == null) {
+        return document;
+      }
+      if (!(encoded instanceof Document)) {
+        throw new RecasterException(format("Cannot transform %s to document", entity.getClass()));
+      }
+
+      document.putAll((Document) encoded);
+      return document;
+    }
+
+    if (entity instanceof Collection) {
+      Collection<Object> encoded = (Collection<Object>) transformer.getTransformer(entity.getClass()).encode(entity);
+      if (encoded == null) {
+        return document;
+      }
+      document.append(ENCODED_VALUE, encoded);
+      return document;
     }
 
     for (final CastedField cf : cc.getPersistenceFields()) {
@@ -165,7 +216,8 @@ public class Recaster {
         writeCastedField(entity, cf, document, involvedObjects);
       } catch (Exception e) {
         throw new CastedFieldException(format("Cannot map [%s] to [%s] class for field [%s]",
-            document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()));
+                                           document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()),
+            e);
       }
     }
 
@@ -179,8 +231,7 @@ public class Recaster {
   private void writeCastedField(
       Object entity, CastedField cf, Document document, Map<Object, Document> involvedObjects) {
     // Annotation logic should be wired here
-    if (transformer.hasSimpleValueTransformer(cf) || transformer.hasSimpleValueTransformer(entity)
-        || transformer.hasSimpleValueTransformer(cf.getType())) {
+    if (transformer.hasSimpleValueTransformer(cf.getType())) {
       simpleValueFieldRecaster.toDocument(this, entity, cf, document, involvedObjects);
     } else {
       defaultFieldRecaster.toDocument(this, entity, cf, document, involvedObjects);

@@ -5,7 +5,6 @@ import static io.harness.k8s.model.HelmVersion.V2;
 import static java.lang.String.format;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.helm.HelmConstants;
 import io.harness.k8s.model.HelmVersion;
 
 public final class HelmCommandTemplateFactory {

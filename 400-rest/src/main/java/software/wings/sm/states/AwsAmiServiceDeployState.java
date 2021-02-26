@@ -606,12 +606,13 @@ public class AwsAmiServiceDeployState extends State {
 
     // This sweeping element will be used by verification or other consumers.
     List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(allInstanceElements);
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(allInstanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
 

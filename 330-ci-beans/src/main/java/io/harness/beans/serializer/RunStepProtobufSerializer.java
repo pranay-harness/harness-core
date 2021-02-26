@@ -4,8 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.yaml.extended.reports.JunitTestReport;
+import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
+import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -13,6 +14,7 @@ import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,19 +42,19 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     }
     runStepBuilder.setContainerPort(port);
 
-    List<UnitTestReport> reports = runStepInfo.getReports();
-    if (isNotEmpty(reports)) {
-      for (UnitTestReport unitTestReport : reports) {
-        if (unitTestReport.getType() == UnitTestReport.Type.JUNIT) {
-          Report report =
-              Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolveJunitReport(unitTestReport)).build();
-          runStepBuilder.addReports(report);
-        }
+    UnitTestReport reports = runStepInfo.getReports();
+    if (reports != null) {
+      if (reports.getType() == UnitTestReportType.JUNIT) {
+        JUnitTestReport junitTestReport = (JUnitTestReport) reports.getSpec();
+        List<String> resolvedReport = junitTestReport.resolve(step.getIdentifier(), "run");
+
+        Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolvedReport).build();
+        runStepBuilder.addReports(report);
       }
     }
 
     List<String> output = RunTimeInputHandler.resolveListParameter(
-        "Output", "Run", runStepInfo.getIdentifier(), runStepInfo.getOutput(), false);
+        "OutputVariables", "Run", step.getIdentifier(), runStepInfo.getOutputVariables(), false);
     if (isNotEmpty(output)) {
       runStepBuilder.addAllEnvVarOutputs(output);
     }
@@ -70,10 +72,5 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();
-  }
-
-  public List<String> resolveJunitReport(UnitTestReport unitTestReport) {
-    JunitTestReport junitTestReport = (JunitTestReport) unitTestReport;
-    return junitTestReport.getSpec().getPaths();
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.CIExecutionPlanTestHelper.GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.HARSH;
 
@@ -19,7 +20,7 @@ import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -37,12 +38,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class BuildSetupUtilsTest extends CIExecutionTest {
+public class BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ConnectorUtils connectorUtils;
-  @Mock private SecretVariableUtils secretVariableUtils;
+  @Mock private SecretUtils secretUtils;
   @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
@@ -53,7 +54,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Before
   public void setUp() {
     on(buildSetupUtils).set("k8BuildSetupUtils", k8BuildSetupUtils);
-    on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
+    on(k8BuildSetupUtils).set("secretVariableUtils", secretUtils);
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
@@ -70,8 +71,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
@@ -81,8 +85,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
         .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
-    when(secretVariableUtils.getSecretVariableDetails(any(), any()))
-        .thenReturn(SecretVariableDetails.builder().build());
+    when(secretUtils.getSecretVariableDetails(any(), any())).thenReturn(SecretVariableDetails.builder().build());
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
@@ -112,8 +115,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
@@ -123,8 +129,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
         .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
-    when(secretVariableUtils.getSecretVariableDetails(any(), any()))
-        .thenReturn(SecretVariableDetails.builder().build());
+    when(secretUtils.getSecretVariableDetails(any(), any())).thenReturn(SecretVariableDetails.builder().build());
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");

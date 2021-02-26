@@ -179,17 +179,6 @@ public class AzureVMSSDeployTaskHandler extends AzureVMSSTaskHandler {
     handleExecutionLog(deployTaskParameters, message, scaleCommandUnit, waitCommandUnit);
   }
 
-  private void clearScalingPolicy(AzureConfig azureConfig, VirtualMachineScaleSet scaleSet,
-      AzureVMSSDeployTaskParameters deployTaskParameters, ExecutionLogCallback logCallBack) {
-    String scaleSetName = scaleSet.name();
-    String scaleSetId = scaleSet.id();
-    String resourceGroupName = deployTaskParameters.getResourceGroupName();
-    String subscriptionId = deployTaskParameters.getSubscriptionId();
-    logCallBack.saveExecutionLog(format("Clearing scaling policy for scale set: [%s]", scaleSetName));
-    azureAutoScaleSettingsClient.clearAutoScaleSettingOnTargetResourceId(
-        azureConfig, subscriptionId, resourceGroupName, scaleSetId);
-  }
-
   private void updateScaleSetCapacity(AzureConfig azureConfig, AzureVMSSDeployTaskParameters deployTaskParameters,
       String scaleSetName, int capacity, String scaleCommandUnit, String waitCommandUnit) {
     String subscriptionId = deployTaskParameters.getSubscriptionId();

@@ -11,6 +11,7 @@ import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -62,17 +63,19 @@ public class ServiceStepPlanCreator
 
   private PlanNode prepareServiceNode(ServiceConfig serviceConfig, ExecutionPlanCreationContext context) {
     final String serviceNodeUid = generateUuid();
+    ServiceYaml serviceYaml = serviceConfig.getService();
 
-    if (!serviceConfig.getName().isExpression() && EmptyPredicate.isEmpty(serviceConfig.getName().getValue())) {
-      serviceConfig.setName(serviceConfig.getIdentifier());
+    if (EmptyPredicate.isEmpty(serviceYaml.getName())) {
+      serviceYaml.setName(serviceYaml.getIdentifier());
     }
 
     ServiceConfig serviceOverrides = null;
     if (serviceConfig.getUseFromStage() != null) {
       ServiceUseFromStage.Overrides overrides = serviceConfig.getUseFromStage().getOverrides();
       if (overrides != null) {
-        serviceOverrides =
-            ServiceConfig.builder().name(overrides.getName()).description(overrides.getDescription()).build();
+        ServiceYaml overriddenEntity =
+            ServiceYaml.builder().name(overrides.getName().getValue()).description(overrides.getDescription()).build();
+        serviceOverrides = ServiceConfig.builder().service(overriddenEntity).build();
       }
     }
 
@@ -111,7 +114,7 @@ public class ServiceStepPlanCreator
           context, serviceConfig.getUseFromStage().getStage().getValue());
       if (previousStage != null) {
         DeploymentStage deploymentStage = (DeploymentStage) previousStage;
-        return serviceConfig.applyUseFromStage(deploymentStage.getService());
+        return serviceConfig.applyUseFromStage(deploymentStage.getServiceConfig());
       } else {
         throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
       }

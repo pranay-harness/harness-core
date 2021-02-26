@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.ce.exportData;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -64,6 +66,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CEExportDataQueryBuilder {
   private CEExportDataTableSchema schema = new CEExportDataTableSchema();
   private static final String STANDARD_TIME_ZONE = "GMT";
@@ -219,6 +222,47 @@ public class CEExportDataQueryBuilder {
               Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getUnallocatedCost()),
                   CEExportDataMetadataFields.UNALLOCATEDCOST.getFieldName()));
           fieldNames.add(CEExportDataMetadataFields.UNALLOCATEDCOST);
+          break;
+        default:
+          break;
+      }
+    } else if (aggregationFunction != null && aggregationFunction.getFunction() == QLCEAggregationFunction.AVG) {
+      switch (aggregationFunction.getUtilization()) {
+        case CPU_LIMIT:
+          selectQuery.addCustomColumns(
+              Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuLimit()),
+                  CEExportDataMetadataFields.AGGREGATEDCPULIMIT.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDCPULIMIT);
+          break;
+        case CPU_REQUEST:
+          selectQuery.addCustomColumns(
+              Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuRequest()),
+                  CEExportDataMetadataFields.AGGREGATEDCPUREQUEST.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDCPUREQUEST);
+          break;
+        case CPU_UTILIZATION_VALUE:
+          selectQuery.addCustomColumns(
+              Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuUtilizationValue()),
+                  CEExportDataMetadataFields.AGGREGATEDCPUUTILIZATIONVALUE.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDCPUUTILIZATIONVALUE);
+          break;
+        case MEMORY_LIMIT:
+          selectQuery.addCustomColumns(
+              Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryLimit()),
+                  CEExportDataMetadataFields.AGGREGATEDMEMORYLIMIT.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDMEMORYLIMIT);
+          break;
+        case MEMORY_REQUEST:
+          selectQuery.addCustomColumns(
+              Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryRequest()),
+                  CEExportDataMetadataFields.AGGREGATEDMEMORYREQUEST.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDMEMORYREQUEST);
+          break;
+        case MEMORY_UTILIZATION_VALUE:
+          selectQuery.addCustomColumns(Converter.toColumnSqlObject(
+              FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryUtilizationValue()),
+              CEExportDataMetadataFields.AGGREGATEDMEMORYUTILIZATIONVALUE.getFieldName()));
+          fieldNames.add(CEExportDataMetadataFields.AGGREGATEDMEMORYUTILIZATIONVALUE);
           break;
         default:
           break;
@@ -646,12 +690,6 @@ public class CEExportDataQueryBuilder {
       } else if (field.equals(CEDataEntryKeys.systemCost)) {
         selectQuery.addColumns(schema.getSystemCost());
         fieldNames.add(CEExportDataMetadataFields.SYSTEMCOST);
-      } else if (field.equals(CEDataEntryKeys.maxCpuUtilization)) {
-        selectQuery.addColumns(schema.getMaxCpuUtilization());
-        fieldNames.add(CEExportDataMetadataFields.MAXCPUUTILIZATION);
-      } else if (field.equals(CEDataEntryKeys.maxMemoryUtilization)) {
-        selectQuery.addColumns(schema.getMaxMemoryUtilization());
-        fieldNames.add(CEExportDataMetadataFields.MAXMEMORYUTILIZATION);
       } else if (field.equals(CEDataEntryKeys.avgCpuUtilization)) {
         selectQuery.addColumns(schema.getAvgCpuUtilization());
         fieldNames.add(CEExportDataMetadataFields.AVGCPUUTILIZATION);

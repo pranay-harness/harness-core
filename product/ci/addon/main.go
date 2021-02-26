@@ -9,6 +9,7 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/addon/grpc"
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	"github.com/wings-software/portal/product/ci/addon/services"
@@ -31,8 +32,8 @@ var (
 type service struct {
 	ID         string   `arg:"--id, required" help:"Service ID"`
 	Image      string   `arg:"--image, required" help:"docker image name for the service"`
-	Entrypoint []string `arg:"--entrypoint" help:"entrypoint for the service"`
-	Args       []string `arg:"--args" help:"arguments for the service"`
+	Entrypoint []string `arg:"env:HARNESS_SERVICE_ENTRYPOINT" help:"entrypoint for the service"`
+	Args       []string `arg:"env:HARNESS_SERVICE_ARGS" help:"arguments for the service"`
 }
 
 var args struct {
@@ -40,6 +41,7 @@ var args struct {
 
 	Port                  uint   `arg:"--port, required" help:"port for running GRPC server"`
 	Verbose               bool   `arg:"--verbose" help:"enable verbose logging mode"`
+	LogMetrics            bool   `arg:"--log_metrics" help:"enable metric logging"`
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
 }
@@ -48,6 +50,7 @@ func parseArgs() {
 	// set defaults here
 	args.DeploymentEnvironment = "prod"
 	args.Verbose = false
+	args.LogMetrics = true
 
 	arg.MustParse(&args)
 }
@@ -71,6 +74,10 @@ func main() {
 	pendingLogs <- remoteLogger
 	log := remoteLogger.BaseLogger
 
+	if args.LogMetrics {
+		metrics.Log(int32(os.Getpid()), "addon", log)
+	}
+
 	var serviceLogger *logs.RemoteLogger
 
 	// Start integration test service in a separate goroutine
@@ -85,12 +92,13 @@ func main() {
 		pendingLogs <- serviceLogger
 
 		go func() {
-			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger, serviceLogger.Writer).Run()
+			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger,
+				serviceLogger.Writer, args.LogMetrics, log).Run()
 		}()
 	}
 
 	log.Infow("Starting CI addon server", "port", args.Port)
-	s, err := addonServer(args.Port, log)
+	s, err := addonServer(args.Port, args.LogMetrics, log)
 	if err != nil {
 		log.Errorw("error while running CI addon server", "port", args.Port, "error_msg", zap.Error(err))
 		addonlogs.LogState().ClosePendingLogs()

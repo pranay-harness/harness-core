@@ -57,7 +57,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore("Will enable after setting up listeners")
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private Injector injector;
   @Inject private AdviserRegistry adviserRegistry;
@@ -75,8 +74,11 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build();
 
-  private static final ExecutionMetadata metadata =
-      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
+  private static final ExecutionMetadata metadata = ExecutionMetadata.newBuilder()
+                                                        .setExecutionUuid(generateUuid())
+                                                        .setRunSequence(0)
+                                                        .setTriggerInfo(triggerInfo)
+                                                        .build();
 
   @Before
   public void setUp() {
@@ -88,6 +90,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartOneNodeExecution() {
     String testNodeId = generateUuid();
     Plan oneNodePlan =
@@ -117,6 +120,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartSyncExecution() {
     String testStartNodeId = generateUuid();
     Plan oneNodePlan =
@@ -146,6 +150,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartAsyncExecution() {
     String testStartNodeId = generateUuid();
     String testWaitNodeId = generateUuid();
@@ -198,6 +203,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldThrowInvalidRequestException() {
     final String exceptionStartMessage = "No node found with Id";
     Plan oneNodePlan = Plan.builder().startingNodeId(generateUuid()).build();
@@ -210,6 +216,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldRerunExecution() {
     String testNodeId = generateUuid();
     Plan oneNodePlan =

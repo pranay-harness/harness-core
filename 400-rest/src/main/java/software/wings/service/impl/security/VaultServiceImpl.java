@@ -253,10 +253,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         !Objects.equals(savedVaultConfigWithCredentials.getAuthToken(), vaultConfig.getAuthToken())
         || !Objects.equals(savedVaultConfigWithCredentials.getSecretId(), vaultConfig.getSecretId());
 
-    // Validate every time when secret manager config change submitted
-    if (validate) {
-      validateVaultConfig(accountId, vaultConfig);
-    }
+    validateVaultConfig(accountId, vaultConfig, validate);
 
     if (credentialChanged) {
       updateVaultCredentials(savedVaultConfig, vaultConfig.getAuthToken(), vaultConfig.getSecretId());
@@ -286,11 +283,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     return configId;
   }
 
-  private String saveVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate) {
-    // Validate every time when secret manager config change submitted
-    if (validate) {
-      validateVaultConfig(accountId, vaultConfig);
-    }
+  private String saveVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret) {
+    validateVaultConfig(accountId, vaultConfig, validateBySavingTestSecret);
+
     String authToken = vaultConfig.getAuthToken();
     String secretId = vaultConfig.getSecretId();
 
@@ -325,7 +320,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   }
 
   @Override
-  public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate) {
+  public String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath =
@@ -340,8 +335,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
     checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(vaultConfig);
 
-    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validate)
-                                          : updateVaultConfig(accountId, vaultConfig, true, validate);
+    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validateBySavingTestSecret)
+                                          : updateVaultConfig(accountId, vaultConfig, true, validateBySavingTestSecret);
   }
 
   private Optional<String> getTemplatizedField(String templatizedField, VaultConfig vaultConfig) {
@@ -479,7 +474,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         .getVaultSecretChangeLogs(encryptedData, vaultConfig);
   }
 
-  public void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
+  private void validateVaultFields(VaultConfig vaultConfig) {
     if (isEmpty(vaultConfig.getName())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Name can not be empty", USER);
     }
@@ -501,7 +496,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         throw new SecretManagementException(VAULT_OPERATION_ERROR, message, USER);
       }
     }
-    if (!vaultConfig.isReadOnly()) {
+  }
+
+  public void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
+    validateVaultConfig(accountId, vaultConfig, true);
+  }
+
+  @Override
+  public void validateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingDummySecret) {
+    validateVaultFields(vaultConfig);
+    if (!vaultConfig.isReadOnly() && validateBySavingDummySecret) {
       vaultEncryptorsRegistry.getVaultEncryptor(EncryptionType.VAULT)
           .createSecret(accountId, VaultConfig.VAULT_VAILDATION_URL, Boolean.TRUE.toString(), vaultConfig);
     }

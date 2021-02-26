@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.CEView.CEViewKeys;
 import io.harness.ccm.views.entities.ViewState;
+import io.harness.ccm.views.entities.ViewType;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -83,6 +84,13 @@ public class CEViewDao {
     return hPersistence.createQuery(CEView.class)
         .filter(CEViewKeys.accountId, accountId)
         .filter(CEViewKeys.viewState, viewState)
+        .asList();
+  }
+
+  public List<CEView> findByAccountIdAndType(String accountId, ViewType viewType) {
+    return hPersistence.createQuery(CEView.class)
+        .filter(CEViewKeys.accountId, accountId)
+        .filter(CEViewKeys.viewType, viewType)
         .asList();
   }
 }

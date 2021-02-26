@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.verify;
@@ -23,6 +24,7 @@ import com.google.inject.Inject;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import org.assertj.core.data.Offset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,6 +53,8 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
   private static final double SYSTEM_COST = 0.4;
   private static final double CPU_SYSTEM_COST = 0.2;
   private static final double MEMORY_SYSTEM_COST = 0.2;
+  private static final BigDecimal zeroPointZero = BigDecimal.valueOf(0.0D);
+  private static final Offset<BigDecimal> bigDecimalOffset = within(new BigDecimal("0.00000000000001"));
 
   private ActualIdleCostBatchJobData actualIdleCostBatchJobData;
 
@@ -77,10 +81,12 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(actualIdleCostWriterData.get(0).getParentInstanceId()).isEqualTo("PARENT_INSTANCE_ID");
     assertThat(actualIdleCostWriterData.get(0).getInstanceId()).isEqualTo(INSTANCE_ID);
-    assertThat(actualIdleCostWriterData.get(0).getActualIdleCost()).isEqualTo(BigDecimal.valueOf(0.4));
+    assertThat(actualIdleCostWriterData.get(0).getActualIdleCost())
+        .isCloseTo(BigDecimal.valueOf(0.4), bigDecimalOffset);
     assertThat(actualIdleCostWriterData.get(0).getCpuActualIdleCost()).isEqualTo(BigDecimal.valueOf(0.2));
     assertThat(actualIdleCostWriterData.get(0).getMemoryActualIdleCost()).isEqualTo(BigDecimal.valueOf(0.2));
-    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.4));
+    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost())
+        .isCloseTo(BigDecimal.valueOf(0.4), bigDecimalOffset);
     assertThat(actualIdleCostWriterData.get(0).getCpuUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
     assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
   }
@@ -102,10 +108,11 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     assertThat(actualIdleCostWriterData.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(actualIdleCostWriterData.get(0).getParentInstanceId()).isEqualTo("PARENT_INSTANCE_ID");
     assertThat(actualIdleCostWriterData.get(0).getInstanceId()).isEqualTo(INSTANCE_ID);
-    assertThat(actualIdleCostWriterData.get(0).getActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
-    assertThat(actualIdleCostWriterData.get(0).getCpuActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
-    assertThat(actualIdleCostWriterData.get(0).getMemoryActualIdleCost()).isEqualTo(BigDecimal.valueOf(0));
-    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.4));
+    assertThat(actualIdleCostWriterData.get(0).getActualIdleCost()).isEqualTo(zeroPointZero);
+    assertThat(actualIdleCostWriterData.get(0).getCpuActualIdleCost()).isEqualTo(zeroPointZero);
+    assertThat(actualIdleCostWriterData.get(0).getMemoryActualIdleCost()).isEqualTo(zeroPointZero);
+    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost())
+        .isCloseTo(BigDecimal.valueOf(0.4), bigDecimalOffset);
     assertThat(actualIdleCostWriterData.get(0).getCpuUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
     assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(BigDecimal.valueOf(0.2));
   }
@@ -131,9 +138,9 @@ public class ActualIdleBillingDataWriterTest extends CategoryTest {
     assertThat(actualIdleCostWriterData.get(0).getCpuActualIdleCost()).isEqualTo(BigDecimal.valueOf(CPU_IDLE_COST));
     assertThat(actualIdleCostWriterData.get(0).getMemoryActualIdleCost())
         .isEqualTo(BigDecimal.valueOf(MEMORY_IDLE_COST));
-    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost()).isEqualTo(BigDecimal.ZERO);
-    assertThat(actualIdleCostWriterData.get(0).getCpuUnallocatedCost()).isEqualTo(BigDecimal.ZERO);
-    assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(BigDecimal.ZERO);
+    assertThat(actualIdleCostWriterData.get(0).getUnallocatedCost()).isEqualTo(zeroPointZero);
+    assertThat(actualIdleCostWriterData.get(0).getCpuUnallocatedCost()).isEqualTo(zeroPointZero);
+    assertThat(actualIdleCostWriterData.get(0).getMemoryUnallocatedCost()).isEqualTo(zeroPointZero);
   }
 
   private ActualIdleCostData mockActualIdleCostDataForNode(

@@ -3,25 +3,25 @@ package io.harness.ng;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
-import static io.harness.exception.WingsException.USER;
 
-import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
-import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
-import io.harness.connector.apis.dto.stats.ConnectorStatistics;
+import io.harness.connector.ConnectorCatalogueResponseDTO;
+import io.harness.connector.ConnectorCategory;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorFilterPropertiesDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector.VaultConnectorKeys;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
-import io.harness.encryption.Scope;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -32,6 +32,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -68,26 +69,30 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    if (get(accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
+            connectorInfo.getIdentifier())
+            .isPresent()) {
+      throw new DuplicateFieldException(String.format(
+          "Try using different connector identifier, [%s] cannot be used", connectorInfo.getIdentifier()));
+    }
+
+    // validate the dto received
+    ConnectorConfigDTO connectorConfigDTO = connectorInfo.getConnectorConfig();
+    connectorConfigDTO.validate();
+
     SecretManagerConfigDTO secretManagerConfigDTO =
-        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorInfo.getConnectorConfig());
+        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorConfigDTO);
+
     SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);
     if (Optional.ofNullable(createdSecretManager).isPresent()) {
-      try {
-        if (isDefaultSecretManager(connector.getConnectorInfo())) {
-          setDefaultFlagFalseOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
-              connector.getConnectorInfo().getProjectIdentifier());
-        }
-        return defaultConnectorService.create(connector, accountIdentifier);
-      } catch (Exception ex) {
-        log.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
-        ngSecretManagerService.deleteSecretManager(accountIdentifier, connectorInfo.getOrgIdentifier(),
-            connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
-        throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Exception occurred while saving secret manager", USER);
+      if (isDefaultSecretManager(connector.getConnectorInfo())) {
+        clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier());
       }
+      return defaultConnectorService.create(connector, accountIdentifier);
     }
     throw new SecretManagementException(
-        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager in 71 rest.", SRE);
+        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager remotely.", SRE);
   }
 
   private boolean isDefaultSecretManager(ConnectorInfoDTO connector) {
@@ -104,7 +109,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private void setDefaultFlagFalseOfSecretManagers(
+  private void clearDefaultFlagOfSecretManagers(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -127,13 +132,20 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    ConnectorConfigDTO connectorConfigDTO = connectorInfo.getConnectorConfig();
+
+    // validate fields of dto
+    connectorConfigDTO.validate();
+
     SecretManagerConfigUpdateDTO dto =
-        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorInfo.getConnectorConfig());
+        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorConfigDTO);
+
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
+
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
-        setDefaultFlagFalseOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+        clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);
@@ -168,20 +180,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    long currentTime = System.currentTimeMillis();
-    try {
-      boolean success =
-          ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      return ConnectorValidationResult.builder().valid(success).testedAt(currentTime).build();
-    } catch (Exception exception) {
-      log.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
-          projectIdentifier, connectorIdentifier, exception);
-      return ConnectorValidationResult.builder()
-          .valid(false)
-          .errorMessage(exception.getMessage())
-          .testedAt(currentTime)
-          .build();
-    }
+    return defaultConnectorService.testConnection(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @Override
@@ -190,9 +190,18 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
-    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
+    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(
+        accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier, perpetualTaskId);
+  }
+
+  @Override
+  public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
+      Long activityTime) {
+    defaultConnectorService.updateActivityDetailsInTheConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorValidationResult, activityTime);
   }
 
   @Override
@@ -204,8 +213,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
-    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override
@@ -220,5 +229,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     throw new UnsupportedOperationException("Cannot call list api on secret manager");
+  }
+
+  @Override
+  public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
+    return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
   }
 }

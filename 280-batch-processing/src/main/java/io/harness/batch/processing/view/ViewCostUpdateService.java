@@ -36,9 +36,13 @@ public class ViewCostUpdateService {
       List<CEView> views = ceViewService.getViewByState(accountId, ViewState.COMPLETED);
       views.forEach(view -> {
         log.info("Updating view {}", view.getUuid());
-        ceViewService.updateTotalCost(view, bigQueryService.get(),
-            cloudBillingHelper.getCloudProviderTableName(
-                config.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified));
+        try {
+          ceViewService.updateTotalCost(view, bigQueryService.get(),
+              cloudBillingHelper.getCloudProviderTableName(
+                  config.getBillingDataPipelineConfig().getGcpProjectId(), accountId, unified));
+        } catch (Exception ex) {
+          log.error("Exception while updating cost", ex);
+        }
       });
     });
     log.info("Updated views for all accounts");

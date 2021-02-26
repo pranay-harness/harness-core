@@ -11,8 +11,8 @@ import lombok.experimental.UtilityClass;
 public class EnvironmentMapper {
   public EnvironmentOutcome toOutcome(@Nonnull EnvironmentYaml environmentYaml) {
     return EnvironmentOutcome.builder()
-        .identifier(environmentYaml.getIdentifier().getValue())
-        .name(environmentYaml.getName() != null ? environmentYaml.getName().getValue() : "")
+        .identifier(environmentYaml.getIdentifier())
+        .name(environmentYaml.getName() != null ? environmentYaml.getName() : "")
         .description(environmentYaml.getDescription() != null ? environmentYaml.getDescription().getValue() : "")
         .tags(convertToList(environmentYaml.getTags()))
         .environmentType(environmentYaml.getType())

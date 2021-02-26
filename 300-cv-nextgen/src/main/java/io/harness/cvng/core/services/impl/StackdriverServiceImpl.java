@@ -12,7 +12,6 @@ import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.StackdriverImportStatus;
-import io.harness.cvng.core.beans.StackdriverSampleDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
@@ -20,9 +19,8 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.exception.OnboardingException;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.Status;
-import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
@@ -34,7 +32,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -100,9 +98,8 @@ public class StackdriverServiceImpl implements StackdriverService {
   }
 
   @Override
-  public ResponseDTO<StackdriverSampleDataDTO> getSampleData(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, Object metricDefinitionDTO, String tracingId) {
-    ResponseDTO responseDTO = ResponseDTO.newResponse();
+  public Set<TimeSeriesSampleDTO> getSampleData(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, Object metricDefinitionDTO, String tracingId) {
     try {
       StackDriverMetricDefinition metricDefinition =
           StackDriverMetricDefinition.extractFromJson(JsonUtils.asJson(metricDefinitionDTO));
@@ -130,17 +127,20 @@ public class StackdriverServiceImpl implements StackdriverService {
       final Gson gson = new Gson();
       Type type = new TypeToken<List<TimeSeriesSampleDTO>>() {}.getType();
       List<TimeSeriesSampleDTO> dataPoints = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-      SortedSet<TimeSeriesSampleDTO> sortedSet = new TreeSet<>(dataPoints);
-      responseDTO.setStatus(Status.SUCCESS);
-      responseDTO.setData(StackdriverSampleDataDTO.builder().sampleData(sortedSet).build());
+      return new TreeSet<>(dataPoints);
 
     } catch (Exception ex) {
-      responseDTO.setStatus(Status.ERROR);
       String msg = "Exception while trying to fetch sample data. Please ensure that the metric definition corresponds "
           + "to a line chart in the dashboard.";
-      responseDTO.setData(StackdriverSampleDataDTO.builder().errorMessage(msg).build());
+      log.error(msg, ex);
+      throw new OnboardingException(msg);
     }
-    return responseDTO;
+  }
+
+  @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    listDashboards(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 1, 0, null, tracingId);
   }
 
   @Override

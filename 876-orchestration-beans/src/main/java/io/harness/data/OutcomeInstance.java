@@ -10,7 +10,6 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.sdk.core.data.Outcome;
 
 import java.util.List;
 import lombok.Builder;
@@ -48,8 +47,8 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   Level producedBy;
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
-
   org.bson.Document outcome;
+  boolean isGraphOutcome;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
 

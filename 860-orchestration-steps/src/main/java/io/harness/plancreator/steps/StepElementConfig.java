@@ -9,6 +9,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.intfc.WithSkipCondition;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,18 +18,19 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @TypeAlias("stepElementConfig")
-public class StepElementConfig {
-  String uuid;
+public class StepElementConfig implements WithSkipCondition {
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
-  Timeout timeout;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   String type;
@@ -37,12 +39,14 @@ public class StepElementConfig {
   StepSpecType stepSpecType;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  ParameterField<List<String>> delegateSelectors;
 
   @Builder
-  public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,
-      List<FailureStrategyConfig> failureStrategies, String type, StepSpecType stepSpecType,
-      ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
+  public StepElementConfig(String uuid, String identifier, String name, String description,
+      ParameterField<Timeout> timeout, List<FailureStrategyConfig> failureStrategies, String type,
+      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;

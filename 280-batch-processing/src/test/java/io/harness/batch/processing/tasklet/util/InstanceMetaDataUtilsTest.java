@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
@@ -16,7 +16,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InstanceMetaDataUtilsTest extends BatchProcessingBaseTest {
+public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   private static final String NODE_POOL_NAME = "manager-pool";
 
   @Test

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static com.google.common.collect.ImmutableSortedMap.of;
 import static java.util.Arrays.asList;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
@@ -23,6 +24,7 @@ import com.google.inject.Inject;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -151,7 +153,7 @@ public class SplunkState extends HttpState {
   }
 
   @Override
-  protected String getFinalHeader(ExecutionContext context) {
+  protected List<KeyValuePair> getFinalHeaders(ExecutionContext context) {
     SettingAttribute splunkSettingAttribute =
         settingsService
             .getGlobalSettingAttributesByType(
@@ -160,9 +162,13 @@ public class SplunkState extends HttpState {
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
     managerDecryptionService.decrypt(splunkConfig,
         secretManager.getEncryptionDetails(splunkConfig, context.getAppId(), context.getWorkflowExecutionId()));
-    return "Authorization: Basic "
-        + Base64.encodeBase64URLSafeString((splunkConfig.getUsername() + ":" + new String(splunkConfig.getPassword()))
-                                               .getBytes(StandardCharsets.UTF_8));
+    return Collections.singletonList(KeyValuePair.builder()
+                                         .key("Authorization")
+                                         .value("Basic "
+                                             + Base64.encodeBase64URLSafeString((splunkConfig.getUsername() + ":"
+                                                 + new String(splunkConfig.getPassword()))
+                                                                                    .getBytes(StandardCharsets.UTF_8)))
+                                         .build());
   }
 
   @Override

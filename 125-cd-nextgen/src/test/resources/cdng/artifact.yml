@@ -7,9 +7,10 @@ pipeline:
         name: deployment-stage-1
         type: Deployment
         spec:
-          service:
-            name: manager
-            identifier: manager
+          serviceConfig:
+            service:
+              name: manager
+              identifier: manager
             serviceDefinition:
               type: "Kubernetes"
               spec:
@@ -42,8 +43,8 @@ pipeline:
                   name: "Rollout Deployment"
                   identifier: rollout-deployment
                   type: Http
+                  timeout: 100s
                   spec:
-                    socketTimeoutMillis: 1000
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
     - stage:
@@ -51,9 +52,10 @@ pipeline:
         name: deployment-stage-2
         type: Deployment
         spec:
-          service:
-            name: delegate
-            identifier: delegate
+          serviceConfig:
+            service:
+              name: delegate
+              identifier: delegate
             serviceDefinition:
               type: Kubernetes
               spec:
@@ -70,7 +72,7 @@ pipeline:
                   name: "http"
                   identifier: http
                   type: Http
+                  timeout: 100s
                   spec:
-                    socketTimeoutMillis: 1000
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5

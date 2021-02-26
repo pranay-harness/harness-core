@@ -9,9 +9,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.common.EntityReferenceHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
@@ -44,6 +45,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -54,7 +56,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class InputSetEntityServiceImplTest extends CDNGBaseTest {
+public class InputSetEntityServiceImplTest extends CDNGTestBase {
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject InputSetEntityServiceImpl inputSetEntityService;
 
@@ -88,6 +90,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Input set moved to pipeline service so test is redundant")
   public void testServiceLayerOnInputSet() {
     String ORG_IDENTIFIER = "orgId";
     String PROJ_IDENTIFIER = "projId";
@@ -175,7 +178,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
         .listAllEntityUsage(0, 10, ACCOUNT_ID,
             EntityReferenceHelper.createFQN(
                 Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
-            "");
+            EntityType.INPUT_SETS, "");
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);
     assertThat(delete).isTrue();
@@ -256,7 +259,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
         .listAllEntityUsage(0, 10, ACCOUNT_ID,
             EntityReferenceHelper.createFQN(
                 Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
-            "");
+            EntityType.INPUT_SETS, "");
 
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);

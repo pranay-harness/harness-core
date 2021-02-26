@@ -1,14 +1,8 @@
 package io.harness.ng.core.entitydetail;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CV_CONFIG;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.ENVIRONMENT;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.INPUT_SETS;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.PIPELINES;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.PROJECTS;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SECRETS;
-import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERVICE;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
@@ -22,10 +16,13 @@ import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.event.EventProtoToEntityHelper;
 
 import com.google.inject.Singleton;
-import java.util.EnumMap;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Singleton
 public class EntityDetailProtoToRestMapper {
@@ -35,6 +32,13 @@ public class EntityDetailProtoToRestMapper {
         .entityRef(createEntityReference(entityDetail))
         .type(mapEventToRestEntityType(entityDetail.getType()))
         .build();
+  }
+
+  public List<EntityDetail> createEntityDetailsDTO(List<EntityDetailProtoDTO> entityDetails) {
+    if (isEmpty(entityDetails)) {
+      return Collections.emptyList();
+    }
+    return entityDetails.stream().map(this::createEntityDetailDTO).collect(Collectors.toList());
   }
 
   private EntityReference createEntityReference(EntityDetailProtoDTO entityDetail) {
@@ -80,23 +84,12 @@ public class EntityDetailProtoToRestMapper {
   }
 
   private EntityType mapEventToRestEntityType(EntityTypeProtoEnum type) {
-    Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum = getEntityTypeProtoEnumToRestEnumMap();
+    Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum =
+        EventProtoToEntityHelper.getEntityTypeProtoEnumToRestEnumMap();
     if (mappingBetweenProtoAndActualEnum.containsKey(type)) {
       return mappingBetweenProtoAndActualEnum.get(type);
     } else {
       throw new UnknownEnumTypeException("entityType", String.valueOf(type));
     }
-  }
-
-  private Map<EntityTypeProtoEnum, EntityType> getEntityTypeProtoEnumToRestEnumMap() {
-    Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum = new EnumMap<>(EntityTypeProtoEnum.class);
-    mappingBetweenProtoAndActualEnum.put(SECRETS, EntityType.SECRETS);
-    mappingBetweenProtoAndActualEnum.put(PROJECTS, EntityType.PROJECTS);
-    mappingBetweenProtoAndActualEnum.put(PIPELINES, EntityType.PIPELINES);
-    mappingBetweenProtoAndActualEnum.put(SERVICE, EntityType.SERVICE);
-    mappingBetweenProtoAndActualEnum.put(CONNECTORS, EntityType.CONNECTORS);
-    mappingBetweenProtoAndActualEnum.put(CV_CONFIG, EntityType.CV_CONFIG);
-    mappingBetweenProtoAndActualEnum.put(ENVIRONMENT, EntityType.ENVIRONMENT);
-    return mappingBetweenProtoAndActualEnum;
   }
 }

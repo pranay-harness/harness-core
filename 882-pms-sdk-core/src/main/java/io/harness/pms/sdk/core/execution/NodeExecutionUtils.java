@@ -8,8 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -51,39 +50,6 @@ public class NodeExecutionUtils {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    Map<String, Object> map = JsonOrchestrationUtils.asMap(json);
-    updateStepParametersMap(map);
-    return map;
-  }
-
-  private void updateStepParametersMap(Map<String, Object> map) {
-    if (EmptyPredicate.isEmpty(map)) {
-      return;
-    }
-
-    map.forEach((k, v) -> {
-      if (!(v instanceof Map)) {
-        return;
-      }
-
-      Map<String, Object> inner = (Map<String, Object>) v;
-      if (inner.containsKey(OrchestrationField.ORCHESTRATION_FIELD_CLASS_FIELD)) {
-        String className = (String) inner.get(OrchestrationField.ORCHESTRATION_FIELD_CLASS_FIELD);
-        Class<? extends OrchestrationField> aClass;
-        try {
-          aClass = (Class<? extends OrchestrationField>) Class.forName(className);
-        } catch (ClassNotFoundException e) {
-          throw new RuntimeException(e);
-        }
-        OrchestrationField field = JsonOrchestrationUtils.asObject(JsonOrchestrationUtils.asJson(v), aClass);
-        map.put(k, field);
-        Object finalValue = field.fetchFinalValue();
-        if (finalValue instanceof Map) {
-          updateStepParametersMap((Map<String, Object>) finalValue);
-        }
-      } else {
-        updateStepParametersMap(inner);
-      }
-    });
+    return RecastOrchestrationUtils.toDocumentFromJson(json);
   }
 }

@@ -8,6 +8,8 @@ import static org.junit.runners.Parameterized.Parameters;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -36,6 +38,7 @@ import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(Module._870_YAML_BEANS)
 @RunWith(Parameterized.class)
 public class GcbStepCompletionYamlValidatorTest {
   private final ChangeContext<StepYaml> changeContext;

@@ -1,9 +1,7 @@
 package io.harness.pms.serializer.jackson;
 
-import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
-
 import io.harness.common.NGExpressionUtils;
-import io.harness.exception.InvalidArgumentsException;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorType;
@@ -86,12 +84,12 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
     }
     if (inputSetValidator != null) {
       String value = getLeftSideOfExpression(text);
-      if (matchesVariablePattern(value)) {
+      if (EngineExpressionEvaluator.matchesVariablePattern(value)) {
         return ParameterField.createExpressionField(true, value, inputSetValidator, isTypeString);
       }
       return ParameterField.createValueFieldWithInputSetValidator(value, inputSetValidator, isTypeString);
     }
-    if (matchesVariablePattern(text)) {
+    if (EngineExpressionEvaluator.matchesVariablePattern(text)) {
       return ParameterField.createExpressionField(true, text, null, isTypeString);
     }
 

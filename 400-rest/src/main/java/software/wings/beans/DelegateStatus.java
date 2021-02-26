@@ -1,6 +1,9 @@
 package software.wings.beans;
 
-import software.wings.beans.Delegate.Status;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateInstanceStatus;
+import io.harness.delegate.beans.DelegateScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +17,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;
@@ -30,7 +34,7 @@ public class DelegateStatus {
     private String delegateName;
     private String delegateGroupName;
     private String description;
-    private Status status;
+    private DelegateInstanceStatus status;
     private long lastHeartBeat;
     private boolean activelyConnected;
     private String delegateProfileId;

@@ -14,7 +14,6 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -8,7 +8,9 @@ public enum ExecutionStrategyType {
   @JsonProperty("Basic") BASIC("Basic"),
   @JsonProperty("Canary") CANARY("Canary"),
   @JsonProperty("BlueGreen") BLUE_GREEN("BlueGreen"),
-  @JsonProperty("Rolling") ROLLING("Rolling");
+  @JsonProperty("Rolling") ROLLING("Rolling"),
+  @JsonProperty("Default") DEFAULT("Default");
+  ;
 
   private String displayName;
 

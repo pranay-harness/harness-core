@@ -15,4 +15,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class AwsAccessKeyCredential implements AwsCredential {
   String secretKeyRef;
   String accessKey;
+  String accessKeyRef;
 }

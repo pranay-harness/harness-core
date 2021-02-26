@@ -4,10 +4,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -44,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -72,8 +75,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -83,6 +88,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
@@ -95,7 +101,6 @@ import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.HelmDeployContextElement;
@@ -108,13 +113,13 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.helm.HelmReleaseInfoElement;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -147,6 +152,7 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -206,6 +212,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -216,9 +223,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
-public class HelmDeployStateTest extends WingsBaseTest {
+public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";
   private static final String CHART_NAME = "chart-name";
@@ -352,10 +360,21 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+  private ContainerServiceParams containerServiceParams =
+      ContainerServiceParams.builder()
+          .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                .withValue(KubernetesClusterConfig.builder()
+                                               .delegateName("delegateName")
+                                               .delegateSelectors(new HashSet<>(singletonList("delegateSelectors")))
+                                               .useKubernetesDelegate(true)
+                                               .build())
+                                .build())
+          .build();
   private ExecutionContextImpl context;
 
   @Before
   public void setup() throws InterruptedException {
+    MockitoAnnotations.initMocks(this);
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("settingsService", settingsService);
     helmDeployState.setHelmReleaseNamePrefix(HELM_RELEASE_NAME_PREFIX);
@@ -386,8 +405,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
-    when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any()))
-        .thenReturn(ContainerServiceParams.builder().build());
+    when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any())).thenReturn(containerServiceParams);
     when(artifactCollectionUtils.fetchContainerImageDetails(any(), any())).thenReturn(ImageDetails.builder().build());
 
     when(delegateService.executeTask(any()))
@@ -416,9 +434,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
-    doReturn(anEnvironment().uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build())
-        .when(k8sStateHelper)
-        .getEnvFromExecutionContext(context);
   }
 
   @Test
@@ -576,7 +591,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testEmptyHelmChartSpecWithGit() {
+  public void testEmptyHelmChartSpecWithGit() throws InterruptedException {
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
     doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
@@ -740,7 +755,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
@@ -750,7 +764,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getCommandFlags()).isEqualTo(COMMAND_FLAGS);
@@ -969,7 +983,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().chartName(CHART_NAME).chartUrl(CHART_URL).chartVersion(CHART_VERSION).build())
         .when(serviceResourceService)
         .getHelmChartSpecification(APP_ID, SERVICE_ID);
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     testHandleAsyncResponseForHelmFetchTaskWithValuesInGit();
@@ -1193,9 +1207,11 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
     when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
-        .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+        .thenReturn(GitFetchFilesTaskParams.builder()
+                        .containerServiceParams(containerServiceParams)
+                        .isBindTaskFeatureSet(true)
+                        .build());
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
@@ -1203,8 +1219,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
-
-    verifyDelegateNameInTags();
   }
 
   @Test
@@ -1220,7 +1234,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
         .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
@@ -1265,7 +1279,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId()))
         .thenReturn(true);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
     when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(true);
 
@@ -1274,15 +1287,13 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.HELM_VALUES_FETCH);
-
-    verifyDelegateNameInTags();
   }
 
-  private void verifyDelegateNameInTags() {
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+  private void verifyDelegateSelectorInDelegateTaskParams(DelegateTask delegateTask) {
+    HelmCommandRequest helmCommandRequest = (HelmCommandRequest) delegateTask.getData().getParameters()[0];
+    KubernetesClusterConfig clusterConfig =
+        (KubernetesClusterConfig) helmCommandRequest.getContainerServiceParams().getSettingAttribute().getValue();
+    assertThat(clusterConfig.getDelegateSelectors()).contains("delegateSelectors");
   }
 
   @Test
@@ -1698,18 +1709,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
     final HelmReleaseInfoElement helmReleaseInfoElement = HelmReleaseInfoElement.builder().releaseName("test").build();
 
     ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    doReturn(false).when(workflowExecutionService).isMultiService(context.getAppId(), context.getWorkflowExecutionId());
-    helmDeployState.saveHelmReleaseInfoToSweepingOutput(contextSpy, helmReleaseInfoElement);
-    verify(contextSpy).prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
-    verify(sweepingOutputService).save(instanceCaptor.capture());
-    assertThat(instanceCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
-    assertThat(((HelmReleaseInfoElement) instanceCaptor.getValue().getValue()).getReleaseName()).isEqualTo("test");
-
-    doReturn(true).when(workflowExecutionService).isMultiService(context.getAppId(), context.getWorkflowExecutionId());
     helmDeployState.saveHelmReleaseInfoToSweepingOutput(contextSpy, helmReleaseInfoElement);
     verify(contextSpy).prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PHASE);
-    // 1 time is from previous case
-    verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
+    verify(sweepingOutputService).save(instanceCaptor.capture());
     assertThat(instanceCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
     assertThat(((HelmReleaseInfoElement) instanceCaptor.getValue().getValue()).getReleaseName()).isEqualTo("test");
   }
@@ -1725,7 +1727,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     when(applicationManifestService.getAppManifest(any(), any(), any(), any()))
         .thenReturn(ApplicationManifest.builder()
                         .helmCommandFlag(HELM_COMMAND_FLAG)
@@ -1745,9 +1746,41 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputDontSkipVerification() {
+    on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
+    helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(true).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testsaveInstanceInfoToSweepingOutputSkipVerification() {
+    on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
+    helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
+        asList(InstanceDetails.builder().hostName("hostName").newInstance(false).build(),
+            InstanceDetails.builder().hostName("hostName").newInstance(false).build()));
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(argumentCaptor.capture());
+
+    InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
+    assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
   }
 }

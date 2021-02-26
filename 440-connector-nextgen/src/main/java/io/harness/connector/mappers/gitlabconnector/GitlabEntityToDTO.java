@@ -10,7 +10,6 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAcce
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType;
@@ -22,13 +21,14 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
+import io.harness.govern.Switch;
 
-public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConnector> {
+public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
   public GitlabConnectorDTO createConnectorDTO(GitlabConnector connector) {
     GitlabAuthenticationDTO gitlabAuthenticationDTO = buildGitlabAuthentication(connector);
@@ -51,11 +51,9 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
     switch (authType) {
       case SSH:
         final GitlabSshAuthentication gitlabSshAuthentication = (GitlabSshAuthentication) authenticationDetails;
-        final GitlabSshCredentialsSpecDTO gitlabSshCredentialsSpecDTO =
-            GitlabSshCredentialsSpecDTO.builder()
-                .sshKeyRef(SecretRefHelper.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
-                .build();
-        gitlabCredentialsDTO = GitlabSshCredentialsDTO.builder().spec(gitlabSshCredentialsSpecDTO).build();
+        gitlabCredentialsDTO = GitlabSshCredentialsDTO.builder()
+                                   .sshKeyRef(SecretRefHelper.createSecretRef(gitlabSshAuthentication.getSshKeyRef()))
+                                   .build();
         break;
       case HTTP:
         final GitlabHttpAuthentication gitlabHttpAuthentication = (GitlabHttpAuthentication) authenticationDetails;
@@ -64,6 +62,9 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
         GitlabHttpCredentialsSpecDTO gitlabHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
         gitlabCredentialsDTO =
             GitlabHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(gitlabHttpCredentialsSpecDTO).build();
+        break;
+      default:
+        Switch.unhandled(authType);
     }
     return GitlabAuthenticationDTO.builder().authType(authType).credentials(gitlabCredentialsDTO).build();
   }
@@ -103,6 +104,8 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
                 .kerberosKeyRef(SecretRefHelper.createSecretRef(gitlabKerberos.getKerberosKeyRef()))
                 .build();
         break;
+      default:
+        Switch.unhandled(type);
     }
     return gitlabHttpCredentialsSpecDTO;
   }

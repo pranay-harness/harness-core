@@ -10,9 +10,9 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 
@@ -27,7 +27,7 @@ import org.mongodb.morphia.Datastore;
 
 public class LimitConfigurationServiceMongoIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationServiceMongo configuredLimitService;
-  @Inject private WingsPersistence dao;
+  @Inject private HPersistence dao;
 
   // namespacing accountId with class name to prevent collision with other tests
   private static final String SOME_ACCOUNT_ID =

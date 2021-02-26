@@ -28,6 +28,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
@@ -129,6 +131,7 @@ import org.eclipse.jgit.util.HttpSupport;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 
@@ -907,7 +910,7 @@ public class GitClientImpl implements GitClient {
       LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
       lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
       Collection<Ref> refs = lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
-      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches found, validation success.");
     } catch (Exception e) {
       log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
 

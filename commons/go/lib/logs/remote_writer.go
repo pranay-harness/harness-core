@@ -54,7 +54,7 @@ func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
 		key:      key,
 		now:      time.Now(),
 		limit:    defaultLimit,
-		interval: time.Second,
+		interval: defaultInterval,
 		close:    make(chan struct{}),
 		ready:    make(chan struct{}, 1),
 		log:      l.Sugar(),
@@ -209,7 +209,7 @@ func (b *RemoteWriter) upload() error {
 		return err
 	}
 
-	b.log.Infow("uploading logs", "key", b.key, "link", link.Value, "num_lines", len(b.history))
+	b.log.Infow("uploading logs", "key", b.key, "num_lines", len(b.history))
 	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
 	if err != nil {
 		b.log.Errorw("failed to upload using link", "key", b.key, "link", link.Value, zap.Error(err))

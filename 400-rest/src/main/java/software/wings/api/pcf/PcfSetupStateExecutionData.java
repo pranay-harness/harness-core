@@ -59,6 +59,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   // This is just to preserve setupState data.
   private String[] tempRoutesOnSetupState;
   private String[] finalRoutesOnSetupState;
+  private boolean useArtifactProcessingScript;
+  private String artifactProcessingScript;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

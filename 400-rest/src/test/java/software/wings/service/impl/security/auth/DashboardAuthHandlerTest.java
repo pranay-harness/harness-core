@@ -24,6 +24,7 @@ import io.harness.dashboard.Action;
 import io.harness.dashboard.DashboardAccessPermissions;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -59,6 +60,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Inject private TestUtils testUtils;
   @Mock private FeatureFlagService featureFlagService;
+  @Inject private HPersistence persistence;
 
   private User user;
   private Account account;
@@ -88,7 +90,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
                                        .createdBy(EmbeddedUser.builder().uuid(USER1_ID).build())
                                        .uuid(DASHBOARD1_ID)
                                        .build();
-    wingsPersistence.save(dashboard1);
+    persistence.save(dashboard1);
 
     User user = User.Builder.anUser().uuid(USER_ID).build();
     UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
@@ -121,7 +123,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
                                        .createdBy(EmbeddedUser.builder().uuid(USER_ID).build())
                                        .uuid(DASHBOARD1_ID)
                                        .build();
-    wingsPersistence.save(dashboard1);
+    persistence.save(dashboard1);
 
     User user = User.Builder.anUser().uuid(USER_ID).build();
     UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
@@ -154,7 +156,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
                                        .createdBy(EmbeddedUser.builder().uuid(USER1_ID).build())
                                        .uuid(DASHBOARD1_ID)
                                        .build();
-    wingsPersistence.save(dashboard1);
+    persistence.save(dashboard1);
 
     User user = User.Builder.anUser().uuid(USER_ID).build();
     UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
@@ -187,7 +189,7 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
                                        .createdBy(EmbeddedUser.builder().uuid(USER1_ID).build())
                                        .uuid(DASHBOARD1_ID)
                                        .build();
-    wingsPersistence.save(dashboard1);
+    persistence.save(dashboard1);
 
     User user = User.Builder.anUser().uuid(USER_ID).build();
     UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder().build();
@@ -279,14 +281,14 @@ public class DashboardAuthHandlerTest extends WingsBaseTest {
                                        .uuid(DASHBOARD1_ID)
                                        .createdBy(EmbeddedUser.builder().uuid(user.getUuid()).build())
                                        .build();
-    wingsPersistence.save(dashboard1);
+    persistence.save(dashboard1);
     DashboardSettings dashboard = DashboardSettings.builder()
                                       .accountId(ACCOUNT_ID)
                                       .name(ACCOUNT_NAME)
                                       .uuid("uuid2")
                                       .createdBy(EmbeddedUser.builder().uuid(user.getUuid()).build())
                                       .build();
-    wingsPersistence.save(dashboard);
+    persistence.save(dashboard);
 
     addUserAccountPermission(Arrays.asList(PermissionAttribute.PermissionType.MANAGE_CUSTOM_DASHBOARDS));
     UserThreadLocal.set(user);

@@ -12,11 +12,13 @@ import io.harness.pms.sample.cd.beans.Infrastructure;
 import io.harness.pms.sample.cd.beans.InfrastructureDefinition;
 import io.harness.pms.sample.cd.beans.Service;
 import io.harness.pms.sample.cd.beans.ServiceDefinition;
+import io.harness.pms.sample.steps.InfrastructureStepParameters;
 import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
@@ -46,9 +48,9 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
       PlanCreationContext ctx, DeploymentStage config) {
     DeploymentStageSpec spec = Preconditions.checkNotNull(config.getSpec());
     LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
-    createPlanNodeForService(responseMap, ctx, spec.getService());
-    createPlanNodeForInfrastructure(responseMap, ctx, spec.getInfrastructure());
-    createPlanNodeForSteps(responseMap, ctx, spec.getExecution());
+    createPlanNodeForService(responseMap, spec.getService());
+    createPlanNodeForInfrastructure(responseMap, spec.getInfrastructure());
+    createPlanNodeForSteps(responseMap, spec.getExecution());
     return responseMap;
   }
 
@@ -69,34 +71,34 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
         .build();
   }
 
-  private void createPlanNodeForService(
-      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, Service service) {
+  private void createPlanNodeForService(Map<String, PlanCreationResponse> responseMap, Service service) {
     if (service == null) {
       return;
     }
 
     ServiceDefinition definition = Preconditions.checkNotNull(service.getServiceDefinition());
-    createSyncPlanNode(responseMap, ctx, "service", service.getUuid(), service.getIdentifier(),
+    createSyncPlanNode(responseMap, "service", service.getUuid(), service.getIdentifier(),
         new MapStepParameters("serviceDefinition", definition.getSpec()));
   }
 
   private void createPlanNodeForInfrastructure(
-      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, Infrastructure infrastructure) {
+      Map<String, PlanCreationResponse> responseMap, Infrastructure infrastructure) {
     if (infrastructure == null) {
       return;
     }
 
-    MapStepParameters stepParameters = new MapStepParameters();
+    InfrastructureStepParameters stepParameters = InfrastructureStepParameters.builder().build();
     Environment environment = Preconditions.checkNotNull(infrastructure.getEnvironment());
-    stepParameters.put("environmentName", environment.getName());
+    stepParameters.setEnvironmentName(environment.getName());
     InfrastructureDefinition infrastructureDefinition = infrastructure.getInfrastructureDefinition();
-    stepParameters.put("infrastructureDefinition", infrastructureDefinition.getSpec());
+    stepParameters.setTmpBool(infrastructureDefinition.getTmpBool());
+    stepParameters.setInfrastructureDefinition(infrastructureDefinition.getSpec());
     createSyncPlanNode(
-        responseMap, ctx, "infrastructure", infrastructureDefinition.getUuid(), "infrastructure", stepParameters);
+        responseMap, "infrastructure", infrastructureDefinition.getUuid(), "infrastructure", stepParameters);
   }
 
-  private void createSyncPlanNode(Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, String type,
-      String uuid, String identifier, MapStepParameters stepParameters) {
+  private void createSyncPlanNode(Map<String, PlanCreationResponse> responseMap, String type, String uuid,
+      String identifier, StepParameters stepParameters) {
     PlanNode node = PlanNode.builder()
                         .uuid(uuid)
                         .identifier(identifier)
@@ -114,8 +116,7 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
         node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).contextMap(contextValueMap).build());
   }
 
-  private void createPlanNodeForSteps(
-      Map<String, PlanCreationResponse> responseMap, PlanCreationContext ctx, Execution execution) {
+  private void createPlanNodeForSteps(Map<String, PlanCreationResponse> responseMap, Execution execution) {
     if (execution == null) {
       return;
     }

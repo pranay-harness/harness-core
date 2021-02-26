@@ -4,18 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.serializer.JsonUtils;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.bson.Document;
 
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
@@ -34,19 +27,19 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+        .skipInfo(nodeExecution.getSkipInfo())
+        .stepParameters(nodeExecution.getResolvedStepParameters())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .progressDataMap(nodeExecution.getProgressDataMap())
+        .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }
 
-  public GraphVertex convertFrom(NodeExecution nodeExecution, List<Outcome> outcomes) {
+  public GraphVertex convertFrom(NodeExecution nodeExecution, List<Document> outcomes) {
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -60,16 +53,16 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .skipInfo(nodeExecution.getSkipInfo())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
-        .outcomeDocuments(PmsOutcomeMapper.convertOutcomesToDocumentList(outcomes))
+        .outcomeDocuments(outcomes)
         .progressDataMap(nodeExecution.getProgressDataMap())
+        .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }
 }

@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -137,6 +138,13 @@ public interface EnvironmentService extends OwnedByApplication {
   List<String> getEnvIdsByApp(@NotEmpty String appId);
 
   Map<String, List<Base>> getAppIdEnvMap(Set<String> appIds);
+
+  /**
+   * @param appIds the applicationIds for which we need to fetch the environments
+   * @param environmentType The type of environment needed
+   * @return A map of the ids of environments in the given application and of the given type grouped by applications
+   */
+  Map<String, Set<String>> getAppIdEnvIdMapByType(Set<String> appIds, EnvironmentType environmentType);
 
   /**
    * Clones Environment along with Service Infrastructure

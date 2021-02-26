@@ -28,6 +28,7 @@ public class GrpcServer extends AbstractIdleService {
   public GrpcServer(Connector connector, Set<BindableService> services, Set<ServerInterceptor> interceptors,
       HealthStatusManager healthStatusManager) {
     ServerBuilder<?> builder = ServerBuilder.forPort(connector.getPort());
+    builder.maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE);
     if (connector.isSecure()) {
       File certChain = new File(connector.getCertFilePath());
       File privateKey = new File(connector.getKeyFilePath());

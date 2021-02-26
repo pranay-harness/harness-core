@@ -25,7 +25,6 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.repositories.ResourceRestraintInstanceRepository;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;

@@ -81,10 +81,12 @@ func (h *engineHandler) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLReq
 	*pb.EvaluateJEXLResponse, error) {
 	so := make(output.StageOutput)
 	for stepID, stepOutput := range in.GetStepOutputs() {
-		so[stepID] = &output.StepOutput{Output: stepOutput.GetOutput()}
+		o := &output.StepOutput{}
+		o.Output.Variables = stepOutput.GetOutput()
+		so[stepID] = o
 	}
 
-	result, err := evaluateJEXL(ctx, in.GetStepId(), in.GetExpressions(), so, h.log)
+	result, err := evaluateJEXL(ctx, in.GetStepId(), in.GetExpressions(), so, false, h.log)
 	if err != nil {
 		h.log.Errorw("failed to evaluate expression", "request_arg", in.String(), zap.Error(err))
 		return &pb.EvaluateJEXLResponse{}, err

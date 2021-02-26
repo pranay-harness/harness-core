@@ -1,12 +1,14 @@
 package io.harness;
 
 import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,11 +31,21 @@ public class MessageProducer implements Runnable {
   private void publishMessages() throws InterruptedException {
     int count = 0;
     while (true) {
-      Message projectEvent =
-          Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", String.valueOf(count)))
-              .setData(ProjectEntityChangeDTO.newBuilder().setIdentifier(String.valueOf(count)).build().toByteString())
-              .build();
+      Message projectEvent;
+      if (count % 3 == 0) {
+        projectEvent =
+            Message.newBuilder()
+                .putAllMetadata(ImmutableMap.of("accountId", String.valueOf(count)))
+                .setData(AccountEntityChangeDTO.newBuilder().setAccountId(String.valueOf(count)).build().toByteString())
+                .build();
+      } else {
+        projectEvent =
+            Message.newBuilder()
+                .putAllMetadata(ImmutableMap.of("accountId", String.valueOf(count)))
+                .setData(
+                    ProjectEntityChangeDTO.newBuilder().setIdentifier(String.valueOf(count)).build().toByteString())
+                .build();
+      }
 
       String messageId = null;
       try {
@@ -46,7 +58,7 @@ public class MessageProducer implements Runnable {
       }
 
       count += 1;
-      Thread.sleep(500);
+      TimeUnit.SECONDS.sleep(1);
     }
   }
 }

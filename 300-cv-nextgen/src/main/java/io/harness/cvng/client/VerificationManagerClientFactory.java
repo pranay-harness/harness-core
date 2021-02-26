@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
@@ -41,25 +42,27 @@ class ManagerClientX509TrustManager implements X509TrustManager {
   }
 }
 
+@Singleton
 public class VerificationManagerClientFactory implements Provider<VerificationManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());
 
   private String baseUrl;
   private ServiceTokenGenerator tokenGenerator;
+  private ObjectMapper objectMapper;
 
   public VerificationManagerClientFactory(String baseUrl, ServiceTokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
+    this.objectMapper = new ObjectMapper();
+    this.objectMapper.registerModule(new Jdk8Module());
+    this.objectMapper.registerModule(new GuavaModule());
+    this.objectMapper.registerModule(new JavaTimeModule());
+    this.objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
   }
 
   @Override
   public VerificationManagerClient get() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new JavaTimeModule());
-    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
     Retrofit retrofit = new Retrofit.Builder()
                             .baseUrl(baseUrl)
                             .client(getUnsafeOkHttpClient())

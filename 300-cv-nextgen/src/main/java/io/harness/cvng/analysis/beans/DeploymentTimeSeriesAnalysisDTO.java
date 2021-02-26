@@ -11,6 +11,9 @@ import lombok.Value;
 @Builder
 public class DeploymentTimeSeriesAnalysisDTO {
   int risk;
+  public Risk getRisk() {
+    return Risk.valueOf(risk);
+  }
   Double score;
   List<HostInfo> hostSummaries;
   List<TransactionMetricHostData> transactionMetricSummaries;
@@ -36,6 +39,9 @@ public class DeploymentTimeSeriesAnalysisDTO {
     boolean primary;
     boolean canary;
     int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(risk);
+    }
     Double score;
   }
 
@@ -44,10 +50,15 @@ public class DeploymentTimeSeriesAnalysisDTO {
   public static class HostData implements Comparable<HostData> {
     String hostName;
     int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(risk);
+    }
     Double score;
     List<Double> controlData;
     List<Double> testData;
-
+    public boolean isAnomalous() {
+      return getRisk().getValue() >= Risk.MEDIUM.getValue();
+    }
     public Optional<String> getHostName() {
       return Optional.ofNullable(hostName);
     }
@@ -67,8 +78,16 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String transactionName;
     String metricName;
     int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(this.risk);
+    }
+
     Double score;
     // TODO: For load test, this is overall data. Figure out a better name that suits for both canary and load test
     List<HostData> hostData;
+
+    public boolean isAnomalous() {
+      return getRisk().getValue() >= Risk.MEDIUM.getValue();
+    }
   }
 }

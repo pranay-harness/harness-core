@@ -1,9 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -13,7 +16,6 @@ import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -34,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.util.Maps.newHashMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -41,25 +44,28 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
@@ -78,6 +84,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerDefinition;
@@ -85,10 +92,12 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
+import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
@@ -101,6 +110,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -109,19 +119,26 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
-public class EcsStateHelperTest extends WingsBaseTest {
+public class EcsStateHelperTest extends CategoryTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Inject @InjectMocks private EcsStateHelper helper;
+
+  @Before
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -166,6 +183,9 @@ public class EcsStateHelperTest extends WingsBaseTest {
                                                     .scalingPolicyForTarget("ScalablePolicy")
                                                     .build()))
             .build();
+    boolean ecsRegisterTaskDefinitionTagsEnabled = true;
+    when(featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, config.getApp().getAccountId()))
+        .thenReturn(ecsRegisterTaskDefinitionTagsEnabled);
     ContainerSetupParams containerSetupParams = helper.buildContainerSetupParams(mockContext, config);
     assertThat(containerSetupParams).isNotNull();
     assertThat(containerSetupParams instanceof EcsSetupParams).isTrue();
@@ -180,6 +200,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(ecsSetupParams.getParentRecordHostedZoneId()).isEqualTo("ParentZone");
     assertThat(ecsSetupParams.getParentRecordName()).isEqualTo("ParentRecord");
     assertThat(ecsSetupParams.getClusterName()).isEqualTo("EcsCluster");
+    assertThat(ecsSetupParams.isEcsRegisterTaskDefinitionTagsEnabled()).isEqualTo(ecsRegisterTaskDefinitionTagsEnabled);
   }
 
   @Test
@@ -210,7 +231,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
-  public void testQueueDelegateTaskForEcsListenerUpdate() {
+  public void testQueueDelegateTaskForEcsListenerUpdate() throws InterruptedException {
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).build();
     AwsConfig awsConfig = AwsConfig.builder().build();
     DelegateService mockService = mock(DelegateService.class);
@@ -714,5 +735,102 @@ public class EcsStateHelperTest extends WingsBaseTest {
   public void testGetTimeoutMillis() {
     assertThat(helper.getTimeout(10)).isEqualTo(900000);
     assertThat(helper.getTimeout(35792)).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCreateSweepingOutputForRollbackFailure() throws InterruptedException {
+    EcsDeployDataBag bag =
+        EcsDeployDataBag.builder()
+            .service(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
+            .app(anApplication().uuid(APP_ID).name(APP_NAME).build())
+            .env(anEnvironment().uuid(ENV_ID).name(ENV_NAME).build())
+            .ecsInfrastructureMapping(anEcsInfrastructureMapping()
+                                          .withUuid(INFRA_MAPPING_ID)
+                                          .withClusterName(CLUSTER_NAME)
+                                          .withRegion("us-east-1")
+                                          .withVpcId("vpc-id")
+                                          .withAssignPublicIp(true)
+                                          .withLaunchType("Ec2")
+                                          .build())
+            .awsConfig(AwsConfig.builder().build())
+            .encryptedDataDetails(emptyList())
+            .containerElement(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
+            .build();
+    DelegateService mockDelegateService = mock(DelegateService.class);
+    ExecutionContext mockContext = mock(ExecutionContext.class);
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
+    EcsResizeParams ecsResizeParams = mock(EcsResizeParams.class);
+    doThrow(new InterruptedException()).when(mockDelegateService).executeTask(any());
+
+    assertThatThrownBy(
+        () -> helper.createSweepingOutputForRollback(bag, activity, mockDelegateService, ecsResizeParams, mockContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Failed to generate rollback information");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCreateSweepingOutputForRollback() throws InterruptedException {
+    EcsDeployDataBag bag =
+        EcsDeployDataBag.builder()
+            .service(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
+            .app(anApplication().uuid(APP_ID).name(APP_NAME).build())
+            .env(anEnvironment().uuid(ENV_ID).name(ENV_NAME).build())
+            .ecsInfrastructureMapping(anEcsInfrastructureMapping()
+                                          .withUuid(INFRA_MAPPING_ID)
+                                          .withClusterName(CLUSTER_NAME)
+                                          .withRegion("us-east-1")
+                                          .withVpcId("vpc-id")
+                                          .withAssignPublicIp(true)
+                                          .withLaunchType("Ec2")
+                                          .build())
+            .awsConfig(AwsConfig.builder().build())
+            .encryptedDataDetails(emptyList())
+            .containerElement(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
+            .build();
+    DelegateService mockDelegateService = mock(DelegateService.class);
+    ExecutionContext mockContext = mock(ExecutionContext.class);
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
+    EcsResizeParams ecsResizeParams = mock(EcsResizeParams.class);
+
+    doReturn(EcsCommandExecutionResponse.builder()
+                 .ecsCommandResponse(EcsDeployRollbackDataFetchResponse.builder().build())
+                 .build())
+        .when(mockDelegateService)
+        .executeTask(any());
+
+    doNothing().when(sweepingOutputService).ensure(any());
+    doReturn("").when(mockContext).appendStateExecutionId(anyString());
+    doReturn(SweepingOutputInstance.builder())
+        .doReturn(SweepingOutputInstance.builder())
+        .when(mockContext)
+        .prepareSweepingOutputBuilder(any());
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .phaseName("Rollback Phase1")
+                                    .phaseNameForRollback("Phase1")
+                                    .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build())
+                                    .build();
+    doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
+
+    helper.createSweepingOutputForRollback(bag, activity, mockDelegateService, ecsResizeParams, mockContext);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockDelegateService).executeTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    assertThat(delegateTask).isNotNull();
+
+    assertThat(delegateTask.getData().getParameters()).isNotNull();
+    assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof EcsDeployRollbackDataFetchRequest).isTrue();
+    assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(INFRA_MAPPING_ID);
+
+    verify(sweepingOutputService).ensure(any());
   }
 }

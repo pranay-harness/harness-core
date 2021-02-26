@@ -28,6 +28,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -179,5 +180,18 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
         + "$commandString = {" + new String("This is a test".getBytes()) + "}"
         + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
         + "Write-Host \"Copied config file to the host.\"\n");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testConstructPSScriptWithCommandsWithAmpersand() {
+    String command = "echo \"1&2\"";
+    List<List<String>> result =
+        WinRmExecutorHelper.constructPSScriptWithCommands(command, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(0)).hasSize(3);
+    Pattern patternForAmpersandWithinString = Pattern.compile("[a-zA-Z0-9]+\\^&");
+    assertThat(patternForAmpersandWithinString.matcher(result.get(0).get(1)).find()).isTrue();
   }
 }

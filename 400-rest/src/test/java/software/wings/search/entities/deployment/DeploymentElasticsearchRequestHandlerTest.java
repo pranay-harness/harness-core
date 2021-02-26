@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -44,6 +45,7 @@ import org.mockito.InjectMocks;
 public class DeploymentElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentElasticsearchRequestHandler deploymentSearchRequestHandler;
   @Inject private TestUtils eventTestHelper;
+  @Inject private HPersistence persistence;
 
   protected String accountId;
   protected String appId1;
@@ -73,7 +75,7 @@ public class DeploymentElasticsearchRequestHandlerTest extends WingsBaseTest {
   @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void translateHitsToSearchResultsTest() {
     Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
     SearchResponse searchResponse = SearchRequestHandlerTestUtils.getSearchResponse(DeploymentSearchEntity.TYPE);
 
     List<SearchResult> searchResults =
@@ -91,7 +93,7 @@ public class DeploymentElasticsearchRequestHandlerTest extends WingsBaseTest {
   public void testCreateQuery() {
     String searchString = "value";
     Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
     account.setUuid(accountId);
 
     BoolQueryBuilder boolQueryBuilder = deploymentSearchRequestHandler.createQuery(searchString, accountId);

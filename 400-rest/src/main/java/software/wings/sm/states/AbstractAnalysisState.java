@@ -65,7 +65,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -134,7 +133,6 @@ public abstract class AbstractAnalysisState extends State {
   @Inject protected FeatureFlagService featureFlagService;
   @Inject protected StateExecutionService stateExecutionService;
   @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
-  @Inject @SchemaIgnore protected K8sStateHelper k8sStateHelper;
   @Inject private transient ExpressionEvaluator evaluator;
   @Inject private AccountService accountService;
   @Inject protected CVActivityLogService cvActivityLogService;

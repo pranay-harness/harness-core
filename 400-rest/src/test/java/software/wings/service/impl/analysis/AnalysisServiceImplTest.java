@@ -9,10 +9,10 @@ import static software.wings.service.impl.analysis.LogMLAnalysisStatus.LE_ANALYS
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -26,7 +26,7 @@ import org.junit.experimental.categories.Category;
 
 public class AnalysisServiceImplTest extends WingsBaseTest {
   @Inject private AnalysisService analysisService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   private StateType stateType = StateType.ELK;
   private String appId;
@@ -37,7 +37,7 @@ public class AnalysisServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws IllegalAccessException {
-    FieldUtils.writeField(analysisService, "wingsPersistence", wingsPersistence, true);
+    FieldUtils.writeField(analysisService, "wingsPersistence", persistence, true);
 
     appId = generateUuid();
     stateExecutionId = generateUuid();
@@ -52,8 +52,7 @@ public class AnalysisServiceImplTest extends WingsBaseTest {
   public void testCreateAndSaveSummary() {
     analysisService.createAndSaveSummary(stateType, appId, stateExecutionId, query, message, accountId);
 
-    LogMLAnalysisRecord analysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    LogMLAnalysisRecord analysisRecord = persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
 
     assertThat(analysisRecord).isNotNull();
     assertThat(analysisRecord.getStateType()).isEqualTo(stateType);
@@ -69,28 +68,26 @@ public class AnalysisServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCleanUpForLogRetry() {
     LogDataRecord logDataRecord = LogDataRecord.builder().stateExecutionId(stateExecutionId).build();
-    wingsPersistence.save(logDataRecord);
+    persistence.save(logDataRecord);
     LogMLAnalysisRecord logMLAnalysisRecord = LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).build();
-    wingsPersistence.save(logMLAnalysisRecord);
+    persistence.save(logMLAnalysisRecord);
     LearningEngineAnalysisTask analysisTask =
         LearningEngineAnalysisTask.builder().state_execution_id(stateExecutionId).build();
-    wingsPersistence.save(analysisTask);
+    persistence.save(analysisTask);
     LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
         LearningEngineExperimentalAnalysisTask.builder().state_execution_id(stateExecutionId).build();
-    wingsPersistence.save(experimentalAnalysisTask);
+    persistence.save(experimentalAnalysisTask);
 
     analysisService.cleanUpForLogRetry(stateExecutionId);
 
-    LogDataRecord record = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority).get();
+    LogDataRecord record = persistence.createQuery(LogDataRecord.class, excludeAuthority).get();
     assertThat(record).isNull();
-    LogMLAnalysisRecord mlAnalysisRecord =
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
+    LogMLAnalysisRecord mlAnalysisRecord = persistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority).get();
     assertThat(mlAnalysisRecord).isNull();
-    LearningEngineAnalysisTask task =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).get();
+    LearningEngineAnalysisTask task = persistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).get();
     assertThat(task).isNull();
     LearningEngineExperimentalAnalysisTask expTask =
-        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority).get();
+        persistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority).get();
     assertThat(expTask).isNull();
   }
 }

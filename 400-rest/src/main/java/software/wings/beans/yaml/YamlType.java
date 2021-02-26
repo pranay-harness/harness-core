@@ -29,6 +29,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER_APP_SERVICE;
 import static software.wings.beans.yaml.YamlConstants.MULTIPLE_ANY;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
@@ -168,10 +169,11 @@ public enum YamlType {
       ApplicationManifest.class),
   // Azure App Service Manifest
   APPLICATION_MANIFEST_APP_SERVICE(EntityType.APPLICATION_MANIFEST.name(),
-      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
-          INDEX_YAML),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER),
-      Service.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE),
+      ApplicationManifest.class),
   // PCF Override All Services
   APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
@@ -207,6 +209,12 @@ public enum YamlType {
           MANIFEST_FILE_FOLDER, MANIFEST_FILE_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
           MANIFEST_FILE_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_APP_SERVICE(YamlConstants.MANIFEST_FILE,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, MANIFEST_FILE_FOLDER, ANY_EXCEPT_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, MANIFEST_FILE_FOLDER),
       ManifestFile.class),
   MANIFEST_FILE_VALUES_SERVICE_OVERRIDE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, VALUES_FOLDER,

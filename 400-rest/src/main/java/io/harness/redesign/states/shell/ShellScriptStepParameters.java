@@ -3,12 +3,8 @@ package io.harness.redesign.states.shell;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.shell.ScriptType;
-import io.harness.timeout.TimeoutObtainment;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
@@ -17,7 +13,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import com.github.reinert.jjschema.Attributes;
-import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,18 +51,4 @@ public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Script Output Variables") String outputVars;
   @Attributes(title = "Publish Variable Name") String sweepingOutputName;
   @Attributes(title = "Publish Variable Scope") String sweepingOutputScope;
-
-  // TODO(gpahal): update later
-  // @Override
-  public List<TimeoutObtainment> fetchTimeouts() {
-    long timeoutMillis = 3600000;
-    if (EmptyPredicate.isNotEmpty(timeoutSecs)) {
-      timeoutMillis = Long.parseLong(timeoutSecs) * 1000;
-    }
-    return Collections.singletonList(
-        TimeoutObtainment.builder()
-            .type(AbsoluteTimeoutTrackerFactory.DIMENSION)
-            .parameters(AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutMillis).build())
-            .build());
-  }
 }

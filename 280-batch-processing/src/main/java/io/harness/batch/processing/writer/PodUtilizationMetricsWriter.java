@@ -61,8 +61,7 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
             k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
           }
         });
-    if (!k8sGranularUtilizationDataList.isEmpty()) {
-      k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
-    }
+
+    k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
   }
 }

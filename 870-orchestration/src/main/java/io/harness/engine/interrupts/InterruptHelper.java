@@ -13,6 +13,7 @@ public class InterruptHelper {
         .setPlanExecutionId(planExecution.getUuid())
         .putAllSetupAbstractions(
             isEmpty(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
+        .setMetadata(planExecution.getMetadata())
         .build();
   }
 }

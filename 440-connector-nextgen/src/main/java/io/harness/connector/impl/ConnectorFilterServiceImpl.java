@@ -14,29 +14,36 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
+import io.harness.connector.ConnectorCategory;
+import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.services.ConnectorFilterService;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.mapper.TagMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   FilterService filterService;
 
@@ -45,11 +52,12 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
 
   @Override
   public Criteria createCriteriaFromConnectorListQueryParams(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String filterIdentifier, String searchTerm, FilterPropertiesDTO filterProperties,
+      String projectIdentifier, String filterIdentifier, String encodedSearchTerm, FilterPropertiesDTO filterProperties,
       Boolean includeAllConnectorsAccessibleAtScope) {
     if (isNotBlank(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
+    String searchTerm = getDecodedSearchTerm(encodedSearchTerm);
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     if (includeAllConnectorsAccessibleAtScope != null && includeAllConnectorsAccessibleAtScope) {
@@ -59,10 +67,9 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       criteria.and(ConnectorKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
-    if (isNotBlank(searchTerm)) {
-      populateSearchTermFilter(criteria, searchTerm);
-    }
+
     if (isEmpty(filterIdentifier) && filterProperties == null) {
+      applySearchFilter(criteria, searchTerm);
       return criteria;
     }
 
@@ -73,6 +80,25 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
+  }
+
+  private String getDecodedSearchTerm(String encodedSearchTerm) {
+    String decodedString = null;
+    if (isNotBlank(encodedSearchTerm)) {
+      try {
+        decodedString = java.net.URLDecoder.decode(encodedSearchTerm, StandardCharsets.UTF_8.name());
+      } catch (UnsupportedEncodingException e) {
+        log.info("Encountered exception while decoding {}", encodedSearchTerm);
+      }
+    }
+    return decodedString;
+  }
+
+  private void applySearchFilter(Criteria criteria, String searchTerm) {
+    if (isNotBlank(searchTerm)) {
+      Criteria criteriaWithSearchTerm = getSearchTermFilter(criteria, searchTerm);
+      criteria.andOperator(criteriaWithSearchTerm);
+    }
   }
 
   private void addCriteriaToReturnAllConnectorsAccessible(
@@ -112,12 +138,48 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     }
     populateInFilter(criteria, ConnectorKeys.categories, connectorFilter.getCategories());
     populateInFilter(criteria, ConnectorKeys.type, connectorFilter.getTypes());
-    populateInFilter(criteria, ConnectorKeys.name, connectorFilter.getConnectorNames());
+    populateNameDesciptionAndSearchTermFilter(criteria, connectorFilter.getConnectorNames(),
+        connectorFilter.getDescription(), searchTerm, connectorFilter.getInheritingCredentialsFromDelegate());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());
-    populateDescriptionFilter(criteria, connectorFilter.getDescription(), searchTerm);
     populateInFilter(criteria, ConnectorKeys.connectionStatus, connectorFilter.getConnectivityStatuses());
-    populateInheritCredentialsFromDelegateFilter(criteria, connectorFilter.getInheritingCredentialsFromDelegate());
     populateTagsFilter(criteria, connectorFilter.getTags());
+  }
+
+  private void populateNameDesciptionAndSearchTermFilter(Criteria criteria, List<String> connectorNames,
+      String description, String searchTerm, Boolean inheritingCredentialsFromDelegate) {
+    List<Criteria> criteriaList = new ArrayList<>();
+    Criteria nameCriteria = getNameFilter(criteria, connectorNames);
+    if (nameCriteria != null) {
+      criteriaList.add(nameCriteria);
+    }
+    Criteria descriptionCriteria = getDescriptionFilter(criteria, description, searchTerm);
+    if (descriptionCriteria != null) {
+      criteriaList.add(descriptionCriteria);
+    }
+    Criteria inheritingFromDelegateCriteria =
+        getInheritCredentialsFromDelegateFilter(criteria, inheritingCredentialsFromDelegate);
+    if (inheritingFromDelegateCriteria != null) {
+      criteriaList.add(inheritingFromDelegateCriteria);
+    }
+    Criteria searchCriteria = getSearchTermFilter(criteria, searchTerm);
+    if (searchCriteria != null) {
+      criteriaList.add(searchCriteria);
+    }
+    if (criteriaList.size() != 0) {
+      criteria.andOperator(criteriaList.toArray(new Criteria[0]));
+    }
+  }
+
+  private Criteria getNameFilter(Criteria criteria, List<String> connectorNames) {
+    if (isEmpty(connectorNames)) {
+      return null;
+    }
+    List<Criteria> criteriaForNames =
+        connectorNames.stream()
+            .map(
+                name -> where(ConnectorKeys.name).regex(name, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS))
+            .collect(Collectors.toList());
+    return new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
   }
 
   private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
@@ -127,53 +189,64 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     criteria.and(ConnectorKeys.tags).in(TagMapper.convertToList(tags));
   }
 
-  private void populateInheritCredentialsFromDelegateFilter(
+  private Criteria getInheritCredentialsFromDelegateFilter(
       Criteria criteria, Boolean inheritingCredentialsFromDelegate) {
     if (inheritingCredentialsFromDelegate != null) {
       if (inheritingCredentialsFromDelegate.booleanValue()) {
-        addCriteriaForInheritingFromDelegate(criteria);
+        return addCriteriaForInheritingFromDelegate(criteria);
       } else {
-        addCriteriaForNotInheritingFromDelegate(criteria);
+        return addCriteriaForNotInheritingFromDelegate(criteria);
       }
     }
+    return null;
   }
 
-  private void addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
-    Criteria criteriaForInheritingFromDelegate = new Criteria().orOperator(
+  private Criteria addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
+    return new Criteria().orOperator(
         where(CREDENTIAL_TYPE_KEY).exists(false), where(CREDENTIAL_TYPE_KEY).ne(INHERIT_FROM_DELEGATE_STRING));
-    criteria.andOperator(criteriaForInheritingFromDelegate);
   }
 
-  private void addCriteriaForInheritingFromDelegate(Criteria criteria) {
-    criteria.and(CREDENTIAL_TYPE_KEY).is(INHERIT_FROM_DELEGATE_STRING);
+  private Criteria addCriteriaForInheritingFromDelegate(Criteria criteria) {
+    return where(CREDENTIAL_TYPE_KEY).is(INHERIT_FROM_DELEGATE_STRING);
   }
 
   private String getPatternForMatchingAnyOneOf(List<String> wordsToBeMatched) {
     return StringUtils.collectionToDelimitedString(wordsToBeMatched, "|");
   }
 
-  private void populateDescriptionFilter(Criteria criteria, String description, String searchTerm) {
+  private Criteria getDescriptionFilter(Criteria criteria, String description, String searchTerm) {
     if (isBlank(description)) {
-      return;
+      return null;
     }
     String[] descriptionsWords = description.split(" ");
-    if (isNotEmpty(descriptionsWords) && isBlank(searchTerm)) {
+    if (isNotEmpty(descriptionsWords)) {
       String pattern = getPatternForMatchingAnyOneOf(Arrays.asList(descriptionsWords));
-      Criteria descriptionCriteria = Criteria.where(ConnectorKeys.description)
-                                         .regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
-      criteria.andOperator(descriptionCriteria);
+      return where(ConnectorKeys.description).regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
     }
+    return null;
   }
 
-  private void populateSearchTermFilter(Criteria criteria, String searchTerm) {
+  private Criteria getSearchTermFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
-      Criteria searchCriteria = new Criteria().orOperator(
+      Criteria tagCriteria = createCriteriaForSearchingTag(searchTerm);
+      return new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.tags).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+          where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          tagCriteria);
     }
+    return null;
+  }
+
+  private Criteria createCriteriaForSearchingTag(String searchTerm) {
+    String keyToBeSearched = searchTerm;
+    String valueToBeSearched = "";
+    if (searchTerm.contains(":")) {
+      String[] split = searchTerm.split(":");
+      keyToBeSearched = split[0];
+      valueToBeSearched = split.length >= 2 ? split[1] : "";
+    }
+    return where(ConnectorKeys.tags).is(NGTag.builder().key(keyToBeSearched).value(valueToBeSearched).build());
   }
 
   public Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier,

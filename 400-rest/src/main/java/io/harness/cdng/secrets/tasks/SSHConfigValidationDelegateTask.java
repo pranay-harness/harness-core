@@ -4,6 +4,8 @@ import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -21,6 +23,7 @@ import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
 import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
 import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.AccessType;
 import io.harness.shell.KerberosConfig;
@@ -31,12 +34,14 @@ import io.harness.shell.SshSessionFactory;
 import com.google.inject.Inject;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService secretDecryptionService;
 
@@ -46,32 +51,33 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
-  private SshSessionConfig getSSHSessionConfig(SSHTaskParams sshTaskParams) {
-    SSHKeySpecDTO sshKeySpecDTO = sshTaskParams.getSshKeySpec();
+  private SshSessionConfig getSSHSessionConfig(
+      SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails) {
     SshSessionConfig.Builder builder = aSshSessionConfig().withPort(sshKeySpecDTO.getPort());
     SSHAuthDTO authDTO = sshKeySpecDTO.getAuth();
     switch (authDTO.getAuthScheme()) {
       case SSH:
         SSHConfigDTO sshConfigDTO = (SSHConfigDTO) authDTO.getSpec();
-        generateSSHBuilder(sshTaskParams, sshConfigDTO, builder);
+        generateSSHBuilder(sshConfigDTO, builder, encryptionDetails);
         break;
       case Kerberos:
         KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) authDTO.getSpec();
-        generateKerberosBuilder(sshTaskParams, kerberosConfigDTO, builder);
+        generateKerberosBuilder(kerberosConfigDTO, builder, encryptionDetails);
         break;
       default:
         break;
     }
+    builder.withSshConnectionTimeout(30000);
     return builder.build();
   }
 
   private void generateSSHBuilder(
-      SSHTaskParams sshTaskParams, SSHConfigDTO sshConfigDTO, SshSessionConfig.Builder builder) {
+      SSHConfigDTO sshConfigDTO, SshSessionConfig.Builder builder, List<EncryptedDataDetail> encryptionDetails) {
     switch (sshConfigDTO.getCredentialType()) {
       case Password:
         SSHPasswordCredentialDTO sshPasswordCredentialDTO = (SSHPasswordCredentialDTO) sshConfigDTO.getSpec();
-        SSHPasswordCredentialDTO passwordCredentialDTO = (SSHPasswordCredentialDTO) secretDecryptionService.decrypt(
-            sshPasswordCredentialDTO, sshTaskParams.getEncryptionDetails());
+        SSHPasswordCredentialDTO passwordCredentialDTO =
+            (SSHPasswordCredentialDTO) secretDecryptionService.decrypt(sshPasswordCredentialDTO, encryptionDetails);
         builder.withAccessType(AccessType.USER_PASSWORD)
             .withUserName(passwordCredentialDTO.getUserName())
             .withPassword(passwordCredentialDTO.getPassword().getDecryptedValue());
@@ -82,7 +88,7 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
         // since files are base 64 encoded, we decode it before using it
         SSHKeyReferenceCredentialDTO keyReferenceCredentialDTO =
             (SSHKeyReferenceCredentialDTO) secretDecryptionService.decrypt(
-                sshKeyReferenceCredentialDTO, sshTaskParams.getEncryptionDetails());
+                sshKeyReferenceCredentialDTO, encryptionDetails);
         char[] fileData = keyReferenceCredentialDTO.getKey().getDecryptedValue();
         keyReferenceCredentialDTO.getKey().setDecryptedValue(new String(fileData).toCharArray());
         builder.withAccessType(AccessType.KEY)
@@ -92,8 +98,8 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
         break;
       case KeyPath:
         SSHKeyPathCredentialDTO sshKeyPathCredentialDTO = (SSHKeyPathCredentialDTO) sshConfigDTO.getSpec();
-        SSHKeyPathCredentialDTO keyPathCredentialDTO = (SSHKeyPathCredentialDTO) secretDecryptionService.decrypt(
-            sshKeyPathCredentialDTO, sshTaskParams.getEncryptionDetails());
+        SSHKeyPathCredentialDTO keyPathCredentialDTO =
+            (SSHKeyPathCredentialDTO) secretDecryptionService.decrypt(sshKeyPathCredentialDTO, encryptionDetails);
         builder.withKeyPath(keyPathCredentialDTO.getKeyPath())
             .withUserName(keyPathCredentialDTO.getUserName())
             .withAccessType(AccessType.KEY)
@@ -106,8 +112,8 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
     builder.withAuthenticationScheme(SSH_KEY);
   }
 
-  private void generateKerberosBuilder(
-      SSHTaskParams sshTaskParams, KerberosConfigDTO kerberosConfigDTO, SshSessionConfig.Builder builder) {
+  private void generateKerberosBuilder(KerberosConfigDTO kerberosConfigDTO, SshSessionConfig.Builder builder,
+      List<EncryptedDataDetail> encryptionDetails) {
     KerberosConfigBuilder kerberosConfig = KerberosConfig.builder()
                                                .principal(kerberosConfigDTO.getPrincipal())
                                                .realm(kerberosConfigDTO.getRealm())
@@ -115,14 +121,14 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
     switch (kerberosConfigDTO.getTgtGenerationMethod()) {
       case Password:
         TGTPasswordSpecDTO tgtPasswordSpecDTO = (TGTPasswordSpecDTO) kerberosConfigDTO.getSpec();
-        TGTPasswordSpecDTO passwordSpecDTO = (TGTPasswordSpecDTO) secretDecryptionService.decrypt(
-            tgtPasswordSpecDTO, sshTaskParams.getEncryptionDetails());
+        TGTPasswordSpecDTO passwordSpecDTO =
+            (TGTPasswordSpecDTO) secretDecryptionService.decrypt(tgtPasswordSpecDTO, encryptionDetails);
         builder.withPassword(passwordSpecDTO.getPassword().getDecryptedValue());
         break;
       case KeyTabFilePath:
         TGTKeyTabFilePathSpecDTO tgtKeyTabFilePathSpecDTO = (TGTKeyTabFilePathSpecDTO) kerberosConfigDTO.getSpec();
-        TGTKeyTabFilePathSpecDTO keyTabFilePathSpecDTO = (TGTKeyTabFilePathSpecDTO) secretDecryptionService.decrypt(
-            tgtKeyTabFilePathSpecDTO, sshTaskParams.getEncryptionDetails());
+        TGTKeyTabFilePathSpecDTO keyTabFilePathSpecDTO =
+            (TGTKeyTabFilePathSpecDTO) secretDecryptionService.decrypt(tgtKeyTabFilePathSpecDTO, encryptionDetails);
         kerberosConfig.keyTabFilePath(keyTabFilePathSpecDTO.getKeyPath());
         break;
       default:
@@ -142,7 +148,8 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
   public DelegateResponseData run(TaskParameters parameters) {
     SSHTaskParams sshTaskParams = (SSHTaskParams) parameters;
 
-    SshSessionConfig sshSessionConfig = getSSHSessionConfig(sshTaskParams);
+    SshSessionConfig sshSessionConfig =
+        getSSHSessionConfig(sshTaskParams.getSshKeySpec(), sshTaskParams.getEncryptionDetails());
     sshSessionConfig.setHost(sshTaskParams.getHost());
     try {
       Session session = SshSessionFactory.getSSHSession(sshSessionConfig);

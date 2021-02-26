@@ -2,9 +2,7 @@ package io.harness.executionplan;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
-import static io.harness.common.CIExecutionConstants.ARGS_PREFIX;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
-import static io.harness.common.CIExecutionConstants.ENTRYPOINT_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
@@ -66,8 +64,11 @@ import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.common.CIExecutionConstants;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -78,8 +79,6 @@ import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -113,6 +112,7 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Singleton;
@@ -428,9 +428,9 @@ public class CIExecutionPlanTestHelper {
         .dependencySpecType(
             CIServiceInfo.builder()
                 .identifier(SERVICE_ID)
-                .args(Collections.singletonList(SERVICE_ARGS))
-                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                .image(SERVICE_IMAGE)
+                .args(ParameterField.createValueField(Collections.singletonList(SERVICE_ARGS)))
+                .entrypoint(ParameterField.createValueField(Collections.singletonList(SERVICE_ENTRYPOINT)))
+                .image(ParameterField.createValueField(SERVICE_IMAGE))
                 .resources(ContainerResource.builder()
                                .limits(ContainerResource.Limits.builder()
                                            .cpu(ParameterField.createValueField(SERVICE_LIMIT_CPU_STRING))
@@ -461,8 +461,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(ContainerImageDetails.builder()
@@ -488,8 +488,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -880,8 +880,7 @@ public class CIExecutionPlanTestHelper {
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
         .type(Infrastructure.Type.KUBERNETES_DIRECT)
-        .spec(
-            K8sDirectInfraYaml.Spec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
+        .spec(K8sDirectInfraYamlSpec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
         .build();
   }
   public StageElement getIntegrationStageElement() {
@@ -925,15 +924,17 @@ public class CIExecutionPlanTestHelper {
     return envVars;
   }
 
-  public List<CustomSecretVariable> getCustomSecretVariable() {
-    List<CustomSecretVariable> secretVariables = new ArrayList<>();
-    secretVariables.add(CustomSecretVariable.builder()
+  public List<SecretNGVariable> getCustomSecretVariable() {
+    List<SecretNGVariable> secretVariables = new ArrayList<>();
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR1")
-                            .value(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
                             .build());
-    secretVariables.add(CustomSecretVariable.builder()
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR2")
-                            .value(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
                             .build());
     return secretVariables;
   }
@@ -1005,7 +1006,9 @@ public class CIExecutionPlanTestHelper {
                     KubernetesClusterConfigDTO.builder()
                         .credential(KubernetesCredentialDTO.builder()
                                         .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                        .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegate").build())
+                                        .config(KubernetesDelegateDetailsDTO.builder()
+                                                    .delegateSelectors(Collections.singleton("delegate"))
+                                                    .build())
                                         .build())
                         .build())
                 .build())

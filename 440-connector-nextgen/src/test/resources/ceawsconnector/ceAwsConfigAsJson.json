@@ -17,12 +17,12 @@
         "OPTIMIZATION"
       ],
       "curAttributes": {
-        "reportName": "reportName",
-        "s3BucketName": "s3BucketName"
+        "reportName": "report_name_utsav",
+        "s3BucketName": "ce-customer-billing-data-dev"
       },
       "crossAccountAccess": {
-        "crossAccountRoleArn": "arn:aws:iam::123456789012:role/harnessCERole",
-        "externalId": "harness:987654321091:3vgRlwVBSPKxGMtmH4uOYQ"
+        "crossAccountRoleArn": "arn:aws:iam::890436954479:role/harnessCERole",
+        "externalId": "harness:108817434118:kmpySmUISimoRrJL6NL73w"
       }
     }
   }

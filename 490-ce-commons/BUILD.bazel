@@ -8,20 +8,12 @@ load("//:macros.bzl", "sources")
 sources()
 
 java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//960-persistence:module",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "//:lombok",
+        "//960-persistence:module",
     ],
 )
 
@@ -31,7 +23,7 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
+        "//960-persistence:module",
         ":module",
     ],
 )

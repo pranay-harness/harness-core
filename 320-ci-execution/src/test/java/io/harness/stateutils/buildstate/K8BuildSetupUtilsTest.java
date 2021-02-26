@@ -14,6 +14,7 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.VISTAAR;
 
@@ -39,7 +40,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -71,10 +72,10 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 @Slf4j
-public class K8BuildSetupUtilsTest extends CIExecutionTest {
+public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
-  @Inject private SecretVariableUtils secretVariableUtils;
+  @Inject private SecretUtils secretUtils;
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
@@ -86,9 +87,9 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Before
   public void setUp() {
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
-    on(secretVariableUtils).set("secretNGManagerClient", secretNGManagerClient);
-    on(secretVariableUtils).set("secretManagerClientService", secretManagerClientService);
-    on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
+    on(secretUtils).set("secretNGManagerClient", secretNGManagerClient);
+    on(secretUtils).set("secretManagerClientService", secretManagerClientService);
+    on(k8BuildSetupUtils).set("secretUtils", secretUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
     on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
@@ -134,8 +135,11 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 

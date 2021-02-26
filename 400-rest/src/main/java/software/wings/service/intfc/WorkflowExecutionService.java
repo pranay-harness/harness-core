@@ -100,6 +100,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution triggerPipelineResumeExecution(
       String appId, int parallelIndexToResume, WorkflowExecution workflowExecution);
 
+  WorkflowExecution triggerPipelineResumeExecution(String appId, String stageName, WorkflowExecution workflowExecution);
+
   List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution workflowExecution);
 
   List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution workflowExecution);
@@ -200,6 +202,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       List<String> appIds, long epochMilli, String[] projectedKeys);
 
   List<Artifact> obtainLastGoodDeployedArtifacts(@NotEmpty String appId, @NotEmpty String workflowId);
+
+  List<Artifact> obtainLastGoodDeployedArtifacts(WorkflowExecution workflowExecution, List<String> infraMappingList);
 
   List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId);
 

@@ -461,7 +461,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   private void createCloudwatchMetricRecord(int minute, String cvConfigId) throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("./verification/cloudwatchAnalysis.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/cloudwatchAnalysis.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
@@ -473,7 +473,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       });
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
     }
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/cloudwatchData.json").getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/cloudwatchData.json");
 
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
@@ -614,7 +614,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     attribute.setUuid(connectorId);
     wingsPersistence.save(attribute);
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/dataForTimeSeries.json").getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/dataForTimeSeries.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
@@ -626,7 +626,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(metricDataRecords);
     }
 
-    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/24_7_ts_analysis.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
@@ -660,8 +660,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
 
     final Gson gson = new Gson();
-    File file =
-        new File(getClass().getClassLoader().getResource("./verification/cv_24_7_analysis_record.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/cv_24_7_analysis_record.json");
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
@@ -750,7 +749,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricsForRisk.json").getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/metricsForRisk.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
@@ -766,7 +765,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(dataRecords);
     }
 
-    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/24_7_ts_analysis.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
@@ -832,10 +831,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     TimeSeriesMLAnalysisRecord tsAnalysisRecord = null;
     List<Double> expectedTimeSeries = new ArrayList<>();
 
-    File file1 = new File(getClass()
-                              .getClassLoader()
-                              .getResource("./verification/24x7_ts_transactionMetricRisk_MetricRecords")
-                              .getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/24x7_ts_transactionMetricRisk_MetricRecords");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
@@ -854,10 +850,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(dataRecords);
     }
 
-    File file = new File(getClass()
-                             .getClassLoader()
-                             .getResource("./verification/24_7_ts_transactionMetricRisk_regression.json")
-                             .getFile());
+    File file = new File("400-rest/src/test/resources/verification/24_7_ts_transactionMetricRisk_regression.json");
     final Gson gson = new Gson();
 
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -963,7 +956,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     createAppDConnector();
 
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricsForRisk.json").getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/metricsForRisk.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
@@ -975,7 +968,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       wingsPersistence.save(metricDataRecords);
     }
 
-    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/24_7_ts_analysis.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
@@ -1036,7 +1029,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     saveMetricRecords(cvConfigId);
 
-    File file = new File(getClass().getClassLoader().getResource("./verification/multi-risk-sorting.json").getFile());
+    File file = new File("400-rest/src/test/resources/verification/multi-risk-sorting.json");
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
@@ -1265,7 +1258,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   private void saveMetricRecords(String cvConfigId) throws IOException {
-    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    File file1 = new File("400-rest/src/test/resources/verification/metricRecords.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
