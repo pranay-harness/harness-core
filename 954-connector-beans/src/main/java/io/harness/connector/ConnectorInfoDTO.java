@@ -1,14 +1,13 @@
 package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -40,6 +39,15 @@ public class ConnectorInfoDTO {
   @NotNull
   io.harness.delegate.beans.connector.ConnectorConfigDTO connectorConfig;
 
+  // Adding custom setters for Jackson to set empty string as null
+  public void setOrgIdentifier(String orgIdentifier) {
+    this.orgIdentifier = isEmpty(orgIdentifier) ? null : orgIdentifier;
+  }
+
+  public void setProjectIdentifier(String projectIdentifier) {
+    this.projectIdentifier = isEmpty(projectIdentifier) ? null : projectIdentifier;
+  }
+
   @Builder
   public ConnectorInfoDTO(String name, String identifier, String description, String orgIdentifier,
       String projectIdentifier, Map<String, String> tags, ConnectorType connectorType,
@@ -47,8 +55,8 @@ public class ConnectorInfoDTO {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
-    this.orgIdentifier = orgIdentifier;
-    this.projectIdentifier = projectIdentifier;
+    this.orgIdentifier = isEmpty(orgIdentifier) ? null : orgIdentifier;
+    this.projectIdentifier = isEmpty(projectIdentifier) ? null : projectIdentifier;
     this.tags = tags;
     this.connectorType = connectorType;
     this.connectorConfig = connectorConfig;
