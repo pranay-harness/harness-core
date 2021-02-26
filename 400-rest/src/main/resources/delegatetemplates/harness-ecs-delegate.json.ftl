@@ -35,6 +35,10 @@
           "value": "${delegateGroupName}"
         },
         {
+          "name": "DELEGATE_GROUP_ID",
+          "value": "${delegateGroupId}"
+        },
+        {
           "name": "DELEGATE_PROFILE",
           "value": "${delegateProfile}"
         },

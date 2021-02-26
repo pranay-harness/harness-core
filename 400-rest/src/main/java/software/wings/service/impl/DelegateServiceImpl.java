@@ -658,6 +658,8 @@ public class DelegateServiceImpl implements DelegateService {
                                             .findFirst()
                                             .orElse(null);
 
+      DelegateGroup delegateGroup = upsertDelegateGroup(delegateSetupDetails.getName(), accountId);
+
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                              .accountId(accountId)
@@ -677,6 +679,7 @@ public class DelegateServiceImpl implements DelegateService {
                                              .delegateReplicas(sizeDetails.getReplicas())
                                              .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
                                              .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
+                                             .delegateGroupId(delegateGroup.getUuid())
                                              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1178,6 +1181,7 @@ public class DelegateServiceImpl implements DelegateService {
     private String verificationHost;
     private String delegateName;
     private String delegateProfile;
+    private String delegateGroupId;
     private String delegateType;
     private boolean ceEnabled;
     private boolean ciEnabled;
@@ -1370,6 +1374,12 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (inquiry.getDelegateCpu() != 0) {
         params.put("delegateCpu", String.valueOf(inquiry.getDelegateCpu()));
+      }
+
+      if (isNotBlank(inquiry.getDelegateGroupId())) {
+        params.put("delegateGroupId", inquiry.getDelegateGroupId());
+      } else {
+        params.put("delegateGroupId", "");
       }
 
       return params.build();
@@ -1766,6 +1776,8 @@ public class DelegateServiceImpl implements DelegateService {
         version = EMPTY_VERSION;
       }
 
+      DelegateGroup delegateGroup = upsertDelegateGroup(delegateGroupName, accountId);
+
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                              .accountId(accountId)
@@ -1775,7 +1787,9 @@ public class DelegateServiceImpl implements DelegateService {
                                              .delegateName(StringUtils.EMPTY)
                                              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
                                              .delegateType(ECS)
+                                             .delegateGroupId(delegateGroup.getUuid())
                                              .build());
+
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
       // Add Task Spec Json file
@@ -2068,6 +2082,13 @@ public class DelegateServiceImpl implements DelegateService {
                         .orElse(null);
     }
 
+    String delegateGroupId = delegateParams.getDelegateGroupId();
+    if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
+      DelegateGroup delegateGroup =
+          upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId());
+      delegateGroupId = delegateGroup.getUuid();
+    }
+
     Delegate delegate = Delegate.builder()
                             .uuid(delegateParams.getDelegateId())
                             .accountId(delegateParams.getAccountId())
@@ -2077,6 +2098,7 @@ public class DelegateServiceImpl implements DelegateService {
                             .ip(delegateParams.getIp())
                             .hostName(delegateParams.getHostName())
                             .delegateGroupName(delegateParams.getDelegateGroupName())
+                            .delegateGroupId(delegateGroupId)
                             .delegateName(delegateParams.getDelegateName())
                             .delegateProfileId(delegateParams.getDelegateProfileId())
                             .lastHeartBeat(delegateParams.getLastHeartBeat())

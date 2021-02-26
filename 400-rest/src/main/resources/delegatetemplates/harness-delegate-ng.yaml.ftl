@@ -108,6 +108,8 @@ spec:
           value: ${deployMode}
         - name: DELEGATE_NAME
           value: ${delegateName}
+        - name: DELEGATE_GROUP_ID
+          value: ${delegateGroupId}
         - name: DELEGATE_DESCRIPTION
           value: "${delegateDescription}"
         - name: DELEGATE_PROFILE

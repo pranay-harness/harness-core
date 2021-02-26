@@ -18,6 +18,7 @@ public class DelegateParams {
   String hostName;
   String delegateName;
   String delegateGroupName;
+  String delegateGroupId;
   String delegateProfileId;
   String description;
   String version;
