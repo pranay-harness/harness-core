@@ -32,7 +32,7 @@ public class StageElementConfig {
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
-  String type;
+  @NotNull String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;

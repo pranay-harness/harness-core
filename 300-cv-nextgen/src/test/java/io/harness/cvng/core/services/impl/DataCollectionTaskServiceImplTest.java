@@ -9,6 +9,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -76,17 +77,18 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject @Spy private DataCollectionTaskServiceImpl dataCollectionTaskServiceImpl;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Mock private Clock clock;
+  @Inject private Clock clock;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
@@ -98,6 +100,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   private Instant fakeNow;
   private String dataCollectionWorkerId;
   private String verificationTaskId;
+  private CVConfig cvConfig;
 
   @Before
   public void setupTests() throws IllegalAccessException {
@@ -106,7 +109,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
-    CVConfig cvConfig = cvConfigService.save(createCVConfig());
+    cvConfig = cvConfigService.save(createCVConfig());
     cvConfigId = cvConfig.getUuid();
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId);
     dataCollectionTaskService = spy(dataCollectionTaskService);
@@ -116,7 +119,82 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(
         dataCollectionTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
     fakeNow = clock.instant();
-    dataCollectionWorkerId = cvConfigId;
+    dataCollectionWorkerId = monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(),
+        cvConfig.getIdentifier());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextTask() throws IllegalAccessException {
+    DataCollectionTask dataCollectionTask = create(SUCCESS);
+    clock = Clock.fixed(Instant.now().plus(Duration.ofMinutes(20)), ZoneOffset.UTC);
+
+    FieldUtils.writeField(dataCollectionTaskServiceImpl, "clock", clock, true);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleRecoverNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+    assertThat(retrievedDataCollectionTask.getStatus()).isEqualTo(SUCCESS);
+
+    DataCollectionTask dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                     .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                     .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                         retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                     .get();
+
+    assertThat(dataCollectionTaskQuery).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextLastUpdatedStatusQueued() {
+    DataCollectionTask dataCollectionTask = create(QUEUED);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleRecoverNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+    assertThat(retrievedDataCollectionTask.getStatus()).isEqualTo(QUEUED);
+
+    List<DataCollectionTask> dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                           .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                               retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                           .asList();
+
+    assertThat(dataCollectionTaskQuery).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextTaskIsAfterTwoMinutes() throws IllegalAccessException {
+    Instant currentTime = clock.instant();
+    Instant instant = currentTime.minusMillis(Duration.ofMinutes(10).toMillis());
+    DataCollectionTask dataCollectionTask = create();
+    clock = Clock.fixed(instant, ZoneOffset.UTC);
+
+    FieldUtils.writeField(dataCollectionTaskServiceImpl, "clock", clock, true);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleRecoverNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+
+    List<DataCollectionTask> dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                           .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                               retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                           .asList();
+
+    assertThat(dataCollectionTaskQuery).hasSize(1);
   }
 
   @Test
@@ -720,7 +798,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
       return ServiceGuardDataCollectionTask.builder()
           .verificationTaskId(verificationTaskId)
           .type(Type.SERVICE_GUARD)
-          .dataCollectionWorkerId(cvConfigId)
+          .dataCollectionWorkerId(dataCollectionWorkerId)
           .accountId(accountId)
           .startTime(fakeNow.minus(Duration.ofMinutes(7)))
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))

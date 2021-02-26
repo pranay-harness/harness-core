@@ -197,7 +197,7 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
           subject: Manual Intervention Needed for ${WORKFLOW_NAME} ${PIPELINE_NAME_EMAIL_SUBJECT}
           body: <<bottom-div>><<${VERB}-color>> ${PHASE_NAME}<b> Workflow <<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} <br> ${APPLICATION} <br> ${SERVICE} <br> ${ARTIFACTS} <br> ${ENVIRONMENT} <br> ${INFRA} <br>${TRIGGER} <br><i>Started ${START_DATE} and ${VERB} at ${END_DATE} <br> Expires ${EXPIRES_DATE} </i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       pagerDuty:
-        summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACT} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
+        summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACTS} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
         link:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}

@@ -59,3 +59,10 @@ permissions:
     allowedScopeLevels:
       - account
       - organization
+  - identifier: core.secret.create
+    name: create secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

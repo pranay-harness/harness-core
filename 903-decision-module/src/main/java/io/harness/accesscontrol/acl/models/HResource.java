@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 @Builder
 public class HResource {
-  private static final String IDENTIFIER_FOR_ALL_RESOURCES = "*";
+  public static final String IDENTIFIER_FOR_ALL_RESOURCES = "*";
   private String resourceIdentifier;
   private String resourceType;
 

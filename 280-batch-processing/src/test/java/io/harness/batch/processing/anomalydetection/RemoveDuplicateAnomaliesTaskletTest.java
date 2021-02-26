@@ -104,10 +104,22 @@ public class RemoveDuplicateAnomaliesTaskletTest extends CategoryTest {
   }
 
   private AnomalyEntity getClusterAnomaly(String id, String clusterId, String namespace, String workloadName) {
-    return AnomalyEntity.builder().id(id).clusterId(clusterId).namespace(namespace).workloadName(workloadName).build();
+    return AnomalyEntity.builder()
+        .actualCost(10.2)
+        .id(id)
+        .clusterId(clusterId)
+        .namespace(namespace)
+        .workloadName(workloadName)
+        .build();
   }
 
   private AnomalyEntity getGCPAnomaly(String id, String gcpProject, String gcpProduct, String gcpSku) {
-    return AnomalyEntity.builder().id(id).gcpProject(gcpProject).gcpProduct(gcpProduct).gcpSKUId(gcpSku).build();
+    return AnomalyEntity.builder()
+        .actualCost(10.3)
+        .id(id)
+        .gcpProject(gcpProject)
+        .gcpProduct(gcpProduct)
+        .gcpSKUId(gcpSku)
+        .build();
   }
 }

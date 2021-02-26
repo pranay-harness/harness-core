@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

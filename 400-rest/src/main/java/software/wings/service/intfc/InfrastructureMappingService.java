@@ -21,6 +21,7 @@ import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureDefinition;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingVariableTypes;
 
@@ -36,7 +37,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by anubhaw on 1/10/17.
  */
-public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedByInfrastructureProvisioner {
+public interface InfrastructureMappingService
+    extends OwnedByEnvironment, OwnedByInfrastructureProvisioner, OwnedByInfrastructureDefinition {
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
 
   PageResponse<InfrastructureMapping> list(

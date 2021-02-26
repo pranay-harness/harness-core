@@ -20,6 +20,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.serializer.JsonUtils;
 
 import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentContext;
 import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentManagementGroupContext;
@@ -53,7 +54,7 @@ public class AzureARMDeploymentService {
 
     LogCallback logCallback = getARMDeploymentLogCallback(context);
     logCallback.saveExecutionLog(
-        String.format("Starting ARM Deployment for Resource Group - [%s], Mode - [%s], Deployment Name - [%s]",
+        String.format("Starting ARM Deployment for %nResource Group - [%s], Mode - [%s], Deployment Name - [%s]",
             azureClientContext.getResourceGroupName(), azureARMTemplate.getDeploymentMode().name(),
             azureARMTemplate.getDeploymentName()));
     azureManagementClient.deployAtResourceGroupScope(azureClientContext, azureARMTemplate);
@@ -260,7 +261,7 @@ public class AzureARMDeploymentService {
       ILogStreamingTaskClient logStreamingTaskClient, ARMDeploymentSteadyStateContext steadyStateContext) {
     String armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(steadyStateContext);
     LogCallback outPutLogCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
-    outPutLogCallback.saveExecutionLog(armDeploymentOutputs, LogLevel.INFO, SUCCESS);
+    outPutLogCallback.saveExecutionLog(JsonUtils.prettifyJsonString(armDeploymentOutputs), LogLevel.INFO, SUCCESS);
     return armDeploymentOutputs;
   }
 

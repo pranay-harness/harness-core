@@ -22,4 +22,5 @@ public class K8sDeleteRequest implements K8sDeployRequest {
   private String resources;
   private boolean deleteNamespacesForRelease;
   private String filePaths;
+  DeleteResourcesType deleteResourcesType;
 }

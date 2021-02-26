@@ -248,11 +248,14 @@ public class SettingsServiceImpl implements SettingsService {
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
     try {
+      long timestamp = System.currentTimeMillis();
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
+      log.info("Time taken in DB Query for while fetching settings:  {}", System.currentTimeMillis() - timestamp);
 
+      timestamp = System.currentTimeMillis();
       List<SettingAttribute> filteredSettingAttributes =
           getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
-
+      log.info("Total time taken in filtering setting records:  {}.", System.currentTimeMillis() - timestamp);
       return aPageResponse()
           .withResponse(filteredSettingAttributes)
           .withTotal(filteredSettingAttributes.size())
@@ -383,7 +386,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (inputSettingAttributes == null) {
       return Collections.emptyList();
     }
-
+    long timestamp = System.currentTimeMillis();
     if (isEmpty(inputSettingAttributes)) {
       return inputSettingAttributes;
     }
@@ -393,19 +396,29 @@ public class SettingsServiceImpl implements SettingsService {
 
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
+    log.info("Time taken in getRestrictionsAndAppEnvMapFromCache {}", System.currentTimeMillis() - timestamp);
+    timestamp = System.currentTimeMillis();
     Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
     Set<String> appsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
     Map<String, List<Base>> appIdEnvMap = envService.getAppIdEnvMap(appsByAccountId);
+    log.info("Time taken in getAppIdsAsSetByAccountId + getAppIdEnvMap {}", System.currentTimeMillis() - timestamp);
 
     Set<SettingAttribute> helmRepoSettingAttributes = new HashSet<>();
     boolean isAccountAdmin;
 
+    List<Long> timeTakenOnSettingAttributes = new ArrayList<>();
+    List<Long> timeTakenOnCheckingPermissions = new ArrayList<>();
+    List<Long> timeTakenOnCheckingReferences = new ArrayList<>();
     for (SettingAttribute settingAttribute : inputSettingAttributes) {
+      timestamp = System.currentTimeMillis();
       PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
       isAccountAdmin = userService.hasPermission(accountId, permissionType);
-      if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
+      timeTakenOnCheckingPermissions.add(System.currentTimeMillis() - timestamp);
+      boolean isRefereincing = isSettingAttributeReferencingCloudProvider(settingAttribute);
+      timeTakenOnCheckingReferences.add(System.currentTimeMillis() - timestamp);
+      if (isRefereincing) {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
         if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
@@ -413,8 +426,18 @@ public class SettingsServiceImpl implements SettingsService {
           filteredSettingAttributes.add(settingAttribute);
         }
       }
+      timeTakenOnSettingAttributes.add(System.currentTimeMillis() - timestamp);
     }
 
+    log.info("Breakup of time spent in filtering Setting Attribute: {}, Total: {}",
+        StringUtils.join(timeTakenOnSettingAttributes, ","),
+        timeTakenOnSettingAttributes.stream().reduce(0l, Long::sum));
+    log.info("Breakup of time spent in checking permissions: {}, Total: {}",
+        StringUtils.join(timeTakenOnCheckingPermissions, ","),
+        timeTakenOnCheckingPermissions.stream().reduce(0l, Long::sum));
+    log.info("Breakup of time spent in checking references: {}, Total: {}",
+        StringUtils.join(timeTakenOnCheckingReferences, ","),
+        timeTakenOnCheckingReferences.stream().reduce(0l, Long::sum));
     getFilteredHelmRepoSettingAttributes(appIdFromRequest, envIdFromRequest, accountId, filteredSettingAttributes,
         appEnvMapFromUserPermissions, restrictionsFromUserPermissions, appIdEnvMap, helmRepoSettingAttributes);
 
@@ -483,12 +506,17 @@ public class SettingsServiceImpl implements SettingsService {
       Map<String, Set<String>> appEnvMapFromUserPermissions, UsageRestrictions restrictionsFromUserPermissions,
       boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap, SettingAttribute settingAttribute,
       SettingAttribute settingAttributeWithUsageRestrictions) {
+    long time = System.currentTimeMillis();
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
         // Runtime check using intersection of usage scopes of secretIds.
-        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
+        boolean ans =
+            secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
+        log.info("Time taken in checking for filtered Attribute :: canUseSecretsInAppAndEnv : {}",
+            System.currentTimeMillis() - time);
+        return ans;
       }
     }
 
@@ -501,9 +529,10 @@ public class SettingsServiceImpl implements SettingsService {
       if (settingValue instanceof EncryptableSetting) {
         secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
       }
+      log.info("Time taken in checking for filtered Attribute :: encryption {}", System.currentTimeMillis() - time);
       return true;
     }
-
+    log.info("Time taken in checking for filtered Attribute :: {}", System.currentTimeMillis() - time);
     return false;
   }
 

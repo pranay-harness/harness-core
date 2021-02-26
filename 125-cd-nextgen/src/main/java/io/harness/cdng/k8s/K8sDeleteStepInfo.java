@@ -61,7 +61,7 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK;
+    return OrchestrationFacilitatorType.TASK_CHAIN;
   }
 
   @Override

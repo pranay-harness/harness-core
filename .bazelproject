@@ -6,11 +6,13 @@ directories:
   130-resource-group
   136-git-sync-manager
   160-model-gen-tool
+  160-stress-tester
   210-command-library-server
   220-graphql-test
   230-model-test
   250-watcher
   260-delegate
+  270-verification
   280-batch-processing
   300-cv-nextgen
   310-ci-manager
@@ -64,6 +66,7 @@ directories:
   940-resource-group-beans
   940-secret-manager-client
   950-command-library-common
+  950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
@@ -110,3 +113,4 @@ import_run_configurations:
   run-configurations/Notification Microservice.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
+  run-configurations/VerificationServiceApp.xml

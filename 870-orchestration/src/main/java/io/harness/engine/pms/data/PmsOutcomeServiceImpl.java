@@ -61,7 +61,8 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
+  public String consumeInternal(
+      Ambiance ambiance, String name, String value, int levelsToKeep, boolean isGraphOutcome) {
     Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
@@ -75,6 +76,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
+                                   .isGraphOutcome(isGraphOutcome)
                                    .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
@@ -86,8 +88,14 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
+    return findAllByRuntimeId(planExecutionId, runtimeId, false);
+  }
+
+  @Override
+  public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId, boolean isGraphOutcome) {
     Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
+                      .addCriteria(where(OutcomeInstanceKeys.isGraphOutcome).is(isGraphOutcome))
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);

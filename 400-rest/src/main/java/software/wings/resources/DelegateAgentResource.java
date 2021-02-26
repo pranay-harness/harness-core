@@ -20,6 +20,7 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
@@ -335,6 +336,21 @@ public class DelegateAgentResource {
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateScripts(
           accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+    }
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("delegateScriptsNg")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
     }
   }
 

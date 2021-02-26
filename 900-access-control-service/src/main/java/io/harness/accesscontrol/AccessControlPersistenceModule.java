@@ -2,6 +2,8 @@ package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
+import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
+import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
 import io.harness.mongo.AbstractMongoModule;
@@ -27,12 +29,23 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 public class AccessControlPersistenceModule extends PersistenceModule {
   private static AccessControlPersistenceModule instance;
+  private final MongoConfig mongoConfig;
 
-  public static synchronized AccessControlPersistenceModule getInstance() {
+  private AccessControlPersistenceModule(MongoConfig mongoConfig) {
+    this.mongoConfig = mongoConfig;
+  }
+
+  public static synchronized AccessControlPersistenceModule getInstance(MongoConfig mongoConfig) {
     if (instance == null) {
-      instance = new AccessControlPersistenceModule();
+      instance = new AccessControlPersistenceModule(mongoConfig);
     }
     return instance;
+  }
+
+  @Provides
+  @Singleton
+  MongoConfig mongoConfig() {
+    return mongoConfig;
   }
 
   @Provides
@@ -65,8 +78,9 @@ public class AccessControlPersistenceModule extends PersistenceModule {
 
   @Override
   protected Class<?>[] getConfigClasses() {
-    return new Class[] {PermissionPersistenceConfig.class, RolePersistenceConfig.class,
-        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class};
+    return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
+        PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class,
+        ACLPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

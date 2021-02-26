@@ -1,0 +1,69 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+sources()
+
+shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_openpojo_openpojo",
+    "@maven//:de_bwaldvogel_mongo_java_server_core",
+    "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
+    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
+    "@maven//:io_prometheus_simpleclient_servlet",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+] + [
+    "//400-rest:module",
+    "//970-rbac-core:module",
+    "//:lombok",
+]
+
+java_binary(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+        "src/generated/**/*.java",
+    ]),
+    data = ["//:resource"],
+    main_class = "io.harness.app.VerificationServiceApplication",
+    resources = [
+        "//270-verification/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//270-verification/src/main/resources",
+    ],
+    deps = shared_dependencies,
+)
+
+test_dependencies = shared_dependencies + [
+    ":module",
+    "//400-rest:supporter-test",
+    "//960-persistence:supporter-test",
+    "//990-commons-test:module",
+    "@maven//:io_dropwizard_dropwizard_testing",
+    "@maven//:org_assertj_assertj_core",
+    "@maven//:org_glassfish_javax_el",
+    "@maven//:org_powermock_powermock_module_junit4",
+]
+
+java_library(
+    name = "tests",
+    srcs = glob(
+        ["src/test/**/*.java"],
+    ),
+    data = [
+        "//270-verification/src/test/resources:resource",
+    ],
+    resources = [
+        "//270-verification/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = test_dependencies,
+)
+
+run_tests()

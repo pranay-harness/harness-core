@@ -1984,6 +1984,7 @@ maven_install(
         "org.jsoup:jsoup:1.8.3",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "com.github.heremaps:oksse:0.9.0",
+        "io.prometheus:simpleclient_servlet:0.3.0",
         "com.slack.api:slack-api-client:1.5.3",
         "com.slack.api:slack-api-model:1.5.3",
         "org.springframework.batch:spring-batch-core:4.2.2.RELEASE",
@@ -2032,7 +2033,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cf:cf-client-sdk-java:1.0.0-20210126.200034-12",
+        "io.harness.cf:cf-client-sdk-java:0.0.2",
         "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [
@@ -2047,6 +2048,27 @@ maven_install(
         "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
         "com.squareup.okhttp3:okhttp:3.6.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "batch",
+    artifacts = [
+        "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

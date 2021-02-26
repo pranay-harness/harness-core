@@ -58,7 +58,7 @@ mkdir -p dist/verification-service ;
 
 cd dist/verification-service
 
-cp ../../270-verification/target/verification-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/270-verification/module_deploy.jar verification-capsule.jar
 cp ../../270-verification/keystore.jks .
 cp ../../270-verification/verification-config.yml .
 

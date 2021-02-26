@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -21,6 +22,7 @@ import com.google.inject.Injector;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -110,6 +112,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   }
 
   private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(EarlyEofExceptionMapper.class);
+    environment.jersey().register(ConstraintViolationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);

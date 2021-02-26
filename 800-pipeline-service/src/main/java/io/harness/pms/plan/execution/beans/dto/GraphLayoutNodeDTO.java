@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution.beans.dto;
 
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,4 +30,5 @@ public class GraphLayoutNodeDTO {
   private Long startTs;
   private Long endTs;
   EdgeLayoutListDTO edgeLayoutList;
+  SkipInfo skipInfo;
 }

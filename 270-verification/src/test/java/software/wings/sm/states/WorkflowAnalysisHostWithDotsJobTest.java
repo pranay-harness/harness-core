@@ -13,7 +13,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -62,7 +62,7 @@ import org.mockito.Spy;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBaseTest {
+public class WorkflowAnalysisHostWithDotsJobTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String stateExecutionId;
