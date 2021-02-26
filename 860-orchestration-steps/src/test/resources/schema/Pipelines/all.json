@@ -30,6 +30,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "BarrierInfoConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BranchBuildSpec": {
       "allOf": [
         {
@@ -169,6 +185,18 @@
       "properties": {
         "onFailure": {
           "$ref": "#/definitions/OnFailureConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FlowControlConfig": {
+      "type": "object",
+      "properties": {
+        "barriers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BarrierInfoConfig"
+          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -435,6 +463,9 @@
       "properties": {
         "description": {
           "type": "string"
+        },
+        "flowControl": {
+          "$ref": "#/definitions/FlowControlConfig"
         },
         "identifier": {
           "type": "string"

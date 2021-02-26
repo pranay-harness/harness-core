@@ -1,5 +1,6 @@
 package io.harness.steps.common.pipeline;
 
+import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
@@ -24,6 +25,7 @@ public class PipelineSetupStepParameters implements StepParameters {
 
   String name;
   String identifier;
+  FlowControlConfig flowControl;
   ParameterField<String> description;
   Map<String, String> tags;
   NGProperties properties;
@@ -33,12 +35,13 @@ public class PipelineSetupStepParameters implements StepParameters {
   int sequenceId;
 
   @Builder(builderMethodName = "newBuilder")
-  public PipelineSetupStepParameters(String childNodeID, String name, String identifier,
+  public PipelineSetupStepParameters(String childNodeID, String name, String identifier, FlowControlConfig flowControl,
       ParameterField<String> description, Map<String, String> tags, NGProperties properties,
       List<NGVariable> originalVariables, String executionId, int sequenceId) {
     this.childNodeID = childNodeID;
     this.name = name;
     this.identifier = identifier;
+    this.flowControl = flowControl;
     this.description = description;
     this.tags = tags;
     this.properties = properties;
@@ -59,7 +62,7 @@ public class PipelineSetupStepParameters implements StepParameters {
           .build();
     }
     return new PipelineSetupStepParameters(childNodeID, infoConfig.getName(), infoConfig.getIdentifier(),
-        infoConfig.getDescription(), infoConfig.getTags(), infoConfig.getProperties(), infoConfig.getVariables(),
-        executionMetadata.getExecutionUuid(), executionMetadata.getRunSequence());
+        infoConfig.getFlowControl(), infoConfig.getDescription(), infoConfig.getTags(), infoConfig.getProperties(),
+        infoConfig.getVariables(), executionMetadata.getExecutionUuid(), executionMetadata.getRunSequence());
   }
 }
