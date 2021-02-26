@@ -19,7 +19,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
@@ -57,7 +57,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private CVConfigService cvConfigService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
   // Probabally by moving ProgressLog concept to a separate service and model.
@@ -340,7 +340,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
-    String dataCollectionWorkerId = monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+    String dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
         cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
         cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
     return ServiceGuardDataCollectionTask.builder()

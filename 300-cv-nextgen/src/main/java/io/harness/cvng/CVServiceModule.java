@@ -66,7 +66,7 @@ import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
@@ -87,7 +87,7 @@ import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
-import io.harness.cvng.core.services.impl.MonitoringTaskPerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
@@ -294,7 +294,7 @@ public class CVServiceModule extends AbstractModule {
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
       bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
-      bind(MonitoringTaskPerpetualTaskService.class).to(MonitoringTaskPerpetualTaskServiceImpl.class);
+      bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
 
       MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
           MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);

@@ -5,7 +5,7 @@ import io.harness.encryption.Scope;
 
 import java.util.List;
 
-public interface MonitoringTaskPerpetualTaskService extends DeleteEntityByHandler<MonitoringSourcePerpetualTask> {
+public interface MonitoringSourcePerpetualTaskService extends DeleteEntityByHandler<MonitoringSourcePerpetualTask> {
   void createTask(String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier,
       String monitoringSourceIdentifier);
   void deleteTask(String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
@@ -13,6 +13,9 @@ public interface MonitoringTaskPerpetualTaskService extends DeleteEntityByHandle
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, Scope scope);
   void createPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask);
   void resetLiveMonitoringPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask);
-  String getDataCollectionWorkerId(String accountId, String orgIdentifier, String projectIdentifier,
+  String getLiveMonitoringWorkerId(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String monitoringSourceIdentifier);
+
+  String getDeploymentWorkerId(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, String monitoringSourceIdentifier);
 }
