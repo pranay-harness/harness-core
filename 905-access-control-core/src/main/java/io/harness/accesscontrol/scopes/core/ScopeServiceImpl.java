@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.scopes.core;
 
-import static io.harness.accesscontrol.scopes.core.Scope.SCOPE_IDENTIFIER_DELIMITER;
+import static io.harness.accesscontrol.scopes.core.Scope.PATH_DELIMITER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidArgumentsException;
@@ -20,6 +20,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ScopeServiceImpl implements ScopeService {
   private final Map<Integer, ScopeLevel> scopeLevelsByRank;
+  private final Map<String, ScopeLevel> scopeLevelsByResourceType;
   private final Map<String, ScopeLevel> scopeLevels;
   private final int lowestLevel;
 
@@ -27,7 +28,9 @@ public class ScopeServiceImpl implements ScopeService {
   public ScopeServiceImpl(Map<String, ScopeLevel> scopeLevels) {
     this.scopeLevels = scopeLevels;
     this.scopeLevelsByRank = new HashMap<>();
+    this.scopeLevelsByResourceType = new HashMap<>();
     scopeLevels.values().forEach(scopeLevel -> scopeLevelsByRank.put(scopeLevel.getRank(), scopeLevel));
+    scopeLevels.values().forEach(scopeLevel -> scopeLevelsByResourceType.put(scopeLevel.getResourceType(), scopeLevel));
     if (scopeLevelsByRank.get(0) == null) {
       throw new InvalidArgumentsException("No root scope level has been registered");
     }
@@ -58,12 +61,13 @@ public class ScopeServiceImpl implements ScopeService {
 
   @Override
   public Scope buildScopeFromScopeIdentifier(String scopeIdentifier) {
-    List<String> scopeIdentifierElements = Arrays.asList(scopeIdentifier.split(SCOPE_IDENTIFIER_DELIMITER));
+    List<String> scopeIdentifierElements = Arrays.asList(scopeIdentifier.split(PATH_DELIMITER));
     if (scopeIdentifierElements.size() < 3) {
       return null;
     }
     String instanceId = scopeIdentifierElements.get(scopeIdentifierElements.size() - 1);
-    ScopeLevel scopeLevel = scopeLevels.get(scopeIdentifierElements.get(scopeIdentifierElements.size() - 2));
+    ScopeLevel scopeLevel =
+        scopeLevelsByResourceType.get(scopeIdentifierElements.get(scopeIdentifierElements.size() - 2));
     if (isEmpty(instanceId)) {
       throw new InvalidArgumentsException("The instance id is invalid or empty in the scopeIdentifier");
     }
@@ -72,7 +76,7 @@ public class ScopeServiceImpl implements ScopeService {
           "The scope level mentioned in the scope identifier is not registered in the system");
     }
     String parentScopeIdentifier =
-        String.join(SCOPE_IDENTIFIER_DELIMITER, scopeIdentifierElements.subList(0, scopeIdentifierElements.size() - 2));
+        String.join(PATH_DELIMITER, scopeIdentifierElements.subList(0, scopeIdentifierElements.size() - 2));
     return Scope.builder()
         .instanceId(instanceId)
         .level(scopeLevel)

@@ -100,6 +100,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution triggerPipelineResumeExecution(
       String appId, int parallelIndexToResume, WorkflowExecution workflowExecution);
 
+  WorkflowExecution triggerPipelineResumeExecution(String appId, String stageName, WorkflowExecution workflowExecution);
+
   List<PipelineStageGroupedInfo> getResumeStages(String appId, WorkflowExecution workflowExecution);
 
   List<WorkflowExecution> getResumeHistory(String appId, WorkflowExecution workflowExecution);

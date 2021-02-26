@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.cloud.bigquery.datatransfer.v1.TransferState;
 import com.google.inject.Singleton;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -43,20 +44,23 @@ public class AzureBillingDataPipelineTasklet implements Tasklet {
         accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE,
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
-
-    boolean awsUseNewPipeline = mainConfig.getBillingDataPipelineConfig().isAwsUseNewPipeline();
+    log.info("Found {} Azure connectors", ceConnectorsList.size());
     ceConnectorsList.forEach(settingAttribute -> {
       String settingId = settingAttribute.getUuid();
-      BillingDataPipelineRecord billingDataPipelineRecord = billingDataPipelineRecordDao.getByAccountId(accountId);
+      BillingDataPipelineRecord billingDataPipelineRecord =
+          billingDataPipelineRecordDao.getBySettingId(accountId, settingId);
       if (null == billingDataPipelineRecord) {
         String dataSetId = billingDataPipelineService.createDataSet(account);
-        BillingDataPipelineRecord dataPipelineRecord = BillingDataPipelineRecord.builder()
-                                                           .accountId(accountId)
-                                                           .accountName(accountName)
-                                                           .cloudProvider(CloudProvider.AZURE.name())
-                                                           .settingId(settingId)
-                                                           .dataSetId(dataSetId)
-                                                           .build();
+        BillingDataPipelineRecord dataPipelineRecord =
+            BillingDataPipelineRecord.builder()
+                .accountId(accountId)
+                .accountName(accountName)
+                .cloudProvider(CloudProvider.AZURE.name())
+                .settingId(settingId)
+                .dataSetId(dataSetId)
+                .dataTransferJobStatus(TransferState.PENDING.toString())
+                .preAggregatedScheduledQueryStatus(TransferState.PENDING.toString())
+                .build();
         billingDataPipelineRecordDao.create(dataPipelineRecord);
       }
     });

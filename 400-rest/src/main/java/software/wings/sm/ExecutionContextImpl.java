@@ -22,6 +22,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.HELM_CHART;
+import static software.wings.sm.ContextElement.ROLLBACK_ARTIFACT;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
@@ -236,7 +237,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   public static void addArtifactToContext(ArtifactStreamService artifactStreamService, String accountId,
-      Map<String, Object> map, Artifact artifact, BuildSourceService buildSourceService) {
+      Map<String, Object> map, Artifact artifact, BuildSourceService buildSourceService, boolean rollbackArtifact) {
     if (artifact != null) {
       artifact.setSource(
           artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId()));
@@ -247,7 +248,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                            .buildSourceService(buildSourceService)
                            .artifactStream(artifactStream)
                            .build();
-      map.put(ARTIFACT, artifact);
+      map.put(rollbackArtifact ? ROLLBACK_ARTIFACT : ARTIFACT, artifact);
       String artifactFileName = null;
       if (isNotEmpty(artifact.getArtifactFiles())) {
         artifactFileName = artifact.getArtifactFiles().get(0).getName();
@@ -255,7 +256,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         artifactFileName = artifact.getFileName();
       }
       if (isNotEmpty(artifactFileName)) {
-        map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+        map.put(rollbackArtifact ? ExpressionEvaluator.ROLLBACK_ARTIFACT_FILE_NAME_VARIABLE
+                                 : ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE,
+            artifactFileName);
+      }
+    } else {
+      if (rollbackArtifact) {
+        // Roll back artifact could be null if it is the first execution or service has changed/templatized since last
+        // execution
+        map.put(ROLLBACK_ARTIFACT, Artifact.Builder.anArtifact().build());
       }
     }
   }
@@ -1006,8 +1015,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       map = copyIfNeeded(map);
       Application app = getApp();
       if (app != null) {
-        addArtifactToContext(
-            artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact(), buildSourceService);
+        addArtifactToContext(artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact(),
+            buildSourceService, false);
       }
     }
     if (stateExecutionContext.getArtifactFileName() != null) {

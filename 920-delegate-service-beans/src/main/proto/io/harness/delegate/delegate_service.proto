@@ -15,6 +15,7 @@ import "920-delegate-service-beans/src/main/proto/io/harness/callback/callback.p
 import "920-delegate-service-beans/src/main/proto/io/harness/perpetualtask/perpetual_task_client.proto";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 service DelegateService {
@@ -39,6 +40,7 @@ service DelegateService {
   rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
 }
 
+// Next ID: 9
 message SubmitTaskRequest {
   callback.DelegateCallbackToken callback_token = 1;
 
@@ -49,6 +51,10 @@ message SubmitTaskRequest {
   TaskDetails details = 4;
   repeated Capability capabilities = 5;
   repeated TaskSelector selectors = 6;
+
+  // The time the task should stay in the queue. To set the execution time out, fill out
+  // details.execution_timeout
+  google.protobuf.Duration queue_timeout = 8;
 }
 
 message SubmitTaskResponse {

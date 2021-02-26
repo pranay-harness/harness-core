@@ -1,12 +1,12 @@
 use clap::Clap;
+use multimap::MultiMap;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::java_class::{JavaClass, JavaClassTraits};
-use crate::java_module::{modules, JavaModule};
-use multimap::MultiMap;
+use crate::java_module::{JavaModule, modules};
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]

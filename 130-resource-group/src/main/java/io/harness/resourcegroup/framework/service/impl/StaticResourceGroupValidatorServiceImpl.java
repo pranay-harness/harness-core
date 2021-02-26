@@ -4,11 +4,12 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
+import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.Scope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
-import io.harness.resourcegroup.resourceclient.api.ResourceValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -44,13 +45,33 @@ public class StaticResourceGroupValidatorServiceImpl implements ResourceGroupVal
         throw new IllegalStateException(
             String.format("Resource validator for resource type %s not registered", resourceType));
       }
-      valid = valid && resourceValidators.get(resourceType).getScopes().contains(scope);
+      valid = valid && areResourcesLegalAtScope(resourceType, resourceIds, scope, resourceGroup);
       valid = valid
           && resourceValidators.get(resourceType)
                  .validate(resourceIds, resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
                      resourceGroup.getProjectIdentifier())
                  .stream()
                  .allMatch(Boolean.TRUE::equals);
+    }
+    return valid;
+  }
+
+  private boolean areResourcesLegalAtScope(
+      String resourceType, List<String> resourceIds, Scope scope, ResourceGroup resourcegroup) {
+    boolean valid;
+    switch (resourceType) {
+      case ResourceGroupConstants.ACCOUNT:
+        valid = resourceIds.stream().allMatch(resourcegroup.getAccountIdentifier()::equals);
+        break;
+      case ResourceGroupConstants.ORGANIZATION:
+        valid = resourceIds.stream().allMatch(resourcegroup.getOrgIdentifier()::equals);
+        break;
+      case ResourceGroupConstants.PROJECT:
+        valid = resourceIds.stream().allMatch(resourcegroup.getProjectIdentifier()::equals);
+        break;
+      default:
+        valid = resourceValidators.get(resourceType).getScopes().contains(scope);
+        break;
     }
     return valid;
   }

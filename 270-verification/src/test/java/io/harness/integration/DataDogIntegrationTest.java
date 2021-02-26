@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
@@ -60,6 +60,7 @@ import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.JobDataMap;
@@ -67,8 +68,9 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 
+@Ignore
 @Slf4j
-public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
+public class DataDogIntegrationTest extends VerificationIntegrationBase {
   @Inject private ScmSecret scmSecret;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper managerClient;

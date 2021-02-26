@@ -27,4 +27,9 @@ public class ApprovalPolingServiceImpl implements ApprovalPolingService {
   public void delete(String entityId) {
     wingsPersistence.delete(ApprovalPollingJobEntity.class, entityId);
   }
+
+  @Override
+  public void updateNextIteration(String entityId, long nextIteration) {
+    wingsPersistence.updateField(ApprovalPollingJobEntity.class, entityId, "nextIteration", nextIteration);
+  }
 }

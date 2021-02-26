@@ -119,7 +119,7 @@ spec:
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "${delegateSessionIdentifier}"
         - name: DELEGATE_TASK_LIMIT
-          value: ${delegateTaskLimit}
+          value: "${delegateTaskLimit}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

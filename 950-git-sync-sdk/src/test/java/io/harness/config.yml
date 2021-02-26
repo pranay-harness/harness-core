@@ -1,3 +1,17 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: https
+      port: 7090
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 8726
+      maxRequestHeaderSize: 100KiB
+
 mongo:
   uri: mongodb://localhost:27017/git-test-harness
   connectTimeout: 30000

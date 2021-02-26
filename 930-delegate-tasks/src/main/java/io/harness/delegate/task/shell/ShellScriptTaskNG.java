@@ -3,7 +3,9 @@ package io.harness.delegate.task.shell;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -47,31 +49,39 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     ShellScriptTaskParametersNG taskParameters = (ShellScriptTaskParametersNG) parameters;
+    CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
     if (taskParameters.isExecuteOnDelegate()) {
       ShellExecutorConfig shellExecutorConfig = getShellExecutorConfig(taskParameters);
       ScriptProcessExecutor executor =
-          shellExecutorFactory.getExecutor(shellExecutorConfig, this.getLogStreamingTaskClient());
+          shellExecutorFactory.getExecutor(shellExecutorConfig, this.getLogStreamingTaskClient(), commandUnitsProgress);
       // TODO: check later
       // if (taskParameters.isLocalOverrideFeatureFlag()) {
       //   taskParameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(taskParameters.getScript()));
       // }
       ExecuteCommandResponse executeCommandResponse =
           executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
-      return ShellScriptTaskResponseNG.builder().executeCommandResponse(executeCommandResponse).build();
+      return ShellScriptTaskResponseNG.builder()
+          .executeCommandResponse(executeCommandResponse)
+          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
+          .build();
     } else {
       try {
         SshSessionConfig sshSessionConfig = getSshSessionConfig(taskParameters);
         ScriptSshExecutor executor =
-            sshExecutorFactoryNG.getExecutor(sshSessionConfig, this.getLogStreamingTaskClient());
+            sshExecutorFactoryNG.getExecutor(sshSessionConfig, this.getLogStreamingTaskClient(), commandUnitsProgress);
         ExecuteCommandResponse executeCommandResponse =
             executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
-        return ShellScriptTaskResponseNG.builder().executeCommandResponse(executeCommandResponse).build();
+        return ShellScriptTaskResponseNG.builder()
+            .executeCommandResponse(executeCommandResponse)
+            .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
+            .build();
       } catch (Exception e) {
         log.error("Bash Script Failed to execute.", e);
         return ShellScriptTaskResponseNG.builder()
             .status(CommandExecutionStatus.FAILURE)
             .errorMessage("Bash Script Failed to execute. Reason: " + e.getMessage())
+            .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
             .build();
       } finally {
         SshSessionManager.evictAndDisconnectCachedSession(taskParameters.getExecutionId(), taskParameters.getHost());

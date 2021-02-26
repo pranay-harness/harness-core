@@ -18,6 +18,7 @@ import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -35,6 +36,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
@@ -42,6 +44,8 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
+import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -64,8 +68,10 @@ import io.harness.yaml.YamlSdkInitHelper;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.jersey.KryoFeature;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -105,6 +111,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
 
+  private final MetricRegistry metricRegistry = new MetricRegistry();
+
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("Shutdown hook, entering maintenance...");
@@ -131,6 +139,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+    bootstrap.setMetricRegistry(metricRegistry);
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
@@ -145,6 +154,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new NextGenModule(appConfig));
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(MetricRegistry.class).toInstance(metricRegistry);
+      }
+    });
+    modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     Injector injector = Guice.createInjector(modules);
 
@@ -166,8 +182,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
-
+    registerIterators(injector);
     MaintenanceController.forceMaintenance(false);
+  }
+
+  public void registerIterators(Injector injector) {
+    injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -225,6 +245,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -277,6 +298,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
     if (appConfig.getShouldConfigureWithPMS()) {
       queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     }

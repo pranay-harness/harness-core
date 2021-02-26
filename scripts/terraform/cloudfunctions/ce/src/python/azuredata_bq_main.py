@@ -4,7 +4,8 @@ import os
 from google.cloud import bigquery
 from google.cloud import storage
 import datetime
-from util import create_dataset, if_tbl_exists, createTable
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_
 from calendar import monthrange
 
 """
@@ -47,11 +48,14 @@ def main(event, context):
     data = base64.b64decode(event['data']).decode('utf-8')
     jsonData = json.loads(data)
     print(jsonData)
+
     # This is available only in runtime python 3.7, go 1.11
     jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
+
     jsonData["tableName"] = f"azureBilling_{jsonData['tableSuffix']}"
     client = bigquery.Client(jsonData["projectName"])
-    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
+    util.ACCOUNTID_LOG = jsonData.get("accountIdOrig")
+    create_dataset(client, jsonData["datasetName"])
     dataset = client.dataset(jsonData["datasetName"])
 
     preAggragatedTableRef = dataset.table("preAggregated")
@@ -61,24 +65,25 @@ def main(event, context):
     unifiedTableTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], "unifiedTable")
 
     if not if_tbl_exists(client, unifiedTableRef):
-        print("%s table does not exists, creating table..." % unifiedTableRef)
+        print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableTableName)
     else:
-        print("%s table exists" % unifiedTableTableName)
+        alterUnifiedTable(client, jsonData)
+        print_("%s table exists" % unifiedTableTableName)
 
     if not if_tbl_exists(client, preAggragatedTableRef):
-        print("%s table does not exists, creating table..." % preAggragatedTableRef)
+        print_("%s table does not exists, creating table..." % preAggragatedTableRef)
         createTable(client, preAggragatedTableTableName)
     else:
-        print("%s table exists" % preAggragatedTableTableName)
+        alterPreaggTable(client, jsonData)
+        print_("%s table exists" % preAggragatedTableTableName)
 
     # start streaming the data from the gcs
-    print("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])
+    print_("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])
     try:
         ingestDataFromCsvToAzureTable(client, jsonData)
     except Exception as e:
-        # TODO: Re raise the exception here for retry
-        print(e)
+        print_(e, "WARN")
         return
     ingestDataToPreaggregatedTable(client, jsonData)
     ingestDataInUnifiedTableTable(client, jsonData)
@@ -98,9 +103,9 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
                 maxsize = blob.size
                 csvtoingest = blob.name
     if not csvtoingest:
-        print("No CSV to insert. GCS bucket might be empty")
+        print_("No CSV to insert. GCS bucket might be empty", "WARN")
         return
-    print(csvtoingest, maxsize)
+    print_(csvtoingest)
 
     job_config = bigquery.LoadJobConfig(
         autodetect=True,
@@ -113,11 +118,11 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
         write_disposition='WRITE_TRUNCATE' #If the table already exists, BigQuery overwrites the table data
     )
     uris = ["gs://" + jsonData["bucket"] + "/" + csvtoingest]
-    print("Ingesting CSV from %s" % uris)
+    print_("Ingesting CSV from %s" % uris)
     # format: ce-prod-274307:BillingReport_wfhxhd0rrqwoo8tizt5yvw.awsCurTable_2020_04
     table_id = "%s.%s" % (jsonData["datasetName"], jsonData["tableName"])
-    print(table_id)
-    print("Loading into %s table..." % table_id)
+    print_(table_id)
+    print_("Loading into %s table..." % table_id)
     load_job = client.load_table_from_uri(
         uris,
         table_id,
@@ -127,7 +132,7 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
     load_job.result()  # Wait for the job to complete.
 
     table = client.get_table(table_id)
-    print("Total {} rows in table {}".format(table.num_rows, table_id))
+    print_("Total {} rows in table {}".format(table.num_rows, table_id))
     # cleanup the processed blobs
     blobs = storage_client.list_blobs(
         jsonData["bucket"], prefix="/".join(jsonData["name"].split("/")[:-1])
@@ -135,7 +140,7 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
     for blob in blobs:
         if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):
             blob.delete()
-            print("Blob {} deleted.".format(blob.name))
+            print_("Blob {} deleted.".format(blob.name))
 
 
 def ingestDataToPreaggregatedTable(client, jsonData):
@@ -144,7 +149,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     year, month = jsonData["tableSuffix"].split('_')
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
-    print("Loading into %s preAggregated table..." % tableName)
+    print_("Loading into %s preAggregated table..." % tableName)
     query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AZURE";
            INSERT INTO `%s.preAggregated` (startTime, azureResourceRate, cost,
                                            azureServiceName, region, azureSubscriptionGuid,
@@ -167,7 +172,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     )
     query_job = client.query(query, job_config=job_config)
     query_job.result()
-    print("Loaded into %s table..." % tableName)
+    print_("Loaded into %s table..." % tableName)
 
 
 def ingestDataInUnifiedTableTable(client, jsonData):
@@ -177,7 +182,7 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     year, month = jsonData["tableSuffix"].split('_')
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
-    print("Loading into %s table..." % tableName)
+    print_("Loading into %s table..." % tableName)
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
            INSERT INTO `%s.unifiedTable`
                 (product, startTime, cost,
@@ -207,7 +212,7 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     )
     query_job = client.query(query, job_config=job_config)
     query_job.result()
-    print("Loaded into %s table..." % tableName)
+    print_("Loaded into %s table..." % tableName)
 
 def createUDF(client, projectId):
     create_dataset(client, "CE_INTERNAL")
@@ -231,3 +236,42 @@ def createUDF(client, projectId):
 
     query_job = client.query(query)
     query_job.result()
+
+def alterPreaggTable(client, jsonData):
+    print_("Altering Preaggregated Data Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.preAggregated` ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceRate FLOAT64, \
+        ADD COLUMN IF NOT EXISTS azureServiceName STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e, "WARN")
+    else:
+        print_("Finished Altering preAggregated Table")
+
+def alterUnifiedTable(client, jsonData):
+    print_("Altering unifiedTable Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.unifiedTable` ADD COLUMN IF NOT EXISTS azureMeterCategory STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterSubcategory STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterId STRING, \
+        ADD COLUMN IF NOT EXISTS azureMeterName STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceType STRING, \
+        ADD COLUMN IF NOT EXISTS azureServiceTier STRING, \
+        ADD COLUMN IF NOT EXISTS azureInstanceId STRING, \
+        ADD COLUMN IF NOT EXISTS azureResourceGroup STRING, \
+        ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
+        ADD COLUMN IF NOT EXISTS azureServiceName STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print_(e, "WARN")
+    else:
+        print_("Finished Altering unifiedTable Table")

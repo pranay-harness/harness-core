@@ -29,6 +29,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("STACKDRIVER")
 @Data
@@ -132,5 +133,17 @@ public class StackdriverCVConfig extends MetricCVConfig {
                                   .build());
     });
     this.setMetricPack(metricPack);
+  }
+
+  public static class StackDriverCVConfigUpdatableEntity
+      extends MetricCVConfigUpdatableEntity<StackdriverCVConfig, StackdriverCVConfig> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<StackdriverCVConfig> updateOperations, StackdriverCVConfig stackdriverCVConfig) {
+      setCommonOperations(updateOperations, stackdriverCVConfig);
+      updateOperations.set(StackdriverCVConfigKeys.metricInfoList, stackdriverCVConfig.getMetricInfoList());
+      updateOperations.set(StackdriverCVConfigKeys.dashboardName, stackdriverCVConfig.getDashboardName());
+      updateOperations.set(StackdriverCVConfigKeys.dashboardPath, stackdriverCVConfig.getDashboardPath());
+    }
   }
 }

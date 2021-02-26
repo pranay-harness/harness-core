@@ -13,9 +13,9 @@ public interface NGGitService {
   CommitAndPushResult commitAndPush(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest, String accountId,
       SshSessionConfig sshSessionConfig);
 
-  FetchFilesResult fetchFilesByPath(
-      GitStoreDelegateConfig gitStoreDelegateConfig, String accountId, SshSessionConfig sshSessionConfig);
+  FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId,
+      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO);
 
   void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String manifestFilesDirectory, String accountId,
-      SshSessionConfig sshSessionConfig);
+      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO);
 }

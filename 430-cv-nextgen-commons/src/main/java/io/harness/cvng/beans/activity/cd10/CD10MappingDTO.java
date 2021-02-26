@@ -9,4 +9,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public abstract class CD10MappingDTO {
   private String appId;
+  String appName;
 }

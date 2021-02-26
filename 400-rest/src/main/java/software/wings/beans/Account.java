@@ -131,6 +131,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long gitSyncExpiryCheckIteration;
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
+  @FdIndex private Long resourceLookupSyncIteration;
 
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
@@ -422,6 +423,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      this.resourceLookupSyncIteration = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -461,6 +467,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.ceLicenseExpiryIteration.equals(fieldName)) {
       return this.ceLicenseExpiryIteration;
+    }
+
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      return this.resourceLookupSyncIteration;
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -723,6 +733,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
+    public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }

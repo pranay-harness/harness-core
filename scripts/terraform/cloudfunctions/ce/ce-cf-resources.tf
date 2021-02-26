@@ -132,6 +132,22 @@ data "archive_file" "ce-azuredata-gcs" {
     filename = "main.py"
   }
   source {
+    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
+    filename = "clusterdata_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/unified_schema.py")}"
+    filename = "unified_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
+    filename = "preaggregated_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
     content  = "${file("${path.module}/src/python/requirements.txt")}"
     filename = "requirements.txt"
   }
@@ -213,7 +229,7 @@ resource "google_cloudfunctions_function" "ce-clusterdata-function" {
     entry_point               = "main"
     available_memory_mb       = 256
     timeout                   = 540
-    runtime                   = "python37"
+    runtime                   = "python38"
     project                   = "${var.projectId}"
     region                    = "${var.region}"
     source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
@@ -221,6 +237,7 @@ resource "google_cloudfunctions_function" "ce-clusterdata-function" {
     environment_variables = {
       disabled = "false"
       disable_for_accounts = ""
+      GCP_PROJECT = "${var.projectId}"
     }
     event_trigger {
       event_type = "google.storage.object.finalize"
@@ -237,7 +254,7 @@ resource "google_cloudfunctions_function" "ce-gcpdata-function" {
   entry_point               = "main"
   available_memory_mb       = 256
   timeout                   = 540
-  runtime                   = "python37"
+  runtime                   = "python38"
   project                   = "${var.projectId}"
   region                    = "${var.region}"
   source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
@@ -248,6 +265,7 @@ resource "google_cloudfunctions_function" "ce-gcpdata-function" {
   environment_variables = {
     disabled = "false"
     disable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
   }
   event_trigger {
     event_type = "google.pubsub.topic.publish"
@@ -285,7 +303,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-function" {
   entry_point               = "main"
   available_memory_mb       = 256
   timeout                   = 540
-  runtime                   = "python37"
+  runtime                   = "python38"
   project                   = "${var.projectId}"
   region                    = "${var.region}"
   source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
@@ -296,6 +314,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-function" {
   environment_variables = {
     disabled = "false"
     enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
   }
   event_trigger {
     event_type = "google.pubsub.topic.publish"
@@ -312,7 +331,7 @@ resource "google_cloudfunctions_function" "ce-azuredata-bq-function" {
   entry_point               = "main"
   available_memory_mb       = 256
   timeout                   = 540
-  runtime                   = "python37"
+  runtime                   = "python38"
   project                   = "${var.projectId}"
   region                    = "${var.region}"
   source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
@@ -321,6 +340,7 @@ resource "google_cloudfunctions_function" "ce-azuredata-bq-function" {
   environment_variables = {
     disabled = "false"
     enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
   }
   event_trigger {
     event_type = "google.pubsub.topic.publish"
@@ -337,7 +357,7 @@ resource "google_cloudfunctions_function" "ce-azuredata-gcs-function" {
   entry_point               = "main"
   available_memory_mb       = 256
   timeout                   = 540
-  runtime                   = "python37"
+  runtime                   = "python38"
   project                   = "${var.projectId}"
   region                    = "${var.region}"
   source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
@@ -346,6 +366,7 @@ resource "google_cloudfunctions_function" "ce-azuredata-gcs-function" {
   environment_variables = {
     disabled = "false"
     enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
   }
 
   event_trigger {

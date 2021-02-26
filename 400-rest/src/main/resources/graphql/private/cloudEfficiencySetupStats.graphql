@@ -29,6 +29,7 @@ type infraAccountConnectionData {
   linkedAccountCloudFormationTemplateLink: String
   masterAccountLaunchTemplateLink: String
   linkedAccountLaunchTemplateLink: String
+  azureHarnessAppClientId: String
 }
 
 type ceConnectorData {

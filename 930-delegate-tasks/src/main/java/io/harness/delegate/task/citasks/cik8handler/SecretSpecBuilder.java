@@ -106,6 +106,11 @@ public class SecretSpecBuilder {
             secretVariableDetail.getSecretVariableDTO().getSecret().toSecretRefStringValue());
         SecretVariableDTO secretVariableDTO = (SecretVariableDTO) secretDecryptionService.decrypt(
             secretVariableDetail.getSecretVariableDTO(), secretVariableDetail.getEncryptedDataDetailList());
+
+        log.info("Decrypted custom variable name:[{}], type:[{}], secretRef:[{}]",
+            secretVariableDetail.getSecretVariableDTO().getName(),
+            secretVariableDetail.getSecretVariableDTO().getType(),
+            secretVariableDetail.getSecretVariableDTO().getSecret().toSecretRefStringValue());
         switch (secretVariableDTO.getType()) {
           case FILE:
             data.put(secretVariableDTO.getName(),
@@ -213,6 +218,7 @@ public class SecretSpecBuilder {
         "Decrypting git connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
     secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
 
+    log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
     if (data.isEmpty()) {
       String errMsg = format("Invalid GIT Authentication scheme %s for repository %s", gitConfigDTO.getGitAuthType(),
           gitConfigDTO.getUrl());
@@ -239,9 +245,13 @@ public class SecretSpecBuilder {
       GithubHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
 
+      log.info("Decrypting GitHub connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
+
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
 
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         GithubUsernamePasswordDTO githubUsernamePasswordDTO =
             (GithubUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
@@ -294,7 +304,11 @@ public class SecretSpecBuilder {
 
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       SSHKeyDetails sshKeyDetails = gitConnector.getSshKeyDetails();
+      log.info("Decrypting GitHub connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
+
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
       if (key == null || isEmpty(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Github connector should have not empty sshKey");
@@ -318,8 +332,11 @@ public class SecretSpecBuilder {
       GithubHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
 
+      log.info("Decrypting GitHub connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
 
       if (gitHTTPAuthenticationDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         GithubUsernamePasswordDTO githubHttpCredentialsSpecDTO =
@@ -359,9 +376,11 @@ public class SecretSpecBuilder {
       GitlabHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
 
+      log.info("Decrypting GitLab connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         GitlabUsernamePasswordDTO gitlabHttpCredentialsSpecDTO =
             (GitlabUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
@@ -413,7 +432,10 @@ public class SecretSpecBuilder {
       }
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       SSHKeyDetails sshKeyDetails = gitConnector.getSshKeyDetails();
+      log.info("Decrypting GitLab connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
       if (key == null || isEmpty(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Gitlab connector should have not empty sshKey");
@@ -435,10 +457,11 @@ public class SecretSpecBuilder {
     if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
       GitlabHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-
+      log.info("Decrypting GitLab connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         GitlabUsernamePasswordDTO gitlabHttpCredentialsSpecDTO =
             (GitlabUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
@@ -476,10 +499,11 @@ public class SecretSpecBuilder {
     if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
       BitbucketHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-
+      log.info("Decrypting Bitbucket connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         BitbucketUsernamePasswordDTO bitbucketHttpCredentialsSpecDTO =
             (BitbucketUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
@@ -505,7 +529,10 @@ public class SecretSpecBuilder {
       }
     } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
       SSHKeyDetails sshKeyDetails = gitConnector.getSshKeyDetails();
+      log.info("Decrypting Bitbucket connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
       if (key == null || isEmpty(key.getDecryptedValue())) {
         throw new CIStageExecutionException("Bitbucket connector should have not empty sshKey");
@@ -528,10 +555,11 @@ public class SecretSpecBuilder {
     if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
       BitbucketHttpCredentialsDTO gitHTTPAuthenticationDTO =
           (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-
+      log.info("Decrypting Bitbucket connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
+          gitConnector.getConnectorType());
       secretDecryptionService.decrypt(
           gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
       if (gitHTTPAuthenticationDTO.getType() == BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
         BitbucketUsernamePasswordDTO bitbucketHttpCredentialsSpecDTO =
             (BitbucketUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();

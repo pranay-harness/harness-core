@@ -21,14 +21,18 @@ import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.UserClientModule;
 import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
+import io.harness.pms.barriers.service.PMSBarrierService;
+import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
@@ -100,7 +104,12 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
     install(PmsDelegateServiceDriverModule.getInstance());
@@ -174,6 +183,8 @@ public class PipelineServiceModule extends AbstractModule {
     filterPropertiesMapper.addBinding(FilterType.PIPELINESETUP.toString()).to(PipelineFilterPropertiesMapper.class);
     filterPropertiesMapper.addBinding(FilterType.PIPELINEEXECUTION.toString())
         .to(PipelineExecutionFilterPropertiesMapper.class);
+
+    bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
   }
 
   @Provides

@@ -10,7 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.DataCollectionType;
@@ -62,7 +62,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 
-public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTest {
+public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private K8ActivityCollectionPerpetualTaskExecutor dataCollector = new K8ActivityCollectionPerpetualTaskExecutor();
   @Mock private SecretDecryptionService secretDecryptionService;

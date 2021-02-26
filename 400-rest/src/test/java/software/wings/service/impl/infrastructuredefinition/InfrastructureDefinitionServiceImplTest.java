@@ -71,6 +71,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
 import software.wings.api.CloudProviderType;
@@ -108,6 +109,7 @@ import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBui
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
@@ -166,6 +168,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
   @Mock private SecretManager secretManager;
+  @Mock private QueuePublisher<PruneEvent> pruneQueue;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -431,6 +434,11 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(eq(ACCOUNT_ID), any(InfrastructureDefinitionService.class), eq(null), eq(Event.Type.DELETE),
             eq(false), eq(false));
+    ArgumentCaptor<PruneEvent> captor = ArgumentCaptor.forClass(PruneEvent.class);
+    verify(pruneQueue, times(1)).send(captor.capture());
+    assertThat(captor.getValue().getEntityId()).isEqualTo(INFRA_DEFINITION_ID);
+    assertThat(captor.getValue().getAppId()).isEqualTo(APP_ID);
+    assertThat(captor.getValue().getEntityClass()).isEqualTo(InfrastructureDefinition.class.getCanonicalName());
   }
 
   @Test

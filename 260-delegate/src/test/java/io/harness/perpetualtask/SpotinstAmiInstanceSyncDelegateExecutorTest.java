@@ -13,7 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -52,7 +52,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
+public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTestBase {
   @Mock private EncryptionService encryptionService;
   @Mock private SpotInstSyncTaskHandler taskHandler;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;

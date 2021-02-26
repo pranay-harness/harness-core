@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +13,7 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.sm.StateMachineExecutor.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateType.COMMAND;
 
 import static java.lang.String.format;
@@ -114,7 +114,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionContext.StateExecutionContextBuilder;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
 
 import com.github.reinert.jjschema.Attributes;
@@ -273,10 +272,10 @@ public class CommandState extends State {
   }
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
+    Integer timeout = super.getTimeoutMillis();
+    return timeout == null ? DEFAULT_STATE_TIMEOUT_MILLIS : timeout;
   }
 
   // Entry function for execution of Command State (for both Service linked and Template library linked)
@@ -555,7 +554,6 @@ public class CommandState extends State {
     } catch (WingsException ex) {
       return handleException(context, executionDataBuilder, activityId, appId, ex);
     }
-
     return getExecutionResponse(executionDataBuilder, activityId, delegateTaskId);
   }
 
@@ -689,6 +687,7 @@ public class CommandState extends State {
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+            .description("Command state Execution")
             .waitId(activityId)
             .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
             .workflowExecutionId(context.getWorkflowExecutionId())
@@ -703,8 +702,10 @@ public class CommandState extends State {
 
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
     delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return delegateTaskId;
   }
 
@@ -1418,6 +1419,11 @@ public class CommandState extends State {
   @SchemaIgnore
   public void setExecutorService(ExecutorService executorService) {
     this.executorService = executorService;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   /**

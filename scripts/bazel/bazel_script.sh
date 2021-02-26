@@ -29,8 +29,8 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//260-delegate/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... || true
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]
@@ -59,6 +59,12 @@ BAZEL_MODULES="\
   //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
+  //250-watcher:module \
+  //250-watcher:module_deploy.jar \
+  //260-delegate:module \
+  //260-delegate:module_deploy.jar \
+  //270-verification:module \
+  //270-verification:module_deploy.jar \
   //280-batch-processing:module \
   //280-batch-processing:module_deploy.jar \
   //300-cv-nextgen:module_deploy.jar \
@@ -298,8 +304,11 @@ build_bazel_application 280-batch-processing
 build_bazel_application 120-ng-manager
 build_bazel_application 160-model-gen-tool
 build_bazel_application 210-command-library-server
+build_bazel_application 250-watcher
+build_bazel_application 260-delegate
 build_bazel_application 300-cv-nextgen
 build_bazel_application 310-ci-manager
+build_bazel_application 270-verification
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group

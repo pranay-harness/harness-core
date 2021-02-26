@@ -4,9 +4,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
@@ -24,15 +22,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SSHHostValidationCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.beans.executioncapability.WinrmHostValidationCapability;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;
@@ -51,8 +49,6 @@ public class CommandExecutionContextTest extends WingsBaseTest {
           .accountId(ACCOUNT_ID)
           .activityId(ACTIVITY_ID)
           .host(aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build())
-          .hostConnectionAttributes(
-              aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(aHostConnectionAttributes().build()).build())
           .winRmConnectionAttributes(WinRmConnectionAttributes.builder()
                                          .accountId(ACCOUNT_ID)
                                          .username(USER_NAME)
@@ -135,10 +131,10 @@ public class CommandExecutionContextTest extends WingsBaseTest {
             .executeOnDelegate(true)
             .build();
 
-    // we do not evaluate ssh selector capability if execute on delegate is true.
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SelectorCapability.class);
+    assertThat(executionCapabilities).hasSize(2);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(SSHHostValidationCapability.class);
+    assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
   }
 
   @Test

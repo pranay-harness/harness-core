@@ -1,12 +1,14 @@
 package io.harness.notification.module;
 
 import io.harness.govern.ProviderModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notification.NotificationClientApplicationConfiguration;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientMorphiaRegistrar;
 
@@ -65,7 +67,12 @@ public class NotificationClientApplicationModule extends AbstractModule {
       }
     });
 
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     bind(HPersistence.class).to(MongoPersistence.class);
     install(new NotificationClientModule(this.appConfig.getNotificationClientConfiguration()));
   }

@@ -85,6 +85,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsDelegateTask;
+import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.cek8s.CEKubernetesTestConnectionDelegateTask;
@@ -142,6 +143,10 @@ import io.harness.http.HttpServiceImpl;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.kustomize.KustomizeClient;
+import io.harness.kustomize.KustomizeClientImpl;
+import io.harness.openshift.OpenShiftClient;
+import io.harness.openshift.OpenShiftClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
@@ -335,12 +340,8 @@ import software.wings.helpers.ext.helm.HelmDeployServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.kustomize.KustomizeClient;
-import software.wings.helpers.ext.kustomize.KustomizeClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
-import software.wings.helpers.ext.openshift.OpenShiftClient;
-import software.wings.helpers.ext.openshift.OpenShiftClientImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
@@ -648,7 +649,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("timeoutExecutor")
   public ExecutorService timeoutExecutor() {
-    ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
+    ExecutorService timeoutExecutor = ThreadPool.create(10, 40, 7, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("timeout-%d").setPriority(Thread.NORM_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { timeoutExecutor.shutdownNow(); }));
     return timeoutExecutor;
@@ -1268,6 +1269,7 @@ public class DelegateModule extends AbstractModule {
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8_FETCH_EVENTS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.HTTP_TASK_NG).toInstance(HttpTaskNG.class);
     mapBinder.addBinding(TaskType.NOTIFY_MAIL).toInstance(MailSenderDelegateTask.class);
     mapBinder.addBinding(TaskType.NOTIFY_SLACK).toInstance(SlackSenderDelegateTask.class);
@@ -1366,5 +1368,9 @@ public class DelegateModule extends AbstractModule {
         .to(ArtifactoryValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.NEXUS.getDisplayName())
         .to(NexusValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.GCP.getDisplayName())
+        .to(GcpValidationTaskHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.AWS.getDisplayName())
+        .to(AwsValidationHandler.class);
   }
 }

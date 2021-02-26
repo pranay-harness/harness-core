@@ -30,6 +30,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
+import io.harness.cvng.core.jobs.DataCollectionTaskRecoverNextTaskHandler;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
@@ -57,8 +58,8 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
@@ -70,6 +71,8 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -217,7 +220,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -253,6 +261,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationTaskOrchestrationIterator(injector);
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
+    registerRecoverNextTaskHandlerIterator(injector);
     registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
@@ -349,7 +358,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleWithFixedDelay(
-        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+        () -> analysisOrchestrationIterator.process(), 0, 5, TimeUnit.SECONDS);
   }
 
   private void registerVerificationJobInstanceTimeoutIterator(Injector injector) {
@@ -443,6 +452,31 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(activityCollectionIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+  }
+
+  private void registerRecoverNextTaskHandlerIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
+        3, new ThreadFactoryBuilder().setNameFormat("recover-next-task-iterator").build());
+    DataCollectionTaskRecoverNextTaskHandler dataCollectionTaskRecoverNextTaskHandler =
+        injector.getInstance(DataCollectionTaskRecoverNextTaskHandler.class);
+    PersistenceIterator dataCollectionTaskRecoverHandlerIterator =
+        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVConfig.class)
+            .fieldName(CVConfigKeys.createNextTaskIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(dataCollectionTaskRecoverNextTaskHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(CVConfigKeys.firstTaskQueued).equal(true))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(
+        () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 2, TimeUnit.MINUTES);
   }
 
   private void registerDeleteDataCollectionWorkersIterator(Injector injector) {

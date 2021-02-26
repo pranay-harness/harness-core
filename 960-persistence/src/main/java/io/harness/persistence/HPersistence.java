@@ -41,13 +41,6 @@ public interface HPersistence extends HealthMonitor {
   void register(Store store, String uri);
 
   /**
-   * Register User provider.
-   *
-   * @param userProvider user provider
-   */
-  void registerUserProvider(UserProvider userProvider);
-
-  /**
    * Gets the datastore.
    *
    * @param store    the store

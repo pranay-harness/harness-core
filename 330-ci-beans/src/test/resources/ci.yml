@@ -60,9 +60,12 @@ pipeline:
                     type: RunTests
                     spec:
                       retry: 2
-                      goals: echo "Running test"
+                      args: echo "Running test"
                       buildTool: maven
                       language: java
+                      packages: "*.harness, *.wings"
+                      testAnnotaions: "harnessTest"
+                      runOnlySelectedTests: true
             - step:
                 identifier: generateReport
                 type: Run

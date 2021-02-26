@@ -20,6 +20,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.arm.ARMOutputVariables;
+import software.wings.api.arm.ARMPreExistingTemplate;
 import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.ARMSourceType;
 import software.wings.beans.Activity;
@@ -40,6 +41,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -100,7 +102,7 @@ public class ARMStateHelper {
     Activity activity = Activity.builder()
                             .applicationName(context.fetchRequiredApp().getName())
                             .appId(context.getAppId())
-                            .commandName("Execute ARM Deployment")
+                            .commandName(StateType.ARM_CREATE_RESOURCE.name())
                             .type(Type.Command)
                             .workflowType(context.getWorkflowType())
                             .workflowExecutionName(context.getWorkflowExecutionName())
@@ -192,5 +194,22 @@ public class ARMStateHelper {
                                    .name(ARMOutputVariables.SWEEPING_OUTPUT_NAME)
                                    .value(armOutputVariables)
                                    .build());
+  }
+
+  void savePreExistingTemplate(ARMPreExistingTemplate armPreExistingTemplate, String key, ExecutionContext context) {
+    SweepingOutputInstance instance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(key).build());
+    if (instance == null) {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                     .name(key)
+                                     .value(armPreExistingTemplate)
+                                     .build());
+    }
+  }
+
+  ARMPreExistingTemplate getPreExistingTemplate(String key, ExecutionContext context) {
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(key).build());
+    return sweepingOutputInstance != null ? (ARMPreExistingTemplate) sweepingOutputInstance.getValue() : null;
   }
 }

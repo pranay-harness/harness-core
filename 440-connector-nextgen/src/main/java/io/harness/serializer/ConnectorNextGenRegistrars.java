@@ -36,6 +36,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

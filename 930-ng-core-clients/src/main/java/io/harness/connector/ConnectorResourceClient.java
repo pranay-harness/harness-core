@@ -1,7 +1,9 @@
 package io.harness.connector;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.serializer.kryo.KryoResponse;
 
@@ -35,4 +37,12 @@ public interface ConnectorResourceClient {
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  @POST(CONNECTORS_API + "/listV2")
+  Call<ResponseDTO<PageResponse<ConnectorResponseDTO>>> listConnectors(
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
+      @Body ConnectorFilterPropertiesDTO connectorListFilter);
 }

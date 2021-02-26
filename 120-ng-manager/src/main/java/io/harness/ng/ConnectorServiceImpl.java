@@ -25,14 +25,13 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.helper.ConnectorLogContext;
+import io.harness.connector.helper.HarnessManagedConnectorHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
-import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -68,13 +67,15 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final Producer eventProducer;
   private final ExecutorService executorService;
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
       ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper) {
+      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper,
+      HarnessManagedConnectorHelper harnessManagedConnectorHelper) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -83,6 +84,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     this.eventProducer = eventProducer;
     this.executorService = executorService;
     this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
+    this.harnessManagedConnectorHelper = harnessManagedConnectorHelper;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -106,7 +108,8 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-      Boolean isHarnessManagedSecretManager = isHarnessManagedSecretManager(connectorInfo);
+      boolean isHarnessManagedSecretManager =
+          harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       if (!isHarnessManagedSecretManager) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
@@ -139,20 +142,6 @@ public class ConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
-    if (connector == null) {
-      return false;
-    }
-    switch (connector.getConnectorType()) {
-      case GCP_KMS:
-        return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      case LOCAL:
-        return ((LocalConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      default:
-        return false;
-    }
-  }
-
   private void runTestConnectionAsync(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     // User can create a connector without test connection, in this flow we won't have
     // a status for the connector, to solve this issue we will do one test connection
@@ -181,34 +170,34 @@ public class ConnectorServiceImpl implements ConnectorService {
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
       ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
       createConnectorUpdateActivity(accountIdentifier, savedConnector);
-      publishEventForConnectorUpdate(accountIdentifier, savedConnector);
+      publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
+          savedConnector.getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return connectorResponse;
     }
   }
 
-  private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
     try {
-      EntityChangeDTO.Builder connectorUpdateDTOBuilder =
-          EntityChangeDTO.newBuilder()
-              .setAccountIdentifier(StringValue.of(accountIdentifier))
-              .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
-      if (isNotBlank(savedConnector.getOrgIdentifier())) {
-        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()));
+      EntityChangeDTO.Builder connectorUpdateDTOBuilder = EntityChangeDTO.newBuilder()
+                                                              .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                              .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
       }
-      if (isNotBlank(savedConnector.getProjectIdentifier())) {
-        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
+      if (isNotBlank(projectIdentifier)) {
+        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
       }
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
                   EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.UPDATE_ACTION))
+                  EventsFrameworkMetadataConstants.ACTION, action))
               .setData(connectorUpdateDTOBuilder.build().toByteString())
               .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
-          String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,
-              savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier()));
+          String.format(CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
   }
 
@@ -239,10 +228,14 @@ public class ConnectorServiceImpl implements ConnectorService {
               getConnectorService(connector.getType())
                   .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
           if (isConnectorDeleted) {
+            publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier,
+                EventsFrameworkMetadataConstants.DELETE_ACTION);
             return true;
           } else {
-            connectorHeartbeatService.createConnectorHeatbeatTask(
+            PerpetualTaskId perpetualTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
                 accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+            updateConnectorEntityWithPerpetualtaskId(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, perpetualTaskId.getId());
             return false;
           }
         }
@@ -326,10 +319,16 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   private void updateTheConnectorValidationResultInTheEntity(ConnectorValidationResult connectorValidationResult,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    Connector connector =
-        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
-    connectorRepository.save(connector);
+    try {
+      Connector connector =
+          getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
+      connectorRepository.save(connector);
+    } catch (Exception ex) {
+      log.error("Error saving the connector status for the connector {}",
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
+          ex);
+    }
   }
 
   private Connector getConnectorWithIdentifier(

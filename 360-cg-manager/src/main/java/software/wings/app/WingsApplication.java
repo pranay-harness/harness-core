@@ -55,6 +55,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
 import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
+import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
@@ -72,7 +73,7 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.mongo.MongoModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
@@ -97,6 +98,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.persistence.UserProvider;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -151,7 +153,6 @@ import software.wings.beans.alert.AlertReconciliationHandler;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
@@ -167,6 +168,7 @@ import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.ManagerVersionsCleanUpJob;
+import software.wings.scheduler.ResourceLookupSyncHandler;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -183,6 +185,7 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.encryption.migration.EncryptedDataLocalToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -412,7 +415,13 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
+
     modules.add(new SpringPersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -732,7 +741,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         && !configuration.getEventsMongo().getUri().equals(configuration.getMongoConnectionFactory().getUri())) {
       persistence.register(Store.builder().name("events").build(), configuration.getEventsMongo().getUri());
     }
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerAuditResponseFilter(Environment environment, Injector injector) {
@@ -984,6 +992,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
+    injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
+    injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

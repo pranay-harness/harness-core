@@ -1,10 +1,10 @@
 package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
@@ -26,26 +26,40 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-
-@CdIndex(name = "searchIdx_1", fields = { @Field("accountId")
-                                          , @Field("status"), @Field("retryCount") })
-@CdIndex(name = "accountId_createdAt_index",
-    fields = { @Field("accountId")
-               , @Field(value = "createdAt", type = IndexType.DESC) })
-@CdIndex(name = "accountId_status_gitToHarness_createdAt_index",
-    fields =
-    { @Field("accountId")
-      , @Field(value = "status"), @Field(value = "gitToHarness"), @Field(value = "createdAt") })
-@CdIndex(name = "accountId_queuekey_status_createdAt_index",
-    fields =
-    {
-      @Field("accountId")
-      , @Field(value = "queueKey"), @Field(value = "status"), @Field(value = "createdAt", type = IndexType.DESC)
-    })
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
 @Entity(value = "yamlChangeSet")
 @HarnessEntity(exportable = false)
 public class YamlChangeSet extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("searchIdx_1")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.status)
+                 .field(YamlChangeSetKeys.retryCount)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_createdAt_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .descSortField(Base.CREATED_AT_KEY)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_status_gitToHarness_createdAt_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.status)
+                 .field(YamlChangeSetKeys.gitToHarness)
+                 .field(Base.CREATED_AT_KEY)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_queuekey_status_createdAt_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.queueKey)
+                 .field(YamlChangeSetKeys.status)
+                 .descSortField(Base.CREATED_AT_KEY)
+                 .build())
+        .build();
+  }
+
   public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
   public static final String MAX_QUEUE_DURATION_EXCEEDED_CODE = "MAX_QUEUE_DURATION_EXCEEDED";
 

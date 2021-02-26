@@ -173,8 +173,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope,
-      String searchTerm, int page, int size) {
+      String projectIdentifier, List<String> identifiers, List<SecretType> secretTypes,
+      boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size) {
     Criteria criteria = Criteria.where(SecretKeys.accountIdentifier).is(accountIdentifier);
     if (!includeSecretsFromEverySubScope) {
       criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier).and(SecretKeys.projectIdentifier).is(projectIdentifier);
@@ -198,6 +198,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           Criteria.where(SecretKeys.tags + "." + NGTagKeys.value)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+    }
+    if (Objects.nonNull(identifiers) && !identifiers.isEmpty()) {
+      criteria.and(SecretKeys.identifier).in(identifiers);
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
@@ -234,12 +237,39 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                     .secretManager(getSecretManagerIdentifier(secretResponseWrapper.getSecret()))
                     .build()));
       }
+      publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, identifier,
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
       return true;
     }
     if (!remoteDeletionSuccess) {
       throw new InvalidRequestException("Unable to delete secret remotely.", USER);
     } else {
       throw new InvalidRequestException("Unable to delete secret locally, data might be inconsistent", USER);
+    }
+  }
+
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
+    try {
+      EntityChangeDTO.Builder secretEntityChangeDTOBuilder =
+          EntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(accountIdentifier))
+              .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        secretEntityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
+      }
+      if (isNotBlank(projectIdentifier)) {
+        secretEntityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
+      }
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(
+                  ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                      EventsFrameworkMetadataConstants.SECRET_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(secretEntityChangeDTOBuilder.build().toByteString())
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework secret Identifier: {}", identifier, e);
     }
   }
 
@@ -314,7 +344,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", secret.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.PROJECT_ENTITY,
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SECRET_ENTITY,
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(secretEntityChangeDTOBuilder.build().toByteString())
               .build());

@@ -89,6 +89,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
       StepResponseBuilder responseBuilder =
           StepResponse.builder()
               .status(Status.FAILED)
+              .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
               .failureInfo(FailureInfo.newBuilder()
                                .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
                                .build());
@@ -120,6 +121,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
                          .outcome(k8sCanaryOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
+        .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
         .build();
   }
 

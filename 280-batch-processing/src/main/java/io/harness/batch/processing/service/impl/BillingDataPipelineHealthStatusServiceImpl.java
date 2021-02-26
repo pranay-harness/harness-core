@@ -97,18 +97,27 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   }
 
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
+    log.info("running updateBillingPipelineRecordsStatus");
     billingDataPipelineRecordDao.listAllBillingDataPipelineRecords().forEach(billingDataPipelineRecord -> {
       try {
         BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder = BillingDataPipelineRecord.builder();
         if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AZURE.name())) {
+          billingDataPipelineRecordBuilder.accountId(billingDataPipelineRecord.getAccountId())
+              .settingId(billingDataPipelineRecord.getSettingId());
           // Check for data in last 3 days in preAgg table. Only when time has elapsed more than 24 hours.
           long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
           if (billingDataPipelineRecord.getCreatedAt() >= now
               || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId(), CloudProvider.AZURE.name())) {
             // Set SUCCEEDED in first 24 hours
+            log.info("Updating data transfer and preagg status..");
             billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.SUCCEEDED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
           } else {
+            log.info("Updating data transfer and preagg status...");
             billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.FAILED.toString());
+            // This is for compatibility with health status api in manager
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
           }
           billingDataPipelineRecordBuilder.lastSuccessfulStorageSync(fetchLastSuccessfulS3RunInstant(
               billingDataPipelineRecord.getAccountId(), BatchJobType.SYNC_BILLING_REPORT_AZURE));
@@ -161,6 +170,7 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
               billingDataPipelineRecord.getAccountId(), BatchJobType.SYNC_BILLING_REPORT_S3));
         }
         billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
+        log.info("Updated record");
       } catch (Exception e) {
         log.error("Failed to update the health status for the account {}", billingDataPipelineRecord.getAccountId(), e);
       }

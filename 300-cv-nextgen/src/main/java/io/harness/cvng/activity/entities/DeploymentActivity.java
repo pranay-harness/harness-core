@@ -66,16 +66,17 @@ public class DeploymentActivity extends Activity {
     verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
 
     // Set the properties needed for a health verification instance
-    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
-    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
-
+    Instant postActivityStart = DateTimeUtils.roundDownTo5MinBoundary(getVerificationStartTime());
+    Instant preActivityStart = postActivityStart.minus(verificationJobInstance.getResolvedJob().getDuration());
+    // TODO: we can probably get rid of this logic by moving postActivityStart, preActivityStart inside the job
     if (!VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-      verificationJobInstance.setStartTime(preactivityStart);
+      verificationJobInstance.setStartTime(preActivityStart);
     } else {
       verificationJobInstance.setStartTime(this.getVerificationStartTime());
     }
-    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
-    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
+    // TODO: These should be inferred from startTime and probably should be part of HealthVerification as methods
+    verificationJobInstance.setPreActivityVerificationStartTime(preActivityStart);
+    verificationJobInstance.setPostActivityVerificationStartTime(postActivityStart);
   }
 
   @Override
