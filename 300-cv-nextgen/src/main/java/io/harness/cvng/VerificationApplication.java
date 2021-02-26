@@ -129,6 +129,7 @@ import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
