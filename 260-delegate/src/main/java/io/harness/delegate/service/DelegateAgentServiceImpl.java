@@ -1988,6 +1988,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String activityId = null;
     Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
 
+    // Add other system secrets
+    addSystemSecrets(secrets);
+
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
     Object[] parameters = taskData.getParameters();
@@ -2023,6 +2026,32 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     return Pair.of(activityId, secrets);
+  }
+
+  private void addSystemSecrets(Set<String> secrets) {
+    // Add config file secrets
+    secrets.add(delegateConfiguration.getAccountSecret());
+    secrets.add(delegateConfiguration.getManagerServiceSecret());
+
+    // Add environment variable secrets
+    String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");
+    if (isNotBlank(delegateProfileId)) {
+      secrets.add(delegateProfileId);
+    }
+
+    if (isNotBlank(delegateSessionIdentifier)) {
+      secrets.add(delegateSessionIdentifier);
+    }
+
+    String proxyUser = System.getenv().get("PROXY_USER");
+    if (isNotBlank(proxyUser)) {
+      secrets.add(proxyUser);
+    }
+
+    String proxyPassword = System.getenv().get("PROXY_PASSWORD");
+    if (isNotBlank(proxyPassword)) {
+      secrets.add(proxyPassword);
+    }
   }
 
   /**
