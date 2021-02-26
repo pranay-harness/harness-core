@@ -124,6 +124,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -726,7 +727,7 @@ public class PcfStateHelper {
                   .build();
           return findSetupSweepingOutput(newSweepingOutputInquiry);
         } else {
-          return SetupSweepingOutputPcf.builder().build();
+          throw new InvalidArgumentsException("Different Infrastructure or Service on worklflow phases");
         }
       }
     } else {
@@ -745,8 +746,39 @@ public class PcfStateHelper {
     PhaseExecutionData previousPhaseExecutionData =
         stateExecutionService.fetchPhaseExecutionDataSweepingOutput(previousPhaseStateExecutionInstance);
 
-    return previousPhaseExecutionData.getInfraDefinitionId().equals(currentPhaseExecutionData.getInfraDefinitionId())
+    Optional<InfrastructureMapping> previousPhaseInfrastructureMapping =
+        getInfraMapping(stateExecutionInstance, previousPhaseExecutionData);
+
+    Optional<InfrastructureMapping> currentPhaseInfrastructureMapping =
+        getInfraMapping(stateExecutionInstance, currentPhaseExecutionData);
+
+    return isTheSameOrgAndSpace(previousPhaseInfrastructureMapping, currentPhaseInfrastructureMapping)
         && previousPhaseExecutionData.getServiceId().equals(currentPhaseExecutionData.getServiceId());
+  }
+
+  private boolean isTheSameOrgAndSpace(Optional<InfrastructureMapping> previousPhaseInfrastructureMapping,
+      Optional<InfrastructureMapping> currentPhaseInfrastructureMapping) {
+    if (previousPhaseInfrastructureMapping.isPresent() && currentPhaseInfrastructureMapping.isPresent()) {
+      PcfInfrastructureMapping previousPhasePcfInfrastructureMapping =
+          (PcfInfrastructureMapping) previousPhaseInfrastructureMapping.get();
+      PcfInfrastructureMapping currentPhasePcfInfrastructureMapping =
+          (PcfInfrastructureMapping) currentPhaseInfrastructureMapping.get();
+      return previousPhasePcfInfrastructureMapping.getOrganization().equals(
+                 currentPhasePcfInfrastructureMapping.getOrganization())
+          && previousPhasePcfInfrastructureMapping.getSpace().equals(currentPhasePcfInfrastructureMapping.getSpace());
+    } else {
+      return false;
+    }
+  }
+
+  private Optional<InfrastructureMapping> getInfraMapping(
+      StateExecutionInstance stateExecutionInstance, PhaseExecutionData phaseExecutionData) {
+    return infrastructureMappingService
+        .getInfraMappingLinkedToInfraDefinition(
+            stateExecutionInstance.getAppId(), phaseExecutionData.getInfraDefinitionId())
+        .stream()
+        .filter(infrastructureMapping -> infrastructureMapping.getServiceId().equals(phaseExecutionData.getServiceId()))
+        .findFirst();
   }
 
   void populatePcfVariables(ExecutionContext context, SetupSweepingOutputPcf setupSweepingOutputPcf) {
