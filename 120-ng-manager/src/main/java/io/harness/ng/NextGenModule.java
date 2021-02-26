@@ -80,7 +80,6 @@ import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.serializer.GitSyncRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
@@ -222,14 +221,14 @@ public class NextGenModule extends AbstractModule {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(GitSyncRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NextGenRegistrars.kryoRegistrars).build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(GitSyncRegistrars.morphiaRegistrars)
+            .addAll(NextGenRegistrars.morphiaRegistrars)
             .build();
       }
 
