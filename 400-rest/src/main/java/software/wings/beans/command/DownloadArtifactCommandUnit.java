@@ -1,20 +1,12 @@
 package software.wings.beans.command;
 
-import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
-import static io.harness.logging.CommandExecutionStatus.RUNNING;
-import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.INFO;
-
-import static software.wings.beans.Log.Builder.aLog;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.inject.Inject;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -22,13 +14,12 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
-
-import software.wings.beans.AWSTemporaryCredentials;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.BambooConfig;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SftpConfig;
-import software.wings.beans.SmbConfig;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.*;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -48,27 +39,26 @@ import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryType;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SimpleTimeZone;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.mongodb.morphia.annotations.Transient;
+
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.*;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.Builder.aLog;
 
 @JsonTypeName("DOWNLOAD_ARTIFACT")
 @EqualsAndHashCode(callSuper = true)
@@ -325,6 +315,23 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       awsAccessKey = credentials.getAccessKeyId();
       awsSecretKey = credentials.getSecretKey();
       awsToken = credentials.getToken();
+    } else if (awsConfig.isUseIRSA()) {
+      WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
+      providerBuilder.roleSessionName(awsConfig.getAccountId()
+              + md5Hex(
+              awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
+      if (StringUtils.isNotEmpty(awsConfig.getWebIdentityTokenFile())) {
+        providerBuilder.webIdentityTokenFile(awsConfig.getWebIdentityTokenFile());
+      }
+
+      if (StringUtils.isNotEmpty(awsConfig.getIrsaRoleArn())) {
+        providerBuilder.roleArn(awsConfig.getIrsaRoleArn());
+      }
+
+      AWSCredentialsProvider credentialsProvider = providerBuilder.build();
+      AWSCredentials awsCredentials = credentialsProvider.getCredentials();
+      awsAccessKey = awsCredentials.getAWSAccessKeyId();
+      awsSecretKey = awsCredentials.getAWSSecretKey();
     } else {
       awsAccessKey = String.valueOf(awsConfig.getAccessKey());
       awsSecretKey = String.valueOf(awsConfig.getSecretKey());

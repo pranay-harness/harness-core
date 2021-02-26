@@ -56,9 +56,9 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
-      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
-      AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion, boolean useEncryptedAccessKey,
-      String encryptedAccessKey) {
+      boolean useEc2IamCredentials, String tag, boolean useIRSA, String irsaRoleArn, String webIdentityTokenFile,
+      CCMConfig ccmConfig, boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes,
+      String defaultRegion, boolean useEncryptedAccessKey, String encryptedAccessKey) {
     this();
     this.accessKey = accessKey == null ? null : accessKey.clone();
     this.secretKey = secretKey == null ? null : secretKey.clone();
@@ -67,6 +67,9 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
     this.ccmConfig = ccmConfig;
+    this.irsaRoleArn = irsaRoleArn;
+    this.webIdentityTokenFile = webIdentityTokenFile;
+    this.useIRSA = useIRSA;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
     this.defaultRegion = defaultRegion;
@@ -104,18 +107,25 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     private String secretKey;
     private boolean useEc2IamCredentials;
     private String tag;
+    private boolean useIRSA;
+    private String irsaRoleArn;
+    private String webIdentityTokenFile;
     private boolean assumeCrossAccountRole;
     private AwsCrossAccountAttributes crossAccountAttributes;
     private String defaultRegion;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId, String secretKey,
-        UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
-        boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag, boolean useIRSA,
+        String irsaRoleArn, String webIdentityTokenFile, boolean assumeCrossAccountRole,
+        AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.accessKeySecretId = accessKeySecretId;
       this.secretKey = secretKey;
+      this.irsaRoleArn = irsaRoleArn;
+      this.webIdentityTokenFile = webIdentityTokenFile;
+      this.useIRSA = useIRSA;
       this.useEc2IamCredentials = useEc2IamCredentials;
       this.tag = tag;
       this.assumeCrossAccountRole = assumeCrossAccountRole;
