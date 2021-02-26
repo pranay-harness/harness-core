@@ -26,9 +26,12 @@ public class ProxyVariableHelper {
   public static final String PROXY_USER = "PROXY_USER";
   public static final String PROXY_PASSWORD = "PROXY_PASSWORD";
 
-  public static final String HTTP_PROXY_VAR = "http_proxy";
-  public static final String HTTPS_PROXY_VAR = "https_proxy";
-  public static final String NO_PROXY_VAR = "no_proxy";
+  public static final String HTTP_PROXY_VARL = "http_proxy";
+  public static final String HTTPS_PROXY_VARL = "https_proxy";
+  public static final String NO_PROXY_VARL = "no_proxy";
+  public static final String HTTP_PROXY_VARU = "HTTP_PROXY";
+  public static final String HTTPS_PROXY_VARU = "HTTPS_PROXY";
+  public static final String NO_PROXY_VARU = "NO_PROXY";
 
   public boolean checkIfProxyIsConfigured() {
     try {
@@ -67,13 +70,19 @@ public class ProxyVariableHelper {
 
     if (isNotEmpty(proxyString)) {
       Map<String, SecretParams> proxyConfiguration = new HashMap<>();
-      proxyConfiguration.put(HTTP_PROXY_VAR,
-          SecretParams.builder().secretKey(HTTP_PROXY_VAR).value(encodeBase64(proxyString)).type(TEXT).build());
-      proxyConfiguration.put(HTTPS_PROXY_VAR,
-          SecretParams.builder().secretKey(HTTPS_PROXY_VAR).value(encodeBase64(proxyString)).type(TEXT).build());
+      proxyConfiguration.put(HTTP_PROXY_VARL,
+          SecretParams.builder().secretKey(HTTP_PROXY_VARL).value(encodeBase64(proxyString)).type(TEXT).build());
+      proxyConfiguration.put(HTTPS_PROXY_VARL,
+          SecretParams.builder().secretKey(HTTPS_PROXY_VARL).value(encodeBase64(proxyString)).type(TEXT).build());
+      proxyConfiguration.put(HTTP_PROXY_VARU,
+              SecretParams.builder().secretKey(HTTP_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
+      proxyConfiguration.put(HTTPS_PROXY_VARU,
+              SecretParams.builder().secretKey(HTTPS_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
       if (isNotEmpty(noProxy)) {
-        proxyConfiguration.put(NO_PROXY_VAR,
-            SecretParams.builder().secretKey(NO_PROXY_VAR).value(encodeBase64(noProxy)).type(TEXT).build());
+        proxyConfiguration.put(NO_PROXY_VARL,
+            SecretParams.builder().secretKey(NO_PROXY_VARL).value(encodeBase64(noProxy)).type(TEXT).build());
+        proxyConfiguration.put(NO_PROXY_VARU,
+                SecretParams.builder().secretKey(NO_PROXY_VARU).value(encodeBase64(noProxy)).type(TEXT).build());
       }
       return proxyConfiguration;
     } else {
