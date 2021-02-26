@@ -119,7 +119,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(
         dataCollectionTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
     fakeNow = clock.instant();
-    dataCollectionWorkerId = monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(cvConfig.getAccountId(),
+    dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(cvConfig.getAccountId(),
         cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(),
         cvConfig.getIdentifier());
   }
