@@ -6,7 +6,7 @@ import io.harness.ng.core.entities.UserGroup;
 
 import java.util.Set;
 
-public class UserGroupMorphiaRegistrar implements MorphiaRegistrar {
+public class NextGenMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(UserGroup.class);
