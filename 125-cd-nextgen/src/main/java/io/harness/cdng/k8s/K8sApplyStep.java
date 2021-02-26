@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
@@ -84,6 +85,9 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+    if (passThroughData instanceof GitFetchResponsePassThroughData) {
+      return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
+    }
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
 
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
