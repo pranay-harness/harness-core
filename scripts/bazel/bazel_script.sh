@@ -295,6 +295,12 @@ build_proto_module() {
   fi
 }
 
+if [ "${PLATFORM}" == "jenkins" ]
+then
+  build_bazel_module 990-commons-test
+  exit 0
+fi
+
 build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
 build_bazel_application 900-access-control-service
