@@ -266,6 +266,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
+
   private static final String START_SH = "start.sh";
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
@@ -448,6 +450,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
+      log.info("Delegate Group Id: {}", delegateGroupId);
+
       DelegateParamsBuilder builder = DelegateParams.builder()
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
@@ -456,6 +460,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
+                                          .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
