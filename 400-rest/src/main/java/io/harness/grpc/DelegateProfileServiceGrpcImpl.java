@@ -295,7 +295,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (delegateProfileGrpc.hasCreatedBy()) {
+    if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
                                            .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                            .name(delegateProfileGrpc.getCreatedBy().getName())
@@ -303,7 +303,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                            .build());
     }
 
-    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+    if (delegateProfileGrpc.hasLastUpdatedBy() && isNotEmpty(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
       User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
       UserThreadLocal.set(user);
     }
