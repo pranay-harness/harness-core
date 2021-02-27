@@ -56,7 +56,8 @@ public class ProxyVariableHelper {
     String proxyScheme = System.getenv(PROXY_SCHEME);
     String proxyUser = System.getenv(PROXY_USER);
     String proxyPassword = System.getenv(PROXY_PASSWORD);
-    String noProxy = System.getenv(NO_PROXY_VAR);
+    String noProxyL = System.getenv(NO_PROXY_VARL);
+    String noProxyU = System.getenv(NO_PROXY_VARU);
 
     String proxyString = null;
     if (isNotEmpty(proxyHost) && isNotEmpty(proxyPort) && isNotEmpty(proxyScheme)) {
@@ -75,14 +76,16 @@ public class ProxyVariableHelper {
       proxyConfiguration.put(HTTPS_PROXY_VARL,
           SecretParams.builder().secretKey(HTTPS_PROXY_VARL).value(encodeBase64(proxyString)).type(TEXT).build());
       proxyConfiguration.put(HTTP_PROXY_VARU,
-              SecretParams.builder().secretKey(HTTP_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
+          SecretParams.builder().secretKey(HTTP_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
       proxyConfiguration.put(HTTPS_PROXY_VARU,
-              SecretParams.builder().secretKey(HTTPS_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
-      if (isNotEmpty(noProxy)) {
+          SecretParams.builder().secretKey(HTTPS_PROXY_VARU).value(encodeBase64(proxyString)).type(TEXT).build());
+      if (isNotEmpty(noProxyL)) {
         proxyConfiguration.put(NO_PROXY_VARL,
-            SecretParams.builder().secretKey(NO_PROXY_VARL).value(encodeBase64(noProxy)).type(TEXT).build());
+            SecretParams.builder().secretKey(NO_PROXY_VARL).value(encodeBase64(noProxyL)).type(TEXT).build());
+      }
+      if (isNotEmpty(noProxyU)) {
         proxyConfiguration.put(NO_PROXY_VARU,
-                SecretParams.builder().secretKey(NO_PROXY_VARU).value(encodeBase64(noProxy)).type(TEXT).build());
+            SecretParams.builder().secretKey(NO_PROXY_VARU).value(encodeBase64(noProxyU)).type(TEXT).build());
       }
       return proxyConfiguration;
     } else {
