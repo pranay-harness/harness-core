@@ -2,12 +2,13 @@ package io.harness.batch.processing.config.k8s.recommendation;
 
 import static io.harness.batch.processing.config.k8s.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogramV2;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.protoToCheckpoint;
 import static io.harness.time.DurationUtils.truncate;
+
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.newCpuHistogram;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.newCpuHistogramV2;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.protoToCheckpoint;
 
 import static java.time.Duration.between;
 
