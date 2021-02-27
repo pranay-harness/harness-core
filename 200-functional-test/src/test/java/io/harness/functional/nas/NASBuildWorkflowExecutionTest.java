@@ -140,6 +140,7 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   public void executeBuildWorkflowWithParameterizedArtifactStream() {
     final String appId = service.getAppId();
     final String accountId = service.getAccountId();
+
     resetCache(accountId);
     // create parameterized nexus maven artifact stream
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners,

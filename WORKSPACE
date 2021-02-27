@@ -2139,7 +2139,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 )
 
 http_archive(
-    name = "openjdk8u242_darwin_archive_linux",
+    name = "openjdk8u242_linux_archive",
     build_file_content = """
 java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:bin/java', visibility = ['//visibility:public'])
 exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
@@ -2147,6 +2147,21 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
     sha256 = "f39b523c724d0e0047d238eb2bb17a9565a60574cf651206c867ee5fc000ab43",
     strip_prefix = "jdk8u242-b08",
     urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
+)
+
+http_archive(
+    name = "openjdk8u242_macos_archive",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+java_runtime(
+    name = 'runtime',
+    srcs =  glob(['**']),
+    java='//:Contents/Home/bin/java'
+)
+""",
+    sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
+    strip_prefix = "jdk8u242-b08",
+    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
 )
 
 load("//tools/bazel/pmd:toolchains.bzl", "rules_pmd_toolchains")
