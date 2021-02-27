@@ -186,11 +186,15 @@ public class BillingCalculationService {
     if (instanceData.getInstanceType() == K8S_PV) {
       // in one cases (with NFS PV), the PV.Capacity is much less than claimed PVC.Request
       if (storageUsage <= storageRequest && storageRequest <= storageResource.getCapacity()) {
-        storageIdleCost = BigDecimal.valueOf(billingDataForResource.getStorageBillingAmount().doubleValue()
-            * (storageRequest - storageUsage) / storageResource.getCapacity());
-
+        try {
+          storageIdleCost = BigDecimal.valueOf(billingDataForResource.getStorageBillingAmount().doubleValue()
+              * (storageRequest - storageUsage) / storageResource.getCapacity());
+        } catch (Exception ex) {
+          log.error("billingDataForResource:{} storageRequest:{} storageUsage:{} storageResource:{}",
+              billingDataForResource, storageRequest, storageUsage, storageResource);
+        }
       } else {
-        log.error("inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
+        log.warn("inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
             utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
             instanceData.toString());
       }

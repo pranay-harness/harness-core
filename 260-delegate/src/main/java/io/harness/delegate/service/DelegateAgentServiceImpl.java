@@ -266,6 +266,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
+
   private static final String START_SH = "start.sh";
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
@@ -448,6 +450,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
+      log.info("Delegate Group Id: {}", delegateGroupId);
+
       DelegateParamsBuilder builder = DelegateParams.builder()
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
@@ -456,6 +460,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
+                                          .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
@@ -1990,6 +1995,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String activityId = null;
     Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
 
+    // Add other system secrets
+    addSystemSecrets(secrets);
+
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
     Object[] parameters = taskData.getParameters();
@@ -2025,6 +2033,32 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     return Pair.of(activityId, secrets);
+  }
+
+  private void addSystemSecrets(Set<String> secrets) {
+    // Add config file secrets
+    secrets.add(delegateConfiguration.getAccountSecret());
+    secrets.add(delegateConfiguration.getManagerServiceSecret());
+
+    // Add environment variable secrets
+    String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");
+    if (isNotBlank(delegateProfileId)) {
+      secrets.add(delegateProfileId);
+    }
+
+    if (isNotBlank(delegateSessionIdentifier)) {
+      secrets.add(delegateSessionIdentifier);
+    }
+
+    String proxyUser = System.getenv().get("PROXY_USER");
+    if (isNotBlank(proxyUser)) {
+      secrets.add(proxyUser);
+    }
+
+    String proxyPassword = System.getenv().get("PROXY_PASSWORD");
+    if (isNotBlank(proxyPassword)) {
+      secrets.add(proxyPassword);
+    }
   }
 
   /**

@@ -47,12 +47,11 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
-import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -92,7 +91,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -114,6 +112,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Mock private AlertRuleService alertRuleService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Mock private Clock clock;
   private Instant fakeNow;
@@ -126,6 +125,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   private String orgIdentifier;
   private String cvConfigId;
   private String serviceIdentifier;
+  private String monitoringSourceIdentifier;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -136,6 +136,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     cvConfigId = generateUuid();
+    monitoringSourceIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.390Z").toEpochMilli();
     connectorId = generateUuid();
@@ -248,37 +249,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testProcessVerificationJobInstance_canaryAndTest() {
-    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
-    job.setAccountId(accountId);
-    job.setIdentifier(verificationJobIdentifier);
-    hPersistence.save(job);
-    CVConfig cvConfig = cvConfigService.save(newCVConfig());
-    String verificationTaskId = verificationJobInstanceService.create(
-        accountId, orgIdentifier, projectIdentifier, newVerificationJobInstanceDTO());
-    VerificationJobInstance verificationJobInstance =
-        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
-    verificationJobInstance.setResolvedJob(job);
-
-    // behavior under test
-    verificationJobInstanceService.processVerificationJobInstance(verificationJobInstance);
-
-    // validate that data collection tasks are created since this is canary
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
-        UUID.nameUUIDFromBytes((verificationJobInstance.getUuid() + ":" + connectorId).getBytes(Charsets.UTF_8))
-            .toString());
-    params.put(CVConfigKeys.connectorIdentifier, connectorId);
-    verify(verificationManagerService)
-        .createDataCollectionTask(
-            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class));
-    VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
-    assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
   public void testProcessVerificationJobInstance_health() {
     VerificationJob job = verificationJobService.fromDto(newHealthVerificationJobDTO());
     job.setAccountId(accountId);
@@ -344,34 +314,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void createDataCollectionTasks_validatePerpetualTaskCreationWithCorrectParams() {
-    VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
-    job.setAccountId(accountId);
-    job.setIdentifier(verificationJobIdentifier);
-    hPersistence.save(job);
-    CVConfig cvConfig = cvConfigService.save(newCVConfig());
-    String verificationTaskId = verificationJobInstanceService.create(
-        accountId, orgIdentifier, projectIdentifier, newVerificationJobInstanceDTO());
-    VerificationJobInstance verificationJobInstance =
-        verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
-    verificationJobInstance.setResolvedJob(job);
-    verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
-        UUID.nameUUIDFromBytes((verificationJobInstance.getUuid() + ":" + connectorId).getBytes(Charsets.UTF_8))
-            .toString());
-    params.put(CVConfigKeys.connectorIdentifier, connectorId);
-    verify(verificationManagerService)
-        .createDataCollectionTask(
-            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class));
-    VerificationJobInstance saved = verificationJobInstanceService.getVerificationJobInstance(verificationTaskId);
-    assertThat(saved.getPerpetualTaskIds()).isEqualTo(Lists.newArrayList(perpetualTaskId));
-    assertThat(saved.getCvConfigMap()).isEqualTo(Collections.singletonMap(cvConfig.getUuid(), cvConfig));
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
   public void createDataCollectionTasks_validateDataCollectionTasksCreation() {
     VerificationJob job = verificationJobService.fromDto(newCanaryVerificationJobDTO());
     job.setAccountId(accountId);
@@ -384,7 +326,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(job);
     verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
-    String workerId = getDataCollectionWorkerId(verificationJobInstance.getUuid(), connectorId);
+    String workerId = getDataCollectionWorkerId(connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
     assertThat(firstTask.getStartTime()).isEqualTo(Instant.parse("2020-07-27T10:29:00Z"));
@@ -414,7 +356,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     verificationJobInstanceService.createDataCollectionTasks(verificationJobInstance);
     VerificationJobInstance updated =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
-    String workerId = getDataCollectionWorkerId(verificationJobInstanceId, connectorId);
+    String workerId = getDataCollectionWorkerId(connectorId);
     DataCollectionTask firstTask = dataCollectionTaskService.getNextTask(accountId, workerId).get();
     assertThat(firstTask).isNotNull();
     assertThat(firstTask.getEndTime()).isEqualTo(Instant.parse("2020-07-27T10:44:00Z"));
@@ -959,7 +901,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(perpetualTaskId), captor.capture());
     DataCollectionConnectorBundle dataCollectionConnectorBundle = captor.getValue();
     assertThat(dataCollectionConnectorBundle.getSourceIdentifier())
-        .isEqualTo(getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
+        .isEqualTo(getDataCollectionWorkerIdOld(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
     assertThat(dataCollectionConnectorBundle.getConnectorIdentifier()).isEqualTo(cvConfig.getConnectorIdentifier());
     assertThat(dataCollectionConnectorBundle.getDataCollectionType()).isEqualTo(DataCollectionType.CV);
   }
@@ -984,12 +926,16 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(perpetualTaskId), captor.capture());
     DataCollectionConnectorBundle dataCollectionConnectorBundle = captor.getValue();
     assertThat(dataCollectionConnectorBundle.getSourceIdentifier())
-        .isEqualTo(getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
+        .isEqualTo(getDataCollectionWorkerIdOld(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
     assertThat(dataCollectionConnectorBundle.getConnectorIdentifier()).isEqualTo(cvConfig.getConnectorIdentifier());
     assertThat(dataCollectionConnectorBundle.getDataCollectionType()).isEqualTo(DataCollectionType.CV);
   }
 
-  private String getDataCollectionWorkerId(String verificationJobInstanceId, String connectorId) {
+  private String getDataCollectionWorkerId(String connectorId) {
+    return monitoringSourcePerpetualTaskService.getDeploymentWorkerId(
+        accountId, orgIdentifier, projectIdentifier, connectorId, monitoringSourceIdentifier);
+  }
+  private String getDataCollectionWorkerIdOld(String verificationJobInstanceId, String connectorId) {
     return UUID.nameUUIDFromBytes((verificationJobInstanceId + ":" + connectorId).getBytes(Charsets.UTF_8)).toString();
   }
   @Test
@@ -1264,7 +1210,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     canaryVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     canaryVerificationJobDTO.setJobName(generateUuid());
     canaryVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
-    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
+    canaryVerificationJobDTO.setMonitoringSources(Arrays.asList(monitoringSourceIdentifier));
     canaryVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     canaryVerificationJobDTO.setServiceIdentifier("service");
     canaryVerificationJobDTO.setOrgIdentifier(orgIdentifier);
@@ -1280,7 +1226,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     healthVerificationJobDTO.setIdentifier(verificationJobIdentifier);
     healthVerificationJobDTO.setJobName(generateUuid());
     healthVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
-    healthVerificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
+    healthVerificationJobDTO.setMonitoringSources(Arrays.asList(monitoringSourceIdentifier));
     healthVerificationJobDTO.setServiceIdentifier("service");
     healthVerificationJobDTO.setOrgIdentifier(orgIdentifier);
     healthVerificationJobDTO.setProjectIdentifier(projectIdentifier);
@@ -1300,7 +1246,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfig.setEnvIdentifier("env");
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setOrgIdentifier(orgIdentifier);
-    cvConfig.setIdentifier("groupId");
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName("productName");
@@ -1348,6 +1294,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .resolvedJob(verificationJob)
             .createdAt(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
+            .perpetualTaskIds(Arrays.asList("perpetualTaskId"))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
@@ -1371,7 +1318,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     verificationJobDTO.setIdentifier(verificationJobIdentifier);
     verificationJobDTO.setJobName(generateUuid());
     verificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
-    verificationJobDTO.setMonitoringSources(Arrays.asList("groupId"));
+    verificationJobDTO.setMonitoringSources(Arrays.asList(monitoringSourceIdentifier));
     verificationJobDTO.setServiceIdentifier(serviceIdentifier);
     verificationJobDTO.setOrgIdentifier(orgIdentifier);
     verificationJobDTO.setProjectIdentifier(projectIdentifier);
