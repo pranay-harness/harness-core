@@ -1,8 +1,9 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.checkpointToProto;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.checkpointToProto;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;

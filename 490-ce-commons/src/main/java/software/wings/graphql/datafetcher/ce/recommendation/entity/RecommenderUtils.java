@@ -1,4 +1,4 @@
-package io.harness.ccm.recommender.k8sworkload;
+package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import io.harness.event.payloads.HistogramProto;
 import io.harness.grpc.utils.HTimestamps;
