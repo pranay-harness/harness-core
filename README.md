@@ -57,12 +57,10 @@ buf check lint
 Create a file `.bazelrc` in your portal repo root with the following content
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=<Java home path>
 ```
 Here is a sample `.bazelrc`
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
 If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
