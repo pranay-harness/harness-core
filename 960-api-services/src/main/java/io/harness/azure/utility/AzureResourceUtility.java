@@ -1,6 +1,8 @@
 package io.harness.azure.utility;
 
 import static io.harness.azure.model.AzureConstants.ACTIVITY_LOG_EVENT_DATA_TEMPLATE;
+import static io.harness.azure.model.AzureConstants.ASSIGNMENT_NAME_PATTERN;
+import static io.harness.azure.model.AzureConstants.BLUEPRINT_ID_REGEX;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_PRODUCTION_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME;
@@ -15,8 +17,14 @@ import static io.harness.azure.model.AzureConstants.SLOT_SWAP_JOB_PROCESSOR_STR;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.azure.model.blueprint.assignment.Assignment;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.serializer.JsonUtils;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.monitor.EventData;
 import java.text.DateFormat;
@@ -25,7 +33,10 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.SimpleTimeZone;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
@@ -130,5 +141,59 @@ public class AzureResourceUtility {
     }
 
     return deploymentSlotName.replace(format(DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN, appName), EMPTY);
+  }
+
+  public String getAssignmentName(final String blueprintName) {
+    return String.format(ASSIGNMENT_NAME_PATTERN, blueprintName, System.currentTimeMillis());
+  }
+
+  public String getResourceScope(final String blueprintId) {
+    Matcher matcher = BLUEPRINT_ID_REGEX.matcher(blueprintId);
+    if (!matcher.matches()) {
+      throw new InvalidArgumentsException(format("Parameter resourceScope not found in blueprintId: %s", blueprintId));
+    }
+    return matcher.group("resourceScope");
+  }
+
+  public String getVersionId(final String blueprintId) {
+    Matcher matcher = BLUEPRINT_ID_REGEX.matcher(blueprintId);
+    if (!matcher.matches()) {
+      throw new InvalidArgumentsException(format("Parameter versionId not found in blueprintId: %s", blueprintId));
+    }
+
+    return matcher.group("versionId");
+  }
+
+  public String getBlueprintName(final String blueprintId) {
+    Matcher matcher = BLUEPRINT_ID_REGEX.matcher(blueprintId);
+    if (!matcher.matches()) {
+      throw new InvalidArgumentsException(format("Parameter blueprintName not found in blueprintId: %s", blueprintId));
+    }
+
+    return matcher.group("blueprintName");
+  }
+
+  public String getBlueprintId(final String assignmentJson) {
+    Assignment assignment = JsonUtils.asObject(assignmentJson, Assignment.class);
+    return assignment.getProperties().getBlueprintId();
+  }
+
+  public Optional<String> getBlueprintNameFromBlueprintJson(final String blueprintJson) {
+    JsonNode blueprintObj = JsonUtils.readTree(blueprintJson);
+    return blueprintObj.get("name") != null && isNotBlank(blueprintObj.get("name").asText())
+        ? Optional.of(blueprintObj.get("name").asText())
+        : Optional.empty();
+  }
+
+  public Map<String, String> fixArtifactNames(final Map<String, String> artifacts) {
+    artifacts.replaceAll(AzureResourceUtility::getArtifactName);
+    return artifacts;
+  }
+
+  public String getArtifactName(final String artifactFileName, final String artifactJson) {
+    JsonNode artifactObj = JsonUtils.readTree(artifactJson);
+    return artifactObj.get("name") != null && isNoneBlank(artifactObj.get("name").asText())
+        ? artifactObj.get("name").asText()
+        : artifactFileName;
   }
 }

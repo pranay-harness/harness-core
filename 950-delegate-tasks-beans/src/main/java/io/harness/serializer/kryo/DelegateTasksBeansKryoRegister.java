@@ -185,10 +185,12 @@ import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.delegate.task.azure.arm.request.AzureARMRollbackParameters;
+import io.harness.delegate.task.azure.arm.request.AzureBlueprintDeploymentParameters;
 import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMListManagementGroupResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMListSubscriptionLocationsResponse;
 import io.harness.delegate.task.azure.arm.response.AzureARMRollbackResponse;
+import io.harness.delegate.task.azure.arm.response.AzureBlueprintDeploymentResponse;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
@@ -603,6 +605,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sDeleteRequest.class, 543255);
     kryo.register(ManagementGroupData.class, 543256);
     kryo.register(DeleteResourcesType.class, 543257);
+    kryo.register(AzureBlueprintDeploymentParameters.class, 543258);
+    kryo.register(AzureBlueprintDeploymentResponse.class, 543259);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

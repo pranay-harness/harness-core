@@ -141,7 +141,7 @@ public class ARMRollbackStateTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockContext).getAppId();
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
         .when(helper)
-        .createActivity(eq(mockContext), eq(false), anyString());
+        .createARMActivity(eq(mockContext), eq(false), anyString());
     doReturn(20).when(helper).renderTimeout(eq(TIMEOUT_EXPRESSION), eq(mockContext));
 
     doReturn(azureConfig).when(azureVMSSStateHelper).getAzureConfig(eq(CLOUD_PROVIDER_ID));

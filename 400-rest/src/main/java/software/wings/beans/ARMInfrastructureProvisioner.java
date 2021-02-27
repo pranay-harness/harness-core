@@ -25,18 +25,21 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   private ARMScopeType scopeType;
   @Trimmed(message = "Template Body should not contain leading and trailing spaces") private String templateBody;
   private GitFileConfig gitFileConfig;
+  private boolean isBlueprint;
 
   @Builder
   private ARMInfrastructureProvisioner(String name, String description, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType) {
+      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType,
+      boolean isBlueprint) {
     super(name, description, ARM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy, createdAt,
         lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.sourceType = sourceType;
     this.templateBody = templateBody;
     this.gitFileConfig = gitFileConfig;
     this.scopeType = scopeType;
+    this.isBlueprint = isBlueprint;
   }
 
   ARMInfrastructureProvisioner() {
@@ -57,16 +60,18 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
     private String templateBody;
     private GitFileConfig gitFileConfig;
     private ARMScopeType scopeType;
+    private boolean isBlueprint;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, List<NameValuePair.Yaml> variables,
         List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, ARMSourceType sourceType, String templateBody,
-        GitFileConfig gitFileConfig, ARMScopeType scopeType) {
+        GitFileConfig gitFileConfig, ARMScopeType scopeType, boolean isBlueprint) {
       super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);
       this.sourceType = sourceType;
       this.templateBody = templateBody;
       this.gitFileConfig = gitFileConfig;
       this.scopeType = scopeType;
+      this.isBlueprint = isBlueprint;
     }
   }
 }

@@ -29,6 +29,7 @@ import static software.wings.sm.states.pcf.PcfPluginState.PCF_PLUGIN_COMMAND;
 import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.sm.states.provision.ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE;
+import static software.wings.sm.states.provision.ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE;
 import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEPLOY_COMMAND;
 import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOTINST_LISTENER_UPDATE_COMMAND;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
@@ -91,7 +92,8 @@ public class CommandUnitDetails {
     AZURE_APP_SERVICE_SLOT_TRAFFIC_SHIFT(APP_SERVICE_SLOT_TRAFFIC_SHIFT),
     AZURE_APP_SERVICE_SLOT_SWAP(APP_SERVICE_SLOT_SWAP),
     CUSTOM_DEPLOYMENT_FETCH_INSTANCES(FETCH_INSTANCE_COMMAND_UNIT),
-    AZURE_ARM_DEPLOYMENT(AZURE_ARM_COMMAND_UNIT_TYPE);
+    AZURE_ARM_DEPLOYMENT(AZURE_ARM_COMMAND_UNIT_TYPE),
+    AZURE_BLUEPRINT_DEPLOYMENT(AZURE_BLUEPRINT_COMMAND_UNIT_TYPE);
 
     private String name;
 
