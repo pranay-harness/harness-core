@@ -3,6 +3,7 @@ enum WorkflowEntityAggregation {
   Application
 }
 
+# Set workflow aggregation criteria
 input WorkflowAggregation {
   # Aggregate by entity
   entityAggregation: WorkflowEntityAggregation

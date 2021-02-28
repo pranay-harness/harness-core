@@ -4,6 +4,7 @@ enum ServiceEntityAggregation {
   ArtifactType
 }
 
+# Set service aggregation criteria
 input ServiceAggregation {
   # Aggregate by entity
   entityAggregation: ServiceEntityAggregation

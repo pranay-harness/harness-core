@@ -3,6 +3,7 @@ enum TriggerEntityAggregation {
   Application
 }
 
+# Set trigger aggregation criteria
 input TriggerAggregation {
   # Aggregate by entity
   entityAggregation: TriggerEntityAggregation

@@ -7,7 +7,7 @@ enum InstanceEntityAggregation {
   InstanceType
 }
 
-# Set aggregation criteria
+# Set instance aggregation criteria
 input InstanceAggregation {
   # Aggregate by entity
   entityAggregation: InstanceEntityAggregation

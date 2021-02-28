@@ -24,6 +24,7 @@ input DeploymentSortCriteria {
   sortOrder: SortOrder
 }
 
+# Set deployment filter criteria
 input DeploymentFilter {
   # Filter by application id
   application: IdFilter
@@ -57,15 +58,11 @@ input DeploymentFilter {
   tag: DeploymentTagFilter
 }
 
-# Set aggregation criteria
+# Set deployment aggregation function
 input DeploymentAggregationFunction {
-  # Aggregate by deployment count
   count: CountAggregateOperation
-  # Aggregate by deployment duration
   duration: DurationAggregateOperation
-  # Aggregate by deployment rollback duration
   rollbackDuration: DurationAggregateOperation
-  # Aggregate by number of instances deployed
   instancesDeployed: CountAggregateOperation
 }
 
@@ -76,6 +73,7 @@ enum DurationAggregateOperation {
   MAX
 }
 
+# Set deployment aggregation criteria
 input DeploymentAggregation {
   # Aggregate by entity
   entityAggregation: DeploymentEntityAggregation

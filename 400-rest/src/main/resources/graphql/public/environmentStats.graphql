@@ -4,6 +4,7 @@ enum EnvironmentEntityAggregation {
   EnvironmentType
 }
 
+# Set environment aggregation criteria
 input EnvironmentAggregation {
   # Aggregate by entity
   entityAggregation: EnvironmentEntityAggregation

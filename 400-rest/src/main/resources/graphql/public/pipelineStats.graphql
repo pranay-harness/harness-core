@@ -3,6 +3,7 @@ enum PipelineEntityAggregation {
   Application
 }
 
+# Set pipeline aggregation criteria
 input PipelineAggregation {
   # Aggregate by entity
   entityAggregation: PipelineEntityAggregation
