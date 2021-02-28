@@ -1,3 +1,4 @@
+# Possible type values for cloud provider aggregation
 enum CloudProviderTypeAggregation {
   Type
 }

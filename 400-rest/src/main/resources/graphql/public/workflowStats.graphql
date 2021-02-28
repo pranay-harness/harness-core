@@ -1,3 +1,4 @@
+# Possible entity values for workflow aggregation
 enum WorkflowEntityAggregation {
   Application
 }

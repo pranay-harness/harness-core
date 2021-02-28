@@ -1,3 +1,4 @@
+# Possible entity values for trigger aggregation
 enum TriggerEntityAggregation {
   Application
 }

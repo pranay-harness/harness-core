@@ -1,3 +1,4 @@
+# Possible entity values for pipeline aggregation
 enum PipelineEntityAggregation {
   Application
 }

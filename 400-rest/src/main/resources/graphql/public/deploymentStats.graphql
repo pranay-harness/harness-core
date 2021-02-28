@@ -1,3 +1,4 @@
+# Possible entity values for deployment aggregation
 enum DeploymentEntityAggregation {
   Application
   Service
@@ -11,41 +12,64 @@ enum DeploymentEntityAggregation {
   Pipeline
 }
 
+# Possible types of sort
 enum DeploymentSortType {
   Duration
   Count
 }
 
+# Set sort criteria
 input DeploymentSortCriteria {
   sortType: DeploymentSortType
   sortOrder: SortOrder
 }
 
 input DeploymentFilter {
+  # Filter by application id
   application: IdFilter
+  # Filter by service id
   service: IdFilter
+  # Filter by cloud provider id
   cloudProvider: IdFilter
+  # Filter by environment id
   environment: IdFilter
+  # Filter by environment type id
   environmentType: EnvironmentTypeFilter
+  # Filter by status id
   status: IdFilter
+  # Filter by deployment end time
   endTime: TimeFilter
+  # Filter by deployment start time
   startTime: TimeFilter
+  # Filter by deployment duration
   duration: NumberFilter
+  # Filter by rollback duration
   rollbackDuration: NumberFilter
+  # Filter by trigger-by id
   triggeredBy: IdFilter
+  # Filter by trigger id
   trigger: IdFilter
+  # Filter by workflow id
   workflow: IdFilter
+  # Filter by pipeline id
   pipeline: IdFilter
+  # Filter by deployment tag
   tag: DeploymentTagFilter
 }
 
+# Set aggregation criteria
 input DeploymentAggregationFunction {
+  # Aggregate by deployment count
   count: CountAggregateOperation
+  # Aggregate by deployment duration
   duration: DurationAggregateOperation
+  # Aggregate by deployment rollback duration
   rollbackDuration: DurationAggregateOperation
+  # Aggregate by number of instances deployed
   instancesDeployed: CountAggregateOperation
 }
 
+# Possible duration aggregation values
 enum DurationAggregateOperation {
   AVERAGE
   MIN

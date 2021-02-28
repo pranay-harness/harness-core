@@ -1,3 +1,4 @@
+# Possible entity values for service aggregation
 enum ServiceEntityAggregation {
   Application
   ArtifactType

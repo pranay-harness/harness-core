@@ -1,3 +1,4 @@
+# Possible entity values for instance aggregation
 enum InstanceEntityAggregation {
   Application
   Service
@@ -6,6 +7,7 @@ enum InstanceEntityAggregation {
   InstanceType
 }
 
+# Set aggregation criteria
 input InstanceAggregation {
   # Aggregate by entity
   entityAggregation: InstanceEntityAggregation

@@ -1,3 +1,4 @@
+# Possible entity values for environment aggregation
 enum EnvironmentEntityAggregation {
   Application
   EnvironmentType
