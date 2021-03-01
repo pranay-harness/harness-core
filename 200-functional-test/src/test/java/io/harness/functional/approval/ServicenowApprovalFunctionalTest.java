@@ -25,6 +25,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
@@ -36,7 +37,6 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
-import software.wings.FeatureTestHelper;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -83,7 +83,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceNowDelegateServiceImpl serviceNowDelegateService;
-  @Inject private FeatureTestHelper featureTestHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   private Environment environment;
   private OwnerManager.Owners owners;
@@ -93,7 +93,6 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
 
   @Before
   public void setUp() {
-    featureTestHelper.enableFeatureFlag(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS);
     owners = ownerManager.create();
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
