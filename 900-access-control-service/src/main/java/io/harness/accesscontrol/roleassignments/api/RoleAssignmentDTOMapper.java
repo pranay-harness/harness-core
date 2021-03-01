@@ -60,8 +60,8 @@ public class RoleAssignmentDTOMapper {
                       .collect(Collectors.toSet()))
         .principalTypeFilter(
             object.getPrincipalTypeFilter() == null ? new HashSet<>() : object.getPrincipalTypeFilter())
-        .managedFilter(object.getManaged() == null ? new HashSet<>() : object.getManaged())
-        .disabledFilter(object.getDisabled() == null ? new HashSet<>() : object.getDisabled())
+        .managedFilter(object.getHarnessManagedFilter() == null ? new HashSet<>() : object.getHarnessManagedFilter())
+        .disabledFilter(object.getDisabledFilter() == null ? new HashSet<>() : object.getDisabledFilter())
         .build();
   }
 }
