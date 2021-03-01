@@ -5,7 +5,6 @@ import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -55,12 +54,9 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     MaintenanceController.forceMaintenance(true);
     Injector injector = Guice.createInjector(new GitSyncTestModule(config));
 
-    final HPersistence instance = injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);
-    final Tester instance1 = injector.getInstance(Tester.class);
-    instance1.test();
   }
 
   private void registerResources(Environment environment, Injector injector) {
