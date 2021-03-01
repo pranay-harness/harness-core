@@ -14,6 +14,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
@@ -279,8 +280,21 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId) {
-    Activity activity = get(activityId);
+  public DeploymentActivitySummaryDTO getDeploymentSummary(String activityId) {
+    DeploymentActivity activity = (DeploymentActivity) get(activityId);
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        getDeploymentVerificationJobInstanceSummary(activity);
+    return DeploymentActivitySummaryDTO.builder()
+        .deploymentVerificationJobInstanceSummary(deploymentVerificationJobInstanceSummary)
+        .serviceIdentifier(activity.getServiceIdentifier())
+        .serviceName(getServiceNameFromActivity(activity))
+        .envIdentifier(activity.getEnvironmentIdentifier())
+        .envName(deploymentVerificationJobInstanceSummary.getEnvironmentName())
+        .deploymentTag(activity.getDeploymentTag())
+        .build();
+  }
+
+  private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(Activity activity) {
     List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(verificationJobInstanceIds);
@@ -288,11 +302,10 @@ public class ActivityServiceImpl implements ActivityService {
     deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
     return deploymentVerificationJobInstanceSummary;
   }
-
   @Override
   public ActivityStatusDTO getActivityStatus(String accountId, String activityId) {
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
-        getDeploymentSummary(activityId);
+        getDeploymentVerificationJobInstanceSummary(get(activityId));
     return ActivityStatusDTO.builder()
         .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
         .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())

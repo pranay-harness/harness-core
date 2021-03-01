@@ -33,6 +33,7 @@ import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
@@ -921,11 +922,20 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
     String activityId = activityService.register(accountId, generateUuid(), deploymentActivityDTO);
     DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
-        DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder().build();
+        DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary.builder()
+            .environmentName("env name")
+            .build();
     when(verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(anyList()))
         .thenReturn(deploymentVerificationJobInstanceSummary);
     assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isNull();
-    activityService.getDeploymentSummary(activityId);
+    DeploymentActivitySummaryDTO deploymentActivitySummaryDTO = activityService.getDeploymentSummary(activityId);
+    assertThat(deploymentActivitySummaryDTO.getServiceIdentifier())
+        .isEqualTo(deploymentActivityDTO.getServiceIdentifier());
+    assertThat(deploymentActivitySummaryDTO.getDeploymentTag()).isEqualTo(deploymentActivityDTO.getDeploymentTag());
+    assertThat(deploymentActivitySummaryDTO.getEnvIdentifier())
+        .isEqualTo(deploymentActivityDTO.getEnvironmentIdentifier());
+    assertThat(deploymentActivitySummaryDTO.getServiceName()).isEqualTo("service name");
+    assertThat(deploymentActivitySummaryDTO.getEnvName()).isEqualTo("env name");
     assertThat(deploymentVerificationJobInstanceSummary.getActivityId()).isEqualTo(activityId);
     assertThat(deploymentVerificationJobInstanceSummary.getActivityStartTime())
         .isEqualTo(deploymentActivityDTO.getActivityStartTime());
