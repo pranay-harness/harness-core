@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InterruptEventListener extends QueueListener<InterruptEvent> {
+  @Inject private PMSInterruptService pmsInterruptService;
+
   @Inject
   public InterruptEventListener(QueueConsumer<InterruptEvent> queueConsumer) {
     super(queueConsumer, false);
@@ -21,5 +23,6 @@ public class InterruptEventListener extends QueueListener<InterruptEvent> {
     InterruptType interruptType = event.getInterruptType();
     StepType stepType = event.getStepType();
     log.info("Starting to handle InterruptEvent of type: {} for step type : {}", interruptType, stepType);
+    pmsInterruptService.handleAbort(event.getNotifyId());
   }
 }

@@ -1,8 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -71,12 +70,11 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
     Interrupt handledInterrupt = orchestrationService.registerInterrupt(
         InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(InterruptType.ABORT_ALL).build());
     assertThat(handledInterrupt).isNotNull();
-    assertThat(handledInterrupt.getState()).isEqualTo(PROCESSED_SUCCESSFULLY);
+    assertThat(handledInterrupt.getState()).isEqualTo(PROCESSING);
 
-    interruptTestHelper.waitForPlanCompletion(execution.getUuid());
     PlanExecution abortedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(abortedExecution).isNotNull();
-    assertThat(abortedExecution.getStatus()).isEqualTo(ABORTED);
+    assertThat(abortedExecution.getStatus()).isEqualTo(RUNNING);
   }
 
   private Map<String, String> getAbstractions() {
