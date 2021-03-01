@@ -43,6 +43,7 @@ import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -614,12 +615,12 @@ public class ActivityServiceImpl implements ActivityService {
       if (runtimeDetailsMap.containsKey(verificationJob.getIdentifier())) {
         verificationJob.resolveVerificationJob(runtimeDetailsMap.get(verificationJob.getIdentifier()));
       }
-      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
           activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
       validateJob(verificationJob);
-      activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
 
-      jobInstancesToCreate.add(verificationJobInstance);
+      jobInstancesToCreate.add(verificationJobInstanceBuilder.build());
     });
     Preconditions.checkState(!jobInstancesToCreate.isEmpty(), "Should have at least one VerificationJobInstance");
     if (activity.deduplicateEvents()) {
@@ -637,15 +638,14 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJob.getServiceIdentifier());
   }
 
-  private VerificationJobInstance fillOutCommonJobInstanceProperties(
+  private VerificationJobInstanceBuilder fillOutCommonJobInstanceProperties(
       Activity activity, VerificationJob verificationJob) {
     return VerificationJobInstance.builder()
         .verificationJobIdentifier(verificationJob.getIdentifier())
         .accountId(activity.getAccountId())
         .executionStatus(ExecutionStatus.QUEUED)
         .deploymentStartTime(activity.getActivityStartTime())
-        .resolvedJob(verificationJob)
-        .build();
+        .resolvedJob(verificationJob);
   }
 
   public Activity getActivityFromDTO(ActivityDTO activityDTO) {

@@ -183,6 +183,7 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
         .thenReturn(VerificationJobInstance.builder()
                         .accountId(accountId)
                         .preActivityVerificationStartTime(start)
+                        .deploymentStartTime(start.plus(Duration.ofMinutes(3)))
                         .startTime(start.plus(Duration.ofMinutes(5)))
                         .postActivityVerificationStartTime(start.plus(Duration.ofMinutes(10)))
                         .uuid(verificationJobInstanceId)

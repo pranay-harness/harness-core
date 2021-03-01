@@ -361,7 +361,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TEST_LOG_ANALYSIS.name());
     assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId="
-            + baselineVerificationTaskId + "&analysisStartTime=1595846771000&analysisEndTime=1595847671000");
+            + baselineVerificationTaskId + "&analysisStartTime=1595846760000&analysisEndTime=1595847660000");
     assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId=" + verificationTaskId
             + "&analysisStartTime=1595846951000&analysisEndTime=1595847011000");

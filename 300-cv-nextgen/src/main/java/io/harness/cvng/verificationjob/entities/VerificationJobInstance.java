@@ -5,6 +5,7 @@ import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
@@ -36,9 +37,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -46,7 +49,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
-@Builder
+@Builder(buildMethodName = "unsafeBuild")
 @FieldNameConstants(innerTypeName = "VerificationJobInstanceKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -84,8 +87,8 @@ public final class VerificationJobInstance
 
   private String verificationJobIdentifier;
 
-  private Instant deploymentStartTime;
-  private Instant startTime;
+  @Setter(AccessLevel.NONE) private Instant deploymentStartTime;
+  @Setter(AccessLevel.PRIVATE) private Instant startTime;
   @FdIndex private Long dataCollectionTaskIteration;
   @FdIndex private Long analysisOrchestrationIteration;
   @FdIndex private Long deletePerpetualTaskIteration;
@@ -114,6 +117,34 @@ public final class VerificationJobInstance
   @FdTtlIndex
   private Date validUntil =
       Date.from(OffsetDateTime.now().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION).toInstant());
+
+  public static class VerificationJobInstanceBuilder {
+    public VerificationJobInstanceBuilder deploymentStartTime(Instant deploymentStartTime) {
+      this.deploymentStartTime = DateTimeUtils.roundDownTo1MinBoundary(deploymentStartTime);
+      return this;
+    }
+
+    public VerificationJobInstanceBuilder startTime(Instant startTime) {
+      this.startTime = DateTimeUtils.roundDownTo1MinBoundary(startTime);
+      return this;
+    }
+    public VerificationJobInstance build() {
+      VerificationJobInstance unsafeVerificationJobInstance = unsafeBuild();
+      Instant deploymentStartTime = unsafeVerificationJobInstance.getDeploymentStartTime();
+      Instant startTime = unsafeVerificationJobInstance.getStartTime();
+      // TODO: add this condition once health verification startTime is consistent with everything else.
+      // Preconditions.checkState(startTime.compareTo(deploymentStartTime) >= 0,
+      //   "Deployment start time should be before verification start time.");
+      if (deploymentStartTime.equals(startTime)) {
+        unsafeVerificationJobInstance.setStartTime(startTime.plus(Duration.ofMinutes(1)));
+      }
+      return unsafeVerificationJobInstance;
+    }
+
+    public VerificationJob getResolvedJob() {
+      return resolvedJob;
+    }
+  }
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -305,5 +336,10 @@ public final class VerificationJobInstance
     Instant cutoff =
         Collections.max(Arrays.asList(Instant.ofEpochMilli(createdAt).plus(TIMEOUT), getEndTime().plus(TIMEOUT)));
     return now.isAfter(cutoff);
+  }
+  // Just to support existing tests. We should never use this for newer API
+  @Deprecated
+  public void setStartTimeFromTest(Instant startTime) {
+    this.setStartTime(startTime);
   }
 }

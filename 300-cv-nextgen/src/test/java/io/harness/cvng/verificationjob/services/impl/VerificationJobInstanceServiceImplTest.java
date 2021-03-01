@@ -262,7 +262,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     String verificationJobInstanceId = generateUuid();
     verificationJobInstance.setUuid(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(job);
-    verificationJobInstance.setStartTime(Instant.now());
+    verificationJobInstance.setStartTimeFromTest(Instant.now());
     verificationJobInstance.setPreActivityVerificationStartTime(
         verificationJobInstance.getStartTime().minus(job.getDuration()));
     verificationJobInstance.setPostActivityVerificationStartTime(Instant.now());
@@ -300,7 +300,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     String verificationJobInstanceId = generateUuid();
     verificationJobInstance.setUuid(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(job);
-    verificationJobInstance.setStartTime(Instant.now());
+    verificationJobInstance.setStartTimeFromTest(Instant.now());
     verificationJobInstance.setPreActivityVerificationStartTime(
         verificationJobInstance.getStartTime().minus(job.getDuration()));
     verificationJobInstance.setPostActivityVerificationStartTime(Instant.now());
@@ -942,15 +942,16 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testDedupCreate_withHealthJob() {
-    Instant now = Instant.now();
+    Instant now = Instant.parse("2021-02-26T09:03:48.439Z");
     int numOfJobInstances = 10;
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     for (int i = 0; i < numOfJobInstances; i++) {
       verificationJobInstances.add(
           VerificationJobInstance.builder()
               .accountId(accountId)
-              .startTime(now.plusSeconds(i))
+              .startTime(now.plus(Duration.ofMinutes(i)))
               .executionStatus(ExecutionStatus.QUEUED)
+              .deploymentStartTime(now.minus(Duration.ofMinutes(2)))
               .verificationJobIdentifier("job-" + i)
               .preActivityVerificationStartTime(now.minusSeconds(i * 60))
               .postActivityVerificationStartTime(now.plusSeconds(i * 60))
@@ -978,7 +979,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
       assertThat(verificationJobInstance.getAccountId()).isEqualTo(accountId);
       assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
       assertThat(verificationJobInstance.getVerificationJobIdentifier()).isEqualTo("job-" + i);
-      assertThat(verificationJobInstance.getStartTime()).isEqualTo(now.plusSeconds(i));
+      assertThat(verificationJobInstance.getStartTime())
+          .isEqualTo(Instant.parse("2021-02-26T09:03:00.000Z").plus(Duration.ofMinutes(i)));
       assertThat(verificationJobInstance.getPreActivityVerificationStartTime()).isEqualTo(now.minusSeconds(i * 60));
       assertThat(verificationJobInstance.getPostActivityVerificationStartTime()).isEqualTo(now.plusSeconds(i * 60));
 
@@ -996,7 +998,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testCreate_whenNonHealthJob() {
-    Instant now = Instant.now();
+    Instant now = Instant.parse("2021-02-26T09:03:48.439Z");
     int numOfJobInstances = 10;
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     for (int i = 0; i < numOfJobInstances; i++) {
@@ -1004,7 +1006,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
           VerificationJobInstance.builder()
               .uuid("id-" + i)
               .accountId(accountId)
-              .startTime(now.plusSeconds(i))
+              .deploymentStartTime(now.minus(Duration.ofMinutes(2)))
+              .startTime(now.plus(Duration.ofMinutes(i)))
               .executionStatus(ExecutionStatus.QUEUED)
               .verificationJobIdentifier("job-" + i)
               .preActivityVerificationStartTime(now.minusSeconds(i * 60))
@@ -1032,7 +1035,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
       assertThat(verificationJobInstance.getAccountId()).isEqualTo(accountId);
       assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
       assertThat(verificationJobInstance.getVerificationJobIdentifier()).isEqualTo("job-" + i);
-      assertThat(verificationJobInstance.getStartTime()).isEqualTo(now.plusSeconds(i));
+      assertThat(verificationJobInstance.getStartTime())
+          .isEqualTo(Instant.parse("2021-02-26T09:03:00.000Z").plus(Duration.ofMinutes(i)));
       assertThat(verificationJobInstance.getPreActivityVerificationStartTime()).isEqualTo(now.minusSeconds(i * 60));
       assertThat(verificationJobInstance.getPostActivityVerificationStartTime()).isEqualTo(now.plusSeconds(i * 60));
 
@@ -1058,6 +1062,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
           VerificationJobInstance.builder()
               .uuid("id-" + i)
               .accountId(accountId)
+              .deploymentStartTime(now.minus(Duration.ofMinutes(2)))
               .startTime(now.plusSeconds(i))
               .executionStatus(ExecutionStatus.QUEUED)
               .verificationJobIdentifier("job-" + i)
