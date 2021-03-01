@@ -23,6 +23,7 @@ public class GraphLayoutNodeDTO {
   String nodeType;
   String nodeGroup;
   String nodeIdentifier;
+  String name;
   String nodeUuid;
   ExecutionStatus status;
   String module;
