@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class InterruptEvent extends Queuable {
   String interruptUuid;
   StepType stepType;
+  String planExecutionId;
   String nodeExecutionId;
   InterruptType interruptType;
   @Builder.Default String notifyId = generateUuid();

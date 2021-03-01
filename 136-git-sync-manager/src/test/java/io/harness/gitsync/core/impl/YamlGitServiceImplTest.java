@@ -113,7 +113,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
         .when(yamlGitConfigService)
         .getGitConnector(any(), any(), any(), any());
     yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
-    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
+    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), anyString());
   }
 
   @Test

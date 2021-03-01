@@ -12,6 +12,7 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -22,8 +23,11 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.NonNull;
@@ -35,6 +39,8 @@ public class AbortAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AbortHelper abortHelper;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -77,9 +83,11 @@ public class AbortAllInterruptHandler implements InterruptHandler {
           updatedInterrupt.getUuid());
       return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
     }
+    List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED);
+        notifyIds.add(abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED, updatedInterrupt) + "|"
+            + interrupt.getUuid());
       }
 
     } catch (Exception ex) {
@@ -87,6 +95,8 @@ public class AbortAllInterruptHandler implements InterruptHandler {
       throw ex;
     }
 
-    return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+    waitNotifyEngine.waitForAllOnInList(
+        publisherName, AbortAllInterruptCallback.builder().interrupt(updatedInterrupt).build(), notifyIds);
+    return updatedInterrupt;
   }
 }
