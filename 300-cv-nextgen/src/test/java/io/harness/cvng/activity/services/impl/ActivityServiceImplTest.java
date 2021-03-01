@@ -1046,6 +1046,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     realVerificationJobService.save(healthVerificationJob);
     realVerificationJobInstanceService.create(VerificationJobInstance.builder()
                                                   .accountId(kubernetesActivity.getAccountId())
+                                                  .deploymentStartTime(Instant.now())
+                                                  .startTime(Instant.now())
                                                   .resolvedJob(healthVerificationJob)
                                                   .executionStatus(ExecutionStatus.RUNNING)
                                                   .startTime(Instant.now())
@@ -1087,6 +1089,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     realVerificationJobInstanceService.create(VerificationJobInstance.builder()
                                                   .accountId(kubernetesActivity.getAccountId())
                                                   .resolvedJob(healthVerificationJob)
+                                                  .deploymentStartTime(Instant.now())
+                                                  .startTime(Instant.now())
                                                   .executionStatus(ExecutionStatus.SUCCESS)
                                                   .startTime(Instant.now())
                                                   .build());
@@ -1118,8 +1122,11 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     summary.setPassed(1);
     summary.setProgress(0);
 
-    List<VerificationJobInstance> jobInstances1 =
-        Arrays.asList(VerificationJobInstance.builder().uuid("jobId1").build());
+    List<VerificationJobInstance> jobInstances1 = Arrays.asList(VerificationJobInstance.builder()
+                                                                    .deploymentStartTime(Instant.now())
+                                                                    .startTime(Instant.now())
+                                                                    .uuid("jobId1")
+                                                                    .build());
     when(verificationJobInstanceService.get(Arrays.asList("jobId1"))).thenReturn(jobInstances1);
 
     when(verificationJobInstanceService.getActivityVerificationSummary(jobInstances1)).thenReturn(summary);
@@ -1159,8 +1166,11 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     summary.setPassed(1);
     summary.setProgress(0);
 
-    List<VerificationJobInstance> jobInstances1 =
-        Arrays.asList(VerificationJobInstance.builder().uuid("jobId1").build());
+    List<VerificationJobInstance> jobInstances1 = Arrays.asList(VerificationJobInstance.builder()
+                                                                    .deploymentStartTime(Instant.now())
+                                                                    .startTime(Instant.now())
+                                                                    .uuid("jobId1")
+                                                                    .build());
     when(verificationJobInstanceService.get(Arrays.asList("jobId1"))).thenReturn(jobInstances1);
 
     when(verificationJobInstanceService.getActivityVerificationSummary(jobInstances1)).thenReturn(summary);
