@@ -46,7 +46,9 @@ message InterventionWaitAdvise {
   string nextNodeId = 3;
 }
 
-message EndPlanAdvise {}
+message EndPlanAdvise {
+  bool isAbort = 1;
+}
 
 message MarkSuccessAdvise {
   string nextNodeId = 1;

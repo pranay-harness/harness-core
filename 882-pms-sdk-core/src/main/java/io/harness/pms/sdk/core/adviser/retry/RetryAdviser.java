@@ -82,7 +82,7 @@ public class RetryAdviser implements Adviser {
             .setType(AdviseType.INTERVENTION_WAIT)
             .build();
       case END_EXECUTION:
-        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().setIsAbort(true).build())
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
