@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -56,18 +57,25 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   @Override
   public StepResponse handleTaskResult(
       Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    K8sDeployResponse executionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
+    ResponseData responseData = responseDataMap.values().iterator().next();
+    if (responseData instanceof ErrorNotifyResponseData) {
+      return K8sStepHelper
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
+          .build();
+    }
 
+    K8sDeployResponse executionResponse = (K8sDeployResponse) responseData;
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
-    if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return stepResponseBuilder.status(Status.SUCCEEDED).build();
-    } else {
+
+    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();
     }
+
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override
