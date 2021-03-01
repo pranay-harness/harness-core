@@ -9,9 +9,6 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public class RoleValidator implements ConstraintValidator<ValidRole, Role> {
-  private static final String ALLOWED_CHARS_STRING = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._";
-  private static final int MAX_ALLOWED_LENGTH = 128;
-
   @Override
   public void initialize(ValidRole constraintAnnotation) {
     // nothing to initialize

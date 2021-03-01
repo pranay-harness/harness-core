@@ -6,6 +6,7 @@ import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapp
 
 import io.harness.accesscontrol.resources.HarnessResourceGroupService;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
@@ -30,7 +31,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
@@ -58,12 +58,22 @@ public class RoleAssignmentResource {
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")
-  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(@BeanParam PageRequest pageRequest,
-      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("principalIdentifier") String principalIdentifier,
-      @QueryParam("roleIdentifier") String roleIdentifier) {
+  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(
+      @BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     PageResponse<RoleAssignment> pageResponse =
-        roleAssignmentService.getAll(pageRequest, scopeIdentifier, principalIdentifier, roleIdentifier);
+        roleAssignmentService.list(pageRequest, scopeIdentifier, RoleAssignmentFilter.buildEmpty());
+    return ResponseDTO.newResponse(pageResponse.map(RoleAssignmentDTOMapper::toDTO));
+  }
+
+  @POST
+  @Path("filter")
+  @ApiOperation(value = "Get Filtered Role Assignments", nickname = "getFilteredRoleAssignmentList")
+  public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(@BeanParam PageRequest pageRequest,
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
+    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    PageResponse<RoleAssignment> pageResponse =
+        roleAssignmentService.list(pageRequest, scopeIdentifier, fromDTO(roleAssignmentFilter));
     return ResponseDTO.newResponse(pageResponse.map(RoleAssignmentDTOMapper::toDTO));
   }
 
