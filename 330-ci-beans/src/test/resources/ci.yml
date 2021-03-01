@@ -66,6 +66,8 @@ pipeline:
                       packages: "*.harness, *.wings"
                       testAnnotaions: "harnessTest"
                       runOnlySelectedTests: true
+                      preTestCommands: ./run lint
+                      postTestCommands: mvn clean
             - step:
                 identifier: generateReport
                 type: Run
