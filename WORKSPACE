@@ -1376,6 +1376,7 @@ maven_install(
         "com.google.protobuf:protobuf-java-util:3.11.4",
         "com.google.protobuf:protobuf-java:3.11.4",
         "com.googlecode.javaewah:JavaEWAH:1.1.6",
+        "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20200713.1",
         "com.graphql-java:graphql-java:12.0",
         "com.graphql-java:java-dataloader:2.1.1",
         "com.hazelcast:hazelcast-aws:2.4",
