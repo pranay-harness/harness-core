@@ -329,7 +329,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnArtifactoryResponseWith400StatusCode() throws IOException, IllegalAccessException {
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
@@ -349,6 +349,35 @@ public class ArtifactoryServiceTest extends CategoryTest {
     when(client.restCall(any())).thenReturn(artifactoryResponse);
 
     assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
+      throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
