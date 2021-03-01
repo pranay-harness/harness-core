@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+exit 0
+
 set -ex
 
 local_repo=${HOME}/.m2/repository
