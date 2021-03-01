@@ -15,12 +15,10 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -91,58 +89,36 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
 
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      StepResponseBuilder stepResponseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
-                               .build());
-      if (k8sRollingStepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
-                .build());
-      }
-      return stepResponseBuilder.build();
-    }
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
-      K8sRollingDeployResponse k8sTaskResponse =
-          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-
-      K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder()
-                                                .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-                                                .releaseNumber(k8sTaskResponse.getReleaseNumber())
-                                                .build();
-
-      return StepResponse.builder()
-          .status(Status.SUCCEEDED)
-          .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
-                           .outcome(k8sRollingOutcome)
-                           .group(StepOutcomeGroup.STAGE.name())
-                           .build())
+      return K8sStepHelper
+          .getDelegateErrorFailureResponseBuilder(k8sRollingStepParameters, (ErrorNotifyResponseData) responseData)
           .build();
-    } else {
-      StepResponseBuilder stepResponseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses())
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
-      if (k8sRollingStepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(k8sRollingStepParameters.getRollbackInfo()).build())
-                .build());
-      }
-      return stepResponseBuilder.build();
     }
+
+    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper
+          .getFailureResponseBuilder(k8sRollingStepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+          .build();
+    }
+
+    InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
+    K8sRollingDeployResponse k8sTaskResponse =
+        (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+
+    K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder()
+                                              .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                              .releaseNumber(k8sTaskResponse.getReleaseNumber())
+                                              .build();
+
+    return stepResponseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
+                         .outcome(k8sRollingOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
+        .build();
   }
 }
