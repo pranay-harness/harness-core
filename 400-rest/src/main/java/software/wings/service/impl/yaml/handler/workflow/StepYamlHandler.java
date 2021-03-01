@@ -105,13 +105,18 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    String type = stepYaml.getType();
+
+    if (isEmpty(type)) {
+      throw new InvalidRequestException("Step type could not be empty");
+    }
 
     if (isEmpty(stepYaml.getName())) {
-      throw new InvalidRequestException("Step name is empty for " + stepYaml.getType() + " step");
+      throw new InvalidRequestException("Step name is empty for " + type + " step");
     }
 
     StepCompletionYamlValidator stepCompletionYamlValidator =
-        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(stepYaml.getType()));
+        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(type));
     if (stepCompletionYamlValidator != null) {
       stepCompletionYamlValidator.validate(changeContext);
     }
@@ -182,7 +187,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     return GraphNode.builder()
         .name(stepYaml.getName())
-        .type(stepYaml.getType())
+        .type(type)
         .templateExpressions(templateExpressions)
         .rollback(isRollback)
         .properties(outputProperties.isEmpty() ? null : outputProperties)
