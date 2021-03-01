@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.roles.validator;
+package io.harness.accesscontrol.roleassignments.validator;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -11,12 +11,12 @@ import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
 
 @Documented
-@Constraint(validatedBy = {RoleValidator.class})
+@Constraint(validatedBy = {RoleAssignmentFilterValidator.class})
 @Target(TYPE)
 @Retention(RUNTIME)
 @ReportAsSingleViolation
-public @interface ValidRole {
-  String message() default "Invalid role";
+public @interface ValidRoleAssignmentFilter {
+  String message() default "Invalid role assignment filter";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
 }

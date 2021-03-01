@@ -21,15 +21,13 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
-    roleAssignment.setDisabled(false);
-    roleAssignment.setManaged(false);
     return roleAssignmentDao.create(roleAssignment);
   }
 
   @Override
-  public PageResponse<RoleAssignment> getAll(
-      PageRequest pageRequest, String parentIdentifier, String principalIdentifier, String roleIdentifier) {
-    return roleAssignmentDao.getAll(pageRequest, parentIdentifier, principalIdentifier, roleIdentifier);
+  public PageResponse<RoleAssignment> list(
+      PageRequest pageRequest, String parentIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.list(pageRequest, parentIdentifier, roleAssignmentFilter);
   }
 
   @Override

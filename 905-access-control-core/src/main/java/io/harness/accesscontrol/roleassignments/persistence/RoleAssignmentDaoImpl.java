@@ -2,10 +2,10 @@ package io.harness.accesscontrol.roleassignments.persistence;
 
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.toDBO;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.exception.DuplicateFieldException;
@@ -45,22 +45,43 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   }
 
   @Override
-  public PageResponse<RoleAssignment> getAll(
-      PageRequest pageRequest, String parentIdentifier, String principalIdentifier, String roleIdentifier) {
+  public PageResponse<RoleAssignment> list(
+      PageRequest pageRequest, String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
-    Criteria parentCriteria = Criteria.where(RoleAssignmentDBOKeys.scopeIdentifier).is(parentIdentifier);
-    Criteria principalCriteria = Criteria.where(RoleAssignmentDBOKeys.principalIdentifier).is(principalIdentifier);
-    Criteria roleCriteria = Criteria.where(RoleAssignmentDBOKeys.principalIdentifier).is(roleIdentifier);
-    Criteria criteria;
-    if (isEmpty(principalIdentifier) && isEmpty(roleIdentifier)) {
-      criteria = parentCriteria;
-    } else if (isEmpty(principalIdentifier)) {
-      criteria = new Criteria().andOperator(parentCriteria, roleCriteria);
-    } else if (isEmpty(roleIdentifier)) {
-      criteria = new Criteria().andOperator(parentCriteria, principalCriteria);
-    } else {
-      criteria = new Criteria().andOperator(parentCriteria, new Criteria().orOperator(principalCriteria, roleCriteria));
+    Criteria criteria = new Criteria();
+    criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(scopeIdentifier);
+
+    if (!roleAssignmentFilter.getRoleFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.roleIdentifier).in(roleAssignmentFilter.getRoleFilter());
     }
+
+    if (!roleAssignmentFilter.getResourceGroupFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.resourceGroupIdentifier).in(roleAssignmentFilter.getResourceGroupFilter());
+    }
+
+    if (!roleAssignmentFilter.getManagedFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.managed).in(roleAssignmentFilter.getManagedFilter());
+    }
+
+    if (!roleAssignmentFilter.getDisabledFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.disabled).in(roleAssignmentFilter.getDisabledFilter());
+    }
+
+    if (!roleAssignmentFilter.getPrincipalTypeFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.principalType).in(roleAssignmentFilter.getPrincipalTypeFilter());
+    }
+
+    else if (!roleAssignmentFilter.getPrincipalFilter().isEmpty()) {
+      criteria.orOperator(roleAssignmentFilter.getPrincipalFilter()
+                              .stream()
+                              .map(principal
+                                  -> Criteria.where(RoleAssignmentDBOKeys.principalIdentifier)
+                                         .is(principal.getPrincipalIdentifier())
+                                         .and(RoleAssignmentDBOKeys.principalType)
+                                         .is(principal.getPrincipalType()))
+                              .toArray(Criteria[] ::new));
+    }
+
     Page<RoleAssignmentDBO> assignmentPage = roleAssignmentRepository.findAll(criteria, pageable);
     return PageUtils.getNGPageResponse(assignmentPage.map(RoleAssignmentDBOMapper::fromDBO));
   }

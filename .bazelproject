@@ -53,7 +53,9 @@ directories:
   900-access-control-service
   903-decision-module
   905-access-control-core
-  909-access-control-sdk
+  908-access-control-admin-client
+  908-access-control-sdk
+  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
