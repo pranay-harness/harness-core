@@ -197,6 +197,7 @@ shared_dependencies = [
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_j2objc_j2objc_annotations",
     "@maven//:com_google_oauth_client_google_oauth_client",
+    "@maven//:com_googlecode_owasp_java_html_sanitizer_owasp_java_html_sanitizer",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:com_googlecode_javaewah_JavaEWAH",
