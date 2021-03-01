@@ -148,7 +148,10 @@ public class OverviewPageStatsDataFetcher
       Thread.currentThread().interrupt();
     }
 
-    overviewStatsDataBuilder.defaultAzurePerspectiveId(ceViewService.getDefaultAzureViewId(accountId));
+    if (overviewStatsDataBuilder.build().getAzureConnectorsPresent() != null
+        && overviewStatsDataBuilder.build().getAzureConnectorsPresent()) {
+      overviewStatsDataBuilder.defaultAzurePerspectiveId(ceViewService.getDefaultAzureViewId(accountId));
+    }
     log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }
