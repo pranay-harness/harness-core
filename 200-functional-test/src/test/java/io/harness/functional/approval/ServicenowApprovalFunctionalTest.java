@@ -36,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import software.wings.FeatureTestHelper;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
