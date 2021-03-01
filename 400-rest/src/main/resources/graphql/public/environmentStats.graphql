@@ -1,10 +1,10 @@
-# Possible entity values for environment aggregation
+# Possible entity values for Environment aggregation
 enum EnvironmentEntityAggregation {
   Application
   EnvironmentType
 }
 
-# Set environment aggregation criteria
+# Set Environment aggregation criteria
 input EnvironmentAggregation {
   # Aggregate by entity
   entityAggregation: EnvironmentEntityAggregation
@@ -12,7 +12,7 @@ input EnvironmentAggregation {
   tagAggregation: EnvironmentTagAggregation
 }
 
-# Aggregate by environment tag
+# Aggregate by Environment tag
 input EnvironmentTagAggregation {
   entityType: EnvironmentTagType
   tagName: String

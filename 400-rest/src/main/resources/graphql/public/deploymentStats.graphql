@@ -1,4 +1,4 @@
-# Possible entity values for deployment aggregation
+# Possible entity values for Deployment aggregation
 enum DeploymentEntityAggregation {
   Application
   Service
@@ -24,41 +24,41 @@ input DeploymentSortCriteria {
   sortOrder: SortOrder
 }
 
-# Set deployment filter criteria
+# Set Deployment filter criteria
 input DeploymentFilter {
-  # Filter by application id
+  # Filter by Application id
   application: IdFilter
-  # Filter by service id
+  # Filter by Service id
   service: IdFilter
-  # Filter by cloud provider id
+  # Filter by Cloud Provider id
   cloudProvider: IdFilter
-  # Filter by environment id
+  # Filter by Environment id
   environment: IdFilter
-  # Filter by environment type id
+  # Filter by Environment Type id
   environmentType: EnvironmentTypeFilter
-  # Filter by status id
+  # Filter by Status id
   status: IdFilter
-  # Filter by deployment end time
+  # Filter by Deployment end time
   endTime: TimeFilter
-  # Filter by deployment start time
+  # Filter by Deployment start time
   startTime: TimeFilter
-  # Filter by deployment duration
+  # Filter by Deployment duration
   duration: NumberFilter
-  # Filter by rollback duration
+  # Filter by Rollback Duration
   rollbackDuration: NumberFilter
-  # Filter by trigger-by id
+  # Filter by Triggered-by id
   triggeredBy: IdFilter
-  # Filter by trigger id
+  # Filter by Trigger id
   trigger: IdFilter
-  # Filter by workflow id
+  # Filter by Workflow id
   workflow: IdFilter
-  # Filter by pipeline id
+  # Filter by Pipeline id
   pipeline: IdFilter
-  # Filter by deployment tag
+  # Filter by Deployment Tag
   tag: DeploymentTagFilter
 }
 
-# Set deployment aggregation function
+# Set Deployment aggregation function
 input DeploymentAggregationFunction {
   count: CountAggregateOperation
   duration: DurationAggregateOperation
@@ -66,14 +66,14 @@ input DeploymentAggregationFunction {
   instancesDeployed: CountAggregateOperation
 }
 
-# Possible duration aggregation values
+# Possible Duration aggregation values
 enum DurationAggregateOperation {
   AVERAGE
   MIN
   MAX
 }
 
-# Set deployment aggregation criteria
+# Set Deployment aggregation criteria
 input DeploymentAggregation {
   # Aggregate by entity
   entityAggregation: DeploymentEntityAggregation
@@ -83,7 +83,7 @@ input DeploymentAggregation {
   tagAggregation: DeploymentTagAggregation
 }
 
-# Aggregate by deployment tag
+# Aggregate by Deployment tag
 input DeploymentTagAggregation {
   entityType: DeploymentTagType
   tagName: String

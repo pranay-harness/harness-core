@@ -1,9 +1,9 @@
-# Possible entity values for workflow aggregation
+# Possible entity values for Workflow aggregation
 enum WorkflowEntityAggregation {
   Application
 }
 
-# Set workflow aggregation criteria
+# Set Workflow aggregation criteria
 input WorkflowAggregation {
   # Aggregate by entity
   entityAggregation: WorkflowEntityAggregation
@@ -11,7 +11,7 @@ input WorkflowAggregation {
   tagAggregation: WorkflowTagAggregation
 }
 
-# Aggregate by workflow tag
+# Aggregate by Workflow tag
 input WorkflowTagAggregation {
   entityType: WorkflowTagType
   tagName: String

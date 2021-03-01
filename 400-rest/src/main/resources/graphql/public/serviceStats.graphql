@@ -1,10 +1,10 @@
-# Possible entity values for service aggregation
+# Possible entity values for Service aggregation
 enum ServiceEntityAggregation {
   Application
   ArtifactType
 }
 
-# Set service aggregation criteria
+# Set Service aggregation criteria
 input ServiceAggregation {
   # Aggregate by entity
   entityAggregation: ServiceEntityAggregation
@@ -12,7 +12,7 @@ input ServiceAggregation {
   tagAggregation: ServiceTagAggregation
 }
 
-# Aggregate by service tag
+# Aggregate by Service tag
 input ServiceTagAggregation {
   entityType: ServiceTagType
   tagName: String

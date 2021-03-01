@@ -1,9 +1,9 @@
-# Possible entity values for trigger aggregation
+# Possible entity values for Trigger aggregation
 enum TriggerEntityAggregation {
   Application
 }
 
-# Set trigger aggregation criteria
+# Set Trigger aggregation criteria
 input TriggerAggregation {
   # Aggregate by entity
   entityAggregation: TriggerEntityAggregation
@@ -11,7 +11,7 @@ input TriggerAggregation {
   tagAggregation: TriggerTagAggregation
 }
 
-# Aggregate by trigger tag
+# Aggregate by Trigger tag
 input TriggerTagAggregation {
   entityType: TriggerTagType
   tagName: String

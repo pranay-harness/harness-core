@@ -1,9 +1,9 @@
-# Possible entity values for pipeline aggregation
+# Possible entity values for Pipeline aggregation
 enum PipelineEntityAggregation {
   Application
 }
 
-# Set pipeline aggregation criteria
+# Set Pipeline aggregation criteria
 input PipelineAggregation {
   # Aggregate by entity
   entityAggregation: PipelineEntityAggregation
@@ -11,7 +11,7 @@ input PipelineAggregation {
   tagAggregation: PipelineTagAggregation
 }
 
-# Aggregate by pipeline tag
+# Aggregate by Pipeline tag
 input PipelineTagAggregation {
   entityType: PipelineTagType
   tagName: String

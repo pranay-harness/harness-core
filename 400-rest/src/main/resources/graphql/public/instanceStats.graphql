@@ -1,4 +1,4 @@
-# Possible entity values for instance aggregation
+# Possible entity values for Instance aggregation
 enum InstanceEntityAggregation {
   Application
   Service
@@ -7,7 +7,7 @@ enum InstanceEntityAggregation {
   InstanceType
 }
 
-# Set instance aggregation criteria
+# Set Instance aggregation criteria
 input InstanceAggregation {
   # Aggregate by entity
   entityAggregation: InstanceEntityAggregation
@@ -17,7 +17,7 @@ input InstanceAggregation {
   tagAggregation: InstanceTagAggregation
 }
 
-# Aggregate by instance tag
+# Aggregate by Instance tag
 input InstanceTagAggregation {
   entityType: InstanceTagType
   tagName: String
