@@ -16,6 +16,6 @@ public class RoleAssignmentFilterDTO {
   Set<String> roleFilter;
   Set<PrincipalType> principalTypeFilter;
   Set<PrincipalDTO> principalFilter;
-  Set<Boolean> managed;
-  Set<Boolean> disabled;
+  Set<Boolean> harnessManagedFilter;
+  Set<Boolean> disabledFilter;
 }
