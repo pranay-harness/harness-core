@@ -69,17 +69,19 @@ public class ArtifactoryServiceTest extends CategoryTest {
    */
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(9881));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig =
-      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-
-  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
+  private ArtifactoryConfig artifactoryConfig;
+  private ArtifactoryConfig artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
+    artifactoryConfig =
+        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
     FieldUtils.writeField(
         artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
   }
