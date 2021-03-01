@@ -12,7 +12,7 @@ public class TestCustomRepositoryImpl implements TestCustomRepository {
   private final GitAwarePersistence mongoTemplate;
 
   @Override
-  public void findByIdd(String id) {
-    mongoTemplate.findById(id, SampleBean.class);
+  public SampleBean save(SampleBean sampleBean) {
+    return mongoTemplate.save(sampleBean, null);
   }
 }
