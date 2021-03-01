@@ -1,5 +1,7 @@
 package io.harness.beans.serializer;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
@@ -38,12 +40,22 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
 
     RunTestsStep.Builder runTestsStepBuilder = RunTestsStep.newBuilder();
 
+    runTestsStepBuilder.setPreTestCommand(RunTimeInputHandler.resolveStringParameter(
+        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPreCommand(), false));
+    runTestsStepBuilder.setPostTestCommand(RunTimeInputHandler.resolveStringParameter(
+        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPostCommand(), false));
     runTestsStepBuilder.setArgs(runTestsStepInfo.getArgs());
     runTestsStepBuilder.setContainerPort(port);
     runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
     runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());
     runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.isRunOnlySelectedTests());
     runTestsStepBuilder.setPackages(runTestsStepInfo.getPackages());
+
+    List<String> output = RunTimeInputHandler.resolveListParameter(
+        "OutputVariables", "RunTests", step.getIdentifier(), runTestsStepInfo.getOutputVariables(), false);
+    if (isNotEmpty(output)) {
+      runTestsStepBuilder.addAllEnvVarOutputs(output);
+    }
 
     if (runTestsStepInfo.getTestAnnotations() != null) {
       runTestsStepBuilder.setTestAnnotations(runTestsStepInfo.getTestAnnotations());
