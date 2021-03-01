@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -81,6 +82,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceNowDelegateServiceImpl serviceNowDelegateService;
+  @Inject private FeatureTestHelper featureTestHelper;
 
   private Environment environment;
   private OwnerManager.Owners owners;
@@ -90,6 +92,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
 
   @Before
   public void setUp() {
+    featureTestHelper.enableFeatureFlag(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS);
     owners = ownerManager.create();
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
