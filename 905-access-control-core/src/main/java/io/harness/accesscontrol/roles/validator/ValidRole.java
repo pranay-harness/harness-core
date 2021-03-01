@@ -16,7 +16,7 @@ import javax.validation.ReportAsSingleViolation;
 @Retention(RUNTIME)
 @ReportAsSingleViolation
 public @interface ValidRole {
-  String message() default "Invalid identifier";
+  String message() default "Invalid role";
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
 }

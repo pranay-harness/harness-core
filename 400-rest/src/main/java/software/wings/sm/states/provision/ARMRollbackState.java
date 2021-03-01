@@ -50,7 +50,7 @@ public class ARMRollbackState extends ARMProvisionState {
 
     ARMPreExistingTemplate preExistingTemplate = validationData.getPreExistingTemplate();
     AzureARMPreDeploymentData preDeploymentData = preExistingTemplate.getPreDeploymentData();
-    Activity activity = helper.createActivity(context, false, getStateType());
+    Activity activity = helper.createARMActivity(context, false, getStateType());
 
     AzureARMDeploymentParameters taskParams =
         AzureARMDeploymentParameters.builder()

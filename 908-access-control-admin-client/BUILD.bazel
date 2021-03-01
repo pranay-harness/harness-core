@@ -1,0 +1,37 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "sources")
+
+sources()
+
+shared_dependencies = [
+    "//970-ng-commons:module",
+    "//960-persistence:module",
+    "//909-access-control-commons:module",
+    "@maven//:com_google_inject_guice",
+    "//:lombok",
+]
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

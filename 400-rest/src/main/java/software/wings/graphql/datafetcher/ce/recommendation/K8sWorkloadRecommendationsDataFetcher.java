@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.ce.recommendation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Optional.ofNullable;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
@@ -17,6 +19,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRec
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLUnitPrice;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
@@ -40,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,10 +91,16 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
             .greaterThanOrEq(1)
             .field(K8sWorkloadRecommendationKeys.lastReceivedUtilDataAt)
             .greaterThanOrEq(Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(2)));
+
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
+
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
+      QLUnitPrice qlUnitPrice = ofNullable(k8sWorkloadRecommendation.getUnitPrice())
+                                    .map(u -> QLUnitPrice.builder().cpu(u.getCpu()).memory(u.getMemory()).build())
+                                    .orElse(QLUnitPrice.builder().info("NA").build());
       Collection<? extends QLContainerRecommendation> containerRecommendations =
           entityToDtoCr(k8sWorkloadRecommendation.getContainerRecommendations());
+
       connectionBuilder.node(QLK8sWorkloadRecommendation.builder()
                                  .clusterId(k8sWorkloadRecommendation.getClusterId())
                                  .clusterName(clusterNameCache.get(k8sWorkloadRecommendation.getClusterId()))
@@ -100,6 +110,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                                  .workloadType(k8sWorkloadRecommendation.getWorkloadType())
                                  .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
                                  .numDays(k8sWorkloadRecommendation.getNumDays())
+                                 .unitPrice(qlUnitPrice)
                                  .preset(QLK8sWorkloadRecommendationPreset.builder()
                                              .cpuRequest(0.8)
                                              .memoryRequest(0.8)
@@ -126,6 +137,17 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
               .burstable(entityToDto(containerRecommendation.getBurstable()))
               .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
               .recommended(entityToDto(containerRecommendation.getRecommended()))
+              //  requiredPercentiles 50, 80, 90, 95, 99
+              .p50(entityToDto(
+                  ofNullable(containerRecommendation.getPercentileBased()).map(x -> x.get("p50")).orElse(null)))
+              .p80(entityToDto(
+                  ofNullable(containerRecommendation.getPercentileBased()).map(x -> x.get("p80")).orElse(null)))
+              .p90(entityToDto(
+                  ofNullable(containerRecommendation.getPercentileBased()).map(x -> x.get("p90")).orElse(null)))
+              .p95(entityToDto(
+                  ofNullable(containerRecommendation.getPercentileBased()).map(x -> x.get("p95")).orElse(null)))
+              .p99(entityToDto(
+                  ofNullable(containerRecommendation.getPercentileBased()).map(x -> x.get("p99")).orElse(null)))
               .numDays(containerRecommendation.getNumDays())
               .totalSamplesCount(containerRecommendation.getTotalSamplesCount())
               .build();
@@ -142,6 +164,12 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
         .limits(entityToDto(resourceRequirement.getLimits()))
         .yaml(resourceRequirementToYaml(resourceRequirement))
         .build();
+  }
+
+  private Map<String, QLResourceRequirement> mapEntityToDto(final Map<String, ResourceRequirement> percentileBased) {
+    return ofNullable(percentileBased)
+        .map(p -> p.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> entityToDto(e.getValue()))))
+        .orElse(new HashMap<>());
   }
 
   private String resourceRequirementToYaml(ResourceRequirement resourceRequirement) {

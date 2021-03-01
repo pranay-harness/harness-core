@@ -250,7 +250,7 @@ public class ConnectorResource {
   }
 
   // TODO(UTSAV): will be moved to 340-ce-nextgen
-  @GET
+  @POST
   @Path("/getceawstemplateurl")
   @ApiOperation(value = "Get CE Aws Connector Template URL Environment Wise", nickname = "getCEAwsTemplate")
   public ResponseDTO<String> getCEAwsTemplate(

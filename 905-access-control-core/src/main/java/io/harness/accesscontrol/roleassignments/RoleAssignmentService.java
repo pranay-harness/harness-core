@@ -13,8 +13,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface RoleAssignmentService {
   RoleAssignment create(@Valid @NotNull RoleAssignment roleAssignment);
 
-  PageResponse<RoleAssignment> getAll(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
-      String principalIdentifier, String roleIdentifier);
+  PageResponse<RoleAssignment> list(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
+      @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
