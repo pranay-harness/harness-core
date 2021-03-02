@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HttpStep implements TaskExecutable<HttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getYamlType()).build();
-  private static final int socketTimeoutMillis = 10000;
 
   @Inject private KryoSerializer kryoSerializer;
 
@@ -60,6 +59,11 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
 
   @Override
   public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
+    int socketTimeoutMillis = (int) NGTimeConversionHelper.convertTimeStringToMilliseconds("10m");
+    if (stepParameters.getTimeout() != null && stepParameters.getTimeout().getValue() != null) {
+      socketTimeoutMillis =
+          (int) NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue());
+    }
     HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
                                                                   .url(stepParameters.getUrl().getValue())
                                                                   .method(stepParameters.getMethod().getValue())
