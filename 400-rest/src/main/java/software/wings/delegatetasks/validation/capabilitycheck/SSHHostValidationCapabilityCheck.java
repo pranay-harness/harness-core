@@ -10,11 +10,9 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
@@ -45,7 +43,7 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
     CapabilityResponseBuilder capabilityResponseBuilder = CapabilityResponse.builder().delegateCapability(capability);
 
     boolean rolledOut = isNotEmpty(capability.getHost());
-    boolean abTesting = (capability.getValidationInfo() != null);
+    boolean abTesting = capability.getValidationInfo() != null;
 
     boolean capabilityValidatedWithSecrets = false;
     boolean capabilityValidatedWithoutSecrets = false;

@@ -37,6 +37,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability.SSHHostValidationCapabilityBuilder;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.settings.SettingValue;
 
@@ -257,8 +258,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         return capabilities;
       case SSH:
         if (!executeOnDelegate) {
-          SSHHostValidationCapability.SSHHostValidationCapabilityBuilder capabilityBuilder =
-              SSHHostValidationCapability.builder();
+          SSHHostValidationCapabilityBuilder capabilityBuilder = SSHHostValidationCapability.builder();
           if (!sshHostValidationStripSecrets) {
             capabilityBuilder
                 .validationInfo(BasicValidationInfo.builder()
