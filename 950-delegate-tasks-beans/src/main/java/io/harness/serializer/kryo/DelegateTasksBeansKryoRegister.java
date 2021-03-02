@@ -76,6 +76,8 @@ import io.harness.delegate.beans.connector.NoOpConnectorValidationParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValidationParams;
+import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
+import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitValidationParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsDelegateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
@@ -569,6 +571,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactoryValidationParams.class, 19539);
     kryo.register(AwsValidationParams.class, 19544);
     kryo.register(GcpValidationParams.class, 19545);
+    kryo.register(AwsCodeCommitTaskParams.class, 19546);
+    kryo.register(AwsCodeCommitValidationParams.class, 19547);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

@@ -72,6 +72,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
+import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
@@ -1266,6 +1267,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SHELL_SCRIPT_TASK_NG).toInstance(ShellScriptTaskNG.class);
     mapBinder.addBinding(TaskType.NG_NEXUS_TASK).toInstance(NexusDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_ARTIFACTORY_TASK).toInstance(ArtifactoryDelegateTask.class);
+    mapBinder.addBinding(TaskType.NG_AWS_CODE_COMMIT_TASK).toInstance(AwsCodeCommitDelegateTask.class);
   }
 
   private void registerSecretManagementBindings() {
