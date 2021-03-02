@@ -1,5 +1,8 @@
 package io.harness.ccm.anomaly.entities;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -16,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @FieldNameConstants(innerTypeName = "AnomalyEntityKeys")
+@TargetModule(Module._490_CE_COMMONS)
 public class AnomalyEntity {
   String id;
   String accountId;
