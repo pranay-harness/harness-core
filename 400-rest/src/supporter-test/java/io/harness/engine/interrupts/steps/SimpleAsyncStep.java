@@ -67,5 +67,5 @@ public class SimpleAsyncStep implements AsyncExecutable<SimpleStepAsyncParams> {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, SimpleStepAsyncParams stateParameters, AsyncExecutableResponse executableResponse) {}
+      Ambiance ambiance, SimpleStepAsyncParams stepParameters, AsyncExecutableResponse executableResponse) {}
 }

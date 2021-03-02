@@ -108,7 +108,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, BarrierStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, BarrierStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
     updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance));
   }
 
