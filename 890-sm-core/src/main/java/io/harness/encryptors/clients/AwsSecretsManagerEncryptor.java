@@ -187,13 +187,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
     AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
     try {
-      AWSSecretsManager client =
-          AWSSecretsManagerClientBuilder.standard()
-              .withCredentials(new AWSStaticCredentialsProvider(
-                  new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey())))
-              .withRegion(secretsManagerConfig.getRegion() == null ? Regions.US_EAST_1
-                                                                   : Regions.fromName(secretsManagerConfig.getRegion()))
-              .build();
+      AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
       GetSecretValueRequest request =
           new GetSecretValueRequest().withSecretId(AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis());
       client.getSecretValue(request);
