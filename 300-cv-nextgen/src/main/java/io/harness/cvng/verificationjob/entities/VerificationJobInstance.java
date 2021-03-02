@@ -3,6 +3,7 @@ package io.harness.cvng.verificationjob.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -103,6 +104,7 @@ public final class VerificationJobInstance
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
+  private ActivityVerificationStatus verificationStatus;
 
   // this stuff is only required for health verification
   private Instant preActivityVerificationStartTime;
