@@ -2,6 +2,7 @@ package io.harness.event.timeseries.processor;
 
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.utils.DateUtils;
+import io.harness.event.timeseries.processor.utils.FFUtils;
 import io.harness.exception.DeploymentMigrationException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.DBUtils;
@@ -82,6 +83,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject DataFetcherUtils utils;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private FFUtils ffUtils;
 
   @Override
   public void processEvent(TimeSeriesEventInfo eventInfo) {
@@ -208,8 +210,8 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
         log.info("DEPLOYMENT_DATA_MIGRATION_SUCCESS for account : {}", accountId);
         try {
           // Disable deployment data migration cron for the account
-          featureFlagService.updateFeatureFlagForAccount(
-              FeatureName.CUSTOM_DASHBOARD_ENABLE_CRON_DEPLOYMENT_DATA_MIGRATION.toString(), accountId, false);
+          ffUtils.updateFeatureFlagForAccount(
+              FeatureName.CUSTOM_DASHBOARD_ENABLE_CRON_DEPLOYMENT_DATA_MIGRATION, accountId, false);
           log.info("Deployment data migration feature flag disabled for account : {}", accountId);
         } catch (Exception exception) {
           String errorLog =
