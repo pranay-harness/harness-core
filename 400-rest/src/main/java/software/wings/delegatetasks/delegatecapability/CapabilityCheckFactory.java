@@ -24,7 +24,6 @@ import software.wings.delegatetasks.validation.capabilitycheck.GitConnectionCapa
 import software.wings.delegatetasks.validation.capabilitycheck.HelmCommandCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
-import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
 import com.google.inject.Inject;
@@ -49,7 +48,6 @@ public class CapabilityCheckFactory {
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
   @Inject ClusterMasterUrlCapabilityCheck clusterMasterUrlCapabilityCheck;
-  @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
   @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
@@ -89,8 +87,6 @@ public class CapabilityCheckFactory {
         return chartMuseumCapabilityCheck;
       case CLUSTER_MASTER_URL:
         return clusterMasterUrlCapabilityCheck;
-      case SHELL_CONNECTION:
-        return shellConnectionCapabilityCheck;
       case GIT_CONNECTION:
         return gitConnectionCapabilityCheck;
       case KUSTOMIZE:

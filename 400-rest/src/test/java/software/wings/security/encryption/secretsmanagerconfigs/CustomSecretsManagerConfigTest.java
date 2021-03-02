@@ -15,12 +15,13 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.rule.Owner;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigBuilder;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType;
 
@@ -82,7 +83,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0) instanceof ShellConnectionCapability).isTrue();
+    assertThat(executionCapabilities.get(0) instanceof SSHHostValidationCapability).isTrue();
   }
 
   @Test
@@ -99,7 +100,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities = config.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotNull();
     assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0) instanceof ShellConnectionCapability).isTrue();
+    assertThat(executionCapabilities.get(0) instanceof HttpConnectionExecutionCapability).isTrue();
   }
 
   @Test

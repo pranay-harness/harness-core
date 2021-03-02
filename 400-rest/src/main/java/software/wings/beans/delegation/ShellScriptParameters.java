@@ -9,6 +9,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -29,7 +30,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
-import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
@@ -191,8 +192,14 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
             "DELEGATE_POWERSHELL", Arrays.asList("/bin/sh", "-c", "pwsh -Version")));
       }
       return executionCapabilities;
+    } else {
+      switch (connectionType) {
+        case SSH:
+          executionCapabilities.add(SSHHostValidationCapability.builder().host(host).port(port).build());
+        case WINRM:
+          executionCapabilities.add(HttpConnectionExecutionCapability.builder().host(host).port(port).build());
+      }
     }
-    executionCapabilities.add(ShellConnectionCapability.builder().shellScriptParameters(this).build());
     return executionCapabilities;
   }
 }

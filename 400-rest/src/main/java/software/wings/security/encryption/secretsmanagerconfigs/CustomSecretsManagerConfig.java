@@ -6,11 +6,13 @@ import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -19,7 +21,9 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.Lists;
@@ -69,8 +73,19 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig {
       return new ArrayList<>();
     }
 
-    return Collections.singletonList(
-        ShellConnectionCapability.builder().shellScriptParameters(buildShellScriptParameters(this)).build());
+    ShellScriptParameters shellScriptParameters = buildShellScriptParameters(this);
+
+    if (remoteHostConnector.getSettingType() == HOST_CONNECTION_ATTRIBUTES) {
+      return Collections.singletonList(SSHHostValidationCapability.builder()
+                                           .host(host)
+                                           .port(((HostConnectionAttributes) remoteHostConnector).getSshPort())
+                                           .build());
+    } else {
+      return Collections.singletonList(HttpConnectionExecutionCapability.builder()
+                                           .host(host)
+                                           .port(shellScriptParameters.getWinrmConnectionAttributes().getPort())
+                                           .build());
+    }
   }
 
   @Override

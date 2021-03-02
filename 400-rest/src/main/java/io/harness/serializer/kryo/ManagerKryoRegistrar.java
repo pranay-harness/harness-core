@@ -397,8 +397,6 @@ import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlVali
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.SftpCapability;
-import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -1609,7 +1607,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmDeployContextElement.class, 7346);
     kryo.register(NewRelicMetricDataRecord.class, 7347);
     kryo.register(ClusterLevel.class, 7348);
-    kryo.register(SftpCapability.class, 7351);
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
@@ -1627,7 +1624,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ScriptType.class, 7386);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
-    kryo.register(ShellConnectionCapability.class, 7390);
     kryo.register(GitConnectionCapability.class, 7391);
     kryo.register(GitValidationParameters.class, 7392);
     kryo.register(AppPermissionSummaryForUI.class, 7395);
