@@ -5,7 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataMetadataFields;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public enum QLCESortType {
   TIME(CEExportDataMetadataFields.STARTTIME),
   TOTALCOST(CEExportDataMetadataFields.SUM),

@@ -8,7 +8,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCEGroupBy {
   QLCEEntityGroupBy entity;
   QLCETimeAggregation time;

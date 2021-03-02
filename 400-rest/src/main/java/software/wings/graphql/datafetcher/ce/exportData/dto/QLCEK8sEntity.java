@@ -11,7 +11,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CEK8sEntityKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCEK8sEntity {
   String namespace;
   String workload;

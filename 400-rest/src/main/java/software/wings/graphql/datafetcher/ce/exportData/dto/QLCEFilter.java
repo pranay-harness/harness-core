@@ -18,7 +18,7 @@ import lombok.Value;
 @Value
 @Builder
 @ToString
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCEFilter implements EntityFilter {
   private QLIdFilter application;
   private QLIdFilter service;

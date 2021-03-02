@@ -10,7 +10,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "CEHarnessEntityKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCEHarnessEntity {
   String application;
   String service;

@@ -13,7 +13,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCELabelFilter implements Filter {
   private List<QLK8sLabelInput> labels;
 

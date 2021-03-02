@@ -13,7 +13,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLCETagFilter implements Filter {
   private QLCETagType entityType;
   private List<QLTagInput> tags;
