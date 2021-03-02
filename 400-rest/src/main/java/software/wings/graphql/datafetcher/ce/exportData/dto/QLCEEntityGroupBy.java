@@ -16,6 +16,7 @@ public enum QLCEEntityGroupBy {
   Task(QLAggregationKind.SIMPLE),
   LaunchType(QLAggregationKind.SIMPLE),
   Workload(QLAggregationKind.SIMPLE),
+  WorkloadType(QLAggregationKind.SIMPLE),
   Namespace(QLAggregationKind.SIMPLE),
   Node(QLAggregationKind.SIMPLE),
   Pod(QLAggregationKind.SIMPLE);
