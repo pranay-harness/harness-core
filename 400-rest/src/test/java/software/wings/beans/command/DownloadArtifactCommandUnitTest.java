@@ -304,7 +304,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
                                            .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -315,7 +315,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3ContextFolder =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
                                            .metadata(mockMetadataForS3Folder())
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -326,7 +326,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext artifactoryContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(artifactStreamAttributesForArtifactory)
                                            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -337,7 +337,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext artifactoryContextAnon =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(streamAttributesAnon)
                                            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -348,7 +348,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext azureArtifactsContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
                                            .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -359,7 +359,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMaven =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(nexus2MavenStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -370,7 +370,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMavenWithoutArtifactFileMetadata = new ShellCommandExecutionContext(
-      aCommandExecutionContext()
+      aCommandExecutionContext(true, true)
           .artifactStreamAttributes(nexus2MavenStreamAttributesWithoutArtifactFileMetadata)
           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
           .hostConnectionAttributes(hostConnectionAttributes)
@@ -381,7 +381,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMavenAnon =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(nexus2MavenStreamAttributesAnon)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -392,7 +392,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext bambooContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(bambooStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -403,7 +403,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext jenkinsContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true, true)
                                            .artifactStreamAttributes(jenkinsArtifactStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -456,7 +456,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @TestCaseName("{method}-{0}")
   public void testShouldDownloadThroughBash(ArtifactStreamType artifactStreamType) {
     ShellCommandExecutionContext context =
-        new ShellCommandExecutionContext(CommandExecutionContext.Builder.aCommandExecutionContext().build());
+        new ShellCommandExecutionContext(CommandExecutionContext.Builder.aCommandExecutionContext(true, true).build());
     switch (artifactStreamType) {
       case AMAZON_S3:
         context = amazonS3Context;

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
 
@@ -15,7 +16,6 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse.Capabili
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
-import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
 
@@ -37,19 +37,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
-  @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private EncryptionService encryptionService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SSHHostValidationCapability capability = (SSHHostValidationCapability) delegateCapability;
     CapabilityResponseBuilder capabilityResponseBuilder = CapabilityResponse.builder().delegateCapability(capability);
 
-    boolean rolledOut = featureFlagService.isEnabled(
-        FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS, delegateConfiguration.getAccountId());
-    boolean abTesting = featureFlagService.isEnabled(
-        FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS_AB, delegateConfiguration.getAccountId());
+    boolean rolledOut = isNotEmpty(capability.getHost());
+    boolean abTesting = (capability.getValidationInfo() != null);
 
     boolean capabilityValidatedWithSecrets = false;
     boolean capabilityValidatedWithoutSecrets = false;

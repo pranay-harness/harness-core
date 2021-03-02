@@ -21,14 +21,14 @@ import lombok.Value;
 @Builder
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class SSHHostValidationCapability implements ExecutionCapability {
-  @NotNull BasicValidationInfo validationInfo;
-  @NotNull private SettingAttribute hostConnectionAttributes;
-  @NotNull private SettingAttribute bastionConnectionAttributes;
+  BasicValidationInfo validationInfo;
+  private SettingAttribute hostConnectionAttributes;
+  private SettingAttribute bastionConnectionAttributes;
   private List<EncryptedDataDetail> hostConnectionCredentials;
   private List<EncryptedDataDetail> bastionConnectionCredentials;
   private SSHExecutionCredential sshExecutionCredential;
   private Map<String, String> envVariables = new HashMap<>();
-  // old impl above, new impl below
+  // old impl above, new impl below -- send both sets to get A/B testing and one set to use that result
   private String host;
   private int port;
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SSH_HOST_CONNECTION;

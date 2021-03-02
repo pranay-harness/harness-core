@@ -488,7 +488,9 @@ public class CommandState extends State {
       String windowsRuntimePath = getEvaluatedSettingValue(context, accountId, appId, envId, WINDOWS_RUNTIME_PATH);
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
-          aCommandExecutionContext()
+          aCommandExecutionContext(
+              featureFlagService.isEnabled(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS, accountId),
+              featureFlagService.isEnabled(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS_AB, accountId))
               .appId(appId)
               .envId(envId)
               .backupPath(backupPath)

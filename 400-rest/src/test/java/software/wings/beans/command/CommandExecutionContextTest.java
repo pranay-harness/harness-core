@@ -45,7 +45,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   private static final String MASTER_URL = "http://example.com";
 
   CommandExecutionContext.Builder contextBuilder =
-      aCommandExecutionContext()
+      aCommandExecutionContext(true, true)
           .appId(APP_ID)
           .envId(ENV_ID)
           .accountId(ACCOUNT_ID)
@@ -225,14 +225,14 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotSetEnvVariablesWithFF() {
     CommandExecutionContext context;
-    context = aCommandExecutionContext()
+    context = aCommandExecutionContext(true, true)
                   .host(aHost().build())
                   .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())
                   .envVariables(ImmutableMap.of("k1", "v1"))
                   .build();
     assertThat(context.winrmSessionConfig("Execute", "foo").getEnvironment()).containsKey("k1");
 
-    context = aCommandExecutionContext()
+    context = aCommandExecutionContext(true, true)
                   .envVariables(ImmutableMap.of("k1", "v1"))
                   .host(aHost().build())
                   .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())

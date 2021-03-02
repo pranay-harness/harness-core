@@ -16,11 +16,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -127,6 +129,7 @@ public class AwsCodeDeployState extends State {
   @Inject protected transient SecretManager secretManager;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private AwsStateHelper awsStateHelper;
+  @Inject protected FeatureFlagService featureFlagService;
 
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
@@ -205,7 +208,9 @@ public class AwsCodeDeployState extends State {
         context, infrastructureMapping, cloudProviderSetting, encryptedDataDetails, executionDataBuilder);
 
     DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
-    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext(
+        featureFlagService.isEnabled(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS, app.getAccountId()),
+        featureFlagService.isEnabled(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS_AB, app.getAccountId()))
                                                           .accountId(app.getAccountId())
                                                           .appId(app.getUuid())
                                                           .envId(envId)

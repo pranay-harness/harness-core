@@ -649,7 +649,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext()
+             aCommandExecutionContext(true, true)
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -734,7 +734,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext()
+             aCommandExecutionContext(true, true)
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -920,7 +920,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext()
+             aCommandExecutionContext(true, true)
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -979,7 +979,7 @@ public class CommandStateTest extends WingsBaseTest {
   private DelegateTaskBuilder getDelegateBuilder(
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes, Command command) {
     CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext()
+        aCommandExecutionContext(true, true)
             .appId(APP_ID)
             .backupPath(BACKUP_PATH)
             .runtimePath(RUNTIME_PATH)
@@ -1679,7 +1679,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext()
+             aCommandExecutionContext(true, true)
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)

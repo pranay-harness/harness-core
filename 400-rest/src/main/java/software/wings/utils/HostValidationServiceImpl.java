@@ -9,8 +9,10 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.NoopExecutionCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
@@ -45,6 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 public class HostValidationServiceImpl implements HostValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject protected FeatureFlagService featureFlagService;
 
   @Override
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
@@ -94,7 +97,9 @@ public class HostValidationServiceImpl implements HostValidationService {
   private HostValidationResponse validateHostSsh(
       String hostName, SettingAttribute connectionSetting, ExecutionCredential executionCredential) {
     CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext()
+        aCommandExecutionContext(
+            featureFlagService.isEnabledForAllAccounts(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS),
+            featureFlagService.isEnabledForAllAccounts(FeatureName.SSH_HOST_VALIDATION_STRIP_SECRETS_AB))
             .hostConnectionAttributes(connectionSetting)
             .executionCredential(executionCredential)
             .host(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())

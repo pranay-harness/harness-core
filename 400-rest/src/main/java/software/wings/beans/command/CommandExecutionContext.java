@@ -96,6 +96,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
   private List<String> delegateSelectors;
 
+  private boolean sshHostValidationStripSecrets;
+  private boolean sshHostValidationStripSecretsAb;
+
   // new fields for multi artifact
   private Map<String, Artifact> multiArtifactMap;
   private Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap;
@@ -103,7 +106,10 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
   private String artifactFileName;
 
-  public CommandExecutionContext() {}
+  public CommandExecutionContext(boolean sshHostValidationStripSecrets, boolean sshHostValidationStripSecretsAb) {
+    this.sshHostValidationStripSecrets = sshHostValidationStripSecrets;
+    this.sshHostValidationStripSecretsAb = sshHostValidationStripSecretsAb;
+  }
 
   /**
    * Instantiates a new Command execution context.
@@ -152,6 +158,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
     artifactFileName = other.artifactFileName;
     delegateSelectors = other.delegateSelectors;
+    sshHostValidationStripSecrets = other.sshHostValidationStripSecrets;
+    sshHostValidationStripSecretsAb = other.sshHostValidationStripSecretsAb;
   }
 
   /**
@@ -249,23 +257,30 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         return capabilities;
       case SSH:
         if (!executeOnDelegate) {
-          capabilities.add(SSHHostValidationCapability.builder()
-                               .validationInfo(BasicValidationInfo.builder()
-                                                   .accountId(accountId)
-                                                   .appId(appId)
-                                                   .activityId(activityId)
-                                                   .executeOnDelegate(executeOnDelegate)
-                                                   .publicDns(host == null ? null : host.getPublicDns())
-                                                   .build())
-                               .hostConnectionAttributes(hostConnectionAttributes)
-                               .bastionConnectionAttributes(bastionConnectionAttributes)
-                               .hostConnectionCredentials(hostConnectionCredentials)
-                               .bastionConnectionCredentials(bastionConnectionCredentials)
-                               .sshExecutionCredential((SSHExecutionCredential) executionCredential)
-                               // old impl above, new impl below
-                               .port(((HostConnectionAttributes) hostConnectionAttributes.getValue()).getSshPort())
-                               .host(host.getPublicDns())
-                               .build());
+          SSHHostValidationCapability.SSHHostValidationCapabilityBuilder capabilityBuilder =
+              SSHHostValidationCapability.builder();
+          if (!sshHostValidationStripSecrets) {
+            capabilityBuilder
+                .validationInfo(BasicValidationInfo.builder()
+                                    .accountId(accountId)
+                                    .appId(appId)
+                                    .activityId(activityId)
+                                    .executeOnDelegate(executeOnDelegate)
+                                    .publicDns(host == null ? null : host.getPublicDns())
+                                    .build())
+                .hostConnectionAttributes(hostConnectionAttributes)
+                .bastionConnectionAttributes(bastionConnectionAttributes)
+                .hostConnectionCredentials(hostConnectionCredentials)
+                .bastionConnectionCredentials(bastionConnectionCredentials)
+                .sshExecutionCredential((SSHExecutionCredential) executionCredential);
+          }
+          if (sshHostValidationStripSecrets || sshHostValidationStripSecretsAb) {
+            capabilityBuilder
+                // old impl above, new impl below
+                .port(((HostConnectionAttributes) hostConnectionAttributes.getValue()).getSshPort())
+                .host(host.getPublicDns());
+          }
+          capabilities.add(capabilityBuilder.build());
         }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
@@ -335,10 +350,18 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
     private String artifactFileName;
 
-    private Builder() {}
+    // feature flags
+    private boolean sshHostValidationStripSecrets;
+    private boolean sshHostValidationStripSecretsAb;
 
-    public static Builder aCommandExecutionContext() {
-      return new Builder();
+    private Builder(boolean sshHostValidationStripSecrets, boolean sshHostValidationStripSecretsAb) {
+      this.sshHostValidationStripSecrets = sshHostValidationStripSecrets;
+      this.sshHostValidationStripSecretsAb = sshHostValidationStripSecretsAb;
+    }
+
+    public static Builder aCommandExecutionContext(
+        boolean sshHostValidationStripSecrets, boolean sshHostValidationStripSecretsAb) {
+      return new Builder(sshHostValidationStripSecrets, sshHostValidationStripSecretsAb);
     }
 
     public Builder accountId(String accountId) {
@@ -563,7 +586,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder but() {
-      return aCommandExecutionContext()
+      return aCommandExecutionContext(sshHostValidationStripSecrets, sshHostValidationStripSecretsAb)
           .accountId(accountId)
           .envId(envId)
           .host(host)
@@ -611,7 +634,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public CommandExecutionContext build() {
-      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
+      CommandExecutionContext commandExecutionContext =
+          new CommandExecutionContext(sshHostValidationStripSecrets, sshHostValidationStripSecretsAb);
       commandExecutionContext.setAccountId(accountId);
       commandExecutionContext.setEnvId(envId);
       commandExecutionContext.setHost(host);
