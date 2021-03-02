@@ -68,6 +68,7 @@ modules = [
     "//330-ci-beans",
     "//340-ce-nextgen",
     "//360-cg-manager",
+    "//375-ce-graphql",
     "//380-cg-graphql",
     "//400-rest",
     "//420-delegate-agent",
