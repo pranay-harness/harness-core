@@ -61,6 +61,13 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusConstants;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
@@ -209,5 +216,12 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitlabApiAccessDTO.class, 19645);
     kryo.register(GitlabApiAccessType.class, 19646);
     kryo.register(GitlabApiAccessSpecDTO.class, 19647);
+    kryo.register(AwsCodeCommitConnectorDTO.class, 19648);
+    kryo.register(AwsCodeCommitAuthenticationDTO.class, 19649);
+    kryo.register(AwsCodeCommitHttpsCredentialsDTO.class, 19650);
+    kryo.register(AwsCodeCommitSecretKeyAccessKeyDTO.class, 19651);
+    kryo.register(AwsCodeCommitUrlType.class, 19652);
+    kryo.register(AwsCodeCommitHttpsAuthType.class, 19653);
+    kryo.register(AwsCodeCommitAuthType.class, 19654);
   }
 }

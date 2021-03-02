@@ -116,4 +116,7 @@ public class CIExecutionConstants {
 
   public static final String IMAGE_PATH_SPLIT_REGEX = ":";
   public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
+
+  public static final String AWS_CODE_COMMIT_URL_REGEX =
+      "^https://git-codecommit\\.([^/.]*)\\.amazonaws\\.com/v1/repos(?:/?|/[^/.]*)$";
 }
