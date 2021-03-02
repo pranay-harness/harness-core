@@ -19,7 +19,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetListDataFetcher extends AbstractArrayDataFetcher<QLBudgetTableData, QLBudgetQueryParameters> {
   @Inject BudgetService budgetService;
   @Inject CeAccountExpirationChecker accountChecker;

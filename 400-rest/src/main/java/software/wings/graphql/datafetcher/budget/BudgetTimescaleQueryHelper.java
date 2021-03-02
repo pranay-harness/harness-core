@@ -44,7 +44,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetTimescaleQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private DataUtils utils;

@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "BudgetAlertsTableKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetAlertsTableSchema {
   /**
    * 	TIME TIMESTAMP NOT NULL,
