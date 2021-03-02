@@ -86,8 +86,8 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        notifyIds.add(abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED, updatedInterrupt) + "|"
-            + interrupt.getUuid());
+        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED, updatedInterrupt);
+        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + interrupt.getUuid());
       }
 
     } catch (Exception ex) {

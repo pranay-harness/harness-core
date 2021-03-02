@@ -16,6 +16,7 @@ import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -76,13 +77,17 @@ public class AbortHelper {
 
       InterruptEvent interruptEvent = InterruptEvent.builder()
                                           .interruptUuid(interrupt.getUuid())
-                                          .stepType(nodeExecution.getNode().getStepType())
-                                          .interruptType(InterruptType.ABORT_ALL)
+                                          .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                          .interruptType(InterruptType.ABORT)
                                           .build();
       interruptEventQueuePublisher.send(nodeExecution.getNode().getServiceName(), interruptEvent);
 
       waitNotifyEngine.waitForAllOn(publisherName,
-          InterruptCallback.builder().finalStatus(finalStatus).nodeExecutionId(nodeExecution.getUuid()).build(),
+          InterruptCallback.builder()
+              .finalStatus(finalStatus)
+              .nodeExecutionId(nodeExecution.getUuid())
+              .interruptId(interrupt.getUuid())
+              .build(),
           interruptEvent.getNotifyId());
       return interruptEvent.getNotifyId();
     } catch (NodeExecutionUpdateFailedException ex) {
