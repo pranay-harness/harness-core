@@ -206,6 +206,9 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
 
       AdviserObtainment.Builder adviserObtainmentBuilder = AdviserObtainment.newBuilder();
+      if (rollbackInfoBuilder != null) {
+        getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
+      }
       switch (actionType) {
         case IGNORE:
           adviserObtainmentList.add(
@@ -224,8 +227,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                       RetryAdviserParameters.builder()
                           .applicableFailureTypes(failureTypes)
                           .nextNodeId(nextNodeUuid)
-                          .repairActionCodeAfterRetry(
-                              toRepairAction(retryAction.getSpecConfig().getOnRetryFailure().getAction()))
+                          .repairActionCodeAfterRetry(toRepairAction(
+                              retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
                           .retryCount(retryAction.getSpecConfig().getRetryCount())
                           .waitIntervalList(retryAction.getSpecConfig()
                                                 .getRetryIntervals()
@@ -256,13 +259,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         case STAGE_ROLLBACK:
           if (rollbackInfoBuilder != null) {
             rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
-            getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
           }
           break;
         case STEP_GROUP_ROLLBACK:
           if (rollbackInfoBuilder != null) {
             rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
-            getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
           }
           break;
         case MANUAL_INTERVENTION:
@@ -272,7 +273,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                       ManualInterventionAdviserParameters.builder()
                           .applicableFailureTypes(failureTypes)
-                          .timeoutAction(toRepairAction(actionConfig.getSpecConfig().getOnTimeout().getAction()))
+                          .timeoutAction(toRepairAction(
+                              actionConfig.getSpecConfig().getOnTimeout().getAction(), rollbackInfoBuilder))
                           .timeout((int) TimeoutUtils.getTimeoutInSeconds(actionConfig.getSpecConfig().getTimeout(), 0))
                           .build())))
                   .build());
@@ -359,7 +361,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return uuid;
   }
 
-  private RepairActionCode toRepairAction(FailureStrategyActionConfig action) {
+  private RepairActionCode toRepairAction(FailureStrategyActionConfig action, RollbackInfoBuilder rollbackInfoBuilder) {
     switch (action.getType()) {
       case IGNORE:
         return RepairActionCode.IGNORE;
@@ -368,7 +370,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       case ABORT:
         return RepairActionCode.END_EXECUTION;
       case STAGE_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
+        }
+        return RepairActionCode.ON_FAIL;
       case STEP_GROUP_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
+        }
         return RepairActionCode.ON_FAIL;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
