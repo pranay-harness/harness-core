@@ -35,11 +35,12 @@ public class ManualInterventionAdviser implements Adviser {
     String nextNodeId = parameters == null ? null : parameters.getNextNodeId();
     RepairActionCode repairActionCode = parameters == null ? null : parameters.getTimeoutAction();
     return AdviserResponse.newBuilder()
-        .setInterventionWaitAdvise(InterventionWaitAdvise.newBuilder()
-                                       .setTimeout(timeout)
-                                       .setRepairActionCode(repairActionCode)
-                                       .setNextNodeId(nextNodeId == null ? "" : nextNodeId)
-                                       .build())
+        .setInterventionWaitAdvise(
+            InterventionWaitAdvise.newBuilder()
+                .setTimeout(timeout)
+                .setRepairActionCode(repairActionCode == null ? RepairActionCode.UNKNOWN : repairActionCode)
+                .setNextNodeId(nextNodeId == null ? "" : nextNodeId)
+                .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();
   }

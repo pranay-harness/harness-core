@@ -1,5 +1,6 @@
 package io.harness.functional.redesign.engine;
 
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
@@ -135,7 +136,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
 
@@ -163,7 +164,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(ABORTED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(3);
 

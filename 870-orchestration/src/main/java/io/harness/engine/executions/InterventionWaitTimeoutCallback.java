@@ -60,6 +60,7 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
         return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP)
             .metadata(Collections.singletonMap(InterruptType.NEXT_STEP.name(), interventionWaitAdvise.getNextNodeId()))
             .build();
+      case UNKNOWN:
       case END_EXECUTION:
         return interruptPackageBuilder.interruptType(InterruptType.ABORT_ALL).build();
       default:
