@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggregationList<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, CloudBillingSortCriteria> {
   @Inject PreAggregateBillingService preAggregateBillingService;

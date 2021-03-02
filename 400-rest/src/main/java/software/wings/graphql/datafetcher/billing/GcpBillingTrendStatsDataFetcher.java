@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;

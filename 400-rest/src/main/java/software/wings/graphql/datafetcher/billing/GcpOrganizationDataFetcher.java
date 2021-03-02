@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class GcpOrganizationDataFetcher
     extends AbstractArrayDataFetcher<GcpOrganizationDTO, GcpOrganizationQueryArguments> {
   @Inject GcpOrganizationService gcpOrganizationService;

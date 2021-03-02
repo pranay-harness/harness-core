@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class GcpBillingAccountDataFetcher
     extends AbstractArrayDataFetcher<GcpBillingAccountDTO, GcpBillingAccountQueryArguments> {
   @Inject GcpBillingAccountService gcpBillingAccountService;
