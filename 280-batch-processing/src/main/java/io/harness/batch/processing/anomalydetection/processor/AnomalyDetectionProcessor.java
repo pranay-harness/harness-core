@@ -12,6 +12,8 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.impl.AnomalyDetectionLogContext;
 import io.harness.ccm.anomaly.entities.Anomaly;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
 import io.harness.logging.AutoLogContext;
 
 import java.time.Instant;
@@ -34,6 +36,7 @@ public class AnomalyDetectionProcessor
   @Autowired AnomalyDetectionPythonService pythonService;
   @Autowired BatchMainConfig mainConfig;
   @Autowired AnomalyService anomalyService;
+  @Autowired CfClient cfClient;
 
   Set<String> anomalyHashSet;
   JobParameters parameters;
@@ -67,7 +70,10 @@ public class AnomalyDetectionProcessor
     try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
       AnomalyDetectionHelper.logProcessingTimeSeries("Stats Model");
       returnAnomaly = statsModel.detectAnomaly(timeSeries);
-      if (mainConfig.getCePythonServiceConfig().isUseProphet() && returnAnomaly.isAnomaly()) {
+      Target target = Target.builder().identifier("batch-processing").build();
+      log.info("The feature flag Anomaly-detection-is-prophet resolves to "
+          + cfClient.boolVariation("Anomaly-detection-is-prophet", target, true));
+      if (cfClient.boolVariation("Anomaly-detection-is-prophet", target, true) && returnAnomaly.isAnomaly()) {
         AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
         Anomaly anomalyFromService = pythonService.process(timeSeries);
         if (anomalyFromService != null) {

@@ -184,7 +184,4 @@ if [[ "" != "$ANOMALY_DETECTION_PYTHON_SERVICE_URL" ]]; then
   yq write -i $CONFIG_FILE cePythonService.pythonServiceUrl "$ANOMALY_DETECTION_PYTHON_SERVICE_URL"
 fi
 
-if [[ "" != "$ANOMALY_DETECTION_USE_PROPHET" ]]; then
-  yq write -i $CONFIG_FILE cePythonService.useProphet "$ANOMALY_DETECTION_USE_PROPHET"
-fi
 

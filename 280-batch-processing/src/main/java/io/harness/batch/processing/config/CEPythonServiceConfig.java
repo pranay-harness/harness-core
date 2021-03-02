@@ -9,5 +9,4 @@ import lombok.Data;
 @Singleton
 public class CEPythonServiceConfig {
   String pythonServiceUrl;
-  boolean useProphet;
 }
