@@ -234,7 +234,7 @@ public class CEViewServiceImpl implements CEViewService {
                                                    .identifier(ViewFieldIdentifier.AZURE)
                                                    .build())
                                     .viewOperator(ViewIdOperator.NOT_NULL)
-                                    .values(Collections.emptyList())
+                                    .values(Collections.singletonList(""))
                                     .build();
 
     ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();

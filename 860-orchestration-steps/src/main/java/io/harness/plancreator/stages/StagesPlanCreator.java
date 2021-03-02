@@ -62,6 +62,7 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
           GraphLayoutNode.newBuilder()
               .setNodeUUID(stageYamlField.getNode().getUuid())
               .setNodeType(stageYamlField.getNode().getType())
+              .setName(stageYamlField.getNode().getName())
               .setNodeGroup(StepOutcomeGroup.STAGE.name())
               .setNodeIdentifier(stageYamlField.getNode().getIdentifier())
               .setEdgeLayoutList(
