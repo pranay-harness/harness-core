@@ -93,6 +93,7 @@ import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
@@ -247,6 +248,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
   private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
+  private static final String DELEGATE_TYPE = "dockerType";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -432,6 +434,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(0);
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(0);
     validateDelegateInnerProperties(delegateWithoutScalingGroup.getUuid(), delegateStatus.getDelegates().get(0));
   }
 
@@ -519,6 +523,104 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus status = delegateService.getDelegateStatusWithScalingGroups(accountId);
 
     assertThat(status.getScalingGroups()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2ScalingGroupWithDelegateGroupDetails() {
+    String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
+    when(delegateProfileService.get(accountId, delegateProfileId))
+        .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
+
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+
+    Delegate deletedDelegate =
+        createDelegateBuilder().accountId(accountId).status(DelegateInstanceStatus.DELETED).build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    persistence.save(delegateGroup1);
+    DelegateGroup delegateGroup2 = DelegateGroup.builder().name("grp2").accountId(accountId).build();
+    persistence.save(delegateGroup2);
+
+    // these three delegates should be returned for group 1
+    Delegate delegate1 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp1")
+                             .hostName("kube-0")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .build();
+
+    Delegate delegate2 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp1")
+                             .hostName("kube-1")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .build();
+
+    // this delegate should cause an empty group to be returned
+    Delegate delegate3 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp2")
+                             .delegateGroupId(delegateGroup2.getUuid())
+                             .build();
+
+    persistence.save(Arrays.asList(deletedDelegate, delegate1, delegate2, delegate3));
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate1.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate2.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    persistence.save(delegateConnection1);
+    persistence.save(delegateConnection2);
+
+    DelegateStatus delegateStatus = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
+
+    assertThat(delegateStatus.getDelegates()).hasSize(0);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(0);
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(2);
+    assertThat(delegateStatus.getDelegateGroupDetails())
+        .extracting(DelegateGroupDetails::getGroupName)
+        .containsOnly("grp1", "grp2");
+
+    for (DelegateGroupDetails group : delegateStatus.getDelegateGroupDetails()) {
+      if (group.getGroupName().equals("grp1")) {
+        assertThat(group.getDelegates()).hasSize(2);
+        assertThat(group.getDelegateType()).isEqualTo(DELEGATE_TYPE);
+        assertThat(group.getGroupHostName()).isEqualTo("");
+        assertThat(group.getGroupSelectors()).isNotNull();
+        assertThat(group.getGroupSelectors().containsKey("grp1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-0")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("profile")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s2")).isTrue();
+        assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
+        assertThat(group.getDelegates())
+            .extracting(DelegateStatus.DelegateInner::getUuid)
+            .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+      } else if (group.getGroupName().equals("grp2")) {
+        assertThat(group.getDelegates()).hasSize(0);
+      }
+    }
   }
 
   @Test
@@ -3584,7 +3686,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .ip("127.0.0.1")
         .hostName("localhost")
         .delegateName("testDelegateName")
-        .delegateType("dockerType")
+        .delegateType(DELEGATE_TYPE)
         .version(VERSION)
         .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());

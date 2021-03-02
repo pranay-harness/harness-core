@@ -100,6 +100,7 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -754,9 +755,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
+    List<DelegateGroupDetails> delegateGroupDetails = getDelegateGroupDetails(accountId, activeDelegateConnections);
+
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
         .scalingGroups(scalingGroups)
+        .delegateGroupDetails(delegateGroupDetails)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
   }
@@ -785,12 +789,54 @@ public class DelegateServiceImpl implements DelegateService {
         .collect(toList());
   }
 
+  @NotNull
+  private List<DelegateGroupDetails> getDelegateGroupDetails(String accountId,
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
+    List<Delegate> activeDelegates =
+        persistence.createQuery(Delegate.class)
+            .filter(DelegateKeys.accountId, accountId)
+            .field(DelegateKeys.delegateGroupId)
+            .exists()
+            .field(DelegateKeys.status)
+            .hasAnyOf(Arrays.asList(DelegateInstanceStatus.ENABLED, DelegateInstanceStatus.WAITING_FOR_APPROVAL))
+            .asList();
+
+    return activeDelegates.stream()
+        .collect(groupingBy(Delegate::getDelegateGroupId))
+        .entrySet()
+        .stream()
+        .map(entry -> {
+          List<Delegate> groupDelegates = entry.getValue();
+
+          String delegateType = groupDelegates.get(0).getDelegateType();
+          String groupName = groupDelegates.get(0).getDelegateName();
+          String groupHostName = ""; // TODO - use method added in DEL-1638
+
+          Map<String, SelectorType> groupSelectors = new HashMap<>();
+          groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
+
+          long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
+
+          return DelegateGroupDetails.builder()
+              .delegateType(delegateType)
+              .groupName(groupName)
+              .groupHostName(groupHostName)
+              .groupSelectors(groupSelectors)
+              .lastHeartBeat(lastHeartBeat)
+              .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections, true))
+              .build();
+        })
+        .collect(toList());
+  }
+
   private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
     return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.status)
         .notEqual(DelegateInstanceStatus.DELETED)
         .field(DelegateKeys.delegateGroupName)
+        .doesNotExist()
+        .field(DelegateKeys.delegateGroupId)
         .doesNotExist()
         .asList();
   }
@@ -2584,7 +2630,6 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       // No in scope delegates, capable of doing the task
-      log.warn("No capable delegates found.");
       return null;
     } catch (Exception ex) {
       log.error("Unexpected error occurred while obtaining capable delegate Ids", ex);
