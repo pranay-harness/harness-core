@@ -2229,7 +2229,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }
 
-      log.info("Processing sync task");
+      log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
