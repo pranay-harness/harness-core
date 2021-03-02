@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 public class InstanceMapperUtils {
   public static final String hostname = "hostname";
 
-  @VisibleForTesting
   @NotNull
   public static <T> List<T> mapJsonToInstanceElements(Map<String, String> hostAttributes, String hostObjectArrayPath,
       String output, Function<HostProperties, T> jsonMapper) {
