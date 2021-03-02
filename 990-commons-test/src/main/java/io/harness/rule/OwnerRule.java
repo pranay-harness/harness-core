@@ -66,6 +66,7 @@ public class OwnerRule implements TestRule {
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
   public static final String ADWAIT = "adwait.bhandare";
+  public static final String ADARSH = "adarsh.agarwal";
   public static final String AKRITI = "akriti.garg";
   public static final String ALEKSANDAR = "aleksandar.radisavljevic";
   public static final String AGORODETKI = "alexandr.gorodetki";
@@ -182,6 +183,7 @@ public class OwnerRule implements TestRule {
       ImmutableMap.<String, UserInfo>builder()
           .put(AADITI, defaultUserInfo(AADITI).slack("UCFPUNRAQ").team(CDC).build())
           .put(ABHINAV, defaultUserInfo(ABHINAV).slack("UQQPR8M6Y").team(DX).build())
+          .put(ADARSH, defaultUserInfo(ADARSH).slack("U01Q02K5LUR").team(CE).build())
           .put(ALEKSANDAR, defaultUserInfo(ALEKSANDAR).slack("U012MKR5FUZ").team(CI).build())
           .put(AGORODETKI, defaultUserInfo(AGORODETKI).slack("U013KM8H2NL").team(CDC).build())
           .put(AKRITI, defaultUserInfo(AKRITI).slack("U01JCQAS84S").team(PL).build())
