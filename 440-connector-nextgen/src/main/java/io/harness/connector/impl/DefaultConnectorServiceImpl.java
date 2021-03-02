@@ -232,7 +232,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         connectorRequestDTO.getProjectIdentifier(), connectorRequestDTO.getName());
     if (connectors != null && connectors.getSize() >= 1) {
       throw new InvalidRequestException(
-          format("Connector with name [%s] already exists", connectorRequestDTO.getName()));
+          format("Connector with name [%s] already exists or has been soft deleted", connectorRequestDTO.getName()));
     }
   }
 
