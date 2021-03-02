@@ -12,6 +12,7 @@ import static io.harness.security.encryption.SecretManagerType.KMS;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.delegate.task.utils.KmsUtils;
 import io.harness.encryption.Encrypted;
@@ -20,12 +21,14 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
+import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,6 +45,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
 public class KmsConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) private String name;
 
   @Attributes(title = "AWS Access Key", required = true)
@@ -55,6 +59,14 @@ public class KmsConfig extends SecretManagerConfig {
   @Attributes(title = "AWS key ARN", required = true) @Encrypted(fieldName = "aws_key_arn") private String kmsArn;
 
   @Attributes(title = "AWS Region", required = true) private String region;
+
+  @Attributes(title = "AWS AssumeIamRole") private boolean assumeIamRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRole") private boolean assumeStsRoleOnDelegate;
+  @Attributes(title = "AWS AssumeStsRoleDuration")
+  private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
+  @Attributes(title = "AWS AssumeStsRoleARN") private String roleArn;
+  @Attributes(title = "AWS AssumeStsExternalName") private String externalName;
+  @Attributes(title = "AWS DelegateSelectors") private Set<String> delegateSelectors;
 
   @JsonIgnore
   @SchemaIgnore
@@ -77,8 +89,14 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
-        region, maskingEvaluator));
+    List<ExecutionCapability> executionCapabilities =
+        Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
+            region, maskingEvaluator));
+    if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
+    }
+    return executionCapabilities;
   }
 
   @Override
