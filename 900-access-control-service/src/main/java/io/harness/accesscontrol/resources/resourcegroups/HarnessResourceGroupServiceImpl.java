@@ -1,10 +1,9 @@
-package io.harness.accesscontrol.resources;
+package io.harness.accesscontrol.resources.resourcegroups;
 
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT_LEVEL_PARAM_NAME;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ORG_LEVEL_PARAM_NAME;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT_LEVEL_PARAM_NAME;
 
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
@@ -60,10 +59,5 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
     });
 
     resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse, scope.toString()));
-  }
-
-  @Override
-  public void remove(String identifier, Scope scope) {
-    resourceGroupService.delete(identifier, scope.toString());
   }
 }

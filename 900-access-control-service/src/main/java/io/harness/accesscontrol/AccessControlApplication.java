@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupReconciliationIterator;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -83,11 +84,16 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+    registerIterators(injector);
 
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  public void registerIterators(Injector injector) {
+    injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
   }
 
   private void registerJerseyFeatures(Environment environment) {

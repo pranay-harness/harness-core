@@ -7,8 +7,8 @@ import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
-import io.harness.accesscontrol.resources.HarnessResourceGroupService;
-import io.harness.accesscontrol.resources.HarnessResourceGroupServiceImpl;
+import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
+import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
