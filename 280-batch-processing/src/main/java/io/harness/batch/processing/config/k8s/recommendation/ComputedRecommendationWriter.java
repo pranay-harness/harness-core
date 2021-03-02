@@ -195,12 +195,14 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       Instant startInclusive = jobStartDate.minus(Duration.ofDays(7));
       Cost lastDayCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
       if (lastDayCost != null) {
-        final BigDecimal cpuUnitCost = ofNullable(lastDayCost.getCpuUnitCost()).orElse(BigDecimal.ZERO);
-        final BigDecimal memoryUnitCost = ofNullable(lastDayCost.getMemoryUnitCost()).orElse(BigDecimal.ZERO);
         final UnitPrice unitPrice =
             UnitPrice.builder()
-                .cpu(cpuUnitCost.divide(BigDecimal.valueOf(1000000000L * 60 * 60), MathContext.DECIMAL128))
-                .memory(memoryUnitCost.divide(BigDecimal.valueOf(1024 * 60 * 60), MathContext.DECIMAL128))
+                .cpu(ofNullable(lastDayCost.getCpuUnitCost())
+                         .map(x -> x.multiply(BigDecimal.valueOf(60L * 60 * 1024), MathContext.DECIMAL128))
+                         .orElse(BigDecimal.valueOf(0.04656D)))
+                .memory(ofNullable(lastDayCost.getMemoryUnitCost())
+                            .map(x -> x.multiply(BigDecimal.valueOf(60L * 60 * 1024), MathContext.DECIMAL128))
+                            .orElse(BigDecimal.valueOf(0.00511D)))
                 .build();
         recommendation.setUnitPrice(unitPrice);
 
@@ -276,9 +278,11 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
                                .map(Quantity::getNumber)
                                .orElse(null);
 
-      ResourceRequirement recommendedResource =
-          ofNullable(containerRecommendation.getPercentileBased().get(String.format(PERCENTILE_KEY, 90)))
-              .orElse(containerRecommendation.getGuaranteed());
+      ResourceRequirement recommendedResource = containerRecommendation.getGuaranteed();
+      if (containerRecommendation.getPercentileBased() != null
+          && containerRecommendation.getPercentileBased().containsKey(String.format(PERCENTILE_KEY, 90))) {
+        recommendedResource = containerRecommendation.getPercentileBased().get(String.format(PERCENTILE_KEY, 90));
+      }
       BigDecimal recommended = ofNullable(recommendedResource)
                                    .map(ResourceRequirement::getRequests)
                                    .map(requests -> requests.get(resource))
