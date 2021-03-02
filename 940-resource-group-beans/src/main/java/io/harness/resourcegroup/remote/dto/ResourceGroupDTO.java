@@ -24,9 +24,8 @@ public class ResourceGroupDTO {
   String projectIdentifier;
   @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String identifier;
   @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String name;
-  @ApiModelProperty(required = true) @Size(min = 7, max = 7) @NotEmpty String color;
-  @Builder.Default Boolean harnessManaged = Boolean.FALSE;
   @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
   @Size(max = 128) Map<String, String> tags;
   @Size(max = 1024) String description;
+  String color;
 }

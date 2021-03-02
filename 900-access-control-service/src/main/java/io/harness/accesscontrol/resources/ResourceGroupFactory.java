@@ -7,46 +7,56 @@ import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ResourceGroupFactory {
-  public ResourceGroup buildResourceGroup(ResourceGroupDTO object, String scopeIdentifier) {
+  public ResourceGroup buildResourceGroup(ResourceGroupResponse resourceGroupResponse, String scopeIdentifier) {
+    ResourceGroupDTO resourceGroupDto = resourceGroupResponse.getResourceGroup();
     Set<String> resourceSelectors;
-    if (object.getResourceSelectors() == null) {
+    if (resourceGroupDto.getResourceSelectors() == null) {
       resourceSelectors = new HashSet<>();
     } else {
-      resourceSelectors = object.getResourceSelectors()
+      resourceSelectors = resourceGroupDto.getResourceSelectors()
                               .stream()
                               .map(this::buildResourceSelector)
+                              .flatMap(Collection::stream)
                               .filter(Optional::isPresent)
                               .map(Optional::get)
                               .collect(Collectors.toSet());
     }
     return ResourceGroup.builder()
-        .identifier(object.getIdentifier())
+        .identifier(resourceGroupDto.getIdentifier())
         .scopeIdentifier(scopeIdentifier)
-        .name(object.getName())
+        .name(resourceGroupDto.getName())
         .resourceSelectors(resourceSelectors)
-        .managed(object.getHarnessManaged() == null ? Boolean.FALSE : object.getHarnessManaged())
+        .managed(resourceGroupResponse.isHarnessManaged())
         .build();
   }
 
-  public Optional<String> buildResourceSelector(ResourceSelector resourceSelector) {
+  public List<Optional<String>> buildResourceSelector(ResourceSelector resourceSelector) {
     if (resourceSelector instanceof StaticResourceSelector) {
       StaticResourceSelector staticResourceSelector = (StaticResourceSelector) resourceSelector;
-      return Optional.of(PATH_DELIMITER.concat(staticResourceSelector.getResourceType())
-                             .concat(PATH_DELIMITER)
-                             .concat(staticResourceSelector.getIdentifier()));
+      return staticResourceSelector.getIdentifiers()
+          .stream()
+          .map(identifier
+              -> Optional.of(PATH_DELIMITER.concat(staticResourceSelector.getResourceType())
+                                 .concat(PATH_DELIMITER)
+                                 .concat(identifier)))
+          .collect(Collectors.toList());
     } else if (resourceSelector instanceof DynamicResourceSelector) {
       DynamicResourceSelector dynamicResourceSelector = (DynamicResourceSelector) resourceSelector;
-      return Optional.of(PATH_DELIMITER.concat(dynamicResourceSelector.getResourceType())
-                             .concat(PATH_DELIMITER)
-                             .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER));
+      return Collections.singletonList(Optional.of(PATH_DELIMITER.concat(dynamicResourceSelector.getResourceType())
+                                                       .concat(PATH_DELIMITER)
+                                                       .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER)));
     }
-    return Optional.empty();
+    return Collections.singletonList(Optional.empty());
   }
 }

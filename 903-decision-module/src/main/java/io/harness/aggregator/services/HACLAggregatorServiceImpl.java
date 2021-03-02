@@ -19,6 +19,7 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -78,28 +79,30 @@ public class HACLAggregatorServiceImpl implements ACLAggregatorService {
                       resourceGroupClient.getResourceGroup(resourceIdentifier, parentMetadata.getAccountIdentifier(),
                           parentMetadata.getOrgIdentifier(), parentMetadata.getProjectIdentifier()))
                   .getResourceGroup();
-          permissions.forEach(permission -> {
-            resourceGroup.getResourceSelectors().forEach(resource -> {
-              Optional<HResource> hResourceOptional = HResource.fromResourceSelector(resource);
-              if (hResourceOptional.isPresent()) {
-                HACL acl = HACL.builder()
-                               .permission(permission)
-                               .resource(hResourceOptional.get())
-                               .sourceMetadata(SourceMetadata.builder()
-                                                   .roleIdentifier(role.get().getIdentifier())
-                                                   .userGroupIdentifier(null)
-                                                   .roleAssignmentIdentifier(roleAssignment.getIdentifier())
-                                                   .build())
-                               .resourceGroupIdentifier(resourceGroup.getIdentifier())
-                               .principal(hPrincipal)
-                               .aclQueryString(HACL.getAclQueryString(
-                                   parentMetadata, hResourceOptional.get(), hPrincipal, permission))
-                               .parentMetadata(parentMetadata)
-                               .build();
-                acldao.save(acl);
-              }
-            });
-          });
+          permissions.forEach(permission
+              -> resourceGroup.getResourceSelectors()
+                     .stream()
+                     .map(HResource::fromResourceSelector)
+                     .flatMap(Collection::stream)
+                     .filter(Optional::isPresent)
+                     .map(Optional::get)
+                     .forEach(hResource -> {
+                       HACL acl = HACL.builder()
+                                      .permission(permission)
+                                      .resource(hResource)
+                                      .sourceMetadata(SourceMetadata.builder()
+                                                          .roleIdentifier(role.get().getIdentifier())
+                                                          .userGroupIdentifier(null)
+                                                          .roleAssignmentIdentifier(roleAssignment.getIdentifier())
+                                                          .build())
+                                      .resourceGroupIdentifier(resourceGroup.getIdentifier())
+                                      .principal(hPrincipal)
+                                      .aclQueryString(
+                                          HACL.getAclQueryString(parentMetadata, hResource, hPrincipal, permission))
+                                      .parentMetadata(parentMetadata)
+                                      .build();
+                       acldao.save(acl);
+                     }));
         }
       }
     }
