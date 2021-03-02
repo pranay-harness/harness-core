@@ -38,6 +38,7 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
@@ -122,13 +123,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<PipelineServiceConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(PipelineServiceConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+    configureObjectMapper(bootstrap.getObjectMapper());
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
@@ -226,6 +227,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
+        .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .build();

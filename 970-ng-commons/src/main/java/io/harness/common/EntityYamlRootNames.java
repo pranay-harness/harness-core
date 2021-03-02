@@ -12,6 +12,7 @@ package io.harness.common;
 public class EntityYamlRootNames {
   public static String PROJECT = "project";
   public static String PIPELINE = "pipeline";
+  public static String PIPELINE_STEP = "pipelineStep";
   public static String CONNECTOR = "connector";
   public static String SECRET = "secret";
   public static String SERVICE = "service";
