@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLChartDataPoint {
   long time;
   int eventsCount;

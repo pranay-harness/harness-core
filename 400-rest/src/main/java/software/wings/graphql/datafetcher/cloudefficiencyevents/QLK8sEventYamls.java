@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.K8S_EVENT_YAML_DIFF)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLK8sEventYamls {
   String oldYaml;
   String newYaml;
