@@ -1,12 +1,19 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
-
+import lombok.*;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -15,21 +22,9 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @JsonTypeName("AWS")
 @Data
@@ -47,6 +42,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @Attributes(title = "Ec2 Iam role tags") private String tag;
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
   private boolean assumeCrossAccountRole;
+  private boolean useIRSA;
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
 
@@ -59,6 +55,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
       boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
+                   boolean useIRSA,
       AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion, boolean useEncryptedAccessKey,
       String encryptedAccessKey) {
     this();
@@ -69,6 +66,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
     this.ccmConfig = ccmConfig;
+    this.useIRSA = useIRSA;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
     this.defaultRegion = defaultRegion;
@@ -107,13 +105,14 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     private boolean useEc2IamCredentials;
     private String tag;
     private boolean assumeCrossAccountRole;
+    private boolean useIRSA;
     private AwsCrossAccountAttributes crossAccountAttributes;
     private String defaultRegion;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId, String secretKey,
         UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
-        boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
+        boolean assumeCrossAccountRole, boolean useIRSA, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.accessKeySecretId = accessKeySecretId;
@@ -121,6 +120,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
       this.useEc2IamCredentials = useEc2IamCredentials;
       this.tag = tag;
       this.assumeCrossAccountRole = assumeCrossAccountRole;
+      this.useIRSA = useIRSA;
       this.crossAccountAttributes = crossAccountAttributes;
       this.defaultRegion = defaultRegion;
     }

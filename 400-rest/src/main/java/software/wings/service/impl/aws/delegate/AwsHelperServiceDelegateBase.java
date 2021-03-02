@@ -1,34 +1,9 @@
 package software.wings.service.impl.aws.delegate;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
-import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
-import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
-import static io.harness.exception.WingsException.USER;
-
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
-
-import static org.apache.commons.lang3.StringUtils.defaultString;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.aws.AwsCallTracker;
-import io.harness.exception.InvalidRequestException;
-
-import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.service.intfc.security.EncryptionService;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
-import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.auth.*;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.retry.PredefinedBackoffStrategies;
 import com.amazonaws.retry.PredefinedRetryPolicies;
@@ -47,8 +22,27 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import java.util.UUID;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.aws.AwsCallTracker;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.service.intfc.security.EncryptionService;
+
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.*;
+import static io.harness.exception.WingsException.USER;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
 
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
@@ -63,6 +57,13 @@ class AwsHelperServiceDelegateBase {
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
+    } else if (awsConfig.isUseIRSA()) {
+      WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
+      providerBuilder.roleSessionName(awsConfig.getAccountId()
+              + md5Hex(
+              awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
+
+      credentialsProvider = providerBuilder.build();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
           new BasicAWSCredentials(defaultString(String.valueOf(awsConfig.getAccessKey()), ""),
