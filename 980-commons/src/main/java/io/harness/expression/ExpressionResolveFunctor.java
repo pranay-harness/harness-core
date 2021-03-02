@@ -6,6 +6,6 @@ public interface ExpressionResolveFunctor {
   boolean hasVariables(String expression);
 
   default ResolveObjectResponse processObject(Object o) {
-    return new ResolveObjectResponse(false, false);
+    return new ResolveObjectResponse(false, false, null);
   }
 }

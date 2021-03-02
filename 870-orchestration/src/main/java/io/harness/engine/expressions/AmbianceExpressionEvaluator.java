@@ -26,15 +26,13 @@ import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
-import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.expression.OrchestrationFieldProcessor;
-import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.expression.ProcessorResult;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.ParameterDocumentField;
+import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.ParameterFieldProcessor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -67,7 +65,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationFieldRegistry orchestrationFieldRegistry;
+  @Inject private ParameterFieldProcessor parameterFieldProcessor;
 
   protected final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
@@ -79,10 +77,6 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;
-    //    if (ambiance.getExpressionFunctorToken() == 0) {
-    //      ambiance.setExpressionFunctorToken(HashGenerator.generateIntegerHash());
-    //    }
-
     this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
     this.refObjectSpecific = refObjectSpecific;
     this.groupAliases = new HashMap<>();
@@ -186,106 +180,72 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Override
   public Object resolve(Object o) {
     return ExpressionEvaluatorUtils.updateExpressions(
-        o, new AmbianceResolveFunctorImpl(this, orchestrationFieldRegistry, ambiance));
+        o, new AmbianceResolveFunctorImpl(this, parameterFieldProcessor, ambiance));
   }
 
   @Override
   protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
     Object value = super.evaluateInternal(expression, ctx);
-    if (value instanceof OrchestrationField) {
-      OrchestrationField orchestrationField = (OrchestrationField) value;
-      return orchestrationField.fetchFinalValue();
-    } else if (!(value instanceof Document)) {
+    if (!(value instanceof ParameterDocumentField)) {
       return value;
     }
 
-    Document doc = (Document) value;
-    String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
-    if (recastedClass.equals(ParameterField.class.getName())
-        || recastedClass.equals(DummyOrchestrationField.class.getName())) {
-      OrchestrationField orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
-      return orchestrationField.fetchFinalValue();
-    }
-    return value;
+    ParameterDocumentField docField = (ParameterDocumentField) value;
+    return docField.fetchFinalValue();
   }
 
   public static class AmbianceResolveFunctorImpl extends ResolveFunctorImpl {
-    private final OrchestrationFieldRegistry orchestrationFieldRegistry;
+    private final ParameterFieldProcessor parameterFieldProcessor;
     private final Ambiance ambiance;
 
     public AmbianceResolveFunctorImpl(AmbianceExpressionEvaluator expressionEvaluator,
-        OrchestrationFieldRegistry orchestrationFieldRegistry, Ambiance ambiance) {
+        ParameterFieldProcessor parameterFieldProcessor, Ambiance ambiance) {
       super(expressionEvaluator);
-      this.orchestrationFieldRegistry = orchestrationFieldRegistry;
+      this.parameterFieldProcessor = parameterFieldProcessor;
       this.ambiance = ambiance;
     }
 
-    /**
-     * <p>
-     * This method checks if we have special objects, applies custom handling for them and mutates these objects
-     * <br>
-     * Special objects: {@link Document} and {@link OrchestrationField}.
-     * </p>
-     * <p>
-     * When we encounter a {@link Document} with {@link Recaster#RECAST_CLASS_KEY} specified
-     * and equal to one of these values:
-     * <br>
-     * &nbsp;&nbsp;&nbsp;&nbsp;{@link ParameterField},
-     * <br>
-     * &nbsp;&nbsp;&nbsp;&nbsp;{@link DummyOrchestrationField} - used only for testing
-     * <br>
-     * We recast it from <code>Document</code> to <code>OrchestrationField</code> and send to
-     * <br>
-     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> method
-     * <br>
-     * which mutates this object.
-     * <br>
-     * Then we recast this updated <code>OrchestrationField</code> back to Document and update (replace) original
-     * <code>Object o</code> value
-     * </p>
-     *
-     * <p>
-     * When we encounter {@link OrchestrationField} we simply call this method
-     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> and update the object
-     * </p>
-     *
-     * @param o an object that should be processed
-     * @return {@link ResolveObjectResponse} with 2 boolean flags: processed and changed
-     */
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      OrchestrationField orchestrationField;
-      if (o instanceof Document) {
-        Document doc = (Document) o;
-        String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
-        if (recastedClass.equals(ParameterField.class.getName())
-            || recastedClass.equals(DummyOrchestrationField.class.getName())) {
-          orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
-          ProcessorResult processorResult = getProcessorResult(orchestrationField);
-          Document recastedDocument = RecastOrchestrationUtils.toDocument(orchestrationField);
-          doc.clear();
-          doc.putAll(recastedDocument);
-          return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
-        } else {
-          return new ResolveObjectResponse(false, false);
-        }
-      } else if (o instanceof OrchestrationField) {
-        orchestrationField = (OrchestrationField) o;
-        ProcessorResult processorResult = getProcessorResult(orchestrationField);
-        return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
+      ParameterDocumentField docField;
+      if (o instanceof ParameterDocumentField) {
+        docField = (ParameterDocumentField) o;
+      } else if (!(o instanceof Document)) {
+        return new ResolveObjectResponse(false, null);
       } else {
-        return new ResolveObjectResponse(false, false);
+        Document doc = (Document) o;
+        String recastClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
+        if (!recastClass.equals(ParameterField.class.getName())) {
+          return new ResolveObjectResponse(false, null);
+        }
+
+        Document encodedValue = (Document) RecastOrchestrationUtils.getEncodedValue(doc);
+        if (encodedValue == null) {
+          return new ResolveObjectResponse(true, o);
+        }
+
+        // Temporarily store valueDoc so that recaster doesn't deserialize it
+        Document valueDoc = (Document) encodedValue.get(ParameterDocumentFieldKeys.valueDoc);
+        encodedValue.put(ParameterDocumentFieldKeys.valueDoc, null);
+
+        docField = RecastOrchestrationUtils.fromDocument(encodedValue, ParameterDocumentField.class);
+        if (docField == null) {
+          return new ResolveObjectResponse(true, o);
+        }
+
+        // Reset valueDoc
+        docField.setValueDoc(valueDoc);
       }
+
+      processObjectInternal(docField);
+      return new ResolveObjectResponse(true, docField);
     }
 
-    private ProcessorResult getProcessorResult(OrchestrationField orchestrationField) {
-      OrchestrationFieldType type = orchestrationField.getType();
-      OrchestrationFieldProcessor fieldProcessor = orchestrationFieldRegistry.obtain(type);
-      ProcessorResult processorResult = fieldProcessor.process(ambiance, orchestrationField);
-      if (processorResult.getStatus() == ProcessorResult.Status.ERROR) {
+    private void processObjectInternal(ParameterDocumentField documentField) {
+      ProcessorResult processorResult = parameterFieldProcessor.process(ambiance, documentField);
+      if (processorResult.isError()) {
         throw new CriticalExpressionEvaluationException(processorResult.getMessage());
       }
-      return processorResult;
     }
   }
 }

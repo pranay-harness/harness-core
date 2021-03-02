@@ -188,12 +188,12 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
     @Override
     public ResolveObjectResponse processObject(Object o) {
       if (!(o instanceof DummyField)) {
-        return new ResolveObjectResponse(false, false);
+        return new ResolveObjectResponse(false, false, null);
       }
 
       DummyField field = (DummyField) o;
       boolean updated = field.process(this);
-      return new ResolveObjectResponse(true, updated);
+      return new ResolveObjectResponse(true, updated, o);
     }
   }
 
