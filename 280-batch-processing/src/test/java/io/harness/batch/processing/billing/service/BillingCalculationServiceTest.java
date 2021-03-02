@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.when;
 
@@ -651,6 +652,37 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
 
     assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetPVIdleCostWithCapacityUsageRequestAsZero() {
+    final BillingAmountBreakup billingDataForResource = BillingAmountBreakup.builder()
+                                                            .cpuBillingAmount(BigDecimal.ONE)
+                                                            .memoryBillingAmount(BigDecimal.ONE)
+                                                            .storageBillingAmount(BigDecimal.ONE)
+                                                            .build();
+
+    final UtilizationData utilizationData = UtilizationData.builder()
+                                                .avgCpuUtilization(1D)
+                                                .avgMemoryUtilization(1D)
+                                                .avgStorageUsageValue(0D)
+                                                .avgStorageRequestValue(0D)
+                                                .build();
+
+    final InstanceData instanceData = InstanceData.builder()
+                                          .instanceType(InstanceType.K8S_PV)
+                                          .storageResource(StorageResource.builder().capacity(0D).build())
+                                          .build();
+
+    try {
+      IdleCostData idleCostData =
+          billingCalculationService.getIdleCostForResource(billingDataForResource, utilizationData, instanceData);
+      assertThat(idleCostData.getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
+    } catch (Exception ex) {
+      fail("Should calculate idle cost even if storageCapacity = storageRequest = storageUtilization = 0", ex);
+    }
   }
 
   private InstanceData getInstanceWithTime(Instant startInstant, Instant endInstant) {
