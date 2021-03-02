@@ -118,3 +118,4 @@ import_run_configurations:
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
   run-configurations/VerificationServiceApp.xml
+  run-configurations/BatchProcessinngApp.xml
