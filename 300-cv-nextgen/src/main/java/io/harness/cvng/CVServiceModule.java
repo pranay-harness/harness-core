@@ -127,6 +127,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.springdata.SpringPersistenceModule;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
@@ -166,7 +167,7 @@ public class CVServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(FeatureFlagModule.getInstance());
-
+    install(new SpringPersistenceModule());
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
