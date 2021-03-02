@@ -217,6 +217,7 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.exception.TemplateException;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.expression.NgSecretManagerFunctor;
@@ -255,8 +256,6 @@ import software.wings.service.intfc.security.SecretManager;
 import com.github.zafarkhaja.semver.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -269,9 +268,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoGridFSException;
+import com.sun.crypto.provider.Preconditions;
+import com.sun.istack.internal.NotNull;
+import com.sun.tools.javac.util.Pair;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -303,25 +304,24 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.MediaType;
-import lombok.Getter;
+import jdk.nashorn.internal.objects.annotations.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
 import okhttp3.Response;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import sun.misc.IOUtils;
 
 @Singleton
 @ValidateOnExecution
@@ -381,7 +381,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private EventEmitter eventEmitter;
+  @Inject private software.wings.service.impl.EventEmitter eventEmitter;
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
@@ -400,12 +400,12 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private PersistentLocker persistentLocker;
-  @Inject private DelegateTaskBroadcastHelper broadcastHelper;
-  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private software.wings.service.impl.DelegateTaskBroadcastHelper broadcastHelper;
+  @Inject private software.wings.service.impl.AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
-  @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private software.wings.service.impl.DelegateConnectionDao delegateConnectionDao;
   @Inject private SystemEnvironment sysenv;
   @Inject private DelegateSyncService delegateSyncService;
   @Inject private DelegateTaskService delegateTaskService;
@@ -421,7 +421,9 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CapabilityService capabilityService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
-  @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
+  @Inject
+  @jdk.nashorn.internal.objects.annotations.Getter
+  private Subject<software.wings.service.impl.DelegateObserver> subject = new Subject<>();
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
@@ -694,7 +696,7 @@ public class DelegateServiceImpl implements DelegateService {
           new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
       out.putArchiveEntry(yamlTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(yaml)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -761,7 +763,7 @@ public class DelegateServiceImpl implements DelegateService {
         .build();
   }
 
-  @NotNull
+  @com.sun.istack.internal.NotNull
   private List<DelegateScalingGroup> getDelegateScalingGroups(String accountId,
       Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
     List<Delegate> activeDelegates =
@@ -1067,7 +1069,7 @@ public class DelegateServiceImpl implements DelegateService {
     try (StringWriter stringWriter = new StringWriter()) {
       templateConfiguration.getTemplate(template).process(scriptParams, stringWriter);
       return stringWriter.toString();
-    } catch (TemplateException ex) {
+    } catch (software.wings.exception.TemplateException ex) {
       throw new UnexpectedException("This templates are included in the jar, they should be safe to process", ex);
     }
   }
@@ -1475,7 +1477,8 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
 
       if (isEmpty(scriptParams)) {
-        throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
+        throw new InvalidArgumentsException(
+            com.sun.tools.javac.util.Pair.of("scriptParams", "Failed to get jar and script runtime params."));
       }
 
       File start = File.createTempFile("start", ".sh");
@@ -1485,7 +1488,7 @@ public class DelegateServiceImpl implements DelegateService {
       startTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(startTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(start)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1496,7 +1499,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(delegateTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(delegate)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1507,7 +1510,7 @@ public class DelegateServiceImpl implements DelegateService {
       stopTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(stopTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(stop)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1518,7 +1521,7 @@ public class DelegateServiceImpl implements DelegateService {
       setupProxyTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(setupProxyTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(setupProxy)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1528,7 +1531,7 @@ public class DelegateServiceImpl implements DelegateService {
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, DELEGATE_DIR + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1594,7 +1597,8 @@ public class DelegateServiceImpl implements DelegateService {
                                                                                      .build());
 
       if (isEmpty(scriptParams)) {
-        throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
+        throw new InvalidArgumentsException(
+            com.sun.tools.javac.util.Pair.of("scriptParams", "Failed to get jar and script runtime params."));
       }
 
       String templateName;
@@ -1612,7 +1616,7 @@ public class DelegateServiceImpl implements DelegateService {
       launchTarArchiveEntry.setMode(0755);
       out.putArchiveEntry(launchTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(launch)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1623,7 +1627,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1672,7 +1676,7 @@ public class DelegateServiceImpl implements DelegateService {
           new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
       out.putArchiveEntry(yamlTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(yaml)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1725,7 +1729,7 @@ public class DelegateServiceImpl implements DelegateService {
     TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + README_TXT);
     out.putArchiveEntry(readmeTarArchiveEntry);
     try (FileInputStream fis = new FileInputStream(readme)) {
-      IOUtils.copy(fis, out);
+      sun.misc.IOUtils.copy(fis, out);
     }
     out.closeArchiveEntry();
   }
@@ -1799,7 +1803,7 @@ public class DelegateServiceImpl implements DelegateService {
       TarArchiveEntry yamlTarArchiveEntry = new TarArchiveEntry(yaml, ECS_DELEGATE + "/ecs-task-spec.json");
       out.putArchiveEntry(yamlTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(yaml)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1811,7 +1815,7 @@ public class DelegateServiceImpl implements DelegateService {
           new TarArchiveEntry(serviceJson, ECS_DELEGATE + "/service-spec-for-awsvpc-mode.json");
       out.putArchiveEntry(serviceJsonTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(serviceJson)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
       out.closeArchiveEntry();
 
@@ -1822,7 +1826,7 @@ public class DelegateServiceImpl implements DelegateService {
       TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, ECS_DELEGATE + README_TXT);
       out.putArchiveEntry(readmeTarArchiveEntry);
       try (FileInputStream fis = new FileInputStream(readme)) {
-        IOUtils.copy(fis, out);
+        sun.misc.IOUtils.copy(fis, out);
       }
 
       out.closeArchiveEntry();
@@ -1910,7 +1914,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     try {
       if (savedDelegate.isCeEnabled()) {
-        subject.fireInform(DelegateObxxxxxxxx:onAdded, savedDelegate);
+        subject.fireInform(software.wings.service.impl.DelegateObxxxxxxxx:onAdded, savedDelegate);
       }
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Delegate.", e);
@@ -2337,8 +2341,10 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
+      task.setPreAssignedDelegateId(eligibleDelegateIds.get(0));
+      task.setMustExecuteOnDelegateId(eligibleDelegateIds.get(0));
+      saveDelegateTask(task, QUEUED);
       if (isEmpty(eligibleDelegateIds)) {
         log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
@@ -3072,7 +3078,7 @@ public class DelegateServiceImpl implements DelegateService {
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
     if (task == null) {
       log.warn("Delegate task is null");
-      throw new InvalidArgumentsException(Pair.of("args", "Delegate task is null"));
+      throw new InvalidArgumentsException(com.sun.tools.javac.util.Pair.of("args", "Delegate task is null"));
     }
     if (task.getAccountId() == null) {
       log.warn("Delegate task has null account ID");
@@ -3196,7 +3202,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+        BatchDelegateSelectionLog batch = delegateSelecscheduleSyncTasktionLogsService.createBatch(delegateTask);
         boolean canAssign = assignDelegateService.canAssign(batch, delegateId, delegateTask);
         delegateSelectionLogsService.save(batch);
 
@@ -3204,6 +3210,10 @@ public class DelegateServiceImpl implements DelegateService {
           log.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
+        }
+
+        if (delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
+          return assignTask(delegateId, taskId, delegateTask);
         }
 
         if (featureFlagService.isEnabled(FeatureName.PER_AGENT_CAPABILITIES, accountId)) {
@@ -3603,7 +3613,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
-    subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
+    subject.fireInform(software.wings.service.impl.DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
   }
 
   @VisibleForTesting
@@ -3898,7 +3908,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } else if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)
         && previousDelegateConnection.isDisconnected()) {
-      subject.fireInform(DelegateObxxxxxxxx:onReconnected, accountId, delegateId);
+      subject.fireInform(software.wings.service.impl.DelegateObxxxxxxxx:onReconnected, accountId, delegateId);
     }
   }
 
