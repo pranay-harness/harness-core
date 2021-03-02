@@ -72,8 +72,8 @@ public class AnomalyDetectionProcessor
       returnAnomaly = statsModel.detectAnomaly(timeSeries);
       Target target = Target.builder().identifier("batch-processing").build();
       log.info("The feature flag Anomaly-detection-is-prophet resolves to "
-          + cfClient.boolVariation("Anomaly-detection-is-prophet", target, true));
-      if (cfClient.boolVariation("Anomaly-detection-is-prophet", target, true) && returnAnomaly.isAnomaly()) {
+          + cfClient.boolVariation("anomaly_detection_is_prophet", target, true));
+      if (cfClient.boolVariation("anomaly_detection_is_prophet", target, true) && returnAnomaly.isAnomaly()) {
         AnomalyDetectionHelper.logProcessingTimeSeries("Prophet Model");
         Anomaly anomalyFromService = pythonService.process(timeSeries);
         if (anomalyFromService != null) {
