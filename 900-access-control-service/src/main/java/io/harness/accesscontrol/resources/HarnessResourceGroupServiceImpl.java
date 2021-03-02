@@ -11,7 +11,6 @@ import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.RetryUtils;
@@ -49,7 +48,7 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
   public void sync(String identifier, Scope scope) {
     ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
 
-    ResourceGroupDTO resourceGroupDTO = Failsafe.with(retryPolicy).get(() -> {
+    ResourceGroupResponse resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
       ResourceGroupResponse response = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(identifier,
           scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
           scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
@@ -57,10 +56,10 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
         throw new InvalidRequestException(
             String.format("Resource group not found with the given identifier in scope %s", scope.toString()));
       }
-      return response.getResourceGroup();
+      return response;
     });
 
-    resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupDTO, scope.toString()));
+    resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse, scope.toString()));
   }
 
   @Override
