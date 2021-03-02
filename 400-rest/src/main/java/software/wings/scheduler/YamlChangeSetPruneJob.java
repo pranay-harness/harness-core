@@ -45,7 +45,7 @@ public class YamlChangeSetPruneJob implements Job {
   // Delete any YamlChangeSets older than 30 days
   private static final int RETENTION_PERIOD_IN_DAYS = 30;
   // Delete 2k record in a batch
-  private static final String BATCH_SIZE = "2000";
+  private static final String BATCH_SIZE = "500";
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private AccountService accountService;

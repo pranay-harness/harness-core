@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateScope;
 
@@ -22,6 +23,7 @@ public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;
   List<DelegateScalingGroup> scalingGroups;
+  List<DelegateGroupDetails> delegateGroupDetails;
 
   @JsonInclude(Include.NON_NULL)
   @JsonIgnoreProperties(ignoreUnknown = true)

@@ -55,5 +55,6 @@ public class CiBeansRegistrars {
                    .availableAtAccountLevel(false)
                    .clazz(CIStepInfo.class)
                    .build())
+          .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
           .build();
 }

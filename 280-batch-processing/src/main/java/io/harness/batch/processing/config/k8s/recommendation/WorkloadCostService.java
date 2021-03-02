@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -91,16 +90,20 @@ public class WorkloadCostService {
             if (cpuCost == null && memoryCost == null) {
               return null;
             }
-            BigDecimal memoryUnitPrice = Optional.ofNullable(memoryCost)
-                                             .map(x
-                                                 -> x.divide(memoryRequest, MathContext.DECIMAL128)
-                                                        .divide(usageDurationSeconds, MathContext.DECIMAL128))
-                                             .orElse(null);
-            BigDecimal cpuUnitPrice = Optional.ofNullable(cpuCost)
-                                          .map(x
-                                              -> x.divide(cpuRequest, MathContext.DECIMAL128)
-                                                     .divide(usageDurationSeconds, MathContext.DECIMAL128))
-                                          .orElse(null);
+            BigDecimal memoryUnitPrice = null;
+            BigDecimal cpuUnitPrice = null;
+
+            if (usageDurationSeconds != null && usageDurationSeconds.compareTo(BigDecimal.ZERO) > 0) {
+              if (memoryCost != null && memoryRequest != null && memoryRequest.compareTo(BigDecimal.ZERO) > 0) {
+                memoryUnitPrice = memoryCost.divide(memoryRequest, MathContext.DECIMAL128)
+                                      .divide(usageDurationSeconds, MathContext.DECIMAL128);
+              }
+              if (cpuCost != null && cpuRequest != null && cpuRequest.compareTo(BigDecimal.ZERO) > 0) {
+                cpuUnitPrice = cpuCost.divide(cpuRequest, MathContext.DECIMAL128)
+                                   .divide(usageDurationSeconds, MathContext.DECIMAL128);
+              }
+            }
+
             return Cost.builder()
                 .cpu(cpuCost)
                 .memory(memoryCost)

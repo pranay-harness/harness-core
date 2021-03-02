@@ -842,8 +842,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
+                                                injector.getInstance(DelegateSyncServiceImpl.class)),
+        0L, 2L, TimeUnit.SECONDS);
     if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
       taskPollExecutor.scheduleWithFixedDelay(
           injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
@@ -859,8 +860,9 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                 injector.getInstance(DelegateDisconnectedDetector.class)),
         0L, 60L, TimeUnit.SECONDS);
 
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
+                                                injector.getInstance(ProgressUpdateService.class)),
+        0L, 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()

@@ -33,13 +33,6 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   @Override
   public Instant fetchLastBatchJobScheduledTime(String accountId, BatchJobType batchJobType) {
     Instant instant = fetchLastDependentBatchJobScheduledTime(accountId, batchJobType);
-    if (null != instant && batchJobType == BatchJobType.ANOMALY_DETECTION_CLOUD) {
-      Instant currentInstant = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(3, ChronoUnit.DAYS);
-      if (!instant.isBefore(currentInstant)) {
-        instant = currentInstant;
-      }
-      return instant;
-    }
     if (null == instant) {
       if (batchJobType.getBatchJobBucket() == BatchJobBucket.OUT_OF_CLUSTER) {
         SettingAttribute ceConnector = cloudToHarnessMappingService.getFirstSettingAttributeByCategory(
