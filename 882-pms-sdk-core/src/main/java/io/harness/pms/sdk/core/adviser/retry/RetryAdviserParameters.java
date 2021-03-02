@@ -22,6 +22,6 @@ public class RetryAdviserParameters implements WithFailureTypes {
   int retryCount;
   RepairActionCode repairActionCodeAfterRetry;
   Set<FailureType> applicableFailureTypes;
-  // Only applicable if the repair action code after retry is set to IGNORE/ON_FAIL
+  // Only applicable if the repair action code after retry is set to IGNORE
   String nextNodeId;
 }
