@@ -11,7 +11,7 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
-        "//870-oldgen-yaml-beans/src/main/resources:resource",
+        "//870-cg-yaml-beans/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
