@@ -48,9 +48,14 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         yamlSchemaProvider.getYamlSchema(EntityType.INTEGRATION_STAGE, orgIdentifier, projectIdentifier, scope);
     JsonNode integrationStageSteps =
         yamlSchemaProvider.getYamlSchema(EntityType.INTEGRATION_STEPS, orgIdentifier, projectIdentifier, scope);
+    JsonNode pipelineStepsSchema =
+        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
 
     JsonNode definitions = integrationStageSchema.get(DEFINITIONS_NODE);
-    JsonNode stepDefinitions = integrationStageSteps.get(DEFINITIONS_NODE);
+    JsonNode integrationStepDefinitions = integrationStageSteps.get(DEFINITIONS_NODE);
+    JsonNode pipelineStepDefinitions = pipelineStepsSchema.get(DEFINITIONS_NODE);
+
+    JsonNode stepDefinitions = JsonNodeUtils.merge(integrationStepDefinitions, pipelineStepDefinitions);
     JsonNode mergedDefinitions = JsonNodeUtils.merge(definitions, stepDefinitions);
 
     JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());

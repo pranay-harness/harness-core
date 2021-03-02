@@ -20,6 +20,9 @@ public enum EntityType {
   PROJECTS(ModuleType.CORE, EntityTypeConstants.PROJECTS, EntityYamlRootNames.PROJECT, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.PIPELINES)
   PIPELINES(ModuleType.CD, EntityTypeConstants.PIPELINES, EntityYamlRootNames.PIPELINE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.PIPELINE_STEPS)
+  PIPELINE_STEPS(
+      ModuleType.CD, EntityTypeConstants.PIPELINE_STEPS, EntityYamlRootNames.PIPELINE_STEP, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.CONNECTORS)
   CONNECTORS(ModuleType.CORE, EntityTypeConstants.CONNECTORS, EntityYamlRootNames.CONNECTOR, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.SECRETS)
