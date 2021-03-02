@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -26,8 +27,12 @@ import java.util.Map;
  * {@link Task} for details on this
  */
 @OwnedBy(CDC)
-public interface TaskExecutable<T extends StepParameters> extends Step<T> {
+public interface TaskExecutable<T extends StepParameters> extends Step<T>, Abortable<T, TaskExecutableResponse> {
   TaskRequest obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
+
+  default void handleAbort(Ambiance ambiance, T stepParameters, TaskExecutableResponse executableResponse) {
+    // NOOP : By default this is noop as task abortion is handled by the PMS but you are free to override it
+  }
 }

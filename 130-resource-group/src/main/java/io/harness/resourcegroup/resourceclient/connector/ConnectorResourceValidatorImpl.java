@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.resourceclient.connector;
 
+import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
+
 import static java.util.stream.Collectors.toList;
 
 import io.harness.connector.ConnectorFilterPropertiesDTO;
@@ -9,6 +12,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.remote.client.NGRestUtils;
+import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.Scope;
@@ -40,9 +44,14 @@ public class ConnectorResourceValidatorImpl implements ResourceValidator {
             .getResponse(connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, projectIdentifier, 0,
                 resourceIds.size(), ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(resourceIds).build()))
             .getContent();
-    Set<String> validResourcIds =
+    Set<String> validResourceIds =
         secretManagers.stream().map(e -> e.getConnector().getIdentifier()).collect(Collectors.toSet());
-    return resourceIds.stream().map(validResourcIds::contains).collect(toList());
+    return resourceIds.stream().map(validResourceIds::contains).collect(toList());
+  }
+
+  @Override
+  public EnumSet<ValidatorType> getValidatorTypes() {
+    return EnumSet.of(STATIC, DYNAMIC);
   }
 
   @Override

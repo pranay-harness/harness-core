@@ -3,6 +3,9 @@ package io.harness.pms.sdk.core.resolver.outcome;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.Resolver;
 
@@ -16,4 +19,6 @@ public interface OutcomeService extends Resolver<Outcome> {
   List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds);
 
   Outcome fetchOutcome(@NonNull String outcomeInstanceId);
+
+  OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject);
 }

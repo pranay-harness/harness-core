@@ -15,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 public class QLCEK8sEntity {
   String namespace;
   String workload;
+  String workloadType;
   String node;
   String pod;
   List<QLCEK8sLabels> selectedLabels;

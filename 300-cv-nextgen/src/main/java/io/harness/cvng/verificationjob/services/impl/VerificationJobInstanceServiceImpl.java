@@ -378,9 +378,12 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             .distinct()
             .count()
         == verificationTaskCount) {
+      verificationJobInstance.setExecutionStatus(ExecutionStatus.SUCCESS);
+      ActivityVerificationStatus activityVerificationStatus = getDeploymentVerificationStatus(verificationJobInstance);
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class);
-      verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, SUCCESS);
+      verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, SUCCESS)
+          .set(VerificationJobInstanceKeys.verificationStatus, activityVerificationStatus);
       hPersistence.getDatastore(VerificationJobInstance.class)
           .update(hPersistence.createQuery(VerificationJobInstance.class)
                       .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
@@ -470,12 +473,13 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier, int limit) {
     List<VerificationJobInstance> verificationJobInstances =
         hPersistence.createQuery(VerificationJobInstance.class)
-            .filter(VerificationJobInstanceKeys.accountId, accountId)
             .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
+            .filter(VerificationJobInstanceKeys.accountId, accountId)
             .filter(PROJECT_IDENTIFIER_KEY, projectIdentifier)
             .filter(ORG_IDENTIFIER_KEY, orgIdentifier)
             .filter(VerificationJobInstance.VERIFICATION_JOB_IDENTIFIER_KEY, verificationJobIdentifier)
             .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
+            .filter(VerificationJobInstanceKeys.verificationStatus, ActivityVerificationStatus.VERIFICATION_PASSED)
             .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
             .asList(new FindOptions().limit(limit));
     return verificationJobInstances.stream()

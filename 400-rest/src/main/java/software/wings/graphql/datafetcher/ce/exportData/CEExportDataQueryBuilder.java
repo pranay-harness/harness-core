@@ -358,6 +358,9 @@ public class CEExportDataQueryBuilder {
       case Workload:
         groupBy = schema.getWorkloadName();
         break;
+      case WorkloadType:
+        groupBy = schema.getWorkloadType();
+        break;
       case Namespace:
         groupBy = schema.getNamespace();
         break;

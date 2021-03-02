@@ -8,6 +8,8 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -36,6 +38,8 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -72,6 +76,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretCrudService secretCrudService;
   @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
+  @Inject private OutcomeService outcomeService;
+  @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
   public Class<ShellScriptStepParameters> getStepParametersClass() {
@@ -81,6 +87,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
+    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+
+    if (infrastructureOutcome == null) {
+      throw new InvalidRequestException("Infrastructure not available");
+    }
+
     ScriptType scriptType = stepParameters.getShell().getScriptType();
     ShellScriptTaskParametersNGBuilder taskParametersNGBuilder = ShellScriptTaskParametersNG.builder();
 
@@ -132,8 +145,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .executeOnDelegate(stepParameters.onDelegate.getValue())
             .environmentVariables(environmentVariables)
             .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
-            // TODO: Pass infra delegate config as well for kubeConfigContent
-            // .k8sInfraDelegateConfig()
+            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance))
             .outputVars(outputVars)
             .script(((ShellScriptInlineSource) stepParameters.getSource().getSpec()).getScript().getValue())
             .scriptType(scriptType)

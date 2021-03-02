@@ -1,12 +1,15 @@
 package io.harness.resourcegroup.reconciliation;
 
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
+import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ENTITY_CRUD;
 
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
@@ -21,7 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -38,7 +40,7 @@ public class SyncConciliationJob implements Runnable {
   Set<String> validResourceTypes;
 
   @Inject
-  public SyncConciliationJob(@Named(ResourceGroupConstants.ENTITY_CRUD) Consumer redisConsumer,
+  public SyncConciliationJob(@Named(ENTITY_CRUD) Consumer redisConsumer,
       @Named("resourceValidatorMap") Map<String, ResourceValidator> resourceValidators,
       ResourceGroupService resourceGroupService, @Named("serviceId") String serviceId) {
     this.redisConsumer = redisConsumer;
@@ -97,29 +99,39 @@ public class SyncConciliationJob implements Runnable {
   }
 
   private boolean processMessage(Message message) {
-    AtomicBoolean success = new AtomicBoolean(true);
+    boolean success = true;
     if (!message.hasMessage()) {
-      return success.get();
+      return success;
     }
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap == null || !metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)
-        || !metadataMap.get(EventsFrameworkMetadataConstants.ACTION)
-                .equals(EventsFrameworkMetadataConstants.DELETE_ACTION)) {
-      return success.get();
+    if (metadataMap == null || !metadataMap.containsKey(ACTION) || !metadataMap.containsKey(ENTITY_TYPE)) {
+      return success;
     }
-    if (metadataMap.get(ENTITY_TYPE) != null) {
-      String entityType = metadataMap.get(ENTITY_TYPE);
-      if (!validResourceTypes.contains(entityType)) {
-        return success.get();
-      }
-      ResourcePrimaryKey resourcePrimaryKey = resourceValidators.get(entityType).getResourceGroupKeyFromEvent(message);
-      if (Objects.isNull(resourcePrimaryKey)) {
-        return success.get();
-      }
-      if (!resourceGroupService.handleResourceDeleteEvent(resourcePrimaryKey)) {
-        success.set(false);
+
+    String entityType = metadataMap.get(ENTITY_TYPE);
+    if (!validResourceTypes.contains(entityType)) {
+      return success;
+    }
+    ResourcePrimaryKey resourcePrimaryKey = resourceValidators.get(entityType).getResourceGroupKeyFromEvent(message);
+    if (Objects.isNull(resourcePrimaryKey)) {
+      return success;
+    }
+    String action = metadataMap.get(ACTION);
+    success = processMessage(resourcePrimaryKey, action);
+    return success;
+  }
+
+  private boolean processMessage(ResourcePrimaryKey resourcePrimaryKey, String action) {
+    boolean success = true;
+    if (action.equals(DELETE_ACTION)) {
+      success = resourceGroupService.handleResourceDeleteEvent(resourcePrimaryKey);
+    } else {
+      if (action.equals(CREATE_ACTION)) {
+        success = resourceGroupService.createDefaultResourceGroup(resourcePrimaryKey);
+      } else if (action.equals(RESTORE_ACTION)) {
+        success = resourceGroupService.restoreResourceGroupsUnderHierarchy(resourcePrimaryKey);
       }
     }
-    return success.get();
+    return success;
   }
 }

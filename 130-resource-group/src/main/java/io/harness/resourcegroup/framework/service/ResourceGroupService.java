@@ -24,4 +24,8 @@ public interface ResourceGroupService {
   boolean handleResourceDeleteEvent(ResourcePrimaryKey resourcePrimaryKey);
 
   boolean deleteStaleResources(ResourceGroup resourceGroup);
+
+  boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey);
+
+  boolean restoreResourceGroupsUnderHierarchy(ResourcePrimaryKey resourcePrimaryKey);
 }
