@@ -487,9 +487,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
+    log.info("Rendering service variables");
     serviceVariables.replaceAll((name, value) -> context.renderExpression(value));
 
     if (safeDisplayServiceVariables != null) {
+      log.info("Rendering safe display service variables");
       safeDisplayServiceVariables.replaceAll((name, value) -> context.renderExpression(value));
     }
     shellScriptParameters.serviceVariables(serviceVariables).safeDisplayServiceVariables(safeDisplayServiceVariables);
@@ -497,6 +499,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
     // Added to support delegate profile startup script execution through the workflow
+    log.info("Render expression from mustExecuteOnDelegateId");
     String mustExecuteOnDelegateIdRendered = !"null".equals(context.renderExpression(mustExecuteOnDelegateId))
         ? context.renderExpression(mustExecuteOnDelegateId)
         : null;
@@ -526,6 +529,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .mustExecuteOnDelegateId(mustExecuteOnDelegateIdRendered)
             .build();
 
+    log.info("Preparing to substitute task params and scheduled the task on delegate");
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
         StateExecutionContext.builder()
             .stateExecutionData(scriptStateExecutionData)
@@ -534,6 +538,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .expressionFunctorToken(expressionFunctorToken)
             .build());
 
+    log.info("Finished substituting task params and scheduled the task on delegate with delegateId {}", delegateTaskId);
     appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
