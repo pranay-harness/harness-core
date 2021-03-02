@@ -3,6 +3,7 @@ package io.harness.serializer;
 import io.harness.EntityType;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
@@ -54,6 +55,13 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(PipelineConfig.class)
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.PIPELINE_STEPS)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(PMSStepInfo.class)
                    .build())
           .build();
 }
