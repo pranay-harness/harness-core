@@ -24,6 +24,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class InviteModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
@@ -83,6 +85,12 @@ public class InviteModule extends AbstractModule {
   @Singleton
   protected String getUserVerificationSecret(NextGenConfiguration nextGenConfiguration) {
     return nextGenConfiguration.getNextGenConfig().getUserVerificationSecret();
+  }
+
+  @Provides
+  @Singleton
+  protected TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+    return new TransactionTemplate(mongoTransactionManager);
   }
 
   @Provides
