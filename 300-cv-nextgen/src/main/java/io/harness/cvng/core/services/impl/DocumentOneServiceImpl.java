@@ -6,13 +6,18 @@ import io.harness.repositories.repo.DocumentOneRepo;
 
 import com.google.inject.Inject;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 public class DocumentOneServiceImpl implements DocumentOneService {
   @Inject DocumentOneRepo documentOneRepo;
 
   @Override
+  @Transactional
   public void save(DocumentOne documentOne) {
-    documentOneRepo.save(documentOne);
+    DocumentOne one = documentOneRepo.save(documentOne);
+    if (one.getAmount() > 5000) {
+      throw new RuntimeException("amount cannot be more than 5000");
+    }
   }
 
   @Override

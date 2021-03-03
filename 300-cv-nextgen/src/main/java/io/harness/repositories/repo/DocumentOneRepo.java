@@ -7,5 +7,4 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @HarnessRepo
-@Transactional
 public interface DocumentOneRepo extends CrudRepository<DocumentOne, String> {}
