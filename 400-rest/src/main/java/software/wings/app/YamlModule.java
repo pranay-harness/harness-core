@@ -50,6 +50,9 @@ import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLET
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
+import io.harness.governance.BlackoutWindowFilterType;
+import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.InfrastructureType;
@@ -104,6 +107,16 @@ import software.wings.service.impl.yaml.handler.deploymentspec.container.Kuberne
 import software.wings.service.impl.yaml.handler.deploymentspec.container.PcfServiceSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserDataSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllAppFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllNonProdEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllProdEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.ApplicationFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomAppFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.EnvironmentFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.GovernanceFreezeConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.TimeRangeBasedFreezeConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
@@ -481,5 +494,28 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(PcfCommandTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.CUSTOM_DEPLOYMENT_TYPE)
         .to(CustomDeploymentTypeTemplateYamlHandler.class);
+
+    MapBinder<String, GovernanceFreezeConfigYamlHandler> governanceFreezeConfigYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, GovernanceFreezeConfigYamlHandler.class);
+    governanceFreezeConfigYamlHandlerMapBinder.addBinding("TIME_RANGE_BASED_FREEZE_CONFIG")
+        .to(TimeRangeBasedFreezeConfigYamlHandler.class);
+
+    MapBinder<String, ApplicationFilterYamlHandler> applicationFilterYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ApplicationFilterYamlHandler.class);
+    applicationFilterYamlHandlerMapBinder.addBinding(BlackoutWindowFilterType.ALL.name())
+        .to(AllAppFilterYamlHandler.class);
+    applicationFilterYamlHandlerMapBinder.addBinding(BlackoutWindowFilterType.CUSTOM.name())
+        .to(CustomAppFilterYamlHandler.class);
+
+    MapBinder<String, EnvironmentFilterYamlHandler> environmentFilterYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, EnvironmentFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL.name())
+        .to(AllEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.CUSTOM.name())
+        .to(CustomEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL_PROD.name())
+        .to(AllProdEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL_NON_PROD.name())
+        .to(AllNonProdEnvFilterYamlHandler.class);
   }
 }
