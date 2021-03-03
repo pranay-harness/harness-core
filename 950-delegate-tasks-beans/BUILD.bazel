@@ -2,10 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 shared_dependencies = [
     "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
@@ -73,14 +70,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()
