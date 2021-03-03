@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
@@ -52,6 +53,7 @@ import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -97,6 +99,7 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.LiteEngineSecretEvaluator;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -203,6 +206,17 @@ public class K8BuildSetupUtils {
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
     K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
+
+    List<String> containerNames =
+        containerParamsList.stream().map(CIK8ContainerParams::getName).collect(Collectors.toList());
+    containerNames.add(setupAddOnContainerParams.getName());
+    executionSweepingOutputResolver.consume(ambiance, CLEANUP_DETAILS,
+        PodCleanupDetails.builder()
+            .infrastructure(infrastructure)
+            .podName(podSetupInfo.getName())
+            .cleanUpContainerNames(containerNames)
+            .build(),
+        StepOutcomeGroup.STAGE.name());
 
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())

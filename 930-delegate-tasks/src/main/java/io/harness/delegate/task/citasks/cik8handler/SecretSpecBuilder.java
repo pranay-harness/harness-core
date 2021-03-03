@@ -293,6 +293,10 @@ public class SecretSpecBuilder {
         .build();
   }
 
+  public static String getSecretName(String podName) {
+    return podName + "-" + SECRET;
+  }
+
   private Map<String, SecretParams> retrieveGitHubSecretParams(
       GithubConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
     Map<String, SecretParams> secretData = new HashMap<>();
