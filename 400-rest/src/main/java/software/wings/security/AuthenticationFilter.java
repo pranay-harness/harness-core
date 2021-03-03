@@ -38,6 +38,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.security.annotations.AdminPortalAuth;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ScimAPI;
@@ -128,7 +129,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-    if (isExternalFacingApiRequest(containerRequestContext)) {
+    if (isExternalFacingApiRequest(containerRequestContext) || isApiKeyAuthorizationAPI()) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
       if (isNotEmpty(apiKey)) {
@@ -396,6 +397,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected boolean externalFacingAPI() {
     return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
+  }
+
+  private boolean isApiKeyAuthorizationAPI() {
+    return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
   }
 
   private String getRequestParamFromContext(
