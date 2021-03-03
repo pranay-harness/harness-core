@@ -34,7 +34,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
       }
     });
 
@@ -72,7 +72,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
             List<YamlField> fields = specField.getNode().fields();
             fields.forEach(field -> {
               if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-                addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+                addFieldToPropertiesMapUnderStep(field, specField.getNode(), yamlPropertiesMap);
               }
             });
           }
@@ -88,7 +88,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = executionTargetField.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, executionTargetField.getNode(), yamlPropertiesMap);
       }
     });
   }

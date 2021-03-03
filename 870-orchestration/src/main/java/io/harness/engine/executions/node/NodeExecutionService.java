@@ -29,7 +29,7 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId);
 
-  List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String parentId);
+  List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String parentId, boolean isOldRetry);
 
   List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status);
 
