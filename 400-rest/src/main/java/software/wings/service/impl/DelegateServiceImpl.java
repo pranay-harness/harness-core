@@ -2384,9 +2384,13 @@ public class DelegateServiceImpl implements DelegateService {
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
+
+      // Hack for now
       task.setPreAssignedDelegateId(eligibleDelegateIds.get(0));
       task.setMustExecuteOnDelegateId(eligibleDelegateIds.get(0));
       saveDelegateTask(task, QUEUED);
+      // --------------
+
       if (isEmpty(eligibleDelegateIds)) {
         log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
