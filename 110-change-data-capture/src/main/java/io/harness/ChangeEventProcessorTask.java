@@ -3,6 +3,7 @@ package io.harness;
 import io.harness.changestreamsframework.ChangeDataCapture;
 import io.harness.changestreamsframework.ChangeDataCaptureSink;
 import io.harness.changestreamsframework.ChangeEvent;
+import io.harness.entities.CDCEntity;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

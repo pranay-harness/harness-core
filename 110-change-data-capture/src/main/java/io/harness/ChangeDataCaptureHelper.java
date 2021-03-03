@@ -3,6 +3,7 @@ package io.harness;
 import io.harness.changestreamsframework.ChangeSubscriber;
 import io.harness.changestreamsframework.ChangeTracker;
 import io.harness.changestreamsframework.ChangeTrackingInfo;
+import io.harness.entities.CDCEntity;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.inject.Inject;

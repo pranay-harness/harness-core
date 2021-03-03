@@ -1,6 +1,5 @@
 package io.harness.entities;
 
-import io.harness.CDCEntity;
 import io.harness.ChangeHandler;
 import io.harness.TimeScaleDBChangeHandler;
 import io.harness.persistence.PersistentEntity;

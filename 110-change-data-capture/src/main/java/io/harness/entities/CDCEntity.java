@@ -1,5 +1,6 @@
-package io.harness;
+package io.harness.entities;
 
+import io.harness.ChangeHandler;
 import io.harness.persistence.PersistentEntity;
 
 public interface CDCEntity<T extends PersistentEntity> {

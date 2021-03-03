@@ -1,6 +1,7 @@
 package io.harness;
 
 import io.harness.changestreamsframework.ChangeEvent;
+import io.harness.entities.CDCEntity;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;

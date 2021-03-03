@@ -1,6 +1,7 @@
 package io.harness;
 
 import io.harness.entities.ApplicationCDCEntity;
+import io.harness.entities.CDCEntity;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
