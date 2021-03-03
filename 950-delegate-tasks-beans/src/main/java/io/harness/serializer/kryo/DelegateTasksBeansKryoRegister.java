@@ -238,6 +238,7 @@ import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
@@ -573,6 +574,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpValidationParams.class, 19545);
     kryo.register(AwsCodeCommitTaskParams.class, 19546);
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
+    kryo.register(HelmChartManifestDelegateConfig.class, 19548);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

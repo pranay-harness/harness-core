@@ -1,8 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -58,9 +57,8 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
   }
 
   @Override
-  public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+  public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    final StoreConfig storeConfig = k8sManifestOutcome.getStore();
     K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters;
     boolean isResourceName = io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName
         == deleteStepParameters.getDeleteResources().getType();
@@ -82,7 +80,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
+            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure);
