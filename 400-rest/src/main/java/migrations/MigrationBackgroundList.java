@@ -75,6 +75,7 @@ import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitWorkflowCounters;
+import migrations.all.InstanceSyncPerpetualTaskInfoMigration;
 import migrations.all.InvalidCVConfigDeletionMigration;
 import migrations.all.K8sStatesTimeoutMigration;
 import migrations.all.LicenseExpiryReminderTimeMigration;
@@ -309,6 +310,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(187, BaseMigration.class))
         .add(Pair.of(188, MoveDelegateNameToDelegateSelectorsMigration.class))
         .add(Pair.of(189, CleanupOrphanInfraMappings.class))
+        .add(Pair.of(190, InstanceSyncPerpetualTaskInfoMigration.class))
         .build();
   }
 }
