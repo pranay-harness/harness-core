@@ -78,12 +78,12 @@ directories:
   950-git-sync-sdk
   950-ng-core
   950-ng-project-n-orgs
-  950-outbox-sdk
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
   954-connector-beans
   955-filters-sdk
+  955-outbox-sdk
   955-setup-usage-sdk
   960-api-services
   960-continuous-features
