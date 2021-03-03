@@ -41,6 +41,7 @@ directories:
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
+  870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
   876-orchestration-beans
