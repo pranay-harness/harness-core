@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @JsonTypeInfo(
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 })
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class EnvironmentFilter {
   private EnvironmentFilterType filterType;
   public enum EnvironmentFilterType { ALL_PROD, ALL_NON_PROD, ALL, CUSTOM }

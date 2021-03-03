@@ -51,7 +51,6 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-
 @CdIndex(name = "accountIdAndImportedByScim", fields = { @Field("accountId")
                                                          , @Field("importedByScim") })
 @CdIndex(name = "accountAndMemberIds", fields = { @Field("accountId")
