@@ -251,8 +251,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
+    modules.add(new CVNGPersistenceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
-    modules.add(new NotificationClientPersistenceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);

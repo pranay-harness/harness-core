@@ -167,7 +167,6 @@ public class CVServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(FeatureFlagModule.getInstance());
-    install(new SpringPersistenceModule());
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
