@@ -1,0 +1,24 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+description: pipeline description
+pipelineStages:
+- type: APPROVAL
+  name: Approval 0
+  parallel: false
+  properties:
+    userGroups: null
+    variables: null
+    stageName: STAGE 2
+    templateExpressions:
+    - expression: ${User_Group}
+      expressionAllowed: true
+      fieldName: USER_GROUP
+      mandatory: false
+      metadata:
+        relatedField: ''
+        entityType: USER_GROUP
+    timeoutMillis: 86400000
+    approvalStateType: USER_GROUP
+    sweepingOutputName: ''
+  skipCondition:
+    type: DO_NOT_SKIP
