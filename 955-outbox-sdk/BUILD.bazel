@@ -14,11 +14,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//960-ng-core-beans:module",
         "//960-persistence:module",
-        "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
-        "@maven//:io_swagger_swagger_annotations",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )
