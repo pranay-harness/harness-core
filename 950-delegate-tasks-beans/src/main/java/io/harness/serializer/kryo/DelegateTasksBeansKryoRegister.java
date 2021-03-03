@@ -115,6 +115,7 @@ import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -373,6 +374,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(RemoteMethodReturnValueData.class, 5122);
     kryo.register(SecretDetail.class, 19001);
     kryo.register(SelectorCapability.class, 19098);
+    kryo.register(SftpCapability.class, 19124);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
     kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SmtpCapability.class, 19121);
