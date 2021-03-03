@@ -10,6 +10,7 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "//:lombok",
         "//980-commons:module",
     ],
 )
