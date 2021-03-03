@@ -11,12 +11,25 @@ import static software.wings.beans.Schema.SCHEMA_ID;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.migrations.Migration;
+import io.harness.migrations.MigrationBackgroundList;
+import io.harness.migrations.MigrationList;
+import io.harness.migrations.OnPrimaryManagerMigration;
+import io.harness.migrations.OnPrimaryManagerMigrationList;
+import io.harness.migrations.SeedDataMigration;
+import io.harness.migrations.SeedDataMigrationList;
+import io.harness.migrations.TimeScaleDBDataMigration;
+import io.harness.migrations.TimeScaleDBMigration;
+import io.harness.migrations.TimescaleDBDataMigrationList;
+import io.harness.migrations.TimescaleDBMigrationList;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
@@ -39,23 +52,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import migrations.Migration;
-import migrations.MigrationBackgroundList;
-import migrations.MigrationList;
-import migrations.OnPrimaryManagerMigration;
-import migrations.OnPrimaryManagerMigrationList;
-import migrations.SeedDataMigration;
-import migrations.SeedDataMigrationList;
-import migrations.TimeScaleDBDataMigration;
-import migrations.TimeScaleDBMigration;
-import migrations.TimescaleDBDataMigrationList;
-import migrations.TimescaleDBMigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._390_DB_MIGRATION)
 public class MigrationServiceImpl implements MigrationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
