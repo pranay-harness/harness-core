@@ -80,6 +80,10 @@ aeriform("//380-cg-graphql:module")
 
 aeriform("//380-cg-graphql:tests")
 
+aeriform("//390-db-migration:module")
+
+aeriform("//390-db-migration:tests")
+
 aeriform("//400-rest:module")
 
 aeriform("//400-rest:supporter-test")
