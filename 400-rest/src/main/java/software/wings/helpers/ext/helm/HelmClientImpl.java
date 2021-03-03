@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -29,7 +30,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
-import software.wings.utils.CommandFlagUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -393,8 +393,8 @@ public class HelmClientImpl implements HelmClient {
   private String applyCommandFlags(String command, HelmCommandRequest commandRequest, HelmCliCommandType commandType) {
     String flags = isBlank(commandRequest.getCommandFlags()) ? "" : commandRequest.getCommandFlags();
     if (null != commandRequest.getHelmCommandFlag() && isNotEmpty(commandRequest.getHelmCommandFlag().getValueMap())) {
-      return CommandFlagUtils.applyHelmCommandFlags(
-          command, commandRequest.getHelmCommandFlag(), commandType.name(), commandRequest.getHelmVersion());
+      return HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(),
+          commandRequest.getHelmCommandFlag().getValueMap(), commandRequest.getHelmVersion());
     }
     return command.replace(HELM_COMMAND_FLAG_PLACEHOLDER, flags);
   }

@@ -230,6 +230,7 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -613,6 +614,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DeleteResourcesType.class, 543257);
     kryo.register(AzureBlueprintDeploymentParameters.class, 543258);
     kryo.register(AzureBlueprintDeploymentResponse.class, 543259);
+    kryo.register(HelmCommandFlag.class, 543260);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

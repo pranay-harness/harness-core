@@ -21,16 +21,18 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
 import io.harness.helm.HelmCommandTemplateFactory;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;
@@ -47,7 +49,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.CommandFlagUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -300,8 +302,10 @@ public class HelmTaskHelper {
       helmFetchCommand = helmFetchCommand.replace(REPO_NAME + "/", "");
     }
 
-    helmFetchCommand =
-        CommandFlagUtils.applyHelmCommandFlags(helmFetchCommand, helmCommandFlag, commandType.name(), helmVersion);
+    Map<HelmSubCommandType, String> commandFlagValueMap =
+        helmCommandFlag != null ? helmCommandFlag.getValueMap() : null;
+    helmFetchCommand = HelmCommandFlagsUtils.applyHelmCommandFlags(
+        helmFetchCommand, commandType.name(), commandFlagValueMap, helmVersion);
     return applyHelmHomePath(helmFetchCommand, workingDirectory);
   }
 
