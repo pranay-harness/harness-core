@@ -25,6 +25,7 @@ var (
 	executeStage        = executor.ExecuteStage
 	newHTTPRemoteLogger = external.GetHTTPRemoteLogger
 	engineServer        = grpc.NewEngineServer
+	getLogKey           = external.GetLogKey
 )
 
 // schema for executing a stage
@@ -60,13 +61,8 @@ func init() {
 func main() {
 	parseArgs()
 
-	// Lite engine logs that are not part of any step are logged with ID engine_state_logs-main
-	key := "engine_stage_logs-main"
-	remoteLogger, err := newHTTPRemoteLogger(key)
-	if err != nil {
-		// Could not create a logger
-		panic(err)
-	}
+	// Lite engine logs that are not part of any step are logged with ID engine:main
+	remoteLogger := getRemoteLogger("engine:main")
 	log := remoteLogger.BaseLogger
 	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
 
@@ -113,4 +109,18 @@ func startServer(rl *logs.RemoteLogger) {
 			log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
 		}
 	}()
+}
+
+func getRemoteLogger(keyID string) *logs.RemoteLogger {
+	key, err := getLogKey(keyID)
+	if err != nil {
+		panic(err)
+	}
+	remoteLogger, err := newHTTPRemoteLogger(key)
+	if err != nil {
+		// Could not create a logger
+		panic(err)
+	}
+
+	return remoteLogger
 }

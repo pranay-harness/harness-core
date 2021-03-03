@@ -147,7 +147,7 @@ public class StepUtils {
   }
 
   @Nonnull
-  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+  public static LinkedHashMap<String, String> generateStageLogAbstractions(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
     logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
     logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
@@ -155,9 +155,15 @@ public class StepUtils {
     logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
     ambiance.getLevelsList()
         .stream()
-        .filter(level -> level.getGroup().equals("stage"))
+        .filter(level -> level.getGroup().equals("STAGE"))
         .findFirst()
         .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    return logAbstractions;
+  }
+
+  @Nonnull
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = generateStageLogAbstractions(ambiance);
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (currentLevel != null) {
       logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
