@@ -31,6 +31,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -39,6 +40,7 @@ import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -73,6 +75,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateTaskService delegateTaskService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
 
   @Override
   public void run() {
@@ -83,6 +86,7 @@ public class DelegateQueueTask implements Runnable {
     try {
       if (configurationController.isPrimary()) {
         markTimedOutTasksAsFailed();
+        markTasksForForcedExecution();
         markLongQueuedTasksAsFailed();
       }
       rebroadcastUnassignedTasks();
@@ -94,6 +98,57 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private static final FindOptions expiryLimit = new FindOptions().limit(100);
+
+  private void markTasksForForcedExecution() {
+    Query<DelegateTask> query = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                    .filter(DelegateTaskKeys.status, QUEUED)
+                                    .field(DelegateTaskKeys.mustExecuteOnDelegateId)
+                                    .doesNotExist()
+                                    .field(DelegateTaskKeys.expiry)
+                                    .lessThan(currentTimeMillis());
+
+    try (HIterator<DelegateTask> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        DelegateTask task = iterator.next();
+        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
+        List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
+
+        for (String delegatId : activeDelegates) {
+          boolean canAssign = assignDelegateService.canAssign(batch, delegatId, task);
+          if (canAssign) {
+            task.setPreAssignedDelegateId(delegatId);
+            break;
+          }
+        }
+
+        if (task.getPreAssignedDelegateId() == null) {
+          continue;
+        }
+
+        delegateSelectionLogsService.save(batch);
+
+        Query<DelegateTask> filterQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                              .field(DelegateTaskKeys.accountId)
+                                              .equal(task.getAccountId())
+                                              .field(DelegateTaskKeys.uuid)
+                                              .equal(task.getUuid())
+                                              .filter(DelegateTaskKeys.status, QUEUED)
+                                              .field(DelegateTaskKeys.mustExecuteOnDelegateId)
+                                              .doesNotExist()
+                                              .field(DelegateTaskKeys.expiry)
+                                              .lessThan(currentTimeMillis());
+
+        UpdateOperations<DelegateTask> updateOperations =
+            persistence.createUpdateOperations(DelegateTask.class)
+                .set(DelegateTaskKeys.nextBroadcast, 0)
+                .set(DelegateTaskKeys.expiry, currentTimeMillis() + 30000)
+                .set(DelegateTaskKeys.preAssignedDelegateId, task.getPreAssignedDelegateId())
+                .set(DelegateTaskKeys.mustExecuteOnDelegateId, task.getPreAssignedDelegateId());
+
+        persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
+      }
+    }
+  }
 
   private void markTimedOutTasksAsFailed() {
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys = persistence.createQuery(DelegateTask.class, excludeAuthority)
@@ -235,7 +290,8 @@ public class DelegateQueueTask implements Runnable {
 
         // Old way with rebroadcasting
         if (featureFlagService.isNotEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())
-            && delegateTask.getPreAssignedDelegateId() != null && delegateTask.getBroadcastCount() > 0) {
+            && delegateTask.getPreAssignedDelegateId() != null && delegateTask.getMustExecuteOnDelegateId() == null
+            && delegateTask.getBroadcastCount() > 0) {
           updateOperations.unset(DelegateTaskKeys.preAssignedDelegateId);
         }
 

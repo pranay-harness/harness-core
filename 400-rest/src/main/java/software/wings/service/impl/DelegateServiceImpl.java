@@ -2383,8 +2383,10 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task, QUEUED);
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
+      task.setPreAssignedDelegateId(eligibleDelegateIds.get(0));
+      task.setMustExecuteOnDelegateId(eligibleDelegateIds.get(0));
+      saveDelegateTask(task, QUEUED);
       if (isEmpty(eligibleDelegateIds)) {
         log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
@@ -3249,6 +3251,10 @@ public class DelegateServiceImpl implements DelegateService {
           log.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
+        }
+
+        if (delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
+          return assignTask(delegateId, taskId, delegateTask);
         }
 
         if (featureFlagService.isEnabled(FeatureName.PER_AGENT_CAPABILITIES, accountId)) {
