@@ -45,11 +45,13 @@ public class DelegateExecutor {
 
   @Inject private DelegateService delegateService;
 
-  public void ensureDelegate(Account account, String bearerToken, Class clazz) throws IOException {
-    if (!isHealthy(account.getUuid(), bearerToken)) {
-      return;
-      //      executeLocalDelegate(account, bearerToken, clazz);
+  public void ensureDelegate(Account account, String bearerToken, Class clazz)
+      throws IOException, InterruptedException {
+    long t = System.currentTimeMillis();
+    while (!isHealthy(account.getUuid(), bearerToken) && System.currentTimeMillis() - t < 30000) {
+      Thread.sleep(2000);
     }
+    //      executeLocalDelegate(account, bearerToken, clazz)
   }
 
   private void executeLocalDelegate(Account account, String bearerToken, Class clazz) throws IOException {

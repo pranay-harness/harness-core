@@ -132,7 +132,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Getter static Account account;
 
   @Before
-  public void testSetup() throws IOException {
+  public void testSetup() throws IOException, InterruptedException {
     account = accountSetupService.ensureAccount();
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
