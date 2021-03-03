@@ -3,6 +3,9 @@ package software.wings.yaml.templatelibrary;
 import static software.wings.common.TemplateConstants.ARTIFACT_SOURCE;
 import static software.wings.common.TemplateConstants.CUSTOM;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -17,6 +20,7 @@ import lombok.NoArgsConstructor;
 @JsonTypeName(ARTIFACT_SOURCE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({ @JsonSubTypes.Type(value = CustomArtifactSourceTemplateYaml.class, name = CUSTOM) })
+@TargetModule(Module._870_CG_YAML_BEANS)
 public abstract class ArtifactSourceTemplateYaml extends TemplateLibraryYaml {
   private String sourceType;
 

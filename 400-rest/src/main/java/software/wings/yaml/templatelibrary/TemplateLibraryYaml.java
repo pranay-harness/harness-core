@@ -7,6 +7,9 @@ import static software.wings.common.TemplateConstants.PCF_PLUGIN;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.common.TemplateConstants.SSH;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -35,6 +38,8 @@ import lombok.NoArgsConstructor;
       @Type(value = PcfCommandTemplateYaml.class, name = PCF_PLUGIN),
       @Type(value = CustomDeploymentTypeTemplateYaml.class, name = CUSTOM_DEPLOYMENT_TYPE)
 })
+
+@TargetModule(Module._870_CG_YAML_BEANS)
 public abstract class TemplateLibraryYaml extends BaseEntityYaml {
   private String description;
   private List<TemplateVariableYaml> variables;
