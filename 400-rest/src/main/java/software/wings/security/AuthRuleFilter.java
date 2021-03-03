@@ -37,7 +37,6 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
-import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
