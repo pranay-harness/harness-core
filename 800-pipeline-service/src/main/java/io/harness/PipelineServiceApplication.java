@@ -45,6 +45,7 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
+import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
@@ -172,6 +173,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
+    injector.getInstance(BarrierServiceImpl.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
