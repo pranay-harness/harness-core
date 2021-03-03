@@ -2,6 +2,7 @@ package io.harness.event.timeseries.processor.instanceeventprocessor;
 
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.EventProcessor;
+import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.InstanceAggregationException;
 import io.harness.exception.InstanceProcessorException;
 import io.harness.ff.FeatureFlagService;
@@ -17,7 +18,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -130,21 +135,20 @@ public class InstanceEventProcessor implements EventProcessor<TimeSeriesBatchEve
     }
   }
 
-  // starting from timestamp, generate data until current time
-  //  public void generateInstanceDPs(Long timestamp, String accountId, Map<String, Object> dataPoint) throws Exception
-  //  {
-  //    Random rand = new Random();
-  //    Long currentTime = new Date().getTime();
-  //    while (timestamp < currentTime) {
-  //      Integer instanceCount = rand.nextInt(10);
-  //      dataPoint.put(EventProcessor.INSTANCECOUNT, instanceCount);
-  //      List<DataPoint> dpList = new ArrayList<>();
-  //      dpList.add(DataPoint.builder().data(dataPoint).build());
-  //      TimeSeriesBatchEventInfo event =
-  //          TimeSeriesBatchEventInfo.builder().accountId(accountId).timestamp(timestamp).dataPointList(dpList).build();
-  //
-  //      processEvent(event);
-  //      timestamp = DateUtils.addMinutes(timestamp, 10).getTime();
-  //    }
-  //  }
+  //   starting from timestamp, generate data until current time
+  public void generateInstanceDPs(Long timestamp, String accountId, Map<String, Object> dataPoint) throws Exception {
+    Random rand = new Random();
+    Long currentTime = new Date().getTime();
+    while (timestamp < currentTime) {
+      Integer instanceCount = rand.nextInt(10);
+      dataPoint.put(EventProcessor.INSTANCECOUNT, instanceCount);
+      List<DataPoint> dpList = new ArrayList<>();
+      dpList.add(DataPoint.builder().data(dataPoint).build());
+      TimeSeriesBatchEventInfo event =
+          TimeSeriesBatchEventInfo.builder().accountId(accountId).timestamp(timestamp).dataPointList(dpList).build();
+
+      processEvent(event);
+      timestamp = DateUtils.addMinutes(timestamp, 10).getTime();
+    }
+  }
 }

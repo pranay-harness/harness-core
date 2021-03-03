@@ -21,6 +21,7 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
+import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceDataGenRequest;
 import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventProcessor;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.InstanceReconConstants;
@@ -30,6 +31,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
+import io.harness.security.annotations.PublicApi;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -69,6 +71,7 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Slf4j
 @Api("custom-dashboard")
@@ -304,24 +307,23 @@ public class CustomDashboardResource {
           .build();
     }
   }
-  //
-  //  @POST
-  //  @Path("gen-instance-data-point")
-  //  @Timed
-  //  @ExceptionMetered
-  //  @PublicApi
-  //  public RestResponse generateInstanceDataPoints(@Body InstanceDataGenRequest request) throws Exception {
-  //    log.info("generateInstanceDataPoint timestamp: {}, accountId: {}, dataPoint :{}", request.getTimestamp(),
-  //        request.getAccountId(), request.getDataMap());
-  //
-  //    instanceEventProcessor.generateInstanceDPs(request.getTimestamp(), request.getAccountId(),
-  //    request.getDataMap());
-  //
-  //    log.info("Instance Data Points generation completed");
-  //    return Builder.aRestResponse()
-  //        .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message("SUCCESS").build()))
-  //        .build();
-  //  }
+
+  @POST
+  @Path("gen-instance-data-point")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse generateInstanceDataPoints(@Body InstanceDataGenRequest request) throws Exception {
+    log.info("generateInstanceDataPoint timestamp: {}, accountId: {}, dataPoint :{}", request.getTimestamp(),
+        request.getAccountId(), request.getDataMap());
+
+    instanceEventProcessor.generateInstanceDPs(request.getTimestamp(), request.getAccountId(), request.getDataMap());
+
+    log.info("Instance Data Points generation completed");
+    return Builder.aRestResponse()
+        .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message("SUCCESS").build()))
+        .build();
+  }
 
   @PUT
   @Path("instance-recon-per-account")
