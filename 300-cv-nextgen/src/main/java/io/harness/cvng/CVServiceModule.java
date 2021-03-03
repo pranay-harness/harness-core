@@ -50,54 +50,8 @@ import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
 import io.harness.cvng.core.jobs.OrganizationChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.core.services.api.AppDynamicsService;
-import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.CVConfigTransformer;
-import io.harness.cvng.core.services.api.CVEventService;
-import io.harness.cvng.core.services.api.CVNGLogService;
-import io.harness.cvng.core.services.api.CVSetupService;
-import io.harness.cvng.core.services.api.DSConfigService;
-import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
-import io.harness.cvng.core.services.api.DeleteEntityByHandler;
-import io.harness.cvng.core.services.api.DeletedCVConfigService;
-import io.harness.cvng.core.services.api.HostRecordService;
-import io.harness.cvng.core.services.api.LogRecordService;
-import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
-import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
-import io.harness.cvng.core.services.api.OnboardingService;
-import io.harness.cvng.core.services.api.SplunkService;
-import io.harness.cvng.core.services.api.StackdriverService;
-import io.harness.cvng.core.services.api.TimeSeriesRecordService;
-import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.core.services.api.WebhookService;
-import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
-import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
-import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
-import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.CVEventServiceImpl;
-import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
-import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
-import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
-import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
-import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
-import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
-import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
-import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
-import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
-import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
-import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
-import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
-import io.harness.cvng.core.services.impl.SplunkServiceImpl;
-import io.harness.cvng.core.services.impl.StackdriverCVConfigTransformer;
-import io.harness.cvng.core.services.impl.StackdriverDataCollectionInfoMapper;
-import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
-import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
-import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
-import io.harness.cvng.core.services.impl.WebhookServiceImpl;
+import io.harness.cvng.core.services.api.*;
+import io.harness.cvng.core.services.impl.*;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -127,6 +81,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.repositories.DocumentOne;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
@@ -167,6 +122,7 @@ public class CVServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(FeatureFlagModule.getInstance());
+    install(new CVNGPersistenceModule());
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
@@ -310,6 +266,7 @@ public class CVServiceModule extends AbstractModule {
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER)
           .to(StackDriverCVConfigUpdatableEntity.class);
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+      bind(DocumentOneService.class).to(DocumentOneServiceImpl.class);
 
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);

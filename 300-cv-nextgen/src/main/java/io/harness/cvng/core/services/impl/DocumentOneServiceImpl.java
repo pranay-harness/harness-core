@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.cvng.core.entities.DocumentOne;
-import io.harness.cvng.core.repo.DocumentOneRepo;
 import io.harness.cvng.core.services.api.DocumentOneService;
+import io.harness.repositories.DocumentOne;
+import io.harness.repositories.repo.DocumentOneRepo;
 
 import com.google.inject.Inject;
 import java.util.List;

@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.api;
 
-import io.harness.cvng.core.entities.DocumentOne;
+import io.harness.repositories.DocumentOne;
 
 import java.util.List;
 
