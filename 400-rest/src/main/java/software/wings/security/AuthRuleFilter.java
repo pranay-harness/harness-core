@@ -308,8 +308,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
-    if (!isApiKeyAuthorized
-        && (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes))) {
+    if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+      if (isApiKeyAuthorized) {
+        return;
+      }
       UserRequestContext userRequestContext =
           buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
       user.setUserRequestContext(userRequestContext);

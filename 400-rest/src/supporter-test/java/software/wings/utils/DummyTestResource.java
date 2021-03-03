@@ -6,6 +6,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import io.harness.rest.RestResponse;
 
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 
 @AuthRule(permissionType = LOGGED_IN)
@@ -19,6 +20,11 @@ public class DummyTestResource {
 
   // No annotations are added here, in order to test the class level ones
   public RestResponse<Void> testMultipleClassAnnotations() {
+    return new RestResponse<>();
+  }
+
+  @ApiKeyAuthorized
+  public RestResponse<Void> testApiKeyAuthorizationAnnotation() {
     return new RestResponse<>();
   }
 }
