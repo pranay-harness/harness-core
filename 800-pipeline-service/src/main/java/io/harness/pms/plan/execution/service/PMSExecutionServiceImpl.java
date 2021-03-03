@@ -146,10 +146,12 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
-  public InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId) {
+  public InterruptDTO registerInterrupt(
+      PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
     InterruptPackage interruptPackage = InterruptPackage.builder()
                                             .interruptType(executionInterruptType.getExecutionInterruptType())
                                             .planExecutionId(planExecutionId)
+                                            .nodeExecutionId(nodeExecutionId)
                                             .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()

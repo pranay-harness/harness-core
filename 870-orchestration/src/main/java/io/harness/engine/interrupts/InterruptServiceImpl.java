@@ -110,4 +110,10 @@ public class InterruptServiceImpl implements InterruptService {
     return interruptRepository.findByPlanExecutionIdAndStateInOrderByCreatedAtDesc(
         planExecutionId, EnumSet.of(REGISTERED, PROCESSING));
   }
+
+  @Override
+  public List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId) {
+    return interruptRepository.findByPlanExecutionIdAndNodeExecutionIdAndStateInOrderByCreatedAtDesc(
+        planExecutionId, nodeExecutionId, EnumSet.of(REGISTERED, PROCESSING));
+  }
 }
