@@ -1,12 +1,9 @@
 package io.harness;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
-import io.harness.persistence.PersistentEntity;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -15,15 +12,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(PL)
 @Slf4j
 class ChangeEventProcessor {
+  @Inject private Set<CDCEntity<?>> subscribedClasses;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue = new LinkedBlockingQueue<>(1000);
   private ExecutorService changeEventExecutorService =
       Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("primary-change-processor").build());
   private Future<?> changeEventProcessorTaskFuture;
 
-  void startProcessingChangeEvents(Set<Class<? extends PersistentEntity>> subscribedClasses) {
+  void startProcessingChangeEvents() {
     ChangeEventProcessorTask changeEventProcessorTask =
         new ChangeEventProcessorTask(subscribedClasses, changeEventQueue);
     changeEventProcessorTaskFuture = changeEventExecutorService.submit(changeEventProcessorTask);

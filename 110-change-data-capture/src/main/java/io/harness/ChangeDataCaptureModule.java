@@ -1,5 +1,6 @@
 package io.harness;
 
+import io.harness.entities.ApplicationCDCEntity;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -13,6 +14,8 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.Collections;
@@ -44,8 +47,14 @@ public class ChangeDataCaptureModule extends AbstractModule {
         .annotatedWith(Names.named("TimeScaleDBConfig"))
         .toInstance(config.getTimeScaleDBConfig() != null ? config.getTimeScaleDBConfig()
                                                           : TimeScaleDBConfig.builder().build());
-
+    bindEntities();
     install(new RegistrarsModule());
+  }
+
+  private void bindEntities() {
+    Multibinder<CDCEntity<?>> cdcEntityMultibinder =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<CDCEntity<?>>() {});
+    cdcEntityMultibinder.addBinding().to(ApplicationCDCEntity.class);
   }
 
   @Provides

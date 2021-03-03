@@ -1,5 +1,5 @@
 harness-mongo:
-  uri: mongodb://localhost:30003/harness
+  uri: mongodb://localhost:30001/harness
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
@@ -7,7 +7,7 @@ harness-mongo:
   indexManagerMode: AUTO
 
 events-mongo:
-  uri: mongodb://localhost:30003/events
+  uri: mongodb://localhost:30001/events
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000

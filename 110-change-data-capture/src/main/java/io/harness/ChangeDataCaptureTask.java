@@ -25,13 +25,9 @@ public class ChangeDataCaptureTask {
   }
 
   public boolean run() throws InterruptedException {
-    // Register all SubscribedClasses for CDC
-    Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
-    subscribedClasses.add(Application.class);
-
     log.info("Initializing change listeners for CDC entities");
-    changeDataCaptureHelper.startChangeListeners(getChangeSubscriber(), subscribedClasses);
-    changeEventProcessor.startProcessingChangeEvents(subscribedClasses);
+    changeDataCaptureHelper.startChangeListeners(getChangeSubscriber());
+    changeEventProcessor.startProcessingChangeEvents();
     boolean isAlive = true;
     while (!Thread.currentThread().isInterrupted() && isAlive) {
       Thread.sleep(2000);

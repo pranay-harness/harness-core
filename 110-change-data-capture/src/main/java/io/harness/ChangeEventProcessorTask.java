@@ -17,16 +17,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.Strings;
 
 @Slf4j
 public class ChangeEventProcessorTask implements Runnable {
   private ExecutorService executorService;
-  private Set<Class<? extends PersistentEntity>> subscribedClasses;
+  private Set<CDCEntity<?>> cdcEntities;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue;
 
-  ChangeEventProcessorTask(
-      Set<Class<? extends PersistentEntity>> subscribedClasses, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
-    this.subscribedClasses = subscribedClasses;
+  ChangeEventProcessorTask(Set<CDCEntity<?>> cdcEntities, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
+    this.cdcEntities = cdcEntities;
     this.changeEventQueue = changeEventQueue;
   }
 
@@ -66,22 +66,27 @@ public class ChangeEventProcessorTask implements Runnable {
   private Callable<Boolean> getProcessChangeEventTask(
       ChangeHandler changeHandler, ChangeEvent changeEvent, Class<? extends PersistentEntity> clazz) {
     return ()
-               -> changeHandler.handleChange(
-                   changeEvent, getChangeDataCaptureDataDestinationTable(clazz), getChangeDataCaptureFields(clazz));
+               -> changeHandler.handleChange(changeEvent,
+                   Strings.toLowerCase(getChangeDataCaptureDataDestinationTable(clazz)),
+                   getChangeDataCaptureFields(clazz));
   }
 
   private boolean processChange(ChangeEvent<?> changeEvent) {
     List<Future<Boolean>> processChangeEventTaskFutures = new ArrayList<>();
     Class<? extends PersistentEntity> clazz = changeEvent.getEntityType();
-
     ChangeDataCaptureSink[] changeDataCaptureDataSinks = getChangeDataCaptureDataSinks(clazz);
-    for (ChangeDataCaptureSink changeDataCaptureDataSink : changeDataCaptureDataSinks) {
-      ChangeHandler changeHandler = null;
-      if (changeDataCaptureDataSink == ChangeDataCaptureSink.TIMESCALE) {
-        changeHandler = new TimeScaleDBChangeHandler();
+
+    for (CDCEntity<?> cdcEntity : cdcEntities) {
+      if (cdcEntity.getSubscriptionEntity().equals(clazz)) {
+        for (ChangeDataCaptureSink changeDataCaptureDataSink : changeDataCaptureDataSinks) {
+          ChangeHandler changeHandler = null;
+          if (changeDataCaptureDataSink == ChangeDataCaptureSink.TIMESCALE) {
+            changeHandler = cdcEntity.getTimescaleChangeHandler();
+          }
+          Callable<Boolean> processChangeEventTask = getProcessChangeEventTask(changeHandler, changeEvent, clazz);
+          processChangeEventTaskFutures.add(executorService.submit(processChangeEventTask));
+        }
       }
-      Callable<Boolean> processChangeEventTask = getProcessChangeEventTask(changeHandler, changeEvent, clazz);
-      processChangeEventTaskFutures.add(executorService.submit(processChangeEventTask));
     }
 
     for (Future<Boolean> processChangeEventFuture : processChangeEventTaskFutures) {

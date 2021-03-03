@@ -709,7 +709,6 @@
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" name="Maven: cglib:cglib-nodep:3.1" level="project" />
     <orderEntry type="library" name="Maven: org.objenesis:objenesis:2.6" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: software.wings:960-persistence:test-jar:tests:0.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: software.wings:990-commons-test:0.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.bettercloud:vault-java-driver:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.mockito:mockito-core:1.10.19" level="project" />

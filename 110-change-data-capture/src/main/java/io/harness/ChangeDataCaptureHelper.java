@@ -13,10 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ChangeDataCaptureHelper {
   @Inject private ChangeTracker changeTracker;
+  @Inject private Set<CDCEntity<?>> cdcEntities;
 
-  void startChangeListeners(
-      ChangeSubscriber changeSubscriber, Set<Class<? extends PersistentEntity>> subscribedClasses) {
+  void startChangeListeners(ChangeSubscriber changeSubscriber) {
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
+    Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
+    cdcEntities.forEach(cdcEntity -> subscribedClasses.add(cdcEntity.getSubscriptionEntity()));
 
     for (Class<? extends PersistentEntity> subscribedClass : subscribedClasses) {
       ChangeTrackingInfo<?> changeTrackingInfo = new ChangeTrackingInfo<>(subscribedClass, changeSubscriber);
