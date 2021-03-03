@@ -25,6 +25,8 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId);
 
+  List<NodeExecution> fetchNodeExecutionsWithoutOldRetriesAndStatusIn(String planExecutionId, EnumSet<Status> statuses);
+
   List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId);
 
   List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String parentId);
@@ -59,4 +61,10 @@ public interface NodeExecutionService {
   Optional<NodeExecution> getByNodeIdentifier(@NonNull String nodeIdentifier, @NonNull String planExecutionId);
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
+
+  List<NodeExecution> findAllChildrenWithStatusIn(
+      String planExecutionId, String parentId, EnumSet<Status> flowingStatuses, boolean includeParent);
+
+  List<NodeExecution> fetchNodeExecutionsByStatusAndIdIn(
+      String planExecutionId, Status discontinuing, List<String> targetIds);
 }

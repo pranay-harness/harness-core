@@ -20,7 +20,8 @@ public interface PMSExecutionService {
 
   OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
 
-  InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId);
+  InterruptDTO registerInterrupt(
+      PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId);
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
