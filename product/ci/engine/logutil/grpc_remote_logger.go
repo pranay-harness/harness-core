@@ -5,17 +5,9 @@ import (
 	"github.com/wings-software/portal/product/ci/common/external"
 )
 
-var (
-	getLogKey = external.GetLogKey
-)
-
 // GetGrpcRemoteLogger is a helper method that returns a logger than can communicate with the
 // gRPC log server hosted on lite engine.
-func GetGrpcRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
-	key, err := getLogKey(stepID)
-	if err != nil {
-		return nil, err
-	}
+func GetGrpcRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	grpcClient, err := NewGrpcRemoteClient()
 	if err != nil {
 		return nil, err

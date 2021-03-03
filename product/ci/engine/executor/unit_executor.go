@@ -186,7 +186,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_SaveCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -197,7 +197,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RestoreCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -207,7 +207,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
