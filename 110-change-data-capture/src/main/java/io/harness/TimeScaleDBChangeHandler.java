@@ -65,6 +65,8 @@ public class TimeScaleDBChangeHandler implements ChangeHandler {
     return columnValueMapping;
   }
 
+  // https://www.codeproject.com/articles/779373/generic-functions-to-generate-insert-update-delete Generic Function
+  // Adapted from here
   public static String insertSQL(String tableName, Map<String, String> columnValueMappingForInsert) {
     StringBuilder insertSQLBuilder = new StringBuilder();
 
