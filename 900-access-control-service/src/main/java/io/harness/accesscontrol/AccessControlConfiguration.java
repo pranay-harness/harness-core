@@ -1,8 +1,9 @@
 package io.harness.accesscontrol;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.accesscontrol.principals.user.UserClientConfiguration;
+import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.mongo.MongoConfig;
-import io.harness.remote.client.ServiceHttpClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -35,8 +36,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
-  @JsonProperty("resourceGroupServiceConfig") private ServiceHttpClientConfig resourceGroupServiceConfig;
-  @JsonProperty("resourceGroupServiceSecret") private String resourceGroupServiceSecret;
+  @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
+  @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
 
   public AccessControlConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
