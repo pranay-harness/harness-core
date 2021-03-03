@@ -2,7 +2,7 @@ package io.harness.outbox.api.impl;
 
 import io.harness.outbox.Outbox;
 import io.harness.outbox.api.OutboxService;
-import io.harness.outbox.repositories.OutboxRepository;
+import io.harness.repositories.OutboxRepository;
 
 import com.google.inject.Inject;
 import java.util.List;

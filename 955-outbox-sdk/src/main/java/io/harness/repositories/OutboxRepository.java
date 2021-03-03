@@ -1,4 +1,4 @@
-package io.harness.outbox.repositories;
+package io.harness.repositories;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.outbox.Outbox;

@@ -27,7 +27,7 @@ import org.springframework.guice.annotation.GuiceModule;
 
 @Configuration
 @GuiceModule
-@EnableMongoRepositories(basePackages = {"io.harness.repositories", "io.harness.outbox.repositories"},
+@EnableMongoRepositories(basePackages = {"io.harness.repositories"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "primary")
 @EnableMongoAuditing
 public class SpringPersistenceConfig extends AbstractMongoConfiguration {
