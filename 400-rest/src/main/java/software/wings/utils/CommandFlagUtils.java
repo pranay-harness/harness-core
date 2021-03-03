@@ -24,7 +24,7 @@ public class CommandFlagUtils {
   public static HelmSubCommand getHelmSubCommand(HelmVersion version, String commandType) {
     Set<HelmSubCommand> subCommands = getHelmSubCommands(version);
     for (HelmSubCommand subCommand : subCommands) {
-      Set<String> commandTypes = subCommand.getCommandTypes();
+      Set<String> commandTypes = subCommand.getSubCommandType().getCommandTypes();
       if (commandTypes.contains(commandType)) {
         return subCommand;
       }
