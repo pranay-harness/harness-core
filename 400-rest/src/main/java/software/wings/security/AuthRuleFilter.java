@@ -9,6 +9,8 @@ import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
 import static io.harness.exception.WingsException.USER;
 
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+
 import static java.util.Arrays.asList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
@@ -17,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -34,12 +37,14 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
+import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.annotations.AdminPortalAuth;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -259,9 +264,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
+    boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
     if (user == null) {
       if (isExternalApi) {
         return;
+      } else if (isApiKeyAuthorized) {
+        String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
+        if (isEmpty(apiKey)) {
+          return;
+        }
+        user = setUserAndUserRequestContextUsingApiKey(
+            apiKey, accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest);
       } else {
         log.warn("No user context in operation: {}", uriPath);
         throw new AccessDeniedException("No user context set", USER);
@@ -271,7 +284,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     String httpMethod = requestContext.getMethod();
     List<PermissionAttribute> requiredPermissionAttributes;
     boolean harnessSupportUser = false;
-    if (!userService.isUserAssignedToAccount(user, accountId)) {
+    if (!isApiKeyAuthorized && !userService.isUserAssignedToAccount(user, accountId)) {
       if (!isHarnessUserExemptedRequest && !httpMethod.equals(HttpMethod.GET.name())) {
         if (httpMethod.equals(HttpMethod.POST.name())) {
           if (!isGraphQLRequest(uriPath)) {
@@ -295,7 +308,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
     requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
-    if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+    if (!isApiKeyAuthorized
+        && (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes))) {
       UserRequestContext userRequestContext =
           buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
       user.setUserRequestContext(userRequestContext);
@@ -312,9 +326,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     boolean skipAuth = skipAuth(requiredPermissionAttributes);
     boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
 
-    UserRequestContext userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId,
-        emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions, harnessSupportUser);
-    user.setUserRequestContext(userRequestContext);
+    UserRequestContext userRequestContext;
+    if (!isApiKeyAuthorized) {
+      userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId, emptyAppIdsInReq,
+          httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions, harnessSupportUser);
+      user.setUserRequestContext(userRequestContext);
+    } else {
+      userRequestContext = user.getUserRequestContext();
+    }
 
     if (!skipAuth) {
       if (accountLevelPermissions) {
@@ -616,6 +635,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(ExternalFacingApiAuth.class) != null;
   }
 
+  protected boolean apiKeyAuthorizationAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ApiKeyAuthorized.class) != null
+        || resourceClass.getAnnotation(ApiKeyAuthorized.class) != null;
+  }
+
   private boolean delegateAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
@@ -726,5 +753,81 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
 
     return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) != null;
+  }
+
+  private User setUserAndUserRequestContextUsingApiKey(String apiKey, String accountId,
+      ContainerRequestContext requestContext, boolean emptyAppIdsInReq, List<String> appIdsFromRequest) {
+    if (accountId == null) {
+      throw new InvalidRequestException("accountId not specified", USER);
+    }
+
+    User user = new User();
+    ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+    if (apiKeyEntry == null) {
+      throw new InvalidRequestException("Invalid Api Key provided", USER);
+    }
+
+    UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
+    UserRestrictionInfo apiKeyRestrictions =
+        apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
+    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+    String httpMethod = requestContext.getMethod();
+    List<ResourceType> requiredResourceTypes = getAllResourceTypes();
+    boolean isScopedToApp = isPresent(requiredResourceTypes, ResourceType.APPLICATION);
+    boolean skipAuth = skipAuth(requiredPermissionAttributes);
+
+    if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+      UserRequestContext userRequestContext = buildUserRequestContext(
+          apiKeyPermissions, apiKeyRestrictions, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
+      user.setUserRequestContext(userRequestContext);
+      UserThreadLocal.set(user);
+      return user;
+    }
+
+    boolean isAccountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
+    UserRequestContext userRequestContext =
+        buildUserRequestContext(apiKeyPermissions, apiKeyRestrictions, requiredPermissionAttributes, accountId,
+            emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, isAccountLevelPermissions, isScopedToApp);
+    user.setUserRequestContext(userRequestContext);
+    UserThreadLocal.set(user);
+    return user;
+  }
+
+  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String accountId,
+      boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
+      boolean accountLevelPermissions, boolean isScopeToApp) {
+    UserRequestContext userRequestContext = buildUserRequestContext(
+        userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
+
+    if (!accountLevelPermissions) {
+      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
+          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
+    }
+    return userRequestContext;
+  }
+
+  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
+      List<String> appIdsFromRequest) {
+    UserRequestContextBuilder userRequestContextBuilder =
+        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
+
+    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
+
+    if (isScopedToApp) {
+      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+      if (emptyAppIdsInReq) {
+        userRequestContextBuilder.appIdFilterRequired(true);
+        userRequestContextBuilder.appIds(allowedAppIds);
+      } else {
+        if (isEmpty(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
+          throw new WingsException(ErrorCode.ACCESS_DENIED);
+        }
+      }
+    }
+
+    return userRequestContextBuilder.build();
   }
 }
