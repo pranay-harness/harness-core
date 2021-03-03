@@ -13,7 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorDetailsKeys")
-@Document("gitToHarnessErrorDetails")
+@Document("gitToHarnessErrorDetailsNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitToHarnessErrorDetails")
 public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
   private String gitCommitId;

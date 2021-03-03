@@ -14,8 +14,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "gitSyncMetadata", noClassnameStored = true)
-@Document("gitSyncMetadata")
+@Entity(value = "gitSyncMetadataNG", noClassnameStored = true)
+@Document("gitSyncMetadataNG")
 @TypeAlias("io.harness.gitsync.core.beans.gitSyncMetadata")
 public class GitSyncMetadata {
   String gitConnectorId;

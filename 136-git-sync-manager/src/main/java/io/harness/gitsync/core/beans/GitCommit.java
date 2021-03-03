@@ -33,8 +33,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "gitCommit", noClassnameStored = true)
-@Document("gitCommit")
+@Entity(value = "gitCommitNG", noClassnameStored = true)
+@Document("gitCommitNG")
 @TypeAlias("io.harness.gitsync.core.beans.gitCommit")
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

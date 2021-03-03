@@ -5,13 +5,13 @@ import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
+import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
 import io.harness.gitsync.core.impl.YamlGitServiceImpl;
-import io.harness.gitsync.core.impl.YamlSuccessfulChangeServiceImpl;
 import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.gitsync.core.service.GitSyncTriggerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
-import io.harness.gitsync.core.service.YamlSuccessfulChangeService;
 import io.harness.gitsync.gitfileactivity.impl.GitSyncServiceImpl;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
@@ -38,12 +38,12 @@ public class GitSyncModule extends AbstractModule {
   protected void configure() {
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
-    bind(YamlSuccessfulChangeService.class).to(YamlSuccessfulChangeServiceImpl.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
     bind(GitCommitService.class).to(GitCommitServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(GitEntityService.class).to(GitEntityServiceImpl.class);
+    bind(GitSyncTriggerService.class).to(GitSyncTriggerServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
