@@ -16,6 +16,7 @@ import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.advisers.NextStepAdvise.Builder;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -81,16 +82,19 @@ public class RetryAdviser implements Adviser {
             .setType(AdviseType.INTERVENTION_WAIT)
             .build();
       case END_EXECUTION:
-        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+        return adviserResponseBuilder.setEndPlanAdvise(EndPlanAdvise.newBuilder().setIsAbort(true).build())
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
-      case ON_FAIL:
         Builder builder = NextStepAdvise.newBuilder();
         if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
           builder.setNextNodeId(parameters.getNextNodeId());
         }
+        builder.setToStatus(Status.IGNORE_FAILED);
         return adviserResponseBuilder.setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
+      case ON_FAIL:
+        Builder nextStepAdvise = NextStepAdvise.newBuilder();
+        return adviserResponseBuilder.setNextStepAdvise(nextStepAdvise.build()).setType(AdviseType.NEXT_STEP).build();
       case MARK_AS_SUCCESS:
         MarkSuccessAdvise.Builder markSuccessBuilder = MarkSuccessAdvise.newBuilder();
         if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
