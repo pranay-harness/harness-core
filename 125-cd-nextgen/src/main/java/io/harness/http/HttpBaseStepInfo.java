@@ -2,7 +2,6 @@ package io.harness.http;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
@@ -22,5 +21,4 @@ public class HttpBaseStepInfo {
   List<HttpHeaderConfig> headers;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> requestBody;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> assertion;
-  List<NGVariable> outputVariables;
 }
