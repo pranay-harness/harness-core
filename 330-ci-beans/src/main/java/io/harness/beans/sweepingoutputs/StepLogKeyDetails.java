@@ -15,15 +15,14 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("stepTaskDetails")
-@JsonTypeName("stepTaskDetails")
-public class StepTaskDetails implements SweepingOutput {
-  Map<String, String> taskIds;
-  List<String> logKeys;
+@TypeAlias("stepLogKeyDetails")
+@JsonTypeName("stepLogKeyDetails")
+public class StepLogKeyDetails implements SweepingOutput {
+  Map<String, List<String>> logKeys;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @Override
   public String getType() {
-    return "stepTaskDetails";
+    return "stepLogKeyDetails";
   }
 }

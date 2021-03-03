@@ -21,7 +21,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
 
   @Override
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
 
@@ -50,6 +50,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setPlugin(pluginStep)
+        .setLogKey(logKey)
         .build();
   }
 }
