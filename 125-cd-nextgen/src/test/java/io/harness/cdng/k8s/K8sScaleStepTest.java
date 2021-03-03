@@ -68,7 +68,7 @@ public class K8sScaleStepTest extends CategoryTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
-    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(storeConfig, ambiance);
+    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
   }
 
   @Test
@@ -98,7 +98,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -145,7 +145,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
+import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.k8s.K8sConstants.KUBERNETES_CHANGE_CAUSE_ANNOTATION;
 import static io.harness.k8s.K8sConstants.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
@@ -30,6 +31,7 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.LogWeight.Normal;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -62,6 +64,7 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitOperationException;
@@ -70,6 +73,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
+import io.harness.helm.HelmCommandTemplateFactory;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -88,6 +95,7 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -2046,5 +2054,114 @@ public class K8sTaskHelperBase {
       }
     });
     return allPods;
+  }
+
+  public List<FileData> renderTemplateForHelm(String helmPath, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
+      long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+    try (LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+      String helmTemplateCommand = getHelmCommandForRender(
+          helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion, helmCommandFlag);
+      printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+      ProcessResult processResult =
+          executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+      if (processResult.getExitValue() != 0) {
+        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+      }
+
+      result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
+    }
+
+    return result;
+  }
+
+  public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,
+      List<String> chartFiles, List<String> valuesFiles, String releaseName, String namespace,
+      LogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis, HelmCommandFlag helmCommandFlag)
+      throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+
+    for (String chartFile : chartFiles) {
+      if (K8sTaskHelperBase.isValidManifestFile(chartFile)) {
+        try (LogOutputStream logErrorStream =
+                 K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+          String helmTemplateCommand = getHelmCommandForRender(helmPath, manifestFilesDirectory, releaseName, namespace,
+              valuesFileOptions, chartFile, helmVersion, helmCommandFlag);
+          printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+          ProcessResult processResult =
+              executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+          if (processResult.getExitValue() != 0) {
+            throw new WingsException(format("Failed to render chart file [%s]", chartFile));
+          }
+
+          result.add(FileData.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
+        }
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", chartFile), Yellow, Bold));
+      }
+    }
+
+    return result;
+  }
+
+  private void printHelmPath(LogCallback executionLogCallback, final String helmPath) {
+    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
+    executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
+  }
+
+  private void printHelmTemplateCommand(LogCallback executionLogCallback, final String helmTemplateCommand) {
+    executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
+    executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, String chartFile, HelmVersion helmVersion, HelmCommandFlag helmCommandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, chartFile, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap =
+        helmCommandFlag != null ? helmCommandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, HelmVersion helmVersion, HelmCommandFlag commandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_CHART;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, EMPTY, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap = commandFlag != null ? commandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  private String replacePlaceHoldersInHelmTemplateCommand(String unrenderedCommand, String helmPath,
+      String chartLocation, String releaseName, String namespace, String chartFile, String valueOverrides) {
+    return unrenderedCommand.replace(HELM_PATH_PLACEHOLDER, helmPath)
+        .replace("${CHART_LOCATION}", chartLocation)
+        .replace("${CHART_FILE}", chartFile)
+        .replace("${RELEASE_NAME}", releaseName)
+        .replace("${NAMESPACE}", namespace)
+        .replace("${OVERRIDE_VALUES}", valueOverrides);
   }
 }

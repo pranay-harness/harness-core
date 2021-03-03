@@ -43,6 +43,7 @@ type runTestsStep struct {
 	packages             string             // Packages ti will generate callgraph for
 	annotations          string             // Annotations to identify tests for instrumentation
 	cntrPort             uint32             // Container for running ti port
+	logKey               string             // Log key
 	stepCtx              *pb.StepContext    // Step context
 	so                   output.StageOutput // Output variables of the stage
 	log                  *zap.SugaredLogger // Logger
@@ -71,6 +72,7 @@ func NewRunTestsStep(step *pb.UnitStep, tempPath string, so output.StageOutput,
 		tempPath:             tempPath,
 		so:                   so,
 		log:                  log,
+		logKey:               step.GetLogKey(),
 	}
 }
 
@@ -269,6 +271,7 @@ func (e *runTestsStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 					EnvVarOutputs: e.envVarOutputs,
 				},
 			},
+			LogKey: e.logKey,
 		},
 		TmpFilePath: e.tempPath,
 	}

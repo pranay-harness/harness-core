@@ -7,18 +7,18 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -34,44 +34,49 @@ import org.mongodb.morphia.annotations.Id;
 @Data
 @Builder
 @Entity(value = "instanceData", noClassnameStored = true)
-
-@CdIndex(name = "accountId_clusterId_instanceId_instanceState",
-    fields =
-    {
-      @Field(InstanceDataKeys.accountId)
-      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceId), @Field(InstanceDataKeys.instanceState)
-    })
-@CdIndex(name = "accountId_clusterId_instanceName_usageStartTime",
-    fields =
-    {
-      @Field(InstanceDataKeys.accountId)
-      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceName),
-          @Field(value = InstanceDataKeys.usageStartTime, type = IndexType.DESC)
-    })
-@CdIndex(name = "accountId_clusterId_instanceState_usageStartTime",
-    fields =
-    {
-      @Field(InstanceDataKeys.accountId)
-      , @Field(InstanceDataKeys.clusterId), @Field(InstanceDataKeys.instanceState),
-          @Field(value = InstanceDataKeys.usageStartTime)
-    })
-@CdIndex(name = "accountId_instancetype_usageStartTime_usageStopTime",
-    fields =
-    {
-      @Field(InstanceDataKeys.accountId)
-      , @Field(InstanceDataKeys.instanceType), @Field(value = InstanceDataKeys.usageStartTime),
-          @Field(value = InstanceDataKeys.usageStopTime)
-    })
-@CdIndex(name = "accountId_usageStartTime_usageStopTime",
-    fields =
-    {
-      @Field(InstanceDataKeys.accountId)
-      , @Field(value = InstanceDataKeys.usageStartTime), @Field(value = InstanceDataKeys.usageStopTime)
-    })
 @FieldNameConstants(innerTypeName = "InstanceDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_usageStartTime_usageStopTime")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.usageStartTime)
+                 .field(InstanceDataKeys.usageStopTime)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_instancetype_usageStartTime_usageStopTime")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.instanceType)
+                 .field(InstanceDataKeys.usageStartTime)
+                 .field(InstanceDataKeys.usageStopTime)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_clusterId_instanceState_usageStartTime")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.clusterId)
+                 .field(InstanceDataKeys.instanceState)
+                 .field(InstanceDataKeys.usageStartTime)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_clusterId_instanceName_usageStartTime")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.clusterId)
+                 .field(InstanceDataKeys.instanceName)
+                 .descSortField(InstanceDataKeys.usageStartTime)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_clusterId_instanceId_instanceState")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.clusterId)
+                 .field(InstanceDataKeys.instanceId)
+                 .field(InstanceDataKeys.instanceState)
+                 .build())
+        .build();
+  }
+
   @Id String uuid;
   String accountId;
   String settingId;
@@ -84,6 +89,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   Resource totalResource;
   Resource limitResource;
   Resource allocatableResource;
+  Resource pricingResource;
   StorageResource storageResource;
   List<String> pvcClaimNames;
   List<Container> containerList;

@@ -154,21 +154,23 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
       Timestamp creationTimestamp = HTimestamps.fromMillis(pod.getMetadata().getCreationTimestamp().getMillis());
 
-      PodInfo podInfo = PodInfo.newBuilder(podInfoPrototype)
-                            .setPodUid(uid)
-                            .setPodName(pod.getMetadata().getName())
-                            .setNamespace(pod.getMetadata().getNamespace())
-                            .setNodeName(pod.getSpec().getNodeName())
-                            .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
-                            .addAllVolume(getAllVolumes(pod))
-                            .setQosClass(pod.getStatus().getQosClass())
-                            .setCreationTimestamp(creationTimestamp)
-                            .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
-                            .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
-                            .putAllNamespaceLabels(firstNonNull(
-                                getNamespaceLabels(pod.getMetadata().getNamespace()), Collections.emptyMap()))
-                            .setTopLevelOwner(controllerFetcher.getTopLevelOwner(pod))
-                            .build();
+      PodInfo podInfo =
+          PodInfo.newBuilder(podInfoPrototype)
+              .setPodUid(uid)
+              .setPodName(pod.getMetadata().getName())
+              .setNamespace(pod.getMetadata().getNamespace())
+              .setNodeName(pod.getSpec().getNodeName())
+              .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
+              .addAllVolume(getAllVolumes(pod))
+              .setQosClass(pod.getStatus().getQosClass())
+              .setCreationTimestamp(creationTimestamp)
+              .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
+              .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
+              .putAllMetadataAnnotations(firstNonNull(pod.getMetadata().getAnnotations(), Collections.emptyMap()))
+              .putAllNamespaceLabels(
+                  firstNonNull(getNamespaceLabels(pod.getMetadata().getNamespace()), Collections.emptyMap()))
+              .setTopLevelOwner(controllerFetcher.getTopLevelOwner(pod))
+              .build();
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));

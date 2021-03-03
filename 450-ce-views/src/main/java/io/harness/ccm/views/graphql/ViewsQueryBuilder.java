@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ViewsQueryBuilder {
   public static final String K8S_NODE = "K8S_NODE";
   public static final String K8S_POD = "K8S_POD";
+  public static final String K8S_POD_FARGATE = "K8S_POD_FARGATE";
   public static final String K8S_PV = "K8S_PV";
   public static final String ECS_TASK_FARGATE = "ECS_TASK_FARGATE";
   public static final String ECS_TASK_EC2 = "ECS_TASK_EC2";
@@ -241,10 +242,11 @@ public class ViewsQueryBuilder {
     }
 
     if (isClusterConditionOrFilterPresent) {
-      List<String> instancetypeList = ImmutableList.of(K8S_NODE, K8S_PV, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
+      List<String> instancetypeList =
+          ImmutableList.of(K8S_NODE, K8S_PV, K8S_POD_FARGATE, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
 
       if (isPodFilterPresent || isLabelsOperationPresent) {
-        instancetypeList = ImmutableList.of(K8S_POD, ECS_TASK_FARGATE, ECS_TASK_EC2);
+        instancetypeList = ImmutableList.of(K8S_POD, K8S_POD_FARGATE, ECS_TASK_FARGATE, ECS_TASK_EC2);
       }
 
       String[] instancetypeStringArray = instancetypeList.toArray(new String[instancetypeList.size()]);

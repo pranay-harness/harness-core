@@ -2,6 +2,7 @@ package io.harness.annotations.dev;
 
 public enum Module {
   UNDEFINED,
+  _280_BATCH_PROCESSING,
   _310_CI_MANAGER,
   _320_CI_EXECUTION,
   _330_CI_BEANS,

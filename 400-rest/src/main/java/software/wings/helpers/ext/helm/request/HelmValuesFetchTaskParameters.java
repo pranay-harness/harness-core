@@ -9,10 +9,10 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 
-import software.wings.beans.HelmCommandFlag;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.service.impl.ContainerServiceParams;
 

@@ -831,9 +831,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
-    ScheduledExecutorService taskPollExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
-
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -842,27 +839,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
-                                                injector.getInstance(DelegateSyncServiceImpl.class)),
-        0L, 2L, TimeUnit.SECONDS);
-    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
-      taskPollExecutor.scheduleWithFixedDelay(
-          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
-    }
+
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(), 0L, 10L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
-                                                injector.getInstance(DelegateDisconnectedDetector.class)),
-        0L, 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
-                                                injector.getInstance(ProgressUpdateService.class)),
-        0L, 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
@@ -871,6 +851,14 @@ public class WingsApplication extends Application<MainConfiguration> {
             .add(Activity.class)
             .add(Log.class)
             .build();
+
+    ScheduledExecutorService taskPollExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
+
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
+      taskPollExecutor.scheduleWithFixedDelay(
+          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+    }
 
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed ensure data retention",
@@ -887,6 +875,26 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
         0L, 5L, TimeUnit.MINUTES);
+
+    ScheduledExecutorService delegateExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
+                                                injector.getInstance(ProgressUpdateService.class)),
+        0L, 5L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
+                                                injector.getInstance(DelegateDisconnectedDetector.class)),
+        0L, 60L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed while broadcasting perpetual tasks",
+            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
+        0L, 10L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
+                                                injector.getInstance(DelegateSyncServiceImpl.class)),
+        0L, 2L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {

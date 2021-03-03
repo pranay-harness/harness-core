@@ -230,6 +230,7 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -238,6 +239,7 @@ import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
@@ -573,6 +575,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpValidationParams.class, 19545);
     kryo.register(AwsCodeCommitTaskParams.class, 19546);
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
+    kryo.register(HelmChartManifestDelegateConfig.class, 19548);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -611,6 +614,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DeleteResourcesType.class, 543257);
     kryo.register(AzureBlueprintDeploymentParameters.class, 543258);
     kryo.register(AzureBlueprintDeploymentResponse.class, 543259);
+    kryo.register(HelmCommandFlag.class, 543260);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

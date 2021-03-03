@@ -692,28 +692,31 @@ public class BillingDataQueryBuilder {
     DbColumn key = getFilterKey(type);
     QLNumberFilter numberFilter = (QLNumberFilter) filter;
 
-    FunctionCall aggregationFunction = FunctionCall.sum();
+    FunctionCall aggregationFn = FunctionCall.sum();
 
     if (type == QLBillingDataFilterType.StorageUtilizationValue) {
-      aggregationFunction = FunctionCall.max();
+      aggregationFn = FunctionCall.max();
     }
 
     switch (numberFilter.getOperator()) {
       case GREATER_THAN:
-        selectQuery.addHaving(
-            BinaryCondition.greaterThan(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.greaterThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case LESS_THAN:
-        selectQuery.addHaving(
-            BinaryCondition.lessThan(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.lessThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case GREATER_THAN_OR_EQUALS:
         selectQuery.addHaving(
-            BinaryCondition.greaterThanOrEq(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+            BinaryCondition.greaterThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case LESS_THAN_OR_EQUALS:
-        selectQuery.addHaving(
-            BinaryCondition.lessThanOrEq(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.lessThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case EQUALS:
+        selectQuery.addHaving(BinaryCondition.equalTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case NOT_EQUALS:
+        selectQuery.addHaving(BinaryCondition.notEqualTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       default:
         throw new InvalidRequestException("Invalid NumberFilter: " + filter.getOperator());
@@ -915,6 +918,7 @@ public class BillingDataQueryBuilder {
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
+          instanceTypes.add("K8S_POD_FARGATE");
           isNodeAndPodQuery = true;
           break;
         case PV:
@@ -1106,6 +1110,7 @@ public class BillingDataQueryBuilder {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
       instanceTypeValues.add("ECS_TASK_FARGATE");
+      instanceTypeValues.add("K8S_POD_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
       instanceTypeValues.add("K8S_PV");
