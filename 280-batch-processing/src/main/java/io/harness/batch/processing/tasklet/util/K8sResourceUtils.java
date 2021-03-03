@@ -46,6 +46,28 @@ public class K8sResourceUtils {
     return Resource.builder().cpuUnits(vCPU * CPU_UNITS).memoryMb(memoryGB * GBI_TO_MBI).build();
   }
 
+  public static double getFargateVCpu(double cpuUnit) {
+    double vCpu = cpuUnit / CPU_UNITS;
+    if (vCpu <= 0.25) {
+      vCpu = 0.25;
+    } else if (vCpu <= 0.5) {
+      vCpu = 0.5;
+    } else {
+      vCpu = Math.ceil(vCpu);
+    }
+    return vCpu;
+  }
+
+  public static double getFargateMemoryGb(double memoryMb) {
+    double memoryGb = memoryMb / GBI_TO_MBI;
+    if (memoryGb <= 0.5) {
+      memoryGb = 0.5;
+    } else {
+      memoryGb = Math.ceil(memoryGb);
+    }
+    return memoryGb;
+  }
+
   public static StorageResource getCapacity(Quantity capacity) {
     return StorageResource.builder().capacity(getMemoryMb(capacity.getAmount())).build();
   }
