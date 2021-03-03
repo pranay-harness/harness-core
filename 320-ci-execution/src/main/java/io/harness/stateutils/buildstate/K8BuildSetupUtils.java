@@ -565,10 +565,8 @@ public class K8BuildSetupUtils {
     GitConnectionType gitConnectionType =
         gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
     String gitUrl = getGitURL(ciCodebase, gitConnectionType, gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_NETRC_MACHINE, domain);
     envVars.put(DRONE_AWS_REGION, getAwsCodeCommitRegion(gitConfigDTO.getUrl()));
     if (gitConfigDTO.getAuthentication().getAuthType() == AwsCodeCommitAuthType.HTTPS) {
       AwsCodeCommitHttpsCredentialsDTO credentials =
