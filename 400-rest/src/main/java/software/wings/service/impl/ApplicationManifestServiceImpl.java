@@ -87,7 +87,7 @@ import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
-import software.wings.utils.CommandFlagUtils;
+import software.wings.utils.CommandFlagConfigUtils;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
@@ -996,7 +996,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     HelmVersion helmVersion = serviceResourceService.getHelmVersionWithDefault(
         applicationManifest.getAppId(), applicationManifest.getServiceId());
     if (null != helmVersion) {
-      CommandFlagUtils.validateHelmCommandFlags(applicationManifest.getHelmCommandFlag(), helmVersion);
+      CommandFlagConfigUtils.validateHelmCommandFlags(applicationManifest.getHelmCommandFlag(), helmVersion);
     }
   }
 
