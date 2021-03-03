@@ -321,6 +321,26 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testWhitelistForGraphqlInAuthRuleFilter() {
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
+    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
+    authRuleFilter.filter(requestContext);
+    assertThat(requestContext.getMethod()).isEqualTo("GET");
+  }
+
+  @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testWhitelistForGraphqlInAuthRuleFilter() {
