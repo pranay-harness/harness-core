@@ -2,6 +2,8 @@ package io.harness.gitsync.common.impl;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.encryption.ScopeHelper.getScope;
+import static io.harness.gitsync.common.YamlConstants.HARNESS_FOLDER_EXTENSION;
+import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitFolderConfig;
@@ -233,6 +235,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   private YamlGitConfigDTO saveInternal(YamlGitConfigDTO ygs) {
+    ensureFolderEndsWithDelimiter(ygs);
+    validateFolderFollowsHarnessParadigm(ygs);
     List<YamlGitFolderConfig> yamlGitFolderConfigs = new ArrayList<>();
     String defaultGitConfig = findDefaultIfPresent(ygs);
     Optional<YamlGitFolderConfig> oldDefaultConfig =
@@ -251,6 +255,26 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     }
 
     return toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(yamlGitFolderConfigs);
+  }
+
+  private void ensureFolderEndsWithDelimiter(YamlGitConfigDTO ygs) {
+    ygs.getRootFolders().forEach(folder -> {
+      if (!folder.getRootFolder().endsWith(PATH_DELIMITER)) {
+        folder.getRootFolder().concat(PATH_DELIMITER);
+      }
+    });
+  }
+
+  private void validateFolderFollowsHarnessParadigm(YamlGitConfigDTO ygs) {
+    final Optional<YamlGitConfigDTO.RootFolder> rootFolder =
+        ygs.getRootFolders()
+            .stream()
+            .filter(
+                config -> config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
+            .findFirst();
+    if (rootFolder.isPresent()) {
+      throw new InvalidRequestException("Incorrect root folder configuration.");
+    }
   }
 
   @Override

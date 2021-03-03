@@ -20,7 +20,6 @@ import io.harness.gitsync.common.dtos.YamlGitConfigGitFileChangeMap;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.dtos.YamlFilterResult;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
@@ -33,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -50,7 +49,6 @@ public class GitChangeSetProcessor {
   private final GitSyncService gitSyncService;
   private final GitCommitService gitCommitService;
   private final YamlGitConfigService yamlGitConfigService;
-  private final ChangeSetRequestTimeFilter changeSetRequestTimeFilter;
   private final YamlService yamlService;
 
   public void processGitChangeSet(
@@ -95,6 +93,7 @@ public class GitChangeSetProcessor {
       preProcessGitFileActivityChanges(processingCommitId, gitDiffResult.getCommitTimeMs(),
           gitDiffResult.getCommitMessage(), yamlGitConfigGitFileChangeMaps);
 
+      final List<GitFileChange> gitDiffResultChangeFiltered = new ArrayList<>();
       // Mark invalid files as SKIPPED
       yamlGitConfigGitFileChangeMaps.forEach(yamlGitConfigGitFileChangeMap -> {
         final List<GitFileChange> gitDiffResultChangeSet = yamlGitConfigGitFileChangeMap.getGitFileChanges();
@@ -104,12 +103,10 @@ public class GitChangeSetProcessor {
 
         gitSyncService.logActivityForSkippedFiles(validFilesBasedOnYamlGitConfigFilter, gitDiffResultChangeSet,
             "Root Folder not configured.", accountId, gitDiffResultChangeSet.get(0).getCommitId());
-        final List<GitFileChange> validFilesAfterChangeRequestTimeFilter = applyChangeRequestTimeFilterAndLogActivity(
-            validFilesBasedOnYamlGitConfigFilter, accountId, yamlGitConfigGitFileChangeMap.getYamlGitConfigDTO());
-        applySyncFromGit(validFilesAfterChangeRequestTimeFilter);
-
-        yamlService.processChangeSet(gitDiffResultChangeSet);
+        applySyncFromGit(validFilesBasedOnYamlGitConfigFilter);
+        gitDiffResultChangeFiltered.addAll(validFilesBasedOnYamlGitConfigFilter);
       });
+      yamlService.processChangeSet(gitDiffResultChangeFiltered);
     }
   }
 
@@ -143,15 +140,6 @@ public class GitChangeSetProcessor {
       gitFileChange.setProcessingCommitMessage(processingCommitMessage);
       gitFileChange.setChangeFromAnotherCommit(!gitFileChange.getCommitId().equalsIgnoreCase(processingCommitId));
     });
-  }
-
-  private List<GitFileChange> applyChangeRequestTimeFilterAndLogActivity(
-      List<GitFileChange> gitFileChanges, String accountId, YamlGitConfigDTO yamlGitConfig) {
-    final YamlFilterResult yamlFilterResult =
-        changeSetRequestTimeFilter.filterFiles(gitFileChanges, accountId, yamlGitConfig);
-    logFileActivityForSkippedFiles(
-        gitFileChanges, MapUtils.emptyIfNull(yamlFilterResult.getExcludedFilePathWithReasonMap()), accountId);
-    return yamlFilterResult.getFilteredFiles();
   }
 
   private void logFileActivityForSkippedFiles(
