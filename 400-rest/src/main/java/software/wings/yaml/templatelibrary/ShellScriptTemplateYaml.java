@@ -2,6 +2,9 @@ package software.wings.yaml.templatelibrary;
 
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -15,6 +18,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(SHELL_SCRIPT)
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(Module._870_CG_YAML_BEANS)
 public class ShellScriptTemplateYaml extends TemplateLibraryYaml {
   private String scriptType;
   private String scriptString;

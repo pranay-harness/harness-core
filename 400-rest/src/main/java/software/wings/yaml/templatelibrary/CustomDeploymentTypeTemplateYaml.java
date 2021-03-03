@@ -2,6 +2,9 @@ package software.wings.yaml.templatelibrary;
 
 import static software.wings.common.TemplateConstants.CUSTOM_DEPLOYMENT_TYPE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -16,6 +19,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(CUSTOM_DEPLOYMENT_TYPE)
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(Module._870_CG_YAML_BEANS)
 public class CustomDeploymentTypeTemplateYaml extends TemplateLibraryYaml {
   private String fetchInstanceScript;
   private String hostObjectArrayPath;

@@ -33,6 +33,7 @@ fn generate() -> Result<()> {
 
     for module in vec {
         writeln!(target, "aeriform(\"{}\")", module)?;
+        writeln!(target, "")?;
     }
 
     Ok(())

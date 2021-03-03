@@ -2,6 +2,10 @@ package software.wings.yaml.templatelibrary;
 
 import static software.wings.common.TemplateConstants.SSH;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.command.AbstractCommandUnit;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,6 +22,8 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(SSH)
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(Module._870_CG_YAML_BEANS)
+@BreakDependencyOn("software.wings.yaml.templatelibrary.CommandTemplateYaml")
 public class CommandTemplateYaml extends TemplateLibraryYaml {
   private String commandUnitType;
   private List<AbstractCommandUnit.Yaml> commandUnits = new ArrayList<>();
