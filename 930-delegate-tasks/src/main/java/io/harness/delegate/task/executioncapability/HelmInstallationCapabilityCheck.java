@@ -13,6 +13,7 @@ import io.harness.capability.HelmInstallationParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -31,8 +32,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory
-            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
             .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
     return CapabilityResponse.builder()
@@ -53,8 +53,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory
-            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
             .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
     return builder
