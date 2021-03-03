@@ -144,6 +144,7 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-log-client:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -298,11 +299,11 @@ build_proto_module() {
   fi
 }
 
-if [ "${PLATFORM}" == "jenkins" ]
-then
-  build_bazel_module 990-commons-test
-  exit 0
-fi
+#if [ "${PLATFORM}" == "jenkins" ]
+#then
+#  build_bazel_module 990-commons-test
+#  exit 0
+#fi
 
 build_bazel_application 800-pipeline-service
 build_bazel_application 830-notification-service
@@ -372,6 +373,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
+build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
