@@ -3,6 +3,8 @@ package logutil
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
@@ -10,7 +12,6 @@ import (
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"testing"
 )
 
 // struct used to test gRPC abstractions
@@ -71,21 +72,17 @@ func Test_GetGrpcRemoteLogger(t *testing.T) {
 	defer ctrl.Finish()
 
 	oldLogProxyClient := newLogProxyClient
-	oldGetLogKey := getLogKey
 	defer func() {
 		newLogProxyClient = oldLogProxyClient
-		getLogKey = oldGetLogKey
 	}()
 	mGrpcClient := NewMockGrpcLogProxyClient(nil)
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
-	getLogKey = func(stepID string) (string, error) {
-		return stepID, nil
-	}
+
 	newLogProxyClient = func(port uint, log *zap.SugaredLogger) (grpcclient.LogProxyClient, error) {
 		return mEngineClient, nil
 	}
-	key := "test"
+	key := "foo:test"
 	_, err := GetGrpcRemoteLogger(key)
 
 	assert.Equal(t, err, nil)
@@ -98,41 +95,18 @@ func Test_GetGrpcRemoteLogger_OpenFailure(t *testing.T) {
 	defer ctrl.Finish()
 
 	oldEngineClient := newLogProxyClient
-	oldGetLogKey := getLogKey
 	defer func() {
 		newLogProxyClient = oldEngineClient
-		getLogKey = oldGetLogKey
 	}()
 	mGrpcClient := NewMockGrpcLogProxyClient(errors.New("failure"))
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
-	getLogKey = func(stepID string) (string, error) {
-		return stepID, nil
-	}
 	newLogProxyClient = func(port uint, log *zap.SugaredLogger) (grpcclient.LogProxyClient, error) {
 		return mEngineClient, nil
 	}
-	key := "test"
+	key := "foo:test"
 	_, err := GetGrpcRemoteLogger(key)
 
 	// Failure of opening the stream should not error out the logger
 	assert.Nil(t, err)
-}
-
-func Test_GetGrpcRemoteLogger_KeyFailure(t *testing.T) {
-	ctrl, _ := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	oldGetLogKey := getLogKey
-	defer func() {
-		getLogKey = oldGetLogKey
-	}()
-	getLogKey = func(stepID string) (string, error) {
-		return "", errors.New("failure")
-	}
-
-	key := "test"
-	_, err := GetGrpcRemoteLogger(key)
-
-	assert.NotEqual(t, err, nil)
 }

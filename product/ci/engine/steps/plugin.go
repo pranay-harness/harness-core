@@ -27,6 +27,7 @@ type pluginStep struct {
 	containerPort uint32
 	stepContext   *pb.StepContext
 	stageOutput   output.StageOutput
+	logKey        string
 	log           *zap.SugaredLogger
 }
 
@@ -42,6 +43,7 @@ func NewPluginStep(step *pb.UnitStep, stageOutput output.StageOutput,
 		stepContext:   r.GetContext(),
 		stageOutput:   stageOutput,
 		log:           log,
+		logKey:        step.GetLogKey(),
 	}
 }
 
@@ -105,6 +107,7 @@ func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 					Context: e.stepContext,
 				},
 			},
+			LogKey: e.logKey,
 		},
 		PrevStepOutputs: prevStepOutputs,
 	}

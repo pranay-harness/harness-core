@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
@@ -16,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;

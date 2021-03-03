@@ -61,6 +61,19 @@ eventsFramework:
     nettyThreads: 16
     useScriptCache: true
 
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
 #  uri: mongodb://localhost:27017/cd-nextgen-secondary

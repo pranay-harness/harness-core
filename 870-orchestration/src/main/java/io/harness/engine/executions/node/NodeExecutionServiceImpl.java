@@ -114,9 +114,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<NodeExecution> fetchNodeExecutionsByNotifyId(String planExecutionId, String notifyId) {
+  public List<NodeExecution> fetchNodeExecutionsByNotifyId(
+      String planExecutionId, String notifyId, boolean isOldRetry) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.notifyId).is(notifyId))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(isOldRetry))
                       .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
     return mongoTemplate.find(query, NodeExecution.class);
   }

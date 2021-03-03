@@ -100,6 +100,7 @@ BAZEL_MODULES="\
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
+  //870-cg-yaml-beans:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
   //876-orchestration-beans:module \
@@ -340,6 +341,7 @@ build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
+build_bazel_module 870-cg-yaml-beans
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
 build_bazel_module 876-orchestration-beans

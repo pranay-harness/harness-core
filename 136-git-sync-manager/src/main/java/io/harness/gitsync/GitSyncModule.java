@@ -18,14 +18,10 @@ import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.persistence.HPersistence;
-import io.harness.threading.ThreadPool;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GitSyncModule extends AbstractModule {
@@ -48,10 +44,6 @@ public class GitSyncModule extends AbstractModule {
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(GitSyncErrorService.class).to(GitSyncErrorServiceImpl.class);
     bind(GitEntityService.class).to(GitEntityServiceImpl.class);
-
-    bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("default-git-sync-%d").setPriority(Thread.MIN_PRIORITY).build()));
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))

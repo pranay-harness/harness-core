@@ -80,6 +80,7 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
     HashMap<String, String> taskIds = new HashMap<>();
+    HashMap<String, String> logKeys = new HashMap<>();
     when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
         .thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
@@ -97,7 +98,8 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
 
     CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
-        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds);
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds, "test",
+        logKeys);
     assertThat(buildSetupTaskParams).isNotNull();
     verify(logServiceUtils, times(1)).getLogServiceConfig();
     verify(logServiceUtils, times(1)).getLogServiceToken(any());
@@ -124,6 +126,7 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
     HashMap<String, String> taskIds = new HashMap<>();
+    HashMap<String, String> logKeys = new HashMap<>();
     when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
         .thenReturn(ciExecutionPlanTestHelper.getGitAccountConnector());
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
@@ -142,7 +145,7 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
 
     CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet(), ambiance,
-        taskIds);
+        taskIds, "test", logKeys);
     assertThat(buildSetupTaskParams).isNotNull();
     verify(logServiceUtils, times(1)).getLogServiceConfig();
     verify(logServiceUtils, times(1)).getLogServiceToken(any());

@@ -24,8 +24,8 @@ import io.harness.beans.FileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandTemplateFactory;
-import io.harness.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 

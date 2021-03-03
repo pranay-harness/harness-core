@@ -30,7 +30,7 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
       }
     });
 
