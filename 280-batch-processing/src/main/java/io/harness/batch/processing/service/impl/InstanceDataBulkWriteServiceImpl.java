@@ -142,6 +142,11 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
               InstanceDataKeys.allocatableResource, objectToDocument(instanceInfo.getAllocatableResource()));
         }
 
+        if (!isNull(instanceInfo.getPricingResource())) {
+          instanceInfoDocument.append(
+              InstanceDataKeys.pricingResource, objectToDocument(instanceInfo.getPricingResource()));
+        }
+
         if (!isNull(instanceInfo.getStorageResource())) {
           instanceInfoDocument.append(
               InstanceDataKeys.storageResource, objectToDocument(instanceInfo.getStorageResource()));
