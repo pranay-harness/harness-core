@@ -55,12 +55,13 @@ CREATE TABLE IF NOT EXISTS evaluation(
   report TEXT NOT NULL,
   suite_name TEXT NOT NULL,
   class_name TEXT,
-  name TEXT,
+  name TEXT NOT NULL,
   duration_ms INT,
   result result_t,
   message TEXT,
   description TEXT,
-  type test_type_t DEFAULT 'unit',
+  type TEXT NOT NULL,
+  test_type test_type_t DEFAULT 'unit',
   stdout TEXT,
   stderr TEXT,
   selected boolean DEFAULT true NOT NULL,
@@ -90,7 +91,8 @@ comment on column evaluation.duration_ms is 'time taken to run the test in milli
 comment on column evaluation.result is 'represents an evaluated result of a test. It could be one of passed/skipped/failed/error';
 comment on column evaluation.message is 'If there is a failure, it indicates the reason in short format';
 comment on column evaluation.description is 'If there is a failure, it indicates the reason and other details';
-comment on column evaluation.type is 'type of the test. it can be unit/integration/functional/e2e';
+comment on column evaluation.type is 'type of the failure message';
+comment on column evaluation.test_type is 'type of the test. it can be unit/integration/functional/e2e';
 comment on column evaluation.stdout is 'stdout of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.stderr is 'stderr of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of full_run/source_code_changes/new_test/updated_test/flaky_test';
