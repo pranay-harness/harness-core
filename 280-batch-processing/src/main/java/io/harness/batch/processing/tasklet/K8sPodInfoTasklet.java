@@ -5,6 +5,8 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.pop
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -171,12 +173,15 @@ public class K8sPodInfoTasklet implements Tasklet {
       log.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
     }
 
-    Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
+    final Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
     Resource resourceLimit = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
     if (!isEmpty(podInfo.getTotalResource().getLimitsMap())) {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
-    List<String> pvcClaimNames = podInfo.getVolumeList().stream().map(Volume::getId).collect(Collectors.toList());
+
+    final List<String> pvcClaimNames = podInfo.getVolumeList().stream().map(Volume::getId).collect(Collectors.toList());
+    final Resource pricingResource = K8sResourceUtils.getResourceFromAnnotationMap(
+        firstNonNull(podInfo.getMetadataAnnotationsMap(), Collections.emptyMap()));
 
     return InstanceInfo.builder()
         .accountId(accountId)
@@ -191,10 +196,12 @@ public class K8sPodInfoTasklet implements Tasklet {
         .resource(resource)
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)
+        .pricingResource(pricingResource)
         .pvcClaimNames(pvcClaimNames)
         .metaData(metaData)
         .labels(encodeDotsInKey(labelsMap))
         .namespaceLabels(encodeDotsInKey(podInfo.getNamespaceLabelsMap()))
+        .metadataAnnotations(podInfo.getMetadataAnnotationsMap())
         .harnessServiceInfo(harnessServiceInfo)
         .build();
   }
