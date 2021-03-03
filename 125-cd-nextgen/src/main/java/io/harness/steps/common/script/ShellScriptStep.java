@@ -45,6 +45,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -173,15 +174,17 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
         NGVariable::getName, inputVariable -> String.valueOf(inputVariable.getValue().getValue()), (a, b) -> b));
   }
 
-  private List<String> getOutputVars(List<NGVariable> outputVariables) {
+  private List<String> getOutputVars(Map<String, Object> outputVariables) {
     if (EmptyPredicate.isEmpty(outputVariables)) {
       return emptyList();
     }
 
     List<String> outputVars = new ArrayList<>();
-    for (NGVariable inputVariable : outputVariables) {
-      outputVars.add((String) inputVariable.getValue().getValue());
-    }
+    outputVariables.values().forEach(val -> {
+      if (val instanceof ParameterField) {
+        outputVars.add(((ParameterField<?>) val).getValue().toString());
+      }
+    });
     return outputVars;
   }
 
@@ -281,10 +284,10 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   private ShellScriptOutcome prepareShellScriptOutcome(
       ShellScriptStepParameters stepParameters, Map<String, String> sweepingOutputEnvVariables) {
     Map<String, String> outputVariables = new HashMap<>();
-    for (NGVariable outputVariable : stepParameters.getOutputVariables()) {
-      outputVariables.put(
-          outputVariable.getName(), sweepingOutputEnvVariables.get(outputVariable.getValue().getValue()));
-    }
+    stepParameters.getOutputVariables().keySet().forEach(name -> {
+      Object value = ((ParameterField<?>) stepParameters.getOutputVariables().get(name)).getValue();
+      outputVariables.put(name, sweepingOutputEnvVariables.get(value));
+    });
     return ShellScriptOutcome.builder().outputVariables(outputVariables).build();
   }
 }

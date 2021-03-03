@@ -26,4 +26,6 @@ enum Status {
   EXPIRED = 14;
   SUSPENDED = 15;  // This is when a step is closed prematurely not because of the actual flow
   SUCCEEDED = 16;
+
+  IGNORE_FAILED = 17;  // This is when step is marked as Ignored.
 }

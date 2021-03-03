@@ -64,3 +64,27 @@ fi
 if [[ "" != "$MONGO_TRANSACTIONS_ENABLED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ENABLED
 fi
+
+if [[ "" != "$ACCESS_CONTROL_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceConfig.baseUrl $ACCESS_CONTROL_CLIENT_BASE_URL
+fi
+
+if [[ "" != "$ACCESS_CONTROL_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret $ACCESS_CONTROL_CLIENT_SERVICE_SECRET
+fi
+
+if [[ "" != "$USER_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE userClient.userServiceConfig.baseUrl $USER_CLIENT_BASE_URL
+fi
+
+if [[ "" != "$USER_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE userClient.userServiceSecret $USER_CLIENT_SERVICE_SECRET
+fi
+
+if [[ "" != "$RESOURCE_GROUP_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceConfig.baseUrl $RESOURCE_GROUP_CLIENT_BASE_URL
+fi
+
+if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret $RESOURCE_GROUP_CLIENT_SERVICE_SECRET
+fi

@@ -2,6 +2,9 @@ package io.harness.accesscontrol.roleassignments;
 
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -12,15 +15,22 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
+  private final ScopeService scopeService;
   private final RoleAssignmentDao roleAssignmentDao;
+  private final RoleAssignmentValidator roleAssignmentValidator;
 
   @Inject
-  public RoleAssignmentServiceImpl(RoleAssignmentDao roleAssignmentDao) {
+  public RoleAssignmentServiceImpl(
+      ScopeService scopeService, RoleAssignmentDao roleAssignmentDao, RoleAssignmentValidator roleAssignmentValidator) {
+    this.scopeService = scopeService;
     this.roleAssignmentDao = roleAssignmentDao;
+    this.roleAssignmentValidator = roleAssignmentValidator;
   }
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
+    Scope scope = scopeService.buildScopeFromScopeIdentifier(roleAssignment.getScopeIdentifier());
+    roleAssignmentValidator.validate(roleAssignment, scope);
     return roleAssignmentDao.create(roleAssignment);
   }
 

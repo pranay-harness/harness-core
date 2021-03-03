@@ -94,7 +94,11 @@ public class StepUtils {
         for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
           Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
           if (outcome instanceof RollbackOutcome) {
-            return (RollbackOutcome) outcome;
+            RollbackOutcome rollbackOutcome = (RollbackOutcome) outcome;
+            if (rollbackOutcome.getRollbackInfo() == null) {
+              return null;
+            }
+            return rollbackOutcome;
           }
         }
       }

@@ -1,5 +1,7 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -10,9 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-/**
- * Created by rishi on 12/19/16.
- */
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class DelegateFile extends FileMetadata {
   private String fileId;
   private FileBucket bucket;
