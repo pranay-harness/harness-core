@@ -1,7 +1,6 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
-import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
@@ -260,10 +259,9 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
 
     CodeBase codeBase = CodeBase.builder().repoName("test").build();
     Map<String, String> gitEnvVariables = k8BuildSetupUtils.getGitEnvVariables(gitConnector, codeBase);
-    assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_NETRC_MACHINE, DRONE_AWS_REGION);
+    assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
     assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
         .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");
-    assertThat(gitEnvVariables.get(DRONE_NETRC_MACHINE)).isEqualTo("git-codecommit.eu-central-1.amazonaws.com");
     assertThat(gitEnvVariables.get(DRONE_AWS_REGION)).isEqualTo("eu-central-1");
   }
 }
