@@ -93,6 +93,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(configuration.getPortal()).thenReturn(portalConfig);
     doReturn(false).when(authenticationFilter).isScimAPI();
+    doReturn(false).when(authenticationFilter).isApiKeyAuthorizationAPI();
   }
 
   @Test

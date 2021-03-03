@@ -399,7 +399,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
   }
 
-  private boolean isApiKeyAuthorizationAPI() {
+  protected boolean isApiKeyAuthorizationAPI() {
     return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
         || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
   }
