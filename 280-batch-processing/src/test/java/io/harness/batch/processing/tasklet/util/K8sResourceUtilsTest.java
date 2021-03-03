@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet.util;
 
+import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,55 @@ import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class K8sResourceUtilsTest extends CategoryTest {
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateVCpu() {
+    assertThat(K8sResourceUtils.getFargateVCpu(.2 * 1024)).isEqualTo(0.25);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateVCpu1() {
+    assertThat(K8sResourceUtils.getFargateVCpu(.4 * 1024)).isEqualTo(0.5);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateVCpu2() {
+    assertThat(K8sResourceUtils.getFargateVCpu(1.2 * 1024)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateVCpu3() {
+    assertThat(K8sResourceUtils.getFargateVCpu(2 * 1024)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateMemoryGb() {
+    assertThat(K8sResourceUtils.getFargateMemoryGb(0.4 * 1024)).isEqualTo(0.5);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateMemoryGb1() {
+    assertThat(K8sResourceUtils.getFargateMemoryGb(1.2 * 1024)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetFargateMemoryGb2() {
+    assertThat(K8sResourceUtils.getFargateMemoryGb(4 * 1024)).isEqualTo(4);
+  }
+
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)

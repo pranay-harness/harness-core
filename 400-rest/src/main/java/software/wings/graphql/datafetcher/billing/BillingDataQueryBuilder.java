@@ -918,6 +918,7 @@ public class BillingDataQueryBuilder {
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
+          instanceTypes.add("K8S_POD_FARGATE");
           isNodeAndPodQuery = true;
           break;
         case PV:
@@ -1109,6 +1110,7 @@ public class BillingDataQueryBuilder {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
       instanceTypeValues.add("ECS_TASK_FARGATE");
+      instanceTypeValues.add("K8S_POD_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
       instanceTypeValues.add("K8S_PV");
