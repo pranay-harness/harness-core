@@ -83,9 +83,11 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.Base;
 import software.wings.beans.CustomArtifactServerConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
@@ -636,6 +638,31 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public boolean isSettingValueGcp(SettingAttribute settingAttribute) {
     return settingAttribute.getValue() instanceof GcpConfig;
+  }
+
+  @Override
+  public boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute) {
+    return settingAttribute.getValue() instanceof GcpConfig || settingAttribute.getValue() instanceof DockerConfig
+        || settingAttribute.getValue() instanceof AwsConfig;
+  }
+
+  @Override
+  public List<String> getDelegateSelectors(SettingAttribute settingAttribute) {
+    List<String> selectors = new ArrayList<>();
+    if (!hasDelegateSelectorProperty(settingAttribute)) {
+      return selectors;
+    }
+    if (settingAttribute.getValue() instanceof GcpConfig && ((GcpConfig) settingAttribute.getValue()).isUseDelegate()) {
+      selectors = Collections.singletonList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector());
+    }
+    if (settingAttribute.getValue() instanceof DockerConfig) {
+      selectors = ((DockerConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof AwsConfig) {
+      selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());
+    }
+    return isEmpty(selectors) ? new ArrayList<>()
+                              : selectors.stream().filter(StringUtils::isNotBlank).distinct().collect(toList());
   }
 
   @Override

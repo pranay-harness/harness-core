@@ -714,7 +714,7 @@ public class ArtifactCollectionUtils {
                                                          .appId(artifactStream.getAppId())
                                                          .artifactStreamType(artifactStream.getArtifactStreamType());
     SettingValue settingValue;
-    List<String> tags;
+    List<String> tags = new ArrayList<>();
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       parametersBuilder.accountId(artifactStream.getAccountId())
           .buildSourceRequestType(BuildSourceRequestType.GET_BUILDS)
@@ -733,7 +733,12 @@ public class ArtifactCollectionUtils {
       settingValue = settingAttribute.getValue();
       List<EncryptedDataDetail> encryptedDataDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
-      tags = awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute);
+      List<String> delegateSelectors = settingsService.getDelegateSelectors(settingAttribute);
+      if (isNotEmpty(delegateSelectors)) {
+        tags = isNotEmpty(tags) ? tags : new ArrayList<>();
+        tags.addAll(delegateSelectors);
+        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+      }
       accountId = settingAttribute.getAccountId();
       boolean multiArtifactEnabled = multiArtifactEnabled(accountId);
 

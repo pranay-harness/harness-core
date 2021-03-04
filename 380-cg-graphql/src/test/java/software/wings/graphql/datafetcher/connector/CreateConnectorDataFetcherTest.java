@@ -68,6 +68,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashSet;
 import javax.validation.ConstraintViolationException;
 import org.junit.Before;
@@ -80,10 +81,12 @@ import org.mockito.MockitoAnnotations;
 public class CreateConnectorDataFetcherTest {
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
-  @Mock private ConnectorsController connectorsController;
+  @Mock private software.wings.graphql.datafetcher.connector.ConnectorsController connectorsController;
   @Mock private SecretManager secretManager;
 
-  @InjectMocks private CreateConnectorDataFetcher dataFetcher = new CreateConnectorDataFetcher();
+  @InjectMocks
+  private software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher dataFetcher =
+      new software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher();
 
   @Before
   public void setup() throws SQLException {
@@ -94,7 +97,7 @@ public class CreateConnectorDataFetcherTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void checkIfPermissionCorrect() throws NoSuchMethodException {
-    Method method = CreateConnectorDataFetcher.class.getDeclaredMethod(
+    Method method = software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher.class.getDeclaredMethod(
         "mutateAndFetch", QLConnectorInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
     assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONNECTORS);
@@ -219,11 +222,14 @@ public class CreateConnectorDataFetcherTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void createDockerConnector() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     doReturn(setting)
         .when(settingsService)
