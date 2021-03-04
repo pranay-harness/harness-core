@@ -1,7 +1,6 @@
 package io.harness.beans;
 
 import io.harness.beans.FeatureFlag.Scope;
-
 import lombok.Getter;
 
 /**
@@ -73,6 +72,7 @@ public enum FeatureName {
   HELM_MERGE_CAPABILITIES,
   INLINE_SSH_COMMAND,
   IGNORE_PCF_CONNECTION_CONTEXT_CACHE,
+  IRSA_FOR_EKS,
   LIMIT_PCF_THREADS,
   LOCAL_DELEGATE_CONFIG_OVERRIDE,
   LOG_STREAMING_INTEGRATION,

@@ -73,11 +73,13 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.network.Http;
@@ -133,6 +135,7 @@ public class AwsHelperService {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
   @Inject private AwsUtils awsUtils;
   @Inject private AwsCallTracker tracker;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
@@ -236,13 +239,14 @@ public class AwsHelperService {
 
   public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
+    boolean isIRSAForEKSEnabled = featureFlagService.isEnabled(FeatureName.IRSA_FOR_EKS, awsConfig.getAccountId());
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
-    } else if (awsConfig.isUseIRSA()) {
+    } else if (awsConfig.isUseIRSA() && isIRSAForEKSEnabled) {
       WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
       providerBuilder.roleSessionName(awsConfig.getAccountId()
-              + md5Hex(
+          + md5Hex(
               awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
 
       credentialsProvider = providerBuilder.build();

@@ -54,8 +54,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
-      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
-                   boolean useIRSA,
+      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole, boolean useIRSA,
       AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion, boolean useEncryptedAccessKey,
       String encryptedAccessKey) {
     this();
@@ -112,7 +111,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId, String secretKey,
         UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
-        boolean assumeCrossAccountRole, boolean useIRSA, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
+        boolean assumeCrossAccountRole, boolean useIRSA, AwsCrossAccountAttributes crossAccountAttributes,
+        String defaultRegion) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.accessKeySecretId = accessKeySecretId;

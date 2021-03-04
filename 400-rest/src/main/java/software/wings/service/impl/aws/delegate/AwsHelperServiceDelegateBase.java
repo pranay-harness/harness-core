@@ -25,7 +25,9 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -50,17 +52,19 @@ class AwsHelperServiceDelegateBase {
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
   @Inject protected AwsCallTracker tracker;
+  @Inject private FeatureFlagService featureFlagService;
 
   protected void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
+    boolean isIRSAForEKSEnabled = featureFlagService.isEnabled(FeatureName.IRSA_FOR_EKS, awsConfig.getAccountId());
 
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
-    } else if (awsConfig.isUseIRSA()) {
+    } else if (awsConfig.isUseIRSA() && isIRSAForEKSEnabled) {
       WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
       providerBuilder.roleSessionName(awsConfig.getAccountId()
-              + md5Hex(
+          + md5Hex(
               awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
 
       credentialsProvider = providerBuilder.build();
