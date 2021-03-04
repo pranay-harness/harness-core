@@ -1,17 +1,11 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.exception.WingsException.SRE;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.validation.Validator.equalCheck;
-
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -23,12 +17,16 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.exception.WingsException.SRE;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.equalCheck;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 
 /**
  * Created by brett on 7/16/17.
