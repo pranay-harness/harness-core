@@ -23,8 +23,14 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
     NodeExecution nodeExecution = NodeExecutionMapper.fromNodeExecutionProto(nodeExecutionProto);
     Ambiance ambiance = nodeExecution.getAmbiance();
     String accountId = AmbianceHelper.getAccountId(ambiance);
-    if (gitBuildStatusUtility.shouldSendStatus(nodeExecution)) {
-      gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+    try {
+      if (gitBuildStatusUtility.shouldSendStatus(nodeExecution)) {
+        log.info("Received event with status {} to update git status for stage {}", nodeExecution.getStatus(),
+            nodeExecution.getNode().getGroup());
+        gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+      }
+    } catch (Exception ex) {
+      log.error("Failed to send git status update task for node {}", nodeExecution.getUuid(), ex);
     }
   }
 }
