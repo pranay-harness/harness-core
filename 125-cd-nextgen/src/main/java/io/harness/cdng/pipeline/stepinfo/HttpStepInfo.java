@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,16 +46,18 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   List<NGVariable> outputVariables;
+  List<HttpHeaderConfig> headers;
 
   @Builder(builderMethodName = "infoBuilder")
-  public HttpStepInfo(ParameterField<String> url, ParameterField<String> method, List<HttpHeaderConfig> headers,
-      ParameterField<String> requestBody, ParameterField<String> assertion, String name, String identifier,
-      String metadata, List<NGVariable> outputVariables) {
-    super(url, method, headers, requestBody, assertion);
+  public HttpStepInfo(ParameterField<String> url, ParameterField<String> method, ParameterField<String> requestBody,
+      ParameterField<String> assertion, String name, String identifier, String metadata,
+      List<NGVariable> outputVariables, List<HttpHeaderConfig> headers) {
+    super(url, method, requestBody, assertion);
     this.name = name;
     this.identifier = identifier;
     this.metadata = metadata;
     this.outputVariables = outputVariables;
+    this.headers = headers;
   }
 
   @Override
@@ -88,7 +91,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return HttpStepParameters.infoBuilder()
         .assertion(getAssertion())
-        .headers(getHeaders())
+        .headers(headers.stream().collect(Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)))
         .method(getMethod())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .requestBody(getRequestBody())
