@@ -7,8 +7,8 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
+import software.wings.verification.newrelic.NewRelicCVConfigurationYaml;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
-import software.wings.verification.newrelic.NewRelicCVServiceConfiguration.NewRelicCVConfigurationYaml;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

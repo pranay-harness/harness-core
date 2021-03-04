@@ -235,60 +235,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   }
 
   /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion", "connectionType"})
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    // maps to restrictionType
-    private String restrictions;
-    // maps to restrictionExpression
-    private String expression;
-    private String region;
-    // maps to hostConnectionAttrs
-    private String provisionerName;
-    private String connectionType;
-    private String loadBalancer;
-    private boolean usePublicDns;
-    private String hostConnectionType;
-    private boolean provisionInstances;
-    private String autoScalingGroup;
-    private int desiredCapacity;
-    private String hostNameConvention;
-
-    // These four fields map to AwsInstanceFilter
-    private List<String> vpcs = new ArrayList<>();
-    private List<NameValuePair.Yaml> awsTags = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
-        String expression, String region, String provisionerName, String connectionType, String loadBalancer,
-        boolean usePublicDns, String hostConnectionType, boolean provisionInstances, String autoScalingGroup,
-        int desiredCapacity, List<String> vpcs, List<NameValuePair.Yaml> awsTags, String hostNameConvention,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.restrictions = restrictions;
-      this.expression = expression;
-      this.region = region;
-      this.provisionerName = provisionerName;
-      this.connectionType = connectionType;
-      this.loadBalancer = loadBalancer;
-      this.usePublicDns = usePublicDns;
-      this.hostConnectionType = hostConnectionType;
-      this.provisionInstances = provisionInstances;
-      this.autoScalingGroup = autoScalingGroup;
-      this.desiredCapacity = desiredCapacity;
-      this.vpcs = vpcs;
-      this.awsTags = awsTags;
-      this.hostNameConvention = hostNameConvention;
-    }
-  }
-
-  /**
    * Gets restriction type.
    *
    * @return the restriction type

@@ -30,7 +30,7 @@ import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.APMVerificationState.ResponseMapping;
 import software.wings.sm.states.APMVerificationState.ResponseType;
 import software.wings.verification.apm.APMCVServiceConfiguration;
-import software.wings.verification.apm.APMCVServiceConfiguration.APMCVConfigurationYaml;
+import software.wings.verification.apm.APMCVServiceConfigurationAPMCVConfigurationYaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,11 +99,12 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setName("TestAPMConfig");
   }
 
-  private APMCVConfigurationYaml buildYaml() {
+  private APMCVServiceConfigurationAPMCVConfigurationYaml buildYaml() {
     List<MetricCollectionInfo> metrics = new ArrayList<>();
     metrics.add(getMetricCollectionInfo());
 
-    APMCVConfigurationYaml yaml = APMCVConfigurationYaml.builder().metricCollectionInfos(metrics).build();
+    APMCVServiceConfigurationAPMCVConfigurationYaml yaml =
+        APMCVServiceConfigurationAPMCVConfigurationYaml.builder().metricCollectionInfos(metrics).build();
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -134,7 +135,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
         APMCVServiceConfiguration.builder().metricCollectionInfos(metrics).build();
     setBasicInfo(cvServiceConfiguration);
 
-    APMCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
+    APMCVServiceConfigurationAPMCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getMetricCollectionInfos()).isEqualTo(cvServiceConfiguration.getMetricCollectionInfos());
@@ -148,7 +149,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestAPMConfig.yaml")).thenReturn("TestAPMConfig");
 
-    ChangeContext<APMCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<APMCVServiceConfigurationAPMCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAPMConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml());
@@ -169,10 +170,10 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
 
-    APMCVConfigurationYaml yaml = buildYaml();
+    APMCVServiceConfigurationAPMCVConfigurationYaml yaml = buildYaml();
     yaml.setMetricCollectionInfos(new ArrayList<>());
 
-    ChangeContext<APMCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<APMCVServiceConfigurationAPMCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAPMConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -191,7 +192,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
     APMCVServiceConfiguration cvConfig = APMCVServiceConfiguration.builder().build();
     cvConfig.setUuid("testUUID");
     when(cvConfigurationService.getConfiguration("TestAPMConfig", appId, envId)).thenReturn(cvConfig);
-    ChangeContext<APMCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<APMCVServiceConfigurationAPMCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestAPMConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml());

@@ -27,7 +27,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

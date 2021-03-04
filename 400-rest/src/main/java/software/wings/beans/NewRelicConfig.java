@@ -9,7 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
@@ -99,7 +99,7 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting, 
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String apiKey, String newRelicAccountId,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.apiKey = apiKey;
       this.newRelicAccountId = newRelicAccountId;

@@ -82,31 +82,4 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   public String fetchResourceCategory() {
     return CONNECTION_ATTRIBUTES.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends SettingValue.Yaml {
-    private AuthenticationScheme authenticationScheme;
-    private String domain;
-    private String userName;
-    private String password;
-    private boolean useSSL;
-    private int port;
-    private boolean skipCertChecks;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, AuthenticationScheme authenticationScheme, String domain,
-        String userName, String password, boolean useSSL, int port, boolean skipCertChecks,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.authenticationScheme = authenticationScheme;
-      this.domain = domain;
-      this.userName = userName;
-      this.password = password;
-      this.useSSL = useSSL;
-      this.port = port;
-      this.skipCertChecks = skipCertChecks;
-    }
-  }
 }

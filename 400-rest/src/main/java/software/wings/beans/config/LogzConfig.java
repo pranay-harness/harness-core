@@ -9,7 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -78,7 +78,7 @@ public class LogzConfig extends SettingValue implements EncryptableSetting, Exec
 
     @Builder
     public Yaml(
-        String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictions.Yaml usageRestrictions) {
+        String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.logzUrl = logzUrl;
       this.token = token;

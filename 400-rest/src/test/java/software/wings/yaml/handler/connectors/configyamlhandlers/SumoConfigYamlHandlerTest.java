@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SumoConfig;
+import software.wings.beans.SumoConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -34,7 +35,7 @@ public class SumoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "harnessApiVersion: '1.0'\n"
       + "type: SUMO\n";
 
-  private Class yamlClass = SumoConfig.Yaml.class;
+  private Class yamlClass = SumoConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

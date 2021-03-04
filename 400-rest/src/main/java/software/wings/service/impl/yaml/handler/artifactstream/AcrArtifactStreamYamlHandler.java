@@ -5,17 +5,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.AcrArtifactStream;
-import software.wings.beans.artifact.AcrArtifactStream.Yaml;
+import software.wings.beans.artifact.AcrArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
 
 @OwnedBy(CDC)
 @Singleton
-public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, AcrArtifactStream> {
+public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<AcrArtifactStreamYaml, AcrArtifactStream> {
   @Override
-  public Yaml toYaml(AcrArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AcrArtifactStreamYaml toYaml(AcrArtifactStream bean, String appId) {
+    AcrArtifactStreamYaml yaml = AcrArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setSubscriptionId(bean.getSubscriptionId());
     yaml.setRegistryName(bean.getRegistryName());
@@ -25,9 +25,9 @@ public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   @Override
-  protected void toBean(AcrArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(AcrArtifactStream bean, ChangeContext<AcrArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    AcrArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setRegistryName(yaml.getRegistryName());
     bean.setRegistryHostName(yaml.getRegistryHostName());
@@ -41,6 +41,6 @@ public class AcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AcrArtifactStreamYaml.class;
   }
 }

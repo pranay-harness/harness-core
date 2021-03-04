@@ -12,7 +12,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
@@ -106,7 +106,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     private String version;
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String version,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.version = version;
     }

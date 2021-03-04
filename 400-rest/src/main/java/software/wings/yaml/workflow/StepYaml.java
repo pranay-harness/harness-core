@@ -7,8 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.TemplateExpression;
-import software.wings.beans.TemplateExpression.Yaml;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.yaml.BaseYamlWithType;
 
 import java.util.HashMap;
@@ -30,13 +29,13 @@ import lombok.NoArgsConstructor;
 public class StepYaml extends BaseYamlWithType {
   private String name;
   private Map<String, Object> properties = new HashMap<>();
-  private List<TemplateExpression.Yaml> templateExpressions;
+  private List<TemplateExpressionYaml> templateExpressions;
   private String templateUri;
   private List<NameValuePair> templateVariables;
 
   @Builder
-  public StepYaml(String type, String name, Map<String, Object> properties, List<Yaml> templateExpressions,
-      String templateUri, List<NameValuePair> templateVariables) {
+  public StepYaml(String type, String name, Map<String, Object> properties,
+      List<TemplateExpressionYaml> templateExpressions, String templateUri, List<NameValuePair> templateVariables) {
     super(type);
     this.name = name;
     this.properties = properties;

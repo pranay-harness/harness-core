@@ -51,7 +51,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static class Yaml extends YamlWithComputeProvider {
     private String region;
     private String applicationName;
     private String deploymentGroup;

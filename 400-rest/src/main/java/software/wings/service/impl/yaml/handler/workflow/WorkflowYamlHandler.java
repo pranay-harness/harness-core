@@ -28,13 +28,15 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableYaml;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowPhase.Yaml;
+import software.wings.beans.WorkflowPhaseYaml;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.beans.workflow.StepSkipStrategyYaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -343,7 +345,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   }
 
   private List<StepSkipStrategy> getStepSkipStrategiesFromYaml(ChangeContext<Y> changeContext,
-      List<ChangeContext> changeContextList, List<StepSkipStrategy.Yaml> stepSkipStrategyYaml, PhaseStep phaseStep) {
+      List<ChangeContext> changeContextList, List<StepSkipStrategyYaml> stepSkipStrategyYaml, PhaseStep phaseStep) {
     if (isEmpty(stepSkipStrategyYaml)) {
       return emptyList();
     }
@@ -353,7 +355,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     List<StepSkipStrategy> stepSkipStrategies =
         stepSkipStrategyYaml.stream()
             .map(stepSkipStrategy -> {
-              ChangeContext<StepSkipStrategy.Yaml> clonedContext =
+              ChangeContext<StepSkipStrategyYaml> clonedContext =
                   cloneFileChangeContext(changeContext, stepSkipStrategy).build();
               clonedContext.getProperties().put(PHASE_STEP_PROPERTY_NAME, phaseStep);
               return stepSkipStrategyYamlHandler.upsertFromYaml(clonedContext, changeContextList);
@@ -397,16 +399,16 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // phases
     WorkflowPhaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE);
-    List<WorkflowPhase.Yaml> phaseYamlList =
+    List<WorkflowPhaseYaml> phaseYamlList =
         workflowPhases.stream().map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId)).collect(toList());
 
     // rollback phases
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-    List<WorkflowPhase.Yaml> rollbackPhaseYamlList = Lists.newArrayList();
+    List<WorkflowPhaseYaml> rollbackPhaseYamlList = Lists.newArrayList();
     orchestrationWorkflow.getWorkflowPhaseIds().forEach(workflowPhaseId -> {
       WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
       if (rollbackPhase != null) {
-        Yaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);
+        WorkflowPhaseYaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);
         rollbackPhaseYamlList.add(rollbackPhaseYaml);
       }
     });
@@ -421,7 +423,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     TemplateExpressionYamlHandler templateExpressionYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
     List<TemplateExpression> templateExpressions = workflow.getTemplateExpressions();
-    List<TemplateExpression.Yaml> templateExprYamlList = null;
+    List<TemplateExpressionYaml> templateExprYamlList = null;
     if (templateExpressions != null) {
       templateExprYamlList =
           templateExpressions.stream()
@@ -477,7 +479,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
         yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
 
     // Pre Deployment Step Skip Strategy
-    List<StepSkipStrategy.Yaml> preDeploymentStepSkipStrategyYaml =
+    List<StepSkipStrategyYaml> preDeploymentStepSkipStrategyYaml =
         emptyIfNull(orchestrationWorkflow.getPreDeploymentSteps().getStepSkipStrategies())
             .stream()
             .map(stepSkipStrategy -> {
@@ -487,7 +489,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
             .collect(toList());
 
     // Post Deployment Step Skip Strategy
-    List<StepSkipStrategy.Yaml> postDeploymentStepSkipStrategyYaml =
+    List<StepSkipStrategyYaml> postDeploymentStepSkipStrategyYaml =
         emptyIfNull(orchestrationWorkflow.getPostDeploymentSteps().getStepSkipStrategies())
             .stream()
             .map(stepSkipStrategy -> {

@@ -10,7 +10,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.HelmRepoYaml;
@@ -74,7 +74,7 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.cloudProvider = cloudProvider;
       this.bucket = bucket;

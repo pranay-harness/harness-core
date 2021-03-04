@@ -16,6 +16,7 @@ import io.harness.scm.SecretName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsPATConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -28,7 +29,7 @@ public class AzureArtifactsPATConfigYamlHandlerTest extends SettingValueConfigYa
   @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @InjectMocks @Inject private AzureArtifactsPATConfigYamlHandler yamlHandler;
 
-  private Class yamlClass = AzureArtifactsPATConfig.Yaml.class;
+  private Class yamlClass = AzureArtifactsPATConfigYaml.class;
   private static final String azureDevopsUrl = "http://dev.azure.com/garvit-test";
   private static final String AZURE_ARTIFACTS_SETTING_NAME = "azure-artifacts";
 

@@ -14,6 +14,7 @@ import io.harness.rest.RestResponse;
 import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
@@ -62,7 +63,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
   }
 
   @Override
-  public ArtifactStream.Yaml getArtifactStreamYamlObject(String artifactStreamId) {
+  public ArtifactStreamYaml getArtifactStreamYamlObject(String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream != null) {
       return getArtifactStreamYamlObject(artifactStream);
@@ -93,8 +94,8 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
     return null;
   }
 
-  private ArtifactStream.Yaml getArtifactStreamYamlObject(ArtifactStream artifactStream) {
-    return (ArtifactStream.Yaml) yamlHandlerFactory
+  private ArtifactStreamYaml getArtifactStreamYamlObject(ArtifactStream artifactStream) {
+    return (ArtifactStreamYaml) yamlHandlerFactory
         .getYamlHandler(YamlType.ARTIFACT_STREAM, artifactStream.getArtifactStreamType())
         .toYaml(artifactStream, artifactStream.fetchAppId());
   }

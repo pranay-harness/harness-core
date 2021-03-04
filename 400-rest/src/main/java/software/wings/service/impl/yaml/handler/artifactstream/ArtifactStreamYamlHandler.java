@@ -14,7 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.Yaml;
+import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 10/09/17
  */
 @Slf4j
-public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
+public abstract class ArtifactStreamYamlHandler<Y extends ArtifactStreamYaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;
   @Inject ArtifactStreamService artifactStreamService;

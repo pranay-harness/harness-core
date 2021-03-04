@@ -13,7 +13,7 @@ import io.harness.yaml.BaseYaml;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.BaseTemplate;
@@ -54,13 +54,13 @@ public class CommandTemplateYamlHelper {
   private SshCommandTemplate toBean(ChangeContext changeContext, String name, List<ChangeContext> changeSetContext) {
     CommandTemplateYaml commandYaml = (CommandTemplateYaml) changeContext.getYaml();
     List<GraphNode> nodeList = Lists.newArrayList();
-    List<AbstractCommandUnit.Yaml> commandUnitYamlList = commandYaml.getCommandUnits();
+    List<AbstractCommandUnitYaml> commandUnitYamlList = commandYaml.getCommandUnits();
     List<CommandUnit> commandUnitList = Lists.newArrayList();
     List<GraphLink> linkList = Lists.newArrayList();
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
     if (isNotEmpty(commandUnitYamlList)) {
       GraphNode previousGraphNode = null;
-      for (AbstractCommandUnit.Yaml commandUnitYaml : commandUnitYamlList) {
+      for (AbstractCommandUnitYaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler = getCommandUnitYamlHandler(commandUnitYaml);
         ChangeContext commandUnitChangeContext = cloneFileChangeContext(changeContext, commandUnitYaml).build();
         CommandUnit commandUnit;
@@ -97,7 +97,7 @@ public class CommandTemplateYamlHelper {
     return SshCommandTemplate.builder().commandUnits(commandUnitList).commandType(commandType).build();
   }
 
-  private CommandUnitYamlHandler getCommandUnitYamlHandler(AbstractCommandUnit.Yaml commandUnitYaml) {
+  private CommandUnitYamlHandler getCommandUnitYamlHandler(AbstractCommandUnitYaml commandUnitYaml) {
     return commandUnitYamlHandlerMap.get(getCommandUnitSubTypeFromYaml(commandUnitYaml));
   }
 
@@ -116,7 +116,7 @@ public class CommandTemplateYamlHelper {
   private String getLinkId() {
     return graphIdGenerator(YamlConstants.LINK_PREFIX);
   }
-  private String getCommandUnitSubTypeFromYaml(AbstractCommandUnit.Yaml commandUnitYaml) {
+  private String getCommandUnitSubTypeFromYaml(AbstractCommandUnitYaml commandUnitYaml) {
     if (commandUnitYaml.getCommandUnitType().equals(COMMAND.name())) {
       return TemplateConstants.TEMPLATE_REF_COMMAND;
     }

@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.AwsLambdaCommandUnit;
-import software.wings.beans.command.AwsLambdaCommandUnit.Yaml;
+import software.wings.beans.command.AwsLambdaCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class AwsLambdaCommandUnitYamlHandler
-    extends CommandUnitYamlHandler<AwsLambdaCommandUnit.Yaml, AwsLambdaCommandUnit> {
+    extends CommandUnitYamlHandler<AwsLambdaCommandUnitYaml, AwsLambdaCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsLambdaCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(AwsLambdaCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AwsLambdaCommandUnitYaml toYaml(AwsLambdaCommandUnit bean, String appId) {
+    AwsLambdaCommandUnitYaml yaml = AwsLambdaCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

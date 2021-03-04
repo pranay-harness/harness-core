@@ -26,6 +26,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.cloudwatch.CloudWatchCVConfigurationYaml;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
 import java.util.ArrayList;
@@ -133,16 +134,15 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     cvServiceConfiguration.setName("TestCloudWatchConfig");
   }
 
-  private CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml buildYaml() {
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml =
-        CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml.builder()
-            .loadBalancerMetrics(loadBalancerMetrics)
-            .ecsMetrics(ecsMetrics)
-            .lambdaFunctionsMetrics(lambdaFunctionsMetrics)
-            .ec2InstanceNames(ec2InstanceNames)
-            .ec2Metrics(ec2Metrics)
-            .region(region)
-            .build();
+  private CloudWatchCVConfigurationYaml buildYaml() {
+    CloudWatchCVConfigurationYaml yaml = CloudWatchCVConfigurationYaml.builder()
+                                             .loadBalancerMetrics(loadBalancerMetrics)
+                                             .ecsMetrics(ecsMetrics)
+                                             .lambdaFunctionsMetrics(lambdaFunctionsMetrics)
+                                             .ec2InstanceNames(ec2InstanceNames)
+                                             .ec2Metrics(ec2Metrics)
+                                             .region(region)
+                                             .build();
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -163,8 +163,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
                                                                   .build();
     setBasicInfo(cvServiceConfiguration);
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml =
-        yamlHandler.toYaml(cvServiceConfiguration, appId);
+    CloudWatchCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getLoadBalancerMetrics()).isEqualTo(loadBalancerMetrics);
@@ -183,8 +182,8 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -211,12 +210,12 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
     yaml.setLambdaFunctionsMetrics(new HashMap<>());
     yaml.setEc2InstanceNames(new ArrayList<>());
     yaml.setEcsMetrics(new HashMap<>());
     yaml.setLoadBalancerMetrics(new HashMap<>());
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -231,9 +230,9 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
     yaml.setLambdaFunctionsMetrics(invalidLambdaFunctionsMetrics);
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -248,9 +247,9 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
     yaml.setEc2InstanceNames(invalidEc2InstanceNames);
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -265,9 +264,9 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
     yaml.setEcsMetrics(invalidEcsMetrics);
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);
@@ -282,9 +281,9 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
     when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
     when(yamlHelper.getNameFromYamlFilePath("TestCloudWatchConfig.yaml")).thenReturn("TestCloudWatchConfig");
 
-    CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml yaml = buildYaml();
+    CloudWatchCVConfigurationYaml yaml = buildYaml();
     yaml.setLoadBalancerMetrics(invalidLoadBalancerMetrics);
-    ChangeContext<CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<CloudWatchCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestCloudWatchConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(yaml);

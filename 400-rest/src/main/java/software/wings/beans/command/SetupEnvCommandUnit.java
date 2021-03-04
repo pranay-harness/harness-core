@@ -59,14 +59,14 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.SETUP_ENV.name());
     }
 
     @lombok.Builder
     public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+        List<TailFilePatternEntryYaml> filePatternEntryList) {
       super(name, CommandUnitType.SETUP_ENV.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
     }

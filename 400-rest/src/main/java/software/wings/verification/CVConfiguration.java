@@ -91,36 +91,6 @@ public class CVConfiguration extends Base implements NameAccess {
     this.numOfOccurrencesForAlert = occurrences;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class CVConfigurationYaml extends BaseEntityYaml {
-    private String connectorName;
-    private String serviceName;
-    private AnalysisTolerance analysisTolerance;
-    private boolean enabled24x7;
-    private double alertThreshold;
-    private int numOfOccurrencesForAlert = 1;
-    private Date snoozeStartTime;
-    private Date snoozeEndTime;
-    private boolean alertEnabled;
-
-    // TODO: Remove the below setters when DX-574 is fixed.
-    public void setEnabled24x7(Object value) {
-      String enabled24x7 = String.valueOf(value).toLowerCase();
-      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(enabled24x7),
-          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
-      this.enabled24x7 = parseBoolean(enabled24x7);
-    }
-
-    public void setAlertEnabled(Object value) {
-      String alertEnabledStringValue = String.valueOf(value).toLowerCase();
-      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(alertEnabledStringValue),
-          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
-      this.alertEnabled = parseBoolean(alertEnabledStringValue);
-    }
-  }
-
   // This should be an abstract method, but currently class cannot be converted to abstract due to multiple
   // instantiations of this class
   @JsonIgnore

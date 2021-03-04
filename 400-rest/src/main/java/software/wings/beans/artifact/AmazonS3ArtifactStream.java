@@ -75,19 +75,4 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     }
     return validateParameters(jobname);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactStream.Yaml {
-    private String bucketName;
-    private List<String> artifactPaths;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String bucketName, List<String> artifactPaths) {
-      super(AMAZON_S3.name(), harnessApiVersion, serverName);
-      this.bucketName = bucketName;
-      this.artifactPaths = artifactPaths;
-    }
-  }
 }

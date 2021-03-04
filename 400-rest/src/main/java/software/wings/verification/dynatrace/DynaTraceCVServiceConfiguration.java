@@ -2,7 +2,6 @@ package software.wings.verification.dynatrace;
 
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,18 +25,5 @@ public class DynaTraceCVServiceConfiguration extends CVConfiguration {
     super.copy(clonedConfig);
     clonedConfig.setServiceEntityId(this.serviceEntityId);
     return clonedConfig;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class DynaTraceCVConfigurationYaml extends CVConfigurationYaml {
-    private String dynatraceServiceName;
-    private String dynatraceServiceEntityId;
   }
 }

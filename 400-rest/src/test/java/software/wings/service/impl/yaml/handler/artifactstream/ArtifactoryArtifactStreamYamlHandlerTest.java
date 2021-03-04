@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.ArtifactoryArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -61,7 +62,7 @@ public class ArtifactoryArtifactStreamYamlHandlerTest extends WingsBaseTest {
                                                               .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    ArtifactoryArtifactStream.Yaml yaml = yamlHandler.toYaml(artifactoryArtifactStream, APP_ID);
+    ArtifactoryArtifactStreamYaml yaml = yamlHandler.toYaml(artifactoryArtifactStream, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getRepositoryName()).isEqualTo("generic-repo");
     assertThat(yaml.getImageName()).isEqualTo("busybox");
@@ -86,7 +87,7 @@ public class ArtifactoryArtifactStreamYamlHandlerTest extends WingsBaseTest {
                                                               .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    ArtifactoryArtifactStream.Yaml yaml = yamlHandler.toYaml(artifactoryArtifactStream, APP_ID);
+    ArtifactoryArtifactStreamYaml yaml = yamlHandler.toYaml(artifactoryArtifactStream, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getRepositoryName()).isEqualTo("generic-repo");
     assertThat(yaml.getArtifactPattern()).isEqualTo("io/harness/todolist/todolist*");
@@ -101,13 +102,13 @@ public class ArtifactoryArtifactStreamYamlHandlerTest extends WingsBaseTest {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "Harness Artifactory")).thenReturn(settingAttribute);
-    ArtifactoryArtifactStream.Yaml baseYaml = ArtifactoryArtifactStream.Yaml.builder()
-                                                  .repositoryName("conn-onprem")
-                                                  .imageName("busybox")
-                                                  .repositoryType("docker")
-                                                  .serverName("Harness Artifactory")
-                                                  .harnessApiVersion("1.0")
-                                                  .build();
+    ArtifactoryArtifactStreamYaml baseYaml = ArtifactoryArtifactStreamYaml.builder()
+                                                 .repositoryName("conn-onprem")
+                                                 .imageName("busybox")
+                                                 .repositoryType("docker")
+                                                 .serverName("Harness Artifactory")
+                                                 .harnessApiVersion("1.0")
+                                                 .build();
     ChangeContext changeContext =
         ChangeContext.Builder.aChangeContext()
             .withYamlType(YamlType.ARTIFACT_STREAM)
@@ -155,13 +156,13 @@ public class ArtifactoryArtifactStreamYamlHandlerTest extends WingsBaseTest {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "Harness Artifactory")).thenReturn(settingAttribute);
-    ArtifactoryArtifactStream.Yaml baseYaml = ArtifactoryArtifactStream.Yaml.builder()
-                                                  .repositoryName("harness-maven")
-                                                  .artifactPattern("todolist-*.war")
-                                                  .repositoryType("any")
-                                                  .serverName("Harness Artifactory")
-                                                  .harnessApiVersion("1.0")
-                                                  .build();
+    ArtifactoryArtifactStreamYaml baseYaml = ArtifactoryArtifactStreamYaml.builder()
+                                                 .repositoryName("harness-maven")
+                                                 .artifactPattern("todolist-*.war")
+                                                 .repositoryType("any")
+                                                 .serverName("Harness Artifactory")
+                                                 .harnessApiVersion("1.0")
+                                                 .build();
     ChangeContext changeContext =
         ChangeContext.Builder.aChangeContext()
             .withYamlType(YamlType.ARTIFACT_STREAM)
@@ -205,6 +206,6 @@ public class ArtifactoryArtifactStreamYamlHandlerTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(ArtifactoryArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(ArtifactoryArtifactStreamYaml.class);
   }
 }

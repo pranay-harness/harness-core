@@ -10,7 +10,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AwsAmiInfrastructure;
-import software.wings.infra.AwsAmiInfrastructure.Yaml;
+import software.wings.infra.AwsAmiInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -18,10 +18,10 @@ import com.google.inject.Inject;
 import java.util.List;
 
 public class AwsAmiInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, AwsAmiInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<AwsAmiInfrastructureYaml, AwsAmiInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(AwsAmiInfrastructure bean, String appId) {
+  public AwsAmiInfrastructureYaml toYaml(AwsAmiInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     String spotinstCloudProviderName = null;
     if (AmiDeploymentType.SPOTINST == bean.getAmiDeploymentType()) {
@@ -31,7 +31,7 @@ public class AwsAmiInfrastructureYamlHandler
       spotinstCloudProviderName = spotinstCloudProvider.getName();
     }
 
-    return Yaml.builder()
+    return AwsAmiInfrastructureYaml.builder()
         .autoScalingGroupName(bean.getAutoScalingGroupName())
         .classicLoadBalancers(bean.getClassicLoadBalancers())
         .hostNameConvention(bean.getHostNameConvention())
@@ -51,14 +51,15 @@ public class AwsAmiInfrastructureYamlHandler
   }
 
   @Override
-  public AwsAmiInfrastructure upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public AwsAmiInfrastructure upsertFromYaml(
+      ChangeContext<AwsAmiInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     AwsAmiInfrastructure bean = AwsAmiInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AwsAmiInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AwsAmiInfrastructure bean, ChangeContext<AwsAmiInfrastructureYaml> changeContext) {
+    AwsAmiInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -85,6 +86,6 @@ public class AwsAmiInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsAmiInfrastructureYaml.class;
   }
 }

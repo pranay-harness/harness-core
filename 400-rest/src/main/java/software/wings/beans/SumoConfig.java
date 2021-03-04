@@ -9,7 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -74,23 +74,5 @@ public class SumoConfig extends SettingValue implements EncryptableSetting, Exec
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String sumoUrl;
-    private String accessId;
-    private String accessKey;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String sumoUrl, String accessId, String accessKey,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.sumoUrl = sumoUrl;
-      this.accessId = accessId;
-      this.accessKey = accessKey;
-    }
   }
 }

@@ -48,19 +48,4 @@ public class TimeRange {
     Calendar currentCalendar = CalendarUtils.getCalendarForTimeZone(timeZone);
     return startCalendar.before(currentCalendar) && currentCalendar.before(endCalendar);
   }
-
-  @Data
-  public static final class Yaml extends BaseYaml {
-    private String from;
-    private String to;
-    private String timeZone;
-
-    @Builder
-    public Yaml(
-        @JsonProperty("from") String from, @JsonProperty("to") String to, @JsonProperty("timeZone") String timeZone) {
-      setFrom(from);
-      setTo(to);
-      setTimeZone(timeZone);
-    }
-  }
 }

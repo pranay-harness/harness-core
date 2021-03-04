@@ -13,7 +13,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
-import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationYaml;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfigurationYaml;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import com.google.common.base.Charsets;

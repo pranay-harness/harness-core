@@ -163,48 +163,4 @@ public class AwsInstanceInfrastructure
           WingsException.USER);
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AWS_INSTANCE)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    private String hostConnectionAttrsName;
-    private String loadBalancerName;
-    private boolean usePublicDns;
-    private String hostConnectionType;
-    private boolean useAutoScalingGroup;
-    private AwsInstanceFilter awsInstanceFilter;
-    private String autoScalingGroupName;
-    private boolean setDesiredCapacity;
-    private int desiredCapacity;
-    private String hostNameConvention;
-    private Map<String, String> expressions;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String hostConnectionAttrsName,
-        String loadBalancerName, boolean usePublicDns, String hostConnectionType, boolean useAutoScalingGroup,
-        AwsInstanceFilter awsInstanceFilter, String autoScalingGroupName, boolean setDesiredCapacity,
-        int desiredCapacity, String hostNameConvention, Map<String, String> expressions) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setHostConnectionAttrsName(hostConnectionAttrsName);
-      setLoadBalancerName(loadBalancerName);
-      setUsePublicDns(usePublicDns);
-      setHostConnectionType(hostConnectionType);
-      setUseAutoScalingGroup(useAutoScalingGroup);
-      setAutoScalingGroupName(autoScalingGroupName);
-      setAwsInstanceFilter(awsInstanceFilter);
-      setSetDesiredCapacity(setDesiredCapacity);
-      setDesiredCapacity(desiredCapacity);
-      setHostNameConvention(hostNameConvention);
-      setExpressions(expressions);
-    }
-
-    public Yaml() {
-      super(AWS_INSTANCE);
-    }
-  }
 }

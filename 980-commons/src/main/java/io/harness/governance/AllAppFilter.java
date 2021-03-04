@@ -19,16 +19,4 @@ public class AllAppFilter extends ApplicationFilter {
       @JsonProperty("envSelection") EnvironmentFilter envSelection) {
     super(blackoutWindowFilterType, envSelection);
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("ALL")
-  public static final class Yaml extends ApplicationFilterYaml {
-    @Builder
-    public Yaml(BlackoutWindowFilterType filterType, List<EnvironmentFilterYaml> envSelection) {
-      super(filterType, envSelection);
-    }
-
-    public Yaml() {}
-  }
 }

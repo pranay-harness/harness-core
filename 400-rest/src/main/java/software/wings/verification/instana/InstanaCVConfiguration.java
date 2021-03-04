@@ -7,7 +7,6 @@ import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,16 +55,5 @@ public class InstanaCVConfiguration extends CVConfiguration {
   @Override
   public boolean isCVTaskBasedCollectionEnabled() {
     return true;
-  }
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class InstanaCVConfigurationYaml extends CVConfigurationYaml {
-    private List<InstanaTagFilter> tagFilters;
   }
 }

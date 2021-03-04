@@ -14,7 +14,7 @@ import io.harness.shell.KerberosConfig;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
@@ -282,7 +282,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String connectionType, String accessType, String userName,
-        String key, UsageRestrictions.Yaml usageRestrictions) {
+        String key, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.connectionType = connectionType;
       this.accessType = accessType;

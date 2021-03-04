@@ -120,34 +120,4 @@ public class AwsLambdaInfrastructure
       throw new InvalidRequestException("Role Mapping is Required");
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AWS_LAMBDA)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    private String vpcId;
-    private List<String> subnetIds;
-    private List<String> securityGroupIds;
-    private String iamRole;
-    private Map<String, String> expressions;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String vpcId, List<String> subnetIds,
-        List<String> securityGroupIds, String iamRole, Map<String, String> expressions) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setVpcId(vpcId);
-      setSubnetIds(subnetIds);
-      setSecurityGroupIds(securityGroupIds);
-      setIamRole(iamRole);
-      setExpressions(expressions);
-    }
-
-    public Yaml() {
-      super(AWS_LAMBDA);
-    }
-  }
 }

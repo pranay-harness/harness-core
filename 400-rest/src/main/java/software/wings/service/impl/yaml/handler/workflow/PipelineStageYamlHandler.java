@@ -24,11 +24,11 @@ import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.PipelineStage.WorkflowVariable;
 import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowVariable;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -249,7 +249,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     Map<String, Object> outputProperties = new HashMap<>();
     String workflowName = null;
 
-    List<PipelineStage.WorkflowVariable> pipelineStageVariables = new ArrayList<>();
+    List<WorkflowVariable> pipelineStageVariables = new ArrayList<>();
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
       workflowName = generateYamlAndGetNameForEnvStage(appId, stageElement, pipelineStageVariables);
     } else {

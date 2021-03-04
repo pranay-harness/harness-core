@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -16,12 +14,11 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
-import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -123,32 +120,10 @@ public class JenkinsConfig extends SettingValue
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
-        String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
+        String authMechanism, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.token = token;
       this.authMechanism = authMechanism;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class VerificationYaml extends VerificationProviderYaml {
-    private String url;
-    private String username;
-    private String password = ENCRYPTED_VALUE_STR;
-    private String token = ENCRYPTED_VALUE_STR;
-    private String authMechanism;
-
-    @Builder
-    public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
-        String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.url = url;
-      this.username = username;
-      this.password = password;
-      this.authMechanism = authMechanism;
-      this.token = token;
     }
   }
 }

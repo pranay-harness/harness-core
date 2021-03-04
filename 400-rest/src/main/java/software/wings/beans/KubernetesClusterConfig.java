@@ -25,7 +25,7 @@ import io.harness.k8s.model.OidcGrantType;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -305,10 +305,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     public Yaml(boolean useKubernetesDelegate, String delegateName, List<String> delegateSelectors, String type,
         String harnessApiVersion, String masterUrl, String username, String usernameSecretId, String password,
         String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String serviceAccountToken,
-        String clientKeyAlgo, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions,
-        CCMConfig.Yaml ccmConfig, KubernetesClusterAuthType authType, String oidcIdentityProviderUrl,
-        String oidcUsername, OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword,
-        String oidcClientId) {
+        String clientKeyAlgo, boolean skipValidation, UsageRestrictionYaml usageRestrictions, CCMConfig.Yaml ccmConfig,
+        KubernetesClusterAuthType authType, String oidcIdentityProviderUrl, String oidcUsername,
+        OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword, String oidcClientId) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;

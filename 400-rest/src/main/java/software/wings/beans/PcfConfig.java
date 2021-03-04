@@ -11,7 +11,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -90,7 +90,7 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String usernameSecretId,
-        String password, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions) {
+        String password, boolean skipValidation, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.endpointUrl = endpointUrl;
       this.username = username;

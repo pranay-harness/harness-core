@@ -13,7 +13,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.workflow.StepSkipStrategy.Scope;
-import software.wings.beans.workflow.StepSkipStrategy.Yaml;
+import software.wings.beans.workflow.StepSkipStrategyYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Utils;
@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 @Singleton
-public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipStrategy> {
-  private StepSkipStrategy toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+public class StepSkipStrategyYamlHandler extends BaseYamlHandler<StepSkipStrategyYaml, StepSkipStrategy> {
+  private StepSkipStrategy toBean(ChangeContext<StepSkipStrategyYaml> changeContext) {
+    StepSkipStrategyYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Scope scope = Utils.getEnumFromString(Scope.class, yaml.getScope());
     notNullCheck("Invalid scope in yaml file path: " + yamlFilePath, scope);
@@ -55,7 +55,7 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
   }
 
   @Override
-  public Yaml toYaml(StepSkipStrategy bean, String appId) {
+  public StepSkipStrategyYaml toYaml(StepSkipStrategy bean, String appId) {
     List<String> steps = null;
     if (bean.getScope() == Scope.SPECIFIC_STEPS && isNotEmpty(bean.getStepIds())) {
       PhaseStep phaseStep = bean.getPhaseStep();
@@ -73,7 +73,7 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
       }
     }
 
-    return Yaml.builder()
+    return StepSkipStrategyYaml.builder()
         .scope(bean.getScope().name())
         .steps(steps)
         .assertionExpression(bean.getAssertionExpression())
@@ -81,13 +81,14 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
   }
 
   @Override
-  public StepSkipStrategy upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public StepSkipStrategy upsertFromYaml(
+      ChangeContext<StepSkipStrategyYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return StepSkipStrategyYaml.class;
   }
 
   @Override
@@ -96,7 +97,7 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<StepSkipStrategyYaml> changeContext) {
     // Do nothing.
   }
 }

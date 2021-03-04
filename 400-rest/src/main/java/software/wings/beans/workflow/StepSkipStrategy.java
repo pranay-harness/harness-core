@@ -81,20 +81,4 @@ public class StepSkipStrategy {
     return new StepSkipStrategy(
         getScope(), getStepIds() == null ? null : new ArrayList<>(getStepIds()), getAssertionExpression());
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    private String scope;
-    private List<String> steps;
-    private String assertionExpression;
-
-    @Builder
-    public Yaml(String scope, List<String> steps, String assertionExpression) {
-      this.scope = scope;
-      this.steps = steps;
-      this.assertionExpression = assertionExpression;
-    }
-  }
 }

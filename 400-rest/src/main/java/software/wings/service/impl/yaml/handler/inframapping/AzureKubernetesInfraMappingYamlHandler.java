@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.AzureKubernetesInfrastructureMapping.Yaml;
+import software.wings.beans.AzureKubernetesInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -13,10 +13,11 @@ import java.util.List;
 
 @Singleton
 public class AzureKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AzureKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<AzureKubernetesInfrastructureMappingYaml,
+        AzureKubernetesInfrastructureMapping> {
   @Override
-  public Yaml toYaml(AzureKubernetesInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AzureKubernetesInfrastructureMappingYaml toYaml(AzureKubernetesInfrastructureMapping bean, String appId) {
+    AzureKubernetesInfrastructureMappingYaml yaml = AzureKubernetesInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AZURE_KUBERNETES.name());
     yaml.setCluster(bean.getClusterName());
@@ -29,8 +30,8 @@ public class AzureKubernetesInfraMappingYamlHandler
 
   @Override
   public AzureKubernetesInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<AzureKubernetesInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    AzureKubernetesInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -52,9 +53,10 @@ public class AzureKubernetesInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(AzureKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AzureKubernetesInfrastructureMapping bean,
+      ChangeContext<AzureKubernetesInfrastructureMappingYaml> changeContext, String appId, String envId,
+      String computeProviderId, String serviceId) {
+    AzureKubernetesInfrastructureMappingYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setResourceGroup(yaml.getResourceGroup());
@@ -70,6 +72,6 @@ public class AzureKubernetesInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureKubernetesInfrastructureMappingYaml.class;
   }
 }

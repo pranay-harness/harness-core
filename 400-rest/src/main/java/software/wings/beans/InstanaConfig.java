@@ -9,7 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -66,7 +66,7 @@ public class InstanaConfig extends SettingValue implements EncryptableSetting, E
     private String apiToken;
     @Builder
     public Yaml(String type, String harnessApiVersion, String instanaUrl, String apiToken,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.instanaUrl = instanaUrl;
       this.apiToken = apiToken;

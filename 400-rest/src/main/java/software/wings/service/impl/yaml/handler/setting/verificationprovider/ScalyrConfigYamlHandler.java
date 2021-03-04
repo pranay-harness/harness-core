@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.ScalyrConfig;
-import software.wings.beans.ScalyrConfig.ScalyrYaml;
+import software.wings.beans.ScalyrYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 

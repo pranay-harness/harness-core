@@ -66,12 +66,4 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
     clonedConfig.setQuery(this.getQuery());
     return clonedConfig;
   }
-
-  @Data
-  @Builder
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class CustomLogsCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private LogCollectionInfo logCollectionInfo;
-  }
 }

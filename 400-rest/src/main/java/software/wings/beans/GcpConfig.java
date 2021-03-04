@@ -13,7 +13,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CloudProviderYaml;
 
@@ -89,8 +89,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector,
-        boolean skipValidation) {
+        UsageRestrictionYaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
       this.delegateSelector = delegateSelector;

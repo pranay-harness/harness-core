@@ -664,7 +664,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
+  public static final class Yaml extends YamlWithComputeProviderYaml {
     private String region = AWS_DEFAULT_REGION;
     private String vpcId;
     private String subnetIds;

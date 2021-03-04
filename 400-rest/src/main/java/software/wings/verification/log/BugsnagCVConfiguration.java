@@ -33,18 +33,4 @@ public class BugsnagCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setQuery(this.getQuery());
     return clonedConfig;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class BugsnagCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String orgName;
-    private String projectName;
-    private String releaseStage;
-    private boolean browserApplication;
-  }
 }

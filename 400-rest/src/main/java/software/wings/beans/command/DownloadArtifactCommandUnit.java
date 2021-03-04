@@ -252,7 +252,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOWNLOAD_ARTIFACT")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     private String artifactVariableName;
 
     public Yaml() {
@@ -261,7 +261,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
     @lombok.Builder
     public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList, String artifactVariableName) {
+        List<TailFilePatternEntryYaml> filePatternEntryList, String artifactVariableName) {
       super(name, CommandUnitType.DOWNLOAD_ARTIFACT.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
       this.artifactVariableName = artifactVariableName;

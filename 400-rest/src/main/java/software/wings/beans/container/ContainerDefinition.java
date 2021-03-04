@@ -89,11 +89,11 @@ public class ContainerDefinition {
     private Double cpu;
     private Integer memory;
     private LogConfiguration.Yaml logConfiguration;
-    private List<StorageConfiguration.Yaml> storageConfigurations;
+    private List<StorageConfigurationYaml> storageConfigurations;
 
     @Builder
     public Yaml(List<PortMapping.Yaml> portMappings, String name, List<String> commands, Double cpu, Integer memory,
-        LogConfiguration.Yaml logConfiguration, List<StorageConfiguration.Yaml> storageConfigurations) {
+        LogConfiguration.Yaml logConfiguration, List<StorageConfigurationYaml> storageConfigurations) {
       this.portMappings = portMappings;
       this.name = name;
       this.commands = commands;

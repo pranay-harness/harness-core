@@ -11,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -36,17 +37,17 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testToBeanBothAccessKeyAndAccessKeySecretId() {
-    AwsConfig.Yaml yaml = AwsConfig.Yaml.builder().accessKey(SAMPLE_STRING).accessKeySecretId(SAMPLE_STRING).build();
+    AwsConfigYaml yaml = AwsConfigYaml.builder().accessKey(SAMPLE_STRING).accessKeySecretId(SAMPLE_STRING).build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<AwsConfig.Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                                      .withYamlType(YamlType.CLOUD_PROVIDER)
-                                                      .withYaml(yaml)
-                                                      .withChange(change)
-                                                      .build();
+    ChangeContext<AwsConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                     .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                     .withYaml(yaml)
+                                                     .withChange(change)
+                                                     .build();
 
     assertThatThrownBy(() -> yamlHandler.toBean(null, changeContext, null))
         .hasMessageContaining("Cannot set both value and secret reference for accessKey field");
@@ -60,7 +61,7 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     SettingAttribute settingAttribute = new SettingAttribute();
 
     settingAttribute.setValue(awsConfig);
-    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+    AwsConfigYaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKey()).isEqualTo(null);
     assertThat(yaml.getSecretKey()).isEqualTo(null);
   }
@@ -85,7 +86,7 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
         .thenReturn(String.valueOf(accessKey));
     when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
         .thenReturn(secretKey);
-    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+    AwsConfigYaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKeySecretId()).isEqualTo(String.valueOf(accessKey));
     assertThat(yaml.getAccessKey()).isEqualTo(null);
     assertThat(yaml.getSecretKey()).isEqualTo(secretKey);
@@ -109,7 +110,7 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     settingAttribute.setValue(awsConfig);
     when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
         .thenReturn(secretKey);
-    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+    AwsConfigYaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
     assertThat(yaml.getAccessKey()).isEqualTo(String.valueOf(accessKey));
     assertThat(yaml.getAccessKeySecretId()).isEqualTo(null);
     assertThat(yaml.getSecretKey()).isEqualTo(secretKey);
@@ -130,7 +131,7 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     settingAttribute.setValue(awsConfig);
     when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
         .thenReturn(secretKey);
-    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+    AwsConfigYaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
 
     assertThat(yaml.getDefaultRegion()).isEqualTo(defaultRegion);
   }
@@ -140,17 +141,17 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
   @Category(UnitTests.class)
   public void testToBeanRegion() {
     String defaultRegion = "defaultRegion";
-    AwsConfig.Yaml yaml = AwsConfig.Yaml.builder().defaultRegion(defaultRegion).build();
+    AwsConfigYaml yaml = AwsConfigYaml.builder().defaultRegion(defaultRegion).build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("accountId")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<AwsConfig.Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                                      .withYamlType(YamlType.CLOUD_PROVIDER)
-                                                      .withYaml(yaml)
-                                                      .withChange(change)
-                                                      .build();
+    ChangeContext<AwsConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                     .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                     .withYaml(yaml)
+                                                     .withChange(change)
+                                                     .build();
 
     SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();

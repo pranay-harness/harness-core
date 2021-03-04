@@ -7,7 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.instana.InstanaCVConfiguration;
-import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationYaml;
+import software.wings.verification.instana.InstanaCVConfigurationYaml;
 
 import java.util.List;
 

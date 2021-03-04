@@ -24,6 +24,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -39,7 +40,7 @@ public class ApplicationManifestYamlHandlerTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @InjectMocks private ApplicationManifestYamlHandler yamlHandler = spy(ApplicationManifestYamlHandler.class);
 
-  private ChangeContext<ApplicationManifest.Yaml> changeContext;
+  private ChangeContext<ApplicationManifestYaml> changeContext;
 
   private String localValidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_MANIFEST\n"
@@ -105,13 +106,13 @@ public class ApplicationManifestYamlHandlerTest extends WingsBaseTest {
     reset(applicationManifestService);
   }
 
-  private ChangeContext<ApplicationManifest.Yaml> createChangeContext(String fileContent, String filePath) {
+  private ChangeContext<ApplicationManifestYaml> createChangeContext(String fileContent, String filePath) {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(fileContent);
     gitFileChange.setFilePath(filePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<ApplicationManifestYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION_MANIFEST);
     changeContext.setYamlSyncHandler(yamlHandler);

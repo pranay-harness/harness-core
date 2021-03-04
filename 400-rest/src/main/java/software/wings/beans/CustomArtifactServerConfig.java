@@ -7,7 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.audit.ResourceType;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
@@ -52,7 +52,7 @@ public class CustomArtifactServerConfig extends SettingValue {
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, null, null, null, usageRestrictions);
     }
   }

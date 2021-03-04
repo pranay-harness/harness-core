@@ -12,7 +12,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AzureInstanceInfrastructure;
-import software.wings.infra.AzureInstanceInfrastructure.Yaml;
+import software.wings.infra.AzureInstanceInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -22,20 +22,20 @@ import java.util.List;
 
 @Singleton
 public class AzureInstanceInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, AzureInstanceInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<AzureInstanceInfrastructureYaml, AzureInstanceInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(AzureInstanceInfrastructure bean, String appId) {
+  public AzureInstanceInfrastructureYaml toYaml(AzureInstanceInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     SettingAttribute hostConnectionAttr = settingsService.get(bean.getHostConnectionAttrs());
     SettingAttribute winRmConnectionAttr = settingsService.get(bean.getWinRmConnectionAttributes());
-    Yaml yaml = Yaml.builder()
-                    .resourceGroup(bean.getResourceGroup())
-                    .subscriptionId(bean.getSubscriptionId())
-                    .tags(bean.getTags())
-                    .cloudProviderName(cloudProvider.getName())
-                    .type(InfrastructureType.AZURE_SSH)
-                    .build();
+    AzureInstanceInfrastructureYaml yaml = AzureInstanceInfrastructureYaml.builder()
+                                               .resourceGroup(bean.getResourceGroup())
+                                               .subscriptionId(bean.getSubscriptionId())
+                                               .tags(bean.getTags())
+                                               .cloudProviderName(cloudProvider.getName())
+                                               .type(InfrastructureType.AZURE_SSH)
+                                               .build();
 
     if (hostConnectionAttr != null) {
       yaml.setHostConnectionAttrsName(hostConnectionAttr.getName());
@@ -47,14 +47,14 @@ public class AzureInstanceInfrastructureYamlHandler
 
   @Override
   public AzureInstanceInfrastructure upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<AzureInstanceInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     AzureInstanceInfrastructure bean = AzureInstanceInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AzureInstanceInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AzureInstanceInfrastructure bean, ChangeContext<AzureInstanceInfrastructureYaml> changeContext) {
+    AzureInstanceInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     SettingAttribute hostConnectionAttr =
@@ -82,6 +82,6 @@ public class AzureInstanceInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureInstanceInfrastructureYaml.class;
   }
 }

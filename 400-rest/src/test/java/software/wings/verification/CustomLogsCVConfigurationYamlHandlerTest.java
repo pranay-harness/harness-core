@@ -20,8 +20,8 @@ import software.wings.sm.states.CustomLogVerificationState.Method;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
 import software.wings.sm.states.CustomLogVerificationState.ResponseType;
 import software.wings.verification.log.CustomLogCVServiceConfiguration;
-import software.wings.verification.log.CustomLogCVServiceConfiguration.CustomLogsCVConfigurationYaml;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.CustomLogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import com.google.inject.Inject;
 import org.junit.Before;

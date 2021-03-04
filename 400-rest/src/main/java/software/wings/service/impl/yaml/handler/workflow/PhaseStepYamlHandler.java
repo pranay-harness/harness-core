@@ -18,6 +18,7 @@ import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.beans.workflow.StepSkipStrategyYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -106,7 +107,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
       stepSkipStrategies = yaml.getStepSkipStrategies()
                                .stream()
                                .map(stepSkipStrategy -> {
-                                 ChangeContext<StepSkipStrategy.Yaml> clonedContext =
+                                 ChangeContext<StepSkipStrategyYaml> clonedContext =
                                      cloneFileChangeContext(changeContext, stepSkipStrategy).build();
                                  clonedContext.getProperties().put(PHASE_STEP_PROPERTY_NAME, phaseStep);
                                  return stepSkipStrategyYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
@@ -134,7 +135,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY);
     List<StepSkipStrategy> stepSkipStrategies = bean.getStepSkipStrategies();
-    List<StepSkipStrategy.Yaml> stepSkipStrategyYamlList =
+    List<StepSkipStrategyYaml> stepSkipStrategyYamlList =
         stepSkipStrategies.stream()
             .map(stepSkipStrategy -> {
               stepSkipStrategy.setPhaseStep(bean);

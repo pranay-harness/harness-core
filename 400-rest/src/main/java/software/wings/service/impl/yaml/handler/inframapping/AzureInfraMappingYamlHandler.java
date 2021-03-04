@@ -4,17 +4,17 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.AzureInfrastructureMapping;
-import software.wings.beans.AzureInfrastructureMapping.Yaml;
+import software.wings.beans.AzureInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 public class AzureInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AzureInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<AzureInfrastructureMappingYaml, AzureInfrastructureMapping> {
   @Override
-  public AzureInfrastructureMapping.Yaml toYaml(AzureInfrastructureMapping bean, String appId) {
-    AzureInfrastructureMapping.Yaml yaml = AzureInfrastructureMapping.Yaml.builder().build();
+  public AzureInfrastructureMappingYaml toYaml(AzureInfrastructureMapping bean, String appId) {
+    AzureInfrastructureMappingYaml yaml = AzureInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AZURE_INFRA.name());
     yaml.setSubscriptionId(bean.getSubscriptionId());
@@ -25,8 +25,8 @@ public class AzureInfraMappingYamlHandler
 
   @Override
   public AzureInfrastructureMapping upsertFromYaml(
-      ChangeContext<AzureInfrastructureMapping.Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    AzureInfrastructureMapping.Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<AzureInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    AzureInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -48,9 +48,9 @@ public class AzureInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(AzureInfrastructureMapping bean, ChangeContext<AzureInfrastructureMapping.Yaml> changeContext,
+  private void toBean(AzureInfrastructureMapping bean, ChangeContext<AzureInfrastructureMappingYaml> changeContext,
       String appId, String envId, String computeProviderId, String serviceId) {
-    AzureInfrastructureMapping.Yaml yaml = changeContext.getYaml();
+    AzureInfrastructureMappingYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setResourceGroup(yaml.getResourceGroup());
@@ -59,7 +59,7 @@ public class AzureInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return AzureInfrastructureMapping.Yaml.class;
+    return AzureInfrastructureMappingYaml.class;
   }
 
   @Override

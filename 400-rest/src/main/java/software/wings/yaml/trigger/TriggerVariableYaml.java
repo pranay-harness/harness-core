@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.AllowedValueYaml;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairAbstractYaml;
 
 import java.util.List;
 import lombok.Builder;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class TriggerVariableYaml extends NameValuePair.AbstractYaml {
+public class TriggerVariableYaml extends NameValuePairAbstractYaml {
   String entityType;
 
   @Builder

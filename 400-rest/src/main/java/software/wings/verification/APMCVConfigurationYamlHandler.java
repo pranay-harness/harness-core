@@ -11,15 +11,16 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.verification.apm.APMCVServiceConfiguration;
-import software.wings.verification.apm.APMCVServiceConfiguration.APMCVConfigurationYaml;
+import software.wings.verification.apm.APMCVServiceConfigurationAPMCVConfigurationYaml;
 
 import java.util.List;
 
 public class APMCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<APMCVServiceConfiguration.APMCVConfigurationYaml, APMCVServiceConfiguration> {
+    extends CVConfigurationYamlHandler<APMCVServiceConfigurationAPMCVConfigurationYaml, APMCVServiceConfiguration> {
   @Override
-  public APMCVConfigurationYaml toYaml(APMCVServiceConfiguration bean, String appId) {
-    APMCVConfigurationYaml yaml = APMCVConfigurationYaml.builder().build();
+  public APMCVServiceConfigurationAPMCVConfigurationYaml toYaml(APMCVServiceConfiguration bean, String appId) {
+    APMCVServiceConfigurationAPMCVConfigurationYaml yaml =
+        APMCVServiceConfigurationAPMCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setMetricCollectionInfos(bean.getMetricCollectionInfos());
     yaml.setType(StateType.APM_VERIFICATION.name());
@@ -28,7 +29,8 @@ public class APMCVConfigurationYamlHandler
 
   @Override
   public APMCVServiceConfiguration upsertFromYaml(
-      ChangeContext<APMCVConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<APMCVServiceConfigurationAPMCVConfigurationYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
 
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -44,7 +46,7 @@ public class APMCVConfigurationYamlHandler
     APMCVServiceConfiguration bean = APMCVServiceConfiguration.builder().build();
     super.toBean(changeContext, bean, appId, yamlFilePath);
 
-    APMCVConfigurationYaml yaml = changeContext.getYaml();
+    APMCVServiceConfigurationAPMCVConfigurationYaml yaml = changeContext.getYaml();
     List<MetricCollectionInfo> metrics = yaml.getMetricCollectionInfos();
 
     if (isEmpty(metrics)) {
@@ -67,7 +69,7 @@ public class APMCVConfigurationYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return APMCVConfigurationYaml.class;
+    return APMCVServiceConfigurationAPMCVConfigurationYaml.class;
   }
 
   @Override

@@ -1,6 +1,6 @@
 package software.wings.yaml.setting;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 
 import lombok.Data;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public abstract class CollaborationProviderYaml extends SettingValue.Yaml {
-  public CollaborationProviderYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+  public CollaborationProviderYaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

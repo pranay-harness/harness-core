@@ -79,24 +79,4 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AZURE_URL, maskingEvaluator));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String clientId;
-    private String tenantId;
-    private String key;
-    private AzureEnvironmentType azureEnvironmentType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
-        UsageRestrictions.Yaml usageRestrictions, AzureEnvironmentType azureEnvironmentType) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.clientId = clientId;
-      this.tenantId = tenantId;
-      this.key = key;
-      this.azureEnvironmentType = azureEnvironmentType;
-    }
-  }
 }

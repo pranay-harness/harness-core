@@ -8,7 +8,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AzureKubernetesService;
-import software.wings.infra.AzureKubernetesService.Yaml;
+import software.wings.infra.AzureKubernetesServiceYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -18,12 +18,12 @@ import java.util.List;
 
 @Singleton
 public class AzureKubernetesServiceYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, AzureKubernetesService> {
+    extends CloudProviderInfrastructureYamlHandler<AzureKubernetesServiceYaml, AzureKubernetesService> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(AzureKubernetesService bean, String appId) {
+  public AzureKubernetesServiceYaml toYaml(AzureKubernetesService bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
+    return AzureKubernetesServiceYaml.builder()
         .clusterName(bean.getClusterName())
         .namespace(bean.getNamespace())
         .releaseName(bean.getReleaseName())
@@ -36,14 +36,14 @@ public class AzureKubernetesServiceYamlHandler
 
   @Override
   public AzureKubernetesService upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<AzureKubernetesServiceYaml> changeContext, List<ChangeContext> changeSetContext) {
     AzureKubernetesService bean = AzureKubernetesService.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AzureKubernetesService bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AzureKubernetesService bean, ChangeContext<AzureKubernetesServiceYaml> changeContext) {
+    AzureKubernetesServiceYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -57,6 +57,6 @@ public class AzureKubernetesServiceYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureKubernetesServiceYaml.class;
   }
 }

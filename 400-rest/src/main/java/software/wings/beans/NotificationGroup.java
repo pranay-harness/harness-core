@@ -7,7 +7,6 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
-import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.yaml.BaseEntityYaml;
@@ -399,32 +398,15 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
-    private List<AddressYaml> addresses;
+    private List<NotificationGroupAddressYaml> addresses;
     private String defaultNotificationGroupForAccount;
 
     @Builder
-    public Yaml(
-        String type, String harnessApiVersion, List<AddressYaml> addresses, String defaultNotificationGroupForAccount) {
+    public Yaml(String type, String harnessApiVersion, List<NotificationGroupAddressYaml> addresses,
+        String defaultNotificationGroupForAccount) {
       super(type, harnessApiVersion);
       this.addresses = addresses;
       this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
-    }
-  }
-
-  /**
-   * Yaml representation of addressesByChannelType in NotificationGroup.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class AddressYaml extends BaseYaml {
-    private String channelType;
-    private List<String> addresses;
-
-    @Builder
-    public AddressYaml(String channelType, List<String> addresses) {
-      this.channelType = channelType;
-      this.addresses = addresses;
     }
   }
 }

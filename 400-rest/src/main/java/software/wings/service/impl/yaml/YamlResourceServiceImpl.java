@@ -37,12 +37,13 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFileOverrideYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTag;
+import software.wings.beans.InfraProvisionerYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.InfrastructureProvisioner.InfraProvisionerYaml;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -51,8 +52,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
+import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -64,6 +67,7 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerYaml;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
@@ -95,7 +99,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+import software.wings.verification.CVConfigurationYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
@@ -194,8 +198,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ApplicationManifest applicationManifest = applicationManifestService.getById(appId, applicationManifestId);
 
     notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
-    ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
+    ApplicationManifestYaml yaml =
+        (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
@@ -244,7 +248,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   private RestResponse<YamlPayload> getArtifactTrigger(String appId, ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
-    ArtifactStream.Yaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
+    ArtifactStreamYaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
     if (!GLOBAL_APP_ID.equals(appId)) {
       // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is
       // deleted in parallel
@@ -282,10 +286,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     Trigger trigger = triggerService.get(appId, triggerId);
 
-    Trigger.Yaml triggerYaml = (Trigger.Yaml) yamlHandlerFactory
-                                   .getYamlHandler(YamlType.TRIGGER)
+    TriggerYaml triggerYaml = (TriggerYaml) yamlHandlerFactory
+                                  .getYamlHandler(YamlType.TRIGGER)
 
-                                   .toYaml(trigger, appId);
+                                  .toYaml(trigger, appId);
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, trigger.getUuid(), accountId, triggerYaml, trigger.getName() + YAML_EXTENSION);
@@ -319,8 +323,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getApplicationManifest(String appId, ApplicationManifest manifest) {
-    ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(manifest))
+    ApplicationManifestYaml yaml =
+        (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(manifest))
             .toYaml(manifest, appId);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, yaml, INDEX_YAML);
@@ -673,8 +677,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   private RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
-    ConfigFile.OverrideYaml yaml =
-        (ConfigFile.OverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
+    ConfigFileOverrideYaml yaml =
+        (ConfigFileOverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
             .toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
@@ -683,7 +687,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   private RestResponse<YamlPayload> getAppManifestYaml(String accountId, ApplicationManifest applicationManifest) {
     YamlType yamlType = getYamlTypeFromAppManifest(applicationManifest);
 
-    ApplicationManifest.Yaml yaml = (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
+    ApplicationManifestYaml yaml = (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
         applicationManifest, applicationManifest.getAppId());
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,

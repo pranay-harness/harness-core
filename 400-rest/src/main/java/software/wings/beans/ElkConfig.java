@@ -8,7 +8,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.ElkValidationTypeProvider;
@@ -111,7 +111,7 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String elkUrl, ElkValidationType validationType, String username,
-        String password, String connectorType, UsageRestrictions.Yaml usageRestrictions) {
+        String password, String connectorType, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.elkUrl = elkUrl;
       this.validationType = validationType;

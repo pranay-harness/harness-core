@@ -51,14 +51,14 @@ public class PortCheckClearedCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("PORT_CHECK_CLEARED")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.PORT_CHECK_CLEARED.name());
     }
 
     @lombok.Builder
     public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+        List<TailFilePatternEntryYaml> filePatternEntryList) {
       super(name, CommandUnitType.PORT_CHECK_CLEARED.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
     }

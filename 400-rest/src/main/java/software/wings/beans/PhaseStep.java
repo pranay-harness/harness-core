@@ -25,6 +25,7 @@ import io.harness.data.structure.NullSafeImmutableMap;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.beans.workflow.StepSkipStrategyYaml;
 import software.wings.common.WorkflowConstants;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
@@ -573,13 +574,13 @@ public class PhaseStep {
     private boolean stepsInParallel;
     private List<StepYaml> steps = new ArrayList<>();
     private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
-    private List<StepSkipStrategy.Yaml> stepSkipStrategies = new ArrayList<>();
+    private List<StepSkipStrategyYaml> stepSkipStrategies = new ArrayList<>();
     private String phaseStepNameForRollback;
     private Integer waitInterval;
 
     @lombok.Builder
     public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
-        List<FailureStrategy.Yaml> failureStrategies, List<StepSkipStrategy.Yaml> stepSkipStrategies,
+        List<FailureStrategy.Yaml> failureStrategies, List<StepSkipStrategyYaml> stepSkipStrategies,
         String phaseStepNameForRollback, Integer waitInterval) {
       super(type);
       this.name = name;

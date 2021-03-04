@@ -608,7 +608,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("SCP")
-  public static class Yaml extends SshCommandUnit.Yaml {
+  public static class Yaml extends SshCommandUnitYaml {
     // maps to fileCategory
     private String source;
     private String destinationDirectoryPath;

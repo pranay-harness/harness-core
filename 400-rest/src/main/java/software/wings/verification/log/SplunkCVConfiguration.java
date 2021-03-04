@@ -62,24 +62,4 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
   public boolean isCVTaskBasedCollectionEnabled() {
     return true;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class SplunkCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private boolean isAdvancedQuery;
-    private String hostnameField;
-
-    @Attributes(title = "Is advanced query", required = false)
-    @DefaultValue("false")
-    @JsonProperty(value = "isAdvancedQuery")
-    public boolean isAdvancedQuery() {
-      return isAdvancedQuery;
-    }
-
-    public void setAdvancedQuery(boolean advancedQuery) {
-      this.isAdvancedQuery = advancedQuery;
-    }
-  }
 }

@@ -1,6 +1,7 @@
 package software.wings.verification.appdynamics;
 
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
@@ -25,18 +26,5 @@ public class AppDynamicsCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setAppDynamicsApplicationId(this.getAppDynamicsApplicationId());
     clonedConfig.setTierId(this.getTierId());
     return clonedConfig;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class AppDynamicsCVConfigurationYaml extends CVConfigurationYaml {
-    private String appDynamicsApplicationName;
-    private String tierName;
   }
 }

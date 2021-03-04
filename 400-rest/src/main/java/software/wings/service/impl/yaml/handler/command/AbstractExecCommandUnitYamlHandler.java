@@ -13,10 +13,11 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.shell.ScriptType;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.ExecCommandUnit;
-import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
+import software.wings.beans.command.ExecCommandUnitAbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
+import software.wings.beans.command.TailFilePatternEntryYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.Utils;
 
@@ -27,7 +28,8 @@ import java.util.Objects;
 /**
  * @author rktummala on 11/13/17
  */
-public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml, B extends ExecCommandUnit>
+public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUnitAbstractYaml, B
+                                                             extends ExecCommandUnit>
     extends SshCommandUnitYamlHandler<Y, B> {
   @Override
   protected void toYaml(Y yaml, B bean) {
@@ -38,7 +40,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     yaml.setFilePatternEntryList(convertToYaml(bean.getTailPatterns()));
   }
 
-  private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
+  private List<TailFilePatternEntryYaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
     if (isEmpty(patternEntryList)) {
       return null;
     }
@@ -46,14 +48,14 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     return patternEntryList.stream()
         .filter(Objects::nonNull)
         .map(entry
-            -> TailFilePatternEntry.Yaml.Builder.anYaml()
+            -> TailFilePatternEntryYaml.Builder.anYaml()
                    .withFilePath(entry.getFilePath())
                    .withSearchPattern(entry.getPattern())
                    .build())
         .collect(toList());
   }
 
-  protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
+  protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntryYaml> patternEntryYamlList) {
     if (isEmpty(patternEntryYamlList)) {
       return null;
     }
@@ -83,9 +85,9 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   }
 
   @Override
-  public B toBean(AbstractCommandUnit.Yaml yaml) {
+  public B toBean(AbstractCommandUnitYaml yaml) {
     B bean = super.toBean(yaml);
-    final ExecCommandUnit.AbstractYaml execYaml = (ExecCommandUnit.AbstractYaml) yaml;
+    final ExecCommandUnitAbstractYaml execYaml = (ExecCommandUnitAbstractYaml) yaml;
     ScriptType scriptType = isEmpty(execYaml.getScriptType())
         ? ScriptType.BASH
         : Utils.getEnumFromString(ScriptType.class, execYaml.getScriptType());
@@ -106,11 +108,11 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     nodeProperties.put(NODE_PROPERTY_COMMAND_STRING, yaml.getCommand());
     nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
 
-    List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
+    List<TailFilePatternEntryYaml> filePatternEntryList = yaml.getFilePatternEntryList();
     if (isNotEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
                                      .filter(Objects::nonNull)
-                                     .map(TailFilePatternEntry.Yaml::getSearchPattern)
+                                     .map(TailFilePatternEntryYaml::getSearchPattern)
                                      .collect(toList());
       nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
       nodeProperties.put(NODE_PROPERTY_TAIL_PATTERNS, patternList);

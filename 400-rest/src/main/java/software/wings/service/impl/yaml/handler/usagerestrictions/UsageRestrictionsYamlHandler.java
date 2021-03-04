@@ -15,9 +15,11 @@ import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.EnvFilterBuilder;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.GenericEntityFilterBuilder;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UsageRestrictions.UsageRestrictionsBuilder;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -35,11 +37,11 @@ import java.util.stream.Collectors;
  */
 @OwnedBy(CDC)
 @Singleton
-public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestrictions.Yaml, UsageRestrictions> {
+public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestrictionYaml, UsageRestrictions> {
   @Inject AppService appService;
   @Inject EnvironmentService environmentService;
 
-  private AppEnvRestriction constructAppEnvRestriction(AppEnvRestriction.Yaml yaml, String accountId) {
+  private AppEnvRestriction constructAppEnvRestriction(UsageRestrictionsYaml yaml, String accountId) {
     GenericEntityFilter appFilter = constructGenericEntityFilter(yaml.getAppFilter(), accountId);
     return AppEnvRestriction.builder()
         .envFilter(constructEnvFilter(appFilter, yaml.getEnvFilter()))
@@ -47,9 +49,9 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
         .build();
   }
 
-  private AppEnvRestriction.Yaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
+  private UsageRestrictionsYaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
     GenericEntityFilter.Yaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
-    return AppEnvRestriction.Yaml.builder()
+    return UsageRestrictionsYaml.builder()
         .envFilter(constructEnvFilterYaml(appEnvRestriction.getAppFilter(), appEnvRestriction.getEnvFilter()))
         .appFilter(appFilterYaml)
         .build();
@@ -159,10 +161,10 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterType(appFilter.getFilterType()).build();
   }
 
-  private UsageRestrictions toBean(ChangeContext<UsageRestrictions.Yaml> changeContext) {
+  private UsageRestrictions toBean(ChangeContext<UsageRestrictionYaml> changeContext) {
     UsageRestrictionsBuilder usageRestrictionsBuilder = UsageRestrictions.builder();
     String accountId = changeContext.getChange().getAccountId();
-    UsageRestrictions.Yaml yaml = changeContext.getYaml();
+    UsageRestrictionYaml yaml = changeContext.getYaml();
 
     if (yaml == null) {
       return null;
@@ -182,7 +184,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   @Override
-  public UsageRestrictions.Yaml toYaml(UsageRestrictions usageRestrictions, String appId) {
+  public UsageRestrictionYaml toYaml(UsageRestrictions usageRestrictions, String appId) {
     if (usageRestrictions == null) {
       return null;
     }
@@ -191,24 +193,24 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
       return null;
     }
 
-    UsageRestrictions.Yaml.YamlBuilder usageRestrictionsYamlBuilder = UsageRestrictions.Yaml.builder();
-    List<AppEnvRestriction.Yaml> appEnvRestrictionYamlList = usageRestrictions.getAppEnvRestrictions()
-                                                                 .stream()
-                                                                 .map(this::constructAppEnvRestrictionYaml)
-                                                                 .collect(Collectors.toList());
+    UsageRestrictionYaml.YamlBuilder usageRestrictionsYamlBuilder = UsageRestrictionYaml.builder();
+    List<UsageRestrictionsYaml> appEnvRestrictionYamlList = usageRestrictions.getAppEnvRestrictions()
+                                                                .stream()
+                                                                .map(this::constructAppEnvRestrictionYaml)
+                                                                .collect(Collectors.toList());
     usageRestrictionsYamlBuilder.appEnvRestrictions(appEnvRestrictionYamlList);
     return usageRestrictionsYamlBuilder.build();
   }
 
   @Override
   public UsageRestrictions upsertFromYaml(
-      ChangeContext<UsageRestrictions.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<UsageRestrictionYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return UsageRestrictions.Yaml.class;
+    return UsageRestrictionYaml.class;
   }
 
   @Override
@@ -217,7 +219,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   @Override
-  public void delete(ChangeContext<UsageRestrictions.Yaml> changeContext) {
+  public void delete(ChangeContext<UsageRestrictionYaml> changeContext) {
     // do nothing
   }
 }

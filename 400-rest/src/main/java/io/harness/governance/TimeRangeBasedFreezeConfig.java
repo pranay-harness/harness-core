@@ -70,32 +70,4 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   public long fetchEndTime() {
     return getTimeRange().getTo();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("TIME_RANGE_BASED_FREEZE_CONFIG")
-  public static final class Yaml extends GovernanceFreezeConfigYaml {
-    private String name;
-    private String description;
-    private boolean applicable;
-    private List<String> userGroups;
-    private List<ApplicationFilterYaml> appSelections;
-    private TimeRange.Yaml timeRange;
-
-    @Builder
-    public Yaml(String type, String name, String description, boolean applicable, List<String> userGroups,
-        List<ApplicationFilterYaml> appSelections, TimeRange.Yaml timeRange) {
-      super(type);
-      setName(name);
-      setDescription(description);
-      setApplicable(applicable);
-      setUserGroups(userGroups);
-      setAppSelections(appSelections);
-      setTimeRange(timeRange);
-    }
-
-    public Yaml() {
-      super("TIME_RANGE_BASED_FREEZE_CONFIG");
-    }
-  }
 }

@@ -3,6 +3,7 @@ package software.wings.beans.shellscript.provisioner;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.api.ShellScriptProvisionerOutputElement;
+import software.wings.beans.InfraProvisionerYaml;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;

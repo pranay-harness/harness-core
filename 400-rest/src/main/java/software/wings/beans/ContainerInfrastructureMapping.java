@@ -79,21 +79,6 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
     }
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends InfrastructureMapping.YamlWithComputeProvider {
-    private String cluster;
-
-    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, String cluster,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
-          computeProviderName, blueprints);
-      this.cluster = cluster;
-    }
-  }
-
   public abstract String getNamespace();
 
   public abstract String getReleaseName();

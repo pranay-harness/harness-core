@@ -6,7 +6,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.audit.ResourceType;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -93,7 +93,7 @@ public class PhysicalDataCenterConfig extends SettingValue {
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
     }
   }

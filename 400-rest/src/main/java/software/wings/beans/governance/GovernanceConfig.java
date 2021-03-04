@@ -9,6 +9,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.TimeRangeBasedFreezeConfigYaml;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.iterator.PersistentCronIterable;
 import io.harness.mongo.index.FdIndex;
@@ -136,11 +137,11 @@ public class GovernanceConfig
   @EqualsAndHashCode(callSuper = false)
   public static final class Yaml extends BaseEntityYaml {
     private boolean disableAllDeployments;
-    private List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs;
+    private List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, boolean disableAllDeployments,
-        List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs) {
+        List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs) {
       super(type, harnessApiVersion);
       this.disableAllDeployments = disableAllDeployments;
       this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;

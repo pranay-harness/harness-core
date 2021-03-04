@@ -245,7 +245,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends YamlWithComputeProvider {
+  public static class Yaml extends YamlWithComputeProviderYaml {
     private String masterUrl;
     private String username;
     private String password;

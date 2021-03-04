@@ -22,7 +22,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.Type;
-import software.wings.beans.trigger.ArtifactSelection.Yaml;
+import software.wings.beans.trigger.ArtifactSelectionYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -32,22 +32,22 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDC)
-public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, ArtifactSelection> {
+public class ArtifactSelectionYamlHandler extends BaseYamlHandler<ArtifactSelectionYaml, ArtifactSelection> {
   @Inject protected YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {}
+  public void delete(ChangeContext<ArtifactSelectionYaml> changeContext) {}
 
   @Override
-  public Yaml toYaml(ArtifactSelection bean, String appId) {
-    ArtifactSelection.Yaml yaml = ArtifactSelection.Yaml.builder()
-                                      .artifactFilter(bean.getArtifactFilter())
-                                      .type(bean.getType().name())
-                                      .serviceName(bean.getServiceName())
-                                      .workflowName(bean.getWorkflowName())
-                                      .pipelineName(bean.getPipelineName())
-                                      .build();
+  public ArtifactSelectionYaml toYaml(ArtifactSelection bean, String appId) {
+    ArtifactSelectionYaml yaml = ArtifactSelectionYaml.builder()
+                                     .artifactFilter(bean.getArtifactFilter())
+                                     .type(bean.getType().name())
+                                     .serviceName(bean.getServiceName())
+                                     .workflowName(bean.getWorkflowName())
+                                     .pipelineName(bean.getPipelineName())
+                                     .build();
 
     if (EmptyPredicate.isNotEmpty(bean.getArtifactStreamId())) {
       yaml.setArtifactStreamName(yamlHelper.getArtifactStreamName(appId, bean.getArtifactStreamId()));
@@ -61,8 +61,9 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
   }
 
   @Override
-  public ArtifactSelection upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    ArtifactSelection.Yaml yaml = changeContext.getYaml();
+  public ArtifactSelection upsertFromYaml(
+      ChangeContext<ArtifactSelectionYaml> changeContext, List<ChangeContext> changeSetContext) {
+    ArtifactSelectionYaml yaml = changeContext.getYaml();
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceName = yaml.getServiceName();
@@ -108,7 +109,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
 
   @Override
   public Class getYamlClass() {
-    return ArtifactSelection.Yaml.class;
+    return ArtifactSelectionYaml.class;
   }
 
   @Override

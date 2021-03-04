@@ -6,7 +6,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.GraphNode;
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.yaml.ChangeContext;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  *  @author rktummala on 11/13/17
  */
-public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml, C extends CommandUnit>
+public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnitYaml, C extends CommandUnit>
     extends BaseYamlHandler<Y, C> {
   protected abstract C getCommandUnit();
 
@@ -56,7 +56,7 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     return commandUnit;
   }
 
-  public C toBean(AbstractCommandUnit.Yaml yaml) {
+  public C toBean(AbstractCommandUnitYaml yaml) {
     C commandUnit = getCommandUnit();
     commandUnit.setDeploymentType(yaml.getDeploymentType());
     commandUnit.setCommandUnitType(Utils.getEnumFromString(CommandUnitType.class, yaml.getCommandUnitType()));

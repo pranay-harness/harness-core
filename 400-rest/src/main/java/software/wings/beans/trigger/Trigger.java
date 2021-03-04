@@ -15,11 +15,9 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
@@ -172,51 +170,6 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       }
     }
     return workflowVariables;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-    @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
-    private String executionType;
-    private String executionName;
-    private boolean continueWithDefaultValues;
-    private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
-    private List<ManifestSelection.Yaml> manifestSelections = new ArrayList<>();
-    private List<TriggerVariable> workflowVariables = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, String executionType, String executionName,
-        List<TriggerVariable> workflowVariables, List<TriggerConditionYaml> triggerCondition,
-        List<ArtifactSelection.Yaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections,
-        boolean continueWithDefaultValues) {
-      super(EntityType.TRIGGER.name(), harnessApiVersion);
-      this.continueWithDefaultValues = continueWithDefaultValues;
-      this.setHarnessApiVersion(harnessApiVersion);
-      this.description = description;
-      this.executionType = executionType;
-      this.executionName = executionName;
-      this.workflowVariables = workflowVariables;
-      this.triggerCondition = triggerCondition;
-      this.artifactSelections = artifactSelections;
-      this.manifestSelections = manifestSelections;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static class TriggerVariable extends NameValuePair.AbstractYaml {
-      String entityType;
-
-      @Builder
-      public TriggerVariable(
-          String entityType, String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamls) {
-        super(name, value, valueType, allowedValueYamls);
-        this.entityType = entityType;
-      }
-    }
   }
 
   @UtilityClass

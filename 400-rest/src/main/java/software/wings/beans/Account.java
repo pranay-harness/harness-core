@@ -699,19 +699,6 @@ public class Account extends Base implements PersistentRegularIterable {
     }
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private List<NameValuePair.Yaml> defaults = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, List<NameValuePair.Yaml> defaults) {
-      super(type, harnessApiVersion);
-      this.defaults = defaults;
-    }
-  }
-
   public List<String> toAccountIds(List<Account> accounts) {
     return accounts.stream().map(account -> getUuid()).collect(Collectors.toList());
   }

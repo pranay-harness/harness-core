@@ -71,22 +71,4 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
     executionCapabilityList.add(ChartMuseumCapability.builder().build());
     return executionCapabilityList;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends HelmRepoYaml {
-    private String cloudProvider;
-    private String bucket;
-    private String region;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket, String region,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.cloudProvider = cloudProvider;
-      this.bucket = bucket;
-      this.region = region;
-    }
-  }
 }

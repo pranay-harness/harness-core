@@ -11,7 +11,7 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TemplateExpression;
-import software.wings.beans.TemplateExpression.Yaml;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -30,11 +30,11 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @Singleton
-public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpression.Yaml, TemplateExpression> {
+public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpressionYaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private TemplateExpression toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
-    Yaml yaml = changeContext.getYaml();
+  private TemplateExpression toBean(ChangeContext<TemplateExpressionYaml> changeContext) throws HarnessException {
+    TemplateExpressionYaml yaml = changeContext.getYaml();
 
     Map<String, Object> properties = new HashMap<>();
     if (yaml.getMetadata() != null) {
@@ -54,12 +54,12 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   }
 
   @Override
-  public Yaml toYaml(TemplateExpression bean, String appId) {
+  public TemplateExpressionYaml toYaml(TemplateExpression bean, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
     List<NameValuePair.Yaml> nameValuePairYamlList =
         Utils.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
-    return Yaml.Builder.aYaml()
+    return TemplateExpressionYaml.Builder.aYaml()
         .withExpression(bean.getExpression())
         .withFieldName(bean.getFieldName())
         .withMetadata(nameValuePairYamlList)
@@ -67,14 +67,14 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   }
 
   @Override
-  public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public TemplateExpression upsertFromYaml(ChangeContext<TemplateExpressionYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return TemplateExpression.Yaml.class;
+    return TemplateExpressionYaml.class;
   }
 
   @Override
@@ -83,7 +83,7 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<TemplateExpressionYaml> changeContext) throws HarnessException {
     // Do nothing
   }
 }

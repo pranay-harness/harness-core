@@ -63,20 +63,4 @@ public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifa
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         azureDevopsUrl, maskingEvaluator));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends AzureArtifactsYaml {
-    private String azureDevopsUrl;
-    private String pat;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String azureDevopsUrl, String pat,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.azureDevopsUrl = azureDevopsUrl;
-      this.pat = pat;
-    }
-  }
 }

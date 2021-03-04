@@ -12,7 +12,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
@@ -90,7 +90,7 @@ public class BambooConfig extends SettingValue implements EncryptableSetting, Ar
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionYaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
     }
   }

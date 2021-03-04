@@ -65,32 +65,4 @@ public class AzureKubernetesService
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AZURE;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_KUBERNETES)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String clusterName;
-    private String namespace;
-    private String releaseName;
-    private String resourceGroup;
-    private String subscriptionId;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String clusterName, String namespace, String releaseName,
-        String resourceGroup, String subscriptionId) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setClusterName(clusterName);
-      setNamespace(namespace);
-      setReleaseName(releaseName);
-      setResourceGroup(resourceGroup);
-      setSubscriptionId(subscriptionId);
-    }
-
-    public Yaml() {
-      super(AZURE_KUBERNETES);
-    }
-  }
 }

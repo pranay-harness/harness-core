@@ -25,6 +25,7 @@ import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
+import software.wings.beans.artifact.AzureArtifactsArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -72,7 +73,7 @@ public class AzureArtifactsArtifactStreamYamlHandlerTest extends WingsBaseTest {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
 
-    AzureArtifactsArtifactStream.Yaml yaml = yamlHandler.toYaml(azureArtifactsArtifactStream, APP_ID);
+    AzureArtifactsArtifactStreamYaml yaml = yamlHandler.toYaml(azureArtifactsArtifactStream, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getPackageType()).isEqualTo(ProtocolType.maven.name());
     assertThat(yaml.getProject()).isEqualTo(PROJECT);
@@ -92,15 +93,15 @@ public class AzureArtifactsArtifactStreamYamlHandlerTest extends WingsBaseTest {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, settingName)).thenReturn(settingAttribute);
-    AzureArtifactsArtifactStream.Yaml baseYaml = AzureArtifactsArtifactStream.Yaml.builder()
-                                                     .packageType(ProtocolType.maven.name())
-                                                     .project(PROJECT)
-                                                     .feed(FEED)
-                                                     .packageId(PACKAGE_ID)
-                                                     .packageName(PACKAGE_NAME)
-                                                     .serverName(settingName)
-                                                     .harnessApiVersion("1.0")
-                                                     .build();
+    AzureArtifactsArtifactStreamYaml baseYaml = AzureArtifactsArtifactStreamYaml.builder()
+                                                    .packageType(ProtocolType.maven.name())
+                                                    .project(PROJECT)
+                                                    .feed(FEED)
+                                                    .packageId(PACKAGE_ID)
+                                                    .packageName(PACKAGE_NAME)
+                                                    .serverName(settingName)
+                                                    .harnessApiVersion("1.0")
+                                                    .build();
     ChangeContext changeContext =
         ChangeContext.Builder.aChangeContext()
             .withYamlType(YamlType.ARTIFACT_STREAM)
@@ -151,6 +152,6 @@ public class AzureArtifactsArtifactStreamYamlHandlerTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(AzureArtifactsArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(AzureArtifactsArtifactStreamYaml.class);
   }
 }

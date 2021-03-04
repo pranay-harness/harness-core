@@ -1,6 +1,6 @@
 package software.wings.yaml.command;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.yaml.templatelibrary.TemplateLibraryYaml;
 
@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("COMMAND")
-public class CommandRefYaml extends AbstractCommandUnit.Yaml {
+public class CommandRefYaml extends AbstractCommandUnitYaml {
   private List<TemplateLibraryYaml.TemplateVariableYaml> variables;
   private String templateUri;
 

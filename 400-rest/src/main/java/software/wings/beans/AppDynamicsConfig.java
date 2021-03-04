@@ -110,24 +110,4 @@ public class AppDynamicsConfig
             String.format("%s@%s:%s", getUsername(), getAccountname(), new String(getPassword()))
                 .getBytes(StandardCharsets.UTF_8));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String username;
-    private String password;
-    private String accountName;
-    private String controllerUrl;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String username, String password, String accountName,
-        String controllerUrl, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.username = username;
-      this.password = password;
-      this.accountName = accountName;
-      this.controllerUrl = controllerUrl;
-    }
-  }
 }

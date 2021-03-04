@@ -17,6 +17,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.beans.workflow.StepSkipStrategyYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -38,7 +39,7 @@ public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
   public void testToYaml() {
     StepSkipStrategy stepSkipStrategy =
         new StepSkipStrategy(StepSkipStrategy.Scope.ALL_STEPS, null, ASSERTION_EXPRESSION);
-    StepSkipStrategy.Yaml yaml = stepSkipStrategyYamlHandler.toYaml(stepSkipStrategy, APP_ID);
+    StepSkipStrategyYaml yaml = stepSkipStrategyYamlHandler.toYaml(stepSkipStrategy, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getScope()).isEqualTo(ALL_STEPS.name());
     assertThat(yaml.getSteps()).isNull();
@@ -76,11 +77,11 @@ public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testToBean() {
-    StepSkipStrategy.Yaml yaml = StepSkipStrategy.Yaml.builder()
-                                     .scope(ALL_STEPS.name())
-                                     .steps(Collections.singletonList("randomStepId"))
-                                     .assertionExpression(ASSERTION_EXPRESSION)
-                                     .build();
+    StepSkipStrategyYaml yaml = StepSkipStrategyYaml.builder()
+                                    .scope(ALL_STEPS.name())
+                                    .steps(Collections.singletonList("randomStepId"))
+                                    .assertionExpression(ASSERTION_EXPRESSION)
+                                    .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.STEP_SKIP_STRATEGY)
                                       .withYaml(yaml)
@@ -94,7 +95,7 @@ public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
     assertThat(stepSkipStrategy.getStepIds()).isNullOrEmpty();
     assertThat(stepSkipStrategy.getAssertionExpression()).isEqualTo(ASSERTION_EXPRESSION);
 
-    yaml = StepSkipStrategy.Yaml.builder()
+    yaml = StepSkipStrategyYaml.builder()
                .scope(SPECIFIC_STEPS.name())
                .steps(null)
                .assertionExpression(ASSERTION_EXPRESSION)
@@ -106,7 +107,7 @@ public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
     assertThat(stepSkipStrategy.getStepIds()).isNullOrEmpty();
     assertThat(stepSkipStrategy.getAssertionExpression()).isEqualTo(ASSERTION_EXPRESSION);
 
-    yaml = StepSkipStrategy.Yaml.builder()
+    yaml = StepSkipStrategyYaml.builder()
                .scope(SPECIFIC_STEPS.name())
                .steps(Collections.emptyList())
                .assertionExpression(ASSERTION_EXPRESSION)
@@ -120,7 +121,7 @@ public class StepSkipStrategyYamlHandlerTest extends WingsBaseTest {
 
     String stepId = "stepId";
     String stepName = "stepName";
-    yaml = StepSkipStrategy.Yaml.builder()
+    yaml = StepSkipStrategyYaml.builder()
                .scope(SPECIFIC_STEPS.name())
                .steps(Collections.singletonList(stepName))
                .assertionExpression(ASSERTION_EXPRESSION)

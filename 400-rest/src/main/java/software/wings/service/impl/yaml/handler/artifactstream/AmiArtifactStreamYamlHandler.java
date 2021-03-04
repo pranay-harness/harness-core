@@ -12,7 +12,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
-import software.wings.beans.artifact.AmiArtifactStream.Yaml;
+import software.wings.beans.artifact.AmiArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.common.collect.Lists;
@@ -23,10 +23,10 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, AmiArtifactStream> {
+public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<AmiArtifactStreamYaml, AmiArtifactStream> {
   @Override
-  public Yaml toYaml(AmiArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AmiArtifactStreamYaml toYaml(AmiArtifactStream bean, String appId) {
+    AmiArtifactStreamYaml yaml = AmiArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setPlatform(bean.getPlatform());
     yaml.setRegion(bean.getRegion());
@@ -37,13 +37,13 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AmiArtifactStreamYaml.class;
   }
 
   @Override
-  protected void toBean(AmiArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(AmiArtifactStream bean, ChangeContext<AmiArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    AmiArtifactStreamYaml yaml = changeContext.getYaml();
     if (isEmpty(yaml.getRegion())) {
       throw new InvalidRequestException("Region cannot be null or empty");
     }

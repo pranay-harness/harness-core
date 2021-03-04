@@ -21,9 +21,10 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
-import software.wings.beans.WorkflowPhase.Yaml;
+import software.wings.beans.WorkflowPhaseYaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -51,7 +52,7 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml, WorkflowPhase> {
+public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhaseYaml, WorkflowPhase> {
   @Inject private YamlHelper yamlHelper;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
@@ -62,8 +63,8 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   @Inject private AppService appService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
 
-  private WorkflowPhase toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext) {
-    Yaml yaml = context.getYaml();
+  private WorkflowPhase toBean(ChangeContext<WorkflowPhaseYaml> context, List<ChangeContext> changeSetContext) {
+    WorkflowPhaseYaml yaml = context.getYaml();
     Change change = context.getChange();
     String accountId = change.getAccountId();
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
@@ -164,7 +165,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   }
 
   @Override
-  public Yaml toYaml(WorkflowPhase bean, String appId) {
+  public WorkflowPhaseYaml toYaml(WorkflowPhase bean, String appId) {
     SettingAttribute settingAttribute = settingsService.get(bean.getComputeProviderId());
     String computeProviderName;
     if (settingAttribute == null) {
@@ -174,7 +175,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     }
 
     // template expressions
-    List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
+    List<TemplateExpressionYaml> templateExprYamlList = Lists.newArrayList();
     if (bean.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExpressionYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);
@@ -219,7 +220,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
     }
 
-    return Yaml.builder()
+    return WorkflowPhaseYaml.builder()
         .computeProviderName(computeProviderName)
         .infraMappingName(infraMappingName)
         .infraDefinitionName(infraDefName)
@@ -237,14 +238,14 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   }
 
   @Override
-  public WorkflowPhase upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public WorkflowPhase upsertFromYaml(
+      ChangeContext<WorkflowPhaseYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext, changeSetContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return WorkflowPhase.Yaml.class;
+    return WorkflowPhaseYaml.class;
   }
 
   @Override
@@ -253,7 +254,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<WorkflowPhaseYaml> changeContext) throws HarnessException {
     // Do nothing
   }
 }

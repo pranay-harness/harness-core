@@ -13,8 +13,8 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.sm.StateType;
+import software.wings.verification.cloudwatch.CloudWatchCVConfigurationYaml;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
-import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration.CloudWatchCVConfigurationYaml;
 
 import com.google.inject.Inject;
 import java.util.List;

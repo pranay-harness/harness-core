@@ -1,8 +1,7 @@
 package software.wings.yaml.command;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.AbstractCommandUnit.Yaml;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -23,13 +22,14 @@ public class CommandYaml extends BaseEntityYaml {
   private String commandUnitType;
   private boolean targetToAllEnv;
   private List<String> targetEnvs = new ArrayList<>();
-  private List<AbstractCommandUnit.Yaml> commandUnits = new ArrayList<>();
+  private List<AbstractCommandUnitYaml> commandUnits = new ArrayList<>();
   private String templateUri;
   private List<NameValuePair> templateVariables;
 
   @Builder
   public CommandYaml(String type, String harnessApiVersion, String commandUnitType, boolean targetToAllEnv,
-      List<String> targetEnvs, List<Yaml> commandUnits, String templateUri, List<NameValuePair> templateVariables) {
+      List<String> targetEnvs, List<AbstractCommandUnitYaml> commandUnits, String templateUri,
+      List<NameValuePair> templateVariables) {
     super(type, harnessApiVersion);
     this.commandUnitType = commandUnitType;
     this.targetToAllEnv = targetToAllEnv;

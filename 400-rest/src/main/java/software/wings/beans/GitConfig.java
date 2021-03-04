@@ -15,7 +15,7 @@ import io.harness.shell.AuthenticationScheme;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.SourceRepoProviderYaml;
@@ -151,7 +151,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
+        String reference, UsageRestrictionYaml usageRestrictions, boolean keyAuth, String sshKeyName,
         String description, String authorName, String authorEmailId, String commitMessage, UrlType urlType) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;

@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
+import software.wings.beans.artifact.AcrArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -59,7 +60,7 @@ public class AcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
                                               .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    AcrArtifactStream.Yaml yaml = yamlHandler.toYaml(acrArtifactStream, APP_ID);
+    AcrArtifactStreamYaml yaml = yamlHandler.toYaml(acrArtifactStream, APP_ID);
     assertThat(yaml.getSubscriptionId()).isEqualTo("subId");
     assertThat(yaml.getRegistryName()).isEqualTo("regName");
     assertThat(yaml.getRegistryHostName()).isEqualTo("regHostName");
@@ -73,14 +74,14 @@ public class AcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    AcrArtifactStream.Yaml baseYaml = AcrArtifactStream.Yaml.builder()
-                                          .subscriptionId("subId")
-                                          .registryName("regName")
-                                          .registryHostName("regHostName")
-                                          .repositoryName("repoName")
-                                          .harnessApiVersion("1.0")
-                                          .serverName("test server")
-                                          .build();
+    AcrArtifactStreamYaml baseYaml = AcrArtifactStreamYaml.builder()
+                                         .subscriptionId("subId")
+                                         .registryName("regName")
+                                         .registryHostName("regHostName")
+                                         .repositoryName("repoName")
+                                         .harnessApiVersion("1.0")
+                                         .serverName("test server")
+                                         .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -120,6 +121,6 @@ public class AcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(AcrArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(AcrArtifactStreamYaml.class);
   }
 }

@@ -9,7 +9,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -54,7 +54,7 @@ public class CommandTemplateYamlHandler extends TemplateLibraryYamlHandler<Comma
     SshCommandTemplate command = (SshCommandTemplate) bean.getTemplateObject();
     String commandUnitType = Utils.getStringFromEnum(command.getCommandType());
     // commmand units
-    List<AbstractCommandUnit.Yaml> commandUnitYamlList = null;
+    List<AbstractCommandUnitYaml> commandUnitYamlList = null;
 
     if (command.getCommandUnits() != null) {
       commandUnitYamlList = command.getCommandUnits()
@@ -62,7 +62,7 @@ public class CommandTemplateYamlHandler extends TemplateLibraryYamlHandler<Comma
                                 .map(commandUnit -> {
                                   CommandUnitYamlHandler commandUnitsYamlHandler = yamlHandlerFactory.getYamlHandler(
                                       YamlType.COMMAND_UNIT, getCommandUnitSubTypeFromBean(commandUnit));
-                                  return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
+                                  return (AbstractCommandUnitYaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
                                 })
                                 .collect(toList());
     }

@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.AppDynamicsConfig.Yaml;
+import software.wings.beans.AppDynamicsConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -12,27 +12,29 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
-public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, AppDynamicsConfig> {
+public class AppDynamicsConfigYamlHandler
+    extends VerificationProviderYamlHandler<AppDynamicsConfigYaml, AppDynamicsConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public AppDynamicsConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     AppDynamicsConfig config = (AppDynamicsConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(config.getType())
-                    .username(config.getUsername())
-                    .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
-                    .accountName(config.getAccountname())
-                    .controllerUrl(config.getControllerUrl())
-                    .build();
+    AppDynamicsConfigYaml yaml =
+        AppDynamicsConfigYaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(config.getType())
+            .username(config.getUsername())
+            .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
+            .accountName(config.getAccountname())
+            .controllerUrl(config.getControllerUrl())
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<AppDynamicsConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    AppDynamicsConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     AppDynamicsConfig config = AppDynamicsConfig.builder()
@@ -47,6 +49,6 @@ public class AppDynamicsConfigYamlHandler extends VerificationProviderYamlHandle
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AppDynamicsConfigYaml.class;
   }
 }

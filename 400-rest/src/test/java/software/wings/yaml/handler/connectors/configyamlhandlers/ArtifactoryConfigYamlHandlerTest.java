@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.ArtifactoryConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -34,7 +35,7 @@ public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHand
       + "harnessApiVersion: '1.0'\n"
       + "type: ARTIFACTORY";
 
-  private Class yamlClass = ArtifactoryConfig.Yaml.class;
+  private Class yamlClass = ArtifactoryConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

@@ -1,0 +1,30 @@
+package software.wings.beans.artifact;
+
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class AzureArtifactsArtifactStreamYaml extends ArtifactStreamYaml {
+  private String packageType;
+  private String project;
+  private String feed;
+  private String packageId;
+  private String packageName;
+
+  @Builder
+  public AzureArtifactsArtifactStreamYaml(String harnessApiVersion, String serverName, String packageType,
+      String project, String feed, String packageId, String packageName) {
+    super(AZURE_ARTIFACTS.name(), harnessApiVersion, serverName);
+    this.packageType = packageType;
+    this.project = project;
+    this.feed = feed;
+    this.packageId = packageId;
+    this.packageName = packageName;
+  }
+}

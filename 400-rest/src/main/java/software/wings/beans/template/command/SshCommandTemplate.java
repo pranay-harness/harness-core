@@ -6,7 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.template.BaseTemplate;
@@ -28,7 +28,7 @@ import lombok.experimental.Wither;
 @Builder
 public class SshCommandTemplate implements BaseTemplate {
   private CommandType commandType;
-  @JsonInclude(NON_NULL) private transient List<AbstractCommandUnit.Yaml> commands;
+  @JsonInclude(NON_NULL) private transient List<AbstractCommandUnitYaml> commands;
   @Wither private List<CommandUnit> commandUnits;
   @Wither @JsonIgnore private List<ReferencedTemplate> referencedTemplateList;
 }

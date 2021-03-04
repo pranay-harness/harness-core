@@ -450,21 +450,6 @@ public abstract class InfrastructureMapping
     }
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends Yaml {
-    private String computeProviderType;
-    private String computeProviderName;
-
-    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
-      this.computeProviderType = computeProviderType;
-      this.computeProviderName = computeProviderName;
-    }
-  }
-
   protected List<String> getList(Object input) {
     if (input instanceof String) {
       return Arrays.asList(((String) input).split(","));
