@@ -25,8 +25,8 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.outbox.Outbox;
-import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
@@ -48,15 +48,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
-  private final OutboxService outboxService;
+  private final OutboxEventService outboxEventService;
   private final NgUserService ngUserService;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
 
   @Inject
-  public OrganizationServiceImpl(
-      OrganizationRepository organizationRepository, OutboxService outboxService, NgUserService ngUserService) {
+  public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxEventService outboxEventService,
+      NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
-    this.outboxService = outboxService;
+    this.outboxEventService = outboxEventService;
     this.ngUserService = ngUserService;
   }
 
@@ -84,13 +84,13 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void publishOutboxEvent(Organization organization, String action) {
-    outboxService.save(Outbox.builder()
-                           .object(organization)
-                           .id(generateUuid())
-                           .createdAt(System.currentTimeMillis())
-                           .type(ORGANIZATION_ENTITY)
-                           .additionalData(singletonMap(ACTION, action))
-                           .build());
+    outboxEventService.save(OutboxEvent.builder()
+                                .object(organization)
+                                .id(generateUuid())
+                                .createdAt(System.currentTimeMillis())
+                                .type(ORGANIZATION_ENTITY)
+                                .additionalData(singletonMap(ACTION, action))
+                                .build());
   }
 
   private void createUserProjectMap(Organization organization) {

@@ -26,8 +26,8 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.outbox.Outbox;
-import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.rule.Owner;
 
@@ -45,15 +45,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
   private OrganizationServiceImpl organizationService;
-  private OutboxService outboxService;
+  private OutboxEventService outboxEventService;
   private NgUserService ngUserService;
 
   @Before
   public void setup() {
     organizationRepository = mock(OrganizationRepository.class);
-    outboxService = mock(OutboxService.class);
+    outboxEventService = mock(OutboxEventService.class);
     ngUserService = mock(NgUserService.class);
-    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService));
+    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxEventService, ngUserService));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -78,8 +78,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 
-    ArgumentCaptor<Outbox> producerMessage = ArgumentCaptor.forClass(Outbox.class);
-    verify(outboxService, times(1)).save(producerMessage.capture());
+    ArgumentCaptor<OutboxEvent> producerMessage = ArgumentCaptor.forClass(OutboxEvent.class);
+    verify(outboxEventService, times(1)).save(producerMessage.capture());
 
     assertEquals(organization, createdOrganization);
   }
@@ -113,8 +113,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
-    ArgumentCaptor<Outbox> producerMessage = ArgumentCaptor.forClass(Outbox.class);
-    verify(outboxService, times(1)).save(producerMessage.capture());
+    ArgumentCaptor<OutboxEvent> producerMessage = ArgumentCaptor.forClass(OutboxEvent.class);
+    verify(outboxEventService, times(1)).save(producerMessage.capture());
 
     assertEquals(organization, updatedOrganization);
   }

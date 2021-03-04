@@ -12,10 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Builder
-@FieldNameConstants(innerTypeName = "OutboxKeys")
-@Entity(value = "outbox")
-@Document("outbox")
-public class Outbox {
+@FieldNameConstants(innerTypeName = "OutboxEventKeys")
+@Entity(value = "outboxEvents", noClassnameStored = true)
+@Document("outboxEvents")
+public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull String type;

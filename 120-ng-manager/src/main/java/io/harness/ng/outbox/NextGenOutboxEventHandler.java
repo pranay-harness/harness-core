@@ -10,8 +10,8 @@ import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.entities.Organization;
-import io.harness.outbox.Outbox;
-import io.harness.outbox.api.OutboxHandler;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxEventHandler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -20,24 +20,25 @@ import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NextGenOutboxHandler implements OutboxHandler {
+public class NextGenOutboxEventHandler implements OutboxEventHandler {
   private final Producer eventProducer;
 
   @Inject
-  public NextGenOutboxHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
+  public NextGenOutboxEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
     this.eventProducer = eventProducer;
   }
 
   @Override
-  public boolean handle(Outbox outbox) {
-    if (ORGANIZATION_ENTITY.equals(outbox.getType())) {
-      Organization organization = (Organization) outbox.getObject();
+  public boolean handle(OutboxEvent outboxEvent) {
+    if (ORGANIZATION_ENTITY.equals(outboxEvent.getType())) {
+      Organization organization = (Organization) outboxEvent.getObject();
       try {
-        eventProducer.send(Message.newBuilder()
-                               .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                                   ENTITY_TYPE, ORGANIZATION_ENTITY, ACTION, outbox.getAdditionalData().get(ACTION)))
-                               .setData(getOrganizationPayload(organization))
-                               .build());
+        eventProducer.send(
+            Message.newBuilder()
+                .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(), ENTITY_TYPE,
+                    ORGANIZATION_ENTITY, ACTION, outboxEvent.getAdditionalData().get(ACTION)))
+                .setData(getOrganizationPayload(organization))
+                .build());
       } catch (ProducerShutdownException e) {
         log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
         return false;

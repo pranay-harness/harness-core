@@ -8,21 +8,21 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class OutboxPollService implements Managed {
-  private final OutboxPollJob outboxPollJob;
+public class OutboxEventPollService implements Managed {
+  private final OutboxEventPollJob outboxEventPollJob;
   private final ScheduledExecutorService executorService;
   private Future<?> outboxPollJobFuture;
 
   @Inject
-  public OutboxPollService(OutboxPollJob outboxPollJob) {
-    this.outboxPollJob = outboxPollJob;
+  public OutboxEventPollService(OutboxEventPollJob outboxEventPollJob) {
+    this.outboxEventPollJob = outboxEventPollJob;
     this.executorService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("outbox-poll-service-thread").build());
   }
 
   @Override
   public void start() {
-    outboxPollJobFuture = executorService.scheduleAtFixedRate(outboxPollJob, 30, 10, TimeUnit.SECONDS);
+    outboxPollJobFuture = executorService.scheduleAtFixedRate(outboxEventPollJob, 30, 10, TimeUnit.SECONDS);
   }
 
   @Override
