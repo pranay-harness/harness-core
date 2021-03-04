@@ -22,6 +22,8 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -66,6 +68,8 @@ import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.KubernetesYamlException;
@@ -94,6 +98,8 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -104,6 +110,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.exception.ShellScriptException;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
@@ -168,6 +175,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private OpenShiftDelegateService openShiftDelegateService;
   @Mock private K8sTaskHelperBase mockK8sTaskHelperBase;
   @Mock private HelmHelper helmHelper;
+  @Mock private CustomManifestService customManifestService;
 
   private String resourcePath = "k8s";
   private String deploymentYaml = "deployment.yaml";
@@ -1095,6 +1103,60 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         .isFalse();
   }
 
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectory_Custom() throws IOException {
+    fetchManifestFilesAndWriteToDirectory_Custom(CUSTOM);
+    fetchManifestFilesAndWriteToDirectory_Custom(CUSTOM_OPENSHIFT_TEMPLATE);
+  }
+
+  private void fetchManifestFilesAndWriteToDirectory_Custom(StoreType storeType) throws IOException {
+    reset(customManifestService);
+    String manifestDirectory = "manifest-files";
+    doReturn("").when(mockK8sTaskHelperBase).getManifestFileNamesInLogFormat(anyString());
+    CustomManifestSource customManifestSource = CustomManifestSource.builder().build();
+    K8sDelegateManifestConfig delegateManifestConfig = K8sDelegateManifestConfig.builder()
+                                                           .manifestStoreTypes(storeType)
+                                                           .customManifestSource(customManifestSource)
+                                                           .build();
+
+    delegateManifestConfig.setCustomManifestEnabled(false);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+    verify(customManifestService, times(0))
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+
+    delegateManifestConfig.setCustomManifestEnabled(true);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isTrue();
+    verify(customManifestService, times(1))
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+
+    doThrow(new IOException("file doesn't exists"))
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+
+    doThrow(new ShellScriptException("command not found", ErrorCode.GENERAL_ERROR, Level.ERROR, WingsException.USER))
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+
+    doThrow(new NullPointerException())
+        .when(customManifestService)
+        .downloadCustomSource(customManifestSource, manifestDirectory, executionLogCallback);
+    assertThat(helper.fetchManifestFilesAndWriteToDirectory(
+                   delegateManifestConfig, manifestDirectory, executionLogCallback, 50000))
+        .isFalse();
+  }
+
   private List<ManifestFile> convertFileDataToManifestFiles(List<FileData> fileDataList) {
     return fileDataList.stream()
         .map(p -> ManifestFile.builder().fileName(p.getFileName()).fileContent(p.getFileContent()).build())
@@ -1546,6 +1608,70 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     verify(spyHelperBase, times(1))
         .renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateCustom() throws Exception {
+    final String workingDirectory = ".";
+    final String manifestDirectory = "manifests/";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+    K8sDelegateManifestConfig manifestConfig =
+        K8sDelegateManifestConfig.builder().manifestStoreTypes(CUSTOM).customManifestEnabled(false).build();
+    List<FileData> manifestFiles = emptyList();
+    doReturn(manifestFiles).when(spyHelperBase).readManifestFilesFromDirectory(manifestDirectory);
+    on(helper).set("k8sTaskHelperBase", spyHelperBase);
+
+    // FF is disabled
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(spyHelperBase, times(0)).readManifestFilesFromDirectory(manifestDirectory);
+    verify(spyHelperBase, times(0))
+        .renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+
+    // FF is enabled
+    manifestConfig.setCustomManifestEnabled(true);
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(spyHelperBase, times(1)).readManifestFilesFromDirectory(manifestDirectory);
+    verify(spyHelperBase, times(1))
+        .renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, emptyList(), executionLogCallback, 600000);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateCustomOpenshiftTemplate() throws Exception {
+    final String workingDirectory = ".";
+    final String manifestDirectory = "manifests/";
+    final String manifestTemplatePath = "manifest/template.yaml";
+    final String ocPath = "oc";
+    K8sDelegateTaskParams k8sDelegateTaskParams =
+        K8sDelegateTaskParams.builder().ocPath(ocPath).workingDirectory(workingDirectory).build();
+    K8sDelegateManifestConfig manifestConfig =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(CUSTOM_OPENSHIFT_TEMPLATE)
+            .customManifestSource(
+                CustomManifestSource.builder().filePaths(singletonList("manifest/template.yaml")).build())
+            .customManifestEnabled(false)
+            .build();
+
+    // FF disabled
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(openShiftDelegateService, times(0))
+        .processTemplatization(manifestDirectory, ocPath, manifestTemplatePath, executionLogCallback, emptyList());
+
+    // FF enabled
+    manifestConfig.setCustomManifestEnabled(true);
+    helper.renderTemplate(k8sDelegateTaskParams, manifestConfig, manifestDirectory, emptyList(), "release", "namespace",
+        executionLogCallback, K8sApplyTaskParameters.builder().build());
+    verify(openShiftDelegateService, times(1))
+        .processTemplatization(manifestDirectory, ocPath, manifestTemplatePath, executionLogCallback, emptyList());
   }
 
   @Test

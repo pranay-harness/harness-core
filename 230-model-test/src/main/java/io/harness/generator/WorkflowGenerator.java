@@ -131,7 +131,8 @@ public class WorkflowGenerator {
     BUILD_JENKINS,
     BUILD_SHELL_SCRIPT,
     BASIC_ECS,
-    BASIC_SIMPLE_MULTI_ARTIFACT
+    BASIC_SIMPLE_MULTI_ARTIFACT,
+    K8S_ROLLING
   }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
@@ -152,6 +153,8 @@ public class WorkflowGenerator {
         return ensureBuildShellScript(seed, owners);
       case BASIC_SIMPLE_MULTI_ARTIFACT:
         return ensureBasicSimpleMultiArtifact(seed, owners);
+      case K8S_ROLLING:
+        return ensureK8sRolling(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -529,6 +532,38 @@ public class WorkflowGenerator {
                                                              .build())
                                        .build())
             .build());
+  }
+
+  private Workflow ensureK8sRolling(Randomizer.Seed seed, Owners owners) {
+    Service service = owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST));
+    Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
+    InfrastructureDefinition infra =
+        owners.obtainInfrastructureDefinition(()
+                                                  -> infrastructureDefinitionGenerator.ensurePredefined(
+                                                      seed, owners, InfrastructureDefinitions.K8S_ROLLING_TEST));
+    Workflow workflow =
+        aWorkflow()
+            .name(format("Rolling %10s-%10s-%10s", service.getName(), environment.getName(), infra.getName()))
+            .appId(service.getAppId())
+            .envId(environment.getUuid())
+            .serviceId(service.getUuid())
+            .envId(environment.getUuid())
+            .infraDefinitionId(infra.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING)
+                    .withUserVariables(
+                        asList(aVariable().name("workloadName").value("default-workload-name").type(TEXT).build(),
+                            aVariable().name("valueOverride").type(TEXT).build(),
+                            aVariable().name("value1Override").type(TEXT).build(),
+                            aVariable().name("value2Override").type(TEXT).build(),
+                            aVariable().name("value3Override").type(TEXT).build(),
+                            aVariable().name("value4Override").type(TEXT).build()))
+                    .build())
+            .build();
+    return ensureWorkflow(seed, owners, workflow);
   }
 
   public Workflow exists(Workflow workflow) {

@@ -26,6 +26,7 @@ public class OpenShiftManagerService {
       throw new InvalidRequestException("Manifest Config at Service can't be  empty", WingsException.USER);
     }
 
-    return applicationManifestForService.getStoreType() == StoreType.OC_TEMPLATES;
+    return applicationManifestForService.getStoreType() == StoreType.OC_TEMPLATES
+        || applicationManifestForService.getStoreType() == StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
   }
 }
