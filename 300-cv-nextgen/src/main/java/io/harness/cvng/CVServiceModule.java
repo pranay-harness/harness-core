@@ -102,6 +102,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Guice Module for initializing all beans.
@@ -268,9 +269,15 @@ public class CVServiceModule extends AbstractModule {
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
       bind(DocumentOneService.class).to(DocumentOneServiceImpl.class);
 
+      registerRequiredBindings();
+
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
+  }
+
+  private void registerRequiredBindings() {
+    requireBinding(TransactionTemplate.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
