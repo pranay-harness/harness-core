@@ -20,7 +20,7 @@ public class OutboxPollJob implements Runnable {
 
   @Override
   public void run() {
-    List<Outbox> outboxes = outboxService.list(null);
+    List<Outbox> outboxes = outboxService.list(null).getContent();
     outboxes.forEach(outbox -> {
       try {
         if (outboxHandler.handle(outbox)) {

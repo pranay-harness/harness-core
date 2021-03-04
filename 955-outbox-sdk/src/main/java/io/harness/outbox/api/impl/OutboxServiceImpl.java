@@ -3,10 +3,12 @@ package io.harness.outbox.api.impl;
 import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.Outbox;
 import io.harness.outbox.Outbox.OutboxKeys;
 import io.harness.outbox.OutboxFilter;
@@ -15,7 +17,6 @@ import io.harness.repositories.OutboxRepository;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -31,10 +32,10 @@ public class OutboxServiceImpl implements OutboxService {
   }
 
   @Override
-  public List<Outbox> list(OutboxFilter outboxFilter) {
+  public PageResponse<Outbox> list(OutboxFilter outboxFilter) {
     Criteria criteria = getOutboxFilterCriteria(outboxFilter);
     Pageable pageable = getPageable(outboxFilter);
-    return outboxRepository.findAll(criteria, pageable).getContent();
+    return getNGPageResponse(outboxRepository.findAll(criteria, pageable));
   }
 
   private Pageable getPageable(OutboxFilter outboxFilter) {
