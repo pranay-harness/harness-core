@@ -30,16 +30,18 @@ public class NextGenOutboxHandler implements OutboxHandler {
 
   @Override
   public boolean handle(Outbox outbox) {
-    Organization organization = (Organization) outbox.getObject();
-    try {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                                 ENTITY_TYPE, ORGANIZATION_ENTITY, ACTION, outbox.getAdditionalData().get(ACTION)))
-                             .setData(getOrganizationPayload(organization))
-                             .build());
-    } catch (ProducerShutdownException e) {
-      log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
-      return false;
+    if (ORGANIZATION_ENTITY.equals(outbox.getType())) {
+      Organization organization = (Organization) outbox.getObject();
+      try {
+        eventProducer.send(Message.newBuilder()
+                               .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
+                                   ENTITY_TYPE, ORGANIZATION_ENTITY, ACTION, outbox.getAdditionalData().get(ACTION)))
+                               .setData(getOrganizationPayload(organization))
+                               .build());
+      } catch (ProducerShutdownException e) {
+        log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
+        return false;
+      }
     }
     return true;
   }
