@@ -11,7 +11,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -36,13 +35,14 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;
+  Map<String, String> headers;
 
   @Builder(builderMethodName = "infoBuilder")
-  public HttpStepParameters(ParameterField<String> url, ParameterField<String> method, List<HttpHeaderConfig> headers,
+  public HttpStepParameters(ParameterField<String> url, ParameterField<String> method,
       ParameterField<String> requestBody, ParameterField<String> assertion, String name, String identifier,
       ParameterField<String> description, ParameterField<String> skipCondition, ParameterField<String> timeout,
-      RollbackInfo rollbackInfo, Map<String, Object> outputVariables) {
-    super(url, method, headers, requestBody, assertion);
+      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, String> headers) {
+    super(url, method, requestBody, assertion);
     this.name = name;
     this.identifier = identifier;
     this.description = description;
@@ -50,6 +50,7 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
     this.outputVariables = outputVariables;
+    this.headers = headers;
     type = StepSpecTypeConstants.HTTP;
   }
 
@@ -57,7 +58,7 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   public String toViewJson() {
     HttpStepParameters httpStepParameters = HttpStepParameters.infoBuilder()
                                                 .assertion(getAssertion())
-                                                .headers(getHeaders())
+                                                .headers(headers)
                                                 .method(getMethod())
                                                 .outputVariables(outputVariables)
                                                 .requestBody(getRequestBody())
