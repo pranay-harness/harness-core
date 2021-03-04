@@ -3,7 +3,6 @@ package io.harness.serializer;
 import io.harness.EntityType;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
-import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -25,7 +24,6 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(UserGroupMorphiaRegistrar.class)
-          .add(OutboxEventMorphiaRegistrar.class)
           .addAll(ResourceGroupSerializer.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();

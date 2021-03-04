@@ -1,8 +1,5 @@
 package io.harness.ng.core.impl;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -10,10 +7,14 @@ import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -25,15 +26,16 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.outbox.OutboxEvent;
-import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,15 +50,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
-  private final OutboxEventService outboxEventService;
+  private final Producer eventProducer;
   private final NgUserService ngUserService;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
 
   @Inject
-  public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxEventService outboxEventService,
-      NgUserService ngUserService) {
+  public OrganizationServiceImpl(OrganizationRepository organizationRepository,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
-    this.outboxEventService = outboxEventService;
+    this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
   }
 
@@ -79,18 +81,30 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void performActionsPostOrganizationCreation(Organization organization) {
-    publishOutboxEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
+    publishEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
     createUserProjectMap(organization);
   }
 
-  private void publishOutboxEvent(Organization organization, String action) {
-    outboxEventService.save(OutboxEvent.builder()
-                                .object(organization)
-                                .id(generateUuid())
-                                .createdAt(System.currentTimeMillis())
-                                .type(ORGANIZATION_ENTITY)
-                                .additionalData(singletonMap(ACTION, action))
-                                .build());
+  private void publishEvent(Organization organization, String action) {
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(getOrganizationPayload(organization))
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
+    }
+  }
+
+  private ByteString getOrganizationPayload(Organization organization) {
+    return OrganizationEntityChangeDTO.newBuilder()
+        .setIdentifier(organization.getIdentifier())
+        .setAccountIdentifier(organization.getAccountIdentifier())
+        .build()
+        .toByteString();
   }
 
   private void createUserProjectMap(Organization organization) {
@@ -139,7 +153,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
       validate(organization);
       Organization updatedOrganization = organizationRepository.save(organization);
-      publishOutboxEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      publishEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedOrganization;
     }
     throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
@@ -187,7 +201,7 @@ public class OrganizationServiceImpl implements OrganizationService {
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
     boolean delete = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
     if (delete) {
-      publishOutboxEvent(
+      publishEvent(
           Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
           EventsFrameworkMetadataConstants.DELETE_ACTION);
     }
@@ -198,7 +212,7 @@ public class OrganizationServiceImpl implements OrganizationService {
   public boolean restore(String accountIdentifier, String identifier) {
     boolean success = organizationRepository.restore(accountIdentifier, identifier);
     if (success) {
-      publishOutboxEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
+      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
           EventsFrameworkMetadataConstants.RESTORE_ACTION);
     }
     return success;

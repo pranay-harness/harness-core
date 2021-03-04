@@ -19,6 +19,10 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
@@ -26,8 +30,6 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.outbox.OutboxEvent;
-import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.rule.Owner;
 
@@ -45,15 +47,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
   private OrganizationServiceImpl organizationService;
-  private OutboxEventService outboxEventService;
+  private Producer eventProducer;
   private NgUserService ngUserService;
 
   @Before
   public void setup() {
     organizationRepository = mock(OrganizationRepository.class);
-    outboxEventService = mock(OutboxEventService.class);
+    eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
-    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxEventService, ngUserService));
+    organizationService = spy(new OrganizationServiceImpl(organizationRepository, eventProducer, ngUserService));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -78,8 +80,12 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 
-    ArgumentCaptor<OutboxEvent> producerMessage = ArgumentCaptor.forClass(OutboxEvent.class);
-    verify(outboxEventService, times(1)).save(producerMessage.capture());
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertEquals(organization, createdOrganization);
   }
@@ -113,8 +119,12 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
-    ArgumentCaptor<OutboxEvent> producerMessage = ArgumentCaptor.forClass(OutboxEvent.class);
-    verify(outboxEventService, times(1)).save(producerMessage.capture());
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertEquals(organization, updatedOrganization);
   }

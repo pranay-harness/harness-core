@@ -32,7 +32,6 @@ shared_dependencies = [
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
     "//955-delegate-beans:module",
-    "//955-outbox-sdk:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
