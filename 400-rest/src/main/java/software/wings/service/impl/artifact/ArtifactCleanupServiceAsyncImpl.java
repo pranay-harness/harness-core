@@ -83,7 +83,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
-      delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.tags(settingsService.getDelegateSelectors(settingAttribute));
       delegateTaskBuilder.data(dataBuilder.build());
     }
 
