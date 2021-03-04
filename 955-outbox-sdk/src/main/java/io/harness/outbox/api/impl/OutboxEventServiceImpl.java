@@ -46,8 +46,8 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   }
 
   @Override
-  public boolean delete(String outboxId) {
-    outboxRepository.deleteById(outboxId);
+  public boolean delete(String outboxEventId) {
+    outboxRepository.deleteById(outboxEventId);
     return true;
   }
 }

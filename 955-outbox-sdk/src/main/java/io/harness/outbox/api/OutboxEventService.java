@@ -9,5 +9,5 @@ public interface OutboxEventService {
 
   PageResponse<OutboxEvent> list(PageRequest pageRequest);
 
-  boolean delete(String outboxId);
+  boolean delete(String outboxEventId);
 }
