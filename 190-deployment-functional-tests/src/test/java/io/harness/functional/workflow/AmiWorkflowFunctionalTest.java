@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -74,7 +73,6 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(CDFunctionalTests.class)
-  @Ignore("TODO: This test needs to be moved to 190-functional tests")
   public void shouldRunAwsAmiWorkflow() {
     service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami");
     final String accountId = service.getAccountId();
@@ -133,7 +131,6 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(CDFunctionalTests.class)
-  @Ignore("TODO: This test needs to be moved to 190-functional tests")
   public void shouldRunAwsAmiWorkflow_Launchtemplate() {
     service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami-lt");
     final String accountId = service.getAccountId();
