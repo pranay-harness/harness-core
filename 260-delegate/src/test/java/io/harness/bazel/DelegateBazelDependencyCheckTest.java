@@ -22,13 +22,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BazelDependencyCheckTest extends CategoryTest {
+public class DelegateBazelDependencyCheckTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
   @Category({UnitTests.class})
+  @Ignore("This tests is to report dependency discrepancies - not done yet")
   public void testDependencyVersionsMatchInBazelWithRestCapsule() throws IOException {
     List<String> depsInMavenInstallJson = getDepsInMavenInstallJson();
     List<String> depsInRestCapsule = getDepsInRestCapsule();
@@ -65,7 +67,7 @@ public class BazelDependencyCheckTest extends CategoryTest {
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {
-    String rootDirectory = Project.rootDirectory(BazelDependencyCheckTest.class);
+    String rootDirectory = Project.rootDirectory(DelegateBazelDependencyCheckTest.class);
     ObjectMapper mapper = new ObjectMapper();
     Map<String, HashMap<String, ?>> mavenInstallJson =
         mapper.readValue(Paths.get(rootDirectory + "/maven_install.json").toFile(), HashMap.class);
@@ -86,7 +88,7 @@ public class BazelDependencyCheckTest extends CategoryTest {
   }
 
   List<String> getDepsInRestCapsule() throws IOException {
-    String absolutePath = Project.moduleDirectory(BazelDependencyCheckTest.class);
+    String absolutePath = Project.moduleDirectory(DelegateBazelDependencyCheckTest.class);
     Set<String> depSetInRestCapsule = new HashSet<>();
     BufferedReader bf =
         new BufferedReader(new FileReader(absolutePath + "/src/test/resources/dependenciesInRestCapsule.txt"));
