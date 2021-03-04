@@ -1,5 +1,26 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
+
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.AwsCrossAccountAttributes;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
@@ -26,29 +47,11 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.harness.aws.AwsCallTracker;
-import io.harness.aws.beans.AwsInternalConfig;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AwsAutoScaleException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.serializer.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.AwsCrossAccountAttributes;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
@@ -83,7 +86,7 @@ public class AwsApiHelperService {
     return getAmazonEcrClient(awsConfig, region).listImages(listImagesRequest);
   }
   public DescribeRepositoriesResult listRepositories(
-          AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
+      AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
     try {
       tracker.trackECRCall("List Repositories");
       return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
@@ -128,27 +131,27 @@ public class AwsApiHelperService {
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
-              new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
+          new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
     }
     if (awsConfig.isAssumeCrossAccountRole()) {
       // For the security token service we default to us-east-1.
       AWSSecurityTokenService securityTokenService =
-              AWSSecurityTokenServiceClientBuilder.standard()
-                      .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
-                      .withCredentials(credentialsProvider)
-                      .build();
+          AWSSecurityTokenServiceClientBuilder.standard()
+              .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
+              .withCredentials(credentialsProvider)
+              .build();
       AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
       credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
-              .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
-              .withStsClient(securityTokenService)
-              .withExternalId(crossAccountAttributes.getExternalId())
-              .build();
+                                .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
+                                .withStsClient(securityTokenService)
+                                .withExternalId(crossAccountAttributes.getExternalId())
+                                .build();
     }
 
     builder.withCredentials(credentialsProvider);
     ClientConfiguration clientConfiguration = new ClientConfiguration();
     RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-            new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
     clientConfiguration.setRetryPolicy(retryPolicy);
     builder.withClientConfiguration(clientConfiguration);
   }
