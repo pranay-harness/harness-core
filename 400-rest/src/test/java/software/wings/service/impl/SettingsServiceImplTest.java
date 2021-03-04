@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 
@@ -41,6 +42,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -51,6 +53,8 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.features.CeCloudAccountFeature;
@@ -64,6 +68,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
@@ -415,5 +420,60 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldReturnFalseWhenSettingAttributeValueIsNotInstanceOfGcpConfig() {
     SettingAttribute settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.isSettingValueGcp(settingAttribute)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testHasDelegateSelectorProperty() {
+    SettingAttribute settingAttribute = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+
+    settingAttribute =
+        aSettingAttribute()
+            .withValue(DockerConfig.builder().dockerRegistryUrl("https://registry.hub.docker.com/v2/").build())
+            .build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+
+    settingAttribute =
+        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+
+    settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetDelegateSelectors() {
+    SettingAttribute settingAttribute =
+        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("gcp").build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Collections.singletonList("gcp"));
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(DockerConfig.builder()
+                                          .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                          .delegateSelectors(Lists.newArrayList("docker", "k8s"))
+                                          .build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Lists.newArrayList("docker", "k8s"));
+
+    settingAttribute =
+        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+
+    settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
   }
 }

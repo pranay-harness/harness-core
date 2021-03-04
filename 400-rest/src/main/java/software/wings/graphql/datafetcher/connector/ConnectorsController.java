@@ -5,6 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -74,7 +75,8 @@ public class ConnectorsController {
       case SLACK:
         return QLSlackConnector.builder();
       case DOCKER:
-        return QLDockerConnector.builder();
+        DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+        return QLDockerConnector.builder().delegateSelectors(dockerConfig.getDelegateSelectors());
       case JENKINS:
         return QLJenkinsConnector.builder();
       case BAMBOO:

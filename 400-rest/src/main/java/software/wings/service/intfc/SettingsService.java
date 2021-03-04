@@ -163,4 +163,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   CEK8sDelegatePrerequisite validateCEDelegateSetting(String accountId, String delegateName);
 
   boolean isSettingValueGcp(SettingAttribute settingAttribute);
+
+  boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute);
+
+  List<String> getDelegateSelectors(SettingAttribute settingAttribute);
 }

@@ -886,6 +886,11 @@ public class CommandState extends State {
     if (featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_COMMAND_ENCODING, accountId)) {
       commandExecutionContextBuilder.disableWinRMCommandEncodingFFSet(true);
     }
+
+    if (featureFlagService.isEnabled(FeatureName.WINRM_COPY_CONFIG_OPTIMIZE, accountId)) {
+      commandExecutionContextBuilder.winrmCopyConfigOptimize(true);
+    }
+
     commandExecutionContextBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }

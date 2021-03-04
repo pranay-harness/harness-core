@@ -442,7 +442,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<Stencil>> getStencils(
       String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
+    long startTime = System.currentTimeMillis();
     Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
+    log.info("Time taken to load StateTypes {}(ms)", System.currentTimeMillis() - startTime);
     return getStateTypeScopeListMap(appId, workflowId, phaseId, stateTypeScopes, stencilsMap);
   }
 
@@ -450,13 +452,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateTypeScope[] stateTypeScopes, Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap) {
     boolean filterForWorkflow = isNotBlank(workflowId);
     boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
-    Workflow workflow = null;
-    Map<StateTypeScope, List<Stencil>> mapByScope = null;
+    Workflow workflow;
+    Map<StateTypeScope, List<Stencil>> mapByScope;
     WorkflowPhase workflowPhase = null;
     Map<String, String> entityMap = new HashMap<>(1);
     boolean buildWorkflow = false;
+    long startTime = System.currentTimeMillis();
     if (filterForWorkflow) {
-      workflow = readWorkflow(appId, workflowId);
+      workflow = readWorkflowWithoutOrchestrationAndWithoutServices(appId, workflowId);
+      log.info("Time taken to load Workflow Without Orchestration and without Services {}(ms)",
+          System.currentTimeMillis() - startTime);
       if (workflow == null) {
         throw new InvalidRequestException(format("Workflow %s does not exist", workflowId), USER);
       }
@@ -764,6 +769,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return null;
     }
     loadOrchestrationWorkflow(workflow, version);
+    return workflow;
+  }
+
+  public Workflow readWorkflowWithoutOrchestrationAndWithoutServices(String appId, String workflowId) {
+    Workflow workflow = readWorkflowWithoutOrchestration(appId, workflowId);
+    if (workflow == null) {
+      return null;
+    }
+    loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);
     return workflow;
   }
 
