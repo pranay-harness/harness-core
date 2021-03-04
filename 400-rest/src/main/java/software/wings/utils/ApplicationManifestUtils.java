@@ -23,10 +23,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PhaseElement;
@@ -38,6 +40,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -522,5 +526,20 @@ public class ApplicationManifestUtils {
   public boolean isPollForChangesEnabled(ApplicationManifest applicationManifest) {
     return applicationManifest != null && applicationManifest.getPollForChanges() != null
         && applicationManifest.getPollForChanges();
+  }
+
+  public static HelmCommandFlag getHelmCommandFlags(HelmCommandFlagConfig helmCommandFlagConfig) {
+    if (helmCommandFlagConfig == null) {
+      return null;
+    }
+
+    Map<HelmSubCommandType, String> resultValueMap = new HashMap<>();
+    if (isNotEmpty(helmCommandFlagConfig.getValueMap())) {
+      for (Map.Entry<HelmSubCommand, String> entry : helmCommandFlagConfig.getValueMap().entrySet()) {
+        resultValueMap.put(entry.getKey().getSubCommandType(), entry.getValue());
+      }
+    }
+
+    return HelmCommandFlag.builder().valueMap(resultValueMap).build();
   }
 }

@@ -49,7 +49,6 @@ public class ManagerExecutor {
     if (failedAlready) {
       return;
     }
-    int y = 0;
     String directoryPath = Project.rootDirectory(ManagerExecutor.class);
     final File lockfile = new File(directoryPath, "manager");
 

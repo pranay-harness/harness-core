@@ -205,9 +205,10 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   public K8sDelegateManifestConfig createDelegateManifestConfig(
       ExecutionContext context, ApplicationManifest appManifest) {
-    K8sDelegateManifestConfigBuilder manifestConfigBuilder = K8sDelegateManifestConfig.builder()
-                                                                 .manifestStoreTypes(appManifest.getStoreType())
-                                                                 .helmCommandFlag(appManifest.getHelmCommandFlag());
+    K8sDelegateManifestConfigBuilder manifestConfigBuilder =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(appManifest.getStoreType())
+            .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag()));
 
     StoreType storeType = appManifest.getStoreType();
     switch (storeType) {
@@ -714,7 +715,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
         .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .helmCommandFlag(applicationManifest.getHelmCommandFlag())
+        .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()))
         .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
         .build();
   }

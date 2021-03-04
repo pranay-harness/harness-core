@@ -89,6 +89,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   Resource totalResource;
   Resource limitResource;
   Resource allocatableResource;
+  Resource pricingResource;
   StorageResource storageResource;
   List<String> pvcClaimNames;
   List<Container> containerList;

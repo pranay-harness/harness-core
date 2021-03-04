@@ -207,7 +207,7 @@ public class BudgetUtils {
   }
 
   private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
-    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE"};
+    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE", "K8S_POD_FARGATE"};
     filters.add(QLBillingDataFilter.builder()
                     .instanceType(QLIdFilter.builder().operator(QLIdOperator.IN).values(instanceTypeValues).build())
                     .build());
