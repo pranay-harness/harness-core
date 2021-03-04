@@ -171,6 +171,7 @@ shared_dependencies = [
     "@maven//:com_google_cloud_google_cloud_logging",
     "@maven//:com_google_cloud_google_cloud_pubsub",
     "@maven//:com_google_cloud_google_cloud_resourcemanager",
+    "@maven//:com_amazonaws_aws_java_sdk_codecommit",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:com_google_code_findbugs_jsr305",
