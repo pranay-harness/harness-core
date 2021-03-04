@@ -30,19 +30,27 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
 @Slf4j
@@ -50,14 +58,18 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final NgUserService ngUserService;
+  private final TransactionTemplate transactionTemplate;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public OrganizationServiceImpl(
-      OrganizationRepository organizationRepository, OutboxService outboxService, NgUserService ngUserService) {
+  public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
+      NgUserService ngUserService, TransactionTemplate transactionTemplate) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.ngUserService = ngUserService;
+    this.transactionTemplate = transactionTemplate;
   }
 
   @Override
@@ -67,8 +79,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     organization.setAccountIdentifier(accountIdentifier);
     try {
       validate(organization);
-      Organization savedOrganization = organizationRepository.save(organization);
-      performActionsPostOrganizationCreation(organization);
+      Organization savedOrganization =
+          wrapperForTransactions(this::performActionsWithOrganizationCreation, organization);
+      createUserProjectMap(organization);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -78,9 +91,14 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
-  private void performActionsPostOrganizationCreation(Organization organization) {
+  private Organization performActionsWithOrganizationCreation(Organization organization) {
+    Organization savedOrganization = organizationRepository.save(organization);
     publishOutboxEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
-    createUserProjectMap(organization);
+    return savedOrganization;
+  }
+
+  private <T, S> S wrapperForTransactions(Function<T, S> function, T arg) {
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> function.apply(arg)));
   }
 
   private void publishOutboxEvent(Organization organization, String action) {

@@ -41,19 +41,23 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
   private OrganizationServiceImpl organizationService;
   private OutboxService outboxService;
   private NgUserService ngUserService;
+  private TransactionTemplate transactionTemplate;
 
   @Before
   public void setup() {
     organizationRepository = mock(OrganizationRepository.class);
     outboxService = mock(OutboxService.class);
     ngUserService = mock(NgUserService.class);
-    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService));
+    transactionTemplate = mock(TransactionTemplate.class);
+    organizationService =
+        spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService, transactionTemplate));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -75,11 +79,12 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
+    when(outboxService.save(any())).thenReturn(Outbox.builder().build());
+    when(transactionTemplate.execute(any())).thenReturn(organization);
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 
-    ArgumentCaptor<Outbox> producerMessage = ArgumentCaptor.forClass(Outbox.class);
-    verify(outboxService, times(1)).save(producerMessage.capture());
+    verify(transactionTemplate, times(1)).execute(any());
 
     assertEquals(organization, createdOrganization);
   }
