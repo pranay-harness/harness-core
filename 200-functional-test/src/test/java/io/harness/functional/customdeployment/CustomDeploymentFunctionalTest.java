@@ -1,4 +1,4 @@
-package software.wings.functional.customDeployment;
+package io.harness.functional.customdeployment;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -102,9 +102,8 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   final String WRAP_UP_CONSTANT = "Wrap Up";
   final String PRE_DEPLOYMENT_CONSTANT = "Pre-Deployment";
   final String POST_DEPLOYMENT_CONSTANT = "Post-Deployment";
-  final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 
-  final String resourcePath = "190-deployment-functional-tests/src/test/resources/customDeployment";
+  final String resourcePath = "200-functional-test/src/test/resources/io/harness/functional/customDeployment";
   final String fetchInstanceScript = "FetchInstanceScript";
   final String checkVarsScript = "CheckVariablesScript";
 

@@ -1,4 +1,4 @@
-package software.wings.functional.terraform;
+package io.harness.functional.terraform;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -63,7 +63,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   private static final String TF_PLAN_STEP_NAME = "Terraform Provision Plan";
   private static final String TF_APPLY_STEP_NAME = "Terraform Apply";
   private static final String SHELL_SCRIPT_STEP_NAME = "Shell Script";
-  private static final String RESOURCE_PATH = "190-deployment-functional-tests/src/test/resources/terraform";
+  private static final String RESOURCE_PATH = "200-functional-test/src/test/resources/io/harness/functional/terraform";
   private static final String SCRIPT_NAME_APPLY = "CheckTerraformApplyPlanJsonScript";
   private static final String SCRIPT_NAME_DESTROY = "CheckTerraformDestroyPlanJsonScript";
   private static final String TF_PLAN_DESTROY_STEP_NAME = "Terraform Destroy Plan";
@@ -197,14 +197,13 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   }
 
   private Workflow createCanaryWorkflow(String envId) {
-    Workflow workflow = aWorkflow()
-                            .name(WORKFLOW_NAME_PREFIX + System.currentTimeMillis())
-                            .appId(application.getUuid())
-                            .envId(envId)
-                            .workflowType(WorkflowType.ORCHESTRATION)
-                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
-                            .build();
-    return workflow;
+    return aWorkflow()
+        .name(WORKFLOW_NAME_PREFIX + System.currentTimeMillis())
+        .appId(application.getUuid())
+        .envId(envId)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+        .build();
   }
 
   private PhaseStep addPreDeploymentPhaseStep(InfrastructureProvisioner infrastructureProvisioner,
