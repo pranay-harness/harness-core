@@ -25,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.ExceptionUtils;
@@ -48,6 +49,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import com.amazonaws.AmazonClientException;
@@ -231,6 +233,7 @@ public class AwsHelperService {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
   @Inject private AwsUtils awsUtils;
   @Inject private AwsCallTracker tracker;
+  @Inject private AwsApiHelperService awsApiHelperService;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
@@ -238,7 +241,8 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackEC2Call("Describe Regions");
-      getAmazonEc2Client(awsConfig).describeRegions();
+      awsApiHelperService.getAmazonEc2Client(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig))
+          .describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         throw new InvalidRequestException("Invalid AWS credentials", INVALID_CLOUD_PROVIDER, USER);
@@ -249,7 +253,9 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      getAmazonEc2Client(AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
+      awsApiHelperService
+          .getAmazonEc2Client(
+              AwsInternalConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
           .describeRegions();
       tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
@@ -261,13 +267,15 @@ public class AwsHelperService {
 
   public AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonCloudWatchClient) builder.build();
   }
 
   private AmazonECSClient getAmazonEcsClient(String region, AwsConfig awsConfig) {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonECSClient) builder.build();
   }
 
@@ -277,12 +285,6 @@ public class AwsHelperService {
         .withRegion(region)
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
-  }
-
-  public AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
-    AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
-    return (AmazonECRClient) builder.build();
   }
 
   public AmazonECRClient getAmazonEcrClient(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -321,78 +323,46 @@ public class AwsHelperService {
   private AmazonS3Client getAmazonS3Client(String region, AwsConfig awsConfig) {
     AmazonS3ClientBuilder builder =
         AmazonS3ClientBuilder.standard().withRegion(region).withForceGlobalBucketAccessEnabled(true);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonS3Client) builder.build();
   }
 
   private AmazonS3Client getAmazonS3Client(AwsConfig awsConfig) {
     AmazonS3ClientBuilder builder =
         AmazonS3ClientBuilder.standard().withRegion(getRegion(awsConfig)).withForceGlobalBucketAccessEnabled(true);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonS3Client) builder.build();
-  }
-
-  public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
-    AWSCredentialsProvider credentialsProvider;
-    if (awsConfig.isUseEc2IamCredentials()) {
-      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
-      credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
-    } else {
-      credentialsProvider = new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
-    }
-    if (awsConfig.isAssumeCrossAccountRole()) {
-      // For the security token service we default to us-east-1.
-      AWSSecurityTokenService securityTokenService =
-          AWSSecurityTokenServiceClientBuilder.standard()
-              .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
-              .withCredentials(credentialsProvider)
-              .build();
-      AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
-      credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
-                                .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
-                                .withStsClient(securityTokenService)
-                                .withExternalId(crossAccountAttributes.getExternalId())
-                                .build();
-    }
-
-    builder.withCredentials(credentialsProvider);
-    ClientConfiguration clientConfiguration = new ClientConfiguration();
-    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
-    clientConfiguration.setRetryPolicy(retryPolicy);
-    builder.withClientConfiguration(clientConfiguration);
   }
 
   private AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
-    return (AmazonEC2Client) builder.build();
-  }
-
-  public AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
-    AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonEC2Client) builder.build();
   }
 
   private AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, AwsConfig awsConfig) {
     AmazonCodeDeployClientBuilder builder = AmazonCodeDeployClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonCodeDeployClient) builder.build();
   }
 
   @VisibleForTesting
   AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonCloudFormationClient) builder.build();
   }
 
   @VisibleForTesting
   AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
     AmazonAutoScalingClientBuilder builder = AmazonAutoScalingClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonAutoScalingClient) builder.build();
   }
 
@@ -400,7 +370,8 @@ public class AwsHelperService {
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -408,7 +379,8 @@ public class AwsHelperService {
       Regions region, AwsConfig awsConfig) {
     AmazonElasticLoadBalancingClientBuilder builder =
         AmazonElasticLoadBalancingClientBuilder.standard().withRegion(region);
-    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(
+        builder, AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -487,9 +459,9 @@ public class AwsHelperService {
       tracker.trackS3Call("List Buckets");
       return getAmazonS3Client(awsConfig).listBuckets();
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return Collections.emptyList();
   }
@@ -502,9 +474,9 @@ public class AwsHelperService {
       return getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
           .getObject(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -517,9 +489,9 @@ public class AwsHelperService {
       return getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
           .getObjectMetadata(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -533,9 +505,9 @@ public class AwsHelperService {
           getBucketRegion(awsConfig, encryptionDetails, listObjectsV2Request.getBucketName()), awsConfig);
       return amazonS3Client.listObjectsV2(listObjectsV2Request);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListObjectsV2Result();
   }
@@ -550,54 +522,6 @@ public class AwsHelperService {
     return (AwsConfig) connectorConfig.getValue();
   }
 
-  private void handleAmazonClientException(AmazonClientException amazonClientException) {
-    log.error("AWS API Client call exception", amazonClientException);
-    String errorMessage = amazonClientException.getMessage();
-    if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
-      throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
-              + " have required permissions.",
-          amazonClientException, USER);
-    } else {
-      log.error("Unhandled aws exception");
-      throw new InvalidRequestException(
-          amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message",
-          ErrorCode.AWS_ACCESS_DENIED, USER);
-    }
-  }
-
-  private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    log.error("AWS API call exception", amazonServiceException);
-    if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
-    } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
-    } else if (amazonServiceException instanceof ClusterNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND)
-          .addParam("message", amazonServiceException.getMessage());
-    } else if (amazonServiceException instanceof ServiceNotFoundException) {
-      throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
-          .addParam("message", amazonServiceException.getMessage());
-    } else if (amazonServiceException instanceof AmazonAutoScalingException) {
-      throw new AwsAutoScaleException(amazonServiceException.getMessage(), ErrorCode.GENERAL_ERROR, USER);
-    } else if (amazonServiceException instanceof AmazonECSException
-        || amazonServiceException instanceof AmazonECRException) {
-      if (amazonServiceException instanceof ClientException) {
-        log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
-        throw amazonServiceException;
-      }
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
-    } else if (amazonServiceException instanceof AmazonCloudFormationException) {
-      if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
-        log.info("Nothing to update on stack" + amazonServiceException.getMessage());
-      } else {
-        throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
-      }
-    } else {
-      log.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
-    }
-  }
-
   public ListDeploymentGroupsResult listDeploymentGroupsResult(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region,
       ListDeploymentGroupsRequest listDeploymentGroupsRequest) {
@@ -607,9 +531,9 @@ public class AwsHelperService {
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentGroups(listDeploymentGroupsRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListDeploymentGroupsResult();
   }
@@ -621,9 +545,9 @@ public class AwsHelperService {
       tracker.trackCDCall("List Applications");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).listApplications(listApplicationsRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListApplicationsResult();
   }
@@ -637,9 +561,9 @@ public class AwsHelperService {
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentConfigs(listDeploymentConfigsRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListDeploymentConfigsResult();
   }
@@ -651,9 +575,9 @@ public class AwsHelperService {
       tracker.trackCDCall("Get Deployment");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).getDeployment(getDeploymentRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new GetDeploymentResult();
   }
@@ -666,9 +590,9 @@ public class AwsHelperService {
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .getDeploymentGroup(getDeploymentGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new GetDeploymentGroupResult();
   }
@@ -680,9 +604,9 @@ public class AwsHelperService {
       tracker.trackCDCall("Create Deployment");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).createDeployment(createDeploymentRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new CreateDeploymentResult();
   }
@@ -696,9 +620,9 @@ public class AwsHelperService {
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentInstances(listDeploymentInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListDeploymentInstancesResult();
   }
@@ -720,9 +644,9 @@ public class AwsHelperService {
       tracker.trackEC2Call("Describe Instances");
       return getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeInstancesResult();
   }
@@ -735,25 +659,16 @@ public class AwsHelperService {
       tracker.trackEC2Call("Describe Images");
       return amazonEc2Client.describeImages(describeImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeImagesResult();
   }
 
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
-      tracker.trackEC2Call("List Regions");
-      return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    return emptyList();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    return awsApiHelperService.listRegions(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
   }
 
   public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
@@ -779,9 +694,9 @@ public class AwsHelperService {
         nextToken = describeTagsResult.getNextToken();
       } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return tags;
   }
@@ -793,9 +708,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Create Cluster");
       return getAmazonEcsClient(region, awsConfig).createCluster(createClusterRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new CreateClusterResult();
   }
@@ -807,9 +722,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Describe Cluster");
       return getAmazonEcsClient(region, awsConfig).describeClusters(describeClustersRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeClustersResult();
   }
@@ -821,9 +736,9 @@ public class AwsHelperService {
       tracker.trackECSCall("List Clusters");
       return getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListClustersResult();
   }
@@ -842,9 +757,9 @@ public class AwsHelperService {
       tracker.trackECSCall("List Services");
       return getAmazonEcsClient(region, awsConfig).listServices(listServicesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListServicesResult();
   }
@@ -856,9 +771,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Describe Services");
       return getAmazonEcsClient(region, awsConfig).describeServices(describeServicesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeServicesResult();
   }
@@ -907,9 +822,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Update Service");
       return getAmazonEcsClient(region, awsConfig).updateService(updateServiceRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new UpdateServiceResult();
   }
@@ -921,9 +836,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Delete Service");
       return getAmazonEcsClient(region, awsConfig).deleteService(deleteServiceRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DeleteServiceResult();
   }
@@ -939,9 +854,9 @@ public class AwsHelperService {
     } catch (ServiceNotFoundException ex) {
       throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DeregisterTaskDefinitionResult();
   }
@@ -957,9 +872,9 @@ public class AwsHelperService {
     } catch (ServiceNotFoundException ex) {
       throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListTasksResult();
   }
@@ -971,9 +886,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Desscribe Task Definition");
       return getAmazonEcsClient(region, awsConfig).describeTaskDefinition(describeTaskDefinitionRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeTaskDefinitionResult();
   }
@@ -985,9 +900,9 @@ public class AwsHelperService {
       tracker.trackECSCall("Describe Tasks");
       return getAmazonEcsClient(region, awsConfig).describeTasks(describeTasksRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeTasksResult();
   }
@@ -1000,25 +915,18 @@ public class AwsHelperService {
       tracker.trackECSCall("Describe Container Instances");
       return getAmazonEcsClient(region, awsConfig).describeContainerInstances(describeContainerInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeContainerInstancesResult();
   }
 
   public ListImagesResult listEcrImages(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       ListImagesRequest listImagesRequest) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      tracker.trackECRCall("List Images");
-      return getAmazonEcrClient(awsConfig, region).listImages(listImagesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    return new ListImagesResult();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    return awsApiHelperService.listEcrImages(
+        AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region, listImagesRequest);
   }
 
   public ListImagesResult listEcrImages(
@@ -1027,9 +935,9 @@ public class AwsHelperService {
       tracker.trackECRCall("List Images");
       return getAmazonEcrClient(ecrConfig, encryptedDataDetails).listImages(listImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new ListImagesResult();
   }
@@ -1040,25 +948,19 @@ public class AwsHelperService {
       tracker.trackECRCall("List Repositories");
       return getAmazonEcrClient(ecrConfig, encryptedDataDetails).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeRepositoriesResult();
   }
 
   public DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    try {
-      tracker.trackECRCall("List Repositories");
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    return new DescribeRepositoriesResult();
+    tracker.trackECRCall("List Repositories");
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    return awsApiHelperService.listRepositories(
+        AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), describeRepositoriesRequest, region);
   }
 
   public List<LoadBalancerDescription> getLoadBalancerDescriptions(
@@ -1071,9 +973,9 @@ public class AwsHelperService {
               new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
           .getLoadBalancerDescriptions();
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1095,9 +997,9 @@ public class AwsHelperService {
         }
       }
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -1120,9 +1022,9 @@ public class AwsHelperService {
     } catch (AmazonServiceException amazonServiceException) {
       describeAutoScalingGroupActivities(
           amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), executionLogCallback, true);
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -1143,9 +1045,9 @@ public class AwsHelperService {
           ? null
           : describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -1233,9 +1135,9 @@ public class AwsHelperService {
 
       } while (describeInstancesResult.getNextToken() != null);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return instanceList;
   }
@@ -1260,9 +1162,9 @@ public class AwsHelperService {
           getLoadBalancerDescriptions(region, awsConfig, encryptionDetails);
       return describeLoadBalancers.stream().map(LoadBalancerDescription::getLoadBalancerName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1281,9 +1183,9 @@ public class AwsHelperService {
         describeAutoScalingGroupActivities(amazonAutoScalingClient,
             createAutoScalingGroupRequest.getAutoScalingGroupName(), new HashSet<>(), logCallback, true);
       }
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new CreateAutoScalingGroupResult();
   }
@@ -1297,9 +1199,9 @@ public class AwsHelperService {
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       return amazonAutoScalingClient.describeAutoScalingGroups(autoScalingGroupsRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeAutoScalingGroupsResult();
   }
@@ -1362,9 +1264,9 @@ public class AwsHelperService {
 
       return rv;
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1388,9 +1290,9 @@ public class AwsHelperService {
       return rv;
 
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1410,9 +1312,9 @@ public class AwsHelperService {
           .stream()
           .anyMatch(inst -> inst.getInstanceId().equals(instanceId));
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return false;
   }
@@ -1432,9 +1334,9 @@ public class AwsHelperService {
           .stream()
           .noneMatch(inst -> inst.getInstanceId().equals(instanceId));
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return false;
   }
@@ -1446,9 +1348,9 @@ public class AwsHelperService {
       tracker.trackCFCall("Create Stack");
       return cloudFormationClient.createStack(createStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new CreateStackResult();
   }
@@ -1460,9 +1362,9 @@ public class AwsHelperService {
       tracker.trackCFCall("Update Stack");
       return cloudFormationClient.updateStack(updateStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new UpdateStackResult();
   }
@@ -1475,9 +1377,9 @@ public class AwsHelperService {
       tracker.trackCFCall("Describe Stacks");
       return cloudFormationClient.describeStacks(describeStacksRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeStacksResult();
   }
@@ -1497,9 +1399,9 @@ public class AwsHelperService {
       } while (nextToken != null);
       return stacks;
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1520,9 +1422,9 @@ public class AwsHelperService {
       } while (nextToken != null);
       return stacksEvents;
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -1534,9 +1436,9 @@ public class AwsHelperService {
       tracker.trackCFCall("Delete Stack");
       cloudFormationClient.deleteStack(deleteStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -1550,9 +1452,9 @@ public class AwsHelperService {
               .getBucketVersioningConfiguration(bucketName);
       return "ENABLED".equals(bucketVersioningConfiguration.getStatus());
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return false;
   }
@@ -1573,9 +1475,9 @@ public class AwsHelperService {
       }
       return region;
     } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -1663,28 +1565,8 @@ public class AwsHelperService {
 
   public Map<String, String> fetchLabels(
       AwsConfig awsConfig, ArtifactStreamAttributes artifactStreamAttributes, List<String> tags) {
-    AmazonECRClient ecrClient = getAmazonEcrClient(awsConfig, artifactStreamAttributes.getRegion());
-    return tags.stream()
-        .map(tag
-            -> ecrClient.batchGetImage(
-                new BatchGetImageRequest()
-                    .withRepositoryName(artifactStreamAttributes.getImageName())
-                    .withImageIds(new ImageIdentifier().withImageTag(tag))
-                    .withAcceptedMediaTypes("application/vnd.docker.distribution.manifest.v1+json")))
-        .flatMap(batchGetImageResult -> batchGetImageResult.getImages().stream())
-        .map(Image::getImageManifest)
-        .flatMap(imageManifest
-            -> ((List<Map<String, Object>>) JsonUtils.asObject(imageManifest, HashMap.class).get("history"))
-                   .stream()
-                   .flatMap(history
-                       -> ((Map<String, Object>) (JsonUtils.asObject(
-                               (String) history.get("v1Compatibility"), HashMap.class)))
-                              .entrySet()
-                              .stream()))
-        .filter(entry -> entry.getKey().equals("config"))
-        .flatMap(config
-            -> ((Map<String, String>) ((Map<String, Object>) config.getValue()).get("Labels")).entrySet().stream())
-        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+    return awsApiHelperService.fetchLabels(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+        artifactStreamAttributes.getImageName(), artifactStreamAttributes.getRegion(), tags);
   }
 
   private String getRegion(AwsConfig awsConfig) {

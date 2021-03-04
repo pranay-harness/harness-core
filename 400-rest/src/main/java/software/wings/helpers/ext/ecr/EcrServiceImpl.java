@@ -9,6 +9,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,6 +19,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
+import software.wings.service.impl.AwsApiHelperService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
@@ -43,19 +45,17 @@ public class EcrServiceImpl implements EcrService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private EncryptionService encryptionService;
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
+  @Inject private AwsApiHelperService awsApiHelperService;
 
   @Override
-  public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String imageName, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(
+      AwsInternalConfig awsConfig, String imageUrl, String region, String imageName, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails = new ArrayList<>();
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      String imageUrl = ecrServiceDelegate.getEcrImageUrl(awsConfig, encryptionDetails, region, imageName);
-
       ListImagesResult listImagesResult;
       ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
       do {
-        listImagesResult = awsHelperService.listEcrImages(awsConfig, encryptionDetails, region, listImagesRequest);
+        listImagesResult = awsApiHelperService.listEcrImages(awsConfig, region, listImagesRequest);
         listImagesResult.getImageIds()
             .stream()
             .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
@@ -79,30 +79,27 @@ public class EcrServiceImpl implements EcrService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  public BuildDetails getLastSuccessfulBuild(AwsConfig awsConfig, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyRepository(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String repositoryName) {
-    return listEcrRegistry(awsConfig, encryptionDetails, region).contains(repositoryName);
+  public boolean verifyRepository(AwsInternalConfig awsConfig, String region, String repositoryName) {
+    return listEcrRegistry(awsConfig, region).contains(repositoryName);
   }
 
   @Override
-  public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return awsHelperService.listRegions(awsConfig, encryptionDetails);
+  public List<String> listRegions(AwsInternalConfig awsConfig) {
+    return awsApiHelperService.listRegions(awsConfig);
   }
 
   @Override
-  public List<String> listEcrRegistry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region) {
     List<String> repoNames = new ArrayList<>();
     DescribeRepositoriesRequest describeRepositoriesRequest = new DescribeRepositoriesRequest();
     DescribeRepositoriesResult describeRepositoriesResult;
     do {
-      describeRepositoriesResult =
-          awsHelperService.listRepositories(awsConfig, encryptionDetails, describeRepositoriesRequest, region);
+      describeRepositoriesResult = awsApiHelperService.listRepositories(awsConfig, describeRepositoriesRequest, region);
       describeRepositoriesResult.getRepositories().forEach(repository -> repoNames.add(repository.getRepositoryName()));
       describeRepositoriesRequest.setNextToken(describeRepositoriesResult.getNextToken());
     } while (describeRepositoriesRequest.getNextToken() != null);
@@ -111,9 +108,8 @@ public class EcrServiceImpl implements EcrService {
   }
 
   @Override
-  public List<Map<String, String>> getLabels(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, List<String> tags) {
-    encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    return Collections.singletonList(awsHelperService.fetchLabels(awsConfig, artifactStreamAttributes, tags));
+  public List<Map<String, String>> getLabels(
+      AwsInternalConfig awsConfig, String imageName, String region, List<String> tags) {
+    return Collections.singletonList(awsApiHelperService.fetchLabels(awsConfig, imageName, region, tags));
   }
 }
