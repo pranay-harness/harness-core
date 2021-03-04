@@ -48,13 +48,15 @@ java_package(
 
 java_library(
     name = "module",
-    srcs = ["src/main/java/io/harness/Dummy.java"],
+    #    srcs = ["src/main/java/io/harness/Dummy.java"],
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
-        ":1-io_harness_managerclient",
-        ":2-io_harness_delegate",
-        ":3-io_harness_perpetualtask",
-    ],
+    deps = shared_dependencies,
+    #    + [
+    #        ":1-io_harness_managerclient",
+    #        ":2-io_harness_delegate",
+    #        ":3-io_harness_perpetualtask",
+    #    ],
 )
 
 checkstyle()
