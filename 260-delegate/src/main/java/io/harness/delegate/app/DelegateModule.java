@@ -99,6 +99,7 @@ import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
+import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -134,6 +135,8 @@ import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.kustomize.KustomizeClient;
 import io.harness.kustomize.KustomizeClientImpl;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
@@ -798,6 +801,7 @@ public class DelegateModule extends AbstractModule {
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
     bind(GcbService.class).to(GcbServiceImpl.class);
+    bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
@@ -1242,6 +1246,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.EXECUTE_COMMAND).toInstance(ExecuteCommandTask.class);
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);
     mapBinder.addBinding(TaskType.AWS_S3_TASK).toInstance(AwsS3Task.class);
+    mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK).toInstance(CustomManifestValuesFetchTask.class);
 
     // Add all NG tasks below this.
     mapBinder.addBinding(TaskType.GCP_TASK).toInstance(GcpTask.class);

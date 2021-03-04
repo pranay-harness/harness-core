@@ -49,6 +49,8 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceFile;
 import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -260,6 +262,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureDeploymentMode.class, 1446);
     kryo.register(ARMScopeType.class, 1447);
     kryo.register(HelmSubCommandType.class, 1448);
+    kryo.register(CustomManifestSource.class, 1449);
+    kryo.register(CustomSourceFile.class, 1450);
 
     kryo.register(AdditionalMetadata.class, 72101);
   }

@@ -266,6 +266,7 @@ public enum TaskType {
   EXECUTE_COMMAND(TaskGroup.CI),
   CI_CLEANUP(TaskGroup.CI),
   AWS_S3_TASK(TaskGroup.AWS),
+  CUSTOM_MANIFEST_VALUES_FETCH_TASK(TaskGroup.CUSTOM_MANIFEST_VALUES_FETCH_TASK),
 
   // Add all NG tasks below this.
   GCP_TASK(TaskGroup.GCP),
