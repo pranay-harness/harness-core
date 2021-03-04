@@ -112,6 +112,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
         throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
       }
+
+
+      if(containsAnyOtherError(stageFailureStrategies)!=true){
+        throw new InvalidRequestException("Failure strategy should contain one error type as Anyother or it is having more than one error type.");
+      }
+      // call a function any other check no other error with any other
       String timeout = DEFAULT_TIMEOUT;
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
@@ -152,6 +158,28 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                     .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
+  }
+
+  public boolean containsAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsAnyOther = false;
+    int errorCountInAnyOther = 0;
+    for(FailureStrategyConfig failureStrategyConfig :stageFailureStrategies) {
+      System.out.println(failureStrategyConfig);
+      for (int i = 0; i < stageFailureStrategies.size(); i++) {
+        int count = 0;
+        for (int j = 0; j < stageFailureStrategies.get(i).getOnFailure().getErrors().size(); j++) {
+          count++;
+          String error = String.valueOf(stageFailureStrategies.get(i).getOnFailure().getErrors().get(j));
+          if(error.contentEquals("ANY_OTHER_ERRORS")){
+            containsAnyOther=true;
+          }
+        }
+        if(containsAnyOther==true){
+          errorCountInAnyOther = count;
+        }
+      }
+    }
+    return (containsAnyOther && (errorCountInAnyOther==1));
   }
 
   protected String getName(StepElementConfig stepElement) {
