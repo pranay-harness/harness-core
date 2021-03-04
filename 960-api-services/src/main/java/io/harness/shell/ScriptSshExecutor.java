@@ -13,6 +13,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.SshRetryableException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -28,6 +29,7 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -68,6 +71,8 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
 
+  public static final String CHANNEL_IS_NOT_OPENED = "channel is not opened.";
+
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
 
@@ -88,12 +93,33 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
+    try {
+      return executeCommandString(command, output, displayCommand, false);
+    } catch (SshRetryableException ex) {
+      log.info("As MaxSessions limit reached, fetching new session for executionId: {}, hostName: {}",
+          config.getExecutionId(), config.getHost());
+      saveExecutionLog(format("Retry connecting to %s ....", config.getHost()));
+      return executeCommandString(command, output, displayCommand, true);
+    }
+  }
+
+  @NotNull
+  private CommandExecutionStatus executeCommandString(
+      String command, StringBuffer output, boolean displayCommand, boolean isRetry) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     long start = System.currentTimeMillis();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("exec");
+
+      Session session;
+      if (isRetry) {
+        session = SshSessionManager.getSimplexSession(config, logCallback);
+      } else {
+        session = SshSessionManager.getCachedSession(config, logCallback);
+      }
+
+      channel = session.openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -144,7 +170,16 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
           sleep(Duration.ofSeconds(1));
         }
       }
-    } catch (RuntimeException | JSchException | IOException ex) {
+    } catch (JSchException jsch) {
+      if (!isRetry && CHANNEL_IS_NOT_OPENED.equals(jsch.getMessage())) {
+        throw new SshRetryableException(jsch);
+      } else {
+        handleException(jsch);
+        log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+        log.error("Command execution failed with error", jsch);
+        return commandExecutionStatus;
+      }
+    } catch (RuntimeException | IOException ex) {
       handleException(ex);
       log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       log.error("Command execution failed with error", ex);
@@ -165,6 +200,18 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
   @Override
   public ExecuteCommandResponse executeCommandString(
       String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
+    try {
+      return getExecuteCommandResponse(command, envVariablesToCollect, secretEnvVariablesToCollect, false);
+    } catch (SshRetryableException ex) {
+      log.info("As MaxSessions limit reached, fetching new session for executionId: {}, hostName: {}",
+          config.getExecutionId(), config.getHost());
+      saveExecutionLog(format("Retry connecting to %s ....", config.getHost()));
+      return getExecuteCommandResponse(command, envVariablesToCollect, secretEnvVariablesToCollect, true);
+    }
+  }
+
+  private ExecuteCommandResponse getExecuteCommandResponse(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect, boolean isRetry) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -173,7 +220,14 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     Map<String, String> envVariablesMap = new HashMap<>();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("exec");
+      Session session;
+      if (isRetry) {
+        session = SshSessionManager.getSimplexSession(this.config, this.logCallback);
+      } else {
+        session = SshSessionManager.getCachedSession(this.config, this.logCallback);
+      }
+
+      channel = session.openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -231,8 +285,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
             if (commandExecutionStatus == SUCCESS && envVariablesFilename != null) {
               BufferedReader br = null;
               try {
-                channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("sftp");
-                channel.connect(config.getSocketConnectTimeout());
+                channel = getSftpConnectedChannel();
                 ((ChannelSftp) channel).cd(directoryPath);
                 BoundedInputStream stream =
                     new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
@@ -260,6 +313,11 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
         }
       }
     } catch (RuntimeException | JSchException | IOException ex) {
+      if (ex instanceof JSchException && !isRetry && CHANNEL_IS_NOT_OPENED.equals(ex.getMessage())) {
+        log.error("Command execution failed with error", ex);
+        throw new SshRetryableException(ex);
+      }
+
       handleException(ex);
       log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       log.error("Command execution failed with error", ex);
@@ -273,6 +331,22 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
         channel.disconnect();
       }
     }
+  }
+
+  private Channel getSftpConnectedChannel() throws JSchException {
+    Channel channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("sftp");
+    try {
+      channel.connect(config.getSocketConnectTimeout());
+    } catch (JSchException jsch) {
+      if (CHANNEL_IS_NOT_OPENED.equals(jsch.getMessage())) {
+        log.info("As MaxSessions limit reached, fetching new session for executionId: {}, hostName: {}",
+            config.getExecutionId(), config.getHost());
+        saveExecutionLog(format("Retry connecting to %s ....", config.getHost()));
+        channel = SshSessionManager.getSimplexSession(this.config, this.logCallback).openChannel("sftp");
+        channel.connect(config.getSocketConnectTimeout());
+      }
+    }
+    return channel;
   }
 
   @Override
