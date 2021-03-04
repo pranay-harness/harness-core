@@ -21,7 +21,6 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
-import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
@@ -59,7 +58,6 @@ import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.springdata.SpringPersistenceModule;
-import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -143,7 +141,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    //    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
@@ -158,7 +156,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
-    closingFactory.addServer(mongoClient);
+    //    closingFactory.addServer(mongoClient);
 
     RestResponse<ElasticsearchConfig> elasticsearchConfigRestResponse =
         Setup.portal()
