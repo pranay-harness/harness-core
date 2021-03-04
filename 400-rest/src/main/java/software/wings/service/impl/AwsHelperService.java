@@ -845,7 +845,6 @@ public class AwsHelperService {
 
   public DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    tracker.trackECRCall("List Repositories");
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
     return awsApiHelperService.listRepositories(
         AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), describeRepositoriesRequest, region);

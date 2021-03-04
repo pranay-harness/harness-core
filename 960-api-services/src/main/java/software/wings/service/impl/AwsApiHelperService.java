@@ -66,37 +66,6 @@ public class AwsApiHelperService {
     return (AmazonEC2Client) builder.build();
   }
 
-  public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsInternalConfig awsConfig) {
-    AWSCredentialsProvider credentialsProvider;
-    if (awsConfig.isUseEc2IamCredentials()) {
-      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
-      credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
-    } else {
-      credentialsProvider = new AWSStaticCredentialsProvider(
-          new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
-    }
-    if (awsConfig.isAssumeCrossAccountRole()) {
-      // For the security token service we default to us-east-1.
-      AWSSecurityTokenService securityTokenService =
-          AWSSecurityTokenServiceClientBuilder.standard()
-              .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
-              .withCredentials(credentialsProvider)
-              .build();
-      AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
-      credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
-                                .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
-                                .withStsClient(securityTokenService)
-                                .withExternalId(crossAccountAttributes.getExternalId())
-                                .build();
-    }
-
-    builder.withCredentials(credentialsProvider);
-    ClientConfiguration clientConfiguration = new ClientConfiguration();
-    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
-        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
-    clientConfiguration.setRetryPolicy(retryPolicy);
-    builder.withClientConfiguration(clientConfiguration);
-  }
   public List<String> listRegions(AwsInternalConfig awsConfig) {
     try {
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
@@ -112,6 +81,18 @@ public class AwsApiHelperService {
   public ListImagesResult listEcrImages(
       AwsInternalConfig awsConfig, String region, ListImagesRequest listImagesRequest) {
     return getAmazonEcrClient(awsConfig, region).listImages(listImagesRequest);
+  }
+  public DescribeRepositoriesResult listRepositories(
+          AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
+    try {
+      tracker.trackECRCall("List Repositories");
+      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return new DescribeRepositoriesResult();
   }
 
   public Map<String, String> fetchLabels(
@@ -138,6 +119,38 @@ public class AwsApiHelperService {
         .flatMap(config
             -> ((Map<String, String>) ((Map<String, Object>) config.getValue()).get("Labels")).entrySet().stream())
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsInternalConfig awsConfig) {
+    AWSCredentialsProvider credentialsProvider;
+    if (awsConfig.isUseEc2IamCredentials()) {
+      log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
+      credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
+    } else {
+      credentialsProvider = new AWSStaticCredentialsProvider(
+              new BasicAWSCredentials(new String(awsConfig.getAccessKey()), new String(awsConfig.getSecretKey())));
+    }
+    if (awsConfig.isAssumeCrossAccountRole()) {
+      // For the security token service we default to us-east-1.
+      AWSSecurityTokenService securityTokenService =
+              AWSSecurityTokenServiceClientBuilder.standard()
+                      .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
+                      .withCredentials(credentialsProvider)
+                      .build();
+      AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
+      credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
+              .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
+              .withStsClient(securityTokenService)
+              .withExternalId(crossAccountAttributes.getExternalId())
+              .build();
+    }
+
+    builder.withCredentials(credentialsProvider);
+    ClientConfiguration clientConfiguration = new ClientConfiguration();
+    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+            new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    clientConfiguration.setRetryPolicy(retryPolicy);
+    builder.withClientConfiguration(clientConfiguration);
   }
 
   public void handleAmazonClientException(AmazonClientException amazonClientException) {
@@ -186,18 +199,6 @@ public class AwsApiHelperService {
       log.error("Unhandled aws exception");
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     }
-  }
-  public DescribeRepositoriesResult listRepositories(
-      AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    try {
-      tracker.trackECRCall("List Repositories");
-      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    return new DescribeRepositoriesResult();
   }
 
   private String getRegion(AwsInternalConfig awsConfig) {
