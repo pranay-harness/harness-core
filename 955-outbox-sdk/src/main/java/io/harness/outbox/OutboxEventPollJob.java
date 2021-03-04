@@ -28,7 +28,7 @@ public class OutboxEventPollJob implements Runnable {
         }
       } catch (Exception exception) {
         log.error(String.format("Error occurred while handling outbox event with id %s and type %s", outbox.getId(),
-                      outbox.getType()),
+                      outbox.getEventType()),
             exception);
       }
     });
