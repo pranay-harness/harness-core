@@ -409,10 +409,8 @@ fn check_for_promotion(
         }
     });
 
-    if !issue {
+    if !issue && not_ready_yet.is_empty() {
         let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
-
-        if not_ready_yet.is_empty() {
             let module = class_modules.get(class);
 
             let msg = format!("{} is ready to go to {}", class.name, target_module.name);
@@ -440,8 +438,10 @@ fn check_for_promotion(
                     for_modules: mdls,
                 },
             });
-        } else {
-            all_classes.insert(class.name.clone());
+    }
+
+    if !not_ready_yet.is_empty() {
+        all_classes.insert(class.name.clone());
 
             results.push(Report {
                 kind: Kind::Blocked,
@@ -454,9 +454,8 @@ fn check_for_promotion(
                 action: Default::default(),
                 for_class: class.name.clone(),
                 indirect_classes: all_classes,
-                for_modules: mdls,
+                for_modules: [module.name.clone(), target_module.name.clone()].iter().cloned().collect(),
             });
-        }
     }
 
     results
@@ -556,10 +555,9 @@ fn check_for_demotion(
         });
     }
 
-    if !issue {
+    if !issue && not_ready_yet.is_empty() {
         let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
 
-        if not_ready_yet.is_empty() {
             let module = class_modules.get(class);
 
             let msg = format!("{} is ready to go to {}", class.name, target_module.name);
@@ -587,7 +585,9 @@ fn check_for_demotion(
                     for_modules: mdls,
                 },
             });
-        } else {
+        }
+
+    if !not_ready_yet.is_empty() {
             all_classes.insert(class.name.clone());
 
             results.push(Report {
@@ -601,10 +601,9 @@ fn check_for_demotion(
                 action: Default::default(),
                 for_class: class.name.clone(),
                 indirect_classes: all_classes,
-                for_modules: mdls,
+                for_modules: [module.name.clone(), target_module.name.clone()].iter().cloned().collect(),
             });
         }
-    }
 
     results
 }

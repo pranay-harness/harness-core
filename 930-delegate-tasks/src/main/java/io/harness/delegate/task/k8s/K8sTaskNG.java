@@ -9,10 +9,6 @@ import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
@@ -28,7 +24,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import java.nio.file.Paths;
@@ -42,7 +37,6 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Inject private Map<String, K8sRequestHandler> k8sTaskTypeToRequestHandler;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
-  @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
 
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
@@ -148,22 +142,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
   public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) {
     decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
-    decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
-  }
-
-  private void decryptK8sInfraDelegateConfig(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
-    if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
-      DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
-
-      KubernetesClusterConfigDTO clusterConfigDTO = directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO();
-      if (clusterConfigDTO.getCredential().getKubernetesCredentialType()
-          == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-        KubernetesClusterDetailsDTO clusterDetailsDTO =
-            (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
-        KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
-        secretDecryptionService.decrypt(authCredentialDTO, directK8sInfraDelegateConfig.getEncryptionDataDetails());
-      }
-    }
+    containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
   }
 
   private void decryptManifestDelegateConfig(ManifestDelegateConfig manifestDelegateConfig) {

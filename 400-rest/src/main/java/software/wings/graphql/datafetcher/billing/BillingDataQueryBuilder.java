@@ -27,6 +27,7 @@ import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -45,6 +46,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCEEnvironmentTyp
 import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
@@ -676,9 +678,48 @@ public class BillingDataQueryBuilder {
         addSimpleIdOperator(selectQuery, f, type);
       } else if (isTimeFilter(f)) {
         addSimpleTimeFilter(selectQuery, f, type);
+      } else if (f instanceof QLNumberFilter) {
+        addHavingOnNumberFilter(selectQuery, f, type);
       }
     } else {
       log.info("Not adding filter since it is not valid " + f);
+    }
+  }
+
+  private void addHavingOnNumberFilter(SelectQuery selectQuery, Filter filter, QLBillingDataFilterType type) {
+    Preconditions.checkState(filter.getValues().length > 0, "filter.getValues().length == 0");
+
+    DbColumn key = getFilterKey(type);
+    QLNumberFilter numberFilter = (QLNumberFilter) filter;
+
+    FunctionCall aggregationFn = FunctionCall.sum();
+
+    if (type == QLBillingDataFilterType.StorageUtilizationValue) {
+      aggregationFn = FunctionCall.max();
+    }
+
+    switch (numberFilter.getOperator()) {
+      case GREATER_THAN:
+        selectQuery.addHaving(BinaryCondition.greaterThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case LESS_THAN:
+        selectQuery.addHaving(BinaryCondition.lessThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case GREATER_THAN_OR_EQUALS:
+        selectQuery.addHaving(
+            BinaryCondition.greaterThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case LESS_THAN_OR_EQUALS:
+        selectQuery.addHaving(BinaryCondition.lessThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case EQUALS:
+        selectQuery.addHaving(BinaryCondition.equalTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case NOT_EQUALS:
+        selectQuery.addHaving(BinaryCondition.notEqualTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      default:
+        throw new InvalidRequestException("Invalid NumberFilter: " + filter.getOperator());
     }
   }
 
@@ -779,6 +820,8 @@ public class BillingDataQueryBuilder {
         return schema.getInstanceId();
       case ParentInstanceId:
         return schema.getParentInstanceId();
+      case StorageUtilizationValue:
+        return schema.getStorageUtilizationValue();
       case LabelSearch:
       case TagSearch:
         return null;
@@ -875,6 +918,7 @@ public class BillingDataQueryBuilder {
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
+          instanceTypes.add("K8S_POD_FARGATE");
           isNodeAndPodQuery = true;
           break;
         case PV:
@@ -1066,6 +1110,7 @@ public class BillingDataQueryBuilder {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
       instanceTypeValues.add("ECS_TASK_FARGATE");
+      instanceTypeValues.add("K8S_POD_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
       instanceTypeValues.add("K8S_PV");

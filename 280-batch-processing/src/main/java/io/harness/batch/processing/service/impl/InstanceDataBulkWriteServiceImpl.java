@@ -21,6 +21,7 @@ import software.wings.dl.WingsPersistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
@@ -142,6 +143,11 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
               InstanceDataKeys.allocatableResource, objectToDocument(instanceInfo.getAllocatableResource()));
         }
 
+        if (!isNull(instanceInfo.getPricingResource())) {
+          instanceInfoDocument.append(
+              InstanceDataKeys.pricingResource, objectToDocument(instanceInfo.getPricingResource()));
+        }
+
         if (!isNull(instanceInfo.getStorageResource())) {
           instanceInfoDocument.append(
               InstanceDataKeys.storageResource, objectToDocument(instanceInfo.getStorageResource()));
@@ -206,7 +212,8 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
             updateOperations = new BasicDBObject(ImmutableMap.of(
                 InstanceDataKeys.usageStopTime, instant, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
 
-            if (instanceEvent.getInstanceType() == InstanceType.K8S_POD) {
+            if (ImmutableSet.of(InstanceType.K8S_POD, InstanceType.K8S_POD_FARGATE)
+                    .contains(instanceEvent.getInstanceType())) {
               updateOperations.append(InstanceDataKeys.ttl, new Date(instant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
             } else if (ImmutableList.of(InstanceType.K8S_NODE, InstanceType.K8S_PV)
                            .contains(instanceEvent.getInstanceType())) {

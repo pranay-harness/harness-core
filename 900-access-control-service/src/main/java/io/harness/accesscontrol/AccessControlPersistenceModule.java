@@ -13,10 +13,12 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.PersistenceModule;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -62,6 +64,22 @@ public class AccessControlPersistenceModule extends PersistenceModule {
       @Override
       public UserProvider userProvider() {
         return new NoopUserProvider();
+      }
+    });
+    install(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
       }
     });
     Multibinder<Class<? extends KryoRegistrar>> kryoRegistrar =

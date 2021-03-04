@@ -93,8 +93,20 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
@@ -1105,6 +1117,72 @@ public class CIExecutionPlanTestHelper {
                                                              .build())
                                                 .build())
                            .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitHubConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("gitHubConnector")
+                .identifier("gitHubConnector")
+                .connectorType(ConnectorType.GITHUB)
+                .connectorConfig(
+                    GithubConnectorDTO.builder()
+                        .url("https://github.com/wings-software/portal.git")
+                        .connectionType(GitConnectionType.REPO)
+                        .authentication(
+                            GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(
+                                                     GithubUsernamePasswordDTO.builder()
+                                                         .username("username")
+                                                         .passwordRef(SecretRefData.builder()
+                                                                          .identifier("gitPassword")
+                                                                          .scope(Scope.ACCOUNT)
+                                                                          .decryptedValue("password".toCharArray())
+                                                                          .build())
+                                                         .build())
+                                                 .build())
+                                .build())
+
+                        .build())
+                .build())
+        .build();
+  }
+  public ConnectorDTO getAwsCodeCommitConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("awsCodeCommitConnector")
+                .identifier("awsCodeCommitConnector")
+                .connectorType(ConnectorType.CODECOMMIT)
+                .connectorConfig(
+                    AwsCodeCommitConnectorDTO.builder()
+                        .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
+                        .urlType(AwsCodeCommitUrlType.REPO)
+                        .authentication(
+                            AwsCodeCommitAuthenticationDTO.builder()
+                                .authType(AwsCodeCommitAuthType.HTTPS)
+                                .credentials(
+                                    AwsCodeCommitHttpsCredentialsDTO.builder()
+                                        .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                                        .httpCredentialsSpec(
+                                            AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                .accessKey("AKIAIOSFODNN7EXAMPLE")
+                                                .secretKeyRef(SecretRefData.builder()
+                                                                  .identifier("secretKeyRefIdentifier")
+                                                                  .scope(Scope.ACCOUNT)
+                                                                  .decryptedValue("S3CR3TKEYEXAMPLE".toCharArray())
+                                                                  .build())
+                                                .build())
+                                        .build())
+
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 

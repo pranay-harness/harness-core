@@ -3,6 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
+
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -36,7 +38,6 @@ import software.wings.sm.states.customdeployment.InstanceMapperUtils;
 import software.wings.sm.states.customdeployment.InstanceMapperUtils.HostProperties;
 
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -63,11 +64,13 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
-    syncInstancesInternal(appId, infraMappingId, null, false, null, instanceSyncFlow);
+    if (MANUAL != instanceSyncFlow) {
+      syncInstancesInternal(appId, infraMappingId, null, null, instanceSyncFlow);
+    }
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId,
-      List<DeploymentSummary> newDeploymentSummaries, boolean rollback, ShellScriptProvisionExecutionData response,
+      List<DeploymentSummary> newDeploymentSummaries, ShellScriptProvisionExecutionData response,
       InstanceSyncFlow instanceSyncFlow) {
     log.info("Performing Custom Deployment Type Instance sync via [{}], Infrastructure Mapping : [{}]",
         instanceSyncFlow, infraMappingId);
@@ -88,10 +91,32 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
         InstanceMapperUtils.mapJsonToInstanceElements(deploymentTypeTemplate.getHostAttributes(),
             deploymentTypeTemplate.getHostObjectArrayPath(), scriptOutput, jsonMapper);
 
-    processDbInstanceUpdates(instancesInDb, latestHostInfos, newDeploymentSummaries, infrastructureMapping);
+    if (instanceSyncFlow == InstanceSyncFlow.NEW_DEPLOYMENT) {
+      rewriteInstances(instancesInDb, latestHostInfos, newDeploymentSummaries, infrastructureMapping);
+    } else {
+      incrementalUpdate(instancesInDb, latestHostInfos, newDeploymentSummaries, infrastructureMapping);
+    }
   }
 
-  private void processDbInstanceUpdates(List<Instance> instancesInDb, List<PhysicalHostInstanceInfo> latestHostInfos,
+  private void rewriteInstances(List<Instance> instancesInDb, List<PhysicalHostInstanceInfo> latestHostInfos,
+      List<DeploymentSummary> newDeploymentSummaries, InfrastructureMapping infraMapping) {
+    log.info("Instances to be added {}", latestHostInfos.size());
+    log.info("Instances to be deleted {}", instancesInDb.size());
+
+    if (isNotEmpty(instancesInDb)) {
+      instanceService.delete(instancesInDb.stream().map(Instance::getUuid).collect(Collectors.toSet()));
+    }
+
+    final DeploymentSummary deploymentSummary;
+    if (isNotEmpty(latestHostInfos) && isNotEmpty(newDeploymentSummaries)) {
+      deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummaries.get(0), false);
+      latestHostInfos.stream()
+          .map(hostInstanceInfo -> buildInstanceFromHostInfo(infraMapping, hostInstanceInfo, deploymentSummary))
+          .forEach(instanceService::save);
+    }
+  }
+
+  private void incrementalUpdate(List<Instance> instancesInDb, List<PhysicalHostInstanceInfo> latestHostInfos,
       List<DeploymentSummary> newDeploymentSummaries, InfrastructureMapping infraMapping) {
     Map<String, Instance> instancesInDbMap = instancesInDb.stream().collect(Collectors.toMap(
         instance -> ((PhysicalHostInstanceInfo) instance.getInstanceInfo()).getHostName(), Function.identity()));
@@ -99,9 +124,9 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
     final Map<String, PhysicalHostInstanceInfo> latestHostInfoMap =
         latestHostInfos.stream().collect(Collectors.toMap(PhysicalHostInstanceInfo::getHostName, Function.identity()));
 
-    SetView<String> instancesToBeAdded = Sets.difference(latestHostInfoMap.keySet(), instancesInDbMap.keySet());
+    Sets.SetView<String> instancesToBeAdded = Sets.difference(latestHostInfoMap.keySet(), instancesInDbMap.keySet());
 
-    SetView<String> instancesToBeDeleted = Sets.difference(instancesInDbMap.keySet(), latestHostInfoMap.keySet());
+    Sets.SetView<String> instancesToBeDeleted = Sets.difference(instancesInDbMap.keySet(), latestHostInfoMap.keySet());
 
     log.info("Instances to be added {}", instancesToBeAdded);
     log.info("Instances to be deleted {}", instancesToBeDeleted);
@@ -133,7 +158,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
       }
 
       instancesToBeAdded.stream()
-          .map(hostName -> latestHostInfoMap.get(hostName))
+          .map(latestHostInfoMap::get)
           .map(hostInstanceInfo -> buildInstanceFromHostInfo(infraMapping, hostInstanceInfo, deploymentSummary))
           .forEach(instanceService::save);
     }
@@ -185,7 +210,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
     String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     String appId = deploymentSummaries.iterator().next().getAppId();
 
-    syncInstancesInternal(appId, infraMappingId, deploymentSummaries, false, null, InstanceSyncFlow.NEW_DEPLOYMENT);
+    syncInstancesInternal(appId, infraMappingId, deploymentSummaries, null, InstanceSyncFlow.NEW_DEPLOYMENT);
   }
 
   @Override
@@ -238,7 +263,7 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
   @Override
   public void processInstanceSyncResponseFromPerpetualTask(
       InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
-    syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), null, false,
+    syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), null,
         (ShellScriptProvisionExecutionData) response, InstanceSyncFlow.PERPETUAL_TASK);
   }
 

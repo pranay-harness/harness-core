@@ -142,6 +142,7 @@ public class CEExportDataQueryBuilder {
       instanceTypeValues.add("ECS_TASK_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
+      instanceTypeValues.add("K8S_POD_FARGATE");
       addInstanceTypeFilter(filters, instanceTypeValues);
     }
   }
@@ -327,6 +328,7 @@ public class CEExportDataQueryBuilder {
     }
   }
 
+  // TODO change here
   private void decorateSimpleGroupBy(List<CEExportDataMetadataFields> fieldNames, SelectQuery selectQuery,
       QLCEEntityGroupBy aggregation, List<CEExportDataMetadataFields> groupByFields, List<QLCEFilter> filters) {
     DbColumn groupBy;

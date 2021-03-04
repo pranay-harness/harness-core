@@ -54,9 +54,16 @@ accessControlClient:
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-resourceGroupServiceConfig:
-  baseUrl: https://localhost:7090
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
+resourceGroupClient:
+  resourceGroupServiceConfig:
+    baseUrl: https://localhost:7090
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+userClient:
+  userServiceConfig:
+    baseUrl: http://localhost:3457/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  userServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

@@ -19,6 +19,7 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -38,14 +39,16 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore String name;
   @JsonIgnore String identifier;
+  List<NGVariable> outputVariables;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepInfo(ShellType shellType, ShellScriptSourceWrapper source,
-      List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
-      ParameterField<String> timeout, ParameterField<Boolean> onDelegate, String name, String identifier) {
-    super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
+  public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, List<NGVariable> environmentVariables,
+      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, String name, String identifier,
+      List<NGVariable> outputVariables) {
+    super(shell, source, environmentVariables, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
+    this.outputVariables = outputVariables;
   }
 
   @Override
@@ -76,7 +79,7 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
         .environmentVariables(getEnvironmentVariables())
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
-        .outputVariables(getOutputVariables())
+        .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .environmentVariables(getEnvironmentVariables())
         .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .shellType(getShell())

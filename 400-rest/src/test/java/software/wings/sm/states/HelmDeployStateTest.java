@@ -93,6 +93,7 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
@@ -124,8 +125,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
-import software.wings.beans.HelmCommandFlag;
-import software.wings.beans.HelmCommandFlagConstants;
+import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
@@ -247,11 +248,11 @@ public class HelmDeployStateTest extends CategoryTest {
       "File path has to be YAML file if git connector is selected";
   private static final String COMMAND_FLAGS = "--tls";
   private static final String PHASE_NAME = "phaseName";
-  private static final HelmCommandFlag HELM_COMMAND_FLAG =
-      HelmCommandFlag.builder()
+  private static final HelmCommandFlagConfig HELM_COMMAND_FLAG =
+      HelmCommandFlagConfig.builder()
           .valueMap(Stream
-                        .of(new AbstractMap.SimpleEntry<>(HelmCommandFlagConstants.HelmSubCommand.INSTALL, "--debug2"),
-                            new AbstractMap.SimpleEntry<>(HelmCommandFlagConstants.HelmSubCommand.UPGRADE, "--debug2"))
+                        .of(new AbstractMap.SimpleEntry<>(HelmSubCommand.INSTALL, "--debug2"),
+                            new AbstractMap.SimpleEntry<>(HelmSubCommand.UPGRADE, "--debug2"))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
           .build();
 
@@ -1749,7 +1750,10 @@ public class HelmDeployStateTest extends CategoryTest {
     verifyDelegateSelectorInDelegateTaskParams(delegateTask);
     HelmInstallCommandRequest helmInstallCommandRequest =
         (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
-    assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);
+    Map<HelmSubCommandType, String> flagsValueMap = helmInstallCommandRequest.getHelmCommandFlag().getValueMap();
+    assertThat(flagsValueMap)
+        .containsKeys(HelmSubCommand.INSTALL.getSubCommandType(), HelmSubCommand.UPGRADE.getSubCommandType());
+    assertThat(flagsValueMap).containsValues("--debug2", "--debug2");
   }
 
   @Test

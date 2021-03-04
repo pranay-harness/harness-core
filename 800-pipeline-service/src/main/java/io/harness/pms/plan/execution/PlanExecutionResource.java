@@ -459,6 +459,20 @@ public class PlanExecutionResource {
       @NotNull @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
-    return ResponseDTO.newResponse(pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId));
+    return ResponseDTO.newResponse(
+        pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, null));
+  }
+
+  // TODO(prashant) : This is a temp route for now merge it with the above. Need be done in sync with UI changes
+  @PUT
+  @ApiOperation(value = "pause, resume or stop the stage executions", nickname = "handleStageInterrupt")
+  @Path("/interrupt/{planExecutionId}/{nodeExecutionId}")
+  public ResponseDTO<InterruptDTO> handleStageInterrupt(@NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
+      @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
+      @NotNull @PathParam("planExecutionId") String planExecutionId,
+      @NotNull @PathParam("nodeExecutionId") String nodeExecutionId) {
+    return ResponseDTO.newResponse(
+        pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId));
   }
 }

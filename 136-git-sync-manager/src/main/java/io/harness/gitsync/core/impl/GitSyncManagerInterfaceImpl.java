@@ -50,10 +50,9 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
       String accountId, String orgId, String projectId, GitFileChange gitFileChange, YamlGitConfigDTO yamlGitConfig) {
     return YamlChangeSet.builder()
         .gitFileChanges(Collections.singletonList(gitFileChange))
-        .gitToHarness(false)
         .organizationId(orgId)
         .projectId(projectId)
-        .status(Status.QUEUED)
+        .status(Status.QUEUED.name())
         .accountId(accountId)
         .scope(getScope(accountId, orgId, projectId))
         .fullSync(false)

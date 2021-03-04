@@ -4,6 +4,7 @@ import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface VerificationTaskService {
@@ -26,7 +27,7 @@ public interface VerificationTaskService {
   boolean isServiceGuardId(String verificationTaskId);
   void removeCVConfigMappings(String cvConfigId);
   List<String> getVerificationTaskIds(String cvConfigId);
-  String findBaselineVerificationTaskId(
+  Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance);
   List<String> getAllVerificationJobInstanceIdsForCVConfig(String cvConfigId);
 }

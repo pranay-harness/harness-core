@@ -31,6 +31,7 @@ import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
@@ -258,6 +259,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(NGInstanceUnitType.class, 1445);
     kryo.register(AzureDeploymentMode.class, 1446);
     kryo.register(ARMScopeType.class, 1447);
+    kryo.register(HelmSubCommandType.class, 1448);
 
     kryo.register(AdditionalMetadata.class, 72101);
   }

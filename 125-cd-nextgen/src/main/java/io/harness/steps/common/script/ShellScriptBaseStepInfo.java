@@ -20,7 +20,6 @@ public class ShellScriptBaseStepInfo {
   @NotNull ShellType shell;
   @NotNull ShellScriptSourceWrapper source;
   List<NGVariable> environmentVariables;
-  List<NGVariable> outputVariables;
   ExecutionTarget executionTarget;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
 }

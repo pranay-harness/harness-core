@@ -1,9 +1,6 @@
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
     name = "module",
@@ -50,14 +47,5 @@ java_binary(
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

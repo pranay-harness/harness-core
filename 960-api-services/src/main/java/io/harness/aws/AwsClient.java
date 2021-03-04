@@ -14,6 +14,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface AwsClient {
   void validateAwsAccountCredential(AwsConfig awsConfig);
 
+  void validateAwsCodeCommitCredential(AwsConfig awsConfig, String region, String repo);
+
   String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region);
 
   AWSCredentialsProvider getAssumedCredentialsProvider(

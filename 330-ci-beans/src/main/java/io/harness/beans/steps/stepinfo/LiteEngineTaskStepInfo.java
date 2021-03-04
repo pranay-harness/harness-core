@@ -34,6 +34,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
   public static final String CALLBACK_IDS = "callbackIds";
+  public static final String LOG_KEYS = "logKeys";
 
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();

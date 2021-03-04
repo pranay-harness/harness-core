@@ -417,6 +417,7 @@ input CCMFilter {
   labelSearch: IdFilter
   tagSearch: IdFilter
   instanceType: IdFilter
+  storageUtilizationValue: NumberFilter
 }
 
 input BillingDataLabelFilter {

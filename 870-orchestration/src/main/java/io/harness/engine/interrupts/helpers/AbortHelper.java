@@ -105,6 +105,17 @@ public class AbortHelper {
     // Get all that are eligible for discontinuing
     List<NodeExecution> allNodeExecutions =
         nodeExecutionService.fetchNodeExecutionsByStatuses(interrupt.getPlanExecutionId(), statuses);
+    return markAbortingStateForNodes(interrupt, statuses, allNodeExecutions);
+  }
+
+  public boolean markAbortingStateForParent(
+      @NotNull Interrupt interrupt, EnumSet<Status> statuses, List<NodeExecution> allNodeExecutions) {
+    // Get all that are eligible for discontinuing
+    return markAbortingStateForNodes(interrupt, statuses, allNodeExecutions);
+  }
+
+  private boolean markAbortingStateForNodes(
+      @NotNull Interrupt interrupt, EnumSet<Status> statuses, List<NodeExecution> allNodeExecutions) {
     if (isEmpty(allNodeExecutions)) {
       log.warn(
           "No Node Executions could be marked as DISCONTINUING - planExecutionId: {}", interrupt.getPlanExecutionId());

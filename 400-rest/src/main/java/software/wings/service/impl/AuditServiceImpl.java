@@ -115,12 +115,12 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE_FOLDER.name(),
-      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
-      ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
-      EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(),
-      ResourceType.USER_INVITE.name(), ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(),
-      ResourceType.DELEGATE_PROFILE.name());
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(),
+          ResourceType.CONNECTION_ATTRIBUTES.name(), ResourceType.CUSTOM_DASHBOARD.name(),
+          ResourceType.SECRET_MANAGER.name(), EntityType.PIPELINE_GOVERNANCE_STANDARD.name(),
+          ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(), ResourceType.USER_INVITE.name(),
+          ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(), ResourceType.DELEGATE_PROFILE.name());
 
   /**
    * check for nonYamlEntites.

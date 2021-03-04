@@ -13,7 +13,7 @@ import java.util.Set;
 public enum ExecutionStatus {
   @JsonProperty("Running")
   RUNNING(Sets.newHashSet(Status.RUNNING, Status.ASYNC_WAITING, Status.TASK_WAITING, Status.TIMED_WAITING), "Running"),
-  @JsonProperty("Failed") FAILED(Sets.newHashSet(Status.ERRORED, Status.FAILED), "Failed"),
+  @JsonProperty("Failed") FAILED(Sets.newHashSet(Status.ERRORED, Status.FAILED, Status.IGNORE_FAILED), "Failed"),
   @JsonProperty("NotStarted") NOT_STARTED(Sets.newHashSet(), "NotStarted"),
   @JsonProperty("Expired") EXPIRED(Sets.newHashSet(Status.EXPIRED), "Expired"),
   @JsonProperty("Aborted") ABORTED(Sets.newHashSet(Status.ABORTED, Status.DISCONTINUING), "Aborted"),

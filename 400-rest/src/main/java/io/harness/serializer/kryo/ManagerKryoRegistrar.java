@@ -194,7 +194,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
@@ -1729,7 +1729,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
     kryo.register(HelmSubCommand.class, 8076);
-    kryo.register(HelmCommandFlag.class, 8077);
+    kryo.register(HelmCommandFlagConfig.class, 8077);
 
     kryo.register(AzureAppServiceSlotSetupContextElement.class, 8098);
     kryo.register(AzureAppServiceSlotSetupExecutionData.class, 8099);

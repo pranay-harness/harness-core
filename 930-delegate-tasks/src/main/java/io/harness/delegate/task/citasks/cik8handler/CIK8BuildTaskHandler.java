@@ -8,7 +8,7 @@ package io.harness.delegate.task.citasks.cik8handler;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
-import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SECRET;
+import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.getSecretName;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -201,7 +201,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       CIK8PodParams<CIK8ContainerParams> podParams, ConnectorDetails gitConnectorDetails) {
     log.info("Creating env variables for pod name: {}", podParams.getName());
     List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
-    String secretName = podParams.getName() + "-" + SECRET;
+    String secretName = getSecretName(podParams.getName());
 
     Map<String, String> secretData = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
