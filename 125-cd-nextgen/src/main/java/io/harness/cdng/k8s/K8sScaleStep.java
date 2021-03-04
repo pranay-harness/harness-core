@@ -1,9 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
@@ -45,9 +43,8 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
     ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
-    K8sManifestOutcome k8sManifestOutcome =
-        k8sStepHelper.getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
-    StoreConfig storeConfig = k8sManifestOutcome.getStore();
+    ManifestOutcome k8sManifestOutcome =
+        k8sStepHelper.getK8sSupportedManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
@@ -73,7 +70,7 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
             .timeoutIntervalInMin(
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
+            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure).getTaskRequest();

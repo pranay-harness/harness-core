@@ -50,36 +50,26 @@ fi
 
 BAZEL_MODULES="\
   //120-ng-manager:module \
-  //120-ng-manager:module_deploy.jar \
   //125-cd-nextgen:module \
   //130-resource-group:module \
   //160-model-gen-tool:module \
-  //160-model-gen-tool:module_deploy.jar \
   //136-git-sync-manager:module \
   //200-functional-test:module \
   //210-command-library-xxxxxxxxmodule \
-  //210-command-library-xxxxxxxxmodule_deploy.jar \
   //220-graphql-test:supporter-test \
   //230-model-test:module \
   //250-watcher:module \
-  //250-watcher:module_deploy.jar \
   //260-delegate:module \
   //260-delegate:module_deploy.jar \
   //270-verification:module \
-  //270-verification:module_deploy.jar \
   //280-batch-processing:module \
-  //280-batch-processing:module_deploy.jar \
-  //300-cv-nextgen:module_deploy.jar \
+  //300-cv-nextgen:module \
   //310-ci-manager:module \
-  //310-ci-manager:module_deploy.jar \
   //320-ci-execution:module \
   //330-ci-beans:module \
   //340-ce-nextgen:module \
-  //340-ce-nextgen:module_deploy.jar \
   //350-event-xxxxxxxxmodule \
-  //350-event-xxxxxxxxmodule_deploy.jar \
   //360-cg-manager:module \
-  //360-cg-manager:module_deploy.jar \
   //380-cg-graphql:module \
   //400-rest:module \
   //400-rest:supporter-test \
@@ -91,10 +81,8 @@ BAZEL_MODULES="\
   //460-capability:module \
   //490-ce-commons:module \
   //800-pipeline-service:module \
-  //800-pipeline-service:module_deploy.jar \
   //810-ng-triggers:module \
   //830-notification-service:module \
-  //830-notification-service:module_deploy.jar \
   //835-notification-senders:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
@@ -112,7 +100,6 @@ BAZEL_MODULES="\
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-access-control-service:module \
-  //900-access-control-service:module_deploy.jar \
   //903-decision-module:module \
   //905-access-control-core:module \
   //908-access-control-admin-client:module \
@@ -132,7 +119,6 @@ BAZEL_MODULES="\
   //955-delegate-beans:module \
   //940-feature-flag:module \
   //940-notification-client:module \
-  //940-notification-client:module_deploy.jar \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //950-command-library-common:module \
@@ -144,6 +130,7 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-log-client:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -264,6 +251,29 @@ build_bazel_application() {
   fi
 }
 
+build_bazel_application_module() {
+  module=$1
+  BAZEL_MODULE="//${module}:module"
+
+  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+    echo "$BAZEL_MODULE is not in the list of modules"
+    exit 1
+  fi
+
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"
+  then
+    mvn -B install:install-file \
+     -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+     -DgroupId=software.wings \
+     -DartifactId=${module} \
+     -Dversion=0.0.1-SNAPSHOT \
+     -Dpackaging=jar \
+     -DgeneratePom=true \
+     -DpomFile=${module}/pom.xml \
+     -DlocalRepositoryPath=${local_repo}
+  fi
+}
+
 build_java_proto_module() {
   module=$1
   modulePath=$module/src/main/proto
@@ -298,28 +308,28 @@ build_proto_module() {
   fi
 }
 
-if [ "${PLATFORM}" == "jenkins" ]
-then
-  build_bazel_module 990-commons-test
-  exit 0
-fi
+#if [ "${PLATFORM}" == "jenkins" ]
+#then
+#  build_bazel_module 990-commons-test
+#  exit 0
+#fi
 
-build_bazel_application 800-pipeline-service
-build_bazel_application 830-notification-service
-build_bazel_application 900-access-control-service
-build_bazel_application 940-notification-client
-build_bazel_application 340-ce-nextgen
-build_bazel_application 350-event-server
-build_bazel_application 360-cg-manager
-build_bazel_application 280-batch-processing
-build_bazel_application 120-ng-manager
-build_bazel_application 160-model-gen-tool
-build_bazel_application 210-command-library-server
-build_bazel_application 250-watcher
+build_bazel_application_module 800-pipeline-service
+build_bazel_application_module 830-notification-service
+build_bazel_application_module 900-access-control-service
+build_bazel_application_module 940-notification-client
+build_bazel_application_module 340-ce-nextgen
+build_bazel_application_module 350-event-server
+build_bazel_application_module 360-cg-manager
+build_bazel_application_module 280-batch-processing
+build_bazel_application_module 120-ng-manager
+build_bazel_application_module 160-model-gen-tool
+build_bazel_application_module 210-command-library-server
+build_bazel_application_module 250-watcher
 build_bazel_application 260-delegate
-build_bazel_application 300-cv-nextgen
-build_bazel_application 310-ci-manager
-build_bazel_application 270-verification
+build_bazel_application_module 300-cv-nextgen
+build_bazel_application_module 310-ci-manager
+build_bazel_application_module 270-verification
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group
@@ -372,6 +382,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
+build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine

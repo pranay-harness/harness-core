@@ -62,7 +62,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -212,7 +212,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
 
-    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
+    HelmCommandFlagConfig helmCommandFlag =
+        HelmCommandFlagConfig.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
     applicationManifest.setHelmCommandFlag(helmCommandFlag);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))

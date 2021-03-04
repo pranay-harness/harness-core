@@ -4,22 +4,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.White;
-import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.beans.LogWeight.Normal;
 import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
@@ -27,26 +23,22 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
-import io.harness.helm.HelmCliCommandType;
-import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
-import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogCallback;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -64,9 +56,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.CommandFlagUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -79,8 +69,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
@@ -137,32 +125,6 @@ public class K8sTaskHelper {
     }
   }
 
-  public List<FileData> renderTemplateForHelm(String helmPath, String manifestFilesDirectory, List<String> valuesFiles,
-      String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
-      long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
-    String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
-    log.info("Values file options: " + valuesFileOptions);
-
-    printHelmPath(executionLogCallback, helmPath);
-
-    List<FileData> result = new ArrayList<>();
-    try (LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
-      String helmTemplateCommand = getHelmCommandForRender(
-          helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion, helmCommandFlag);
-      printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
-
-      ProcessResult processResult = k8sTaskHelperBase.executeShellCommand(
-          manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
-      if (processResult.getExitValue() != 0) {
-        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
-      }
-
-      result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
-    }
-
-    return result;
-  }
-
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory, List<String> valuesFiles,
       String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
@@ -179,18 +141,18 @@ public class K8sTaskHelper {
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
-        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
-            helmCommandFlag);
+        return k8sTaskHelperBase.renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory,
+            valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(),
+            timeoutInMillis, helmCommandFlag);
 
       case HelmChartRepo:
         manifestFilesDirectory = Paths
                                      .get(getChartDirectory(manifestFilesDirectory,
                                          k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName()))
                                      .toString();
-        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
-            helmCommandFlag);
+        return k8sTaskHelperBase.renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory,
+            valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(),
+            timeoutInMillis, helmCommandFlag);
 
       case KustomizeSourceRepo:
         KustomizeConfig kustomizeConfig = k8sDelegateManifestConfig.getKustomizeConfig();
@@ -226,17 +188,17 @@ public class K8sTaskHelper {
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
-        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
-            helmCommandFlag);
+        return k8sTaskHelperBase.renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(),
+            manifestFilesDirectory, filesList, valuesFiles, releaseName, namespace, executionLogCallback,
+            k8sTaskParameters.getHelmVersion(), timeoutInMillis, helmCommandFlag);
 
       case HelmChartRepo:
         manifestFilesDirectory =
             Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
                 .toString();
-        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis,
-            helmCommandFlag);
+        return k8sTaskHelperBase.renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(),
+            manifestFilesDirectory, filesList, valuesFiles, releaseName, namespace, executionLogCallback,
+            k8sTaskParameters.getHelmVersion(), timeoutInMillis, helmCommandFlag);
       case KustomizeSourceRepo:
         KustomizeConfig kustomizeConfig = k8sDelegateManifestConfig.getKustomizeConfig();
         String pluginRootDir = kustomizeConfig != null ? kustomizeConfig.getPluginRootDir() : null;
@@ -407,86 +369,6 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
-  }
-
-  @VisibleForTesting
-  List<FileData> renderTemplateForHelmChartFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
-      String manifestFilesDirectory, List<String> chartFiles, List<String> valuesFiles, String releaseName,
-      String namespace, LogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis,
-      HelmCommandFlag helmCommandFlag) throws Exception {
-    String valuesFileOptions = k8sTaskHelperBase.writeValuesToFile(manifestFilesDirectory, valuesFiles);
-    String helmPath = k8sDelegateTaskParams.getHelmPath();
-    log.info("Values file options: " + valuesFileOptions);
-
-    printHelmPath(executionLogCallback, helmPath);
-
-    List<FileData> result = new ArrayList<>();
-
-    for (String chartFile : chartFiles) {
-      if (K8sTaskHelperBase.isValidManifestFile(chartFile)) {
-        try (LogOutputStream logErrorStream =
-                 K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
-          String helmTemplateCommand = getHelmCommandForRender(helmPath, manifestFilesDirectory, releaseName, namespace,
-              valuesFileOptions, chartFile, helmVersion, helmCommandFlag);
-          printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
-
-          ProcessResult processResult = k8sTaskHelperBase.executeShellCommand(
-              manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
-          if (processResult.getExitValue() != 0) {
-            throw new WingsException(format("Failed to render chart file [%s]", chartFile));
-          }
-
-          result.add(FileData.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
-        }
-      } else {
-        executionLogCallback.saveExecutionLog(
-            color(format("Ignoring file [%s] with unsupported extension", chartFile), Yellow, Bold));
-      }
-    }
-
-    return result;
-  }
-
-  private void printHelmPath(LogCallback executionLogCallback, final String helmPath) {
-    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
-    executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
-  }
-
-  private void printHelmTemplateCommand(LogCallback executionLogCallback, final String helmTemplateCommand) {
-    executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
-    executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
-  }
-
-  @VisibleForTesting
-  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
-      String valuesFileOptions, String chartFile, HelmVersion helmVersion, HelmCommandFlag helmCommandFlag) {
-    HelmCliCommandType commandType = HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE;
-    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
-    String command = replacePlaceHoldersInHelmTemplateCommand(
-        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, chartFile, valuesFileOptions);
-    command = CommandFlagUtils.applyHelmCommandFlags(command, helmCommandFlag, commandType.name(), helmVersion);
-    return command;
-  }
-
-  @VisibleForTesting
-  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
-      String valuesFileOptions, HelmVersion helmVersion, HelmCommandFlag commandFlag) {
-    HelmCliCommandType commandType = HelmCliCommandType.RENDER_CHART;
-    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
-    String command = replacePlaceHoldersInHelmTemplateCommand(
-        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, EMPTY, valuesFileOptions);
-    command = CommandFlagUtils.applyHelmCommandFlags(command, commandFlag, commandType.name(), helmVersion);
-    return command;
-  }
-
-  private String replacePlaceHoldersInHelmTemplateCommand(String unrenderedCommand, String helmPath,
-      String chartLocation, String releaseName, String namespace, String chartFile, String valueOverrides) {
-    return unrenderedCommand.replace(HELM_PATH_PLACEHOLDER, helmPath)
-        .replace("${CHART_LOCATION}", chartLocation)
-        .replace("${CHART_FILE}", chartFile)
-        .replace("${RELEASE_NAME}", releaseName)
-        .replace("${NAMESPACE}", namespace)
-        .replace("${OVERRIDE_VALUES}", valueOverrides);
   }
 
   public List<KubernetesResourceId> getResourceIdsForDeletion(K8sDeleteTaskParameters k8sDeleteTaskParameters,

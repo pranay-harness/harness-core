@@ -22,7 +22,9 @@ import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
@@ -120,6 +122,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
     List<InstanceData> instanceDataLists;
     Map<String, MutableInt> result = new HashMap<>();
     do {
+      // TODO change here
       instanceDataLists =
           instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_POD);
       if (!instanceDataLists.isEmpty()) {
@@ -178,7 +181,9 @@ public class InstanceBillingDataTasklet implements Tasklet {
     log.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
-        instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
+        instanceDataLists.stream()
+            .filter(this::validInstanceForBilling)
+            .collect(Collectors.groupingBy(InstanceData::getClusterId));
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(accountId);
     if (awsDataSetId != null) {
       Set<String> resourceIds = new HashSet<>();
@@ -219,10 +224,27 @@ public class InstanceBillingDataTasklet implements Tasklet {
     return instanceBillingDataList;
   }
 
+  private boolean validInstanceForBilling(InstanceData instanceData) {
+    String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+        InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
+    boolean validInstance = true;
+    if ((instanceData.getInstanceType() == null)
+        || (instanceData.getInstanceType() == InstanceType.K8S_NODE
+            && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType))) {
+      validInstance = false;
+    }
+    return validInstance;
+  }
+
   private InstanceBillingData getInstanceBillingData(final InstanceData instanceData,
       Map<String, UtilizationData> utilizationDataForInstances, Instant startTime, Instant endTime,
       Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
     InstanceType instanceType = instanceData.getInstanceType();
+    String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+        InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
+    if (instanceData.getInstanceType() == K8S_POD && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
+      instanceType = InstanceType.K8S_POD_FARGATE;
+    }
     UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
     BillingData billingData =
         billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
@@ -297,7 +319,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
         .accountId(instanceData.getAccountId())
         .settingId(settingId)
         .clusterId(clusterId)
-        .instanceType(instanceData.getInstanceType().toString())
+        .instanceType(instanceType.toString())
         .billingAccountId("BILLING_ACCOUNT_ID")
         .startTimestamp(startTime.toEpochMilli())
         .endTimestamp(endTime.toEpochMilli())
@@ -383,7 +405,9 @@ public class InstanceBillingDataTasklet implements Tasklet {
   String getParentInstanceId(InstanceData instanceData) {
     String actualParentResourceId =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceData);
-    if (null == actualParentResourceId && K8S_POD == instanceData.getInstanceType()) {
+    if (null == actualParentResourceId
+        && ImmutableSet.of(InstanceType.K8S_POD, InstanceType.K8S_POD_FARGATE)
+               .contains(instanceData.getInstanceType())) {
       String parentResourceId =
           getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData);
       if (null != parentResourceId) {

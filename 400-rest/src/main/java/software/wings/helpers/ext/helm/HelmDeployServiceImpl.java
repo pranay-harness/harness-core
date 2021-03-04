@@ -286,7 +286,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws Exception {
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
 
-    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+    List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
         executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis, commandRequest.getHelmCommandFlag());
