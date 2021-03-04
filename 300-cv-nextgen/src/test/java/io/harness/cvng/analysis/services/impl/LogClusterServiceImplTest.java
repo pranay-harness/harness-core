@@ -219,9 +219,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
                                          .asList();
     assertThat(tasks.size()).isEqualTo(1);
     LogClusterLearningEngineTask testLogClusterLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
-    assertThat(testLogClusterLearningEngineTask.getTestDataUrl())
-        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/l1-test-verification-test-data?verificationTaskId="
-            + verificationTaskId + "&startTime=1595846760000&endTime=1595847540000");
+    assertThat(testLogClusterLearningEngineTask.getTestDataUrl()).isNull();
     assertThat(testLogClusterLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
   @Test

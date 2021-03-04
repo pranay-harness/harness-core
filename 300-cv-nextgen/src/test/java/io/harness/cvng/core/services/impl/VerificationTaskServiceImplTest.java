@@ -10,6 +10,8 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
@@ -19,6 +21,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -44,7 +47,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     assertThat(verificationTaskService.getCVConfigId(verificationTaskId)).isEqualTo(cvConfigId);
   }
 
-  @Test()
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreate_cvConfigNull() {
@@ -178,5 +181,64 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId2);
     assertThat(new HashSet<>(verificationTaskService.getAllVerificationJobInstanceIdsForCVConfig(cvConfigId)))
         .isEqualTo(Sets.newHashSet(verificationJobInstanceId1, verificationJobInstanceId2));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindBaselineVerificationTaskId_baselineVerificationTaskIdExists() {
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    String currentVerificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String baselineVerificationJobInstanceId = generateUuid();
+    String baselineVerificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, baselineVerificationJobInstanceId);
+    Optional<String> result = verificationTaskService.findBaselineVerificationTaskId(currentVerificationTaskId,
+        VerificationJobInstance.builder()
+            .accountId(accountId)
+            .startTime(Instant.now())
+            .deploymentStartTime(Instant.now())
+            .resolvedJob(TestVerificationJob.builder()
+                             .accountId(accountId)
+                             .baselineVerificationJobInstanceId(baselineVerificationJobInstanceId)
+                             .build())
+            .build());
+    assertThat(result.get()).isEqualTo(baselineVerificationTaskId);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindBaselineVerificationTaskId_baselineVerificationTaskIdDoesNotExists() {
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    String currentVerificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String baselineVerificationJobInstanceId = generateUuid();
+
+    Optional<String> result = verificationTaskService.findBaselineVerificationTaskId(currentVerificationTaskId,
+        VerificationJobInstance.builder()
+            .startTime(Instant.now())
+            .deploymentStartTime(Instant.now())
+            .resolvedJob(TestVerificationJob.builder()
+                             .baselineVerificationJobInstanceId(baselineVerificationJobInstanceId)
+                             .build())
+            .build());
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindBaselineVerificationTaskId_baselineVerificationJobInstanceIdDoesNotExist() {
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    String currentVerificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    Optional<String> result = verificationTaskService.findBaselineVerificationTaskId(currentVerificationTaskId,
+        VerificationJobInstance.builder()
+            .startTime(Instant.now())
+            .deploymentStartTime(Instant.now())
+            .resolvedJob(TestVerificationJob.builder().build())
+            .build());
+    assertThat(result).isEmpty();
   }
 }
