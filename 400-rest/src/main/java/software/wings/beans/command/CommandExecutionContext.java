@@ -93,6 +93,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   private boolean
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean winrmCopyConfigOptimize;
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -320,6 +321,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
     private boolean
         disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+    private boolean winrmCopyConfigOptimize;
     private List<String> delegateSelectors;
 
     // new fields for multi artifact
@@ -515,6 +517,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder winrmCopyConfigOptimize(boolean winrmCopyConfigOptimize) {
+      this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
+      return this;
+    }
+
     public Builder disableWinRMEnvVariables(boolean disableWinRMEnvVariables) {
       this.disableWinRMEnvVariables = disableWinRMEnvVariables;
       return this;
@@ -649,6 +656,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
+      commandExecutionContext.setWinrmCopyConfigOptimize(winrmCopyConfigOptimize);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
       return commandExecutionContext;
     }
