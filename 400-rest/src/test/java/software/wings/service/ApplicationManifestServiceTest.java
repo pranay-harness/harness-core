@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -1000,6 +1002,19 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
 
     service.setDeploymentType(DeploymentType.HELM);
     applicationManifest.setKind(AppManifestKind.K8S_MANIFEST);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateLocalAppManifestWithCustomSourceConfig() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Local)
+                                                  .customSourceConfig(CustomSourceConfig.builder().path("test").build())
+                                                  .build();
+
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateLocalAppManifest(applicationManifest));
   }
