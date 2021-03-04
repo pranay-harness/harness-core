@@ -50,6 +50,10 @@ public class DelegateExecutor {
     long t = System.currentTimeMillis();
     while (!isHealthy(account.getUuid(), bearerToken) && System.currentTimeMillis() - t < 100000) {
       Thread.sleep(2000);
+      log.info("Delegate not healthy");
+    }
+    if (!isHealthy(account.getUuid(), bearerToken)) {
+      log.info("Delegate not healthy giving up");
     }
     //      executeLocalDelegate(account, bearerToken, clazz)
   }

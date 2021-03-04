@@ -34,7 +34,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 @Slf4j
 public class ManagerExecutor {
   private static boolean failedAlready;
-  private static Duration waiting = ofMinutes(5);
+  private static Duration waiting = ofMinutes(30);
 
   public static void ensureManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
