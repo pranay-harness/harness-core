@@ -338,6 +338,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         containerRequestContext.getUriInfo().getQueryParameters());
 
     if (isEmpty(accountId)) {
+      accountId = getRequestParamFromContext("routingId", containerRequestContext.getUriInfo().getPathParameters(),
+          containerRequestContext.getUriInfo().getQueryParameters());
+    }
+
+    if (isEmpty(accountId)) {
       // In case of graphql, accountId comes as null. For the new version of api keys, we can get the accountId
       accountId = apiKeyService.getAccountIdFromApiKey(apiKey);
     }
