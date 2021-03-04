@@ -45,15 +45,19 @@ ALTER TABLE tests RENAME TO evaluation;
 --rename columns
 --TODO: this is not complete yet. will be filling USING clause
 ALTER TABLE evaluation RENAME COLUMN time TO created_at;
-ALTER TABLE evaluation RENAME COLUMN status TO result TYPE result_t USING ;
-ALTER TABLE evaluation RENAME COLUMN type TO type test_type_t USING;
+ALTER TABLE evaluation RENAME COLUMN status TO result;
+
+ALTER TABLE evaluation ALTER COLUMN result TYPE result_t USING result::result_t;
+
+
 
 --add new columns
-ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS   last_updated_at   timestamp with time zone DEFAULT now() NOT NULL,
+ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS   last_updated_at   timestamp with time zone DEFAULT now() NOT NULL;
 ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS repo TEXT;
-ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS repo commit_id;
+ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS commit_id TEXT;
 ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS  selected boolean DEFAULT true NOT NULL;
 ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS  criterion selection_criterion_t DEFAULT 'source_code_changes';
+ALTER TABLE evaluation ADD COLUMN IF NOT EXISTS  test_type test_type_t DEFAULT 'unit';
 
 
 --add comments to all the columns
@@ -81,7 +85,8 @@ comment on column evaluation.duration_ms is 'time taken to run the test in milli
 comment on column evaluation.result is 'represents an evaluated result of a test. It could be one of passed/skipped/failed/error';
 comment on column evaluation.message is 'If there is a failure, it indicates the reason in short format';
 comment on column evaluation.description is 'If there is a failure, it indicates the reason and other details';
-comment on column evaluation.type is 'type of the test. it can be unit/integration/functional/e2e';
+comment on column evaluation.type is 'type of the failure message';
+comment on column evaluation.test_type is 'type of the test. it can be unit/integration/functional/e2e';
 comment on column evaluation.stdout is 'stdout of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.stderr is 'stderr of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of full_run/source_code_changes/new_test/updated_test/flaky_test';
