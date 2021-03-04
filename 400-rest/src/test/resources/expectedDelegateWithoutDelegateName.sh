@@ -261,15 +261,12 @@ if [[ ! -z $INSTRUMENTATION ]]; then
   export JRE_BINARY=$JDK_BINARY
 fi
 
-curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
-JAVA_OPTS=" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
-
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
   echo "Starting delegate - version $2 with java $JRE_BINARY"
-  $JRE_BINARY -Dversion=$2 $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar $JAVA_OPTS $2/delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar $2/delegate.jar config-delegate.yml watched $1
 else
   echo "Starting delegate - version $REMOTE_DELEGATE_VERSION with java $JRE_BINARY"
-  $JRE_BINARY -Dversion=$CURRENT_VERSION $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar $JAVA_OPTS delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar delegate.jar config-delegate.yml watched $1
 fi
 
 sleep 3
