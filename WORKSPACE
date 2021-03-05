@@ -1399,7 +1399,7 @@ maven_install(
         "com.j256.two-factor-auth:two-factor-auth:1.0",
         "com.jakewharton.retrofit:retrofit1-okhttp3-client:1.1.0",
         "com.jayway.jsonpath:json-path:2.2.0",
-        "com.jcraft:jsch:0.1.54",
+        "com.jcraft.harness:jsch-0-1-54-harness-patch:1.1",
         "com.jcraft:jzlib:1.1.3",
         "com.mashape.unirest:unirest-java:1.4.9",
         "com.mchange:c3p0:0.9.5.4",
