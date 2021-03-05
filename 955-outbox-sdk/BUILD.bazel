@@ -15,6 +15,9 @@ java_library(
     deps = [
         "//:lombok",
         "//960-persistence:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_inject_guice",
         "@maven//:org_slf4j_slf4j_api",
     ],

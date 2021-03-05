@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.HEvent;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -13,6 +14,8 @@ import io.harness.outbox.OutboxEvent.OutboxEventKeys;
 import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.OutboxEventRepository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import lombok.AccessLevel;
@@ -22,9 +25,14 @@ import org.springframework.data.domain.Pageable;
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 public class OutboxEventServiceImpl implements OutboxEventService {
   private final OutboxEventRepository outboxRepository;
+  private final ObjectMapper objectMapper;
 
   @Override
-  public OutboxEvent save(OutboxEvent outboxEvent) {
+  public OutboxEvent save(HEvent event) throws JsonProcessingException {
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .data(objectMapper.writeValueAsString(event.getEventData()))
+                                  .type(event.getEventType())
+                                  .build();
     return outboxRepository.save(outboxEvent);
   }
 

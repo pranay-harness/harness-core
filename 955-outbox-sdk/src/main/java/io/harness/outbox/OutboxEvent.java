@@ -1,6 +1,5 @@
 package io.harness.outbox;
 
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,9 +18,7 @@ public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull String eventType;
-  @NotNull Object eventData;
-
-  Map<String, String> additionalData;
+  @NotNull String eventData;
 
   @CreatedDate Long createdAt;
 }
