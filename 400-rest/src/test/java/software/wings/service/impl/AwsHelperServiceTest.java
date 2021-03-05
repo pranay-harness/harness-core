@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
-import static org.mockito.Mockito.*;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
@@ -20,10 +19,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
 import io.harness.aws.AwsCallTracker;
-import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -364,6 +362,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AwsCallTracker mockTracker = mock(AwsCallTracker.class);
     doNothing().when(mockTracker).trackCFCall(anyString());
     on(service).set("tracker", mockTracker);
+    on(service).set("awsApiHelperService", awsApiHelperService);
+
+    doCallRealMethod().when(awsApiHelperService).handleAmazonClientException(any());
+    doCallRealMethod().when(awsApiHelperService).handleAmazonServiceException(any());
 
     try {
       service.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
@@ -505,6 +507,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
                                      .withImageIds(new ImageIdentifier().withImageTag("latest"))
                                      .withAcceptedMediaTypes("application/vnd.docker.distribution.manifest.v1+json")))
         .thenReturn(result);
+    doReturn(ecrClient).when(awsApiHelperService).getAmazonEcrClient(any(), any(String.class));
+    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(), any());
+    doCallRealMethod().when(awsApiHelperService).fetchLabels(any(), any(), any(), any());
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
 
     assertThat(
         service.fetchLabels(AwsConfig.builder().accessKey("qwer".toCharArray()).secretKey("qwer".toCharArray()).build(),
@@ -518,7 +524,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFailsInvalidCredentials() {
     when(awsApiHelperService.getAmazonEc2Client(any())).thenCallRealMethod();
-    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(),any());
+    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(), any());
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("tracker", tracker);
     Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
@@ -536,12 +542,14 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AmazonECRClient ecrClient = mock(AmazonECRClient.class);
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("encryptionService", encryptionService);
-    doReturn(ecrClient).when(service).getAmazonEcrClient(any(), any(String.class));
-    when(service.getAmazonEcrClient(awsConfig, region)).thenReturn(ecrClient);
+    doReturn(ecrClient).when(awsApiHelperService).getAmazonEcrClient(any(), any(String.class));
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(awsApiHelperService).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
 
     DescribeRepositoriesResult result = new DescribeRepositoriesResult();
     when(ecrClient.describeRepositories(request)).thenReturn(result);
+    when(awsApiHelperService.listRepositories(any(), any(), anyString())).thenCallRealMethod();
     DescribeRepositoriesResult actual = service.listRepositories(awsConfig, null, request, region);
     verify(tracker, times(1)).trackECRCall("List Repositories");
     assertThat(actual).isEqualTo(result);
@@ -555,12 +563,16 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("encryptionService", encryptionService);
     doReturn(ec2Client).when(service).getAmazonEc2Client(any());
+    doReturn(ec2Client).when(awsApiHelperService).getAmazonEc2Client(any());
     when(service.getAmazonEc2Client(awsConfig)).thenReturn(ec2Client);
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
+    Reflect.on(awsApiHelperService).set("tracker", tracker);
 
     DescribeRegionsResult result = new DescribeRegionsResult().withRegions(
         new Region().withRegionName("us-east-1"), new Region().withRegionName("us-east-2"));
     when(ec2Client.describeRegions()).thenReturn(result);
+    when(awsApiHelperService.listRegions(any())).thenCallRealMethod();
     List<String> actual = service.listRegions(awsConfig, null);
     verify(tracker, times(1)).trackEC2Call("List Regions");
     assertThat(actual).hasSize(2);
