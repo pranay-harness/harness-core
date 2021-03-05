@@ -7,6 +7,9 @@ import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.permissions.PermissionStatus;
+import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.persistence.RoleDao;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
@@ -35,12 +38,15 @@ public class RoleServiceImpl implements RoleService {
   private final RoleDao roleDao;
   private final PermissionService permissionService;
   private final ScopeService scopeService;
+  private final RoleAssignmentService roleAssignmentService;
 
   @Inject
-  public RoleServiceImpl(RoleDao roleDao, PermissionService permissionService, ScopeService scopeService) {
+  public RoleServiceImpl(RoleDao roleDao, PermissionService permissionService, ScopeService scopeService,
+      RoleAssignmentService roleAssignmentService) {
     this.roleDao = roleDao;
     this.permissionService = permissionService;
     this.scopeService = scopeService;
+    this.roleAssignmentService = roleAssignmentService;
   }
 
   @Override
@@ -98,6 +104,16 @@ public class RoleServiceImpl implements RoleService {
     Optional<Role> currentRoleOptional = get(identifier, scopeIdentifier, isManaged);
     if (!currentRoleOptional.isPresent()) {
       throw new InvalidRequestException(String.format("Could not find the role in the scope %s", scopeIdentifier));
+    }
+    Role role = currentRoleOptional.get();
+    if (role.isManaged()) {
+      throw new InvalidRequestException(String.format("Could not delete managed role %s", role.getIdentifier()));
+    }
+    PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(PageRequest.builder().pageSize(1).build(),
+        scopeIdentifier, RoleAssignmentFilter.builder().roleFilter(Sets.newHashSet(identifier)).build());
+    if (pageResponse.getTotalItems() > 0) {
+      throw new InvalidRequestException(String.format(
+          "Cannot delete role because %s role assignments exists using the role", pageResponse.getTotalItems()));
     }
     return roleDao.delete(identifier, scopeIdentifier)
         .orElseThrow(()

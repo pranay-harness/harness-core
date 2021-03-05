@@ -112,6 +112,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
@@ -213,6 +214,7 @@ public class ContinuousVerificationServiceTest extends VerificationBase {
   @Mock private AppService appService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private Logger activityLogger;
+  @Mock private AccountService accountService;
 
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
@@ -282,6 +284,7 @@ public class ContinuousVerificationServiceTest extends VerificationBase {
 
     when(cvConfigurationService.listConfigurations(accountId))
         .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
+    when(accountService.isCertValidationRequired(anyString())).thenReturn(false);
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
     writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
@@ -310,6 +313,7 @@ public class ContinuousVerificationServiceTest extends VerificationBase {
     writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
     writeField(managerVerificationService, "dataCollectionService", dataCollectionService, true);
     writeField(managerVerificationService, "dataStoreService", dataStoreService, true);
+    writeField(managerVerificationService, "accountService", accountService, true);
 
     writeField(managerVerificationService, "environmentService", environmentService, true);
     when(environmentService.get(anyString(), anyString()))

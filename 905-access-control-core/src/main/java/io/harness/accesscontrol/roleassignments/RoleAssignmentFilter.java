@@ -14,12 +14,12 @@ import lombok.Value;
 @Builder
 @ValidRoleAssignmentFilter
 public class RoleAssignmentFilter {
-  @NotNull Set<String> resourceGroupFilter;
-  @NotNull Set<String> roleFilter;
-  @NotNull Set<PrincipalType> principalTypeFilter;
-  @NotNull Set<Principal> principalFilter;
-  @NotNull Set<Boolean> managedFilter;
-  @NotNull Set<Boolean> disabledFilter;
+  @Builder.Default @NotNull Set<String> resourceGroupFilter = new HashSet<>();
+  @Builder.Default @NotNull Set<String> roleFilter = new HashSet<>();
+  @Builder.Default @NotNull Set<PrincipalType> principalTypeFilter = new HashSet<>();
+  @Builder.Default @NotNull Set<Principal> principalFilter = new HashSet<>();
+  @Builder.Default @NotNull Set<Boolean> managedFilter = new HashSet<>();
+  @Builder.Default @NotNull Set<Boolean> disabledFilter = new HashSet<>();
 
   public boolean isEmpty() {
     return resourceGroupFilter.isEmpty() && roleFilter.isEmpty() && principalFilter.isEmpty()
