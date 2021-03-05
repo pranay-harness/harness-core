@@ -6,11 +6,11 @@ load("//tools/bazel/pmd:dependencies.bzl", "rules_pmd_dependencies")
 
 rules_pmd_dependencies()
 
-http_archive(
-    name = "com_github_bazelbuild_buildtools",
-    strip_prefix = "buildtools-master",
-    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
-)
+# http_archive(
+#     name = "com_github_bazelbuild_buildtools",
+#     strip_prefix = "buildtools-master",
+#     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+# )
 
 # Download the Go rules
 http_archive(
@@ -4893,8 +4893,8 @@ go_repository(
 go_repository(
     name = "com_github_golang_snappy",
     importpath = "github.com/golang/snappy",
-    sum = "h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=",
-    version = "v0.0.0-20180518054509-2e65f85255db",
+    sum = "h1:Qgr9rKW7uDUkrbSmQeiDsGa8SjGyCOGtuasMWwvp2P4=",
+    version = "v0.0.1",
 )
 
 go_repository(
@@ -5308,4 +5308,11 @@ go_repository(
     importpath = "go.mongodb.org/mongo-driver",
     sum = "h1:zs/dKNwX0gYUtzwrN9lLiR15hCO0nDwQj5xXx+vjCdE=",
     version = "v1.3.4",
+)
+
+go_repository(
+    name = "com_github_linkedin_goavro_v2",
+    importpath = "github.com/linkedin/goavro/v2",
+    sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",
+    version = "v2.10.0",
 )
