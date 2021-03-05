@@ -35,6 +35,8 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
       resourceGroupUpdateDBO.setVersion(resourceGroupDBO.get().getVersion());
       resourceGroupUpdateDBO.setCreatedAt(resourceGroupDBO.get().getCreatedAt());
       resourceGroupUpdateDBO.setLastModifiedAt(resourceGroupDBO.get().getCreatedAt());
+      resourceGroupUpdateDBO.setNextReconciliationIterationAt(
+          resourceGroupDBO.get().getNextReconciliationIterationAt());
     }
     return fromDBO(resourceGroupRepository.save(resourceGroupUpdateDBO));
   }
@@ -56,6 +58,8 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
   @Override
   public Optional<ResourceGroup> delete(String identifier, String scopeIdentifier) {
     return resourceGroupRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
+        .stream()
+        .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
   }
 }

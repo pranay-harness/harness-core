@@ -38,7 +38,7 @@ public class PermissionServiceImpl implements PermissionService {
   private static final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy(
       "[Retrying]: Failed to remove permission from roles and remove the permission; attempt: {}",
       "[Failed]: Failed to remove permission from roles and remove the permission; attempt: {}",
-      ImmutableList.of(TransactionException.class), Duration.ofSeconds(2), 3, log);
+      ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
 
   @Inject
   public PermissionServiceImpl(PermissionDao permissionDao, ResourceTypeService resourceTypeService,
