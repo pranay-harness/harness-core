@@ -54,4 +54,9 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
     return roleAssignmentDao.delete(identifier, parentIdentifier);
   }
+
+  @Override
+  public long deleteMany(String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.deleteMany(scopeIdentifier, roleAssignmentFilter);
+  }
 }
