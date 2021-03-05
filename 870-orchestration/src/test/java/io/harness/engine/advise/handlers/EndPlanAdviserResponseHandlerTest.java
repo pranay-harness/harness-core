@@ -1,22 +1,27 @@
 package io.harness.engine.advise.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.InterruptManager;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.pms.contracts.advisers.EndPlanAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
@@ -24,13 +29,16 @@ import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
-public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
-  @Inject private RetryAdviserResponseHandler retryAdviseHandler;
+public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
+  @Mock private InterruptManager interruptManager;
+  @InjectMocks @Inject private EndPlanAdviserResponseHandler endPlanAdviserResponseHandler;
+
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
 
@@ -39,7 +47,7 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
   private static final String NODE_SETUP_ID = generateUuid();
 
   private NodeExecution nodeExecution;
-  private RetryAdvise advise;
+  private EndPlanAdvise advise;
 
   @Before
   public void setup() {
@@ -49,7 +57,7 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
                                 Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
                             .build();
 
-    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());
+    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).status(Status.RUNNING).build());
 
     nodeExecution = NodeExecution.builder()
                         .uuid(NODE_EXECUTION_ID)
@@ -64,22 +72,32 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
                         .status(Status.FAILED)
                         .build();
     nodeExecutionService.save(nodeExecution);
-    advise = RetryAdvise.newBuilder().setWaitInterval(0).setRetryNodeExecutionId(NODE_EXECUTION_ID).build();
+    advise = EndPlanAdvise.newBuilder().build();
   }
 
   @Test
   @RealMongo
-  @Owner(developers = PRASHANT)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void shouldTestHandleAdvise() {
-    retryAdviseHandler.handleAdvise(
-        nodeExecution, AdviserResponse.newBuilder().setRetryAdvise(advise).setType(AdviseType.RETRY).build());
-    List<NodeExecution> executions = nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID);
-    assertThat(executions).hasSize(2);
-    NodeExecution newNodeExecution =
-        executions.stream().filter(ex -> !ex.getUuid().equals(NODE_EXECUTION_ID)).findFirst().orElse(null);
-    assertThat(newNodeExecution).isNotNull();
-    assertThat(newNodeExecution.getRetryIds()).hasSize(1);
-    assertThat(newNodeExecution.getRetryIds()).containsExactly(NODE_EXECUTION_ID);
+  public void shouldTestHandleAdviseWithEndTransition() {
+    endPlanAdviserResponseHandler.handleAdvise(
+        nodeExecution, AdviserResponse.newBuilder().setEndPlanAdvise(advise).setType(AdviseType.END_PLAN).build());
+    PlanExecution planExecution = planExecutionService.get(PLAN_EXECUTION_ID);
+    assertThat(planExecution.getStatus()).isEqualTo(Status.FAILED);
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void shouldTestHandlerAdviseWithAbort() {
+    advise = EndPlanAdvise.newBuilder().setIsAbort(true).build();
+    endPlanAdviserResponseHandler.handleAdvise(
+        nodeExecution, AdviserResponse.newBuilder().setEndPlanAdvise(advise).setType(AdviseType.END_PLAN).build());
+    verify(interruptManager, times(1))
+        .register(InterruptPackage.builder()
+                      .planExecutionId(PLAN_EXECUTION_ID)
+                      .interruptType(InterruptType.ABORT_ALL)
+                      .build());
   }
 }
