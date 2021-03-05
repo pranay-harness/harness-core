@@ -97,7 +97,10 @@ public class SshHelperUtils {
           .withKeyName(hostConnectionSetting.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
-          .withKeyPath(hostConnectionAttributes.getKeyPath());
+          .withKeyPath(hostConnectionAttributes.getKeyPath())
+          .withVaultSSH(hostConnectionAttributes.isVaultSSH())
+          .withPublicKey(hostConnectionAttributes.getPublicKey())
+          .withSignedPublicKey(hostConnectionAttributes.getSignedPublicKey());
     } else if (KERBEROS == hostConnectionAttributes.getAuthenticationScheme()) {
       KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
 

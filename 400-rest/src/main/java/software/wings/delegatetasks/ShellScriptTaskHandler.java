@@ -24,6 +24,7 @@ import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,6 +42,7 @@ public class ShellScriptTaskHandler {
   @Inject private EncryptionService encryptionService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   public CommandExecutionResult handle(ShellScriptParameters parameters) {
     // Define output variables and secret output variables together
@@ -67,7 +69,8 @@ public class ShellScriptTaskHandler {
     switch (parameters.getConnectionType()) {
       case SSH: {
         try {
-          SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+          SshSessionConfig expectedSshConfig =
+              parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
           BaseScriptExecutor executor =
               sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
           return CommandExecutionResultMapper.from(

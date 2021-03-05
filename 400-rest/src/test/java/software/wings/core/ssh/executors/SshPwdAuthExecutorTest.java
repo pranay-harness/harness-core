@@ -42,6 +42,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.rules.SshRule;
+import software.wings.service.intfc.security.SSHVaultService;
 
 import com.google.common.io.CharStreams;
 import java.io.File;
@@ -101,6 +102,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private FileBasedScriptExecutor fileBasedScriptExecutor;
   @Mock private DelegateFileManager fileService;
   @Mock private LogCallback logCallback;
+  @Mock private SSHVaultService sshVaultService;
 
   /**
    * Sets the up.

@@ -37,6 +37,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UsageRestrictions;
@@ -50,6 +51,7 @@ import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.VaultService;
 
 import com.google.inject.Inject;
@@ -90,6 +92,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private SecretsDao secretsDao;
   @Inject private SecretService secretService;
   @Inject @Named("hashicorpvault") private RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
+  @Inject private SSHVaultService sshVaultService;
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
@@ -347,6 +350,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       case VAULT:
         vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecrets);
         ((VaultConfig) secretManagerConfig).setCertValidationRequired(isCertValidationRequired);
+        break;
+      case VAULT_SSH:
+        sshVaultService.decryptVaultConfigSecrets(accountId, (SSHVaultConfig) secretManagerConfig, maskSecrets);
+        ((SSHVaultConfig) secretManagerConfig).setCertValidationRequired(isCertValidationRequired);
         break;
       case AWS_SECRETS_MANAGER:
         secretsManagerService.decryptAsmConfigSecrets(

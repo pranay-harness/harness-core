@@ -1152,6 +1152,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.VAULT_RENEW_TOKEN).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.VAULT_LIST_ENGINES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.VAULT_APPROLE_LOGIN).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.SSH_SECRET_ENGINE_AUTH).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.SECRET_DECRYPT).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.BATCH_SECRET_DECRYPT).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.SECRET_DECRYPT_REF).toInstance(ServiceImplDelegateTask.class);

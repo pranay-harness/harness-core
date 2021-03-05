@@ -1,5 +1,4 @@
 package io.harness.serializer.morphia;
-
 import io.harness.beans.EncryptedData;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.SecretChangeLog;
@@ -10,11 +9,13 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 
 import java.util.Set;
@@ -34,9 +35,10 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SecretManagerConfig.class);
     set.add(SecretUsageLog.class);
     set.add(VaultConfig.class);
+    set.add(SSHVaultConfig.class);
+    set.add(BaseVaultConfig.class);
     set.add(MigrateSecretTask.class);
   }
-
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     w.put("beans.AwsSecretsManagerConfig", AwsSecretsManagerConfig.class);
@@ -48,5 +50,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.LocalEncryptionConfig", LocalEncryptionConfig.class);
     w.put("beans.SecretManagerConfig", SecretManagerConfig.class);
     w.put("beans.VaultConfig", VaultConfig.class);
+    w.put("beans.SSHVaultConfig", SSHVaultConfig.class);
+    w.put("beans.BaseVaultConfig", BaseVaultConfig.class);
   }
 }

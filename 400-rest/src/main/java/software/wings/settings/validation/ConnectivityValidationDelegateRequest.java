@@ -10,6 +10,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -24,6 +25,7 @@ import lombok.Data;
 public class ConnectivityValidationDelegateRequest implements ExecutionCapabilityDemander {
   private SettingAttribute settingAttribute;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private SSHVaultConfig sshVaultConfig;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
