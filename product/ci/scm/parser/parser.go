@@ -83,6 +83,8 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			"Unsupported webhook event",
 			"event", event,
 			"elapsed_time_ms", utils.TimeSince(start),
+			"body", in.GetBody(),
+			"header", in.GetHeader(),
 			zap.Error(err),
 		)
 		return nil, status.Errorf(codes.InvalidArgument,
