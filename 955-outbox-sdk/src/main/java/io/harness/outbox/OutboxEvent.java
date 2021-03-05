@@ -1,5 +1,10 @@
 package io.harness.outbox;
 
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
+
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,4 +26,14 @@ public class OutboxEvent {
   @NotNull String eventData;
 
   @CreatedDate Long createdAt;
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("createdAt_entityType_Idx")
+                 .field(OutboxEventKeys.createdAt)
+                 .field(OutboxEventKeys.eventType)
+                 .build())
+        .build();
+  }
 }
