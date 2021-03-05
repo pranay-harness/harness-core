@@ -1,15 +1,18 @@
 package software.wings.helpers.ext.ecr;
 
-import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
-import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
-import com.amazonaws.services.ecr.model.ListImagesRequest;
-import com.amazonaws.services.ecr.model.ListImagesResult;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
+import static java.util.stream.Collectors.toList;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
+
 import software.wings.beans.AwsConfig;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -19,13 +22,13 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
+import com.amazonaws.services.ecr.model.ListImagesRequest;
+import com.amazonaws.services.ecr.model.ListImagesResult;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.*;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
-import static java.util.stream.Collectors.toList;
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 /**
  * Created by brett on 7/15/17

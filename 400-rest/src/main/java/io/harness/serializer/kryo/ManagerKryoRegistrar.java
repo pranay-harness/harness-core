@@ -158,7 +158,6 @@ import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;

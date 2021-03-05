@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -15,13 +14,11 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
 import software.wings.service.impl.AwsApiHelperService;
-import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
-import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
@@ -41,25 +38,23 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 
 public class EcrServiceTest extends WingsBaseTest {
-  @Mock private AwsHelperService awsHelperService;
   @Mock private AwsEcrHelperServiceDelegate ecrServiceDelegate;
-  @Mock private EncryptionService encryptionService;
   @Inject @InjectMocks private EcrService ecrService;
   @Mock private AwsApiHelperService awsApiHelperService;
 
-  private AwsConfig awsConfig = AwsConfig.builder().build();//.accessKey("dummy".toCharArray()).secretKey("dummy".toCharArray()).build();
+  private AwsConfig awsConfig = AwsConfig.builder().build();
 
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldGetLabels() {
-    when(awsApiHelperService.fetchLabels(eq(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig)), eq("imageName"),eq(Regions.US_EAST_1.getName()), anyListOf(String.class)))
+    when(awsApiHelperService.fetchLabels(eq(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig)), eq("imageName"),
+             eq(Regions.US_EAST_1.getName()), anyListOf(String.class)))
         .thenReturn(ImmutableMap.<String, String>builder().put("key1", "val1").build());
-    assertThat(
-        ecrService.getLabels(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), "imageName", Regions.US_EAST_1.getName(), Lists.newArrayList("tag1")))
+    assertThat(ecrService.getLabels(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), "imageName",
+                   Regions.US_EAST_1.getName(), Lists.newArrayList("tag1")))
         .hasSize(1)
         .isEqualTo(Collections.singletonList(ImmutableMap.<String, String>builder().put("key1", "val1").build()));
   }
@@ -74,9 +69,11 @@ public class EcrServiceTest extends WingsBaseTest {
     imagesResult.setNextToken(null);
     imagesResult.setImageIds(Lists.newArrayList(null, buildImageIdentifier(null), buildImageIdentifier("latest"),
         buildImageIdentifier("v2"), buildImageIdentifier("v1")));
-    when(awsApiHelperService.listEcrImages(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),region,new ListImagesRequest().withRepositoryName("imageName")))
-            .thenReturn(imagesResult);
-    assertThat(ecrService.getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), null, region, "imageName", 10))
+    when(awsApiHelperService.listEcrImages(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region,
+             new ListImagesRequest().withRepositoryName("imageName")))
+        .thenReturn(imagesResult);
+    assertThat(
+        ecrService.getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), null, region, "imageName", 10))
         .hasSize(3)
         .isEqualTo(Lists.newArrayList(buildBuildDetails("latest"), buildBuildDetails("v1"), buildBuildDetails("v2")));
   }
@@ -95,9 +92,11 @@ public class EcrServiceTest extends WingsBaseTest {
                                                    })
                                                    .collect(Collectors.toList()));
     describeRepositoriesResult.setNextToken(null);
-    when(awsApiHelperService.listRepositories(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),new DescribeRepositoriesRequest(), Regions.US_EAST_1.getName()))
-            .thenReturn(describeRepositoriesResult);
-    assertThat(ecrService.listEcrRegistry(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), Regions.US_EAST_1.getName()))
+    when(awsApiHelperService.listRepositories(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+             new DescribeRepositoriesRequest(), Regions.US_EAST_1.getName()))
+        .thenReturn(describeRepositoriesResult);
+    assertThat(ecrService.listEcrRegistry(
+                   AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), Regions.US_EAST_1.getName()))
         .containsExactly("repo1", "repo2");
   }
 
@@ -115,9 +114,12 @@ public class EcrServiceTest extends WingsBaseTest {
                                                    })
                                                    .collect(Collectors.toList()));
     describeRepositoriesResult.setNextToken(null);
-    when(awsApiHelperService.listRepositories(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),new DescribeRepositoriesRequest(), Regions.US_EAST_1.getName()))
-            .thenReturn(describeRepositoriesResult);
-    assertThat(ecrService.verifyRepository(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), Regions.US_EAST_1.getName(), "repo1")).isTrue();
+    when(awsApiHelperService.listRepositories(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+             new DescribeRepositoriesRequest(), Regions.US_EAST_1.getName()))
+        .thenReturn(describeRepositoriesResult);
+    assertThat(ecrService.verifyRepository(
+                   AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), Regions.US_EAST_1.getName(), "repo1"))
+        .isTrue();
   }
 
   private ImageIdentifier buildImageIdentifier(String tag) {

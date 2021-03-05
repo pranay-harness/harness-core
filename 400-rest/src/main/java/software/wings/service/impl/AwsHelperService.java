@@ -149,8 +149,7 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      getAmazonEc2Client(
-              AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
+      getAmazonEc2Client(AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
           .describeRegions();
       tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
