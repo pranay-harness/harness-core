@@ -100,7 +100,6 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -121,6 +120,8 @@ import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
 import io.harness.logstreaming.LogStreamingClient;
+import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.logstreaming.LogStreamingSanitizer;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -142,7 +143,6 @@ import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.DelegateTaskFactory;
-import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -1953,7 +1953,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return null;
     }
     String logBaseKey = delegateTaskPackage.getLogStreamingAbstractions() != null
-        ? LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
+        ? LogStreamingHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
         : EMPTY;
 
     LogStreamingTaskClientBuilder taskClientBuilder =
