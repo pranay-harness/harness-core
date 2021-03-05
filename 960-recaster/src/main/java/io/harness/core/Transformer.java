@@ -102,7 +102,11 @@ public abstract class Transformer {
   }
 
   public Object encode(final Class<?> c, final Object o) {
-    return getTransformer(c).encode(o, null);
+    return encode(c, o, null);
+  }
+
+  public Object encode(final Class<?> c, final Object o, CastedField cf) {
+    return getTransformer(c).encode(o, cf);
   }
 
   protected RecastTransformer getTransformer(final Class<?> c) {
