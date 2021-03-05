@@ -1,4 +1,4 @@
-package callgraph
+package testintelligence
 
 import (
 	"bufio"
@@ -147,4 +147,30 @@ type Input struct {
 type Relation struct {
 	Source int   `json:"source"`
 	Tests  []int `json:"tests"`
+}
+
+type CGphDTO struct {
+	Nodes     []Node
+	Relations []Relation
+}
+
+//ToStringMap converts CallgraphDto to string for avro encoding
+func (cg *CGphDTO) ToStringMap(map[string]interface{}, error) {
+	var nodes, relations []interface{}
+	for _, v := range *cg.Nodes {
+		datumIn := map[string]interface{}{
+			"package": string(u.Pkg),
+			"method":  string(u.Method),
+		}
+		names = append(names, datumIn)
+	}
+	for _, v = range *cg.Relations {
+		relations = append(relations, v)
+	}
+
+	datum := map[string]interface{}{
+		"nodes":     nodes,
+		"relations": relations,
+	}
+	return datum
 }
