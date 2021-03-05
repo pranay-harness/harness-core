@@ -30,6 +30,9 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   @Override
   public OutboxEvent save(HEvent event) throws JsonProcessingException {
     OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .resourceScope(event.getResourceScope())
+                                  .resourceIdentifier(event.getResourceIdentifier())
+                                  .resourceType(event.getResourceType())
                                   .eventData(objectMapper.writeValueAsString(event.getEventData()))
                                   .eventType(event.getEventType())
                                   .build();
