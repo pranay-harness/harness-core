@@ -33,6 +33,7 @@ import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCEEnabledFilter;
 import software.wings.resources.graphql.TriggeredByType;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -291,7 +292,37 @@ public class DataFetcherUtils {
     }
   }
 
-  public void setNumberFilter(FieldEnd<? extends Query<?>> field, QLNumberFilter numberFilter) {
+  public void setBooleanFilter(FieldEnd<? extends Query<?>> field, QLCEEnabledFilter ceEnabledFilter) {
+
+    if (ceEnabledFilter == null) {
+      return;
+    }
+
+    QLEnumOperator operator = (QLEnumOperator) ceEnabledFilter.getOperator();
+    if (operator == null) {
+      throw new WingsException("Enum Operator cannot be null");
+    }
+
+    if (isEmpty(ceEnabledFilter.getValues())) {
+      throw new WingsException("Value cannot be empty");
+    }
+
+    Boolean[] booleanFilterValues = ceEnabledFilter.getValues();
+
+    if(operator == software.wings.graphql.schema.type.aggregation.QLEnumOperator.EQUALS) {
+        System.out.println("Boolean value is ");
+        System.out.println(booleanFilterValues[0]);
+        System.out.println(field);
+        field.equal(booleanFilterValues[0]);
+    }else{
+        throw new WingsException("Unknown Number operator " + operator);
+    }
+
+  }
+
+
+
+    public void setNumberFilter(FieldEnd<? extends Query<?>> field, QLNumberFilter numberFilter) {
     if (numberFilter == null) {
       throw new WingsException("Filter is null");
     }

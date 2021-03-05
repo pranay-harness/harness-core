@@ -9,6 +9,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCEEnabledFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderTypeFilter;
 
@@ -44,6 +45,12 @@ public class CloudProviderQueryHelper {
         field = query.field("value.type");
         QLCloudProviderTypeFilter cloudProviderTypeFilter = filter.getCloudProviderType();
         utils.setEnumFilter(field, cloudProviderTypeFilter);
+      }
+
+      if (filter.getIsCEEnabled() != null) {
+        field = query.field("value.ccmConfig.cloudCostEnabled");
+        QLCEEnabledFilter ceEnabledFilter = filter.getIsCEEnabled();
+        utils.setBooleanFilter(field, ceEnabledFilter);
       }
 
       if (filter.getCreatedAt() != null) {
