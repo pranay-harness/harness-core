@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -35,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
+@BreakDependencyOn("import software.wings.service.intfc.security.EncryptionService")
 public class ShellScriptTaskHandler {
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;

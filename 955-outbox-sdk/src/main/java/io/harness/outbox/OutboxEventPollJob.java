@@ -1,9 +1,13 @@
 package io.harness.outbox;
 
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.outbox.api.OutboxEventService;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,26 +15,37 @@ import lombok.extern.slf4j.Slf4j;
 public class OutboxEventPollJob implements Runnable {
   private final OutboxEventService outboxEventService;
   private final OutboxEventHandler outboxEventHandler;
+  private final PersistentLocker persistentLocker;
+  private static final String OUTBOX_POLL_JOB_LOCK = "OUTBOX_POLL_JOB_LOCK";
+  public static final String OUTBOX_PERSISTENCE_LOCKER = "OUTBOX_PERSISTENCE_LOCKER";
 
   @Inject
-  public OutboxEventPollJob(OutboxEventService outboxEventService, OutboxEventHandler outboxEventHandler) {
+  public OutboxEventPollJob(OutboxEventService outboxEventService, OutboxEventHandler outboxEventHandler,
+      @Named(OUTBOX_PERSISTENCE_LOCKER) PersistentLocker persistentLocker) {
     this.outboxEventService = outboxEventService;
     this.outboxEventHandler = outboxEventHandler;
+    this.persistentLocker = persistentLocker;
   }
 
   @Override
   public void run() {
-    List<OutboxEvent> outboxEvents = outboxEventService.list(null).getContent();
-    outboxEvents.forEach(outbox -> {
-      try {
-        if (outboxEventHandler.handle(outbox)) {
-          outboxEventService.delete(outbox.getId());
-        }
-      } catch (Exception exception) {
-        log.error(String.format("Error occurred while handling outbox event with id %s and type %s", outbox.getId(),
-                      outbox.getEventType()),
-            exception);
+    try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(OUTBOX_POLL_JOB_LOCK, Duration.ofMinutes(1))) {
+      if (lock == null) {
+        log.error("Could not acquire lock for outbox poll job");
+        return;
       }
-    });
+      List<OutboxEvent> outboxEvents = outboxEventService.list(null).getContent();
+      outboxEvents.forEach(outbox -> {
+        try {
+          if (outboxEventHandler.handle(outbox)) {
+            outboxEventService.delete(outbox.getId());
+          }
+        } catch (Exception exception) {
+          log.error(String.format("Error occurred while handling outbox event with id %s and type %s", outbox.getId(),
+                        outbox.getEventType()),
+              exception);
+        }
+      });
+    }
   }
 }
