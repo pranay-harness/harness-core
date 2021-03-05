@@ -69,6 +69,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -89,7 +90,6 @@ import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
@@ -284,7 +284,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate =
         delegateBuilder.includeScopes(test.getIncludeScopes()).excludeScopes(test.getExcludeScopes()).build();
     when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    when(featureFlagService.isFeatureFlagEnabled(anyString(), anyString())).thenReturn(true);
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
 
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
