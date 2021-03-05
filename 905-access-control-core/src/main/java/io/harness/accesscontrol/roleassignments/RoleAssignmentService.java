@@ -21,4 +21,6 @@ public interface RoleAssignmentService {
   List<RoleAssignment> get(@NotEmpty String principal, @NotNull PrincipalType principalType);
 
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+
+  long deleteMany(@NotEmpty String scopeIdentifier, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

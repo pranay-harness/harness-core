@@ -46,6 +46,7 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   private int dataCollectionTotalTime;
   private String cvConfigId;
   private int initialDelaySeconds;
+  private boolean validateCert;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

@@ -28,6 +28,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -59,6 +60,7 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   @Mock AppService appService;
   @Mock WaitNotifyEngine waitNotifyEngine;
   @Mock DelegateService delegateService;
+  @Mock AccountService accountService;
 
   @Before
   public void setup() throws Exception {
