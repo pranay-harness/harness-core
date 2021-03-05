@@ -34,7 +34,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar /root/.m2/repository/software/wings/260-delegate/0.0.1-SNAPSHOT/260-delegate-0.0.1-SNAPSHOT-capsule.jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/config-delegate.yml &
   sleep 300
   echo "Starting functional tests"
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=6 -- //200-functional-test/... //190-deployment-functional-tests:software.wings.functional.terraform.TerraformFunctionalTest //190-deployment-functional-tests:software.wings.functional.customDeployment.CustomDeploymentFunctionalTest || true
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=4 -- //200-functional-test/... //190-deployment-functional-tests:software.wings.functional.terraform.TerraformFunctionalTest //190-deployment-functional-tests:software.wings.functional.customDeployment.CustomDeploymentFunctionalTest || true
 fi
 
 ps auxwwwe
