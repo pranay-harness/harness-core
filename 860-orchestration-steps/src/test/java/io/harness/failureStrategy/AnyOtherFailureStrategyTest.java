@@ -31,7 +31,7 @@ public class AnyOtherFailureStrategyTest extends CategoryTest {
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
-  public void anyOtherFailureStrategy() {
+  public void testAtleastAnyOtherFailureStrategyExists() {
     List<FailureStrategyConfig> stageFailureStrategies1, stageFailureStrategies2, stageFailureStrategies3;
     // Not containing error type as ANY_OTHER_ERRORS
     stageFailureStrategies1 = Collections.singletonList(
