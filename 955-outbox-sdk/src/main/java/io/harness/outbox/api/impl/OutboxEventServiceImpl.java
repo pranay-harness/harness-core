@@ -44,7 +44,7 @@ public class OutboxEventServiceImpl implements OutboxEventService {
 
   private Pageable getPageable(PageRequest pageRequest) {
     if (pageRequest == null) {
-      pageRequest = PageRequest.builder().pageIndex(0).pageSize(30).build();
+      pageRequest = PageRequest.builder().pageIndex(0).pageSize(20).build();
     }
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField(OutboxEventKeys.createdAt, ASC).build();

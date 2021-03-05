@@ -22,7 +22,7 @@ public class OutboxEventPollService implements Managed {
 
   @Override
   public void start() {
-    outboxPollJobFuture = executorService.scheduleAtFixedRate(outboxEventPollJob, 30, 10, TimeUnit.SECONDS);
+    outboxPollJobFuture = executorService.scheduleAtFixedRate(outboxEventPollJob, 20, 10, TimeUnit.SECONDS);
   }
 
   @Override
