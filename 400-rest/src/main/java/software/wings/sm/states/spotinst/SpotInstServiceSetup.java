@@ -10,6 +10,8 @@ import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_SETUP
 
 import static software.wings.sm.StateType.SPOTINST_SETUP;
 
+import static java.util.Collections.emptyMap;
+
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -254,6 +256,9 @@ public class SpotInstServiceSetup extends State {
 
   @Override
   public Map<String, String> validateFields() {
+    if (useCurrentRunningCount) {
+      return emptyMap();
+    }
     Map<String, String> invalidFields = new HashMap<>();
     if (isEmpty(minInstances)) {
       invalidFields.put("minInstances", "Min Instances is needed");

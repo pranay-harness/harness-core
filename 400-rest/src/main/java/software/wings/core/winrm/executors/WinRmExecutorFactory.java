@@ -24,9 +24,10 @@ public class WinRmExecutorFactory {
         getExecutionLogCallback(config), delegateFileManager, shouldSaveExecutionLogs, config, disableCommandEncoding);
   }
 
-  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(WinRmSessionConfig config, boolean disableCommandEncoding) {
-    return new FileBasedWinRmExecutor(
-        getExecutionLogCallback(config), delegateFileManager, true, config, disableCommandEncoding);
+  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(
+      WinRmSessionConfig config, boolean disableCommandEncoding, boolean winrmCopyConfigOptimize) {
+    return new FileBasedWinRmExecutor(getExecutionLogCallback(config), delegateFileManager, true, config,
+        disableCommandEncoding, winrmCopyConfigOptimize);
   }
 
   ExecutionLogCallback getExecutionLogCallback(WinRmSessionConfig config) {

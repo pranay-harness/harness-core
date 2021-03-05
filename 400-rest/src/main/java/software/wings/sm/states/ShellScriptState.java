@@ -54,6 +54,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -75,6 +76,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.settings.SettingValue;
@@ -124,6 +126,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Inject @Transient private DelegateService delegateService;
   @Inject @Transient private FeatureFlagService featureFlagService;
   @Transient @Inject KryoSerializer kryoSerializer;
+  @Inject @Transient private SSHVaultService sshVaultService;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -336,6 +339,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     List<EncryptedDataDetail> winrmEdd = emptyList();
     List<EncryptedDataDetail> keyEncryptionDetails = emptyList();
     KerberosConfig kerberosConfig = null;
+    SSHVaultConfig sshVaultConfig = null;
+    boolean isVaultSSH = false;
+    String role = null;
+    String publicKey = null;
 
     HostConnectionAttributes hostConnectionAttributes = null;
 
@@ -385,6 +392,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         keyName = keySettingAttribute.getUuid();
         keyEncryptionDetails = secretManager.getEncryptionDetails(
             (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+        isVaultSSH = ((HostConnectionAttributes) keySettingAttribute.getValue()).isVaultSSH();
+        role = ((HostConnectionAttributes) keySettingAttribute.getValue()).getRole();
+        publicKey = ((HostConnectionAttributes) keySettingAttribute.getValue()).getPublicKey();
+        String sshVaultConfigId = ((HostConnectionAttributes) keySettingAttribute.getValue()).getSshVaultConfigId();
+        sshVaultConfig = sshVaultService.getSSHVaultConfig(executionContext.getApp().getAccountId(), sshVaultConfigId);
 
       } else if (connectionType == ConnectionType.WINRM) {
         winRmConnectionAttributes = setupWinrmCredentials(connectionAttributes, context);
@@ -461,6 +473,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .accessType(accessType)
             .authenticationScheme(authenticationScheme)
             .kerberosConfig(kerberosConfig)
+            .sshVaultConfig(sshVaultConfig)
+            .role(role)
+            .publicKey(publicKey)
+            .isVaultSSH(isVaultSSH)
             .localOverrideFeatureFlag(
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, executionContext.getApp().getAccountId()))
             .keyName(keyName)

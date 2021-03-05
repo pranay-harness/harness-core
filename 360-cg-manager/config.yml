@@ -552,6 +552,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 mockServerConfig:
   baseUrl: http://localhost

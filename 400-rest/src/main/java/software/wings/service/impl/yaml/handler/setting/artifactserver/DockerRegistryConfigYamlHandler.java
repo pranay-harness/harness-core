@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.artifactserver;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
@@ -11,7 +12,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author rktummala on 11/19/17
@@ -23,12 +27,14 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
     Yaml yaml;
+    List<String> delegateSelectors = getDelegateSelectors(dockerConfig.getDelegateSelectors());
     if (dockerConfig.hasCredentials()) {
       yaml = Yaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(dockerConfig.getType())
                  .url(dockerConfig.getDockerRegistryUrl())
                  .username(dockerConfig.getUsername())
+                 .delegateSelectors(delegateSelectors)
                  .password(getEncryptedYamlRef(dockerConfig.getAccountId(), dockerConfig.getEncryptedPassword()))
                  .build();
     } else {
@@ -36,6 +42,7 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(dockerConfig.getType())
                  .url(dockerConfig.getDockerRegistryUrl())
+                 .delegateSelectors(delegateSelectors)
                  .build();
     }
 
@@ -50,13 +57,21 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
+    List<String> delegateSelectors = getDelegateSelectors(yaml.getDelegateSelectors());
     DockerConfig config = DockerConfig.builder()
                               .accountId(accountId)
                               .dockerRegistryUrl(yaml.getUrl())
                               .encryptedPassword(yaml.getPassword())
                               .username(yaml.getUsername())
+                              .delegateSelectors(delegateSelectors)
                               .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
+  }
+
+  private List<String> getDelegateSelectors(List<String> delegateSelectors) {
+    return isNotEmpty(delegateSelectors)
+        ? delegateSelectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList())
+        : new ArrayList<>();
   }
 
   @Override
