@@ -62,12 +62,15 @@ public class HACLDAOImpl implements ACLDAO {
                       HResource.builder().resourceIdentifier(x).resourceType(PROJECT).build(), hPrincipal,
                       permissionCheckDTO.getPermission()));
 
-      String queryStringForResourceIdentifier = getACLQuery(parentMetadata,
-          HResource.builder()
-              .resourceIdentifier(permissionCheckDTO.getResourceIdentifier())
-              .resourceType(permissionCheckDTO.getResourceType())
-              .build(),
-          hPrincipal, permissionCheckDTO.getPermission());
+      Optional<String> queryStringForResourceIdentifier =
+          Optional.ofNullable(permissionCheckDTO.getResourceIdentifier())
+              .map(x
+                  -> getACLQuery(parentMetadata,
+                      HResource.builder()
+                          .resourceIdentifier(x)
+                          .resourceType(permissionCheckDTO.getResourceType())
+                          .build(),
+                      hPrincipal, permissionCheckDTO.getPermission()));
 
       String queryStringForAllResources = getACLQuery(parentMetadata,
           HResource.builder()
@@ -76,7 +79,8 @@ public class HACLDAOImpl implements ACLDAO {
               .build(),
           hPrincipal, permissionCheckDTO.getPermission());
 
-      List<String> aclQueryStrings = Lists.newArrayList(queryStringForAllResources, queryStringForResourceIdentifier);
+      List<String> aclQueryStrings = Lists.newArrayList(queryStringForAllResources);
+      queryStringForResourceIdentifier.ifPresent(aclQueryStrings::add);
       queryStringForAccountScope.ifPresent(aclQueryStrings::add);
       queryStringForOrgScope.ifPresent(aclQueryStrings::add);
       queryStringForProjectScope.ifPresent(aclQueryStrings::add);
