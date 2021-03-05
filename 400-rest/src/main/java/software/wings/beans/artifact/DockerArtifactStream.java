@@ -77,17 +77,4 @@ public class DockerArtifactStream extends ArtifactStream {
   public boolean checkIfStreamParameterized() {
     return validateParameters(imageName);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String imageName;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String imageName) {
-      super(DOCKER.name(), harnessApiVersion, serverName);
-      this.imageName = imageName;
-    }
-  }
 }

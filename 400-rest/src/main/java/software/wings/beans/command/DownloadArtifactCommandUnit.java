@@ -249,25 +249,6 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return super.getTailPatterns();
   }
 
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("DOWNLOAD_ARTIFACT")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    private String artifactVariableName;
-
-    public Yaml() {
-      super(CommandUnitType.DOWNLOAD_ARTIFACT.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntryYaml> filePatternEntryList, String artifactVariableName) {
-      super(name, CommandUnitType.DOWNLOAD_ARTIFACT.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-      this.artifactVariableName = artifactVariableName;
-    }
-  }
-
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
     delegateLogService.save(context.getAccountId(),
         aLog()

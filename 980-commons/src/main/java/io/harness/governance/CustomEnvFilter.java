@@ -20,20 +20,4 @@ public class CustomEnvFilter extends EnvironmentFilter {
     super(filterType);
     this.environments = environments;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("CUSTOM")
-  public static final class Yaml extends EnvironmentFilterYaml {
-    private List<String> environments;
-
-    @Builder
-    public Yaml(@JsonProperty("environments") List<String> environments,
-        @JsonProperty("filterType") EnvironmentFilterType environmentFilterType) {
-      super(environmentFilterType);
-      setEnvironments(environments);
-    }
-
-    public Yaml() {}
-  }
 }

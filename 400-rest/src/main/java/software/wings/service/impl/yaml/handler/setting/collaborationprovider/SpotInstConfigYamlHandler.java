@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
-import software.wings.beans.SpotInstConfig.Yaml;
+import software.wings.beans.SpotInstConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 
@@ -15,26 +15,26 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Singleton
-public class SpotInstConfigYamlHandler extends CloudProviderYamlHandler<Yaml, SpotInstConfig> {
+public class SpotInstConfigYamlHandler extends CloudProviderYamlHandler<SpotInstConfigYaml, SpotInstConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public SpotInstConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     SpotInstConfig spotInstConfig = (SpotInstConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .spotInstAccountId(spotInstConfig.getSpotInstAccountId())
-                    .spotInstToken(
-                        getEncryptedYamlRef(spotInstConfig.getAccountId(), spotInstConfig.getEncryptedSpotInstToken()))
-                    .type(spotInstConfig.getType())
-                    .build();
+    SpotInstConfigYaml yaml = SpotInstConfigYaml.builder()
+                                  .harnessApiVersion(getHarnessApiVersion())
+                                  .spotInstAccountId(spotInstConfig.getSpotInstAccountId())
+                                  .spotInstToken(getEncryptedYamlRef(
+                                      spotInstConfig.getAccountId(), spotInstConfig.getEncryptedSpotInstToken()))
+                                  .type(spotInstConfig.getType())
+                                  .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<SpotInstConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    SpotInstConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     SpotInstConfig spotInstConfig = SpotInstConfig.builder()
@@ -47,6 +47,6 @@ public class SpotInstConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Sp
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SpotInstConfigYaml.class;
   }
 }

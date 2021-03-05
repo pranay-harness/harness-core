@@ -391,25 +391,4 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       return gcpKubernetesInfrastructureMapping;
     }
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends YamlWithComputeProviderYaml {
-    private String namespace;
-    private String releaseName;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace,
-        String releaseName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster, blueprints);
-      this.namespace = namespace;
-      this.releaseName = releaseName;
-    }
-  }
 }

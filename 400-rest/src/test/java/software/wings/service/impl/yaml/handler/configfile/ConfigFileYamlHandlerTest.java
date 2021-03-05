@@ -25,6 +25,7 @@ import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFileYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
@@ -103,8 +104,8 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testUpdateFromYamlWhenRelativePathHasBackSlashes() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_CONFIG_FILE_YAML_2);
-    ChangeContext<ConfigFile.Yaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
-    ConfigFile.Yaml yaml = changeContext.getYaml();
+    ChangeContext<ConfigFileYaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
+    ConfigFileYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext = getChangeSetContext(CONFIG_FILE, configFilePath, changeContext, isEncrypted);
@@ -123,8 +124,8 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
   private void testCrudConfigFiles(
       String yamlFileName, String configFileName, String yamlFilePath, String configFilePath) throws IOException {
     String yamlString = getYamlFile(yamlFileName);
-    ChangeContext<ConfigFile.Yaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
-    ConfigFile.Yaml yaml = changeContext.getYaml();
+    ChangeContext<ConfigFileYaml> changeContext = getYamlChangeContext(yamlString, yamlFilePath);
+    ConfigFileYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -151,7 +152,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private List<ChangeContext> getChangeSetContext(String configFileName, String configFilePath,
-      ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted) throws IOException {
+      ChangeContext<ConfigFileYaml> changeContext, boolean isEncrypted) throws IOException {
     List<ChangeContext> changeSetContext;
     if (!isEncrypted && isNotEmpty(configFileName)) {
       String configFileString = getYamlFile(configFileName);
@@ -164,7 +165,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     return changeSetContext;
   }
 
-  private ConfigFile testUpdateYaml(ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted,
+  private ConfigFile testUpdateYaml(ChangeContext<ConfigFileYaml> changeContext, boolean isEncrypted,
       List<ChangeContext> changeSetContext, ConfigFile savedConfigFile) {
     configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
     verify(configService).update(captor.capture(), any());
@@ -178,7 +179,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private ConfigFile testSaveConfigFile(
-      ChangeContext<ConfigFile.Yaml> changeContext, boolean isEncrypted, List<ChangeContext> changeSetContext) {
+      ChangeContext<ConfigFileYaml> changeContext, boolean isEncrypted, List<ChangeContext> changeSetContext) {
     configFileYamlHandler.upsertFromYaml(changeContext, changeSetContext);
     verify(configService).save(captor.capture(), captorBoundedInputStream.capture());
     ConfigFile savedConfigFile = captor.getValue();
@@ -190,7 +191,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     return savedConfigFile;
   }
 
-  private void testSetUp(ConfigFile.Yaml yaml) {
+  private void testSetUp(ConfigFileYaml yaml) {
     getApplication();
     getService();
     when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(null);
@@ -248,13 +249,13 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
     return changeContext;
   }
 
-  private ChangeContext<ConfigFile.Yaml> getYamlChangeContext(String yamlString, String yamlFilePath)
+  private ChangeContext<ConfigFileYaml> getYamlChangeContext(String yamlString, String yamlFilePath)
       throws IOException {
     GitFileChange gitFileChange = getGitFileChange(yamlFilePath, yamlString);
-    ChangeContext<ConfigFile.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<ConfigFileYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.CONFIG_FILE);
-    ConfigFile.Yaml yaml = (ConfigFile.Yaml) getYaml(yamlString, ConfigFile.Yaml.class);
+    ConfigFileYaml yaml = (ConfigFileYaml) getYaml(yamlString, ConfigFileYaml.class);
     changeContext.setYaml(yaml);
     return changeContext;
   }

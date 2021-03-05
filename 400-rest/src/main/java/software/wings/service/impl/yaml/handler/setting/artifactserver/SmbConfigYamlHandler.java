@@ -6,33 +6,33 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SmbConfig;
-import software.wings.beans.SmbConfig.Yaml;
+import software.wings.beans.SmbConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 @OwnedBy(CDC)
-public class SmbConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SmbConfig> {
+public class SmbConfigYamlHandler extends ArtifactServerYamlHandler<SmbConfigYaml, SmbConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public SmbConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     SmbConfig smbConfig = (SmbConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(smbConfig.getType())
-                    .url(smbConfig.getSmbUrl())
-                    .username(smbConfig.getUsername())
-                    .password(getEncryptedYamlRef(smbConfig.getAccountId(), smbConfig.getEncryptedPassword()))
-                    .domain(smbConfig.getDomain())
-                    .build();
+    SmbConfigYaml yaml = SmbConfigYaml.builder()
+                             .harnessApiVersion(getHarnessApiVersion())
+                             .type(smbConfig.getType())
+                             .url(smbConfig.getSmbUrl())
+                             .username(smbConfig.getUsername())
+                             .password(getEncryptedYamlRef(smbConfig.getAccountId(), smbConfig.getEncryptedPassword()))
+                             .domain(smbConfig.getDomain())
+                             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<SmbConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    SmbConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     SmbConfig config = SmbConfig.builder()
@@ -47,6 +47,6 @@ public class SmbConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SmbCon
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SmbConfigYaml.class;
   }
 }

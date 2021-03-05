@@ -6,9 +6,9 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.Application;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.defaults.Defaults.Yaml;
+import software.wings.beans.defaults.DefaultsYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -23,13 +23,13 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
-public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<SettingAttribute>> {
+public class DefaultVariablesYamlHandler extends BaseYamlHandler<DefaultsYaml, List<SettingAttribute>> {
   @Inject DefaultVariablesHelper defaultsHelper;
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<DefaultsYaml> changeContext) {
     YamlType yamlType = changeContext.getYamlType();
     String accountId = changeContext.getChange().getAccountId();
     String appId;
@@ -52,13 +52,12 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
   }
 
   @Override
-  public Yaml toYaml(List<SettingAttribute> settingAttributeList, String appId) {
-    List<NameValuePair.Yaml> nameValuePairYamlList =
-        defaultsHelper.convertToNameValuePairYamlList(settingAttributeList);
+  public DefaultsYaml toYaml(List<SettingAttribute> settingAttributeList, String appId) {
+    List<NameValuePairYaml> nameValuePairYamlList = defaultsHelper.convertToNameValuePairYamlList(settingAttributeList);
 
     YamlType yamlType = GLOBAL_APP_ID.equals(appId) ? YamlType.ACCOUNT_DEFAULTS : YamlType.APPLICATION_DEFAULTS;
 
-    return Yaml.builder()
+    return DefaultsYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .defaults(nameValuePairYamlList)
         .type(yamlType.name())
@@ -66,8 +65,8 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
   }
 
   @Override
-  public List<SettingAttribute> upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public List<SettingAttribute> upsertFromYaml(
+      ChangeContext<DefaultsYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     YamlType yamlType = changeContext.getYamlType();
     String accountId = changeContext.getChange().getAccountId();
     String appId;
@@ -91,7 +90,7 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DefaultsYaml.class;
   }
 
   @Override

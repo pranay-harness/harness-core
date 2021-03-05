@@ -89,20 +89,4 @@ public class NewRelicConfig extends SettingValue implements EncryptableSetting, 
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String apiKey;
-    private String newRelicAccountId;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String apiKey, String newRelicAccountId,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.apiKey = apiKey;
-      this.newRelicAccountId = newRelicAccountId;
-    }
-  }
 }

@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsContainerTask.Yaml;
+import software.wings.beans.container.EcsContainerTaskYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,17 +10,17 @@ import com.google.inject.Singleton;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<Yaml, EcsContainerTask> {
+public class EcsContainerTaskYamlHandler extends ContainerTaskYamlHandler<EcsContainerTaskYaml, EcsContainerTask> {
   @Override
-  public Yaml toYaml(EcsContainerTask bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public EcsContainerTaskYaml toYaml(EcsContainerTask bean, String appId) {
+    EcsContainerTaskYaml yaml = EcsContainerTaskYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return EcsContainerTaskYaml.class;
   }
 
   @Override

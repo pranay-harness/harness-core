@@ -18,6 +18,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepYaml;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -186,7 +187,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhaseYaml,
               .collect(toList());
     }
 
-    List<PhaseStep.Yaml> phaseStepYamlList = Lists.newArrayList();
+    List<PhaseStepYaml> phaseStepYamlList = Lists.newArrayList();
     if (bean.getPhaseSteps() != null) {
       PhaseStepYamlHandler phaseStepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE_STEP);
       phaseStepYamlList = bean.getPhaseSteps()

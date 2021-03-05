@@ -85,19 +85,4 @@ public class CustomArtifactStream extends ArtifactStream {
   public boolean shouldValidate() {
     return true;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    @NotNull private List<Script> scripts = new ArrayList<>();
-    private List<String> delegateTags = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, List<Script> scripts, List<String> delegateTags) {
-      super(CUSTOM.name(), harnessApiVersion, serverName);
-      this.scripts = scripts;
-      this.delegateTags = delegateTags;
-    }
-  }
 }

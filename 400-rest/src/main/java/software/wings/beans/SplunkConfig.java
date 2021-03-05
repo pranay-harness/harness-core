@@ -100,22 +100,4 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting, Ex
   public Map<String, String> collectionParams() {
     return new HashMap<>();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String splunkUrl;
-    private String username;
-    private String password;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String splunkUrl, String username, String password,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.splunkUrl = splunkUrl;
-      this.username = username;
-      this.password = password;
-    }
-  }
 }

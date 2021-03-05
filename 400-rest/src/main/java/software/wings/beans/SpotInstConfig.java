@@ -62,20 +62,4 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting, 
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         SpotInstConstants.spotInstBaseUrl, maskingEvaluator));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String spotInstToken;
-    private String spotInstAccountId;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions, String spotInstToken,
-        String spotInstAccountId) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.spotInstToken = spotInstToken;
-      this.spotInstAccountId = spotInstAccountId;
-    }
-  }
 }

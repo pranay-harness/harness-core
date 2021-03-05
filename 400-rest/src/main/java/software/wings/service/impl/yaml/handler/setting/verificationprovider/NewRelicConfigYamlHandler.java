@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.NewRelicConfig;
-import software.wings.beans.NewRelicConfig.Yaml;
+import software.wings.beans.NewRelicConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -14,24 +14,24 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
-public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, NewRelicConfig> {
+public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<NewRelicConfigYaml, NewRelicConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public NewRelicConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     NewRelicConfig config = (NewRelicConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(config.getType())
-                    .apiKey(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiKey()))
-                    .build();
+    NewRelicConfigYaml yaml = NewRelicConfigYaml.builder()
+                                  .harnessApiVersion(getHarnessApiVersion())
+                                  .type(config.getType())
+                                  .apiKey(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiKey()))
+                                  .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<NewRelicConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    NewRelicConfigYaml yaml = changeContext.getYaml();
     notNullCheck("api key is null", yaml.getApiKey());
     String accountId = changeContext.getChange().getAccountId();
 
@@ -45,6 +45,6 @@ public class NewRelicConfigYamlHandler extends VerificationProviderYamlHandler<Y
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return NewRelicConfigYaml.class;
   }
 }

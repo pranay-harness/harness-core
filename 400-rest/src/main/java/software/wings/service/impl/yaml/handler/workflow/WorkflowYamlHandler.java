@@ -22,8 +22,10 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRuleYaml;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
@@ -326,7 +328,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   }
 
   private List<FailureStrategy> getFailureStrategiesFromYaml(ChangeContext<Y> changeContext,
-      List<ChangeContext> changeContextList, List<FailureStrategy.Yaml> failureStrategyYaml) {
+      List<ChangeContext> changeContextList, List<FailureStrategyYaml> failureStrategyYaml) {
     if (isEmpty(failureStrategyYaml)) {
       return emptyList();
     }
@@ -446,7 +448,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     FailureStrategyYamlHandler failureStrategyYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
     List<FailureStrategy> failureStrategies = orchestrationWorkflow.getFailureStrategies();
-    List<FailureStrategy.Yaml> failureStrategyYamlList =
+    List<FailureStrategyYaml> failureStrategyYamlList =
         failureStrategies.stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(toList());
@@ -455,20 +457,20 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     NotificationRulesYamlHandler notificationRuleYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE);
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
-    List<NotificationRule.Yaml> notificationRuleYamlList =
+    List<NotificationRuleYaml> notificationRuleYamlList =
         notificationRules.stream()
             .map(notificationRule -> notificationRuleYamlHandler.toYaml(notificationRule, appId))
             .collect(toList());
 
     // Pre Deployment Failure Strategy
-    List<FailureStrategy.Yaml> preDeploymentFailureStrategyYaml =
+    List<FailureStrategyYaml> preDeploymentFailureStrategyYaml =
         emptyIfNull(orchestrationWorkflow.getPreDeploymentSteps().getFailureStrategies())
             .stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(toList());
 
     // Post Deployment Failure Strategy
-    List<FailureStrategy.Yaml> postDeploymentFailureStrategyYaml =
+    List<FailureStrategyYaml> postDeploymentFailureStrategyYaml =
         emptyIfNull(orchestrationWorkflow.getPostDeploymentSteps().getFailureStrategies())
             .stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))

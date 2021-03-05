@@ -116,37 +116,4 @@ public class InfrastructureDefinition
   public void setDeploymentTypeName(String theCustomDeploymentName) {
     customDeploymentName = theCustomDeploymentName;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String name;
-    private CloudProviderType cloudProviderType;
-    private DeploymentType deploymentType;
-    @NotNull private List<CloudProviderInfrastructureYaml> infrastructure = new ArrayList<>();
-    private List<String> scopedServices;
-    private String provisioner;
-
-    /*
-     Support for Custom Deployment
-      */
-    private String deploymentTypeTemplateUri;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, CloudProviderType cloudProviderType,
-        DeploymentType deploymentType, List<CloudProviderInfrastructureYaml> infrastructure,
-        List<String> scopedServices, String provisioner, String deploymentTypeTemplateUri) {
-      super(type, harnessApiVersion);
-      setCloudProviderType(cloudProviderType);
-      setDeploymentType(deploymentType);
-      setInfrastructure(infrastructure);
-      setScopedServices(scopedServices);
-      setProvisioner(provisioner);
-      setDeploymentTypeTemplateUri(deploymentTypeTemplateUri);
-    }
-  }
 }

@@ -22,6 +22,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 11/19/17
  */
 @Slf4j
-public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B extends SettingValue>
+public abstract class SettingValueYamlHandler<Y extends SettingValueYaml, B extends SettingValue>
     extends BaseYamlHandler<Y, SettingAttribute> {
   @Inject protected SecretManager secretManager;
   @Inject protected SettingsService settingsService;

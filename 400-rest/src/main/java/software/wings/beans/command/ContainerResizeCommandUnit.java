@@ -317,18 +317,6 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   protected abstract List<ContainerInfo> executeResize(
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
 
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public Yaml(String name, String commandUnitType, String deploymentType) {
-      super(name, commandUnitType, deploymentType);
-    }
-  }
-
   static class ContextData {
     final SettingAttribute settingAttribute;
     final List<EncryptedDataDetail> encryptedDataDetails;

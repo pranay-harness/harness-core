@@ -2,7 +2,7 @@ package software.wings.beans.container;
 
 import io.harness.yaml.BaseYaml;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 
 import com.github.reinert.jjschema.Attributes;
 import java.util.List;
@@ -35,20 +35,6 @@ public class LogConfiguration {
 
     public void setValue(String value) {
       this.value = value;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    private String logDriver;
-    private List<NameValuePair.Yaml> options;
-
-    @Builder
-    public Yaml(String logDriver, List<NameValuePair.Yaml> options) {
-      this.logDriver = logDriver;
-      this.options = options;
     }
   }
 }

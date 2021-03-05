@@ -31,15 +31,4 @@ public abstract class Filter {
   public Filter(Set<String> ids) {
     this.ids = ids;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseYaml {
-    private List<String> entityNames;
-
-    public Yaml(List<String> entityNames) {
-      this.entityNames = entityNames;
-    }
-  }
 }

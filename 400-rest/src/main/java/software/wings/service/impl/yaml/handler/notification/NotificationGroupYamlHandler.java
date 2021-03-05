@@ -11,8 +11,8 @@ import static java.util.stream.Collectors.toList;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.NotificationGroupBuilder;
-import software.wings.beans.NotificationGroup.Yaml;
 import software.wings.beans.NotificationGroupAddressYaml;
+import software.wings.beans.NotificationGroupYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -32,12 +32,12 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, NotificationGroup> {
+public class NotificationGroupYamlHandler extends BaseYamlHandler<NotificationGroupYaml, NotificationGroup> {
   @Inject YamlHelper yamlHelper;
   @Inject NotificationSetupService notificationSetupService;
 
-  private NotificationGroup toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private NotificationGroup toBean(ChangeContext<NotificationGroupYaml> changeContext) {
+    NotificationGroupYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     Map<NotificationChannelType, List<String>> addressByChannelTypeMap = new HashMap<>();
@@ -56,15 +56,15 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     //        .withRoles()
   }
 
-  private boolean parseIsDefaultFromYaml(Yaml yaml) {
+  private boolean parseIsDefaultFromYaml(NotificationGroupYaml yaml) {
     return Boolean.parseBoolean(yaml.getDefaultNotificationGroupForAccount());
   }
 
   @Override
-  public Yaml toYaml(NotificationGroup bean, String appId) {
+  public NotificationGroupYaml toYaml(NotificationGroup bean, String appId) {
     bean = notificationSetupService.readNotificationGroup(bean.getAccountId(), bean.getUuid());
     List<NotificationGroupAddressYaml> addressYamlList = toAddressYamlList(bean.getAddressesByChannelType());
-    return Yaml.builder()
+    return NotificationGroupYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .addresses(addressYamlList)
         .type(NOTIFICATION_GROUP)
@@ -73,7 +73,8 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   @Override
-  public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public NotificationGroup upsertFromYaml(
+      ChangeContext<NotificationGroupYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     NotificationGroup previous = get(accountId, changeContext.getChange().getFilePath());
 
@@ -112,7 +113,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return NotificationGroupYaml.class;
   }
 
   @Override
@@ -122,7 +123,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<NotificationGroupYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String notificationGroupName = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     NotificationGroup notificationGroup =

@@ -276,20 +276,4 @@ public class ExecCommandUnit extends SshCommandUnit {
       return execCommandUnit;
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("EXEC")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.EXEC.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntryYaml> filePatternEntryList) {
-      super(name, CommandUnitType.EXEC.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-    }
-  }
 }

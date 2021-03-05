@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.KubernetesSetupCommandUnit;
-import software.wings.beans.command.KubernetesSetupCommandUnit.Yaml;
+import software.wings.beans.command.KubernetesSetupCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class KubernetesSetupCommandUnitYamlHandler
-    extends ContainerSetupCommandUnitYamlHandler<Yaml, KubernetesSetupCommandUnit> {
+    extends ContainerSetupCommandUnitYamlHandler<KubernetesSetupCommandUnitYaml, KubernetesSetupCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return KubernetesSetupCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(KubernetesSetupCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public KubernetesSetupCommandUnitYaml toYaml(KubernetesSetupCommandUnit bean, String appId) {
+    KubernetesSetupCommandUnitYaml yaml = KubernetesSetupCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

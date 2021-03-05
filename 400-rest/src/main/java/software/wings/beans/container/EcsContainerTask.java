@@ -473,17 +473,6 @@ public class EcsContainerTask extends ContainerTask {
     return newContainerTask;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerTask.Yaml {
-    @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
-      super(type, harnessApiVersion, advancedConfig, containerDefinition);
-    }
-  }
-
   @Override
   public void validate() {
     if (isNotEmpty(getAdvancedConfig())) {

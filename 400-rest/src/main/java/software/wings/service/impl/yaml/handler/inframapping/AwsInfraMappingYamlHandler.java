@@ -14,7 +14,7 @@ import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -102,17 +102,17 @@ public class AwsInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
+  private List<NameValuePairYaml> getTagsYaml(List<Tag> tagList) {
     if (tagList == null) {
       return null;
     }
 
     return tagList.stream()
-        .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
+        .map(tag -> NameValuePairYaml.builder().name(tag.getKey()).value(tag.getValue()).build())
         .collect(toList());
   }
 
-  private List<Tag> getTags(List<NameValuePair.Yaml> tagYamlList) {
+  private List<Tag> getTags(List<NameValuePairYaml> tagYamlList) {
     return tagYamlList.stream()
         .map(tagYaml -> Tag.builder().key(tagYaml.getName()).value(tagYaml.getValue()).build())
         .collect(toList());

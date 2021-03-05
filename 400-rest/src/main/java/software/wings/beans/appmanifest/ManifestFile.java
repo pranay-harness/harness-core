@@ -39,17 +39,4 @@ public class ManifestFile extends Base implements AccountAccess {
     manifestFile.setAccountId(this.accountId);
     return manifestFile;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class Yaml extends BaseEntityYaml {
-    private String fileContent;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String fileContent) {
-      super(type, harnessApiVersion);
-      this.fileContent = fileContent;
-    }
-  }
 }

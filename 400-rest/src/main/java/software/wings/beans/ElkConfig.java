@@ -98,26 +98,4 @@ public class ElkConfig extends SettingValue implements EncryptableSetting {
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String elkUrl;
-    private String username;
-    private String password;
-    private String connectorType;
-    private ElkValidationType validationType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String elkUrl, ElkValidationType validationType, String username,
-        String password, String connectorType, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.elkUrl = elkUrl;
-      this.validationType = validationType;
-      this.username = username;
-      this.password = password;
-      this.connectorType = connectorType;
-    }
-  }
 }

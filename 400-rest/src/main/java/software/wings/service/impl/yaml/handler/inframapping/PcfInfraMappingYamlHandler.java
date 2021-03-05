@@ -5,7 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.PcfInfrastructureMapping.Yaml;
+import software.wings.beans.PcfInfrastructureMappingYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -13,10 +13,10 @@ import java.util.List;
 
 @Singleton
 public class PcfInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, PcfInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<PcfInfrastructureMappingYaml, PcfInfrastructureMapping> {
   @Override
-  public Yaml toYaml(PcfInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public PcfInfrastructureMappingYaml toYaml(PcfInfrastructureMapping bean, String appId) {
+    PcfInfrastructureMappingYaml yaml = PcfInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.PCF_PCF.name());
     yaml.setOrganization(bean.getOrganization());
@@ -28,8 +28,8 @@ public class PcfInfraMappingYamlHandler
 
   @Override
   public PcfInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<PcfInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    PcfInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -51,9 +51,9 @@ public class PcfInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(PcfInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(PcfInfrastructureMapping bean, ChangeContext<PcfInfrastructureMappingYaml> changeContext,
+      String appId, String envId, String computeProviderId, String serviceId) {
+    PcfInfrastructureMappingYaml yaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setOrganization(yaml.getOrganization());
@@ -69,6 +69,6 @@ public class PcfInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PcfInfrastructureMappingYaml.class;
   }
 }

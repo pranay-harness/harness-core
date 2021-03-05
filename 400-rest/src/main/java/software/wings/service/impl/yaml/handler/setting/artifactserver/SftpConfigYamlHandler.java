@@ -6,33 +6,34 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SftpConfig.Yaml;
+import software.wings.beans.SftpConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 @OwnedBy(CDC)
-public class SftpConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SftpConfig> {
+public class SftpConfigYamlHandler extends ArtifactServerYamlHandler<SftpConfigYaml, SftpConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public SftpConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     SftpConfig sftpConfig = (SftpConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(sftpConfig.getType())
-                    .url(sftpConfig.getSftpUrl())
-                    .username(sftpConfig.getUsername())
-                    .password(getEncryptedYamlRef(sftpConfig.getAccountId(), sftpConfig.getEncryptedPassword()))
-                    .domain(sftpConfig.getDomain())
-                    .build();
+    SftpConfigYaml yaml =
+        SftpConfigYaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(sftpConfig.getType())
+            .url(sftpConfig.getSftpUrl())
+            .username(sftpConfig.getUsername())
+            .password(getEncryptedYamlRef(sftpConfig.getAccountId(), sftpConfig.getEncryptedPassword()))
+            .domain(sftpConfig.getDomain())
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<SftpConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    SftpConfig.Yaml yaml = changeContext.getYaml();
+    SftpConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     SftpConfig config = SftpConfig.builder()
@@ -47,6 +48,6 @@ public class SftpConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, SftpC
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SftpConfigYaml.class;
   }
 }

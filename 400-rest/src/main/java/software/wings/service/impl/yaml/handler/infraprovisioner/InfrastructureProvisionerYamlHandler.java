@@ -12,6 +12,7 @@ import software.wings.beans.InfraProvisionerYaml;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -48,7 +49,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
 
     if (isNotEmpty(bean.getVariables())) {
       NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
-      List<NameValuePair.Yaml> nvpYamlList =
+      List<NameValuePairYaml> nvpYamlList =
           bean.getVariables()
               .stream()
               .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, bean.getAppId()))

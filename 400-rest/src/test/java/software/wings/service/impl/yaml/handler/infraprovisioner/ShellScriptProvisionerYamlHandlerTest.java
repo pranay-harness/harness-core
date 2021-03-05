@@ -22,7 +22,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
-import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner.Yaml;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisionerYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
@@ -63,9 +63,9 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
 
   private ArgumentCaptor<InfrastructureProvisioner> captor = ArgumentCaptor.forClass(InfrastructureProvisioner.class);
   private File yamlFile;
-  private ChangeContext<ShellScriptInfrastructureProvisioner.Yaml> changeContext;
+  private ChangeContext<ShellScriptInfrastructureProvisionerYaml> changeContext;
   private String yamlString;
-  private ShellScriptInfrastructureProvisioner.Yaml yaml;
+  private ShellScriptInfrastructureProvisionerYaml yaml;
 
   @Before
   public void runBeforeTest() throws IOException {
@@ -84,7 +84,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testToYaml() {
     ShellScriptInfrastructureProvisioner provisioner = prepareProvisioner();
-    Yaml yaml = handler.toYaml(provisioner, "my-app");
+    ShellScriptInfrastructureProvisionerYaml yaml = handler.toYaml(provisioner, "my-app");
     assertThat(yaml.getScriptBody()).isEqualTo(SCRIPT_BODY);
   }
 
@@ -98,7 +98,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
     ShellScriptInfrastructureProvisioner savedProvisioner = (ShellScriptInfrastructureProvisioner) captor.getValue();
 
     // convert to Yaml from bean
-    Yaml yamlFromBean = handler.toYaml(savedProvisioner, APP_ID);
+    ShellScriptInfrastructureProvisionerYaml yamlFromBean = handler.toYaml(savedProvisioner, APP_ID);
     assertThat(yamlFromBean).isNotNull();
 
     String yamlContent = getYamlContent(yamlFromBean);
@@ -142,7 +142,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
     return provisioner;
   }
 
-  private ChangeContext<ShellScriptInfrastructureProvisioner.Yaml> getChangeContext(
+  private ChangeContext<ShellScriptInfrastructureProvisionerYaml> getChangeContext(
       String validYamlContent, String yamlFilePath) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
@@ -150,7 +150,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<ShellScriptInfrastructureProvisioner.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<ShellScriptInfrastructureProvisionerYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.PROVISIONER);
     changeContext.setYamlSyncHandler(handler);
@@ -163,7 +163,8 @@ public class ShellScriptProvisionerYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(yamlFile).isNotNull();
     yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
     changeContext = getChangeContext(yamlString, yamlFilePath);
-    yaml = (Yaml) getYaml(yamlString, Yaml.class);
+    yaml =
+        (ShellScriptInfrastructureProvisionerYaml) getYaml(yamlString, ShellScriptInfrastructureProvisionerYaml.class);
     changeContext.setYaml(yaml);
   }
 }

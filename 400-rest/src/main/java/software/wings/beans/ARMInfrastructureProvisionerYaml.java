@@ -24,7 +24,7 @@ public final class ARMInfrastructureProvisionerYaml extends InfraProvisionerYaml
 
   @Builder
   public ARMInfrastructureProvisionerYaml(String type, String harnessApiVersion, String description,
-      List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
+      List<NameValuePairYaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
       ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType,
       boolean isBlueprint) {
     super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);

@@ -23,23 +23,4 @@ public class RuntimeInputsConfig {
   long timeout;
   List<String> userGroupIds;
   RepairActionCode timeoutAction;
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYamlWithType {
-    List<String> runtimeInputVariables;
-    long timeout;
-    List<String> userGroupNames;
-    RepairActionCode timeoutAction;
-
-    @Builder
-    public Yaml(
-        List<String> runtimeInputVariables, long timeout, List<String> userGroupNames, RepairActionCode timeoutAction) {
-      this.runtimeInputVariables = runtimeInputVariables;
-      this.timeout = timeout;
-      this.userGroupNames = userGroupNames;
-      this.timeoutAction = timeoutAction;
-    }
-  }
 }

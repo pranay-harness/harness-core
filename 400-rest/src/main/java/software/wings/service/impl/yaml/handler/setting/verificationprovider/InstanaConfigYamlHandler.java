@@ -1,31 +1,31 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.InstanaConfig;
-import software.wings.beans.InstanaConfig.Yaml;
+import software.wings.beans.InstanaConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
-public class InstanaConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, InstanaConfig> {
+public class InstanaConfigYamlHandler extends VerificationProviderYamlHandler<InstanaConfigYaml, InstanaConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public InstanaConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     InstanaConfig config = (InstanaConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(config.getType())
-                    .instanaUrl(config.getInstanaUrl())
-                    .apiToken(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiToken()))
-                    .build();
+    InstanaConfigYaml yaml = InstanaConfigYaml.builder()
+                                 .harnessApiVersion(getHarnessApiVersion())
+                                 .type(config.getType())
+                                 .instanaUrl(config.getInstanaUrl())
+                                 .apiToken(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedApiToken()))
+                                 .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<InstanaConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    InstanaConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     InstanaConfig config = InstanaConfig.builder()
@@ -39,6 +39,6 @@ public class InstanaConfigYamlHandler extends VerificationProviderYamlHandler<Ya
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return InstanaConfigYaml.class;
   }
 }

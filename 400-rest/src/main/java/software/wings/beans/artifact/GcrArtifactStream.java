@@ -88,19 +88,4 @@ public class GcrArtifactStream extends ArtifactStream {
   public boolean checkIfStreamParameterized() {
     return validateParameters(registryHostName, dockerImageName);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String registryHostName;
-    private String dockerImageName;
-
-    @Builder
-    public Yaml(String harnessApiVersion, String serverName, String registryHostName, String dockerImageName) {
-      super(GCR.name(), harnessApiVersion, serverName);
-      this.registryHostName = registryHostName;
-      this.dockerImageName = dockerImageName;
-    }
-  }
 }

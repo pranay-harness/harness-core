@@ -17,7 +17,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 
 import software.wings.beans.PcfConfig;
-import software.wings.beans.PcfConfig.Yaml;
+import software.wings.beans.PcfConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.Change;
@@ -42,7 +42,7 @@ public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
       + "harnessApiVersion: '1.0'\n"
       + "type: AZURE";
 
-  private Class yamlClass = Yaml.class;
+  private Class yamlClass = PcfConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)
@@ -70,17 +70,17 @@ public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testToBeanBothUsernameAndUsernameSecretId() {
-    Yaml yaml = Yaml.builder().username("username").usernameSecretId("usernameSecretId").build();
+    PcfConfigYaml yaml = PcfConfigYaml.builder().username("username").usernameSecretId("usernameSecretId").build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                            .withYamlType(YamlType.CLOUD_PROVIDER)
-                                            .withYaml(yaml)
-                                            .withChange(change)
-                                            .build();
+    ChangeContext<PcfConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                     .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                     .withYaml(yaml)
+                                                     .withChange(change)
+                                                     .build();
 
     assertThatThrownBy(() -> yamlHandler.toBean(null, changeContext, null))
         .hasMessageContaining("Cannot set both value and secret reference for username field");

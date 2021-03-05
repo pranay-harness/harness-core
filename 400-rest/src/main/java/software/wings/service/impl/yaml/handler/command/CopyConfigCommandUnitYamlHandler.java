@@ -4,7 +4,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_DESTINATION_
 
 import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.CopyConfigCommandUnit;
-import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
+import software.wings.beans.command.CopyConfigCommandUnitYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -15,10 +15,10 @@ import java.util.Map;
  */
 @Singleton
 public class CopyConfigCommandUnitYamlHandler
-    extends CommandUnitYamlHandler<CopyConfigCommandUnit.Yaml, CopyConfigCommandUnit> {
+    extends CommandUnitYamlHandler<CopyConfigCommandUnitYaml, CopyConfigCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return CopyConfigCommandUnit.Yaml.class;
+    return CopyConfigCommandUnitYaml.class;
   }
 
   @Override
@@ -27,31 +27,31 @@ public class CopyConfigCommandUnitYamlHandler
   }
 
   @Override
-  public CopyConfigCommandUnit.Yaml toYaml(CopyConfigCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public CopyConfigCommandUnitYaml toYaml(CopyConfigCommandUnit bean, String appId) {
+    CopyConfigCommandUnitYaml yaml = CopyConfigCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setDestinationParentPath(bean.getDestinationParentPath());
     return yaml;
   }
 
   @Override
-  protected CopyConfigCommandUnit toBean(ChangeContext<CopyConfigCommandUnit.Yaml> changeContext) {
+  protected CopyConfigCommandUnit toBean(ChangeContext<CopyConfigCommandUnitYaml> changeContext) {
     CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(changeContext);
-    Yaml yaml = changeContext.getYaml();
+    CopyConfigCommandUnitYaml yaml = changeContext.getYaml();
     copyConfigCommandUnit.setDestinationParentPath(yaml.getDestinationParentPath());
     return copyConfigCommandUnit;
   }
 
   @Override
   public CopyConfigCommandUnit toBean(AbstractCommandUnitYaml yaml) {
-    CopyConfigCommandUnit.Yaml copyConfigYaml = (CopyConfigCommandUnit.Yaml) yaml;
+    CopyConfigCommandUnitYaml copyConfigYaml = (CopyConfigCommandUnitYaml) yaml;
     CopyConfigCommandUnit copyConfigCommandUnit = super.toBean(yaml);
     copyConfigCommandUnit.setDestinationParentPath(copyConfigYaml.getDestinationParentPath());
     return copyConfigCommandUnit;
   }
 
   @Override
-  protected Map<String, Object> getNodeProperties(ChangeContext<Yaml> changeContext) {
+  protected Map<String, Object> getNodeProperties(ChangeContext<CopyConfigCommandUnitYaml> changeContext) {
     Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
     nodeProperties.put(NODE_PROPERTY_DESTINATION_PARENT_PATH, "$WINGS_RUNTIME_PATH");
     return nodeProperties;

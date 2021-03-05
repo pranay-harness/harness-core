@@ -29,7 +29,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.PcfInfrastructureMapping.Yaml;
+import software.wings.beans.PcfInfrastructureMappingYaml;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -141,17 +141,18 @@ public class PcfInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<PcfInfrastructureMappingYaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    PcfInfrastructureMappingYaml yamlObject =
+        (PcfInfrastructureMappingYaml) getYaml(validYamlContent, PcfInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     PcfInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(ecsInfraMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(ecsInfraMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
+    PcfInfrastructureMappingYaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.PCF_PCF.name());
 
@@ -174,14 +175,14 @@ public class PcfInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<PcfInfrastructureMappingYaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    PcfInfrastructureMapping.Yaml yamlObject =
-        (PcfInfrastructureMapping.Yaml) getYaml(validYamlContent, PcfInfrastructureMapping.Yaml.class);
+    PcfInfrastructureMappingYaml yamlObject =
+        (PcfInfrastructureMappingYaml) getYaml(validYamlContent, PcfInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
-    yamlObject = (PcfInfrastructureMapping.Yaml) getYaml(invalidYamlContent, PcfInfrastructureMapping.Yaml.class);
+    yamlObject = (PcfInfrastructureMappingYaml) getYaml(invalidYamlContent, PcfInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(Exception.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

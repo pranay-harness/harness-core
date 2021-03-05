@@ -8,6 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -26,35 +27,35 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
   public static final String SAMPLE_STRING = "sample-string";
-  private Class yamlClass = GitConfig.Yaml.class;
+  private Class yamlClass = GitConfigYaml.class;
 
   @Test
   @Owner(developers = DHRUV)
   @Category(UnitTests.class)
   public void testToBean() {
-    GitConfig.Yaml yaml = GitConfig.Yaml.builder()
-                              .branch(SAMPLE_STRING)
-                              .reference(SAMPLE_STRING)
-                              .keyAuth(true)
-                              .sshKeyName(null)
-                              .authorName(SAMPLE_STRING)
-                              .authorEmailId(SAMPLE_STRING)
-                              .commitMessage(SAMPLE_STRING)
-                              .description(SAMPLE_STRING)
-                              .password(SAMPLE_STRING)
-                              .username(SAMPLE_STRING)
-                              .url(SAMPLE_STRING)
-                              .build();
+    GitConfigYaml yaml = GitConfigYaml.builder()
+                             .branch(SAMPLE_STRING)
+                             .reference(SAMPLE_STRING)
+                             .keyAuth(true)
+                             .sshKeyName(null)
+                             .authorName(SAMPLE_STRING)
+                             .authorEmailId(SAMPLE_STRING)
+                             .commitMessage(SAMPLE_STRING)
+                             .description(SAMPLE_STRING)
+                             .password(SAMPLE_STRING)
+                             .username(SAMPLE_STRING)
+                             .url(SAMPLE_STRING)
+                             .build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Source Repo Provider/test-harness.yaml")
                         .build();
-    ChangeContext<GitConfig.Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                                      .withYamlType(YamlType.SOURCE_REPO_PROVIDER)
-                                                      .withYaml(yaml)
-                                                      .withChange(change)
-                                                      .build();
+    ChangeContext<GitConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                     .withYamlType(YamlType.SOURCE_REPO_PROVIDER)
+                                                     .withYaml(yaml)
+                                                     .withChange(change)
+                                                     .build();
 
     SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
@@ -89,7 +90,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                                             .withValue(settingValue)
                                             .build();
 
-    GitConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, null);
+    GitConfigYaml yaml = yamlHandler.toYaml(settingAttribute, null);
 
     assertThat(yaml).isNotNull();
     assertThat(yaml.getCommitMessage()).isEqualTo(SAMPLE_STRING);

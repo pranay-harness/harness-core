@@ -9,6 +9,7 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -139,19 +140,4 @@ public abstract class ContainerTask extends DeploymentSpecification implements A
   }
 
   public abstract void validate();
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends DeploymentSpecification.Yaml {
-    private String advancedConfig;
-    private ContainerDefinition.Yaml containerDefinition;
-
-    protected Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
-      super(type, harnessApiVersion);
-      this.advancedConfig = advancedConfig;
-      this.containerDefinition = containerDefinition;
-    }
-  }
 }

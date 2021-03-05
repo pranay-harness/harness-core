@@ -68,17 +68,4 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return singletonList(SftpCapability.builder().sftpUrl(getSftpUrl()).build());
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    String domain;
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String domain, String username, String password,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, url, username, password, usageRestrictions);
-      this.domain = domain;
-    }
-  }
 }

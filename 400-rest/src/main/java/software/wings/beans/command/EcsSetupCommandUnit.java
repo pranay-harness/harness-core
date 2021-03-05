@@ -130,18 +130,4 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
         encryptedDataDetails);
     return CommandExecutionStatus.SUCCESS;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("ECS_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
-    public Yaml() {
-      super(CommandUnitType.ECS_SETUP.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.ECS_SETUP.name(), deploymentType);
-    }
-  }
 }

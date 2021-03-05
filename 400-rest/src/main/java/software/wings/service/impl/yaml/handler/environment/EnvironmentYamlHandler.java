@@ -30,7 +30,7 @@ import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.Environment.Yaml;
+import software.wings.beans.EnvironmentYaml;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -77,7 +77,7 @@ import org.mongodb.morphia.Key;
  */
 @Singleton
 @Slf4j
-public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, Environment> {
+public class EnvironmentYamlHandler extends BaseYamlHandler<EnvironmentYaml, Environment> {
   @Inject YamlHelper yamlHelper;
   @Inject EnvironmentService environmentService;
   @Inject SecretManager secretManager;
@@ -90,20 +90,20 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Inject private ServiceVariableYamlHelper serviceVariableYamlHelper;
 
   @Override
-  public Environment.Yaml toYaml(Environment environment, String appId) {
+  public EnvironmentYaml toYaml(Environment environment, String appId) {
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
     List<VariableOverrideYaml> variableOverrideYamlList =
         convertToVariableOverrideYaml(serviceVariableList, environment.getName(), environment.getAccountId());
 
-    Yaml yaml = Yaml.builder()
-                    .description(environment.getDescription())
-                    .configMapYaml(environment.getConfigMapYaml())
-                    .configMapYamlByServiceTemplateName(
-                        serviceTemplateIdToName(appId, environment.getConfigMapYamlByServiceTemplateId()))
-                    .environmentType(environment.getEnvironmentType().name())
-                    .variableOverrides(variableOverrideYamlList)
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .build();
+    EnvironmentYaml yaml = EnvironmentYaml.builder()
+                               .description(environment.getDescription())
+                               .configMapYaml(environment.getConfigMapYaml())
+                               .configMapYamlByServiceTemplateName(
+                                   serviceTemplateIdToName(appId, environment.getConfigMapYamlByServiceTemplateId()))
+                               .environmentType(environment.getEnvironmentType().name())
+                               .variableOverrides(variableOverrideYamlList)
+                               .harnessApiVersion(getHarnessApiVersion())
+                               .build();
 
     updateYamlWithAdditionalInfo(environment, appId, yaml);
     return yaml;
@@ -265,11 +265,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   @Override
-  public Environment upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public Environment upsertFromYaml(
+      ChangeContext<EnvironmentYaml> changeContext, List<ChangeContext> changeSetContext) {
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId, USER);
-    Yaml yaml = changeContext.getYaml();
+    EnvironmentYaml yaml = changeContext.getYaml();
     String environmentName = yamlHelper.getEnvironmentName(changeContext.getChange().getFilePath());
     Environment current = Builder.anEnvironment()
                               .appId(appId)
@@ -311,7 +312,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   @Override
   public Class getYamlClass() {
-    return Environment.Yaml.class;
+    return EnvironmentYaml.class;
   }
 
   @Override
@@ -322,7 +323,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<EnvironmentYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

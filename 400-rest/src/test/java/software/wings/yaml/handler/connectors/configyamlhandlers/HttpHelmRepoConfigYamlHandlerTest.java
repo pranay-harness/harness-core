@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
+import software.wings.beans.settings.helm.HttpHelmRepoConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HttpHelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -26,7 +27,7 @@ import org.mockito.InjectMocks;
 public class HttpHelmRepoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private HttpHelmRepoConfigYamlHandler yamlHandler;
 
-  private Class yamlClass = HttpHelmRepoConfig.Yaml.class;
+  private Class yamlClass = HttpHelmRepoConfigYaml.class;
   private static final String chartRepoUrl = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HTTP_HELM_CHART_SETTING_NAME = "Http-Helm-Repo";
 

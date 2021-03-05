@@ -22,13 +22,4 @@ public abstract class DeploymentSpecification extends Base {
   public String getAccountId() {
     return accountId;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public abstract static class Yaml extends BaseEntityYaml {
-    public Yaml(String type, String harnessApiVersion) {
-      super(type, harnessApiVersion);
-    }
-  }
 }

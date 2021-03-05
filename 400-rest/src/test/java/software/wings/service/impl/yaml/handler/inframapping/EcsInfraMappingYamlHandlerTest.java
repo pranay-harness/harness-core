@@ -33,7 +33,7 @@ import io.harness.yaml.BaseYaml;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping.Yaml;
+import software.wings.beans.EcsInfrastructureMappingYaml;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -151,12 +151,12 @@ public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void tbsValidateNetworkParameters() {
-    Yaml yaml = Yaml.builder()
-                    .assignPublicIp(true)
-                    .cluster(CLUSTER_NAME)
-                    .computeProviderName(COMPUTE_PROVIDER_ID)
-                    .launchType(LaunchType.FARGATE.name())
-                    .build();
+    EcsInfrastructureMappingYaml yaml = EcsInfrastructureMappingYaml.builder()
+                                            .assignPublicIp(true)
+                                            .cluster(CLUSTER_NAME)
+                                            .computeProviderName(COMPUTE_PROVIDER_ID)
+                                            .launchType(LaunchType.FARGATE.name())
+                                            .build();
     EcsInfrastructureMapping ecsInfrastructureMapping =
         anEcsInfrastructureMapping().withAppId(APP_ID).withName("name").build();
 
@@ -203,16 +203,18 @@ public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private void testCrud(String validYamlContent) throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<EcsInfrastructureMappingYaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    EcsInfrastructureMappingYaml yamlObject =
+        (EcsInfrastructureMappingYaml) getYaml(validYamlContent, EcsInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     EcsInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(ecsInfraMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(ecsInfraMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
+    EcsInfrastructureMappingYaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_ECS.name());
 
@@ -235,12 +237,14 @@ public class EcsInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<EcsInfrastructureMappingYaml> changeContext =
+        getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent2, EcsInfrastructureMapping.Yaml.class);
+    EcsInfrastructureMappingYaml yamlObject =
+        (EcsInfrastructureMappingYaml) getYaml(validYamlContent2, EcsInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
-    yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class);
+    yamlObject = (EcsInfrastructureMappingYaml) getYaml(invalidYamlContent, EcsInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(Exception.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

@@ -8,7 +8,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.CodeDeployInfrastructure;
-import software.wings.infra.CodeDeployInfrastructure.Yaml;
+import software.wings.infra.CodeDeployInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -18,12 +18,12 @@ import java.util.List;
 
 @Singleton
 public class CodeDeployInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, CodeDeployInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<CodeDeployInfrastructureYaml, CodeDeployInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(CodeDeployInfrastructure bean, String appId) {
+  public CodeDeployInfrastructureYaml toYaml(CodeDeployInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
+    return CodeDeployInfrastructureYaml.builder()
         .region(bean.getRegion())
         .applicationName(bean.getApplicationName())
         .deploymentConfig(bean.getDeploymentConfig())
@@ -36,14 +36,14 @@ public class CodeDeployInfrastructureYamlHandler
 
   @Override
   public CodeDeployInfrastructure upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<CodeDeployInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     CodeDeployInfrastructure bean = CodeDeployInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(CodeDeployInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(CodeDeployInfrastructure bean, ChangeContext<CodeDeployInfrastructureYaml> changeContext) {
+    CodeDeployInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -57,6 +57,6 @@ public class CodeDeployInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return CodeDeployInfrastructureYaml.class;
   }
 }

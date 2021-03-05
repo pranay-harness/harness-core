@@ -1965,18 +1965,4 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("KUBERNETES_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
-    public Yaml() {
-      super(CommandUnitType.KUBERNETES_SETUP.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.KUBERNETES_SETUP.name(), deploymentType);
-    }
-  }
 }

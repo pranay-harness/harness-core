@@ -36,14 +36,4 @@ public class NameValuePair {
    TODO: Why is this not an enum? @swagat
   */
   private String valueType;
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends NameValuePairAbstractYaml {
-    @Builder
-    public Yaml(String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamlList) {
-      super(name, value, valueType, allowedValueYamlList);
-    }
-  }
 }

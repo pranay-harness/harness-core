@@ -7,10 +7,10 @@ import static java.util.stream.Collectors.toList;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.LogConfiguration.LogOption;
-import software.wings.beans.container.LogConfiguration.Yaml;
+import software.wings.beans.container.LogConfigurationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
@@ -21,30 +21,31 @@ import java.util.List;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfiguration> {
+public class LogConfigurationYamlHandler extends BaseYamlHandler<LogConfigurationYaml, LogConfiguration> {
   @Override
-  public Yaml toYaml(LogConfiguration logConfiguration, String appId) {
-    return Yaml.builder()
+  public LogConfigurationYaml toYaml(LogConfiguration logConfiguration, String appId) {
+    return LogConfigurationYaml.builder()
         .logDriver(logConfiguration.getLogDriver())
         .options(getLogOptionsYaml(logConfiguration.getOptions()))
         .build();
   }
 
   @Override
-  public LogConfiguration upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public LogConfiguration upsertFromYaml(
+      ChangeContext<LogConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
-  private List<NameValuePair.Yaml> getLogOptionsYaml(List<LogOption> logOptionList) {
+  private List<NameValuePairYaml> getLogOptionsYaml(List<LogOption> logOptionList) {
     if (isEmpty(logOptionList)) {
       return Collections.emptyList();
     }
     return logOptionList.stream()
-        .map(logOption -> NameValuePair.Yaml.builder().name(logOption.getKey()).value(logOption.getValue()).build())
+        .map(logOption -> NameValuePairYaml.builder().name(logOption.getKey()).value(logOption.getValue()).build())
         .collect(toList());
   }
 
-  private List<LogOption> getLogOptions(List<NameValuePair.Yaml> yamlList) {
+  private List<LogOption> getLogOptions(List<NameValuePairYaml> yamlList) {
     if (isEmpty(yamlList)) {
       return Collections.emptyList();
     }
@@ -59,15 +60,15 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
         .collect(toList());
   }
 
-  private LogConfiguration toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private LogConfiguration toBean(ChangeContext<LogConfigurationYaml> changeContext) {
+    LogConfigurationYaml yaml = changeContext.getYaml();
 
     return LogConfiguration.builder().logDriver(yaml.getLogDriver()).options(getLogOptions(yaml.getOptions())).build();
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return LogConfigurationYaml.class;
   }
 
   @Override
@@ -76,7 +77,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<LogConfigurationYaml> changeContext) {
     // Do nothing
   }
 }

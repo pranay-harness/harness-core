@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.governance;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.CustomEnvFilter;
+import io.harness.governance.CustomEnvFilterYaml;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.validation.Validator;
 
@@ -13,29 +14,29 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomEnvFilterYamlHandler extends EnvironmentFilterYamlHandler<CustomEnvFilter.Yaml, CustomEnvFilter> {
+public class CustomEnvFilterYamlHandler extends EnvironmentFilterYamlHandler<CustomEnvFilterYaml, CustomEnvFilter> {
   @Inject private EnvironmentService environmentService;
 
   @Override
-  public CustomEnvFilter.Yaml toYaml(CustomEnvFilter bean, String accountId) {
+  public CustomEnvFilterYaml toYaml(CustomEnvFilter bean, String accountId) {
     List<String> envNames = environmentService.getNames(accountId, bean.getEnvironments());
 
-    return CustomEnvFilter.Yaml.builder().environments(envNames).environmentFilterType(bean.getFilterType()).build();
+    return CustomEnvFilterYaml.builder().environments(envNames).environmentFilterType(bean.getFilterType()).build();
   }
 
   @Override
   public CustomEnvFilter upsertFromYaml(
-      ChangeContext<CustomEnvFilter.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<CustomEnvFilterYaml> changeContext, List<ChangeContext> changeSetContext) {
     CustomEnvFilter customEnvFilter = CustomEnvFilter.builder().build();
     toBean(customEnvFilter, changeContext, changeSetContext);
     return customEnvFilter;
   }
 
   private void toBean(
-      CustomEnvFilter bean, ChangeContext<CustomEnvFilter.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      CustomEnvFilter bean, ChangeContext<CustomEnvFilterYaml> changeContext, List<ChangeContext> changeSetContext) {
     String appId = changeContext.getEntityIdMap().get("appId");
 
-    CustomEnvFilter.Yaml yaml = changeContext.getYaml();
+    CustomEnvFilterYaml yaml = changeContext.getYaml();
 
     bean.setEnvironments(getEnvIds(yaml.getEnvironments(), appId));
     bean.setFilterType(EnvironmentFilterType.CUSTOM);

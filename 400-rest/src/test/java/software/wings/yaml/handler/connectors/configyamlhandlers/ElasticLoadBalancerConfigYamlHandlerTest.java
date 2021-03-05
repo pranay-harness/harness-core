@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ElasticLoadBalancerConfigYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -46,7 +47,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends SettingValueConfig
       + "harnessApiVersion: '1.0'\n"
       + "type: ELB";
 
-  private Class yamlClass = ElasticLoadBalancerConfig.Yaml.class;
+  private Class yamlClass = ElasticLoadBalancerConfigYaml.class;
 
   @Before
   public void setUp() throws Exception {

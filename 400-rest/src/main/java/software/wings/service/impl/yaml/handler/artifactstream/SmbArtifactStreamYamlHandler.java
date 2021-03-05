@@ -5,17 +5,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.SmbArtifactStream;
-import software.wings.beans.artifact.SmbArtifactStream.Yaml;
+import software.wings.beans.artifact.SmbArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
 
 @OwnedBy(CDC)
 @Singleton
-public class SmbArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, SmbArtifactStream> {
+public class SmbArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<SmbArtifactStreamYaml, SmbArtifactStream> {
   @Override
-  public Yaml toYaml(SmbArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public SmbArtifactStreamYaml toYaml(SmbArtifactStream bean, String appId) {
+    SmbArtifactStreamYaml yaml = SmbArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     return yaml;
@@ -23,7 +23,7 @@ public class SmbArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SmbArtifactStreamYaml.class;
   }
 
   @Override
@@ -32,9 +32,9 @@ public class SmbArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   @Override
-  protected void toBean(SmbArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(SmbArtifactStream bean, ChangeContext<SmbArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    SmbArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
   }
 }

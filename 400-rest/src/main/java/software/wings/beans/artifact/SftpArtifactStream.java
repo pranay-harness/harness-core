@@ -72,17 +72,4 @@ public class SftpArtifactStream extends ArtifactStream {
     }
     return false;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactStreamYaml {
-    private List<String> artifactPaths;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, List<String> artifactPaths) {
-      super(SFTP.name(), harnessApiVersion, serverName);
-      this.artifactPaths = artifactPaths;
-    }
-  }
 }

@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.BambooArtifactStream;
-import software.wings.beans.artifact.BambooArtifactStream.Yaml;
+import software.wings.beans.artifact.BambooArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -15,10 +15,11 @@ import com.google.inject.Singleton;
  */
 @OwnedBy(CDC)
 @Singleton
-public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, BambooArtifactStream> {
+public class BambooArtifactStreamYamlHandler
+    extends ArtifactStreamYamlHandler<BambooArtifactStreamYaml, BambooArtifactStream> {
   @Override
-  public Yaml toYaml(BambooArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public BambooArtifactStreamYaml toYaml(BambooArtifactStream bean, String appId) {
+    BambooArtifactStreamYaml yaml = BambooArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     yaml.setPlanName(bean.getJobname());
@@ -27,9 +28,10 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
   }
 
   @Override
-  protected void toBean(BambooArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(
+      BambooArtifactStream bean, ChangeContext<BambooArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    BambooArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
     bean.setJobname(yaml.getPlanName());
     bean.setMetadataOnly(yaml.isMetadataOnly());
@@ -42,6 +44,6 @@ public class BambooArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return BambooArtifactStreamYaml.class;
   }
 }

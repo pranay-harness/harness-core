@@ -4,7 +4,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.Service;
 import software.wings.beans.container.EcsServiceSpecification;
-import software.wings.beans.container.EcsServiceSpecification.Yaml;
+import software.wings.beans.container.EcsServiceSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
@@ -17,15 +17,15 @@ import java.util.List;
 
 @Singleton
 public class EcsServiceSpecificationYamlHandler
-    extends DeploymentSpecificationYamlHandler<Yaml, EcsServiceSpecification> {
+    extends DeploymentSpecificationYamlHandler<EcsServiceSpecificationYaml, EcsServiceSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
-  public Yaml toYaml(EcsServiceSpecification bean, String appId) {
+  public EcsServiceSpecificationYaml toYaml(EcsServiceSpecification bean, String appId) {
     Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
-    return Yaml.builder()
+    return EcsServiceSpecificationYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(YamlHandlerFactory.ECS_SERVICE_SPEC)
         .serviceName(service.getName())
@@ -35,7 +35,7 @@ public class EcsServiceSpecificationYamlHandler
 
   @Override
   public EcsServiceSpecification upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<EcsServiceSpecificationYaml> changeContext, List<ChangeContext> changeSetContext) {
     EcsServiceSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
@@ -50,8 +50,8 @@ public class EcsServiceSpecificationYamlHandler
     }
   }
 
-  private EcsServiceSpecification toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private EcsServiceSpecification toBean(ChangeContext<EcsServiceSpecificationYaml> changeContext) {
+    EcsServiceSpecificationYaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
@@ -68,7 +68,7 @@ public class EcsServiceSpecificationYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return EcsServiceSpecificationYaml.class;
   }
 
   @Override
@@ -83,7 +83,7 @@ public class EcsServiceSpecificationYamlHandler
   }
 
   @Override
-  public void delete(ChangeContext<EcsServiceSpecification.Yaml> changeContext) {
+  public void delete(ChangeContext<EcsServiceSpecificationYaml> changeContext) {
     EcsServiceSpecification ecsServiceSpecification =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (ecsServiceSpecification != null) {

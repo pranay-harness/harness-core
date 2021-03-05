@@ -38,21 +38,4 @@ public class HelmChartSpecification extends DeploymentSpecification implements A
     specification.setAppId(this.getAppId());
     return specification;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
-    private String chartUrl;
-    private String chartName;
-    private String chartVersion;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String chartUrl, String chartName, String chartVersion) {
-      super(type, harnessApiVersion);
-      this.chartUrl = chartUrl;
-      this.chartName = chartName;
-      this.chartVersion = chartVersion;
-    }
-  }
 }

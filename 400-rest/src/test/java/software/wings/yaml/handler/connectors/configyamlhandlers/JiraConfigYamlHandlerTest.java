@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.JiraConfig;
+import software.wings.beans.JiraConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
@@ -68,7 +69,7 @@ public class JiraConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {
     return SettingValueYamlConfig.builder()
         .yamlHandler(yamlHandler)
-        .yamlClass(JiraConfig.Yaml.class)
+        .yamlClass(JiraConfigYaml.class)
         .settingAttributeSaved(settingAttributeSaved)
         .yamlDirPath(collaborationProviderYamlDir)
         .invalidYamlContent(invalidYamlContent)

@@ -13,8 +13,10 @@ import software.wings.beans.Environment;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.EnvFilterBuilder;
+import software.wings.security.EnvFilterYaml;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.GenericEntityFilterBuilder;
+import software.wings.security.GenericEntityFilterYaml;
 import software.wings.security.UsageRestrictionYaml;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
@@ -50,7 +52,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   private UsageRestrictionsYaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
-    GenericEntityFilter.Yaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
+    GenericEntityFilterYaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
     return UsageRestrictionsYaml.builder()
         .envFilter(constructEnvFilterYaml(appEnvRestriction.getAppFilter(), appEnvRestriction.getEnvFilter()))
         .appFilter(appFilterYaml)
@@ -70,7 +72,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return appIds.toArray(new String[0])[0];
   }
 
-  private EnvFilter constructEnvFilter(GenericEntityFilter appFilter, EnvFilter.Yaml envFilterYaml) {
+  private EnvFilter constructEnvFilter(GenericEntityFilter appFilter, EnvFilterYaml envFilterYaml) {
     EnvFilterBuilder builder = EnvFilter.builder();
 
     if (isNotEmpty(envFilterYaml.getEntityNames())) {
@@ -94,8 +96,8 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterTypes(Sets.newHashSet(envFilterYaml.getFilterTypes())).build();
   }
 
-  private EnvFilter.Yaml constructEnvFilterYaml(GenericEntityFilter appFilter, EnvFilter envFilter) {
-    EnvFilter.Yaml.YamlBuilder builder = EnvFilter.Yaml.builder();
+  private EnvFilterYaml constructEnvFilterYaml(GenericEntityFilter appFilter, EnvFilter envFilter) {
+    EnvFilterYaml.YamlBuilder builder = EnvFilterYaml.builder();
 
     if (isNotEmpty(envFilter.getIds())) {
       String appId = getAppId(appFilter);
@@ -117,7 +119,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterTypes(Lists.newArrayList(envFilter.getFilterTypes())).build();
   }
 
-  private GenericEntityFilter constructGenericEntityFilter(GenericEntityFilter.Yaml yaml, String accountId) {
+  private GenericEntityFilter constructGenericEntityFilter(GenericEntityFilterYaml yaml, String accountId) {
     GenericEntityFilterBuilder builder = GenericEntityFilter.builder();
 
     if (isNotEmpty(yaml.getEntityNames())) {
@@ -139,8 +141,8 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterType(yaml.getFilterType()).build();
   }
 
-  private GenericEntityFilter.Yaml constructGenericEntityFilterYaml(GenericEntityFilter appFilter) {
-    GenericEntityFilter.Yaml.YamlBuilder builder = GenericEntityFilter.Yaml.builder();
+  private GenericEntityFilterYaml constructGenericEntityFilterYaml(GenericEntityFilter appFilter) {
+    GenericEntityFilterYaml.YamlBuilder builder = GenericEntityFilterYaml.builder();
 
     if (isNotEmpty(appFilter.getIds())) {
       List<String> names = appFilter.getIds()

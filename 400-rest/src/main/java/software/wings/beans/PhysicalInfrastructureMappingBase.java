@@ -25,25 +25,6 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
     super(infrastructureMappingType.name());
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends YamlWithComputeProvider {
-    private List<String> hostNames;
-    private List<Host> hosts;
-    private String loadBalancer;
-
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, List<Host> hosts, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.hostNames = hostNames;
-      this.loadBalancer = loadBalancer;
-      this.hosts = hosts;
-    }
-  }
-
   public List<String> getHostNames() {
     return hostNames;
   }

@@ -45,20 +45,4 @@ public class DockerStopCommandUnit extends ExecCommandUnit {
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("DOCKER_STOP")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.DOCKER_STOP.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntryYaml> filePatternEntryList) {
-      super(name, CommandUnitType.DOCKER_STOP.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-    }
-  }
 }

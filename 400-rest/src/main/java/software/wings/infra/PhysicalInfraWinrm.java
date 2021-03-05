@@ -59,30 +59,4 @@ public class PhysicalInfraWinrm implements PhysicalDataCenterInfra, InfraMapping
   public String getWinRmConnectionAttributes() {
     return winRmConnectionAttributes;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(PHYSICAL_INFRA_WINRM)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private List<String> hostNames;
-    private List<Host> hosts;
-    private String loadBalancerName;
-    private String winRmConnectionAttributesName;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, List<String> hostNames, List<Host> hosts,
-        String loadBalancerName, String winRmConnectionAttributesName) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setHostNames(hostNames);
-      setHosts(hosts);
-      setLoadBalancerName(loadBalancerName);
-      setWinRmConnectionAttributesName(winRmConnectionAttributesName);
-    }
-
-    public Yaml() {
-      super(PHYSICAL_INFRA_WINRM);
-    }
-  }
 }

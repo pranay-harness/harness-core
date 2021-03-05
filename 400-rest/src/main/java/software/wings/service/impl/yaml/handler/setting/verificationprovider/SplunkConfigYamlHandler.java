@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
-import software.wings.beans.SplunkConfig.Yaml;
+import software.wings.beans.SplunkConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -12,26 +12,26 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
-public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, SplunkConfig> {
+public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<SplunkConfigYaml, SplunkConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public SplunkConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     SplunkConfig config = (SplunkConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(config.getType())
-                    .splunkUrl(config.getSplunkUrl())
-                    .username(config.getUsername())
-                    .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
-                    .build();
+    SplunkConfigYaml yaml = SplunkConfigYaml.builder()
+                                .harnessApiVersion(getHarnessApiVersion())
+                                .type(config.getType())
+                                .splunkUrl(config.getSplunkUrl())
+                                .username(config.getUsername())
+                                .password(getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword()))
+                                .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<SplunkConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    SplunkConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     SplunkConfig config = SplunkConfig.builder()
@@ -45,6 +45,6 @@ public class SplunkConfigYamlHandler extends VerificationProviderYamlHandler<Yam
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SplunkConfigYaml.class;
   }
 }

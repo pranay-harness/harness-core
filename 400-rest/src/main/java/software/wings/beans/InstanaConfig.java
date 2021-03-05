@@ -57,19 +57,4 @@ public class InstanaConfig extends SettingValue implements EncryptableSetting, E
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String instanaUrl;
-    private String apiToken;
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String instanaUrl, String apiToken,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.instanaUrl = instanaUrl;
-      this.apiToken = apiToken;
-    }
-  }
 }

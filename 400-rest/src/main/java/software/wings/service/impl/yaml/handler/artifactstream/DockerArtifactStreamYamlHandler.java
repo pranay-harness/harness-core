@@ -10,7 +10,7 @@ import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream.DockerArtifactStreamBuilder;
-import software.wings.beans.artifact.DockerArtifactStream.Yaml;
+import software.wings.beans.artifact.DockerArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 
@@ -23,19 +23,21 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, DockerArtifactStream> {
+public class DockerArtifactStreamYamlHandler
+    extends ArtifactStreamYamlHandler<DockerArtifactStreamYaml, DockerArtifactStream> {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public Yaml toYaml(DockerArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public DockerArtifactStreamYaml toYaml(DockerArtifactStream bean, String appId) {
+    DockerArtifactStreamYaml yaml = DockerArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setImageName(bean.getImageName());
     return yaml;
   }
 
   @Override
-  public DockerArtifactStream upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public DockerArtifactStream upsertFromYaml(
+      ChangeContext<DockerArtifactStreamYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     DockerArtifactStream previous = get(accountId, yamlFilePath);
@@ -97,8 +99,8 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     return new DockerArtifactStream();
   }
 
-  private DockerArtifactStream toBean(
-      String accountId, DockerArtifactStreamBuilder builder, Yaml artifactStreamYaml, String appId) {
+  private DockerArtifactStream toBean(String accountId, DockerArtifactStreamBuilder builder,
+      DockerArtifactStreamYaml artifactStreamYaml, String appId) {
     return builder.settingId(getSettingId(accountId, appId, artifactStreamYaml.getServerName()))
         .imageName(artifactStreamYaml.getImageName())
         .build();
@@ -106,6 +108,6 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DockerArtifactStreamYaml.class;
   }
 }

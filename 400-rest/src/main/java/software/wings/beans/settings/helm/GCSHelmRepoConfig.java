@@ -64,20 +64,4 @@ public class GCSHelmRepoConfig extends SettingValue implements HelmRepoConfig {
     executionCapabilityList.add(ChartMuseumCapability.builder().build());
     return executionCapabilityList;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends HelmRepoYaml {
-    private String cloudProvider;
-    private String bucket;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String cloudProvider, String bucket,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.cloudProvider = cloudProvider;
-      this.bucket = bucket;
-    }
-  }
 }

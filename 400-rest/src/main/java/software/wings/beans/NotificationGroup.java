@@ -393,20 +393,4 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
       return notificationGroup;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private List<NotificationGroupAddressYaml> addresses;
-    private String defaultNotificationGroupForAccount;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, List<NotificationGroupAddressYaml> addresses,
-        String defaultNotificationGroupForAccount) {
-      super(type, harnessApiVersion);
-      this.addresses = addresses;
-      this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
-    }
-  }
 }

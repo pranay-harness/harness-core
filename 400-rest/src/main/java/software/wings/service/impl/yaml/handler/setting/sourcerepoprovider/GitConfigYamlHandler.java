@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.GitConfig;
-import software.wings.beans.GitConfig.Yaml;
+import software.wings.beans.GitConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -14,13 +14,13 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Singleton
-public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, GitConfig> {
+public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<GitConfigYaml, GitConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public GitConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
-    Yaml yaml =
-        Yaml.builder()
+    GitConfigYaml yaml =
+        GitConfigYaml.builder()
             .harnessApiVersion(getHarnessApiVersion())
             .type(gitConfig.getType())
             .url(gitConfig.getRepoUrl())
@@ -44,9 +44,9 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
 
   @Override
   public SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<GitConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    GitConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     GitConfig config =
@@ -69,6 +69,6 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return GitConfigYaml.class;
   }
 }

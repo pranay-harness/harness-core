@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class UserDataSpecificationYaml extends DeploymentSpecification.Yaml {
+public final class UserDataSpecificationYaml extends DeploymentSpecificationYaml {
   private String data;
 
   @Builder

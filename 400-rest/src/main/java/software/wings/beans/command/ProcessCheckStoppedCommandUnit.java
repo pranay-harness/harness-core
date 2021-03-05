@@ -47,20 +47,4 @@ public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
   public String getPreparedCommand() {
     return super.getPreparedCommand();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("PROCESS_CHECK_STOPPED")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.PROCESS_CHECK_STOPPED.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntryYaml> filePatternEntryList) {
-      super(name, CommandUnitType.PROCESS_CHECK_STOPPED.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-    }
-  }
 }

@@ -4,7 +4,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.NameValuePair.Yaml;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -14,15 +14,15 @@ import java.util.List;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml, NameValuePair> {
-  private NameValuePair toBean(ChangeContext<Yaml> changeContext) {
-    NameValuePair.Yaml yaml = changeContext.getYaml();
+public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePairYaml, NameValuePair> {
+  private NameValuePair toBean(ChangeContext<NameValuePairYaml> changeContext) {
+    NameValuePairYaml yaml = changeContext.getYaml();
     return NameValuePair.builder().name(yaml.getName()).value(yaml.getValue()).valueType(yaml.getValueType()).build();
   }
 
   @Override
-  public NameValuePair.Yaml toYaml(NameValuePair bean, String appId) {
-    return NameValuePair.Yaml.builder()
+  public NameValuePairYaml toYaml(NameValuePair bean, String appId) {
+    return NameValuePairYaml.builder()
         .name(bean.getName())
         .value(bean.getValue())
         .valueType(bean.getValueType())
@@ -30,13 +30,14 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   }
 
   @Override
-  public NameValuePair upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public NameValuePair upsertFromYaml(
+      ChangeContext<NameValuePairYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return NameValuePair.Yaml.class;
+    return NameValuePairYaml.class;
   }
 
   @Override
@@ -45,7 +46,7 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<NameValuePairYaml> changeContext) {
     // Do nothing
   }
 }

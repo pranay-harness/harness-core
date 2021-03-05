@@ -660,33 +660,4 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return ecsInfrastructureMapping;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends YamlWithComputeProviderYaml {
-    private String region = AWS_DEFAULT_REGION;
-    private String vpcId;
-    private String subnetIds;
-    private String securityGroupIds;
-    private String launchType = LaunchType.EC2.name();
-    private boolean assignPublicIp;
-    private String executionRole;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String region,
-        String vpcId, String subnetIds, String securityGroupIds, String launchType, boolean assignPublicIp,
-        String executionRole, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster, blueprints);
-      this.region = region;
-      this.vpcId = vpcId;
-      this.subnetIds = subnetIds;
-      this.securityGroupIds = securityGroupIds;
-      this.launchType = launchType;
-      this.assignPublicIp = assignPublicIp;
-      this.executionRole = executionRole;
-    }
-  }
 }

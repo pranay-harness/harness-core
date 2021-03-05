@@ -118,32 +118,4 @@ public class PhysicalInfra implements PhysicalDataCenterInfra, InfraMappingInfra
     }
     setHosts(hosts);
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(PHYSICAL_INFRA)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private List<String> hostNames;
-    private List<Host> hosts;
-    private String loadBalancerName;
-    private String hostConnectionAttrsName;
-    private Map<String, String> expressions;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, List<String> hostNames, List<Host> hosts,
-        String loadBalancerName, String hostConnectionAttrsName, Map<String, String> expressions) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setHostNames(hostNames);
-      setHosts(hosts);
-      setLoadBalancerName(loadBalancerName);
-      setHostConnectionAttrsName(hostConnectionAttrsName);
-      setExpressions(expressions);
-    }
-
-    public Yaml() {
-      super(PHYSICAL_INFRA);
-    }
-  }
 }

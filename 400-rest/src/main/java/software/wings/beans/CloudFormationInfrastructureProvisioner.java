@@ -62,29 +62,4 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   public String variableKey() {
     return VARIABLE_KEY;
   }
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfraProvisionerYaml {
-    private String sourceType;
-    private String templateBody;
-    private String templateFilePath;
-    private GitFileConfig gitFileConfig;
-
-    // TODO: check usage of yaml constructor
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
-        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
-        String sourceType, String templateBody, String templateFilePath, GitFileConfig gitFileConfig) {
-      super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
-      this.sourceType = sourceType;
-      this.templateBody = templateBody;
-      this.templateFilePath = templateFilePath;
-      this.gitFileConfig = gitFileConfig;
-    }
-  }
 }

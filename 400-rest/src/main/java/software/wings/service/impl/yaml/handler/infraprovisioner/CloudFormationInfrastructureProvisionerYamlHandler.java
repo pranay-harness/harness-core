@@ -8,7 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
-import software.wings.beans.CloudFormationInfrastructureProvisioner.Yaml;
+import software.wings.beans.CloudFormationInfrastructureProvisionerYaml;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
@@ -18,7 +18,8 @@ import com.google.inject.Inject;
 import java.util.List;
 
 public class CloudFormationInfrastructureProvisionerYamlHandler
-    extends InfrastructureProvisionerYamlHandler<Yaml, CloudFormationInfrastructureProvisioner> {
+    extends InfrastructureProvisionerYamlHandler<CloudFormationInfrastructureProvisionerYaml,
+        CloudFormationInfrastructureProvisioner> {
   @Inject SettingsService settingsService;
 
   protected String getSourceRepoSettingId(String appId, String sourceRepoSettingName) {
@@ -34,8 +35,9 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
   }
 
   @Override
-  public Yaml toYaml(CloudFormationInfrastructureProvisioner bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public CloudFormationInfrastructureProvisionerYaml toYaml(
+      CloudFormationInfrastructureProvisioner bean, String appId) {
+    CloudFormationInfrastructureProvisionerYaml yaml = CloudFormationInfrastructureProvisionerYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureProvisionerType.CLOUD_FORMATION.name());
     yaml.setSourceType(bean.getSourceType());
@@ -47,7 +49,8 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
 
   @Override
   public CloudFormationInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+      ChangeContext<CloudFormationInfrastructureProvisionerYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -72,9 +75,9 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
     return current;
   }
 
-  private void toBean(CloudFormationInfrastructureProvisioner bean, ChangeContext<Yaml> changeContext, String appId)
-      throws HarnessException {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(CloudFormationInfrastructureProvisioner bean,
+      ChangeContext<CloudFormationInfrastructureProvisionerYaml> changeContext, String appId) throws HarnessException {
+    CloudFormationInfrastructureProvisionerYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setTemplateFilePath(yaml.getTemplateFilePath());
@@ -85,7 +88,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return CloudFormationInfrastructureProvisionerYaml.class;
   }
 
   @Override

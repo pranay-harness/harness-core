@@ -431,25 +431,6 @@ public abstract class InfrastructureMapping
     return isNotEmpty(displayName) ? displayName : name;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private String serviceName;
-    private String infraMappingType;
-    private String deploymentType;
-    private Map<String, Object> blueprints;
-
-    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion);
-      this.serviceName = serviceName;
-      this.infraMappingType = infraMappingType;
-      this.deploymentType = deploymentType;
-      this.blueprints = blueprints;
-    }
-  }
-
   protected List<String> getList(Object input) {
     if (input instanceof String) {
       return Arrays.asList(((String) input).split(","));

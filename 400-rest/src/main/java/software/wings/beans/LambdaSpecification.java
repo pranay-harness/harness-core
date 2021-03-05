@@ -56,22 +56,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
   }
 
   @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
-    private DefaultSpecification.Yaml defaults;
-    private List<FunctionSpecification.Yaml> functions;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, DefaultSpecification.Yaml defaults,
-        List<FunctionSpecification.Yaml> functions) {
-      super(type, harnessApiVersion);
-      this.defaults = defaults;
-      this.functions = functions;
-    }
-  }
-
-  @Data
   @Builder
   public static class DefaultSpecification {
     private String runtime;
@@ -87,22 +71,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
           .memorySize(this.getMemorySize())
           .timeout(this.getTimeout())
           .build();
-    }
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static final class Yaml extends BaseYaml {
-      private String runtime;
-      private Integer memorySize = 128;
-      private Integer timeout = 3;
-
-      @Builder
-      public Yaml(String runtime, Integer memorySize, Integer timeout) {
-        this.runtime = runtime;
-        this.memorySize = memorySize;
-        this.timeout = timeout;
-      }
     }
   }
 
@@ -133,26 +101,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
           .functionName(this.getFunctionName())
           .handler(this.getHandler())
           .build();
-    }
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static final class Yaml extends BaseYaml {
-      private String runtime;
-      private Integer memorySize = 128;
-      private Integer timeout = 3;
-      private String functionName;
-      private String handler;
-
-      @Builder
-      public Yaml(String runtime, Integer memorySize, Integer timeout, String functionName, String handler) {
-        this.runtime = runtime;
-        this.memorySize = memorySize;
-        this.timeout = timeout;
-        this.functionName = functionName;
-        this.handler = handler;
-      }
     }
   }
 }

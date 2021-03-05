@@ -135,22 +135,6 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
     return keywords;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-    private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
-    private List<FailureStrategy.Yaml> failureStrategies;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {
-      super(EntityType.PIPELINE.name(), harnessApiVersion);
-      this.description = description;
-      this.pipelineStages = pipelineStages;
-    }
-  }
-
   @UtilityClass
   public static final class PipelineKeys {
     // Temporary

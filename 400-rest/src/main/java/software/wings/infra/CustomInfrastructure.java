@@ -59,23 +59,4 @@ public class CustomInfrastructure implements InfraMappingInfrastructureProvider,
   public String getInfrastructureType() {
     return InfrastructureMappingType.CUSTOM.name();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(InfrastructureType.CUSTOM_INFRASTRUCTURE)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private List<NameValuePair> infraVariables;
-    private String deploymentTypeTemplateVersion;
-
-    @Builder
-    public Yaml(String type, List<NameValuePair> infraVariables, String deploymentTypeTemplateVersion) {
-      super(type);
-      setInfraVariables(infraVariables);
-      setDeploymentTypeTemplateVersion(deploymentTypeTemplateVersion);
-    }
-
-    public Yaml() {
-      super(InfrastructureType.CUSTOM_INFRASTRUCTURE);
-    }
-  }
 }

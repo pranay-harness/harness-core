@@ -8,19 +8,20 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.PcfInfraStructure;
-import software.wings.infra.PcfInfraStructure.Yaml;
+import software.wings.infra.PcfInfraStructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import java.util.List;
 
-public class PcfInfraStructureYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, PcfInfraStructure> {
+public class PcfInfraStructureYamlHandler
+    extends CloudProviderInfrastructureYamlHandler<PcfInfraStructureYaml, PcfInfraStructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(PcfInfraStructure bean, String appId) {
+  public PcfInfraStructureYaml toYaml(PcfInfraStructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
+    return PcfInfraStructureYaml.builder()
         .organization(bean.getOrganization())
         .routeMaps(bean.getRouteMaps())
         .space(bean.getSpace())
@@ -31,14 +32,15 @@ public class PcfInfraStructureYamlHandler extends CloudProviderInfrastructureYam
   }
 
   @Override
-  public PcfInfraStructure upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public PcfInfraStructure upsertFromYaml(
+      ChangeContext<PcfInfraStructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     PcfInfraStructure bean = PcfInfraStructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(PcfInfraStructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(PcfInfraStructure bean, ChangeContext<PcfInfraStructureYaml> changeContext) {
+    PcfInfraStructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -51,6 +53,6 @@ public class PcfInfraStructureYamlHandler extends CloudProviderInfrastructureYam
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PcfInfraStructureYaml.class;
   }
 }

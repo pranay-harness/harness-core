@@ -91,22 +91,4 @@ public class JenkinsArtifactStream extends ArtifactStream {
       return validateParameters(jobname);
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String jobName;
-    private List<String> artifactPaths;
-    private boolean metadataOnly;
-
-    @lombok.Builder
-    public Yaml(
-        String harnessApiVersion, String serverName, boolean metadataOnly, String jobName, List<String> artifactPaths) {
-      super(JENKINS.name(), harnessApiVersion, serverName);
-      this.jobName = jobName;
-      this.artifactPaths = artifactPaths;
-      this.metadataOnly = metadataOnly;
-    }
-  }
 }

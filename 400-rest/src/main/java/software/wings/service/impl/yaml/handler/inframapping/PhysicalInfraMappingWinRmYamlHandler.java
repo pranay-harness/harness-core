@@ -5,7 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
-import software.wings.beans.PhysicalInfrastructureMappingWinRm.Yaml;
+import software.wings.beans.PhysicalInfrastructureMappingWinRmYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -14,16 +14,17 @@ import java.util.List;
 
 @Singleton
 public class PhysicalInfraMappingWinRmYamlHandler
-    extends PhysicalInfraMappingBaseYamlHandler<Yaml, PhysicalInfrastructureMappingWinRm> {
+    extends PhysicalInfraMappingBaseYamlHandler<PhysicalInfrastructureMappingWinRmYaml,
+        PhysicalInfrastructureMappingWinRm> {
   @Override
-  public Yaml toYaml(PhysicalInfrastructureMappingWinRm bean, String appId) {
+  public PhysicalInfrastructureMappingWinRmYaml toYaml(PhysicalInfrastructureMappingWinRm bean, String appId) {
     String winRmConnectionAttrsSettingId = bean.getWinRmConnectionAttributes();
 
     SettingAttribute settingAttribute = settingsService.get(winRmConnectionAttrsSettingId);
     notNullCheck(
         "WinRm connection attributes null for the given id: " + winRmConnectionAttrsSettingId, settingAttribute, USER);
 
-    Yaml yaml = Yaml.builder().build();
+    PhysicalInfrastructureMappingWinRmYaml yaml = PhysicalInfrastructureMappingWinRmYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name());
     yaml.setWinRmProfile(settingAttribute.getName());
@@ -32,8 +33,8 @@ public class PhysicalInfraMappingWinRmYamlHandler
 
   @Override
   public PhysicalInfrastructureMappingWinRm upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<PhysicalInfrastructureMappingWinRmYaml> changeContext, List<ChangeContext> changeSetContext) {
+    PhysicalInfrastructureMappingWinRmYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -56,9 +57,9 @@ public class PhysicalInfraMappingWinRmYamlHandler
   }
 
   @Override
-  public void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMappingWinRm bean, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  public void toBean(ChangeContext<PhysicalInfrastructureMappingWinRmYaml> changeContext,
+      PhysicalInfrastructureMappingWinRm bean, String appId, String envId, String computeProviderId, String serviceId) {
+    PhysicalInfrastructureMappingWinRmYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
     String winRmConnAttrsName = yaml.getWinRmProfile();
@@ -75,6 +76,6 @@ public class PhysicalInfraMappingWinRmYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PhysicalInfrastructureMappingWinRmYaml.class;
   }
 }

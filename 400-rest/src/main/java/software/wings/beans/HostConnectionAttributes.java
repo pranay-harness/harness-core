@@ -16,6 +16,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.security.UsageRestrictionYaml;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 import software.wings.settings.SettingVariableTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -268,26 +269,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setKerberosPassword(kerberosPassword);
       hostConnectionAttributes.setVaultSSH(isVaultSSH);
       return hostConnectionAttributes;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends SettingValue.Yaml {
-    private String connectionType;
-    private String accessType;
-    private String userName;
-    private String key;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String connectionType, String accessType, String userName,
-        String key, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.connectionType = connectionType;
-      this.accessType = accessType;
-      this.userName = userName;
-      this.key = key;
     }
   }
 }

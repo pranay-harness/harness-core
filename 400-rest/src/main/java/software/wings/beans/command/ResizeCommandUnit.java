@@ -287,18 +287,4 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   protected Integer getDesiredTrafficPercent(ContextData contextData) {
     return 0;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("RESIZE")
-  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
-    public Yaml() {
-      super(CommandUnitType.RESIZE.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.RESIZE.name(), deploymentType);
-    }
-  }
 }

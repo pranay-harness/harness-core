@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.GcsArtifactStream;
+import software.wings.beans.artifact.GcsArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -59,7 +60,7 @@ public class GcsArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
                                            .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    GcsArtifactStream.Yaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
+    GcsArtifactStreamYaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
     assertThat(yaml.getProjectId()).isEqualTo("hello-world");
     assertThat(yaml.getBucketName()).isEqualTo("harness");
     assertThat(yaml.getArtifactPaths()).isNotEmpty();
@@ -74,13 +75,13 @@ public class GcsArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    GcsArtifactStream.Yaml baseYaml = GcsArtifactStream.Yaml.builder()
-                                          .bucketName("harness")
-                                          .projectId("hello-world")
-                                          .artifactPaths(Lists.newArrayList("path/", "another/path/"))
-                                          .harnessApiVersion("1.0")
-                                          .serverName("test server")
-                                          .build();
+    GcsArtifactStreamYaml baseYaml = GcsArtifactStreamYaml.builder()
+                                         .bucketName("harness")
+                                         .projectId("hello-world")
+                                         .artifactPaths(Lists.newArrayList("path/", "another/path/"))
+                                         .harnessApiVersion("1.0")
+                                         .serverName("test server")
+                                         .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -121,6 +122,6 @@ public class GcsArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(GcsArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(GcsArtifactStreamYaml.class);
   }
 }

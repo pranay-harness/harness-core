@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.ProcessCheckStoppedCommandUnit;
-import software.wings.beans.command.ProcessCheckStoppedCommandUnit.Yaml;
+import software.wings.beans.command.ProcessCheckStoppedCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class ProcessCheckStoppedCommandUnitYamlHandler
-    extends AbstractExecCommandUnitYamlHandler<Yaml, ProcessCheckStoppedCommandUnit> {
+    extends AbstractExecCommandUnitYamlHandler<ProcessCheckStoppedCommandUnitYaml, ProcessCheckStoppedCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ProcessCheckStoppedCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(ProcessCheckStoppedCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public ProcessCheckStoppedCommandUnitYaml toYaml(ProcessCheckStoppedCommandUnit bean, String appId) {
+    ProcessCheckStoppedCommandUnitYaml yaml = ProcessCheckStoppedCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

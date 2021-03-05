@@ -5,17 +5,18 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.SftpArtifactStream;
-import software.wings.beans.artifact.SftpArtifactStream.Yaml;
+import software.wings.beans.artifact.SftpArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
 
 @OwnedBy(CDC)
 @Singleton
-public class SftpArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, SftpArtifactStream> {
+public class SftpArtifactStreamYamlHandler
+    extends ArtifactStreamYamlHandler<SftpArtifactStreamYaml, SftpArtifactStream> {
   @Override
-  public Yaml toYaml(SftpArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public SftpArtifactStreamYaml toYaml(SftpArtifactStream bean, String appId) {
+    SftpArtifactStreamYaml yaml = SftpArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     return yaml;
@@ -23,7 +24,7 @@ public class SftpArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yam
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SftpArtifactStreamYaml.class;
   }
 
   @Override
@@ -32,9 +33,9 @@ public class SftpArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yam
   }
 
   @Override
-  protected void toBean(SftpArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(SftpArtifactStream bean, ChangeContext<SftpArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    SftpArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
   }
 }

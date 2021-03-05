@@ -328,18 +328,4 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     virtualServiceHttpNested.endHttp();
     return virtualServiceSpecNested.endSpec().build();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("RESIZE_KUBERNETES")
-  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
-    public Yaml() {
-      super(CommandUnitType.RESIZE_KUBERNETES.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.RESIZE_KUBERNETES.name(), deploymentType);
-    }
-  }
 }

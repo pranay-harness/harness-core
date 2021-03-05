@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.SetupEnvCommandUnit;
-import software.wings.beans.command.SetupEnvCommandUnit.Yaml;
+import software.wings.beans.command.SetupEnvCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -9,15 +9,16 @@ import com.google.inject.Singleton;
  * @author rktummala on 11/13/17
  */
 @Singleton
-public class SetupEnvCommandUnitYamlHandler extends AbstractExecCommandUnitYamlHandler<Yaml, SetupEnvCommandUnit> {
+public class SetupEnvCommandUnitYamlHandler
+    extends AbstractExecCommandUnitYamlHandler<SetupEnvCommandUnitYaml, SetupEnvCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SetupEnvCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(SetupEnvCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public SetupEnvCommandUnitYaml toYaml(SetupEnvCommandUnit bean, String appId) {
+    SetupEnvCommandUnitYaml yaml = SetupEnvCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

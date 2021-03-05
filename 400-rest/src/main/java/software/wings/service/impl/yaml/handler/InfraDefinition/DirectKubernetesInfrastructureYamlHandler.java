@@ -9,7 +9,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.DirectKubernetesInfrastructure;
-import software.wings.infra.DirectKubernetesInfrastructure.Yaml;
+import software.wings.infra.DirectKubernetesInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -17,19 +17,19 @@ import com.google.inject.Inject;
 import java.util.List;
 
 public class DirectKubernetesInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, DirectKubernetesInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<DirectKubernetesInfrastructureYaml, DirectKubernetesInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(DirectKubernetesInfrastructure bean, String appId) {
+  public DirectKubernetesInfrastructureYaml toYaml(DirectKubernetesInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    Yaml yaml = Yaml.builder()
-                    .clusterName(bean.getClusterName())
-                    .namespace(bean.getNamespace())
-                    .releaseName(bean.getReleaseName())
-                    .cloudProviderName(cloudProvider.getName())
-                    .type(InfrastructureType.DIRECT_KUBERNETES)
-                    .expressions(bean.getExpressions())
-                    .build();
+    DirectKubernetesInfrastructureYaml yaml = DirectKubernetesInfrastructureYaml.builder()
+                                                  .clusterName(bean.getClusterName())
+                                                  .namespace(bean.getNamespace())
+                                                  .releaseName(bean.getReleaseName())
+                                                  .cloudProviderName(cloudProvider.getName())
+                                                  .type(InfrastructureType.DIRECT_KUBERNETES)
+                                                  .expressions(bean.getExpressions())
+                                                  .build();
 
     // To prevent default release name from showing in yaml when provisioner
     if (isNotEmpty(bean.getExpressions())) {
@@ -40,14 +40,15 @@ public class DirectKubernetesInfrastructureYamlHandler
 
   @Override
   public DirectKubernetesInfrastructure upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<DirectKubernetesInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     DirectKubernetesInfrastructure bean = DirectKubernetesInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(DirectKubernetesInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(
+      DirectKubernetesInfrastructure bean, ChangeContext<DirectKubernetesInfrastructureYaml> changeContext) {
+    DirectKubernetesInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -60,6 +61,6 @@ public class DirectKubernetesInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DirectKubernetesInfrastructureYaml.class;
   }
 }

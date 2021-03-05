@@ -5,7 +5,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.container.PortMapping;
-import software.wings.beans.container.PortMapping.Yaml;
+import software.wings.beans.container.PortMappingYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
@@ -16,27 +16,30 @@ import java.util.List;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
+public class PortMappingYamlHandler extends BaseYamlHandler<PortMappingYaml, PortMapping> {
   @Override
-  public Yaml toYaml(PortMapping portMapping, String appId) {
-    return Yaml.builder().containerPort(portMapping.getContainerPort()).hostPort(portMapping.getHostPort()).build();
+  public PortMappingYaml toYaml(PortMapping portMapping, String appId) {
+    return PortMappingYaml.builder()
+        .containerPort(portMapping.getContainerPort())
+        .hostPort(portMapping.getHostPort())
+        .build();
   }
 
   @Override
-  public PortMapping upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public PortMapping upsertFromYaml(ChangeContext<PortMappingYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return toBean(changeContext);
   }
 
-  private PortMapping toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private PortMapping toBean(ChangeContext<PortMappingYaml> changeContext) {
+    PortMappingYaml yaml = changeContext.getYaml();
 
     return PortMapping.builder().containerPort(yaml.getContainerPort()).hostPort(yaml.getHostPort()).build();
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PortMappingYaml.class;
   }
 
   @Override
@@ -45,7 +48,7 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<PortMappingYaml> changeContext) {
     // Do nothing
   }
 }

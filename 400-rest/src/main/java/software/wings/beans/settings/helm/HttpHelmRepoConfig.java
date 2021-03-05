@@ -79,22 +79,4 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
         chartRepoUrl, maskingEvaluator));
     return executionCapabilityList;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends HelmRepoYaml {
-    private String url;
-    private String username;
-    private String password;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.url = url;
-      this.username = username;
-      this.password = password;
-    }
-  }
 }

@@ -22,7 +22,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesClusterConfig.Yaml;
+import software.wings.beans.KubernetesClusterConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.Change;
@@ -48,7 +48,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
   public static final String SAMPLE_STRING = "sample-string";
-  private Class yamlClass = KubernetesClusterConfig.Yaml.class;
+  private Class yamlClass = KubernetesClusterConfigYaml.class;
   private static String secretKey;
 
   @Before
@@ -86,28 +86,28 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
   @Owner(developers = RAUNAK)
   @Category(UnitTests.class)
   public void testToBean() {
-    Yaml yaml = Yaml.builder()
-                    .useKubernetesDelegate(true)
-                    .delegateName(SAMPLE_STRING)
-                    .delegateSelectors(Arrays.asList(SAMPLE_STRING))
-                    .masterUrl(SAMPLE_STRING)
-                    .username(SAMPLE_STRING)
-                    .clientKeyAlgo(SAMPLE_STRING)
-                    .serviceAccountToken(SAMPLE_STRING)
-                    .password(SAMPLE_STRING)
-                    .caCert(SAMPLE_STRING)
-                    .oidcPassword(SAMPLE_STRING)
-                    .build();
+    KubernetesClusterConfigYaml yaml = KubernetesClusterConfigYaml.builder()
+                                           .useKubernetesDelegate(true)
+                                           .delegateName(SAMPLE_STRING)
+                                           .delegateSelectors(Arrays.asList(SAMPLE_STRING))
+                                           .masterUrl(SAMPLE_STRING)
+                                           .username(SAMPLE_STRING)
+                                           .clientKeyAlgo(SAMPLE_STRING)
+                                           .serviceAccountToken(SAMPLE_STRING)
+                                           .password(SAMPLE_STRING)
+                                           .caCert(SAMPLE_STRING)
+                                           .oidcPassword(SAMPLE_STRING)
+                                           .build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                            .withYamlType(YamlType.CLOUD_PROVIDER)
-                                            .withYaml(yaml)
-                                            .withChange(change)
-                                            .build();
+    ChangeContext<KubernetesClusterConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                                   .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                                   .withYaml(yaml)
+                                                                   .withChange(change)
+                                                                   .build();
 
     SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
     KubernetesClusterConfig clusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
@@ -127,17 +127,18 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testToBeanWithOnlyDelegateName() {
-    Yaml yaml = Yaml.builder().useKubernetesDelegate(true).delegateName(SAMPLE_STRING).build();
+    KubernetesClusterConfigYaml yaml =
+        KubernetesClusterConfigYaml.builder().useKubernetesDelegate(true).delegateName(SAMPLE_STRING).build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                            .withYamlType(YamlType.CLOUD_PROVIDER)
-                                            .withYaml(yaml)
-                                            .withChange(change)
-                                            .build();
+    ChangeContext<KubernetesClusterConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                                   .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                                   .withYaml(yaml)
+                                                                   .withChange(change)
+                                                                   .build();
 
     SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
     KubernetesClusterConfig clusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
@@ -152,17 +153,18 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testToBeanBothUsernameAndUsernameSecretId() {
-    Yaml yaml = Yaml.builder().username(SAMPLE_STRING).usernameSecretId(SAMPLE_STRING).build();
+    KubernetesClusterConfigYaml yaml =
+        KubernetesClusterConfigYaml.builder().username(SAMPLE_STRING).usernameSecretId(SAMPLE_STRING).build();
 
     Change change = Change.Builder.aFileChange()
                         .withAccountId("ABC")
                         .withFilePath("Setup/Cloud Providers/test-harness.yaml")
                         .build();
-    ChangeContext<Yaml> changeContext = ChangeContext.Builder.aChangeContext()
-                                            .withYamlType(YamlType.CLOUD_PROVIDER)
-                                            .withYaml(yaml)
-                                            .withChange(change)
-                                            .build();
+    ChangeContext<KubernetesClusterConfigYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                                   .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                                   .withYaml(yaml)
+                                                                   .withChange(change)
+                                                                   .build();
 
     assertThatThrownBy(() -> yamlHandler.toBean(null, changeContext, null))
         .hasMessageContaining("Cannot set both value and secret reference for username field");

@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.SplunkConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -36,7 +37,7 @@ public class SplunkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTe
       + "harnessApiVersion: '1.0'\n"
       + "type: SPLUNK";
 
-  private Class yamlClass = SplunkConfig.Yaml.class;
+  private Class yamlClass = SplunkConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

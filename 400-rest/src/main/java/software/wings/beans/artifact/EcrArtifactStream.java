@@ -77,19 +77,4 @@ public class EcrArtifactStream extends ArtifactStream {
   public boolean checkIfStreamParameterized() {
     return validateParameters(region, imageName);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String imageName;
-    private String region;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String imageName, String region) {
-      super(ECR.name(), harnessApiVersion, serverName);
-      this.imageName = imageName;
-      this.region = region;
-    }
-  }
 }

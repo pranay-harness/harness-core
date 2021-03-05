@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -37,18 +36,5 @@ public class GenericEntityFilter extends Filter {
   public GenericEntityFilter(Set<String> ids, String filterType) {
     super(ids);
     this.filterType = filterType;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends Filter.Yaml {
-    private String filterType;
-
-    @Builder
-    public Yaml(List<String> names, String filterType) {
-      super(names);
-      this.filterType = filterType;
-    }
   }
 }

@@ -37,6 +37,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.governance.GovernanceConfigYaml;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -566,8 +567,8 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
 
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<GovernanceConfig.Yaml> changeContext = getChangeContext(yamlString);
-    GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) getYaml(yamlString, GovernanceConfig.Yaml.class);
+    ChangeContext<GovernanceConfigYaml> changeContext = getChangeContext(yamlString);
+    GovernanceConfigYaml yaml = (GovernanceConfigYaml) getYaml(yamlString, GovernanceConfigYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -605,8 +606,8 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
 
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<GovernanceConfig.Yaml> changeContext = getChangeContext(yamlString);
-    GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) getYaml(yamlString, GovernanceConfig.Yaml.class);
+    ChangeContext<GovernanceConfigYaml> changeContext = getChangeContext(yamlString);
+    GovernanceConfigYaml yaml = (GovernanceConfigYaml) getYaml(yamlString, GovernanceConfigYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -622,14 +623,14 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
             savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).getEnvSelection());
   }
 
-  private ChangeContext<GovernanceConfig.Yaml> getChangeContext(String validYamlContent) {
+  private ChangeContext<GovernanceConfigYaml> getChangeContext(String validYamlContent) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<GovernanceConfig.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<GovernanceConfigYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.GOVERNANCE_CONFIG);
     changeContext.setYamlSyncHandler(handler);

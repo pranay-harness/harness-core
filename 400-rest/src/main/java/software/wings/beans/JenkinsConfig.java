@@ -110,20 +110,4 @@ public class JenkinsConfig extends SettingValue
       return Collections.singletonList(encryptedPassword);
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    private String token;
-    private String authMechanism;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
-        String authMechanism, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, url, username, password, usageRestrictions);
-      this.token = token;
-      this.authMechanism = authMechanism;
-    }
-  }
 }

@@ -14,7 +14,7 @@ import software.wings.beans.Service;
 import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.ManifestSelection.ManifestSelectionBuilder;
 import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
-import software.wings.beans.trigger.ManifestSelection.Yaml;
+import software.wings.beans.trigger.ManifestSelectionYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -24,16 +24,16 @@ import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 
-public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, ManifestSelection> {
+public class ManifestSelectionYamlHandler extends BaseYamlHandler<ManifestSelectionYaml, ManifestSelection> {
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {}
+  public void delete(ChangeContext<ManifestSelectionYaml> changeContext) {}
 
   @Override
-  public Yaml toYaml(ManifestSelection bean, String appId) {
-    return ManifestSelection.Yaml.builder()
+  public ManifestSelectionYaml toYaml(ManifestSelection bean, String appId) {
+    return ManifestSelectionYaml.builder()
         .versionRegex(bean.getVersionRegex())
         .type(bean.getType().name())
         .pipelineName(bean.getPipelineName())
@@ -43,8 +43,9 @@ public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, Manifest
   }
 
   @Override
-  public ManifestSelection upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml yaml = changeContext.getYaml();
+  public ManifestSelection upsertFromYaml(
+      ChangeContext<ManifestSelectionYaml> changeContext, List<ChangeContext> changeSetContext) {
+    ManifestSelectionYaml yaml = changeContext.getYaml();
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     String serviceName = yaml.getServiceName();
@@ -92,7 +93,7 @@ public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, Manifest
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ManifestSelectionYaml.class;
   }
 
   @Override

@@ -10,9 +10,11 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.container.ContainerDefinition;
-import software.wings.beans.container.ContainerDefinition.Yaml;
+import software.wings.beans.container.ContainerDefinitionYaml;
 import software.wings.beans.container.LogConfiguration;
+import software.wings.beans.container.LogConfigurationYaml;
 import software.wings.beans.container.PortMapping;
+import software.wings.beans.container.PortMappingYaml;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.container.StorageConfigurationYaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -29,20 +31,20 @@ import java.util.List;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDefinition.Yaml, ContainerDefinition> {
+public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDefinitionYaml, ContainerDefinition> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
   @Override
-  public ContainerDefinition.Yaml toYaml(ContainerDefinition containerDefinition, String appId) {
+  public ContainerDefinitionYaml toYaml(ContainerDefinition containerDefinition, String appId) {
     // Log Configuration
     LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
-    LogConfiguration.Yaml logConfigYaml = null;
+    LogConfigurationYaml logConfigYaml = null;
     if (containerDefinition.getLogConfiguration() != null) {
       logConfigYaml = logConfigYamlHandler.toYaml(containerDefinition.getLogConfiguration(), appId);
     }
 
     // Port Mappings
-    List<PortMapping.Yaml> portMappingYamlList = Collections.emptyList();
+    List<PortMappingYaml> portMappingYamlList = Collections.emptyList();
     PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
     if (isNotEmpty(portMappings)) {
@@ -65,7 +67,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
               .collect(toList());
     }
 
-    return Yaml.builder()
+    return ContainerDefinitionYaml.builder()
         .commands(containerDefinition.getCommands())
         .cpu(containerDefinition.getCpu())
         .logConfiguration(logConfigYaml)
@@ -77,13 +79,14 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   }
 
   @Override
-  public ContainerDefinition upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public ContainerDefinition upsertFromYaml(
+      ChangeContext<ContainerDefinitionYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext, changeSetContext);
   }
 
   private ContainerDefinition toBean(
-      ChangeContext<ContainerDefinition.Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml yaml = changeContext.getYaml();
+      ChangeContext<ContainerDefinitionYaml> changeContext, List<ChangeContext> changeSetContext) {
+    ContainerDefinitionYaml yaml = changeContext.getYaml();
 
     // port mappings
     List<PortMapping> portMappings = Lists.newArrayList();
@@ -123,7 +126,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
 
     // log configuration
     LogConfiguration logConfig = null;
-    LogConfiguration.Yaml logConfigYaml = yaml.getLogConfiguration();
+    LogConfigurationYaml logConfigYaml = yaml.getLogConfiguration();
     if (logConfigYaml != null) {
       LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, logConfigYaml);
@@ -143,7 +146,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ContainerDefinitionYaml.class;
   }
 
   @Override
@@ -152,7 +155,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<ContainerDefinitionYaml> changeContext) {
     // Do nothing
   }
 }

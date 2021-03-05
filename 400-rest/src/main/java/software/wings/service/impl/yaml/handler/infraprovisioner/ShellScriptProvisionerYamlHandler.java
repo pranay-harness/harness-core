@@ -5,17 +5,17 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
-import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner.Yaml;
+import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisionerYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 public class ShellScriptProvisionerYamlHandler
-    extends InfrastructureProvisionerYamlHandler<ShellScriptInfrastructureProvisioner.Yaml,
+    extends InfrastructureProvisionerYamlHandler<ShellScriptInfrastructureProvisionerYaml,
         ShellScriptInfrastructureProvisioner> {
   @Override
-  public Yaml toYaml(ShellScriptInfrastructureProvisioner bean, String appId) {
-    ShellScriptInfrastructureProvisioner.Yaml yaml = ShellScriptInfrastructureProvisioner.Yaml.builder().build();
+  public ShellScriptInfrastructureProvisionerYaml toYaml(ShellScriptInfrastructureProvisioner bean, String appId) {
+    ShellScriptInfrastructureProvisionerYaml yaml = ShellScriptInfrastructureProvisionerYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureProvisionerType.SHELL_SCRIPT.name());
     yaml.setScriptBody(bean.getScriptBody());
@@ -24,7 +24,7 @@ public class ShellScriptProvisionerYamlHandler
 
   @Override
   public ShellScriptInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<ShellScriptInfrastructureProvisionerYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -50,8 +50,8 @@ public class ShellScriptProvisionerYamlHandler
   }
 
   private void toBean(ShellScriptInfrastructureProvisioner bean,
-      ChangeContext<ShellScriptInfrastructureProvisioner.Yaml> changeContext, String appId) {
-    ShellScriptInfrastructureProvisioner.Yaml yaml = changeContext.getYaml();
+      ChangeContext<ShellScriptInfrastructureProvisionerYaml> changeContext, String appId) {
+    ShellScriptInfrastructureProvisionerYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setScriptBody(yaml.getScriptBody());
@@ -64,6 +64,6 @@ public class ShellScriptProvisionerYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return ShellScriptInfrastructureProvisioner.Yaml.class;
+    return ShellScriptInfrastructureProvisionerYaml.class;
   }
 }

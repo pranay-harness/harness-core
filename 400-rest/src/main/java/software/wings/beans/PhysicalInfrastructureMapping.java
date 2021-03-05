@@ -94,24 +94,6 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
     this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends PhysicalInfrastructureMappingBase.Yaml {
-    // maps to hostConnectionAttrs
-    // This would either be a username/password / ssh key id
-    private String connection;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String connection, List<Host> hosts, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, name, hostNames, loadBalancer, hosts, blueprints);
-      this.connection = connection;
-    }
-  }
-
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;

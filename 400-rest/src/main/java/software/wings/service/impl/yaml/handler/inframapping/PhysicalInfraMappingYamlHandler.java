@@ -5,7 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
-import software.wings.beans.PhysicalInfrastructureMapping.Yaml;
+import software.wings.beans.PhysicalInfrastructureMappingYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -14,16 +14,16 @@ import java.util.List;
 
 @Singleton
 public class PhysicalInfraMappingYamlHandler
-    extends PhysicalInfraMappingBaseYamlHandler<Yaml, PhysicalInfrastructureMapping> {
+    extends PhysicalInfraMappingBaseYamlHandler<PhysicalInfrastructureMappingYaml, PhysicalInfrastructureMapping> {
   @Override
-  public Yaml toYaml(PhysicalInfrastructureMapping bean, String appId) {
+  public PhysicalInfrastructureMappingYaml toYaml(PhysicalInfrastructureMapping bean, String appId) {
     String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
 
     SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
     notNullCheck(
         "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute, USER);
 
-    Yaml yaml = Yaml.builder().build();
+    PhysicalInfrastructureMappingYaml yaml = PhysicalInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
     yaml.setConnection(settingAttribute.getName());
@@ -32,8 +32,8 @@ public class PhysicalInfraMappingYamlHandler
 
   @Override
   public PhysicalInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<PhysicalInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    PhysicalInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -56,9 +56,9 @@ public class PhysicalInfraMappingYamlHandler
   }
 
   @Override
-  protected void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMapping bean, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  protected void toBean(ChangeContext<PhysicalInfrastructureMappingYaml> changeContext,
+      PhysicalInfrastructureMapping bean, String appId, String envId, String computeProviderId, String serviceId) {
+    PhysicalInfrastructureMappingYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
     String hostConnAttrsName = yaml.getConnection();
@@ -75,6 +75,6 @@ public class PhysicalInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PhysicalInfrastructureMappingYaml.class;
   }
 }

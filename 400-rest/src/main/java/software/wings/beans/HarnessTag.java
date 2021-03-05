@@ -57,17 +57,4 @@ public class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseEntityYaml {
-    private List<HarnessTagAbstractYaml> tag;
-
-    @Builder
-    public Yaml(String harnessApiVersion, List<HarnessTagAbstractYaml> tag) {
-      super(EntityType.TAG.name(), harnessApiVersion);
-      this.tag = tag;
-    }
-  }
 }

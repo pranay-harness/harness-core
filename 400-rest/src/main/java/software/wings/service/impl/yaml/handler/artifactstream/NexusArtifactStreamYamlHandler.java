@@ -8,7 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.beans.artifact.NexusArtifactStream.Yaml;
+import software.wings.beans.artifact.NexusArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.RepositoryFormat;
 
@@ -20,10 +20,10 @@ import com.google.inject.Singleton;
 @OwnedBy(CDC)
 @Singleton
 public class NexusArtifactStreamYamlHandler
-    extends ArtifactStreamYamlHandler<NexusArtifactStream.Yaml, NexusArtifactStream> {
+    extends ArtifactStreamYamlHandler<NexusArtifactStreamYaml, NexusArtifactStream> {
   @Override
-  public Yaml toYaml(NexusArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public NexusArtifactStreamYaml toYaml(NexusArtifactStream bean, String appId) {
+    NexusArtifactStreamYaml yaml = NexusArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setRepositoryName(bean.getJobname());
     yaml.setArtifactPaths(bean.getArtifactPaths());
@@ -50,9 +50,9 @@ public class NexusArtifactStreamYamlHandler
   }
 
   @Override
-  protected void toBean(NexusArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(NexusArtifactStream bean, ChangeContext<NexusArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    NexusArtifactStreamYaml yaml = changeContext.getYaml();
     if (isEmpty(yaml.getRepositoryFormat())) {
       throw new InvalidRequestException("Repository Format is mandatory");
     }
@@ -85,6 +85,6 @@ public class NexusArtifactStreamYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return NexusArtifactStreamYaml.class;
   }
 }

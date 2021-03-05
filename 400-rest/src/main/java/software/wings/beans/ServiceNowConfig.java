@@ -84,22 +84,4 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(baseUrl, maskingEvaluator));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CollaborationProviderYaml {
-    private String baseUrl;
-    private String username;
-    private String password = ENCRYPTED_VALUE_STR;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.baseUrl = baseUrl;
-      this.username = username;
-      this.password = password;
-    }
-  }
 }

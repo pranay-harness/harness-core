@@ -81,6 +81,7 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 
@@ -406,20 +407,6 @@ public class SettingAttribute
       settingAttribute.setSample(sample);
       settingAttribute.setConnectivityError(connectivityError);
       return settingAttribute;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseYaml {
-    private String name;
-    private SettingValue.Yaml value;
-
-    @lombok.Builder
-    public Yaml(String name, SettingValue.Yaml value) {
-      this.name = name;
-      this.value = value;
     }
   }
 

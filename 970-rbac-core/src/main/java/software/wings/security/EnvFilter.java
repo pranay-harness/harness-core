@@ -43,17 +43,4 @@ public class EnvFilter extends Filter {
     super(ids);
     this.filterTypes = filterTypes;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends Filter.Yaml {
-    private List<String> filterTypes;
-
-    @Builder
-    public Yaml(List<String> entityNames, List<String> filterTypes) {
-      super(entityNames);
-      this.filterTypes = filterTypes;
-    }
-  }
 }

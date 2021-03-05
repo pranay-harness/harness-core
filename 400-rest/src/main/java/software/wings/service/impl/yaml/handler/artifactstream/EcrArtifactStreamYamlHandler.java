@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.EcrArtifactStream;
-import software.wings.beans.artifact.EcrArtifactStream.Yaml;
+import software.wings.beans.artifact.EcrArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -15,10 +15,10 @@ import com.google.inject.Singleton;
  */
 @OwnedBy(CDC)
 @Singleton
-public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, EcrArtifactStream> {
+public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<EcrArtifactStreamYaml, EcrArtifactStream> {
   @Override
-  public Yaml toYaml(EcrArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public EcrArtifactStreamYaml toYaml(EcrArtifactStream bean, String appId) {
+    EcrArtifactStreamYaml yaml = EcrArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setImageName(bean.getImageName());
     yaml.setRegion(bean.getRegion());
@@ -31,15 +31,15 @@ public class EcrArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
   }
 
   @Override
-  protected void toBean(EcrArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(EcrArtifactStream bean, ChangeContext<EcrArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    EcrArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setImageName(yaml.getImageName());
     bean.setRegion(yaml.getRegion());
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return EcrArtifactStreamYaml.class;
   }
 }

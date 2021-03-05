@@ -604,27 +604,4 @@ public class ScpCommandUnit extends SshCommandUnit {
       return Stream.of(ScpFileCategory.values()).collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("SCP")
-  public static class Yaml extends SshCommandUnitYaml {
-    // maps to fileCategory
-    private String source;
-    private String destinationDirectoryPath;
-    private String artifactVariableName;
-
-    public Yaml() {
-      super(CommandUnitType.SCP.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String source, String destinationDirectoryPath,
-        String artifactVariableName) {
-      super(name, CommandUnitType.SCP.name(), deploymentType);
-      this.source = source;
-      this.destinationDirectoryPath = destinationDirectoryPath;
-      this.artifactVariableName = artifactVariableName;
-    }
-  }
 }

@@ -78,29 +78,4 @@ public class ContainerDefinition {
   public void setPortMappings(List<PortMapping> portMappings) {
     this.portMappings = portMappings;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    List<PortMapping.Yaml> portMappings;
-    private String name;
-    private List<String> commands;
-    private Double cpu;
-    private Integer memory;
-    private LogConfiguration.Yaml logConfiguration;
-    private List<StorageConfigurationYaml> storageConfigurations;
-
-    @Builder
-    public Yaml(List<PortMapping.Yaml> portMappings, String name, List<String> commands, Double cpu, Integer memory,
-        LogConfiguration.Yaml logConfiguration, List<StorageConfigurationYaml> storageConfigurations) {
-      this.portMappings = portMappings;
-      this.name = name;
-      this.commands = commands;
-      this.cpu = cpu;
-      this.memory = memory;
-      this.logConfiguration = logConfiguration;
-      this.storageConfigurations = storageConfigurations;
-    }
-  }
 }

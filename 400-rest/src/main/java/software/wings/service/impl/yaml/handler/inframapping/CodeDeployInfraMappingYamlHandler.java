@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.CodeDeployInfrastructureMapping;
-import software.wings.beans.CodeDeployInfrastructureMapping.Yaml;
+import software.wings.beans.CodeDeployInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -16,10 +16,11 @@ import java.util.List;
  */
 @Singleton
 public class CodeDeployInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, CodeDeployInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<CodeDeployInfrastructureMappingYaml,
+        CodeDeployInfrastructureMapping> {
   @Override
-  public Yaml toYaml(CodeDeployInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public CodeDeployInfrastructureMappingYaml toYaml(CodeDeployInfrastructureMapping bean, String appId) {
+    CodeDeployInfrastructureMappingYaml yaml = CodeDeployInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
     yaml.setRegion(bean.getRegion());
@@ -32,8 +33,8 @@ public class CodeDeployInfraMappingYamlHandler
 
   @Override
   public CodeDeployInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<CodeDeployInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    CodeDeployInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -55,9 +56,9 @@ public class CodeDeployInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,
-      String computeProviderId, String serviceId) {
-    Yaml infraMappingYaml = context.getYaml();
+  private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<CodeDeployInfrastructureMappingYaml> context,
+      String appId, String envId, String computeProviderId, String serviceId) {
+    CodeDeployInfrastructureMappingYaml infraMappingYaml = context.getYaml();
     super.toBean(context, bean, appId, envId, computeProviderId, serviceId, null);
 
     bean.setRegion(infraMappingYaml.getRegion());
@@ -74,6 +75,6 @@ public class CodeDeployInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return CodeDeployInfrastructureMappingYaml.class;
   }
 }

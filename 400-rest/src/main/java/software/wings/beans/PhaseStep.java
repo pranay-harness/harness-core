@@ -564,33 +564,4 @@ public class PhaseStep {
       return phaseStep;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYamlWithType {
-    private String name;
-    private String statusForRollback;
-    private boolean stepsInParallel;
-    private List<StepYaml> steps = new ArrayList<>();
-    private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
-    private List<StepSkipStrategyYaml> stepSkipStrategies = new ArrayList<>();
-    private String phaseStepNameForRollback;
-    private Integer waitInterval;
-
-    @lombok.Builder
-    public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
-        List<FailureStrategy.Yaml> failureStrategies, List<StepSkipStrategyYaml> stepSkipStrategies,
-        String phaseStepNameForRollback, Integer waitInterval) {
-      super(type);
-      this.name = name;
-      this.statusForRollback = statusForRollback;
-      this.stepsInParallel = stepsInParallel;
-      this.steps = steps;
-      this.failureStrategies = failureStrategies;
-      this.stepSkipStrategies = stepSkipStrategies;
-      this.phaseStepNameForRollback = phaseStepNameForRollback;
-      this.waitInterval = waitInterval;
-    }
-  }
 }

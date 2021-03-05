@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.NexusConfig;
-import software.wings.beans.config.NexusConfig.Yaml;
+import software.wings.beans.config.NexusConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -17,13 +17,13 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, NexusConfig> {
+public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<NexusConfigYaml, NexusConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public NexusConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
-    Yaml yaml;
+    NexusConfigYaml yaml;
     if (nexusConfig.hasCredentials()) {
-      yaml = Yaml.builder()
+      yaml = NexusConfigYaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(nexusConfig.getType())
                  .url(nexusConfig.getNexusUrl())
@@ -32,7 +32,7 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
                  .version(nexusConfig.getVersion())
                  .build();
     } else {
-      yaml = Yaml.builder()
+      yaml = NexusConfigYaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(nexusConfig.getType())
                  .url(nexusConfig.getNexusUrl())
@@ -45,9 +45,9 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<NexusConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    NexusConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     NexusConfig config = NexusConfig.builder()
@@ -62,6 +62,6 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return NexusConfigYaml.class;
   }
 }

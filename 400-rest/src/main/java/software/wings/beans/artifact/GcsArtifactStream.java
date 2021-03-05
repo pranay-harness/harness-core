@@ -77,22 +77,4 @@ public class GcsArtifactStream extends ArtifactStream {
     }
     return validateParameters(jobname, projectId);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactStreamYaml {
-    private String bucketName;
-    private List<String> artifactPaths;
-    private String projectId;
-
-    @lombok.Builder
-    public Yaml(
-        String harnessApiVersion, String serverName, String bucketName, List<String> artifactPaths, String projectId) {
-      super(GCS.name(), harnessApiVersion, serverName);
-      this.bucketName = bucketName;
-      this.artifactPaths = artifactPaths;
-      this.projectId = projectId;
-    }
-  }
 }

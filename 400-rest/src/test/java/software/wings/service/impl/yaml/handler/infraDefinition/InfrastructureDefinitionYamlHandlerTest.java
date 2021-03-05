@@ -37,7 +37,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfraDefinitionTestConstants;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.infra.InfrastructureDefinition.Yaml;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsAmiInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfrastructureYamlHandler;
@@ -330,8 +330,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
 
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<Yaml> changeContext = getChangeContext(yamlString);
-    Yaml yaml = (Yaml) getYaml(yamlString, Yaml.class);
+    ChangeContext<InfrastructureDefinitionYaml> changeContext = getChangeContext(yamlString);
+    InfrastructureDefinitionYaml yaml =
+        (InfrastructureDefinitionYaml) getYaml(yamlString, InfrastructureDefinitionYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -378,14 +379,14 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
     reset(infrastructureDefinitionService);
   }
 
-  private ChangeContext<Yaml> getChangeContext(String validYamlContent) {
+  private ChangeContext<InfrastructureDefinitionYaml> getChangeContext(String validYamlContent) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<InfrastructureDefinitionYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.INFRA_DEFINITION);
     changeContext.setYamlSyncHandler(handler);

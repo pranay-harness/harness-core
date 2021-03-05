@@ -14,9 +14,9 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTag;
-import software.wings.beans.HarnessTag.Yaml;
 import software.wings.beans.HarnessTagAbstractYaml;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.HarnessTagYaml;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -194,7 +194,7 @@ public class HarnessTagYamlHelper {
     return harnessTagsYamlList;
   }
 
-  public void upsertHarnessTags(Yaml yaml, String accountId, boolean syncFromGit) {
+  public void upsertHarnessTags(HarnessTagYaml yaml, String accountId, boolean syncFromGit) {
     List<HarnessTag> currentTags = harnessTagService.listTags(accountId);
     Map<String, Set<String>> currentTagsMap = new HashMap<>();
     for (HarnessTag harnessTag : currentTags) {
@@ -257,7 +257,7 @@ public class HarnessTagYamlHelper {
     }
   }
 
-  public void deleteTags(Yaml yaml, String accountId, boolean syncFromGit) {
+  public void deleteTags(HarnessTagYaml yaml, String accountId, boolean syncFromGit) {
     List<HarnessTagAbstractYaml> tags = yaml.getTag();
 
     if (isNotEmpty(tags)) {

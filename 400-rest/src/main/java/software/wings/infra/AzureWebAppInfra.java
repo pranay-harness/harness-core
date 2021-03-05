@@ -103,25 +103,4 @@ public class AzureWebAppInfra implements InfraMappingInfrastructureProvider, Fie
       throw new InvalidRequestException(message);
     }
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_WEBAPP)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String subscriptionId;
-    private String resourceGroup;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String subscriptionId, String resourceGroup) {
-      super(type);
-      this.cloudProviderName = cloudProviderName;
-      this.subscriptionId = subscriptionId;
-      this.resourceGroup = resourceGroup;
-    }
-
-    public Yaml() {
-      super(AZURE_WEBAPP);
-    }
-  }
 }

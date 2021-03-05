@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.JiraConfig;
-import software.wings.beans.JiraConfig.Yaml;
+import software.wings.beans.JiraConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -21,11 +21,11 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class JiraConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, JiraConfig> {
+public class JiraConfigYamlHandler extends CollaborationProviderYamlHandler<JiraConfigYaml, JiraConfig> {
   @Override
-  protected SettingAttribute toBean(final SettingAttribute previous, final ChangeContext<Yaml> changeContext,
+  protected SettingAttribute toBean(final SettingAttribute previous, final ChangeContext<JiraConfigYaml> changeContext,
       final List<ChangeContext> changeSetContext) throws HarnessException {
-    final Yaml yaml = changeContext.getYaml();
+    final JiraConfigYaml yaml = changeContext.getYaml();
     final JiraConfig config = new JiraConfig();
     config.setBaseUrl(yaml.getBaseUrl());
     config.setUsername(yaml.getUsername());
@@ -39,21 +39,22 @@ public class JiraConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
   }
 
   @Override
-  public Yaml toYaml(final SettingAttribute settingAttribute, final String appId) {
+  public JiraConfigYaml toYaml(final SettingAttribute settingAttribute, final String appId) {
     final JiraConfig jiraConfig = (JiraConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(jiraConfig.getType())
-                    .baseUrl(jiraConfig.getBaseUrl())
-                    .username(jiraConfig.getUsername())
-                    .password(getEncryptedYamlRef(jiraConfig.getAccountId(), jiraConfig.getEncryptedPassword()))
-                    .build();
+    JiraConfigYaml yaml =
+        JiraConfigYaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(jiraConfig.getType())
+            .baseUrl(jiraConfig.getBaseUrl())
+            .username(jiraConfig.getUsername())
+            .password(getEncryptedYamlRef(jiraConfig.getAccountId(), jiraConfig.getEncryptedPassword()))
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   public Class getYamlClass() {
-    return JiraConfig.Yaml.class;
+    return JiraConfigYaml.class;
   }
 }

@@ -50,16 +50,4 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupParams setupParams, Map<String, String> serviceVariables,
       Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback);
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public Yaml(String name, String commandUnitType, String deploymentType) {
-      super(name, commandUnitType, deploymentType);
-    }
-  }
 }

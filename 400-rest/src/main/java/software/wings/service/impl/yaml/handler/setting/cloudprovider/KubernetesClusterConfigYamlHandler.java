@@ -5,12 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesClusterConfig.Yaml;
+import software.wings.beans.KubernetesClusterConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -26,15 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler<Yaml, KubernetesClusterConfig> {
+public class KubernetesClusterConfigYamlHandler
+    extends CloudProviderYamlHandler<KubernetesClusterConfigYaml, KubernetesClusterConfig> {
   @Inject CCMConfigYamlHandler ccmConfigYamlHandler;
   @Inject CCMSettingService ccmSettingService;
 
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public KubernetesClusterConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
-    KubernetesClusterConfig.Yaml yaml =
-        KubernetesClusterConfig.Yaml.builder().harnessApiVersion(getHarnessApiVersion()).build();
+    KubernetesClusterConfigYaml yaml =
+        KubernetesClusterConfigYaml.builder().harnessApiVersion(getHarnessApiVersion()).build();
     yaml.setUseKubernetesDelegate(kubernetesClusterConfig.isUseKubernetesDelegate());
     yaml.setDelegateName(kubernetesClusterConfig.getDelegateName());
 
@@ -121,7 +123,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
 
     if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
-      CCMConfig.Yaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
+      CCMConfigYaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
       yaml.setContinuousEfficiencyConfig(ccmConfigYaml);
     }
     toYaml(yaml, settingAttribute, appId);
@@ -130,15 +132,15 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
   @VisibleForTesting
   @Override
-  public SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public SettingAttribute toBean(SettingAttribute previous, ChangeContext<KubernetesClusterConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     Optional<SettingAttribute> optionalPrevious = Optional.ofNullable(previous);
     String uuid = null;
     if (optionalPrevious.isPresent()) {
       uuid = previous.getUuid();
     }
 
-    Yaml yaml = changeContext.getYaml();
+    KubernetesClusterConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     if (isNotEmpty(yaml.getUsername()) && isNotEmpty(yaml.getUsernameSecretId())) {
@@ -229,6 +231,6 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return KubernetesClusterConfigYaml.class;
   }
 }

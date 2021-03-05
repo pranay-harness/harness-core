@@ -1,7 +1,7 @@
 package software.wings.yaml.setting;
 
 import software.wings.security.UsageRestrictionYaml;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class LoadBalancerProviderYaml extends SettingValue.Yaml {
+public abstract class LoadBalancerProviderYaml extends SettingValueYaml {
   public LoadBalancerProviderYaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }

@@ -65,16 +65,4 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   public List<String> fetchRelevantEncryptedSecrets() {
     return SettingServiceHelper.getAllEncryptedSecrets(this);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private UsageRestrictionYaml usageRestrictions;
-
-    public Yaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion);
-      this.usageRestrictions = usageRestrictions;
-    }
-  }
 }

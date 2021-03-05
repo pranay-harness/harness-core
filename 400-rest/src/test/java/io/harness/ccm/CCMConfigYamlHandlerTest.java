@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.rule.Owner;
 
@@ -20,21 +21,21 @@ import org.junit.experimental.categories.Category;
 public class CCMConfigYamlHandlerTest extends CategoryTest {
   private boolean isCloudCostEnabled = true;
   private CCMConfig ccmConfig;
-  private CCMConfig.Yaml ccmConfigYaml;
+  private CCMConfigYaml ccmConfigYaml;
 
   CCMConfigYamlHandler ccmConfigYamlHandler = new CCMConfigYamlHandler();
 
   @Before
   public void setUp() {
     ccmConfig = CCMConfig.builder().cloudCostEnabled(isCloudCostEnabled).build();
-    ccmConfigYaml = CCMConfig.Yaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
+    ccmConfigYaml = CCMConfigYaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testToYaml() {
-    CCMConfig.Yaml yaml = ccmConfigYamlHandler.toYaml(ccmConfig, "");
+    CCMConfigYaml yaml = ccmConfigYamlHandler.toYaml(ccmConfig, "");
     assertThat(yaml).isEqualTo(ccmConfigYaml);
   }
 
@@ -42,8 +43,7 @@ public class CCMConfigYamlHandlerTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testUpsertFromYaml() {
-    ChangeContext<CCMConfig.Yaml> changeContext =
-        ChangeContext.Builder.aChangeContext().withYaml(ccmConfigYaml).build();
+    ChangeContext<CCMConfigYaml> changeContext = ChangeContext.Builder.aChangeContext().withYaml(ccmConfigYaml).build();
     CCMConfig upsertedCcmConfig = ccmConfigYamlHandler.upsertFromYaml(changeContext, EMPTY_LIST);
     assertThat(upsertedCcmConfig).isEqualTo(ccmConfig);
   }

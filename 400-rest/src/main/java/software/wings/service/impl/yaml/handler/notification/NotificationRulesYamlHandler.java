@@ -18,7 +18,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
-import software.wings.beans.NotificationRule.Yaml;
+import software.wings.beans.NotificationRuleYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.NotificationSetupService;
@@ -33,11 +33,12 @@ import java.util.List;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRule.Yaml, NotificationRule> {
+public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRuleYaml, NotificationRule> {
   @Inject NotificationSetupService notificationSetupService;
 
-  private NotificationRule toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeContextList) {
-    Yaml yaml = changeContext.getYaml();
+  private NotificationRule toBean(
+      ChangeContext<NotificationRuleYaml> changeContext, List<ChangeContext> changeContextList) {
+    NotificationRuleYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
 
@@ -84,7 +85,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   }
 
   @Override
-  public Yaml toYaml(NotificationRule notificationRule, String appId) {
+  public NotificationRuleYaml toYaml(NotificationRule notificationRule, String appId) {
     List<String> conditionList = notificationRule.getConditions().stream().map(Enum::name).collect(toList());
 
     List<String> notificationGroupList =
@@ -102,7 +103,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
             })
             .collect(toList());
 
-    return Yaml.builder()
+    return NotificationRuleYaml.builder()
         .conditions(conditionList)
         .executionScope(Utils.getStringFromEnum(notificationRule.getExecutionScope()))
         .notificationGroups(notificationGroupList)
@@ -114,14 +115,14 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   }
 
   @Override
-  public NotificationRule upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public NotificationRule upsertFromYaml(
+      ChangeContext<NotificationRuleYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext, changeSetContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return NotificationRule.Yaml.class;
+    return NotificationRuleYaml.class;
   }
 
   @Override
@@ -130,7 +131,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<NotificationRuleYaml> changeContext) {
     // Do nothing
   }
 }

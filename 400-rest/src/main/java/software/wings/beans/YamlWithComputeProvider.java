@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class YamlWithComputeProvider extends InfrastructureMapping.Yaml {
+public abstract class YamlWithComputeProvider extends InfrastructureMappingYaml {
   private String computeProviderType;
   private String computeProviderName;
 

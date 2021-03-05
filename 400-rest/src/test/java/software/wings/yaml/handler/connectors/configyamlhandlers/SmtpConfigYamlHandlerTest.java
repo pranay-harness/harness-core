@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.helpers.ext.mail.SmtpConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -37,7 +38,7 @@ public class SmtpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "harnessApiVersion: '1.0'\n"
       + "type: SMTP";
 
-  private Class yamlClass = SmtpConfig.Yaml.class;
+  private Class yamlClass = SmtpConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

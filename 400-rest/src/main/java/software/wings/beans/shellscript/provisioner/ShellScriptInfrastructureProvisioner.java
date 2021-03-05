@@ -42,20 +42,4 @@ public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisio
         uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.scriptBody = scriptBody;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfraProvisionerYaml {
-    private String scriptBody;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
-        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
-        String scriptBody) {
-      super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
-      this.scriptBody = scriptBody;
-    }
-  }
 }

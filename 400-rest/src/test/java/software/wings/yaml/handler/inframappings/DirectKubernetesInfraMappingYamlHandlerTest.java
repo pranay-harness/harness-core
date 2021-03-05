@@ -23,6 +23,7 @@ import io.harness.yaml.BaseYaml;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMappingYaml;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -137,11 +138,11 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTest
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<DirectKubernetesInfrastructureMappingYaml> changeContext =
         getChangeContext(validYamlContentWithKubernetesClusterCloudProvider, validYamlFilePath, yamlHandler);
 
-    DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class);
+    DirectKubernetesInfrastructureMappingYaml yamlObject = (DirectKubernetesInfrastructureMappingYaml) getYaml(
+        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     DirectKubernetesInfrastructureMapping infraMapping =
@@ -149,7 +150,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTest
     assertThat(infraMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(infraMapping.getName());
 
-    DirectKubernetesInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(infraMapping, APP_ID);
+    DirectKubernetesInfrastructureMappingYaml yaml = yamlHandler.toYaml(infraMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo("DIRECT_KUBERNETES");
 
@@ -172,15 +173,15 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTest
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<DirectKubernetesInfrastructureMappingYaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class);
+    DirectKubernetesInfrastructureMappingYaml yamlObject = (DirectKubernetesInfrastructureMappingYaml) getYaml(
+        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
-    yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        invalidYamlContent, DirectKubernetesInfrastructureMapping.Yaml.class);
+    yamlObject = (DirectKubernetesInfrastructureMappingYaml) getYaml(
+        invalidYamlContent, DirectKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(Exception.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

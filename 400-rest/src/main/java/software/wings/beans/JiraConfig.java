@@ -81,24 +81,6 @@ public class JiraConfig extends SettingValue implements EncryptableSetting, Exec
     return COLLABORATION_PROVIDER.name();
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CollaborationProviderYaml {
-    private String baseUrl;
-    private String username;
-    private String password = ENCRYPTED_VALUE_STR;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.baseUrl = baseUrl;
-      this.username = username;
-      this.password = password;
-    }
-  }
-
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(

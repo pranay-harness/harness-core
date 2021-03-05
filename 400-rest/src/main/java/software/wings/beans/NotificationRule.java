@@ -341,31 +341,4 @@ public class NotificationRule {
       return notificationRule;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    private List<String> conditions = new ArrayList<>();
-    private String executionScope;
-    private List<String> notificationGroups = new ArrayList<>();
-    private boolean notificationGroupAsExpression;
-    private boolean userGroupAsExpression;
-    private String userGroupExpression;
-
-    private List<String> userGroupIds = new ArrayList<>();
-
-    @Builder
-    public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups,
-        boolean notificationGroupAsExpression, boolean userGroupAsExpression, List<String> userGroupIds,
-        String userGroupExpression) {
-      this.conditions = conditions;
-      this.executionScope = executionScope;
-      this.notificationGroups = notificationGroups;
-      this.notificationGroupAsExpression = notificationGroupAsExpression;
-      this.userGroupAsExpression = userGroupAsExpression;
-      this.userGroupIds = userGroupIds;
-      this.userGroupExpression = userGroupExpression;
-    }
-  }
 }

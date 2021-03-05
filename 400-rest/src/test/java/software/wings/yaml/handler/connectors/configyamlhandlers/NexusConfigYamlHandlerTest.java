@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.config.NexusConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -35,7 +36,7 @@ public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
       + "version: 3.x\n"
       + "type: NEXUS";
 
-  private Class yamlClass = NexusConfig.Yaml.class;
+  private Class yamlClass = NexusConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

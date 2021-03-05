@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import software.wings.security.UsageRestrictionYaml;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class WinRmConnectionAttributesYaml extends SettingValue.Yaml {
+public final class WinRmConnectionAttributesYaml extends SettingValueYaml {
   private WinRmConnectionAttributes.AuthenticationScheme authenticationScheme;
   private String domain;
   private String userName;

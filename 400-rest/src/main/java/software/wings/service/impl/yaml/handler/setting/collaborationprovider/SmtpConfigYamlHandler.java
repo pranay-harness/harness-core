@@ -8,7 +8,7 @@ import io.harness.exception.HarnessException;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.helpers.ext.mail.SmtpConfig.Yaml;
+import software.wings.helpers.ext.mail.SmtpConfigYaml;
 
 import com.google.inject.Singleton;
 import java.util.List;
@@ -18,32 +18,32 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml, SmtpConfig> {
+public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<SmtpConfigYaml, SmtpConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public SmtpConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     SmtpConfig smtpConfig = (SmtpConfig) settingAttribute.getValue();
 
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(smtpConfig.getType())
-                    .host(smtpConfig.getHost())
-                    .port(smtpConfig.getPort())
-                    .fromAddress(smtpConfig.getFromAddress())
-                    .useSSL(smtpConfig.isUseSSL())
-                    .username(smtpConfig.getUsername())
-                    .password(smtpConfig.getEncryptedPassword() != null
-                            ? getEncryptedYamlRef(smtpConfig.getAccountId(), smtpConfig.getEncryptedPassword())
-                            : null)
-                    .build();
+    SmtpConfigYaml yaml = SmtpConfigYaml.builder()
+                              .harnessApiVersion(getHarnessApiVersion())
+                              .type(smtpConfig.getType())
+                              .host(smtpConfig.getHost())
+                              .port(smtpConfig.getPort())
+                              .fromAddress(smtpConfig.getFromAddress())
+                              .useSSL(smtpConfig.isUseSSL())
+                              .username(smtpConfig.getUsername())
+                              .password(smtpConfig.getEncryptedPassword() != null ? getEncryptedYamlRef(
+                                            smtpConfig.getAccountId(), smtpConfig.getEncryptedPassword())
+                                                                                  : null)
+                              .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<SmtpConfigYaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    SmtpConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     SmtpConfig config = SmtpConfig.builder()
@@ -60,6 +60,6 @@ public class SmtpConfigYamlHandler extends CollaborationProviderYamlHandler<Yaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return SmtpConfigYaml.class;
   }
 }

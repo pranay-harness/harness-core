@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.beans.FailureStrategy;
-import software.wings.beans.NotificationRule;
+import software.wings.beans.FailureStrategyYaml;
+import software.wings.beans.NotificationRuleYaml;
 import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.VariableYaml;
 import software.wings.beans.WorkflowPhaseYaml;
@@ -49,13 +49,13 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
   private List<WorkflowPhaseYaml> phases = new ArrayList<>();
   private List<WorkflowPhaseYaml> rollbackPhases = new ArrayList<>();
   private List<StepYaml> postDeploymentSteps = new ArrayList<>();
-  private List<NotificationRule.Yaml> notificationRules = new ArrayList<>();
-  private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
+  private List<NotificationRuleYaml> notificationRules = new ArrayList<>();
+  private List<FailureStrategyYaml> failureStrategies = new ArrayList<>();
   private List<VariableYaml> userVariables = new ArrayList<>();
   private String concurrencyStrategy;
 
-  private List<FailureStrategy.Yaml> preDeploymentFailureStrategy = new ArrayList<>();
-  private List<FailureStrategy.Yaml> postDeploymentFailureStrategy = new ArrayList<>();
+  private List<FailureStrategyYaml> preDeploymentFailureStrategy = new ArrayList<>();
+  private List<FailureStrategyYaml> postDeploymentFailureStrategy = new ArrayList<>();
 
   private List<StepSkipStrategyYaml> preDeploymentStepSkipStrategy = new ArrayList<>();
   private List<StepSkipStrategyYaml> postDeploymentStepSkipStrategy = new ArrayList<>();
@@ -63,9 +63,9 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
   public WorkflowYaml(String type, String harnessApiVersion, String description,
       List<TemplateExpressionYaml> templateExpressions, String envName, boolean templatized,
       List<StepYaml> preDeploymentSteps, List<WorkflowPhaseYaml> phases, List<WorkflowPhaseYaml> rollbackPhases,
-      List<StepYaml> postDeploymentSteps, List<NotificationRule.Yaml> notificationRules,
-      List<FailureStrategy.Yaml> failureStrategies, List<VariableYaml> userVariables, String concurrencyStrategy,
-      List<FailureStrategy.Yaml> preDeploymentFailureStrategy, List<FailureStrategy.Yaml> postDeploymentFailureStrategy,
+      List<StepYaml> postDeploymentSteps, List<NotificationRuleYaml> notificationRules,
+      List<FailureStrategyYaml> failureStrategies, List<VariableYaml> userVariables, String concurrencyStrategy,
+      List<FailureStrategyYaml> preDeploymentFailureStrategy, List<FailureStrategyYaml> postDeploymentFailureStrategy,
       List<StepSkipStrategyYaml> preDeploymentStepSkipStrategy,
       List<StepSkipStrategyYaml> postDeploymentStepSkipStrategy) {
     super(type, harnessApiVersion);

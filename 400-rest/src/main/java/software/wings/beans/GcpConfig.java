@@ -77,24 +77,4 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   public String fetchResourceCategory() {
     return ResourceType.CLOUD_PROVIDER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String serviceAccountKeyFileContent;
-    private boolean useDelegate;
-    private String delegateSelector;
-    private boolean skipValidation;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictionYaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean skipValidation) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
-      this.delegateSelector = delegateSelector;
-      this.useDelegate = useDelegate;
-      this.skipValidation = skipValidation;
-    }
-  }
 }

@@ -150,9 +150,4 @@ public class EntityVersionCollection extends EntityVersion {
       return entityVersionCollection;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {}
 }

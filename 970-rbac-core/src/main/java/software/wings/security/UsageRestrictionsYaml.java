@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class UsageRestrictionsYaml extends BaseYaml {
-  private GenericEntityFilter.Yaml appFilter;
-  private EnvFilter.Yaml envFilter;
+  private GenericEntityFilterYaml appFilter;
+  private EnvFilterYaml envFilter;
 
   @Builder
-  public UsageRestrictionsYaml(GenericEntityFilter.Yaml appFilter, EnvFilter.Yaml envFilter) {
+  public UsageRestrictionsYaml(GenericEntityFilterYaml appFilter, EnvFilterYaml envFilter) {
     this.appFilter = appFilter;
     this.envFilter = envFilter;
   }

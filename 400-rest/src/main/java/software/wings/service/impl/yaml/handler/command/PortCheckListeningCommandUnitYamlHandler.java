@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.PortCheckListeningCommandUnit;
-import software.wings.beans.command.PortCheckListeningCommandUnit.Yaml;
+import software.wings.beans.command.PortCheckListeningCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class PortCheckListeningCommandUnitYamlHandler
-    extends AbstractExecCommandUnitYamlHandler<Yaml, PortCheckListeningCommandUnit> {
+    extends AbstractExecCommandUnitYamlHandler<PortCheckListeningCommandUnitYaml, PortCheckListeningCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PortCheckListeningCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(PortCheckListeningCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public PortCheckListeningCommandUnitYaml toYaml(PortCheckListeningCommandUnit bean, String appId) {
+    PortCheckListeningCommandUnitYaml yaml = PortCheckListeningCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

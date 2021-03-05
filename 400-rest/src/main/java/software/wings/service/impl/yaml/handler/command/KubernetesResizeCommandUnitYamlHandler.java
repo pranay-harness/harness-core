@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.KubernetesResizeCommandUnit;
-import software.wings.beans.command.KubernetesResizeCommandUnit.Yaml;
+import software.wings.beans.command.KubernetesResizeCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class KubernetesResizeCommandUnitYamlHandler
-    extends ContainerResizeCommandUnitYamlHandler<Yaml, KubernetesResizeCommandUnit> {
+    extends ContainerResizeCommandUnitYamlHandler<KubernetesResizeCommandUnitYaml, KubernetesResizeCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return KubernetesResizeCommandUnit.Yaml.class;
+    return KubernetesResizeCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(KubernetesResizeCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public KubernetesResizeCommandUnitYaml toYaml(KubernetesResizeCommandUnit bean, String appId) {
+    KubernetesResizeCommandUnitYaml yaml = KubernetesResizeCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

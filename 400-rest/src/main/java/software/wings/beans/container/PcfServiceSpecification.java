@@ -62,19 +62,4 @@ public class PcfServiceSpecification extends DeploymentSpecification implements 
     specification.setAccountId(this.getAccountId());
     return specification;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
-    private String maniefstYaml;
-    private String serviceName;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceName, String manifestYaml) {
-      super(type, harnessApiVersion);
-      this.maniefstYaml = manifestYaml;
-      this.serviceName = serviceName;
-    }
-  }
 }

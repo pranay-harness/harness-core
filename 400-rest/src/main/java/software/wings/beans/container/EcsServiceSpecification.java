@@ -47,20 +47,4 @@ public class EcsServiceSpecification extends DeploymentSpecification {
     specification.setAppId(this.getAppId());
     return specification;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
-    private String serviceSpecJson;
-    private String schedulingStrategy = ECS_REPLICA_SCHEDULING_STRATEGY;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceName, String manifestYaml, String serviceSpecJson,
-        String schedulingStrategy) {
-      super(type, harnessApiVersion);
-      this.schedulingStrategy = schedulingStrategy;
-      this.serviceSpecJson = serviceSpecJson;
-    }
-  }
 }

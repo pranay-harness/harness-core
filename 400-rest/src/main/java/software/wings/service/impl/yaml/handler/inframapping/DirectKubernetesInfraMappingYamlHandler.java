@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping.Yaml;
+import software.wings.beans.DirectKubernetesInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -16,10 +16,11 @@ import java.util.List;
  */
 @Singleton
 public class DirectKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, DirectKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<DirectKubernetesInfrastructureMappingYaml,
+        DirectKubernetesInfrastructureMapping> {
   @Override
-  public Yaml toYaml(DirectKubernetesInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public DirectKubernetesInfrastructureMappingYaml toYaml(DirectKubernetesInfrastructureMapping bean, String appId) {
+    DirectKubernetesInfrastructureMappingYaml yaml = DirectKubernetesInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.DIRECT_KUBERNETES.name());
     yaml.setNamespace(bean.getNamespace());
@@ -29,8 +30,8 @@ public class DirectKubernetesInfraMappingYamlHandler
 
   @Override
   public DirectKubernetesInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<DirectKubernetesInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    DirectKubernetesInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
@@ -52,9 +53,10 @@ public class DirectKubernetesInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+  private void toBean(DirectKubernetesInfrastructureMapping bean,
+      ChangeContext<DirectKubernetesInfrastructureMappingYaml> changeContext, String appId, String envId,
+      String computeProviderId, String serviceId) {
+    DirectKubernetesInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, serviceId, null);
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
@@ -73,6 +75,6 @@ public class DirectKubernetesInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DirectKubernetesInfrastructureMappingYaml.class;
   }
 }

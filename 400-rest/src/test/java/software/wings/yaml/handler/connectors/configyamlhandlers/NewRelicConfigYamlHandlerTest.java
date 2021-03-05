@@ -14,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.NewRelicConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
@@ -33,7 +34,7 @@ public class NewRelicConfigYamlHandlerTest extends SettingValueConfigYamlHandler
       + "harnessApiVersion: '1.0'\n"
       + "type: NEW_RELIC";
 
-  private Class yamlClass = NewRelicConfig.Yaml.class;
+  private Class yamlClass = NewRelicConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

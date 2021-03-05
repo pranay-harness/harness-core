@@ -68,20 +68,4 @@ public class LogzConfig extends SettingValue implements EncryptableSetting, Exec
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String logzUrl;
-    private String token;
-
-    @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.logzUrl = logzUrl;
-      this.token = token;
-    }
-  }
 }

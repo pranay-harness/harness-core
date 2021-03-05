@@ -131,20 +131,4 @@ public class GovernanceConfig
   public String getAppId() {
     return GLOBAL_APP_ID;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class Yaml extends BaseEntityYaml {
-    private boolean disableAllDeployments;
-    private List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, boolean disableAllDeployments,
-        List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs) {
-      super(type, harnessApiVersion);
-      this.disableAllDeployments = disableAllDeployments;
-      this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;
-    }
-  }
 }

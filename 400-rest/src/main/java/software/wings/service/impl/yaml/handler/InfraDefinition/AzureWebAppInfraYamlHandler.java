@@ -6,23 +6,24 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AzureWebAppInfra;
-import software.wings.infra.AzureWebAppInfra.Yaml;
+import software.wings.infra.AzureWebAppInfraYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import java.util.List;
 
-public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, AzureWebAppInfra> {
+public class AzureWebAppInfraYamlHandler
+    extends CloudProviderInfrastructureYamlHandler<AzureWebAppInfraYaml, AzureWebAppInfra> {
   @Inject private SettingsService settingsService;
 
   @Override
-  public Yaml toYaml(AzureWebAppInfra bean, String appId) {
+  public AzureWebAppInfraYaml toYaml(AzureWebAppInfra bean, String appId) {
     String cloudProviderId = bean.getCloudProviderId();
     SettingAttribute cloudProvider = settingsService.get(cloudProviderId);
     notNullCheck(String.format("Cloud provider with id = [%s], does not exist", cloudProviderId), cloudProvider);
 
-    return Yaml.builder()
+    return AzureWebAppInfraYaml.builder()
         .type(InfrastructureType.AZURE_WEBAPP)
         .cloudProviderName(cloudProvider.getName())
         .subscriptionId(bean.getSubscriptionId())
@@ -31,9 +32,10 @@ public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYaml
   }
 
   @Override
-  public AzureWebAppInfra upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public AzureWebAppInfra upsertFromYaml(
+      ChangeContext<AzureWebAppInfraYaml> changeContext, List<ChangeContext> changeSetContext) {
     AzureWebAppInfra bean = AzureWebAppInfra.builder().build();
-    Yaml yaml = changeContext.getYaml();
+    AzureWebAppInfraYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(String.format("Cloud provider with id = [%s], does not exist", cloudProvider), cloudProvider);
@@ -46,6 +48,6 @@ public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureWebAppInfraYaml.class;
   }
 }

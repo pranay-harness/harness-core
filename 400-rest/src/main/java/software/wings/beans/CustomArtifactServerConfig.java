@@ -46,14 +46,4 @@ public class CustomArtifactServerConfig extends SettingValue {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return null;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    @Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictionYaml usageRestrictions) {
-      super(type, harnessApiVersion, null, null, null, usageRestrictions);
-    }
-  }
 }

@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.DockerConfig;
+import software.wings.beans.DockerConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
@@ -35,7 +36,7 @@ public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlH
       + "harnessApiVersion: '1.0'\n"
       + "type: DOCKER";
 
-  private Class yamlClass = DockerConfig.Yaml.class;
+  private Class yamlClass = DockerConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)
