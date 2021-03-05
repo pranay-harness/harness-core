@@ -1,5 +1,6 @@
 package io.harness.outbox;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull String eventType;
-  @NotNull String eventData;
+  @NotNull JsonNode eventData;
 
   @CreatedDate Long createdAt;
 }
