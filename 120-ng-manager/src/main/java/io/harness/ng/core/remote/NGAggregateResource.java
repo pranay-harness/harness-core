@@ -115,10 +115,12 @@ public class NGAggregateResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
-          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
+
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
+    OrganizationFilterDTO organizationFilterDTO =
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).ignoreCase(true).build();
     return ResponseDTO.newResponse(getNGPageResponse(aggregateOrganizationService.listOrganizationAggregateDTO(
         accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)));
   }
