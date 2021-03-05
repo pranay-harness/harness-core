@@ -335,6 +335,7 @@ import software.wings.beans.artifact.SftpArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CEGcpConfig;
@@ -1250,6 +1251,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.CanaryWorkflowExecutionAdvisor", CanaryWorkflowExecutionAdvisor.class);
     w.put("beans.ce.CEAwsConfig", CEAwsConfig.class);
     w.put("beans.ce.CEGcpConfig", CEGcpConfig.class);
+    w.put("beans.ce.CEAzureConfig", CEAzureConfig.class);
     w.put("beans.command.AmiCommandUnit", AmiCommandUnit.class);
     w.put("beans.command.AwsLambdaCommandUnit", AwsLambdaCommandUnit.class);
     w.put("beans.command.CleanupPowerShellCommandUnit", CleanupPowerShellCommandUnit.class);
