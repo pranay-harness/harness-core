@@ -6,6 +6,7 @@ import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_E
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.rule.Owner;
@@ -17,7 +18,6 @@ import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
 import io.harness.yaml.core.timeout.Timeout;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class AnyOtherFailureStrategyTest extends GenericStepPMSPlanCreator {
+public class AnyOtherFailureStrategyTest extends CategoryTest {
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
@@ -89,10 +89,5 @@ public class AnyOtherFailureStrategyTest extends GenericStepPMSPlanCreator {
       }
     }.containsOnlyAnyOtherError(stageFailureStrategies3);
     assertThat(ans).isEqualTo(false);
-  }
-
-  @Override
-  public Set<String> getSupportedStepTypes() {
-    return null;
   }
 }
