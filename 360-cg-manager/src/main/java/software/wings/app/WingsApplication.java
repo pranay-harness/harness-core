@@ -377,6 +377,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void run(final MainConfiguration configuration, Environment environment) throws Exception {
     log.info("Starting app ...");
+    log.info("Starting app new...");
     log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
