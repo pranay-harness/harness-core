@@ -56,6 +56,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.timeout.TimeoutUtils;
@@ -112,6 +113,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
         throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
       }
+
+      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
+      // type is involved
+      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
+        throw new InvalidRequestException(
+            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+      }
+
       String timeout = DEFAULT_TIMEOUT;
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
@@ -152,6 +161,19 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                     .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
+  }
+
+  public boolean containsOnlyAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAnyOther = false;
+    for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
+      if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
+          && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
+                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
+              == true) {
+        containsOnlyAnyOther = true;
+      }
+    }
+    return containsOnlyAnyOther;
   }
 
   protected String getName(StepElementConfig stepElement) {
