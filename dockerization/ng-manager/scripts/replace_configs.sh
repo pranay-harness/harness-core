@@ -178,6 +178,14 @@ if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
 fi
 
+if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY

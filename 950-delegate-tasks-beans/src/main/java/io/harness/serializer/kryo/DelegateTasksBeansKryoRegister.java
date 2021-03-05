@@ -91,6 +91,9 @@ import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskRespon
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
 import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskParams;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse;
+import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
@@ -581,6 +584,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitTaskParams.class, 19546);
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
     kryo.register(HelmChartManifestDelegateConfig.class, 19548);
+    kryo.register(HttpHelmValidationParams.class, 19549);
+
+    kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
+    kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

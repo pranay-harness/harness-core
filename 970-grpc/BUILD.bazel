@@ -1,6 +1,5 @@
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 

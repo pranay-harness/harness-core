@@ -24,6 +24,7 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -43,8 +44,6 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.TimeoutUtils;
-
-import software.wings.beans.LogHelper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -268,6 +267,6 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
   private String getLogPrefix(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = StepUtils.generateStageLogAbstractions(ambiance);
-    return LogHelper.generateLogBaseKey(logAbstractions);
+    return LogStreamingHelper.generateLogBaseKey(logAbstractions);
   }
 }
