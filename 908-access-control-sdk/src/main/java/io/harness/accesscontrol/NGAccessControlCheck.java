@@ -8,10 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface NGAccessControlCheck {
-  String account() default "";
-  String org() default "";
-  String project() default "";
   String resourceType();
-  String resourceIdentifier() default "";
-  String permissionIdentifier();
+  String permission();
 }

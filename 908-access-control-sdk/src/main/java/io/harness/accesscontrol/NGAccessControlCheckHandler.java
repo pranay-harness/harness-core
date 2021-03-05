@@ -2,6 +2,7 @@ package io.harness.accesscontrol;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.BaseNGAccess;
@@ -50,9 +51,14 @@ public class NGAccessControlCheckHandler implements MethodInterceptor {
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {
     NGAccessControlCheck ngAccessControlCheck = methodInvocation.getMethod().getAnnotation(NGAccessControlCheck.class);
     NGAccess ngAccess = getScopeIdentifiers(methodInvocation);
-    accessControlClient.checkAccessOrThrow(ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(),
-        ngAccess.getProjectIdentifier(), ngAccessControlCheck.resourceType(), ngAccess.getIdentifier(),
-        ngAccessControlCheck.permissionIdentifier());
+    accessControlClient.checkForAccessOrThrow(PermissionCheckDTO.builder()
+                                                  .accountIdentifier(ngAccess.getAccountIdentifier())
+                                                  .orgIdentifier(ngAccess.getOrgIdentifier())
+                                                  .projectIdentifier(ngAccess.getProjectIdentifier())
+                                                  .resourceType(ngAccessControlCheck.resourceType())
+                                                  .resourceIdentifier(ngAccess.getIdentifier())
+                                                  .permission(ngAccessControlCheck.permission())
+                                                  .build());
     return methodInvocation.proceed();
   }
 }

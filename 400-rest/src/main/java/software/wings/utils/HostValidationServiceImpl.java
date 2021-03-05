@@ -18,7 +18,9 @@ import io.harness.shell.SshSessionFactory;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
@@ -26,6 +28,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -45,13 +48,20 @@ import org.apache.commons.lang3.StringUtils;
 public class HostValidationServiceImpl implements HostValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
-      List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
+      List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential,
+      SSHVaultConfig sshVaultConfig) {
     List<HostValidationResponse> hostValidationResponses = new ArrayList<>();
 
     encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails, false);
+    if (connectionSetting.getValue() instanceof HostConnectionAttributes
+        && ((HostConnectionAttributes) connectionSetting.getValue()).isVaultSSH()) {
+      secretManagementDelegateService.signPublicKey(
+          (HostConnectionAttributes) connectionSetting.getValue(), sshVaultConfig);
+    }
     try {
       timeLimiter.callWithTimeout(() -> {
         hostNames.forEach(hostName -> {

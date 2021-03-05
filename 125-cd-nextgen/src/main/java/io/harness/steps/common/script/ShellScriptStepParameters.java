@@ -6,10 +6,8 @@ import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -33,13 +31,14 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;
+  Map<String, Object> environmentVariables;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
-      List<NGVariable> environmentVariables, ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate,
-      String name, String identifier, String type, String description, ParameterField<String> skipCondition,
-      ParameterField<String> timeout, RollbackInfo rollbackInfo, Map<String, Object> outputVariables) {
-    super(shellType, source, environmentVariables, executionTarget, onDelegate);
+      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, String name, String identifier, String type,
+      String description, ParameterField<String> skipCondition, ParameterField<String> timeout,
+      RollbackInfo rollbackInfo, Map<String, Object> outputVariables, Map<String, Object> environmentVariables) {
+    super(shellType, source, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
     this.type = type;
@@ -48,17 +47,17 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
     this.timeout = timeout;
     this.rollbackInfo = rollbackInfo;
     this.outputVariables = outputVariables;
+    this.environmentVariables = environmentVariables;
     this.type = StepSpecTypeConstants.SHELL_SCRIPT;
   }
 
   @Override
   public String toViewJson() {
     return RecastOrchestrationUtils.toDocumentJson(ShellScriptStepParameters.infoBuilder()
-                                                       .environmentVariables(getEnvironmentVariables())
+                                                       .environmentVariables(environmentVariables)
                                                        .executionTarget(getExecutionTarget())
                                                        .onDelegate(getOnDelegate())
                                                        .outputVariables(outputVariables)
-                                                       .environmentVariables(getEnvironmentVariables())
                                                        .shellType(getShell())
                                                        .source(getSource())
                                                        .timeout(getTimeout())

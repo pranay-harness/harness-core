@@ -37,7 +37,7 @@ public class ACLTestResource {
   @GET
   @Path("/acl-test")
   @ApiOperation(value = "Test ACL", nickname = "testACL")
-  @NGAccessControlCheck(resourceType = "SECRET_MANAGER", permissionIdentifier = "core.secretManager.create")
+  @NGAccessControlCheck(resourceType = "SECRET_MANAGER", permission = "core.secretManager.create")
   public ResponseDTO<String> get(@QueryParam("account") @AccountIdentifier String account,
       @QueryParam("org") @OrgIdentifier String org, @QueryParam("project") @ProjectIdentifier String project,
       @QueryParam("resourceIdentifier") @ResourceIdentifier String resourceIdentifier) {

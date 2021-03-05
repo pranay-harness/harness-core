@@ -95,6 +95,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
@@ -108,6 +109,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
@@ -154,6 +156,7 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -245,7 +248,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private SweepingOutputService sweepingOutputService;
-
+  @Inject private SSHVaultService sshVaultService;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
   @Override
@@ -2005,9 +2008,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                           .envId(validationRequest.getEnvId())
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
+    SSHVaultConfig sshVaultConfig = null;
+    if (hostConnectionSetting.getValue() instanceof HostConnectionAttributes
+        && ((HostConnectionAttributes) hostConnectionSetting.getValue()).isVaultSSH()) {
+      sshVaultConfig = sshVaultService.getSSHVaultConfig(hostConnectionSetting.getAccountId(),
+          ((HostConnectionAttributes) hostConnectionSetting.getValue()).getSshVaultConfigId());
+      ((HostConnectionAttributes) hostConnectionSetting.getValue()).setSshVaultConfig(sshVaultConfig);
+    }
     return delegateProxyFactory.get(HostValidationService.class, syncTaskContext)
         .validateHost(validationRequest.getHostNames(), hostConnectionSetting, encryptionDetails,
-            validationRequest.getExecutionCredential());
+            validationRequest.getExecutionCredential(), sshVaultConfig);
   }
 
   @Override

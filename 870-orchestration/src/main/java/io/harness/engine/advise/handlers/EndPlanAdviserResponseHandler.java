@@ -25,7 +25,6 @@ public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
     if (endPlanAdvise != null && endPlanAdvise.getIsAbort()) {
       InterruptPackage interruptPackage = InterruptPackage.builder()
                                               .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
-                                              .nodeExecutionId(nodeExecution.getUuid())
                                               .interruptType(InterruptType.ABORT_ALL)
                                               .build();
       interruptManager.register(interruptPackage);

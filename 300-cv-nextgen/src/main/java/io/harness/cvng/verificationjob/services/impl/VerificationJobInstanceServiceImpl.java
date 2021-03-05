@@ -605,8 +605,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
             / verificationJobInstances.size();
     long timeRemainingMs =
         verificationJobInstances.stream()
-            .mapToLong(
-                verificationJobInstance -> verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
+            .mapToLong(verificationJobInstance -> verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
             .max()
             .getAsLong();
 
@@ -732,7 +731,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                        .status(getDeploymentVerificationStatus(verificationJobInstance))
                        .jobName(verificationJobInstance.getResolvedJob().getJobName())
                        .progressPercentage(verificationJobInstance.getProgressPercentage())
-                       .remainingTimeMs(verificationJobInstance.getTimeRemainingMs(clock.instant()).toMillis())
+                       .remainingTimeMs(verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
                        .startTime(verificationJobInstance.getStartTime().toEpochMilli())
                        .risk(getLatestRisk(verificationJobInstance).orElse(null))
                        .build())

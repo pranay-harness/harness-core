@@ -1,6 +1,7 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
@@ -43,6 +44,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private GitFileConfig gitFileConfig;
   private HelmChartConfig helmChartConfig;
   private KustomizeConfig kustomizeConfig;
+  private CustomSourceConfig customSourceConfig;
   @Nullable private HelmCommandFlagConfig helmCommandFlag;
 
   private Boolean pollForChanges;
@@ -63,6 +65,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .kind(this.kind)
                                        .helmChartConfig(helmChartConfig)
                                        .kustomizeConfig(KustomizeConfig.cloneFrom(this.kustomizeConfig))
+                                       .customSourceConfig(CustomSourceConfig.cloneFrom(this.customSourceConfig))
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .build();
@@ -80,19 +83,21 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private GitFileConfig gitFileConfig;
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
+    private CustomSourceConfig customSourceConfig;
     private Boolean pollForChanges;
     private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlagConfig helmCommandFlag;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges,
-        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
+        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
+        Boolean pollForChanges, HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
+      this.customSourceConfig = customSourceConfig;
       this.pollForChanges = pollForChanges;
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;

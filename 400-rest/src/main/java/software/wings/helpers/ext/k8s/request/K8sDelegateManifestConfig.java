@@ -5,6 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
@@ -35,5 +36,10 @@ public class K8sDelegateManifestConfig implements NestedAnnotationResolver {
   // Applies only to Kustomize
   private KustomizeConfig kustomizeConfig;
 
+  // Applies only to Custom/CustomOpenshiftTemplate
+  @Expression(ALLOW_SECRETS) private CustomManifestSource customManifestSource;
+
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
+
+  private boolean customManifestEnabled;
 }

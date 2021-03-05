@@ -6,6 +6,7 @@ import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
@@ -27,6 +28,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class InterventionWaitAdviserResponseHandler implements AdviserResponseHandler {
@@ -39,7 +41,7 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
-    InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
+    InterventionWaitAdvise interventionWaitAdvise = adviserResponse.getInterventionWaitAdvise();
 
     TimeoutCallback timeoutCallback =
         new InterventionWaitTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
@@ -55,6 +57,9 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
     TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
         (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
     TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
+
+    nodeExecutionService.update(nodeExecution.getUuid(),
+        ops -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())));
 
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)

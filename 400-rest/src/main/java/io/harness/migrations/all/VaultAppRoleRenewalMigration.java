@@ -10,8 +10,8 @@ import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
+import software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -34,8 +34,8 @@ public class VaultAppRoleRenewalMigration implements Migration {
     log.info("Migrate vault app role renewal interval");
     try (HIterator<VaultConfig> iterator = new HIterator<>(wingsPersistence.createQuery(VaultConfig.class)
                                                                .filter(SecretManagerConfigKeys.encryptionType, VAULT)
-                                                               .filter(VaultConfigKeys.renewalInterval, 0)
-                                                               .field(VaultConfigKeys.appRoleId)
+                                                               .filter(BaseVaultConfigKeys.renewalInterval, 0)
+                                                               .field(BaseVaultConfigKeys.appRoleId)
                                                                .exists()
                                                                .fetch())) {
       while (iterator.hasNext()) {
@@ -43,7 +43,7 @@ public class VaultAppRoleRenewalMigration implements Migration {
         try {
           log.info("Processing vault {}", vaultConfig.getUuid());
           wingsPersistence.updateField(
-              VaultConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewalInterval, DEFAULT_RENEWAL_INTERVAL);
+              VaultConfig.class, vaultConfig.getUuid(), BaseVaultConfigKeys.renewalInterval, DEFAULT_RENEWAL_INTERVAL);
           log.info("Updated vault config id {}", vaultConfig.getUuid());
         } catch (Exception e) {
           log.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);
