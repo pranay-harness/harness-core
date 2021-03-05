@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 
 import java.time.Duration;
@@ -27,6 +28,7 @@ public class SSHHostValidationCapability implements ExecutionCapability {
   private List<EncryptedDataDetail> hostConnectionCredentials;
   private List<EncryptedDataDetail> bastionConnectionCredentials;
   private SSHExecutionCredential sshExecutionCredential;
+  private SSHVaultConfig sshVaultConfig;
   private Map<String, String> envVariables = new HashMap<>();
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SSH_HOST_CONNECTION;
 

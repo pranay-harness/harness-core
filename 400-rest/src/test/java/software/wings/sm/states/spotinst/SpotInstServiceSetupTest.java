@@ -150,5 +150,8 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     Map<String, String> fieldMap = state.validateFields();
     assertThat(fieldMap).isNotNull();
     assertThat(fieldMap.size()).isEqualTo(3);
+    state.setUseCurrentRunningCount(true);
+    fieldMap = state.validateFields();
+    assertThat(fieldMap.isEmpty()).isTrue();
   }
 }

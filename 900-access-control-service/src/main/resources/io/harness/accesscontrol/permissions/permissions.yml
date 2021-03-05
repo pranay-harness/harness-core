@@ -60,7 +60,56 @@ permissions:
       - account
       - organization
   - identifier: core.secret.create
-    name: create secret
+    name: Create Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.view
+    name: View Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.edit
+    name: Edit Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.delete
+    name: Delete Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.create
+    name: Create Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.view
+    name: View Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.edit
+    name: Edit Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.delete
+    name: Delete Connector
     status: ACTIVE
     allowedScopeLevels:
       - account

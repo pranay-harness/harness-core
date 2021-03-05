@@ -1,5 +1,6 @@
 package io.harness.shell;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
@@ -17,6 +18,7 @@ import com.jcraft.jsch.Session;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +64,27 @@ public class SshSessionFactory {
     return getSSHSession(config, new NoopExecutionCallback());
   }
 
+  public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
+    Session session = null;
+    int retryCount = 0;
+    while (retryCount <= 6 && session == null) {
+      try {
+        TimeUnit.SECONDS.sleep(1);
+        retryCount++;
+        session = fetchSSHSession(config, logCallback);
+      } catch (InterruptedException ie) {
+        log.error("exception while fetching ssh session", ie);
+      } catch (JSchException jse) {
+        if (retryCount == 6) {
+          return fetchSSHSession(config, logCallback);
+        }
+        log.error("Jschexception while SSH connection with retry count {}", retryCount, jse);
+      }
+    }
+
+    return session;
+  }
+
   /**
    * Gets the SSH session.
    *
@@ -70,7 +93,7 @@ public class SshSessionFactory {
    * @return the SSH session
    * @throws JSchException the j sch exception
    */
-  public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
+  public static Session fetchSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
 
     Session session;
@@ -93,10 +116,23 @@ public class SshSessionFactory {
       if (!new File(keyPath).isFile()) {
         throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
       }
-      if (null == config.getKeyPassphrase()) {
+      if (isEmpty(config.getKeyPassphrase())) {
         jsch.addIdentity(keyPath);
       } else {
         jsch.addIdentity(keyPath, EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
+      }
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+    } else if (config.isVaultSSH()) {
+      log.info("SSH using Vault SSH secret engine");
+
+      final char[] copyOfKey = getCopyOfKey(config);
+      if (isEmpty(config.getKeyPassphrase())) {
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8), null);
+      } else {
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8),
+            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {

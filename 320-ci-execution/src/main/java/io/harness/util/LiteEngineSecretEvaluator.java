@@ -46,18 +46,8 @@ public class LiteEngineSecretEvaluator extends ExpressionEvaluator {
     }
 
     @Override
-    public String renderExpression(String expression) {
+    public String processString(String expression) {
       return expressionEvaluator.substitute(expression, evaluatorResponseContext);
-    }
-
-    @Override
-    public Object evaluateExpression(String expression) {
-      return expressionEvaluator.evaluate(expression, evaluatorResponseContext);
-    }
-
-    @Override
-    public boolean hasVariables(String expression) {
-      return ExpressionEvaluator.containsVariablePattern(expression);
     }
   }
 }

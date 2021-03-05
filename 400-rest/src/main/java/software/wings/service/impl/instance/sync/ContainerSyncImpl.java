@@ -12,7 +12,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -25,7 +24,6 @@ import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -45,7 +43,6 @@ public class ContainerSyncImpl implements ContainerSync {
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infraMappingService;
-  @Inject private EnvironmentService environmentService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
@@ -134,8 +131,6 @@ public class ContainerSyncImpl implements ContainerSync {
   public ContainerSyncResponse getInstances(
       ContainerInfrastructureMapping containerInfraMapping, List<ContainerMetadata> containerMetadataList) {
     List<ContainerInfo> result = Lists.newArrayList();
-    final Environment environment =
-        environmentService.get(containerInfraMapping.getAppId(), containerInfraMapping.getEnvId());
 
     log.info("getInstances() call for app {}", containerInfraMapping.getAppId());
 
@@ -154,9 +149,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .accountId(app.getAccountId())
                 .appId(app.getUuid())
                 .envId(containerInfraMapping.getEnvId())
-                .envType(environment != null ? environment.getEnvironmentType() : null)
                 .infrastructureMappingId(containerInfraMapping.getUuid())
-                .serviceId(containerInfraMapping.getServiceId())
                 .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
                 .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
                 .build();
