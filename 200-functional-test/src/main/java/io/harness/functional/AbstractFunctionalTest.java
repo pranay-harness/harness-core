@@ -204,7 +204,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     WorkflowExecution original = WorkflowRestUtils.startWorkflow(bearerToken, appId, envId, executionArgs);
     resetCache(getAccount().getUuid());
 
-    Awaitility.await().atMost(15, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(25, TimeUnit.MINUTES).pollInterval(5, TimeUnit.SECONDS).until(() -> {
       final WorkflowExecution workflowExecution =
           workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
       return workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
@@ -291,7 +291,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public WorkflowExecution runPipeline(String bearerToken, String appId, String envId, ExecutionArgs executionArgs) {
     WorkflowExecution original = PipelineRestUtils.startPipeline(bearerToken, appId, envId, executionArgs);
 
-    Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(500, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
       final WorkflowExecution workflowExecution =
           workflowExecutionService.getWorkflowExecution(appId, original.getUuid());
       return workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
