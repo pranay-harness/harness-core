@@ -54,6 +54,8 @@ public class DelegateExecutor {
     }
     if (!isHealthy(account.getUuid(), bearerToken)) {
       log.info("Delegate not healthy giving up");
+    } else {
+      log.info("Delegate Healthy, will start functional test.");
     }
     //      executeLocalDelegate(account, bearerToken, clazz)
   }

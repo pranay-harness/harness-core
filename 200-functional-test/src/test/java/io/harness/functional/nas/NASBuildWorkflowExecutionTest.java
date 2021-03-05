@@ -173,6 +173,7 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
         createBuildWorkflow("build-workflow-" + System.currentTimeMillis(), appId, artifactStream.getUuid()));
     log.info("Workflow created successfully with name : " + workflow.getName());
     // Test running the workflow
+    resetCache(accountId);
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, null, workflow.getUuid(), Collections.emptyList());
     if (workflowExecution.getStatus() == ExecutionStatus.FAILED) {

@@ -29,8 +29,6 @@ if [ "${STEP}" == "dockerization" ]; then
   GCP=""
 fi
 if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
-  curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar
-  JAVA_OPTS=" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
 
   bazel ${bazelrc} run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
   java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar /root/.m2/repository/software/wings/260-delegate/0.0.1-SNAPSHOT/260-delegate-0.0.1-SNAPSHOT-capsule.jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/config-delegate.yml &
