@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
 
 # to run:
 # bazel run //160-stress-tester:module -- server /Users/matt/portal3/160-stress-tester/config.yml

@@ -3,7 +3,6 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
 
 shared_dependencies = [
     "//955-delegate-beans:module",
