@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.SettingValidationService.IGNORE_SCOPE_APP_ID;
 
 import static java.lang.String.format;
 
@@ -84,7 +84,7 @@ public class GcpHelperServiceManager {
                                                                    : Collections.emptyList();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, IGNORE_SCOPE_APP_ID)
                                     .tags(tags)
                                     .data(TaskData.builder()
                                               .async(false)

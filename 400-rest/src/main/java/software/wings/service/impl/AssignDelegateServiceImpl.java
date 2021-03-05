@@ -8,6 +8,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import static software.wings.service.impl.SettingValidationService.IGNORE_SCOPE_APP_ID;
+
 import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -20,6 +22,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -407,7 +410,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (match && isNotEmpty(scope.getTaskTypes())) {
       match = scope.getTaskTypes().contains(taskGroup);
     }
-    if (match && isNotEmpty(scope.getApplications())) {
+    if (match && isNotEmpty(scope.getApplications()) && !isCloudProviderValidationTask(appId, accountId)) {
       match = isNotBlank(appId) && scope.getApplications().contains(appId);
     }
     if (match && isNotEmpty(scope.getEnvironments())) {
@@ -435,6 +438,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     return match;
+  }
+
+  private boolean isCloudProviderValidationTask(String appId, String accountId) {
+    if (isNotBlank(appId) && isNotBlank(accountId)) {
+      return featureFlagService.isEnabled(
+                 FeatureName.IGNORE_DELEGATE_APP_SCOPING_IN_VALIDATING_CLOUD_PROVIDER, accountId)
+          && appId.equals(IGNORE_SCOPE_APP_ID);
+    }
+    return false;
   }
 
   @Override

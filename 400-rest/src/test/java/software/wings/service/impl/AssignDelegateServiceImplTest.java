@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -25,6 +26,7 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE
 import static software.wings.service.impl.AssignDelegateServiceImpl.WHITELIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
+import static software.wings.service.impl.SettingValidationService.IGNORE_SCOPE_APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
@@ -87,6 +89,7 @@ import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
@@ -128,6 +131,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private DelegateCache delegateCache;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
   @Mock private LoadingCache<String, List<Delegate>> accountDelegatesCache;
@@ -252,6 +256,45 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
           .logExcludeScopeMatched(eq(batch), anyString(), anyString(), anyString());
     }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testAssignByDelegateScopesWhileValidateCloudProvider() {
+    DelegateScopeTestData test =
+        DelegateScopeTestData.builder()
+            .excludeScopes(emptyList())
+            .includeScopes(
+                ImmutableList.of(DelegateScope.builder().applications(ImmutableList.of("DUMMY_APPLICATION")).build()))
+            .assignable(true)
+            .numOfNoIncludeScopeMatchedInvocations(0)
+            .numOfExcludeScopeMatchedInvocations(0)
+            .build();
+
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, IGNORE_SCOPE_APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+
+    Delegate delegate =
+        delegateBuilder.includeScopes(test.getIncludeScopes()).excludeScopes(test.getExcludeScopes()).build();
+    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(featureFlagService.isFeatureFlagEnabled(anyString(), anyString())).thenReturn(true);
+
+    BatchDelegateSelectionLog batch =
+        BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build()))
+        .isEqualTo(test.isAssignable());
+
+    verify(delegateSelectionLogsService, Mockito.times(test.getNumOfNoIncludeScopeMatchedInvocations()))
+        .logNoIncludeScopeMatched(eq(batch), anyString(), anyString());
+    verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
+        .logExcludeScopeMatched(eq(batch), anyString(), anyString(), anyString());
   }
 
   @Value

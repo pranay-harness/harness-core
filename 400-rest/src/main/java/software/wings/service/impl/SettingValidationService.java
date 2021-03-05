@@ -156,6 +156,8 @@ public class SettingValidationService {
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AwsHelperResourceService awsHelperResourceService;
 
+  public static final String IGNORE_SCOPE_APP_ID = "*";
+
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue instanceof HostConnectionAttributes || settingValue instanceof WinRmConnectionAttributes
