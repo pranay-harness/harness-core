@@ -128,6 +128,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String monitoringSourceIdentifier;
   private int timeCounter;
+  private CVConfig cvConfig;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -146,6 +147,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     fakeNow = Instant.parse("2020-07-27T10:50:00.390Z");
     clock = Clock.fixed(fakeNow, ZoneOffset.UTC);
     timeCounter = 0;
+    cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(
         verificationJobInstanceService, "verificationManagerService", verificationManagerService, true);
@@ -756,7 +758,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                            DeploymentActivityPopoverResultDTO.VerificationResult.builder()
                                .jobName(prodVerificationJobInstance.getResolvedJob().getJobName())
                                .progressPercentage(6)
-                               .remainingTimeMs(3666000L)
+                               .remainingTimeMs(1886110L)
                                .status(ActivityVerificationStatus.IN_PROGRESS)
                                .startTime(prodVerificationJobInstance.getStartTime().toEpochMilli())
                                .build()))
@@ -1346,6 +1348,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
             .perpetualTaskIds(Arrays.asList("perpetualTaskId"))
             .verificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED)
+            .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
