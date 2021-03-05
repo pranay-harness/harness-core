@@ -126,8 +126,6 @@ public class SshSessionFactory {
       log.info("SSH using Vault SSH secret engine");
 
       final char[] copyOfKey = getCopyOfKey(config);
-      log.info("Testing : SSH signed public key {}", config.getSignedPublicKey());
-      log.info("Testing : SSH  private key {}", config.getKey());
       if (isEmpty(config.getKeyPassphrase())) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(copyOfKey, Charsets.UTF_8),
             EncryptionUtils.toBytes(config.getSignedPublicKey().toCharArray(), Charsets.UTF_8), null);

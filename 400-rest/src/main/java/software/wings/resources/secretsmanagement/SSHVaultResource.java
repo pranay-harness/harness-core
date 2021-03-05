@@ -48,7 +48,6 @@ public class SSHVaultResource {
     if (!featureFlagService.isEnabled(FeatureName.SSH_SECRET_ENGINE, accountId)) {
       throw new HintException(String.format("Feature not allowed for account: %s ", accountId));
     }
-    sshVaultConfig.setRenewalInterval(15L);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Adding SSH vault config for account {}", accountId);
       sshVaultConfig.setAccountId(accountId);
