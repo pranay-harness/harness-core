@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
+import static org.mockito.Mockito.*;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
@@ -19,19 +20,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -101,10 +93,12 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Mock AwsConfig awsConfig;
   @Mock private AwsCallTracker tracker;
   @Mock private EncryptionService encryptionService;
+  @Mock private AwsApiHelperService awsApiHelperService;
 
   @Before
   public void setup() {
     when(awsConfig.isCertValidationRequired()).thenReturn(false);
+    when(awsConfig.getDefaultRegion()).thenReturn(Regions.US_EAST_1.getName());
   }
 
   @Test
@@ -523,8 +517,11 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFailsInvalidCredentials() {
+    when(awsApiHelperService.getAmazonEc2Client(any())).thenCallRealMethod();
+    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(),any());
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
     assertThatThrownBy(() -> service.validateAwsAccountCredential(ACCESS_KEY, SECRET_KEY))
         .isInstanceOf(InvalidRequestException.class);
     verify(tracker, never()).trackEC2Call("Describe Regions");
