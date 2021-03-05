@@ -172,12 +172,13 @@ public class OrganizationServiceImplTest extends CategoryTest {
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
 
-    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
+    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class), false))
+        .thenReturn(getPage(emptyList(), 0));
 
     Page<Organization> organizationPage = organizationService.list(
         accountIdentifier, unpaged(), OrganizationFilterDTO.builder().searchTerm(searchTerm).build());
 
-    verify(organizationRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    verify(organizationRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class), false);
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();
