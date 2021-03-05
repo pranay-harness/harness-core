@@ -134,7 +134,7 @@ public abstract class AbstractAnalysisState extends State {
   @Inject protected StateExecutionService stateExecutionService;
   @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
   @Inject private transient ExpressionEvaluator evaluator;
-  @Inject private AccountService accountService;
+  @Inject protected AccountService accountService;
   @Inject protected CVActivityLogService cvActivityLogService;
 
   protected String hostnameField;
