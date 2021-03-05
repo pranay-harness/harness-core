@@ -5,7 +5,6 @@ import io.harness.accesscontrol.Principal;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,5 +18,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessCheckRequestDTO {
   @NotEmpty @Size(max = 1000) List<PermissionCheckDTO> permissions;
-  @NotNull @Valid Principal principal;
+  @Valid Principal principal;
 }

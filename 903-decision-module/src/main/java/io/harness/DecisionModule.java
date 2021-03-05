@@ -4,7 +4,6 @@ import io.harness.accesscontrol.DecisionMorphiaRegistrar;
 import io.harness.accesscontrol.acl.ACLModule;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.aggregator.AggregatorModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.serializer.KryoRegistrar;
@@ -15,10 +14,15 @@ import com.google.inject.multibindings.Multibinder;
 
 public class DecisionModule extends AbstractModule {
   private static DecisionModule instance;
+  private DecisionModuleConfiguration decisionModuleConfiguration;
 
-  public static synchronized DecisionModule getInstance() {
+  public DecisionModule(DecisionModuleConfiguration decisionModuleConfiguration) {
+    this.decisionModuleConfiguration = decisionModuleConfiguration;
+  }
+
+  public static synchronized DecisionModule getInstance(DecisionModuleConfiguration decisionModuleConfiguration) {
     if (instance == null) {
-      instance = new DecisionModule();
+      instance = new DecisionModule(decisionModuleConfiguration);
     }
     return instance;
   }
@@ -30,7 +34,6 @@ public class DecisionModule extends AbstractModule {
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(DecisionMorphiaRegistrar.class);
-    install(AggregatorModule.getInstance());
     install(ACLModule.getInstance());
     registerRequiredBindings();
   }

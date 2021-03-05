@@ -16,11 +16,14 @@ import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupSer
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
+import io.harness.aggregator.AggregatorModule;
 import io.harness.ng.core.UserClientModule;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.threading.ExecutorModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import java.util.concurrent.Executors;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -50,7 +53,11 @@ public class AccessControlModule extends AbstractModule {
                                             .buildValidatorFactory();
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
-    install(DecisionModule.getInstance());
+    install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
+    ExecutorModule.getInstance().setExecutorService(Executors.newFixedThreadPool(5));
+    install(ExecutorModule.getInstance());
+    install(AggregatorModule.getInstance(
+        config.getAggregatorConfiguration(), ExecutorModule.getInstance().getExecutorService()));
 
     install(AccessControlClientModule.getInstance(
         config.getAccessControlClientConfiguration(), ACCESS_CONTROL_SERVICE.getServiceId()));
