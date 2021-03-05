@@ -1,13 +1,6 @@
 package io.harness.plancreator.steps;
 
-import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.FAILURE_STRATEGIES;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGE;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.*;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -37,12 +30,8 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.*;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo.RollbackInfoBuilder;
-import io.harness.pms.sdk.core.steps.io.RollbackStrategy;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -56,6 +45,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.timeout.TimeoutUtils;
@@ -64,15 +54,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
@@ -113,11 +95,13 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
       }
 
-
-      if(containsAnyOtherError(stageFailureStrategies)!=true){
-        throw new InvalidRequestException("Failure strategy should contain one error type as Anyother or it is having more than one error type.");
+      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
+      // type is involved
+      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
+        throw new InvalidRequestException(
+            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
       }
-      // call a function any other check no other error with any other
+
       String timeout = DEFAULT_TIMEOUT;
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
@@ -160,26 +144,17 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
-  public boolean containsAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
-    boolean containsAnyOther = false;
-    int errorCountInAnyOther = 0;
-    for(FailureStrategyConfig failureStrategyConfig :stageFailureStrategies) {
-      System.out.println(failureStrategyConfig);
-      for (int i = 0; i < stageFailureStrategies.size(); i++) {
-        int count = 0;
-        for (int j = 0; j < stageFailureStrategies.get(i).getOnFailure().getErrors().size(); j++) {
-          count++;
-          String error = String.valueOf(stageFailureStrategies.get(i).getOnFailure().getErrors().get(j));
-          if(error.contentEquals("ANY_OTHER_ERRORS")){
-            containsAnyOther=true;
-          }
-        }
-        if(containsAnyOther==true){
-          errorCountInAnyOther = count;
-        }
+  public boolean containsOnlyAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAnyOther = false;
+    for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
+      if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
+          && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
+                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
+              == true) {
+        containsOnlyAnyOther = true;
       }
     }
-    return (containsAnyOther && (errorCountInAnyOther==1));
+    return containsOnlyAnyOther;
   }
 
   protected String getName(StepElementConfig stepElement) {
