@@ -26,6 +26,8 @@ import io.harness.git.GitClientV2Impl;
 import io.harness.kustomize.KustomizeClient;
 import io.harness.kustomize.KustomizeClientImpl;
 import io.harness.manage.ManagedExecutorService;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
@@ -238,6 +240,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureAutoScaleSettingsClient.class).to(AzureAutoScaleSettingsClientImpl.class);
     bind(AzureNetworkClient.class).to(AzureNetworkClientImpl.class);
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
+    bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))

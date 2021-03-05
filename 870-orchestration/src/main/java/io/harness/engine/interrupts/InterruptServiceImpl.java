@@ -79,7 +79,7 @@ public class InterruptServiceImpl implements InterruptService {
 
   private boolean pauseRequired(Interrupt interrupt, String nodeExecutionId) {
     if (interrupt.getNodeExecutionId() == null) {
-      return false;
+      return true;
     }
     List<NodeExecution> targetExecutions =
         nodeExecutionService.findAllChildren(interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId());

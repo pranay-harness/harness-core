@@ -9,13 +9,16 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptPackage.InterruptPackageBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timeout.TimeoutCallback;
+import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.TimeoutInstance;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Collections;
 import org.springframework.data.annotation.Transient;
@@ -42,10 +45,13 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
       return;
     }
     InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
+    nodeExecutionService.update(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserTimeoutDetails, new TimeoutDetails(timeoutInstance)));
     interruptManager.register(getInterruptPackage(interventionWaitAdvise));
   }
 
-  private InterruptPackage getInterruptPackage(InterventionWaitAdvise interventionWaitAdvise) {
+  @VisibleForTesting
+  InterruptPackage getInterruptPackage(InterventionWaitAdvise interventionWaitAdvise) {
     RepairActionCode repairActionCode = interventionWaitAdvise.getRepairActionCode();
     InterruptPackageBuilder interruptPackageBuilder =
         InterruptPackage.builder().planExecutionId(planExecutionId).nodeExecutionId(nodeExecutionId);

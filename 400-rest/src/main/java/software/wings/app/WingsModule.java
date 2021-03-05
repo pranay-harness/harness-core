@@ -472,7 +472,9 @@ import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.LocalSecretManagerServiceImpl;
 import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.NGSecretManagerServiceImpl;
+import software.wings.service.impl.security.SSHVaultServiceImpl;
 import software.wings.service.impl.security.SecretDecryptionServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
@@ -677,6 +679,8 @@ import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
+import software.wings.service.intfc.security.SSHVaultService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -1474,6 +1478,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
     bind(SecretManagerConfigService.class).to(SecretManagerConfigServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(SSHVaultService.class).to(SSHVaultServiceImpl.class);
     bind(AwsSecretsManagerService.class).to(AwsSecretsManagerServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(CyberArkService.class).to(CyberArkServiceImpl.class);
@@ -1487,6 +1492,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(SecretsAuditService.class).to(SecretsAuditServiceImpl.class);
     bind(SecretsRBACService.class).to(SecretsRBACServiceImpl.class);
     bind(SecretsManagerRBACService.class).to(SecretsManagerRBACServiceImpl.class);
+    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)

@@ -4,11 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretChangeLog;
+import io.harness.helpers.ext.vault.SSHVaultAuthResult;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 import io.harness.security.encryption.EncryptedRecord;
 
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -37,15 +41,20 @@ public interface SecretManagementDelegateService {
   /**
    * List vault secret engines
    */
-  @DelegateTaskType(TaskType.VAULT_LIST_ENGINES) List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig);
-
+  @DelegateTaskType(TaskType.VAULT_LIST_ENGINES)
+  List<SecretEngineSummary> listSecretEngines(BaseVaultConfig vaultConfig);
   /**
    * Login Vault using AppRole auth.
    */
-  @DelegateTaskType(TaskType.VAULT_APPROLE_LOGIN) VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig);
+  @DelegateTaskType(TaskType.VAULT_APPROLE_LOGIN) VaultAppRoleLoginResult appRoleLogin(BaseVaultConfig vaultConfig);
+
+  @DelegateTaskType(TaskType.SSH_SECRET_ENGINE_AUTH) SSHVaultAuthResult validateSSHVault(SSHVaultConfig vaultConfig);
 
   /**
    * Validate the CyberArk configuration, including the connectivity to CyberArk service, client certificate etc.
    */
   @DelegateTaskType(TaskType.CYBERARK_VALIDATE_CONFIG) boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig);
+
+  @DelegateTaskType(TaskType.VAULT_SIGN_PUBLIC_KEY_SSH)
+  void signPublicKey(HostConnectionAttributes hostConnectionAttributes, SSHVaultConfig sshVaultConfig);
 }

@@ -40,15 +40,17 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   @JsonIgnore String name;
   @JsonIgnore String identifier;
   List<NGVariable> outputVariables;
+  List<NGVariable> environmentVariables;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, List<NGVariable> environmentVariables,
-      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, String name, String identifier,
-      List<NGVariable> outputVariables) {
-    super(shell, source, environmentVariables, executionTarget, onDelegate);
+  public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, ExecutionTarget executionTarget,
+      ParameterField<Boolean> onDelegate, String name, String identifier, List<NGVariable> outputVariables,
+      List<NGVariable> environmentVariables) {
+    super(shell, source, executionTarget, onDelegate);
     this.name = name;
     this.identifier = identifier;
     this.outputVariables = outputVariables;
+    this.environmentVariables = environmentVariables;
   }
 
   @Override
@@ -76,11 +78,10 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   @Override
   public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
     return ShellScriptStepParameters.infoBuilder()
-        .environmentVariables(getEnvironmentVariables())
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
-        .environmentVariables(getEnvironmentVariables())
+        .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
         .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .shellType(getShell())
         .source(getSource())

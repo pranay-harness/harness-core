@@ -9,6 +9,7 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
@@ -32,6 +33,8 @@ public class EncryptionConfigDeserializer extends StdDeserializer<EncryptionConf
     switch (encryptionType) {
       case VAULT:
         return mapper.treeToValue(obj, VaultConfig.class);
+      case VAULT_SSH:
+        return mapper.treeToValue(obj, SSHVaultConfig.class);
       case LOCAL:
         return mapper.treeToValue(obj, LocalEncryptionConfig.class);
       case AWS_SECRETS_MANAGER:

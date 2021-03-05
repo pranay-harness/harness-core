@@ -53,7 +53,9 @@ import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -105,6 +107,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.ContextElement;
@@ -170,6 +173,7 @@ public class CommandState extends State {
   @Inject @Transient private transient TemplateUtils templateUtils;
   @Inject @Transient private transient ServiceTemplateHelper serviceTemplateHelper;
   @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject @Transient private transient SSHVaultService sshVaultService;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
 
@@ -305,6 +309,7 @@ public class CommandState extends State {
     Service service = null;
     ServiceInstance serviceInstance = null;
     DeploymentType deploymentType = null;
+    SSHVaultConfig sshVaultConfig = null;
 
     if (instanceElement != null) {
       String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
@@ -382,6 +387,11 @@ public class CommandState extends State {
                   ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
             }
             sshKeyRef = keySettingAttribute.getUuid();
+          }
+          if (keySettingAttribute.getValue() instanceof HostConnectionAttributes
+              && ((HostConnectionAttributes) keySettingAttribute.getValue()).isVaultSSH()) {
+            sshVaultConfig = sshVaultService.getSSHVaultConfig(keySettingAttribute.getAccountId(),
+                ((HostConnectionAttributes) keySettingAttribute.getValue()).getSshVaultConfigId());
           }
 
           String hostName = context.renderExpression(getHost());
@@ -507,7 +517,8 @@ public class CommandState extends State {
               .deploymentType(deploymentType != null ? deploymentType.name() : null)
               .delegateSelectors(getDelegateSelectors(context))
               .disableWinRMEnvVariables(
-                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId));
+                  featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId))
+              .sshVaultConfig(sshVaultConfig);
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandExecutionContextBuilder);
@@ -849,6 +860,12 @@ public class CommandState extends State {
       commandExecutionContextBuilder.hostConnectionCredentials(
           secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
               context.getAppId(), context.getWorkflowExecutionId()));
+      if (hostConnectionAttribute.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) hostConnectionAttribute.getValue()).isVaultSSH()) {
+        commandExecutionContextBuilder.sshVaultConfig(
+            sshVaultService.getSSHVaultConfig(hostConnectionAttribute.getAccountId(),
+                ((HostConnectionAttributes) hostConnectionAttribute.getValue()).getSshVaultConfigId()));
+      }
     }
     if (isNotEmpty(host.getBastionConnAttr())) {
       SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
@@ -886,6 +903,11 @@ public class CommandState extends State {
     if (featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_COMMAND_ENCODING, accountId)) {
       commandExecutionContextBuilder.disableWinRMCommandEncodingFFSet(true);
     }
+
+    if (featureFlagService.isEnabled(FeatureName.WINRM_COPY_CONFIG_OPTIMIZE, accountId)) {
+      commandExecutionContextBuilder.winrmCopyConfigOptimize(true);
+    }
+
     commandExecutionContextBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }

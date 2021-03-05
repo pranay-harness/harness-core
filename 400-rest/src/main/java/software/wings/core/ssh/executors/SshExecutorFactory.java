@@ -1,5 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ScriptSshExecutor;
 import io.harness.shell.SshSessionConfig;
@@ -15,6 +17,7 @@ import com.google.inject.Singleton;
  * A factory for creating ScriptExecutor objects.
  */
 @Singleton
+@TargetModule(Module._960_API_SERVICES)
 public class SshExecutorFactory {
   @Inject private DelegateFileManager fileService;
   @Inject private DelegateLogService logService;

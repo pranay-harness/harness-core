@@ -257,6 +257,9 @@ import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
@@ -617,6 +620,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureBlueprintDeploymentParameters.class, 543258);
     kryo.register(AzureBlueprintDeploymentResponse.class, 543259);
     kryo.register(HelmCommandFlag.class, 543260);
+    kryo.register(CustomManifestFetchConfig.class, 543261);
+    kryo.register(CustomManifestValuesFetchParams.class, 543262);
+    kryo.register(CustomManifestValuesFetchResponse.class, 543263);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);

@@ -26,4 +26,10 @@ public class RoleAssignmentCustomRepositoryImpl implements RoleAssignmentCustomR
     return PageableExecutionUtils.getPage(
         assignments, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), RoleAssignmentDBO.class));
   }
+
+  @Override
+  public long deleteMulti(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.remove(query, RoleAssignmentDBO.class).getDeletedCount();
+  }
 }

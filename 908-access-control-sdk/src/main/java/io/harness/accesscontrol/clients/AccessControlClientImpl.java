@@ -14,10 +14,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
+import javax.validation.executable.ValidateOnExecution;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
+@ValidateOnExecution
 public class AccessControlClientImpl implements AccessControlClient {
   private final AccessControlHttpClient accessControlHttpClient;
 
@@ -66,16 +68,8 @@ public class AccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public void checkAccessOrThrow(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String resourceType, String resourceIdentifier, String permissionIdentifier) {
-    if (!hasAccess(PermissionCheckDTO.builder()
-                       .accountIdentifier(accountIdentifier)
-                       .orgIdentifier(orgIdentifier)
-                       .projectIdentifier(projectIdentifier)
-                       .resourceType(resourceType)
-                       .resourceIdentifier(resourceIdentifier)
-                       .permission(permissionIdentifier)
-                       .build())) {
+  public void checkForAccessOrThrow(PermissionCheckDTO permissionCheckDTO) {
+    if (!hasAccess(permissionCheckDTO)) {
       throw new AccessDeniedException("Insufficient permissions to perform this action", USER);
     }
   }

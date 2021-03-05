@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -101,7 +102,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STEP_GROUP)) {
+      if (currentField.checkIfParentIsParallel(STEPS)) {
         return adviserObtainments;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(

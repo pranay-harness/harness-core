@@ -72,7 +72,7 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
       log.info("Running HostValidationTask for hosts: ", hostValidationTaskParameters.getHostNames());
       methodReturnValue = hostValidationService.validateHost(hostValidationTaskParameters.getHostNames(),
           hostValidationTaskParameters.getConnectionSetting(), hostValidationTaskParameters.getEncryptionDetails(),
-          hostValidationTaskParameters.getExecutionCredential());
+          hostValidationTaskParameters.getExecutionCredential(), null);
     } catch (Exception ex) {
       exception = ex.getCause();
       String message =

@@ -36,6 +36,7 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestService;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -45,6 +46,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.exception.ShellScriptException;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
@@ -84,6 +86,7 @@ public class K8sTaskHelper {
   @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private HelmHelper helmHelper;
+  @Inject private CustomManifestService customManifestService;
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
       String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
@@ -164,6 +167,25 @@ public class K8sTaskHelper {
         return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
             k8sDelegateManifestConfig.getGitFileConfig().getFilePath(), executionLogCallback, valuesFiles);
 
+      case CUSTOM:
+        // Creating a new branch for check if custom manifest feature is enabled, can be merged with Local & Remote
+        // once FF is removed
+        if (k8sDelegateManifestConfig.isCustomManifestEnabled()) {
+          List<FileData> customManifestFiles = k8sTaskHelperBase.readManifestFilesFromDirectory(manifestFilesDirectory);
+          return k8sTaskHelperBase.renderManifestFilesForGoTemplate(
+              k8sDelegateTaskParams, customManifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+        }
+
+      // fallthrough to ignore branch if FF is not enabled
+      case CUSTOM_OPENSHIFT_TEMPLATE:
+        if (k8sDelegateManifestConfig.isCustomManifestEnabled()) {
+          return openShiftDelegateService.processTemplatization(manifestFilesDirectory,
+              k8sDelegateTaskParams.getOcPath(),
+              k8sDelegateManifestConfig.getCustomManifestSource().getFilePaths().get(0), executionLogCallback,
+              valuesFiles);
+        }
+
+        // fallthrough to ignore branch if FF is not enabled
       default:
         unhandled(storeType);
     }
@@ -271,6 +293,34 @@ public class K8sTaskHelper {
     }
   }
 
+  private boolean downloadManifestFilesFromCustomSource(K8sDelegateManifestConfig delegateManifestConfig,
+      String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
+    try {
+      customManifestService.downloadCustomSource(
+          delegateManifestConfig.getCustomManifestSource(), manifestFilesDirectory, executionLogCallback);
+      executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+      executionLogCallback.saveExecutionLog(k8sTaskHelperBase.getManifestFileNamesInLogFormat(manifestFilesDirectory));
+      executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    } catch (ShellScriptException e) {
+      log.error("Failed to execute shell script", e);
+      executionLogCallback.saveExecutionLog(
+          "Failed to execute custom manifest script. " + e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
+      return false;
+    } catch (IOException e) {
+      log.error("Failed to get files from manifest directory", e);
+      executionLogCallback.saveExecutionLog(
+          "Failed to get manifest files from custom source. " + ExceptionUtils.getMessage(e), ERROR,
+          CommandExecutionStatus.FAILURE);
+      return false;
+    } catch (Exception e) {
+      log.error("Failed to process custom manifest", e);
+      executionLogCallback.saveExecutionLog(
+          "Failed to process custom manifest. " + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      return false;
+    }
+  }
+
   public boolean fetchManifestFilesAndWriteToDirectory(K8sDelegateManifestConfig delegateManifestConfig,
       String manifestFilesDirectory, ExecutionLogCallback executionLogCallback, long timeoutInMillis) {
     StoreType storeType = delegateManifestConfig.getManifestStoreTypes();
@@ -289,6 +339,14 @@ public class K8sTaskHelper {
         return downloadFilesFromChartRepo(
             delegateManifestConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 
+      case CUSTOM:
+      case CUSTOM_OPENSHIFT_TEMPLATE:
+        if (delegateManifestConfig.isCustomManifestEnabled()) {
+          return downloadManifestFilesFromCustomSource(
+              delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
+        }
+
+      // fallthrough to ignore branch if FF is not enabled
       default:
         unhandled(storeType);
     }

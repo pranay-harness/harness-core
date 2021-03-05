@@ -7,6 +7,7 @@ load("//:macros.bzl", "sources")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
 ] + [
     "//:lombok",
     "@jira_client//jar",
@@ -18,6 +19,7 @@ test_dependencies = [
 ] + shared_dependencies + [
     "//990-commons-test:module",
     "//200-functional-test:module",
+    "//200-functional-test:tests",
     "//230-model-test:module",
     "@maven//:com_bertramlabs_plugins_hcl4j",
     "@maven//:com_icegreen_greenmail",

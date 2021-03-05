@@ -7,6 +7,7 @@ import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PR
 import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
+import static io.harness.generator.SettingGenerator.Settings.OPENSHIFT_TEST_CLUSTER;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
@@ -75,6 +76,7 @@ import software.wings.infra.AzureKubernetesService;
 import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.AzureWebAppInfra;
 import software.wings.infra.CustomInfrastructure;
+import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
@@ -183,6 +185,8 @@ public class InfrastructureDefinitionGenerator {
     K8S_ROLLING_TEST,
     K8S_CANARY_TEST,
     K8S_BLUE_GREEN_TEST,
+    K8S_CUSTOM_MANIFEST,
+    OPENSHIFT_CUSTOM_MANIFEST,
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
     AZURE_HELM,
     GCP_HELM,
@@ -228,6 +232,10 @@ public class InfrastructureDefinitionGenerator {
         return ensureK8sTest(seed, owners, "fn-test-bg");
       case K8S_CANARY_TEST:
         return ensureK8sTest(seed, owners, "fn-test-canary");
+      case K8S_CUSTOM_MANIFEST:
+        return ensureK8sTest(seed, owners, "fn-test-custom-manifest");
+      case OPENSHIFT_CUSTOM_MANIFEST:
+        return ensureOpenshiftTest(seed, owners, "fn-test-custom-manifest");
       case MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST:
         return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
       case AZURE_HELM:
@@ -449,7 +457,32 @@ public class InfrastructureDefinitionGenerator {
             .appId(owners.obtainApplication().getUuid())
             .build();
 
-    return ensureInfrastructureDefinition(infrastructureDefinition);
+    InfrastructureDefinition savedInfraDef = ensureInfrastructureDefinition(infrastructureDefinition);
+    owners.add(savedInfraDef);
+    return savedInfraDef;
+  }
+
+  private InfrastructureDefinition ensureOpenshiftTest(Randomizer.Seed seed, Owners owners, String application) {
+    final SettingAttribute openshiftCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, OPENSHIFT_TEST_CLUSTER);
+    final Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("openshift-fn-tests-" + application)
+            .infrastructure(DirectKubernetesInfrastructure.builder()
+                                .cloudProviderId(openshiftCloudProvider.getUuid())
+                                .namespace(application)
+                                .build())
+            .deploymentType(DeploymentType.KUBERNETES)
+            .cloudProviderType(CloudProviderType.KUBERNETES_CLUSTER)
+            .envId(environment.getUuid())
+            .appId(environment.getAppId())
+            .build();
+
+    owners.add(ensureInfrastructureDefinition(infrastructureDefinition));
+    return owners.obtainInfrastructureDefinition();
   }
 
   public InfrastructureDefinition ensurePredefinedCustomDeployment(

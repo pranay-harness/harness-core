@@ -57,7 +57,7 @@ public class ResourceGroupDBO implements PersistentRegularIterable {
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
-  Long nextReconciliationIterationAt;
+  @Setter Long nextReconciliationIterationAt;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

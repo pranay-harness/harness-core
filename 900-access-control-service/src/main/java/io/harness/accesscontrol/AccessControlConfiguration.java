@@ -1,8 +1,10 @@
 package io.harness.accesscontrol;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
+import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -38,6 +40,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
+  @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
+  @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
 
   public AccessControlConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

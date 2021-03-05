@@ -21,10 +21,10 @@ public class RoleAssignmentDTOMapper {
                                            .build())
                             .resourceGroupIdentifier(object.getResourceGroupIdentifier())
                             .roleIdentifier(object.getRoleIdentifier())
-                            .harnessManaged(object.isManaged())
                             .disabled(object.isDisabled())
                             .build())
         .scope(object.getScopeIdentifier())
+        .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
         .build();
@@ -38,7 +38,7 @@ public class RoleAssignmentDTOMapper {
         .principalType(object.getPrincipal().getType())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .roleIdentifier(object.getRoleIdentifier())
-        .managed(object.isHarnessManaged())
+        .managed(false)
         .disabled(object.isDisabled())
         .build();
   }

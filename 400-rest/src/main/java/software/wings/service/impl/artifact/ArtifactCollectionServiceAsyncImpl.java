@@ -187,7 +187,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       // Set timeout.
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(DEFAULT_TIMEOUT);
-      delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.tags(settingsService.getDelegateSelectors(settingAttribute));
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       delegateTaskBuilder.data(dataBuilder.build());

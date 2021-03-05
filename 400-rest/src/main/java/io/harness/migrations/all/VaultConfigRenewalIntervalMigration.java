@@ -11,8 +11,8 @@ import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
+import software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import software.wings.beans.VaultConfig;
-import software.wings.beans.VaultConfig.VaultConfigKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class VaultConfigRenewalIntervalMigration implements Migration {
           log.info("Processing vault {}", vaultConfig.getUuid());
           long renewalInterval = Duration.ofHours(vaultConfig.getRenewIntervalHours()).toMinutes();
           wingsPersistence.updateField(
-              SecretManagerConfig.class, vaultConfig.getUuid(), VaultConfigKeys.renewalInterval, renewalInterval);
+              SecretManagerConfig.class, vaultConfig.getUuid(), BaseVaultConfigKeys.renewalInterval, renewalInterval);
           log.info("Updated vault config id {}", vaultConfig.getUuid());
         } catch (Exception e) {
           log.error("Exception while updating vault config id: {}", vaultConfig.getUuid(), e);

@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -27,6 +28,7 @@ public class QLDockerConnector implements QLConnector {
   private String userName;
   private String URL;
   private String passwordSecretId;
+  private List<String> delegateSelectors;
 
   public static class QLDockerConnectorBuilder implements QLConnectorBuilder {}
 }
