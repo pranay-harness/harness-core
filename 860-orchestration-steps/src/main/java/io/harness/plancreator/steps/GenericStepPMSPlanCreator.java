@@ -181,9 +181,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     if (onSuccessAdviserObtainment != null) {
       adviserObtainmentList.add(onSuccessAdviserObtainment);
     }
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
-      return adviserObtainmentList;
-    }
+
     List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(currentField, STAGE);
     List<FailureStrategyConfig> stepGroupFailureStrategies = getFieldFailureStrategies(currentField, STEP_GROUP);
     List<FailureStrategyConfig> stepFailureStrategies = getFailureStrategies(currentField.getNode());
@@ -209,6 +207,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (rollbackInfoBuilder != null) {
         getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
       }
+      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+        if (actionType == NGFailureActionType.STAGE_ROLLBACK || actionType == NGFailureActionType.STEP_GROUP_ROLLBACK) {
+          throw new InvalidRequestException("Step inside rollback section cannot have Rollback as failure strategy.");
+        }
+      }
+
       switch (actionType) {
         case IGNORE:
           adviserObtainmentList.add(

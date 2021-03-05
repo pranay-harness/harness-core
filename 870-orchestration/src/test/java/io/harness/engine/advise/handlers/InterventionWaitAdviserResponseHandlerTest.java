@@ -1,45 +1,55 @@
 package io.harness.engine.advise.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
+import io.harness.timeout.TimeoutCallback;
+import io.harness.timeout.TimeoutInstance;
+import io.harness.timeout.TimeoutTracker;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
-  @Inject private RetryAdviserResponseHandler retryAdviseHandler;
+public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTestBase {
+  @Inject InterventionWaitAdviserResponseHandler interventionWaitAdviserResponseHandler;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private TimeoutInstanceRepository timeoutInstanceRepository;
 
   private static final String PLAN_EXECUTION_ID = generateUuid();
   private static final String NODE_EXECUTION_ID = generateUuid();
   private static final String NODE_SETUP_ID = generateUuid();
 
   private NodeExecution nodeExecution;
-  private RetryAdvise advise;
+  private InterventionWaitAdvise advise;
 
   @Before
   public void setup() {
@@ -49,7 +59,7 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
                                 Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
                             .build();
 
-    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());
+    planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).status(Status.RUNNING).build());
 
     nodeExecution = NodeExecution.builder()
                         .uuid(NODE_EXECUTION_ID)
@@ -64,22 +74,37 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
                         .status(Status.FAILED)
                         .build();
     nodeExecutionService.save(nodeExecution);
-    advise = RetryAdvise.newBuilder().setWaitInterval(0).setRetryNodeExecutionId(NODE_EXECUTION_ID).build();
+    Duration timeout = Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build();
+    advise = InterventionWaitAdvise.newBuilder()
+                 .setTimeout(timeout)
+                 .setRepairActionCode(RepairActionCode.END_EXECUTION)
+                 .build();
   }
 
   @Test
   @RealMongo
-  @Owner(developers = PRASHANT)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {
-    retryAdviseHandler.handleAdvise(
-        nodeExecution, AdviserResponse.newBuilder().setRetryAdvise(advise).setType(AdviseType.RETRY).build());
+    interventionWaitAdviserResponseHandler.handleAdvise(nodeExecution,
+        AdviserResponse.newBuilder().setInterventionWaitAdvise(advise).setType(AdviseType.INTERVENTION_WAIT).build());
     List<NodeExecution> executions = nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID);
-    assertThat(executions).hasSize(2);
-    NodeExecution newNodeExecution =
-        executions.stream().filter(ex -> !ex.getUuid().equals(NODE_EXECUTION_ID)).findFirst().orElse(null);
-    assertThat(newNodeExecution).isNotNull();
-    assertThat(newNodeExecution.getRetryIds()).hasSize(1);
-    assertThat(newNodeExecution.getRetryIds()).containsExactly(NODE_EXECUTION_ID);
+    assertThat(executions).hasSize(1);
+    NodeExecution nodeExecution = executions.get(0);
+    assertThat(nodeExecution).isNotNull();
+    assertThat(nodeExecution.getStatus()).isEqualTo(Status.INTERVENTION_WAITING);
+    assertThat(nodeExecution.getAdviserTimeoutInstanceIds()).hasSize(1);
+    String timeoutInstanceId = nodeExecution.getAdviserTimeoutInstanceIds().get(0);
+
+    Optional<TimeoutInstance> optionalTimeout = timeoutInstanceRepository.findById(timeoutInstanceId);
+    assertThat(optionalTimeout).isPresent();
+    TimeoutCallback callback = optionalTimeout.get().getCallback();
+    assertThat(callback).isInstanceOf(InterventionWaitTimeoutCallback.class);
+
+    TimeoutTracker tracker = optionalTimeout.get().getTracker();
+    assertThat(tracker.getDimension()).isEqualTo(AbsoluteTimeoutTrackerFactory.DIMENSION);
+
+    PlanExecution planExecution = planExecutionService.get(PLAN_EXECUTION_ID);
+    assertThat(planExecution.getStatus()).isEqualTo(Status.INTERVENTION_WAITING);
   }
 }

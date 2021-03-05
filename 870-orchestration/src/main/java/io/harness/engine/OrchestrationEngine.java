@@ -420,7 +420,9 @@ public class OrchestrationEngine {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(Ambiance.newBuilder()
                                              .setPlanExecutionId(planExecution.getUuid())
-                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions())
+                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions() == null
+                                                     ? Collections.emptyMap()
+                                                     : planExecution.getSetupAbstractions())
                                              .build())
                                .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
