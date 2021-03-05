@@ -151,3 +151,7 @@ ResoureGroupConfig:
 
 accessControlClient:
   enableAccessControl: false
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

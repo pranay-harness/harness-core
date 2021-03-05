@@ -92,6 +92,8 @@ public class TaskChainStrategy implements ExecuteStrategy {
                                 .setChainEnd(true)
                                 .setPassThroughData(
                                     ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                                .addAllLogKeys(taskChainResponse.getLogKeys())
+                                .addAllUnits(taskChainResponse.getUnits())
                                 .build())
               .build(),
           Collections.emptyList());
