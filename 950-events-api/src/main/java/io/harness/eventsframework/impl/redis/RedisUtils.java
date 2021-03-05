@@ -1,7 +1,6 @@
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.protobuf.util.Timestamps.fromMillis;
 import static java.lang.Long.parseLong;
@@ -24,7 +23,6 @@ import org.redisson.api.StreamMessageId;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
-import org.redisson.config.SingleServerConfig;
 
 @UtilityClass
 public class RedisUtils {
@@ -36,11 +34,7 @@ public class RedisUtils {
   public RedissonClient getClient(RedisConfig redisConfig) {
     Config config = new Config();
     if (!redisConfig.isSentinel()) {
-      SingleServerConfig serverConfig = config.useSingleServer().setAddress(redisConfig.getRedisUrl());
-      String redisPassword = redisConfig.getPassword();
-      if (isNotEmpty(redisPassword)) {
-        serverConfig.setPassword(redisPassword);
-      }
+      config.useSingleServer().setAddress(redisConfig.getRedisUrl());
     } else {
       config.useSentinelServers().setMasterName(redisConfig.getMasterName());
       for (String sentinelUrl : redisConfig.getSentinelUrls()) {
