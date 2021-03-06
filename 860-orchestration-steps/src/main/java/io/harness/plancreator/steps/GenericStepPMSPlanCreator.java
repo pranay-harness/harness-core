@@ -247,6 +247,13 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case RETRY:
           RetryFailureActionConfig retryAction = (RetryFailureActionConfig) action;
+          ParameterField<Integer> retryCount = retryAction.getSpecConfig().getRetryCount();
+          if (retryCount.isExpression()) {
+            throw new InvalidRequestException("RetryCount fixed value is not given.");
+          }
+          if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
+            throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
+          }
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
@@ -255,9 +262,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                           .nextNodeId(nextNodeUuid)
                           .repairActionCodeAfterRetry(toRepairAction(
                               retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
-                          .retryCount(retryAction.getSpecConfig().getRetryCount())
+                          .retryCount(retryCount.getValue())
                           .waitIntervalList(retryAction.getSpecConfig()
                                                 .getRetryIntervals()
+                                                .getValue()
                                                 .stream()
                                                 .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
                                                 .collect(Collectors.toList()))

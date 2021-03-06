@@ -99,7 +99,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.CONNECTIVITY_ERROR);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MANUAL_INTERVENTION);
     ManualInterventionFailureActionConfig manualAction = (ManualInterventionFailureActionConfig) onFailure.getAction();
-    assertThat(manualAction.getSpecConfig().getTimeout()).isEqualTo(Timeout.fromString("1d"));
+    assertThat(manualAction.getSpecConfig().getTimeout().getValue()).isEqualTo(Timeout.fromString("1d"));
     assertThat(manualAction.getSpecConfig().getOnTimeout().getAction().getType()).isEqualTo(NGFailureActionType.IGNORE);
 
     onFailure = stageElement.getFailureStrategies().get(2).getOnFailure();
@@ -107,8 +107,8 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
     RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
-    assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
-    assertThat(retryAction.getSpecConfig().getRetryIntervals().size()).isEqualTo(2);
+    assertThat(retryAction.getSpecConfig().getRetryCount().getValue()).isEqualTo(3);
+    assertThat(retryAction.getSpecConfig().getRetryIntervals().getValue().size()).isEqualTo(2);
     assertThat(retryAction.getSpecConfig().getOnRetryFailure().getAction().getType())
         .isEqualTo(NGFailureActionType.ABORT);
 

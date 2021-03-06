@@ -9,10 +9,10 @@ import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @NoArgsConstructor
 public class ParameterField<T> implements VisitorFieldWrapper {
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
