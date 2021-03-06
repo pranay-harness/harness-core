@@ -78,6 +78,9 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//360-cg-manager:module",
+    ],
     deps = test_dependencies,
 )
 
