@@ -96,8 +96,8 @@ public class BillingCalculationService {
       networkCost = pricingData.getNetworkCost();
     }
 
-    BillingAmountBreakup billingAmountForResource =
-        getBillingAmountBreakupForResource(instanceData, billingAmount, cpuUnit, memoryMb, storageMb);
+    BillingAmountBreakup billingAmountForResource = getBillingAmountBreakupForResource(
+        instanceData, billingAmount, cpuUnit, memoryMb, storageMb, instanceActiveSeconds, pricingData);
     IdleCostData idleCostData = getIdleCostForResource(billingAmountForResource, utilizationData, instanceData);
     SystemCostData systemCostData = getSystemCostForResource(billingAmountForResource, instanceData);
 
@@ -107,7 +107,8 @@ public class BillingCalculationService {
   }
 
   BillingAmountBreakup getBillingAmountBreakupForResource(InstanceData instanceData, BigDecimal billingAmount,
-      double instanceCpu, double instanceMemory, double instanceStorage) {
+      double instanceCpu, double instanceMemory, double instanceStorage, double instanceActiveSeconds,
+      PricingData pricingData) {
     if (K8S_PV.equals(instanceData.getInstanceType())) {
       return BillingAmountBreakup.builder()
           .billingAmount(billingAmount)
@@ -131,10 +132,18 @@ public class BillingCalculationService {
           .storageBillingAmount(BigDecimal.ZERO)
           .build();
     }
+
+    BigDecimal cpuBillingAmount = billingAmount.multiply(BigDecimal.valueOf(0.5));
+    BigDecimal memoryBillingAmount = billingAmount.multiply(BigDecimal.valueOf(0.5));
+    if (pricingData.getCpuPricePerHour() > 0.0 && pricingData.getMemoryPricePerHour() > 0.0) {
+      cpuBillingAmount = BigDecimal.valueOf((pricingData.getCpuPricePerHour() * instanceActiveSeconds) / 3600);
+      memoryBillingAmount = BigDecimal.valueOf((pricingData.getMemoryPricePerHour() * instanceActiveSeconds) / 3600);
+    }
+
     return BillingAmountBreakup.builder()
         .billingAmount(billingAmount)
-        .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
-        .memoryBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
+        .cpuBillingAmount(cpuBillingAmount)
+        .memoryBillingAmount(memoryBillingAmount)
         .storageBillingAmount(BigDecimal.ZERO)
         .build();
   }
