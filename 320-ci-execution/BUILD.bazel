@@ -14,6 +14,7 @@ shared_dependencies = [
     "//890-sm-core:module",
     "//930-ng-core-clients:module",
     "//950-log-client:module",
+    "//955-delegate-beans:module",
     "@jira_client//jar",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",

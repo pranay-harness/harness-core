@@ -7,6 +7,7 @@ shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
     "//950-common-entities:module",
+    "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
     "//400-rest:module",
@@ -411,6 +412,7 @@ shared_dependencies = [
     "@maven//:org_zeroturnaround_zt_exec",
     "@maven//:ru_vyarus_guice_validator",
     "@maven//:software_amazon_ion_ion_java",
+    "//:lombok",
 ]
 
 java_binary(
@@ -426,13 +428,11 @@ java_binary(
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = shared_dependencies + [
-        "//:lombok",
-    ],
+    deps = shared_dependencies,
 )
 
 test_deps = [
-    "module",
+    ":module",
     "//960-persistence:supporter-test",
     "//990-commons-test:module",
     "@maven//:io_dropwizard_dropwizard_testing",
@@ -449,9 +449,7 @@ java_library(
         "//310-ci-manager/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = test_deps + shared_dependencies + [
-        "//:lombok",
-    ],
+    deps = test_deps + shared_dependencies,
 )
 
 run_tests()

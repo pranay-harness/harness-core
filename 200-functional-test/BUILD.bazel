@@ -15,6 +15,7 @@ shared_dependencies = [
     "//400-rest:module",
     "//910-delegate-service-driver:module",
     "//950-delegate-tasks-beans:module",
+    "//955-delegate-beans:module",
     "//970-grpc:module",
     "@jira_client//jar",
 ]

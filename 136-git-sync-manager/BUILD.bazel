@@ -16,6 +16,7 @@ java_library(
         "//440-connector-nextgen:module",
         "//940-secret-manager-client:module",
         "//950-delegate-tasks-beans:module",
+        "//955-delegate-beans:module",
         "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:io_fabric8_fabric8_utils",
