@@ -99,6 +99,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular List<UnitProgress> unitProgresses;
 
   AdviserResponse adviserResponse;
+  // Timeouts for advisers
+  List<String> adviserTimeoutInstanceIds;
+  TimeoutDetails adviserTimeoutDetails;
 
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;

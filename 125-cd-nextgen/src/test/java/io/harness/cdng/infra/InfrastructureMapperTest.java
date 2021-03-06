@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
@@ -26,13 +27,16 @@ public class InfrastructureMapperTest extends CategoryTest {
                                                           .releaseName(ParameterField.createValueField("release"))
                                                           .build();
 
-    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome = K8sDirectInfrastructureOutcome.builder()
-                                                                        .connectorRef("connectorId")
-                                                                        .namespace("namespace")
-                                                                        .releaseName("release")
-                                                                        .build();
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder()
+            .connectorRef("connectorId")
+            .namespace("namespace")
+            .releaseName("release")
+            .environment(EnvironmentOutcome.builder().build())
+            .build();
 
-    InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(k8SDirectInfrastructure);
+    InfrastructureOutcome infrastructureOutcome =
+        InfrastructureMapper.toOutcome(k8SDirectInfrastructure, EnvironmentOutcome.builder().build());
     assertThat(infrastructureOutcome).isEqualTo(k8sDirectInfrastructureOutcome);
   }
 }

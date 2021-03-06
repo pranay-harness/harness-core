@@ -143,7 +143,7 @@ public class ManifestStepTest extends CategoryTest {
 
     StepResponse.StepOutcome stepOutcome =
         manifestStep.processManifests(Arrays.asList(manifestConfig1, manifestConfig2),
-            Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5), null);
+            Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5), null, null);
 
     ManifestsOutcome manifestsOutcome = (ManifestsOutcome) stepOutcome.getOutcome();
     assertThat(manifestsOutcome.getManifestOutcomeList()).isNotEmpty();

@@ -91,7 +91,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at resource group scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -157,7 +157,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at subscription scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -227,7 +227,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at management group scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -294,7 +294,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> azureARMDeploymentService.deployAtTenantScope(context))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Unable to deploy at tenant scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test

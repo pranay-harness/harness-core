@@ -3,6 +3,7 @@ package io.harness.accesscontrol.permissions.api;
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
+import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
@@ -17,6 +18,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
@@ -47,8 +49,34 @@ public class PermissionResource {
 
   @GET
   @ApiOperation(value = "Get All Permissions in a Scope", nickname = "getPermissionList")
-  public ResponseDTO<List<PermissionResponseDTO>> get(@BeanParam HarnessScopeParams scopeParams,
-      @QueryParam("resourceType") String resourceType, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+  public ResponseDTO<List<PermissionResponseDTO>> get(
+      @BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+    List<Permission> permissions = getPermissions(scopeParams, scopeFilterDisabled);
+    return ResponseDTO.newResponse(
+        permissions.stream()
+            .map(permission
+                -> PermissionDTOMapper.toDTO(
+                    permission, permissionService.getResourceTypeFromPermission(permission).orElse(null)))
+            .collect(Collectors.toList()));
+  }
+
+  @GET
+  @Path("/resourcetypes")
+  @ApiOperation(
+      value = "Get All Resource Types for Permissions in a Scope", nickname = "getPermissionResourceTypesList")
+  public ResponseDTO<Set<String>>
+  getResourceTypes(
+      @BeanParam HarnessScopeParams scopeParams, @QueryParam("scopeFilterDisabled") boolean scopeFilterDisabled) {
+    List<Permission> permissions = getPermissions(scopeParams, scopeFilterDisabled);
+    return ResponseDTO.newResponse(permissions.stream()
+                                       .map(permissionService::getResourceTypeFromPermission)
+                                       .filter(Optional::isPresent)
+                                       .map(Optional::get)
+                                       .map(ResourceType::getIdentifier)
+                                       .collect(Collectors.toSet()));
+  }
+
+  private List<Permission> getPermissions(HarnessScopeParams scopeParams, boolean scopeFilterDisabled) {
     Set<String> scopeFilter = new HashSet<>();
     if (!scopeFilterDisabled) {
       Scope scope = scopeService.buildScopeFromParams(scopeParams);
@@ -59,12 +87,6 @@ public class PermissionResource {
                                  .identifierFilter(new HashSet<>())
                                  .statusFilter(new HashSet<>())
                                  .build();
-    List<Permission> permissions = permissionService.list(query);
-    return ResponseDTO.newResponse(
-        permissions.stream()
-            .map(permission
-                -> PermissionDTOMapper.toDTO(
-                    permission, permissionService.getResourceTypeFromPermission(permission).orElse(null)))
-            .collect(Collectors.toList()));
+    return permissionService.list(query);
   }
 }

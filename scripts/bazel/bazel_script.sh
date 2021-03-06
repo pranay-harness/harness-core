@@ -159,7 +159,7 @@ BAZEL_MODULES="\
   //product/ci/scm/proto:all \
 "
 
-bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
+bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS} --remote_download_outputs=all
 
 build_bazel_module() {
   module=$1
@@ -213,6 +213,8 @@ build_bazel_application() {
   BAZEL_MODULE="//${module}:module"
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
+  bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
+
   if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
@@ -254,6 +256,12 @@ build_bazel_application() {
 build_bazel_application_module() {
   module=$1
   BAZEL_MODULE="//${module}:module"
+  BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
+
+  if [ "${BUILD_BAZEL_DEPLOY_JAR}" == "true" ]
+  then
+    bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${GCP} ${BAZEL_ARGUMENTS}
+  fi
 
   if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
@@ -314,22 +322,23 @@ build_proto_module() {
 #  exit 0
 #fi
 
-build_bazel_application_module 800-pipeline-service
-build_bazel_application_module 830-notification-service
-build_bazel_application_module 900-access-control-service
-build_bazel_application_module 940-notification-client
-build_bazel_application_module 340-ce-nextgen
-build_bazel_application_module 350-event-server
-build_bazel_application_module 360-cg-manager
-build_bazel_application_module 280-batch-processing
+build_bazel_application 260-delegate
+
 build_bazel_application_module 120-ng-manager
 build_bazel_application_module 160-model-gen-tool
 build_bazel_application_module 210-command-library-server
 build_bazel_application_module 250-watcher
-build_bazel_application 260-delegate
+build_bazel_application_module 270-verification
+build_bazel_application_module 280-batch-processing
 build_bazel_application_module 300-cv-nextgen
 build_bazel_application_module 310-ci-manager
-build_bazel_application_module 270-verification
+build_bazel_application_module 340-ce-nextgen
+build_bazel_application_module 350-event-server
+build_bazel_application_module 360-cg-manager
+build_bazel_application_module 800-pipeline-service
+build_bazel_application_module 830-notification-service
+build_bazel_application_module 900-access-control-service
+build_bazel_application_module 940-notification-client
 
 build_bazel_module 125-cd-nextgen
 build_bazel_module 130-resource-group

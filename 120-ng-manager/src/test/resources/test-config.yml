@@ -60,7 +60,6 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
-    password: ""
 
 redisLockConfig:
   sentinel: false
@@ -152,3 +151,7 @@ ResoureGroupConfig:
 
 accessControlClient:
   enableAccessControl: false
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

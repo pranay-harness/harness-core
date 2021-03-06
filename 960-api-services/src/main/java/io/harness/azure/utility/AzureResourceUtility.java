@@ -12,6 +12,8 @@ import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_FULL_PATH_PATTE
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME;
+import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_MNG_GROUP_PATTERN;
+import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_SUBSCRIPTION_PATTERN;
 import static io.harness.azure.model.AzureConstants.SLOT_SWAP_JOB_PROCESSOR_STR;
 
 import static java.lang.String.format;
@@ -20,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.azure.model.blueprint.ResourceScopeType;
 import io.harness.azure.model.blueprint.assignment.Assignment;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
@@ -32,10 +35,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SimpleTimeZone;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -143,11 +148,11 @@ public class AzureResourceUtility {
     return deploymentSlotName.replace(format(DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN, appName), EMPTY);
   }
 
-  public String getAssignmentName(final String blueprintName) {
+  public String generateAssignmentName(final String blueprintName) {
     return String.format(ASSIGNMENT_NAME_PATTERN, blueprintName, System.currentTimeMillis());
   }
 
-  public String getResourceScope(final String blueprintId) {
+  public String getDefinitionResourceScope(final String blueprintId) {
     Matcher matcher = BLUEPRINT_ID_REGEX.matcher(blueprintId);
     if (!matcher.matches()) {
       throw new InvalidArgumentsException(format("Parameter resourceScope not found in blueprintId: %s", blueprintId));
@@ -186,8 +191,12 @@ public class AzureResourceUtility {
   }
 
   public Map<String, String> fixArtifactNames(final Map<String, String> artifacts) {
-    artifacts.replaceAll(AzureResourceUtility::getArtifactName);
-    return artifacts;
+    Map<String, String> fixedArtifacts = new HashMap<>();
+    artifacts.forEach((artifactFileName, artifactJson) -> {
+      String artifactName = getArtifactName(artifactFileName, artifactJson);
+      fixedArtifacts.put(artifactName, artifactJson);
+    });
+    return fixedArtifacts;
   }
 
   public String getArtifactName(final String artifactFileName, final String artifactJson) {
@@ -195,5 +204,33 @@ public class AzureResourceUtility {
     return artifactObj.get("name") != null && isNoneBlank(artifactObj.get("name").asText())
         ? artifactObj.get("name").asText()
         : artifactFileName;
+  }
+
+  public String getRandomUUID() {
+    return UUID.randomUUID().toString();
+  }
+
+  public static String getAssignmentSubscriptionId(final Assignment assignment) {
+    String blueprintId = assignment.getProperties().getBlueprintId();
+    if (ResourceScopeType.MANAGEMENT_GROUP == ResourceScopeType.fromBlueprintId(blueprintId)) {
+      return assignment.getProperties().getScope().replace(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN, EMPTY);
+    } else {
+      return getDefinitionResourceScope(blueprintId).replace(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN, EMPTY);
+    }
+  }
+
+  public static boolean isValidResourceScope(final String resourceScope) {
+    return resourceScope != null
+        && (resourceScope.startsWith(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
+            || resourceScope.startsWith(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN));
+  }
+
+  public static String getAssignmentResourceScope(final Assignment assignment) {
+    String blueprintId = assignment.getProperties().getBlueprintId();
+    if (ResourceScopeType.MANAGEMENT_GROUP == ResourceScopeType.fromBlueprintId(blueprintId)) {
+      return assignment.getProperties().getScope();
+    } else {
+      return getDefinitionResourceScope(blueprintId);
+    }
   }
 }
