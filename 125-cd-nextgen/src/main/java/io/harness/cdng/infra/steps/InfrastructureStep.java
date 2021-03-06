@@ -86,7 +86,8 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
     if (finalInfrastructure == null) {
       throw new InvalidRequestException("Infrastructure definition can't be null or empty");
     }
-    InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(finalInfrastructure);
+    InfrastructureOutcome infrastructureOutcome =
+        InfrastructureMapper.toOutcome(finalInfrastructure, environmentOutcome);
     ngManagerLogCallback.saveExecutionLog(
         "Infrastructure Step completed", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
     return StepResponse.builder()
