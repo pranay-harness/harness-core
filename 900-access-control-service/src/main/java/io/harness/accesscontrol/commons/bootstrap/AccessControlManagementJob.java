@@ -1,4 +1,4 @@
-package io.harness.accesscontrol;
+package io.harness.accesscontrol.commons.bootstrap;
 
 import io.harness.accesscontrol.permissions.PermissionsManagementJob;
 import io.harness.accesscontrol.resources.ResourceTypeManagementJob;

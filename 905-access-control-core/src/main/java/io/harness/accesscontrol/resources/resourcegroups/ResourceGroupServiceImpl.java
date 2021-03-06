@@ -63,6 +63,18 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (!currentResourceGroupOptional.isPresent()) {
       throw new InvalidRequestException(String.format("Could not find the role in the scope %s", scopeIdentifier));
     }
+    return deleteInternal(identifier, scopeIdentifier);
+  }
+
+  @Override
+  public void deleteIfPresent(String identifier, String scopeIdentifier) {
+    Optional<ResourceGroup> currentResourceGroupOptional = get(identifier, scopeIdentifier);
+    if (currentResourceGroupOptional.isPresent()) {
+      deleteInternal(identifier, scopeIdentifier);
+    }
+  }
+
+  private ResourceGroup deleteInternal(String identifier, String scopeIdentifier) {
     return Failsafe.with(deleteResourceGroupTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
       long deleteCount = roleAssignmentService.deleteMany(
           scopeIdentifier, RoleAssignmentFilter.builder().resourceGroupFilter(Sets.newHashSet(identifier)).build());

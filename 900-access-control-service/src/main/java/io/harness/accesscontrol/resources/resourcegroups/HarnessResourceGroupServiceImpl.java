@@ -64,7 +64,7 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
     } catch (InvalidRequestException e) {
       if (e.getMessage().equals(errorMessage)) {
         log.warn("Did not find the resource group with identifier {} in scope {}", identifier, scope.toString());
-        resourceGroupService.delete(identifier, scope.toString());
+        resourceGroupService.deleteIfPresent(identifier, scope.toString());
       }
     }
   }
