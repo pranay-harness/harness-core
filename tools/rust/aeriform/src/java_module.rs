@@ -315,7 +315,7 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
 }
 
 fn is_deprecated(name: &String) -> bool {
-    name.contains("/400-rest:")
+    name.contains("/400-rest:") || name.contains("/260-delegate:")
 }
 
 fn index_fraction(name: &String) -> f32 {

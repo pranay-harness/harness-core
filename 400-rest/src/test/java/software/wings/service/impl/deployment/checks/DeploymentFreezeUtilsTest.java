@@ -21,8 +21,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -50,7 +48,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._960_API_SERVICES)
 public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   @Mock GovernanceConfigService governanceConfigService;
   @Mock NotificationService notificationService;

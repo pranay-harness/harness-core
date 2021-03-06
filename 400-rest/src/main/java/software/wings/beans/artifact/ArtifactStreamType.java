@@ -1,5 +1,8 @@
 package software.wings.beans.artifact;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.ImmutableMap;
@@ -9,6 +12,7 @@ import java.util.Set;
 /**
  * The Enum ArtifactStreamType.
  */
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public enum ArtifactStreamType {
   JENKINS,
   BAMBOO,

@@ -10,6 +10,7 @@ import static io.harness.tasks.Cd1SetupFields.SERVICE_ID_FIELD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+
 @Singleton
 @ValidateOnExecution
 @Slf4j
@@ -355,7 +357,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
             .startupScript(delegateProfileGrpc.getStartupScript());
 
     if (delegateProfileGrpc.hasCreatedBy()) {
-      delegateProfileDetailsBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+      delegateProfileDetailsBuilder.createdBy(EmbeddedUser.builder()
                                                   .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                                   .name(delegateProfileGrpc.getCreatedBy().getName())
                                                   .email(delegateProfileGrpc.getCreatedBy().getEmail())
@@ -363,7 +365,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     }
 
     if (delegateProfileGrpc.hasLastUpdatedBy()) {
-      delegateProfileDetailsBuilder.lastUpdatedBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+      delegateProfileDetailsBuilder.lastUpdatedBy(EmbeddedUser.builder()
                                                       .uuid(delegateProfileGrpc.getLastUpdatedBy().getUuid())
                                                       .name(delegateProfileGrpc.getLastUpdatedBy().getName())
                                                       .email(delegateProfileGrpc.getLastUpdatedBy().getEmail())

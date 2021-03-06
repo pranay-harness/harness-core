@@ -2,7 +2,9 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -27,6 +29,7 @@ import lombok.ToString;
 @Data
 @Builder(toBuilder = true)
 @ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails"})
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String jobName;
   private String imageName;

@@ -9,6 +9,7 @@ import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -315,7 +316,7 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
             .numberOfDelegates(delegateProfileGrpc.getNumberOfDelegates());
 
     if (delegateProfileGrpc.hasCreatedBy()) {
-      delegateProfileDetailsNgBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+      delegateProfileDetailsNgBuilder.createdBy(EmbeddedUser.builder()
                                                     .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                                     .name(delegateProfileGrpc.getCreatedBy().getName())
                                                     .email(delegateProfileGrpc.getCreatedBy().getEmail())
@@ -323,7 +324,7 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
     }
 
     if (delegateProfileGrpc.hasLastUpdatedBy()) {
-      delegateProfileDetailsNgBuilder.lastUpdatedBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
+      delegateProfileDetailsNgBuilder.lastUpdatedBy(EmbeddedUser.builder()
                                                         .uuid(delegateProfileGrpc.getLastUpdatedBy().getUuid())
                                                         .name(delegateProfileGrpc.getLastUpdatedBy().getName())
                                                         .email(delegateProfileGrpc.getLastUpdatedBy().getEmail())

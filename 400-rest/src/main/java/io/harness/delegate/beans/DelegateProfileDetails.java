@@ -2,6 +2,7 @@ package io.harness.delegate.beans;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EmbeddedUser;
 
 import java.util.List;
 import lombok.Builder;
@@ -25,8 +26,8 @@ public class DelegateProfileDetails {
   private List<ScopingRuleDetails> scopingRules;
   private List<String> selectors;
 
-  private EmbeddedUserDetails createdBy;
-  private EmbeddedUserDetails lastUpdatedBy;
+  private EmbeddedUser createdBy;
+  private EmbeddedUser lastUpdatedBy;
 
   private String identifier;
 }

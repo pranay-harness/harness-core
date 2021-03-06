@@ -192,6 +192,10 @@ aeriform("//900-access-control-service:module")
 
 aeriform("//900-access-control-service:tests")
 
+aeriform("//902-aggregator-module:module")
+
+aeriform("//902-aggregator-module:tests")
+
 aeriform("//903-decision-module:module")
 
 aeriform("//903-decision-module:tests")
@@ -255,6 +259,8 @@ aeriform("//950-events-framework:tests")
 aeriform("//950-git-sync-sdk:module")
 
 aeriform("//950-log-client:module")
+
+aeriform("//950-log-client:tests")
 
 aeriform("//950-ng-core:module")
 

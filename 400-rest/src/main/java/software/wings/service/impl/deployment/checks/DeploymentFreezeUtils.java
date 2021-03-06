@@ -12,8 +12,6 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.governance.GovernanceFreezeConfig;
 
 import software.wings.beans.InformationNotification;
@@ -40,7 +38,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
 public class DeploymentFreezeUtils {
   public static final int ALERT_VALID_DAYS = 14;
   public static final String BLACKOUT_WINDOW_NAME = "BLACKOUT_WINDOW_NAME";

@@ -1,5 +1,7 @@
 package software.wings.settings;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 
 import software.wings.security.UsageRestrictions;
@@ -19,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
