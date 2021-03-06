@@ -911,6 +911,7 @@ public class DelegateModule extends AbstractModule {
     bind(CVNGDataCollectionDelegateService.class).to(CVNGDataCollectionDelegateServiceImpl.class);
     bind(AzureManagementClient.class).to(AzureManagementClientImpl.class);
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
+    bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =

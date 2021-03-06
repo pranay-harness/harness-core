@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.azure.arm.deployment.validator;
 
+import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.BLUEPRINT_ID_IS_NOT_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.BLUEPRINT_ID_REGEX;
+import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_SUBSCRIPTION_PATTERN;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -8,12 +11,17 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.blueprint.ResourceScopeType;
 import io.harness.azure.model.blueprint.assignment.Assignment;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
 
 public class AssignmentJsonValidator implements Validator<String> {
   @Override
-  public void validate(String assignJson) {
+  public void validate(final String assignJson) {
+    if (isBlank(assignJson)) {
+      throw new InvalidArgumentsException(ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG);
+    }
+
     Assignment assignment = JsonUtils.asObject(assignJson, Assignment.class);
 
     if (assignment.getIdentity() == null) {
@@ -29,16 +37,20 @@ public class AssignmentJsonValidator implements Validator<String> {
       throw new InvalidArgumentsException(AzureConstants.PROPERTIES_BLUEPRINT_ID_VALIDATION_MSG);
     }
 
+    if (!AzureResourceUtility.isValidResourceScope(blueprintId)) {
+      throw new IllegalArgumentException(format(BLUEPRINT_ID_IS_NOT_VALIDATION_MSG, blueprintId));
+    }
+
     if (blueprintId.endsWith("/")) {
       throw new InvalidArgumentsException(format(
           "Not valid value of properties.blueprintId property, ending with '/' character. Required format "
-              + "/{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/versions/{versionId}, blueprintId: %s",
+              + "/{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/versions/{versionId}, but found - blueprintId: %s",
           blueprintId));
     }
 
     if (!BLUEPRINT_ID_REGEX.matcher(blueprintId).matches()) {
       throw new InvalidArgumentsException(format("Not valid value of properties.blueprintId property. Required format "
-              + "/{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/versions/{versionId}, blueprintId: %s",
+              + "/{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/versions/{versionId}, but found - blueprintId: %s",
           blueprintId));
     }
 
@@ -57,10 +69,16 @@ public class AssignmentJsonValidator implements Validator<String> {
       if (isBlank(scope)) {
         throw new InvalidArgumentsException(AzureConstants.PROPERTIES_SCOPE_BLANK_VALIDATION_MSG);
       }
-      if (!scope.startsWith("/subscriptions/")) {
+      if (!scope.startsWith(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
         throw new InvalidArgumentsException(format(
             "Assignment properties.scope has to being assigned to a subscription for management group resource scope, scope: %s ",
             scope));
+      }
+      if (scope.endsWith("/")) {
+        throw new InvalidArgumentsException(
+            format("Not valid value of properties.scope property, ending with '/' character. Required format "
+                    + "/subscriptions/{subscriptionId}, but found - scope: %s",
+                scope));
       }
     }
   }

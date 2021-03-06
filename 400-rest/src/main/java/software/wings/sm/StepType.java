@@ -564,7 +564,8 @@ public enum StepType {
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
   ARM_CREATE_RESOURCE(ARMProvisionState.class, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
-      Collections.singletonList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      Collections.singletonList(INFRASTRUCTURE_PROVISIONER),
+      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, POST_DEPLOYMENT, WRAP_UP),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
       Collections.singletonList(PhaseType.NON_ROLLBACK)),

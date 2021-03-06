@@ -4,6 +4,7 @@ import static io.harness.azure.model.AzureConstants.ARTIFACTS_FOLDER_NAME;
 import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.BLUEPRINT_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.UNIX_SEPARATOR;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -17,19 +18,23 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.delegate.task.azure.arm.request.AzureBlueprintDeploymentParameters;
 import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
+import io.harness.delegate.task.azure.arm.response.AzureBlueprintDeploymentResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -55,6 +60,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
@@ -75,11 +81,12 @@ public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";
   private static final String BLUEPRINT_FOLDER_KEY = "BLUEPRINT";
+  protected static final String EMPTY_TEMPLATE = "{}";
 
   @Getter @Setter protected String provisionerId;
   @Getter @Setter protected String cloudProviderId;
   @Getter @Setter protected String timeoutExpression;
-  @Getter @Setter private AzureDeploymentMode deploymentMode = AzureDeploymentMode.INCREMENTAL;
+  @Getter @Setter private String mode;
 
   @Getter @Setter private String locationExpression;
   @Getter @Setter protected String subscriptionExpression;
@@ -111,8 +118,8 @@ public class ARMProvisionState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
-    return provisioner.isBlueprint() ? executeBlueprintTaskInternal(context, provisioner)
-                                     : executeARMTaskInternal(context, provisioner);
+    return isBlueprint(provisioner) ? executeBlueprintTaskInternal(context, provisioner)
+                                    : executeARMTaskInternal(context, provisioner);
   }
 
   private ExecutionResponse executeBlueprintTaskInternal(
@@ -199,6 +206,13 @@ public class ARMProvisionState extends State {
       templateBody = provisioner.getTemplateBody();
     }
 
+    if (isEmpty(templateBody) || EMPTY_TEMPLATE.equalsIgnoreCase(templateBody)) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage("ARM template is not found or empty")
+          .build();
+    }
+
     String parametersBody;
     if (parametersGitFileConfig != null) {
       parametersBody = helper.extractJsonFromGitResponse(stateExecutionData, VARIABLES_KEY);
@@ -217,8 +231,8 @@ public class ARMProvisionState extends State {
             .subscriptionId(context.renderExpression(subscriptionExpression))
             .resourceGroupName(context.renderExpression(resourceGroupExpression))
             .deploymentDataLocation(context.renderExpression(locationExpression))
-            .templateJson(context.renderExpression(templateBody))
-            .parametersJson(context.renderExpression(parametersBody))
+            .templateJson(templateBody)
+            .parametersJson(isEmpty(parametersBody) ? EMPTY_TEMPLATE : parametersBody)
             .commandName(ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE)
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
             .build();
@@ -256,15 +270,14 @@ public class ARMProvisionState extends State {
     log.info(
         "Blueprint repo info, filePath: {}, assignJsonFilePath: {}, blueprintJsonFilePath: {}, artifactsFolderPath: {} ",
         filePath, assignJsonFilePath, blueprintJsonFilePath, artifactsFolderPath);
-    artifacts.replaceAll((key, value) -> context.renderExpression(value));
 
     AzureBlueprintDeploymentParameters taskParams =
         AzureBlueprintDeploymentParameters.builder()
             .appId(context.getAppId())
             .accountId(context.getAccountId())
             .activityId(activityId)
-            .assignmentJson(context.renderExpression(assignmentJson))
-            .blueprintJson(context.renderExpression(blueprintJson))
+            .assignmentJson(assignmentJson)
+            .blueprintJson(blueprintJson)
             .artifacts(artifacts)
             .commandName(ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE)
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
@@ -293,7 +306,7 @@ public class ARMProvisionState extends State {
                                                     .azureConfigEncryptionDetails(azureEncryptionDetails)
                                                     .azureTaskParameters(taskParams)
                                                     .build();
-
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .uuid(generateUuid())
@@ -306,8 +319,17 @@ public class ARMProvisionState extends State {
                       .taskType(AZURE_ARM_TASK.name())
                       .parameters(new Object[] {delegateRequest})
                       .timeout(TimeUnit.MINUTES.toMillis(helper.renderTimeout(timeoutExpression, context)))
+                      .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .build();
+
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+
     delegateService.queueTask(delegateTask);
     return ExecutionResponse.builder()
         .async(true)
@@ -319,7 +341,7 @@ public class ARMProvisionState extends State {
 
   private AzureDeploymentMode deploymentMode(ARMScopeType scopeType) {
     if (ARMScopeType.RESOURCE_GROUP == scopeType) {
-      return deploymentMode;
+      return mode != null ? AzureDeploymentMode.valueOf(mode.toUpperCase()) : AzureDeploymentMode.INCREMENTAL;
     }
     return AzureDeploymentMode.INCREMENTAL;
   }
@@ -364,7 +386,7 @@ public class ARMProvisionState extends State {
         (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult());
 
     ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
-    return provisioner.isBlueprint()
+    return isBlueprint(provisioner)
         ? executeBlueprintTask(context, stateExecutionData, provisioner, stateExecutionData.getActivityId())
         : executeARMTask(context, stateExecutionData, provisioner, stateExecutionData.getActivityId());
   }
@@ -372,13 +394,40 @@ public class ARMProvisionState extends State {
   private ExecutionResponse handleAsyncInternalARMTask(
       ExecutionContext context, Map<String, ResponseData> response, ARMStateExecutionData stateExecutionData) {
     AzureTaskExecutionResponse executionResponse = (AzureTaskExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
-        ? ExecutionStatus.SUCCESS
-        : ExecutionStatus.FAILED;
+    AzureTaskResponse azureTaskResponse = executionResponse.getAzureTaskResponse();
+
+    if (azureTaskResponse instanceof AzureARMDeploymentResponse) {
+      return handleAsyncInternalARMTask(context, stateExecutionData, executionResponse);
+    } else if (azureTaskResponse instanceof AzureBlueprintDeploymentResponse) {
+      return handleAsyncInternalBlueprintTask(context, stateExecutionData, executionResponse);
+    } else {
+      throw new InvalidRequestException(
+          format("Unknown Azure task response type: %s", executionResponse.getAzureTaskResponse()));
+    }
+  }
+
+  private ExecutionResponse handleAsyncInternalBlueprintTask(ExecutionContext context,
+      ARMStateExecutionData stateExecutionData, AzureTaskExecutionResponse executionResponse) {
+    ExecutionStatus executionStatus = getExecutionStatus(executionResponse);
     activityService.updateStatus(stateExecutionData.getActivityId(), context.getAppId(), executionStatus);
 
+    return (ExecutionStatus.FAILED == executionStatus)
+        ? ExecutionResponse.builder()
+              .errorMessage(executionResponse.getErrorMessage())
+              .executionStatus(executionStatus)
+              .build()
+        : ExecutionResponse.builder().stateExecutionData(stateExecutionData).executionStatus(executionStatus).build();
+  }
+
+  private ExecutionResponse handleAsyncInternalARMTask(ExecutionContext context,
+      ARMStateExecutionData stateExecutionData, AzureTaskExecutionResponse executionResponse) {
+    ExecutionStatus executionStatus = getExecutionStatus(executionResponse);
+    activityService.updateStatus(stateExecutionData.getActivityId(), context.getAppId(), executionStatus);
+    AzureARMDeploymentResponse armDeploymentResponse =
+        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+
     if (!isRollback()) {
-      savePreDeploymentData(context, executionResponse);
+      savePreDeploymentData(context, armDeploymentResponse);
     }
     if (ExecutionStatus.FAILED == executionStatus) {
       return ExecutionResponse.builder()
@@ -392,12 +441,10 @@ public class ARMProvisionState extends State {
     return ExecutionResponse.builder().stateExecutionData(stateExecutionData).executionStatus(executionStatus).build();
   }
 
-  private void savePreDeploymentData(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
-    if (preDeploymentDataDoesNotExist(executionResponse)) {
+  private void savePreDeploymentData(ExecutionContext context, AzureARMDeploymentResponse azureTaskResponse) {
+    if (preDeploymentDataDoesNotExist(azureTaskResponse)) {
       return;
     }
-    AzureARMDeploymentResponse azureTaskResponse =
-        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
     AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
     ARMPreExistingTemplate armPreExistingTemplate =
         ARMPreExistingTemplate.builder().preDeploymentData(preDeploymentData).build();
@@ -407,9 +454,7 @@ public class ARMProvisionState extends State {
     helper.savePreExistingTemplate(armPreExistingTemplate, key, context);
   }
 
-  private boolean preDeploymentDataDoesNotExist(AzureTaskExecutionResponse executionResponse) {
-    AzureARMDeploymentResponse azureTaskResponse =
-        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+  private boolean preDeploymentDataDoesNotExist(AzureARMDeploymentResponse azureTaskResponse) {
     AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
     return preDeploymentData == null || isEmpty(preDeploymentData.getResourceGroupTemplateJson());
   }
@@ -418,6 +463,15 @@ public class ARMProvisionState extends State {
     AzureARMDeploymentResponse azureTaskResponse =
         (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
     helper.saveARMOutputs(azureTaskResponse.getOutputs(), context);
+  }
+
+  private boolean isBlueprint(ARMInfrastructureProvisioner provisioner) {
+    return provisioner != null && ARMResourceType.BLUEPRINT == provisioner.getResourceType();
+  }
+
+  private ExecutionStatus getExecutionStatus(AzureTaskExecutionResponse executionResponse) {
+    return executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS ? ExecutionStatus.SUCCESS
+                                                                                           : ExecutionStatus.FAILED;
   }
 
   @Override
