@@ -9,7 +9,9 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.Resource;
@@ -31,9 +33,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class EcsFargateInstancePricingStrategyTest extends CategoryTest {
   @InjectMocks private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   @Mock VMPricingService vmPricingService;
+  @Mock CustomBillingMetaDataService customBillingMetaDataService;
+  @Mock AwsCustomBillingService awsCustomBillingService;
 
   private static final Instant NOW = Instant.now();
   private final String REGION = "us-east-1";
+  private final String ACCOUNT_ID = "accountId";
 
   @Test
   @Owner(developers = HITESH)
@@ -45,9 +50,11 @@ public class EcsFargateInstancePricingStrategyTest extends CategoryTest {
     doReturn(EcsFargatePricingInfo.builder().region(REGION).cpuPrice(0.04656).memoryPrice(0.00511).build())
         .when(vmPricingService)
         .getFargatePricingInfo(REGION);
+    doReturn(null).when(customBillingMetaDataService).getAwsDataSetId(ACCOUNT_ID);
 
     InstanceData instanceData = InstanceData.builder()
                                     .metaData(metaData)
+                                    .accountId(ACCOUNT_ID)
                                     .totalResource(Resource.builder().cpuUnits(1.0 * 1024).memoryMb(8.0 * 1024).build())
                                     .build();
 
@@ -69,10 +76,12 @@ public class EcsFargateInstancePricingStrategyTest extends CategoryTest {
     doReturn(EcsFargatePricingInfo.builder().region(REGION).cpuPrice(0.04656).memoryPrice(0.00511).build())
         .when(vmPricingService)
         .getFargatePricingInfo(REGION);
+    doReturn(null).when(customBillingMetaDataService).getAwsDataSetId(ACCOUNT_ID);
 
     InstanceData instanceData =
         InstanceData.builder()
             .metaData(metaData)
+            .accountId(ACCOUNT_ID)
             .totalResource(Resource.builder().cpuUnits(1.0 * 1024).memoryMb(8.0 * 1024).build())
             .pricingResource(Resource.builder().cpuUnits(2.0 * 1024).memoryMb(9.0 * 1024).build())
             .build();
