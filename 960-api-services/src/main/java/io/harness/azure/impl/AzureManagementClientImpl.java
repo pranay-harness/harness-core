@@ -12,11 +12,11 @@ import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VAL
 import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.azure.AzureClient;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
@@ -26,6 +26,7 @@ import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.management.ManagementGroupInfo;
 import io.harness.azure.model.management.ManagementGroupListResult;
+import io.harness.azure.utility.AzureUtils;
 import io.harness.exception.AzureClientException;
 import io.harness.serializer.JsonUtils;
 
@@ -37,7 +38,7 @@ import com.microsoft.azure.management.resources.DeploymentMode;
 import com.microsoft.azure.management.resources.DeploymentProperties;
 import com.microsoft.azure.management.resources.Location;
 import com.microsoft.azure.management.resources.ResourceGroupExportTemplateOptions;
-import com.microsoft.azure.management.resources.Subscription;
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.management.resources.implementation.DeploymentExtendedInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentOperationInner;
@@ -45,6 +46,7 @@ import com.microsoft.azure.management.resources.implementation.DeploymentOperati
 import com.microsoft.azure.management.resources.implementation.DeploymentValidateResultInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentsInner;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,16 +59,28 @@ import retrofit2.Response;
 public class AzureManagementClientImpl extends AzureClient implements AzureManagementClient {
   @Override
   public List<String> listLocationsBySubscriptionId(AzureConfig azureConfig, String subscriptionId) {
-    Azure azure = isBlank(subscriptionId) ? getAzureClientWithDefaultSubscription(azureConfig)
-                                          : getAzureClient(azureConfig, subscriptionId);
+    AzureEnvironmentType azureEnvironmentType = azureConfig.getAzureEnvironmentType() == null
+        ? AzureEnvironmentType.AZURE
+        : azureConfig.getAzureEnvironmentType();
 
     log.debug("Start listing location by subscriptionId {}", subscriptionId);
-    Subscription subscription =
-        isBlank(subscriptionId) ? azure.getCurrentSubscription() : azure.subscriptions().getById(subscriptionId);
+    return isNotBlank(subscriptionId) ? getAzureClient(azureConfig, subscriptionId)
+                                            .subscriptions()
+                                            .getById(subscriptionId)
+                                            .listLocations()
+                                            .stream()
+                                            .map(Location::displayName)
+                                            .collect(Collectors.toList())
+                                      : getLocationsFromRegion(azureEnvironmentType);
+  }
 
-    return subscription != null
-        ? subscription.listLocations().stream().map(Location::displayName).collect(Collectors.toList())
-        : emptyList();
+  private List<String> getLocationsFromRegion(AzureEnvironmentType azureEnvironmentType) {
+    return Arrays.stream(Region.values())
+        .filter(region
+            -> (AzureEnvironmentType.AZURE_US_GOVERNMENT == azureEnvironmentType)
+                == AzureUtils.AZURE_GOV_REGIONS_NAMES.contains(region.name()))
+        .map(Region::label)
+        .collect(Collectors.toList());
   }
 
   @Override

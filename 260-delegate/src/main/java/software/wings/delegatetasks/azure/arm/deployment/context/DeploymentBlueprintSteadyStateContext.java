@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class DeploymentBlueprintSteadyStateContext {
   private AzureConfig azureConfig;
-  private String resourceScope;
+  private String assignmentResourceScope;
   private String assignmentName;
   private int steadyCheckTimeoutInMinutes;
   private long statusCheckIntervalInSeconds;
