@@ -71,7 +71,7 @@ public final class K8sWorkloadRecommendation
   @Singular @NotEmpty Map<String, ContainerRecommendation> containerRecommendations;
   @Singular @NotEmpty Map<String, ContainerCheckpoint> containerCheckpoints;
 
-  UnitPrice unitPrice;
+  Cost lastDayCost;
   @FdIndex BigDecimal estimatedSavings;
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;

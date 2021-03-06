@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
@@ -182,9 +183,8 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
         .isEqualTo(BigDecimal.valueOf(-0.575));
 
     // last day's cpu & memory total cost
-    WorkloadCostService.Cost unitCost =
-        WorkloadCostService.Cost.builder().cpu(BigDecimal.valueOf(3.422)).memory(BigDecimal.valueOf(4.234)).build();
-    assertThat(computedRecommendationWriter.estimateMonthlySavings(containerRecommendations, unitCost))
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(3.422)).memory(BigDecimal.valueOf(4.234)).build();
+    assertThat(computedRecommendationWriter.estimateMonthlySavings(containerRecommendations, lastDayCost))
         // dailyChange: 3.422*(-0.338) + 4.234*(-0.575) = -3.591
         // monthlySavings = -3.591 * -30 = 107.74
         .isEqualTo(BigDecimal.valueOf(107.74));
@@ -271,10 +271,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                                                              .name(WORKLOAD_NAME)
                                                              .build()),
              eq(JOB_START_DATE.minus(Duration.ofDays(7)))))
-        .thenReturn(WorkloadCostService.Cost.builder()
-                        .cpu(BigDecimal.valueOf(3.422))
-                        .memory(BigDecimal.valueOf(4.234))
-                        .build());
+        .thenReturn(Cost.builder().cpu(BigDecimal.valueOf(3.422)).memory(BigDecimal.valueOf(4.234)).build());
 
     when(workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(any(), any(), any()))
         .thenReturn(Collections.singletonList(
@@ -380,10 +377,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                                                              .name(WORKLOAD_NAME)
                                                              .build()),
              eq(JOB_START_DATE.minus(Duration.ofDays(7)))))
-        .thenReturn(WorkloadCostService.Cost.builder()
-                        .cpu(BigDecimal.valueOf(3.422))
-                        .memory(BigDecimal.valueOf(4.234))
-                        .build());
+        .thenReturn(Cost.builder().cpu(BigDecimal.valueOf(3.422)).memory(BigDecimal.valueOf(4.234)).build());
     when(workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(any(), any(), any()))
         .thenReturn(Collections.emptyList());
 
