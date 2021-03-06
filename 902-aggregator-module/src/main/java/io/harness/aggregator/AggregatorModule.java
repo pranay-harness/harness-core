@@ -6,6 +6,7 @@ import io.harness.accesscontrol.roles.RoleService;
 import io.harness.aggregator.services.HACLAggregatorServiceImpl;
 import io.harness.aggregator.services.apis.ACLAggregatorService;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.threading.ExecutorModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -15,6 +16,7 @@ import io.debezium.engine.format.Json;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -24,27 +26,32 @@ public class AggregatorModule extends AbstractModule {
   private final AggregatorConfiguration configuration;
   private final ExecutorService executorService;
 
-  public AggregatorModule(AggregatorConfiguration configuration, ExecutorService executorService) {
+  public AggregatorModule(AggregatorConfiguration configuration) {
     this.configuration = configuration;
-    this.executorService = executorService;
+    this.executorService = Executors.newFixedThreadPool(5);
   }
 
-  public static synchronized AggregatorModule getInstance(
-      AggregatorConfiguration aggregatorConfiguration, ExecutorService executorService) {
+  public static synchronized AggregatorModule getInstance(AggregatorConfiguration aggregatorConfiguration) {
     if (instance == null) {
-      instance = new AggregatorModule(aggregatorConfiguration, executorService);
+      instance = new AggregatorModule(aggregatorConfiguration);
     }
     return instance;
   }
 
   @Override
   protected void configure() {
-    bind(ACLAggregatorService.class).to(HACLAggregatorServiceImpl.class).in(Scopes.SINGLETON);
-    registerRequiredBindings();
+    if (configuration.isEnabled()) {
+      ExecutorModule.getInstance().setExecutorService(this.executorService);
+      install(ExecutorModule.getInstance());
 
-    HMongoChangeConsumer hMongoChangeConsumer = new HMongoChangeConsumer();
-    DebeziumEngine<ChangeEvent<String, String>> debeziumEngine = getEngine(hMongoChangeConsumer);
-    executorService.submit(debeziumEngine);
+      bind(ACLAggregatorService.class).to(HACLAggregatorServiceImpl.class).in(Scopes.SINGLETON);
+
+      HMongoChangeConsumer hMongoChangeConsumer = new HMongoChangeConsumer();
+      DebeziumEngine<ChangeEvent<String, String>> debeziumEngine = getEngine(hMongoChangeConsumer);
+      executorService.submit(debeziumEngine);
+
+      registerRequiredBindings();
+    }
   }
 
   private DebeziumEngine<ChangeEvent<String, String>> getEngine(

@@ -2,6 +2,8 @@ package io.harness.accesscontrol;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
+import io.harness.accesscontrol.commons.events.EventsConfig;
+import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
@@ -37,6 +39,8 @@ public class AccessControlConfiguration extends Configuration {
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private final List<String> allowedOrigins = Lists.newArrayList();
+  @JsonProperty("eventsConfig") private EventsConfig eventsConfig;
+  @JsonProperty("iteratorsConfig") private AccessControlIteratorsConfig iteratorsConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;

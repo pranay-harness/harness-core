@@ -16,4 +16,6 @@ public interface ResourceGroupService {
   Optional<ResourceGroup> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   ResourceGroup delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+
+  void deleteIfPresent(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 }
