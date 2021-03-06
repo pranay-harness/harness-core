@@ -145,10 +145,6 @@ if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
 fi
 
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
-fi
-
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -180,6 +176,14 @@ fi
 
 if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
+fi
+
+if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
+  yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 fi
 
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY

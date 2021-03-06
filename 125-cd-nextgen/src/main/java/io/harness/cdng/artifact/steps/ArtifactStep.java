@@ -1,5 +1,7 @@
 package io.harness.cdng.artifact.steps;
 
+import static io.harness.cdng.service.steps.ServiceStep.SERVICE_STEP_COMMAND_UNIT;
+
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -33,6 +35,7 @@ import io.harness.steps.StepUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,7 +71,8 @@ public class ArtifactStep {
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareTaskRequestWithoutLogs(ambiance, taskData, kryoSerializer);
+    return StepUtils.prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, Collections.singletonList(SERVICE_STEP_COMMAND_UNIT));
   }
 
   public StepOutcome processDelegateResponse(

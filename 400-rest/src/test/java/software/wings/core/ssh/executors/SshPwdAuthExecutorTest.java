@@ -201,11 +201,10 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = ANUBHAW)
-  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
     executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
-    assertThatThrownBy(() -> executor.executeCommandString("ls"))
+    assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
         .isInstanceOf(WingsException.class)
         .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
   }

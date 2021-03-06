@@ -15,6 +15,5 @@ public class RoleAssignmentDTO {
   @ApiModelProperty(required = true) String resourceGroupIdentifier;
   @ApiModelProperty(required = true) String roleIdentifier;
   @ApiModelProperty(required = true) PrincipalDTO principal;
-  boolean harnessManaged;
   boolean disabled;
 }

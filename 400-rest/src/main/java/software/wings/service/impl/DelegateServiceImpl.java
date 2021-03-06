@@ -623,6 +623,22 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public Double getConnectedRatioWithPrimary(String targetVersion) {
+    long primary =
+        delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(configurationController.getPrimaryVersion());
+
+    // If we do not have any delegates in the primary version, lets unblock the deployment,
+    // that will be very rare and we are in trouble anyways, let report 1 to let the new deployment go.
+    if (primary == 0) {
+      return 1.0;
+    }
+
+    long target = delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(targetVersion);
+
+    return (double) target / (double) primary;
+  }
+
+  @Override
   public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
     validateSetupDetails(delegateSetupDetails);
     delegateSetupDetails.setSessionIdentifier(generateUuid());

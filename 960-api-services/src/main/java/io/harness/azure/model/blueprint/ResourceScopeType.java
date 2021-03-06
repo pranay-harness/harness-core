@@ -1,5 +1,8 @@
 package io.harness.azure.model.blueprint;
 
+import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_MNG_GROUP_PATTERN;
+import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_SUBSCRIPTION_PATTERN;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -28,9 +31,9 @@ public enum ResourceScopeType {
     if (value == null) {
       return null;
     }
-    if (value.startsWith("/subscriptions/")) {
+    if (value.startsWith(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
       return SUBSCRIPTION;
-    } else if (value.startsWith("/providers/Microsoft.Management/managementGroups/")) {
+    } else if (value.startsWith(RESOURCE_SCOPE_MNG_GROUP_PATTERN)) {
       return MANAGEMENT_GROUP;
     } else {
       return null;

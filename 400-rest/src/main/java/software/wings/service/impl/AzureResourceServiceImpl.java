@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.service.impl.AzureUtils.AZURE_GOV_REGIONS_NAMES;
+import static io.harness.azure.utility.AzureUtils.AZURE_GOV_REGIONS_NAMES;
 
 import io.harness.exception.InvalidArgumentsException;
 
