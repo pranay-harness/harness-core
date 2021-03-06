@@ -2,6 +2,7 @@ package io.harness.cdng.infra;
 
 import static java.lang.String.format;
 
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
@@ -14,7 +15,8 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class InfrastructureMapper {
-  public InfrastructureOutcome toOutcome(@Nonnull Infrastructure infrastructure) {
+  public InfrastructureOutcome toOutcome(
+      @Nonnull Infrastructure infrastructure, EnvironmentOutcome environmentOutcome) {
     switch (infrastructure.getKind()) {
       case InfrastructureKind.KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
@@ -22,6 +24,7 @@ public class InfrastructureMapper {
             .connectorRef(k8SDirectInfrastructure.getConnectorRef().getValue())
             .namespace(k8SDirectInfrastructure.getNamespace().getValue())
             .releaseName(k8SDirectInfrastructure.getReleaseName().getValue())
+            .environment(environmentOutcome)
             .build();
       default:
         throw new InvalidArgumentsException(format("Unknown Infrastructure Kind : [%s]", infrastructure.getKind()));
