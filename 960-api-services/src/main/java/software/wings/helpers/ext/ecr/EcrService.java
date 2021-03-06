@@ -3,10 +3,8 @@ package software.wings.helpers.ext.ecr;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.aws.beans.AwsInternalConfig;
-
-import software.wings.beans.AwsConfig;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +23,7 @@ public interface EcrService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(
+  List<BuildDetailsInternal> getBuilds(
       AwsInternalConfig awsConfig, String imageUrl, String region, String imageName, int maxNumberOfBuilds);
 
   /**
@@ -35,7 +33,7 @@ public interface EcrService {
    * @param imageName the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(AwsConfig awsConfig, String imageName);
+  BuildDetailsInternal getLastSuccessfulBuild(AwsInternalConfig awsConfig, String imageName);
 
   /**
    * Validates the Image

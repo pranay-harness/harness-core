@@ -20,6 +20,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
@@ -48,10 +49,14 @@ public class EcrBuildServiceImpl implements EcrBuildService {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
 
     return wrapNewBuildsWithLabels(
-        ecrService.getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
-            ecrServiceDelegate.getEcrImageUrl(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
-                artifactStreamAttributes.getImageName()),
-            artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName(), 50),
+        ecrService
+            .getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+                ecrServiceDelegate.getEcrImageUrl(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
+                    artifactStreamAttributes.getImageName()),
+                artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName(), 50)
+            .stream()
+            .map(ArtifactConfigMapper::toBuildDetails)
+            .collect(Collectors.toList()),
         artifactStreamAttributes, awsConfig);
   }
 

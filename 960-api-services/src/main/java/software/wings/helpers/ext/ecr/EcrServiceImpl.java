@@ -4,23 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetadataKeys;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 
-import software.wings.beans.AwsConfig;
-import software.wings.common.BuildDetailsComparatorAscending;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
 import software.wings.service.impl.AwsApiHelperService;
-import software.wings.service.impl.AwsHelperService;
-import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
-import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
@@ -40,15 +34,12 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Singleton
 public class EcrServiceImpl implements EcrService {
-  @Inject private AwsHelperService awsHelperService;
-  @Inject private EncryptionService encryptionService;
-  @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
   @Inject private AwsApiHelperService awsApiHelperService;
 
   @Override
-  public List<BuildDetails> getBuilds(
+  public List<BuildDetailsInternal> getBuilds(
       AwsInternalConfig awsConfig, String imageUrl, String region, String imageName, int maxNumberOfBuilds) {
-    List<BuildDetails> buildDetails = new ArrayList<>();
+    List<BuildDetailsInternal> buildDetailsInternals = new ArrayList<>();
     try {
       ListImagesResult listImagesResult;
       ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
@@ -59,13 +50,13 @@ public class EcrServiceImpl implements EcrService {
             .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
             .forEach(imageIdentifier -> {
               Map<String, String> metadata = new HashMap();
-              metadata.put(BuildDetailsMetadataKeys.image, imageUrl + ":" + imageIdentifier.getImageTag());
-              metadata.put(BuildDetailsMetadataKeys.tag, imageIdentifier.getImageTag());
-              buildDetails.add(aBuildDetails()
-                                   .withNumber(imageIdentifier.getImageTag())
-                                   .withMetadata(metadata)
-                                   .withUiDisplayName("Tag# " + imageIdentifier.getImageTag())
-                                   .build());
+              metadata.put(BuildDetailsInternalMetadataKeys.image, imageUrl + ":" + imageIdentifier.getImageTag());
+              metadata.put(BuildDetailsInternalMetadataKeys.tag, imageIdentifier.getImageTag());
+              buildDetailsInternals.add(BuildDetailsInternal.builder()
+                                            .number(imageIdentifier.getImageTag())
+                                            .metadata(metadata)
+                                            .uiDisplayName("Tag# " + imageIdentifier.getImageTag())
+                                            .build());
             });
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
@@ -73,11 +64,11 @@ public class EcrServiceImpl implements EcrService {
       throw new GeneralException(ExceptionUtils.getMessage(e), USER);
     }
     // Sorting at build tag for docker artifacts.
-    return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
+    return buildDetailsInternals.stream().sorted(new BuildDetailsInternalComparatorAscending()).collect(toList());
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(AwsConfig awsConfig, String imageName) {
+  public BuildDetailsInternal getLastSuccessfulBuild(AwsInternalConfig awsConfig, String imageName) {
     return null;
   }
 

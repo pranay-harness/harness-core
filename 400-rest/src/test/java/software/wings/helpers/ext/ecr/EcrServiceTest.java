@@ -18,6 +18,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildDetails.BuildDetailsMetadataKeys;
 import software.wings.service.impl.AwsApiHelperService;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 
 import com.amazonaws.regions.Regions;
@@ -73,7 +74,10 @@ public class EcrServiceTest extends WingsBaseTest {
              new ListImagesRequest().withRepositoryName("imageName")))
         .thenReturn(imagesResult);
     assertThat(
-        ecrService.getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), null, region, "imageName", 10))
+        ecrService.getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), null, region, "imageName", 10)
+            .stream()
+            .map(ArtifactConfigMapper::toBuildDetails)
+            .collect(Collectors.toList()))
         .hasSize(3)
         .isEqualTo(Lists.newArrayList(buildBuildDetails("latest"), buildBuildDetails("v1"), buildBuildDetails("v2")));
   }
