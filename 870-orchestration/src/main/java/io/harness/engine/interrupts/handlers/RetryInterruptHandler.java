@@ -13,8 +13,10 @@ import io.harness.engine.interrupts.helpers.RetryHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -52,6 +54,16 @@ public class RetryInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterrupt(Interrupt interrupt) {
     retryHelper.retryNodeExecution(interrupt.getNodeExecutionId(), interrupt.getParameters());
+
+    nodeExecutionService.update(interrupt.getNodeExecutionId(),
+        ops
+        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+            InterruptEffect.builder()
+                .interruptType(interrupt.getType())
+                .tookEffectAt(System.currentTimeMillis())
+                .interruptId(interrupt.getUuid())
+                .build()));
+
     planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
     return interruptService.markProcessed(interrupt.getUuid(), State.PROCESSED_SUCCESSFULLY);
   }
