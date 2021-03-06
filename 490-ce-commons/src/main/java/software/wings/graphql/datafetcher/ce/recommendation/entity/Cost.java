@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class UnitPrice {
+public class Cost {
   BigDecimal cpu;
   BigDecimal memory;
 }
