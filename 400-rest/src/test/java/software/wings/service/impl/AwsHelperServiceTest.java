@@ -1,53 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.ACASIAN;
-import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
-import static io.harness.rule.OwnerRule.INDER;
-import static io.harness.rule.OwnerRule.MILOS;
-import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.SATYAM;
-
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.joor.Reflect.on;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import io.harness.aws.AwsCallTracker;
-import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AwsAutoScaleException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogCallback;
-import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AWSTemporaryCredentials;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.states.ManagerExecutionLogCallback;
-
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
@@ -66,6 +21,7 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ecr.AmazonECRClient;
@@ -80,22 +36,77 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import io.harness.aws.AwsCallTracker;
+import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
+import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import software.wings.WingsBaseTest;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AWSTemporaryCredentials;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SATYAM;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest( { WebIdentityTokenCredentialsProvider.class })
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
   @Mock AwsConfig awsConfig;
@@ -104,6 +115,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     when(awsConfig.isCertValidationRequired()).thenReturn(false);
   }
 
@@ -569,4 +581,24 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     assertThat(actual).hasSize(2);
     assertThat(actual).containsExactly("us-east-1", "us-east-2");
   }
+
+  @Test(expected = com.amazonaws.SdkClientException.class)
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testAttachCredentialsAndBackoffPolicyWithIRSA() {
+    AwsHelperService awsHelperService = new AwsHelperService();
+    PowerMockito.mockStatic(System.class);
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_ROLE_ARN_ENV_VAR)).thenReturn("abcd");
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_WEB_IDENTITY_ENV_VAR)).thenReturn("/jkj");
+    when(awsConfig.isUseEc2IamCredentials()).thenReturn(false);
+    when(awsConfig.isUseIRSA()).thenReturn(true);
+    when(awsConfig.isAssumeCrossAccountRole()).thenReturn(false);
+    AwsClientBuilder awsClientBuilder = AmazonEC2ClientBuilder.standard().withRegion("us-east-1");
+
+    awsHelperService.attachCredentialsAndBackoffPolicy(awsClientBuilder, awsConfig);
+
+    assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
+    awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
+  }
+
 }
