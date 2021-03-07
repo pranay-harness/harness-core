@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.writer;
 
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -178,15 +179,17 @@ public class InstanceBillingDataTasklet implements Tasklet {
   List<InstanceBillingData> createBillingData(String accountId, Instant startTime, Instant endTime,
       BatchJobType batchJobType, List<InstanceData> instanceDataLists,
       Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
-    log.info("Instance data list {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
+    log.info("Instance data list new {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream()
             .filter(this::validInstanceForBilling)
             .collect(Collectors.groupingBy(InstanceData::getClusterId));
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(accountId);
+    log.info("AWS data set {}", awsDataSetId);
     if (awsDataSetId != null) {
       Set<String> resourceIds = new HashSet<>();
+      Set<String> eksFargateResourceIds = new HashSet<>();
       instanceDataLists.forEach(instanceData -> {
         String resourceId =
             getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
@@ -195,10 +198,25 @@ public class InstanceBillingDataTasklet implements Tasklet {
         if (null != resourceId && cloudProvider.equals(CloudProvider.AWS.name())) {
           resourceIds.add(resourceId);
         }
+
+        String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+            InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
+        if (instanceData.getInstanceType() == K8S_POD_FARGATE
+            || (instanceData.getInstanceType() == K8S_POD
+                && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType))) {
+          // instanceId is resourceId
+          eksFargateResourceIds.add(instanceData.getInstanceId());
+        }
       });
       if (isNotEmpty(resourceIds)) {
         awsCustomBillingService.updateAwsEC2BillingDataCache(
             new ArrayList<>(resourceIds), startTime, endTime, awsDataSetId);
+      }
+
+      if (isNotEmpty(eksFargateResourceIds)) {
+        log.info("Updating EKS Fargate Cache for Resource Id's List of Size: {}", eksFargateResourceIds.size());
+        awsCustomBillingService.updateEksFargateDataCache(
+            new ArrayList<>(eksFargateResourceIds), startTime, endTime, awsDataSetId);
       }
     }
 
@@ -244,6 +262,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
     if (instanceData.getInstanceType() == K8S_POD && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
       instanceType = InstanceType.K8S_POD_FARGATE;
+      instanceData.setInstanceType(instanceType);
     }
     UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
     BillingData billingData =

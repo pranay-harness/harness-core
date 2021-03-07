@@ -17,10 +17,11 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRec
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLLastDayCost;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
-import software.wings.graphql.datafetcher.ce.recommendation.dto.QLUnitPrice;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
@@ -95,11 +96,10 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
 
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
-      QLUnitPrice qlUnitPrice = ofNullable(k8sWorkloadRecommendation.getUnitPrice())
-                                    .map(u -> QLUnitPrice.builder().cpu(u.getCpu()).memory(u.getMemory()).build())
-                                    .orElse(QLUnitPrice.builder().info("NA").build());
-      Collection<? extends QLContainerRecommendation> containerRecommendations =
+      final Collection<? extends QLContainerRecommendation> containerRecommendations =
           entityToDtoCr(k8sWorkloadRecommendation.getContainerRecommendations());
+
+      final QLLastDayCost lastDayCost = convertToQLEntity(k8sWorkloadRecommendation.getLastDayCost());
 
       connectionBuilder.node(QLK8sWorkloadRecommendation.builder()
                                  .clusterId(k8sWorkloadRecommendation.getClusterId())
@@ -110,7 +110,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                                  .workloadType(k8sWorkloadRecommendation.getWorkloadType())
                                  .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
                                  .numDays(k8sWorkloadRecommendation.getNumDays())
-                                 .unitPrice(qlUnitPrice)
+                                 .lastDayCost(lastDayCost)
                                  .preset(QLK8sWorkloadRecommendationPreset.builder()
                                              .cpuRequest(0.8)
                                              .memoryRequest(0.8)
@@ -122,6 +122,12 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                                  .build());
     }));
     return connectionBuilder.build();
+  }
+
+  private QLLastDayCost convertToQLEntity(Cost lastDayCost) {
+    return ofNullable(lastDayCost)
+        .map(c -> QLLastDayCost.builder().cpu(c.getCpu()).memory(c.getMemory()).build())
+        .orElse(QLLastDayCost.builder().info("Not Available").build());
   }
 
   private Collection<? extends QLContainerRecommendation> entityToDtoCr(

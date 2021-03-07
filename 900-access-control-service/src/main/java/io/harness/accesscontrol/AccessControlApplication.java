@@ -6,7 +6,9 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupReconciliationIterator;
+import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
+import io.harness.accesscontrol.commons.events.EventListenerService;
+import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -85,6 +87,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
     registerIterators(injector);
+    registerManagedBeans(appConfig, environment, injector);
 
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
@@ -114,6 +117,13 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
+    }
+  }
+
+  private void registerManagedBeans(
+      AccessControlConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.getEventsConfig().isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(EventListenerService.class));
     }
   }
 

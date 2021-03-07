@@ -47,6 +47,26 @@ mongo:
   transactionsEnabled: true
   aliasDBName: accesscontrol
 
+eventsConfig:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+  enabled: true
+
+iteratorsConfig:
+  resourceGroupIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 600
+
 accessControlClient:
   enableAccessControl: true
   accessControlServiceConfig:
@@ -85,3 +105,4 @@ aggregatorModuleConfig:
     mongodb.ssl.enabled: false
     database.include.list: "accesscontrol"
     collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
+  enabled: false
