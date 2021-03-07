@@ -1,5 +1,25 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
+import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
+import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.service.impl.AwsHelperService;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SDKGlobalConfiguration;
@@ -13,9 +33,6 @@ import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
-import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
-import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,19 +42,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.beans.AwsConfig;
-import software.wings.service.impl.AwsHelperService;
-
-import static io.harness.rule.OwnerRule.ARVIND;
-import static io.harness.rule.OwnerRule.RAGHVENDRA;
-import static io.harness.rule.OwnerRule.SATYAM;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WebIdentityTokenCredentialsProvider.class})

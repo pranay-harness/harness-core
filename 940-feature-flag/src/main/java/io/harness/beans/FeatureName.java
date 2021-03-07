@@ -1,7 +1,6 @@
 package io.harness.beans;
 
 import io.harness.beans.FeatureFlag.Scope;
-
 import lombok.Getter;
 
 /**

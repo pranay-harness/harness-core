@@ -1,5 +1,54 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SATYAM;
+
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import io.harness.aws.AwsCallTracker;
+import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AWSTemporaryCredentials;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.states.ManagerExecutionLogCallback;
+
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -36,14 +85,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.harness.aws.AwsCallTracker;
-import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AwsAutoScaleException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.logging.LogCallback;
-import io.harness.rule.Owner;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -60,52 +106,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import software.wings.WingsBaseTest;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AWSTemporaryCredentials;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.states.ManagerExecutionLogCallback;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.harness.rule.OwnerRule.ACASIAN;
-import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
-import static io.harness.rule.OwnerRule.INDER;
-import static io.harness.rule.OwnerRule.MILOS;
-import static io.harness.rule.OwnerRule.RAGHVENDRA;
-import static io.harness.rule.OwnerRule.RUSHABH;
-import static io.harness.rule.OwnerRule.SATYAM;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.joor.Reflect.on;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest( { WebIdentityTokenCredentialsProvider.class })
+@PrepareForTest({WebIdentityTokenCredentialsProvider.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
@@ -600,5 +603,4 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
     awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
   }
-
 }
