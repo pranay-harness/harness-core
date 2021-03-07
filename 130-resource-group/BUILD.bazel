@@ -26,7 +26,7 @@ java_library(
 )
 
 #java_library(
-#    name = "tests",
+#    name = "tests",testonly=True,
 #    srcs = glob(["src/test/**/*.java"]),
 #    visibility = ["//visibility:public"],
 #    deps = [
