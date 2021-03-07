@@ -31,6 +31,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//884-pms-commons/src/test/resources:resource"],
     visibility = ["//visibility:public"],

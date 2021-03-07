@@ -48,6 +48,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = ["//440-connector-nextgen/src/test/resources:resource"],
     resources = [
