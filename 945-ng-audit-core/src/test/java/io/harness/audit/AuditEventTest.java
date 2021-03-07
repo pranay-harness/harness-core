@@ -1,4 +1,4 @@
-package io.harness.audits;
+package io.harness.audit;
 
 import static io.harness.rule.OwnerRule.KARAN;
 

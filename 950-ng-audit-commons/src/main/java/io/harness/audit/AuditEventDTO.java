@@ -1,4 +1,4 @@
-package io.harness.audits;
+package io.harness.audit;
 
 public class AuditEventDTO {
   String accountIdentifier;
