@@ -1,8 +1,10 @@
 package software.wings.service.mappers.artifact;
 
 import io.harness.aws.beans.AwsInternalConfig;
-import lombok.experimental.UtilityClass;
+
 import software.wings.beans.AwsConfig;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class AwsConfigToInternalMapper {

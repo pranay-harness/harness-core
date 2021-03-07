@@ -1,5 +1,51 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
+import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.threading.Morpheus.sleep;
+
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.aws.AwsCallTracker;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
+import io.harness.network.Http;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AWSTemporaryCredentials;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.EcrConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.common.InfrastructureConstants;
+import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
+import software.wings.sm.states.ManagerExecutionLogCallback;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -133,38 +179,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.aws.AwsCallTracker;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogCallback;
-import io.harness.network.Http;
-import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.ResponseBody;
-import org.apache.commons.collections.CollectionUtils;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AWSTemporaryCredentials;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.EcrConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.common.InfrastructureConstants;
-import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
-import software.wings.sm.states.ManagerExecutionLogCallback;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -174,24 +188,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static com.google.common.collect.Lists.newArrayList;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
-import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import org.apache.commons.collections.CollectionUtils;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
@@ -485,7 +488,7 @@ public class AwsHelperService {
   }
 
   public AwsConfig validateAndGetAwsConfig(
-          SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
+      SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
       throw new InvalidRequestException("connectorConfig is not of type AwsConfig");
@@ -1141,8 +1144,8 @@ public class AwsHelperService {
   }
 
   public CreateAutoScalingGroupResult createAutoScalingGroup(AwsConfig awsConfig,
-                                                             List<EncryptedDataDetail> encryptionDetails, String region,
-                                                             CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback) {
+      List<EncryptedDataDetail> encryptionDetails, String region,
+      CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback) {
     AmazonAutoScalingClient amazonAutoScalingClient = null;
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
